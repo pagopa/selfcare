@@ -413,6 +413,7 @@ public class NotificationServiceImpl implements NotificationService {
                 onboarding.getInstitution().getInstitutionType().name(),
                 onboarding.getWorkflowType().name(),
                 onboarding.getStatus().name());
+        log.info("Get all email templates for product {}: {}", product.getAlias(), product.getEmailTemplates());
         Optional<EmailTemplate> emailTemplateOpt =
                 product.getEmailTemplate(
                         onboarding.getInstitution().getInstitutionType().name(),
