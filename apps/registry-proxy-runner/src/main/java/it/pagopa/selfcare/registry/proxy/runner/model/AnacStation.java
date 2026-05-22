@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode(of = "taxCode")
+@EqualsAndHashCode(of = "rawTaxCode")
 public class AnacStation {
 
   @CsvBindByName(column = "codiceIPA")
