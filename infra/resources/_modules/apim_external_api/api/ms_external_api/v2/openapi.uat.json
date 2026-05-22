@@ -920,6 +920,7 @@
             "in": "query",
             "required": false,
             "schema": {
+              "minimum": 0,
               "type": "integer",
               "format": "int64",
               "default": 0
@@ -940,8 +941,10 @@
             "in": "query",
             "required": false,
             "schema": {
-              "type": "string",
-              "default": "description asc"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           }
         ],
@@ -988,39 +991,6 @@
         "operationId": "retrieveInstitutionOnSearchEngine",
         "parameters": [
           {
-            "name": "products",
-            "in": "query",
-            "description": "List of products to be filtered",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "institutionTypes",
-            "in": "query",
-            "description": "List of institution types to be filtered",
-            "required": false,
-            "schema": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          {
-            "name": "taxCode",
-            "in": "query",
-            "description": "Institution fiscal code",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
             "name": "searchText",
             "in": "query",
             "description": "Search text pattern",
@@ -1037,19 +1007,8 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "format": "int32",
+              "format": "int64",
               "default": 50
-            }
-          },
-          {
-            "name": "skip",
-            "in": "query",
-            "description": "Desired page number for result pagination. It is optional, and the default value is 1 when not specified",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 0
             }
           }
         ],
@@ -1063,6 +1022,91 @@
                   "items": {
                     "$ref": "#/components/schemas/SearchServiceInstitution"
                   }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
+    "/institutions/ipa": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Retrieve IPA institutions",
+        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "operationId": "searchIpaInstitutionsOnSearchEngine",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "description": "Optional search field. Users can provide a search string to filter results",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "*"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Desired page number for result pagination. It is optional, and the default value is 1 when not specified",
+            "required": false,
+            "schema": {
+              "minimum": 0,
+              "type": "integer",
+              "format": "int32",
+              "default": 0
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Maximum number of items per page. It is optional, and the default value is 10 when not specified",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionsResource"
                 }
               }
             }
@@ -1176,9 +1220,7 @@
     },
     "/message/{messageId}/status/{status}": {
       "post": {
-        "tags": [
-          "conservazione"
-        ],
+        "tags": [],
         "summary": "messageAcknowledgment",
         "description": "Service to acknowledge message consumption by a consumer",
         "operationId": "messageAcknowledgmentUsingPOST1",
@@ -3649,7 +3691,9 @@
     },
     "/onboarding/{onboardingId}": {
       "delete": {
-        "tags": ["Onboarding Controller"],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Perform delete operation of an onboarding request",
         "description": "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId": "deleteOnboarding",
@@ -3688,7 +3732,9 @@
     },
     "/onboarding/{onboardingId}/complete": {
       "put": {
-        "tags": ["Onboarding Controller"],
+        "tags": [
+          "Onboarding Controller"
+        ],
         "summary": "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description": "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId": "completeOnboardingUsingPUT",
@@ -4604,21 +4650,82 @@
           "taxCode": {
             "type": "string"
           },
-          "products": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "institutionTypes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
           "lastModified": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "InstitutionsResource": {
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResource1"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "InstitutionResource1": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "originId": {
+            "type": "string"
+          },
+          "o": {
+            "type": "string"
+          },
+          "ou": {
+            "type": "string"
+          },
+          "aoo": {
+            "type": "string"
+          },
+          "taxCode": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "digitalAddress": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "zipCode": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "static",
+              "IPA",
+              "ANAC",
+              "IVASS",
+              "INFOCAMERE"
+            ]
+          },
+          "istatCode": {
+            "type": "string"
+          },
+          "updateDate": {
+            "type": "string"
           }
         }
       },
@@ -5045,6 +5152,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -5284,7 +5400,7 @@
             "type": "string"
           },
           "status": {
-            "$ref": "#/components/schemas/OnboardingStatus"
+            "$ref": "#/components/schemas/OnboardingStatus1"
           }
         }
       },
@@ -5314,6 +5430,57 @@
           },
           "identityTokenAudience": {
             "type": "string"
+          }
+        }
+      },
+      "SigningConfiguration": {
+        "type": "object",
+        "properties": {
+          "requiredSignatures": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skipSignerIdentityCheck": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SigningStep"
+            }
+          }
+        }
+      },
+      "SigningStep": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "label": {
+            "type": "string"
+          },
+          "isFinal": {
+            "type": "boolean"
+          },
+          "final": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ManagingInstitution": {
+        "type": "object",
+        "properties": {
+          "institutionId": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "signingStep": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -5397,6 +5564,15 @@
             "items": {
               "type": "string"
             }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
+            }
           }
         }
       },
@@ -5468,6 +5644,15 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "signingConfiguration": {
+            "$ref": "#/components/schemas/SigningConfiguration"
+          },
+          "managingInstitutions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagingInstitution"
             }
           },
           "id": {

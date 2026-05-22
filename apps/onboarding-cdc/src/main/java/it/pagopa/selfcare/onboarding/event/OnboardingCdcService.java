@@ -30,8 +30,9 @@ import static com.mongodb.client.model.Projections.include;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.DELETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.REQUEST;
-import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.TOBEVALIDATED;
 import static java.util.Arrays.asList;
+
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 
 @Startup
 @Slf4j
@@ -42,6 +43,8 @@ public class OnboardingCdcService {
     private static final String EVENT_NAME = "ONBOARDING-CDC";
     private static final String ONBOARDING_FAILURE_MECTRICS = "OnboardingsUpdate_failures";
     private static final String ONBOARDING_SUCCESS_MECTRICS = "OnboardingsUpdate_successes";
+    private static final String DOCUMENT_KEY = "documentKey";
+    private static final String SUCCESS_FALSE = "FALSE";
     private final TelemetryClient telemetryClient;
     private final TableClient tableClient;
     private final String mongodbDatabase;
@@ -92,7 +95,7 @@ public class OnboardingCdcService {
         Bson match = Aggregates.match(Filters.and(
                 Filters.in("operationType", asList("update", "replace", "insert")),
                 Filters.in("fullDocument.status", Arrays.asList(COMPLETED.name(), DELETED.name()))));
-        Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
+        Bson project = Aggregates.project(fields(include("_id", "ns", DOCUMENT_KEY, "fullDocument")));
         List<Bson> pipeline = Arrays.asList(match, project);
 
         Multi<ChangeStreamDocument<Onboarding>> publisher = dataCollection.watch(pipeline, Onboarding.class, options);
@@ -100,7 +103,7 @@ public class OnboardingCdcService {
                 this::consumerOnboardingEvent,
                 failure -> {
                     log.error("Error during subscribe collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                    constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
+                    constructMapAndTrackEvent(failure.getClass().toString(), SUCCESS_FALSE, ONBOARDING_FAILURE_MECTRICS);
                     Quarkus.asyncExit();
                 });
 
@@ -116,8 +119,9 @@ public class OnboardingCdcService {
 
         Bson match = Aggregates.match(Filters.and(
                 Filters.in("operationType", asList("update", "replace", "insert")),
-                Filters.nin("fullDocument.status", REQUEST.name(), TOBEVALIDATED.name())));
-        Bson project = Aggregates.project(fields(include("_id", "ns", "documentKey", "fullDocument")));
+                Filters.ne("fullDocument.status", REQUEST.name()),
+                Filters.ne("fullDocument.workflowType", WorkflowType.USERS.name())));
+        Bson project = Aggregates.project(fields(include("_id", "ns", DOCUMENT_KEY, "fullDocument")));
         List<Bson> pipeline = Arrays.asList(match, project);
 
         Multi<ChangeStreamDocument<Onboarding>> publisher = dataCollection.watch(pipeline, Onboarding.class, options);
@@ -125,7 +129,7 @@ public class OnboardingCdcService {
                 this::consumerRegistryIndexEvent,
                 failure -> {
                     log.error("Error during subscribe registry index collection, exception: {} , message: {}", failure.toString(), failure.getMessage());
-                    constructMapAndTrackEvent(failure.getClass().toString(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
+                    constructMapAndTrackEvent(failure.getClass().toString(), SUCCESS_FALSE, ONBOARDING_FAILURE_MECTRICS);
                     Quarkus.asyncExit();
                 });
 
@@ -154,7 +158,7 @@ public class OnboardingCdcService {
                         },
                         failure -> {
                             log.error("Error during send Onboarding notifiction having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), SUCCESS_FALSE, ONBOARDING_FAILURE_MECTRICS);
                         });
         log.info("End consumerOnboardingEvent ... ");
     }
@@ -173,7 +177,7 @@ public class OnboardingCdcService {
                         },
                         failure -> {
                             log.error("Error during registry index update for onboarding id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());
-                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), "FALSE", ONBOARDING_FAILURE_MECTRICS);
+                            constructMapAndTrackEvent(document.getDocumentKey().toJson(), SUCCESS_FALSE, ONBOARDING_FAILURE_MECTRICS);
                         });
         log.info("End consumerRegistryIndexEvent ... ");
     }
@@ -191,7 +195,7 @@ public class OnboardingCdcService {
 
     private void constructMapAndTrackEvent(String documentKey, String success, String... metrics) {
         Map<String, String> propertiesMap = new HashMap<>();
-        propertiesMap.put("documentKey", documentKey);
+        propertiesMap.put(DOCUMENT_KEY, documentKey);
         propertiesMap.put("success", success);
 
         Map<String, Double> metricsMap = new HashMap<>();
