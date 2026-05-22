@@ -181,11 +181,10 @@ public class InstitutionFunctions {
   private void processSendEmailDeletions(TaskOrchestrationContext ctx, String onboardingId) throws JsonProcessingException {
     logger.info("processSendEmailDeletions started with id: {}", onboardingId);
     EntityFilter entityFilter = EntityFilter.builder().value(onboardingId).build();
-    String enrichedFilters = objectMapper.writeValueAsString(entityFilter);
 
     ctx.callActivity(
                     SEND_MAIL_DELETE_ACTIVITY,
-                    enrichedFilters,
+                    onboardingId,
                     optionsRetry,
                     String.class)
             .await();
