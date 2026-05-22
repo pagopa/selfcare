@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.dto;
 
 public enum NotificationMailType {
-    GENERIC,
     REGISTRATION,
     REGISTRATION_APPROVE,
     ONBOARDING_APPROVE,
