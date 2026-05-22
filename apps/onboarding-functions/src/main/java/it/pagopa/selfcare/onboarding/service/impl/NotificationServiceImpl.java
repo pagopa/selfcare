@@ -5,6 +5,7 @@ import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.FileMailData;
@@ -248,7 +249,11 @@ public class NotificationServiceImpl implements NotificationService {
         Optional.ofNullable(sendMailInput.getPreviousManagerSurname()).ifPresent(value -> mailParameters.put(templatePlaceholdersConfig.previousManagerSurname(), value));
         mailParameters.put(templatePlaceholdersConfig.expirationDate(), expirationDate);
 
-        String templatePath = getTemplateMailPath(sendMailInput.getProduct(), onboardingWorkflow.getEmailRegistrationPath(templatePathConfig), onboarding);
+        String templatePath = getTemplateMailPath(
+                sendMailInput.getProduct(),
+                onboardingWorkflow.getEmailRegistrationPath(templatePathConfig),
+                onboarding,
+                OnboardingStatus.REQUEST);
         sendMail(NotificationMailRequest.builder()
                 .type(NotificationMailType.REGISTRATION_CONTRACT)
                 .destinationMails(List.of(onboarding.getInstitution().getDigitalAddress()))
@@ -296,7 +301,11 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendCompletedEmail(List<String> destinationMails, Product product, OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
-        String templatePath = getTemplateMailPath(product, onboardingWorkflow.getEmailCompletionPath(templatePathConfig), onboarding);
+        String templatePath = getTemplateMailPath(
+                product,
+                onboardingWorkflow.getEmailCompletionPath(templatePathConfig),
+                onboarding,
+                OnboardingStatus.COMPLETED);
 
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.businessName(), onboarding.getInstitution().getDescription());
@@ -315,7 +324,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendDeletedEmail(List<String> destinationMails, Product product, Onboarding onboarding) {
-        String templatePath = getTemplateMailPath(product, templatePathConfig.deletePath(), onboarding);
+        String templatePath = getTemplateMailPath(product, templatePathConfig.deletePath(), onboarding, OnboardingStatus.DELETED);
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
         sendMail(NotificationMailRequest.builder()
@@ -331,7 +340,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendMailRejection(List<String> destinationMails, Product product, Onboarding onboarding) {
-        String templatePath = getTemplateMailPath(product, templatePathConfig.rejectPath(), onboarding);
+        String templatePath = getTemplateMailPath(product, templatePathConfig.rejectPath(), onboarding, OnboardingStatus.REJECTED);
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
         mailParameter.put(templatePlaceholdersConfig.reasonForReject(), onboarding.getReasonForReject());
@@ -408,17 +417,17 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    private String getTemplateMailPath(Product product, String defaultTemplatePath, Onboarding onboarding) {
+    private String getTemplateMailPath(Product product, String defaultTemplatePath, Onboarding onboarding, OnboardingStatus templateStatus) {
         log.info("Retrieving emailTemplate given institutionType {}, workflowType: {}, status: {}",
                 onboarding.getInstitution().getInstitutionType().name(),
                 onboarding.getWorkflowType().name(),
-                onboarding.getStatus().name());
+                templateStatus.name());
         logEmailTemplatesMap(product);
         Optional<EmailTemplate> emailTemplateOpt =
                 product.getEmailTemplate(
                         onboarding.getInstitution().getInstitutionType().name(),
                         onboarding.getWorkflowType().name(),
-                        onboarding.getStatus().name());
+                        templateStatus.name());
         if (emailTemplateOpt.isPresent()) {
             String emailTemplatePath = emailTemplateOpt.get().getPath();
             log.debug("Using custom email template path: {}", emailTemplatePath);

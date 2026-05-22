@@ -207,7 +207,7 @@ class NotificationServiceDefaultTest {
         when(product.getEmailTemplate(
                 eq(InstitutionType.PA.name()),
                 eq(WorkflowType.IMPORT.name()),
-                eq(OnboardingStatus.PENDING.name()))
+                eq(OnboardingStatus.COMPLETED.name()))
         ).thenReturn(Optional.of(emailTemplate));
 
         // Mock file
