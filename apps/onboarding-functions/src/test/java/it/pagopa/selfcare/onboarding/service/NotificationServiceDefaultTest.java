@@ -380,4 +380,56 @@ class NotificationServiceDefaultTest {
         assertEquals(destination, mailArgumentCaptor.getValue().getTo().get(0));
     }
 
+    @Test
+    void sendMailRegistrationForContractWithSendMailInput() {
+        // given
+        final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
+        final String destination = "test@test.it";
+
+        Product product = new Product();
+        product.setTitle("prod");
+        product.setId("prod-id");
+
+        SendMailInput sendMailInput = new SendMailInput();
+        sendMailInput.setProduct(product);
+        sendMailInput.setUserRequestName("name");
+        sendMailInput.setUserRequestSurname("surname");
+        sendMailInput.setInstitutionName("desc");
+
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId("onboardingId");
+        onboarding.setProductId("prod-id");
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        Institution institution = new Institution();
+        institution.setInstitutionType(InstitutionType.PA);
+        institution.setDigitalAddress(destination);
+        onboarding.setInstitution(institution);
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, OnboardingWorkflowType.INSTITUTION.name());
+
+        when(azureBlobClient.getFileAsText(any())).thenReturn(mailTemplate);
+        Mockito.doNothing().when(mailer).send(any());
+
+        // when
+        notificationService.sendMailRegistrationForContract(sendMailInput, "30", onboardingWorkflow);
+
+        // then
+        Mockito.verify(azureBlobClient, Mockito.times(1)).getFileAsText(any());
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        Mockito.verify(mailer, Mockito.times(1)).send(mailArgumentCaptor.capture());
+        assertEquals(destination, mailArgumentCaptor.getValue().getTo().get(0));
+    }
+
+    @Test
+    void rejectOnboardingUrlShouldReturnConfiguredValue() {
+        // given
+        String expectedRejectUrl = templatePlaceholdersConfig.rejectOnboardingUrlValue();
+
+        // when
+        String actualRejectUrl = notificationService.rejectOnboardingUrl();
+
+        // then
+        assertEquals(expectedRejectUrl, actualRejectUrl);
+    }
+
 }

@@ -1,6 +1,4 @@
 package it.pagopa.selfcare.onboarding.service.impl;
-import it.pagopa.selfcare.onboarding.service.*;
-
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
@@ -17,6 +15,8 @@ import it.pagopa.selfcare.onboarding.entity.MailTemplate;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.service.ContractService;
+import it.pagopa.selfcare.onboarding.service.NotificationService;
 import it.pagopa.selfcare.product.entity.EmailTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -31,7 +31,6 @@ import java.nio.file.Files;
 import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.utils.GenericError.ERROR_DURING_SEND_MAIL;
-
 
 @ApplicationScoped
 public class NotificationServiceImpl implements NotificationService {
