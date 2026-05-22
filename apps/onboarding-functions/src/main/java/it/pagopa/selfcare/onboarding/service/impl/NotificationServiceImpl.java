@@ -79,6 +79,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void sendMail(NotificationMailRequest notificationMailRequest) {
+        log.info(
+                "Preparing notification mail - type: {}, templatePath: {}, recipients: {}, hasAttachment: {}, prefixSubjectPresent: {}",
+                notificationMailRequest.getType(),
+                notificationMailRequest.getTemplatePath(),
+                Optional.ofNullable(notificationMailRequest.getDestinationMails()).map(List::size).orElse(0),
+                Objects.nonNull(notificationMailRequest.getFileMailData()),
+                Objects.nonNull(notificationMailRequest.getPrefixSubject()));
+
         sendMailWithFile(
                 notificationMailRequest.getDestinationMails(),
                 notificationMailRequest.getTemplatePath(),
@@ -327,18 +335,33 @@ public class NotificationServiceImpl implements NotificationService {
 
     private void sendMailWithFile(List<String> destinationMail, String templateName, Map<String, String> mailParameters, String prefixSubject, FileMailData fileMailData) {
         try {
+            if (destinationMailTest) {
+                log.warn(
+                        "Destination mail test mode enabled - overriding recipient list with test address: {}",
+                        destinationMailTestAddress);
+            }
 
             // Dev mode send mail to test digital address
             String destination = destinationMailTest
                     ? destinationMailTestAddress
                     : destinationMail.get(0);
 
-            log.info("Sending mail to {}, with prefixSubject {}", destination, prefixSubject);
+            log.info(
+                    "Loading mail template - templatePath: {}, destination: {}, prefixSubjectPresent: {}",
+                    templateName,
+                    destination,
+                    Objects.nonNull(prefixSubject));
             String template = azureBlobClient.getFileAsText(templateName);
             MailTemplate mailTemplate = objectMapper.readValue(template, MailTemplate.class);
             String html = StringSubstitutor.replace(mailTemplate.getBody(), mailParameters);
 
             final String subject = Optional.ofNullable(prefixSubject).map(value -> String.format(FORMAT_STRING_MSG, value, mailTemplate.getSubject())).orElse(mailTemplate.getSubject());
+            log.info(
+                    "Mail template resolved - templatePath: {}, destination: {}, hasAttachment: {}, emailServiceAvailable: {}",
+                    templateName,
+                    destination,
+                    Objects.nonNull(fileMailData),
+                    isEmailServiceAvailable);
 
             Mail mail = Mail
                     .withHtml(destination, subject, html)
@@ -350,9 +373,17 @@ public class NotificationServiceImpl implements NotificationService {
 
             send(mail);
 
-            log.info("End of sending mail to {}, with subject {}", destination, subject);
+            log.info(
+                    "Mail send completed - destination: {}, subject: {}, templatePath: {}",
+                    destination,
+                    subject,
+                    templateName);
         } catch (Exception e) {
-            log.error(String.format(FORMAT_STRING_MSG, ERROR_DURING_SEND_MAIL, e.getMessage()));
+            log.error(
+                    "Mail send failed - templatePath: {}, errorType: {}, errorMessage: {}",
+                    templateName,
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
             throw new GenericOnboardingException(ERROR_DURING_SEND_MAIL.getMessage());
         }
     }
