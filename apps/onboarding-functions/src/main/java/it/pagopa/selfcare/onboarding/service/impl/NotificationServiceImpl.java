@@ -86,14 +86,64 @@ public class NotificationServiceImpl implements NotificationService {
                 Optional.ofNullable(notificationMailRequest.getDestinationMails()).map(List::size).orElse(0),
                 Objects.nonNull(notificationMailRequest.getFileMailData()),
                 Objects.nonNull(notificationMailRequest.getPrefixSubject()));
+        try {
+            List<String> destinationMails = notificationMailRequest.getDestinationMails();
+            String templateName = notificationMailRequest.getTemplatePath();
+            Map<String, String> mailParameters = notificationMailRequest.getMailParameters();
+            String prefixSubject = notificationMailRequest.getPrefixSubject();
+            FileMailData fileMailData = notificationMailRequest.getFileMailData();
 
-        sendMailWithFile(
-                notificationMailRequest.getDestinationMails(),
-                notificationMailRequest.getTemplatePath(),
-                notificationMailRequest.getMailParameters(),
-                notificationMailRequest.getPrefixSubject(),
-                notificationMailRequest.getFileMailData()
-        );
+            if (destinationMailTest) {
+                log.warn(
+                        "Destination mail test mode enabled - overriding recipient list with test address: {}",
+                        destinationMailTestAddress);
+            }
+
+            // Dev mode send mail to test digital address
+            String destination = destinationMailTest
+                    ? destinationMailTestAddress
+                    : destinationMails.get(0);
+
+            log.info(
+                    "Loading mail template - templatePath: {}, destination: {}, prefixSubjectPresent: {}",
+                    templateName,
+                    destination,
+                    Objects.nonNull(prefixSubject));
+            String template = azureBlobClient.getFileAsText(templateName);
+            MailTemplate mailTemplate = objectMapper.readValue(template, MailTemplate.class);
+            String html = StringSubstitutor.replace(mailTemplate.getBody(), mailParameters);
+
+            final String subject = Optional.ofNullable(prefixSubject).map(value -> String.format(FORMAT_STRING_MSG, value, mailTemplate.getSubject())).orElse(mailTemplate.getSubject());
+            log.info(
+                    "Mail template resolved - templatePath: {}, destination: {}, hasAttachment: {}, emailServiceAvailable: {}",
+                    templateName,
+                    destination,
+                    Objects.nonNull(fileMailData),
+                    isEmailServiceAvailable);
+
+            Mail mail = Mail
+                    .withHtml(destination, subject, html)
+                    .setFrom(senderMail);
+
+            if (Objects.nonNull(fileMailData)) {
+                mail.addAttachment(fileMailData.getName(), fileMailData.getData(), fileMailData.getContentType());
+            }
+
+            send(mail);
+
+            log.info(
+                    "Mail send completed - destination: {}, subject: {}, templatePath: {}",
+                    destination,
+                    subject,
+                    templateName);
+        } catch (Exception e) {
+            log.error(
+                    "Mail send failed - templatePath: {}, errorType: {}, errorMessage: {}",
+                    notificationMailRequest.getTemplatePath(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage());
+            throw new GenericOnboardingException(ERROR_DURING_SEND_MAIL.getMessage());
+        }
     }
 
     @Override
@@ -331,61 +381,6 @@ public class NotificationServiceImpl implements NotificationService {
             fileMailData.setName(PAGOPA_LOGO_FILENAME);
         }
         return fileMailData;
-    }
-
-    private void sendMailWithFile(List<String> destinationMail, String templateName, Map<String, String> mailParameters, String prefixSubject, FileMailData fileMailData) {
-        try {
-            if (destinationMailTest) {
-                log.warn(
-                        "Destination mail test mode enabled - overriding recipient list with test address: {}",
-                        destinationMailTestAddress);
-            }
-
-            // Dev mode send mail to test digital address
-            String destination = destinationMailTest
-                    ? destinationMailTestAddress
-                    : destinationMail.get(0);
-
-            log.info(
-                    "Loading mail template - templatePath: {}, destination: {}, prefixSubjectPresent: {}",
-                    templateName,
-                    destination,
-                    Objects.nonNull(prefixSubject));
-            String template = azureBlobClient.getFileAsText(templateName);
-            MailTemplate mailTemplate = objectMapper.readValue(template, MailTemplate.class);
-            String html = StringSubstitutor.replace(mailTemplate.getBody(), mailParameters);
-
-            final String subject = Optional.ofNullable(prefixSubject).map(value -> String.format(FORMAT_STRING_MSG, value, mailTemplate.getSubject())).orElse(mailTemplate.getSubject());
-            log.info(
-                    "Mail template resolved - templatePath: {}, destination: {}, hasAttachment: {}, emailServiceAvailable: {}",
-                    templateName,
-                    destination,
-                    Objects.nonNull(fileMailData),
-                    isEmailServiceAvailable);
-
-            Mail mail = Mail
-                    .withHtml(destination, subject, html)
-                    .setFrom(senderMail);
-
-            if (Objects.nonNull(fileMailData)) {
-                mail.addAttachment(fileMailData.getName(), fileMailData.getData(), fileMailData.getContentType());
-            }
-
-            send(mail);
-
-            log.info(
-                    "Mail send completed - destination: {}, subject: {}, templatePath: {}",
-                    destination,
-                    subject,
-                    templateName);
-        } catch (Exception e) {
-            log.error(
-                    "Mail send failed - templatePath: {}, errorType: {}, errorMessage: {}",
-                    templateName,
-                    e.getClass().getSimpleName(),
-                    e.getMessage());
-            throw new GenericOnboardingException(ERROR_DURING_SEND_MAIL.getMessage());
-        }
     }
 
     private void send(Mail mail) {
