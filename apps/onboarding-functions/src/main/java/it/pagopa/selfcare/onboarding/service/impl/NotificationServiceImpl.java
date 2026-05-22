@@ -10,6 +10,8 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.FileMailData;
+import it.pagopa.selfcare.onboarding.dto.NotificationMailRequest;
+import it.pagopa.selfcare.onboarding.dto.NotificationMailType;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
 import it.pagopa.selfcare.onboarding.entity.MailTemplate;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -72,6 +74,22 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
+    public String rejectOnboardingUrl() {
+        return templatePlaceholdersConfig.rejectOnboardingUrlValue();
+    }
+
+    @Override
+    public void sendMail(NotificationMailRequest notificationMailRequest) {
+        sendMailWithFile(
+                notificationMailRequest.getDestinationMails(),
+                notificationMailRequest.getTemplatePath(),
+                notificationMailRequest.getMailParameters(),
+                notificationMailRequest.getPrefixSubject(),
+                notificationMailRequest.getFileMailData()
+        );
+    }
+
+    @Override
     public void sendMailRegistration(String institutionName, String destination, String name, String username, String productName, String expirationDate) {
 
         // Prepare data for email
@@ -82,21 +100,41 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameters.put(templatePlaceholdersConfig.institutionDescription(), institutionName);
         mailParameters.put(templatePlaceholdersConfig.expirationDate(), expirationDate);
 
-        sendMailWithFile(List.of(destination), templatePathConfig.registrationRequestPath(), mailParameters, productName, null);
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.REGISTRATION)
+                .destinationMails(List.of(destination))
+                .templatePath(templatePathConfig.registrationRequestPath())
+                .mailParameters(mailParameters)
+                .prefixSubject(productName)
+                .build());
     }
 
     @Override
     public void sendMailRegistrationApprove(String institutionName, String name, String username, String productName, String onboardingId) {
-        sendMailOnboardingOrRegistrationApprove(institutionName, name, username, productName, onboardingId, templatePathConfig.registrationApprovePath());
+        sendMailOnboardingOrRegistrationApprove(
+                institutionName,
+                name,
+                username,
+                productName,
+                onboardingId,
+                templatePathConfig.registrationApprovePath(),
+                NotificationMailType.REGISTRATION_APPROVE);
     }
 
     @Override
     public void sendMailOnboardingApprove(String institutionName, String name, String username, String productName, String onboardingId) {
-        sendMailOnboardingOrRegistrationApprove(institutionName, name, username, productName, onboardingId, templatePathConfig.onboardingApprovePath());
+        sendMailOnboardingOrRegistrationApprove(
+                institutionName,
+                name,
+                username,
+                productName,
+                onboardingId,
+                templatePathConfig.onboardingApprovePath(),
+                NotificationMailType.ONBOARDING_APPROVE);
     }
 
 
-    private void sendMailOnboardingOrRegistrationApprove(String institutionName, String name, String username, String productName, String onboardingId, String templatePath) {
+    private void sendMailOnboardingOrRegistrationApprove(String institutionName, String name, String username, String productName, String onboardingId, String templatePath, NotificationMailType notificationMailType) {
         // Prepare data for email
         Map<String, String> mailParameters = new HashMap<>();
         mailParameters.put(templatePlaceholdersConfig.productName(), productName);
@@ -106,12 +144,16 @@ public class NotificationServiceImpl implements NotificationService {
         StringBuilder adminApproveLink = new StringBuilder(templatePlaceholdersConfig.adminLink());
         mailParameters.put(templatePlaceholdersConfig.confirmTokenName(), adminApproveLink.append(onboardingId).toString());
 
-        sendMailWithFile(List.of(notificationAdminMail), templatePath, mailParameters, productName, null);
+        sendMail(NotificationMailRequest.builder()
+                .type(notificationMailType)
+                .destinationMails(List.of(notificationAdminMail))
+                .templatePath(templatePath)
+                .mailParameters(mailParameters)
+                .prefixSubject(productName)
+                .build());
     }
 
-    //TODO create an object to avoid multiple parameters in input
-    @Override
-    public void sendMailRegistrationForContract(String onboardingId, String destination, String name, String username, String productName, String institutionName, String templatePath, String confirmTokenUrl, String expirationDate) {
+    private void sendMailRegistrationForContractWithResolvedTemplate(String onboardingId, String destination, String name, String username, String productName, String institutionName, String templatePath, String confirmTokenUrl, String expirationDate) {
 
         // Prepare data for email
         Map<String, String> mailParameters = new HashMap<>();
@@ -123,11 +165,16 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameters.put(templatePlaceholdersConfig.institutionDescription(), institutionName);
         mailParameters.put(templatePlaceholdersConfig.expirationDate(), expirationDate);
 
-        sendMailWithFile(List.of(destination), templatePath, mailParameters, productName, null);
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.REGISTRATION_CONTRACT)
+                .destinationMails(List.of(destination))
+                .templatePath(templatePath)
+                .mailParameters(mailParameters)
+                .prefixSubject(productName)
+                .build());
     }
 
-    @Override
-    public void sendMailRegistrationForContract(SendMailInput sendMailInput, String confirmTokenUrl, String expirationDate, OnboardingWorkflow onboardingWorkflow) {
+    private void sendMailRegistrationForContractWithResolvedTemplate(SendMailInput sendMailInput, String confirmTokenUrl, String expirationDate, OnboardingWorkflow onboardingWorkflow) {
         // Prepare data for email
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
         final String onboardingId = onboarding.getId();
@@ -145,8 +192,20 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameters.put(templatePlaceholdersConfig.expirationDate(), expirationDate);
 
         String templatePath = getTemplateMailPath(sendMailInput.getProduct(), onboardingWorkflow.getEmailRegistrationPath(templatePathConfig), onboarding);
-        sendMailWithFile(List.of(onboarding.getInstitution().getDigitalAddress()), templatePath, mailParameters, sendMailInput.getProduct().getTitle(), null);
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.REGISTRATION_CONTRACT)
+                .destinationMails(List.of(onboarding.getInstitution().getDigitalAddress()))
+                .templatePath(templatePath)
+                .mailParameters(mailParameters)
+                .prefixSubject(sendMailInput.getProduct().getTitle())
+                .build());
 
+    }
+
+    @Override
+    public void sendMailRegistrationForContract(SendMailInput sendMailInput, String expirationDate, OnboardingWorkflow onboardingWorkflow) {
+        final String confirmTokenUrl = onboardingWorkflow.getConfirmTokenUrl(templatePlaceholdersConfig);
+        sendMailRegistrationForContractWithResolvedTemplate(sendMailInput, confirmTokenUrl, expirationDate, onboardingWorkflow);
     }
 
     @Override
@@ -161,7 +220,20 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameters.put(templatePlaceholdersConfig.confirmTokenName(), templatePlaceholdersConfig.confirmTokenPlaceholder() + onboardingId);
         mailParameters.put(templatePlaceholdersConfig.expirationDate(), expirationDate);
 
-        sendMailWithFile(List.of(destination), templatePathConfig.registrationAggregatorPath(), mailParameters, productName, null);
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.REGISTRATION_AGGREGATOR)
+                .destinationMails(List.of(destination))
+                .templatePath(templatePathConfig.registrationAggregatorPath())
+                .mailParameters(mailParameters)
+                .prefixSubject(productName)
+                .build());
+    }
+
+    @Override
+    public void sendMailRegistrationForContract(String onboardingId, String destination, String name, String username, String productName, String institutionName, String expirationDate, OnboardingWorkflow onboardingWorkflow) {
+        String templatePath = onboardingWorkflow.getEmailRegistrationPath(templatePathConfig);
+        String confirmTokenUrl = onboardingWorkflow.getConfirmTokenUrl(templatePlaceholdersConfig);
+        sendMailRegistrationForContractWithResolvedTemplate(onboardingId, destination, name, username, productName, institutionName, templatePath, confirmTokenUrl, expirationDate);
     }
 
     @Override
@@ -174,7 +246,14 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
         mailParameter.put(templatePlaceholdersConfig.completeSelfcareName(), templatePlaceholdersConfig.completeSelfcarePlaceholder());
 
-        sendMailWithFile(destinationMails, templatePath, mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.COMPLETED)
+                .destinationMails(destinationMails)
+                .templatePath(templatePath)
+                .mailParameters(mailParameter)
+                .prefixSubject(product.getTitle())
+                .fileMailData(retrieveFileMetadataPagopaLogo())
+                .build());
     }
 
     @Override
@@ -182,7 +261,14 @@ public class NotificationServiceImpl implements NotificationService {
         String templatePath = getTemplateMailPath(product, templatePathConfig.deletePath(), onboarding);
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
-        sendMailWithFile(destinationMails, templatePath, mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.DELETED)
+                .destinationMails(destinationMails)
+                .templatePath(templatePath)
+                .mailParameters(mailParameter)
+                .prefixSubject(product.getTitle())
+                .fileMailData(retrieveFileMetadataPagopaLogo())
+                .build());
 
     }
 
@@ -193,7 +279,14 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
         mailParameter.put(templatePlaceholdersConfig.reasonForReject(), onboarding.getReasonForReject());
         mailParameter.put(templatePlaceholdersConfig.rejectOnboardingUrlPlaceholder(), templatePlaceholdersConfig.rejectOnboardingUrlValue() + product.getId());
-        sendMailWithFile(destinationMails, templatePath, mailParameter, product.getTitle(), retrieveFileMetadataPagopaLogo());
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.REJECTION)
+                .destinationMails(destinationMails)
+                .templatePath(templatePath)
+                .mailParameters(mailParameter)
+                .prefixSubject(product.getTitle())
+                .fileMailData(retrieveFileMetadataPagopaLogo())
+                .build());
     }
 
     @Override
@@ -203,7 +296,14 @@ public class NotificationServiceImpl implements NotificationService {
         mailParameter.put(templatePlaceholdersConfig.institutionDescription(), institutionName);
         mailParameter.put(templatePlaceholdersConfig.completeSelfcareName(), templatePlaceholdersConfig.completeSelfcarePlaceholder());
 
-        sendMailWithFile(destinationMails, templatePathConfig.completePathAggregate(), mailParameter, null, retrieveFileMetadataPagopaLogo());
+        sendMail(NotificationMailRequest.builder()
+                .type(NotificationMailType.COMPLETED_AGGREGATE)
+                .destinationMails(destinationMails)
+                .templatePath(templatePathConfig.completePathAggregate())
+                .mailParameters(mailParameter)
+                .prefixSubject(null)
+                .fileMailData(retrieveFileMetadataPagopaLogo())
+                .build());
     }
 
     private FileMailData retrieveFileMetadataPagopaLogo() {

@@ -12,7 +12,6 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.*;
 import it.pagopa.selfcare.onboarding.utils.DocumentBuilder;
 import it.pagopa.selfcare.onboarding.utils.GenericError;
-import it.pagopa.selfcare.onboarding.utils.MailBuilder;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -59,12 +58,10 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final RegistryProxyService registryProxyService;
     private final OnboardingRepositoryService onboardingRepositoryService;
 
-    private final MailBuilder mailBuilder;
     private final DocumentBuilder documentBuilder;
 
     public OnboardingServiceImpl(
             ProductService productService,
-            MailBuilder mailBuilder,
             NotificationService notificationService,
             DocumentService documentService,
             DocumentBuilder documentBuilder,
@@ -75,7 +72,6 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.productService = productService;
         this.notificationService = notificationService;
         this.documentService = documentService;
-        this.mailBuilder = mailBuilder;
         this.documentBuilder = documentBuilder;
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
@@ -106,7 +102,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                         delegates,
                         product,
                         onboardingWorkflow.getContractTemplatePath(product),
-                        mailBuilder.rejectOnboardingUrl());
+                        notificationService.rejectOnboardingUrl());
 
         documentService.createContractPdf(request);
     }
@@ -210,14 +206,11 @@ public class OnboardingServiceImpl implements OnboardingService {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
         SendMailInput sendMailInput = builderWithProductAndUserRequest(onboarding);
 
-        final String templatePath = mailBuilder.registrationTemplatePath(onboardingWorkflow);
-        final String confirmTokenUrl = mailBuilder.confirmTokenUrl(onboardingWorkflow);
-
         String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
 
         notificationService.sendMailRegistrationForContract(
                 sendMailInput,
-                confirmTokenUrl, expirationDate, onboardingWorkflow);
+                expirationDate, onboardingWorkflow);
     }
 
     public void sendMailRegistrationForContractAggregator(Onboarding onboarding) {
@@ -246,8 +239,8 @@ public class OnboardingServiceImpl implements OnboardingService {
                 "",
                 product.getTitle(),
                 "description",
-                mailBuilder.registrationTemplatePath(onboardingWorkflow),
-                mailBuilder.confirmTokenUrl(onboardingWorkflow), expirationDate);
+                expirationDate,
+                onboardingWorkflow);
     }
 
     public void sendMailRegistrationApprove(Onboarding onboarding) {

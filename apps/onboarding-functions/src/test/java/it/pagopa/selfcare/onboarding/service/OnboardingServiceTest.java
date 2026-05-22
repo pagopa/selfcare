@@ -394,16 +394,14 @@ class OnboardingServiceTest {
         doNothing()
                 .when(notificationService)
                 .sendMailRegistrationForContract(
-                        onboarding.getId(),
-                        onboarding.getInstitution().getDigitalAddress(),
                         sendMailInput,
-                        "default",
-                        "default", "10");
+                        "10",
+                        onboardingWorkflow);
 
         onboardingService.sendMailRegistrationForContract(onboardingWorkflow);
 
         Mockito.verify(notificationService, times(1))
-                .sendMailRegistrationForContract(any(), any(), any(), anyString(), anyString(), anyString());
+                .sendMailRegistrationForContract(any(SendMailInput.class), anyString(), any(OnboardingWorkflow.class));
         verifyNoMoreInteractions(notificationService);
     }
 
@@ -576,8 +574,8 @@ class OnboardingServiceTest {
                         "",
                         product.getTitle(),
                         "description",
-                        "default",
-                        "default", String.valueOf(expirationDate));
+                        String.valueOf(expirationDate),
+                        onboardingWorkflow);
 
         onboardingService.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
 
@@ -589,8 +587,8 @@ class OnboardingServiceTest {
                         "",
                         product.getTitle(),
                         "description",
-                        "contracts/template/mail/onboarding-request/1.0.1.json",
-                        "https://dev.selfcare.pagopa.it/onboarding/confirm?jwt=", "30");
+                        "30",
+                        onboardingWorkflow);
     }
 
     @Test
@@ -889,16 +887,14 @@ class OnboardingServiceTest {
         doNothing()
                 .when(notificationService)
                 .sendMailRegistrationForContract(
-                        onboarding.getId(),
-                        onboarding.getInstitution().getDigitalAddress(),
                         sendMailInput,
-                        "default",
-                        "default", "10");
+                        "10",
+                        onboardingWorkflow);
 
         onboardingService.sendMailRegistrationForContract(onboardingWorkflow);
 
         Mockito.verify(notificationService, times(1))
-                .sendMailRegistrationForContract(any(), any(), any(), anyString(), anyString(), anyString());
+                .sendMailRegistrationForContract(any(SendMailInput.class), anyString(), any(OnboardingWorkflow.class));
         verifyNoMoreInteractions(notificationService);
     }
 
