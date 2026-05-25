@@ -23,11 +23,11 @@ public class IpaUoOpenDataService extends AbstractIpaOpenDataService<IpaUo> {
   @Override
   public List<IpaUo> fetch() {
     log.info("Fetching IPA UOs from open data...");
-    List<IpaUo> uos = parseCsv(restClient.retrieveDataSource(), IpaUo.class, "UOs");
+    List<IpaUo> uos = parseCsv(restClient.retrieveDataSource(), IpaUo.class, "UOs", "ipa-uo");
 
     log.info("Fetching IPA UOs with SFE from open data...");
     List<IpaUo> uosWithSfe =
-        parseCsv(sfeRestClient.retrieveDataSource(), IpaUo.class, "UOs with SFE");
+        parseCsv(sfeRestClient.retrieveDataSource(), IpaUo.class, "UOs with SFE", "ipa-uo-sfe");
 
     // Enrich UOs with codiceFiscaleSfe from the SFE dataset
     Map<String, IpaUo> uoMap =

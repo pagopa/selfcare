@@ -27,6 +27,7 @@
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
     <opencsv.version>5.9</opencsv.version>
+    <azure-storage-blob.version>12.27.1</azure-storage-blob.version>
   </properties>
 
   <dependencyManagement>
@@ -54,6 +55,13 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-rest-client-jackson</artifactId>
+    </dependency>
+
+    <!-- Azure Blob Storage -->
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-blob</artifactId>
+      <version>${azure-storage-blob.version}</version>
     </dependency>
 
     <!-- CSV parsing -->

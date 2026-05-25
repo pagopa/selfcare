@@ -22,6 +22,8 @@ public class IvassDataService {
 
   @Inject @RestClient IvassRestClient ivassRestClient;
 
+  @Inject AzureBlobStorageService storageService;
+
   @ConfigProperty(name = "ivass.registry-types-admitted")
   List<String> registryTypesAdmitted;
 
@@ -38,6 +40,7 @@ public class IvassDataService {
       byte[] zip = ivassRestClient.retrieveDataSource();
       byte[] csv = extractFirstEntryFromZip(zip);
       csv = removeUtf8Bom(csv);
+      storageService.saveDaily(csv, "opendata/ivass");
       List<IvassInsuranceCompany> companies = parseCsv(csv);
       List<IvassInsuranceCompany> filtered = filterCompanies(companies);
       log.info(

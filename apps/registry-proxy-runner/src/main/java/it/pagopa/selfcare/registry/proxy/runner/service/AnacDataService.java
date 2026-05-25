@@ -17,6 +17,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 public class AnacDataService {
 
   @Inject @RestClient AnacRestClient anacRestClient;
+  @Inject AzureBlobStorageService storageService;
 
   /**
    * Fetches ANAC stations from open data and filters out records that have an originId (same logic
@@ -26,6 +27,7 @@ public class AnacDataService {
     log.info("Fetching ANAC stations...");
     try {
       String csv = anacRestClient.retrieveDataSource();
+      storageService.saveDaily(csv.getBytes(java.nio.charset.StandardCharsets.UTF_8), "opendata/anac");
       try (Reader reader =
           new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csv.getBytes())))) {
         CsvToBean<AnacStation> csvToBean =

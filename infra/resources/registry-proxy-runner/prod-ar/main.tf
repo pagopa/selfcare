@@ -40,6 +40,7 @@ locals {
   secrets = {
     "AZURE_SEARCH_API_KEY"          = "azure-search-api-key"
     "APPINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "BLOB_STORAGE_CONN_STRING"      = "web-storage-connection-string"
   }
 }
 

@@ -23,6 +23,7 @@ class IpaOpenDataServiceTest {
   @Mock IpaAOOOpenDataRestClient aooRestClient;
   @Mock IpaUOOpenDataRestClient uoRestClient;
   @Mock IpaUOSfeOpenDataRestClient uoSfeRestClient;
+  @Mock AzureBlobStorageService storageService;
   @InjectMocks IpaInstitutionOpenDataService ipaInstitutionOpenDataService;
   @InjectMocks IpaCategoryOpenDataService ipaCategoryOpenDataService;
   @InjectMocks IpaAOOOpenDataService ipaAooOpenDataService;
@@ -36,6 +37,10 @@ class IpaOpenDataServiceTest {
     ReflectionTestUtils.setField(ipaAooOpenDataService, "restClient", aooRestClient);
     ReflectionTestUtils.setField(ipaUoOpenDataService, "restClient", uoRestClient);
     ReflectionTestUtils.setField(ipaUoOpenDataService, "sfeRestClient", uoSfeRestClient);
+    ReflectionTestUtils.setField(ipaInstitutionOpenDataService, "storageService", storageService);
+    ReflectionTestUtils.setField(ipaCategoryOpenDataService, "storageService", storageService);
+    ReflectionTestUtils.setField(ipaAooOpenDataService, "storageService", storageService);
+    ReflectionTestUtils.setField(ipaUoOpenDataService, "storageService", storageService);
   }
 
   @Test
