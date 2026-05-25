@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import com.azure.core.util.BinaryData;
-import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.identity.ManagedIdentityCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,13 +29,19 @@ public class AzureBlobStorageService {
       @ConfigProperty(name = "blob-storage.account-name", defaultValue = "")
           String accountName,
       @ConfigProperty(name = "blob-storage.container-name", defaultValue = "")
-          String containerName) {
+          String containerName,
+      @ConfigProperty(name = "blob-storage.managed-identity-client-id", defaultValue = "")
+          String managedIdentityClientId) {
     if (!accountName.isBlank() && !containerName.isBlank()) {
       String endpoint = "https://" + accountName + ".blob.core.windows.net";
+      var credentialBuilder = new ManagedIdentityCredentialBuilder();
+      if (!managedIdentityClientId.isBlank()) {
+        credentialBuilder.clientId(managedIdentityClientId);
+      }
       this.containerClient =
           new BlobServiceClientBuilder()
               .endpoint(endpoint)
-              .credential(new DefaultAzureCredentialBuilder().build())
+              .credential(credentialBuilder.build())
               .buildClient()
               .getBlobContainerClient(containerName);
       this.enabled = true;
