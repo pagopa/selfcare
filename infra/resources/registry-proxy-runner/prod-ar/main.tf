@@ -19,6 +19,11 @@ module "local" {
 ###############################################################################
 # Registry Proxy Runner Container App Job
 ###############################################################################
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
 locals {
   image_tag = var.image_tag
 
@@ -40,6 +45,11 @@ locals {
     {
       name  = "AZURE_STORAGE_ACCOUNT_NAME"
       value = local.blob_storage_account_name
+    },
+    {
+      # Required for DefaultAzureCredential to use the correct user-assigned managed identity
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }
   ]
 
