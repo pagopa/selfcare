@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import com.azure.core.util.BinaryData;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -10,7 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
- * Uploads daily open-data CSV snapshots to Azure Blob Storage.
+ * Uploads daily open-data CSV snapshots to Azure Blob Storage using Managed Identity.
  *
  * <p>Blob name pattern: {@code <blobPrefix>/<yyyy-MM-dd>.csv}
  *
@@ -25,14 +26,16 @@ public class AzureBlobStorageService {
   private final boolean enabled;
 
   public AzureBlobStorageService(
-      @ConfigProperty(name = "blob-storage.connection-string", defaultValue = "")
-          String connectionString,
+      @ConfigProperty(name = "blob-storage.account-name", defaultValue = "")
+          String accountName,
       @ConfigProperty(name = "blob-storage.container-name", defaultValue = "")
           String containerName) {
-    if (!connectionString.isBlank() && !containerName.isBlank()) {
+    if (!accountName.isBlank() && !containerName.isBlank()) {
+      String endpoint = "https://" + accountName + ".blob.core.windows.net";
       this.containerClient =
           new BlobServiceClientBuilder()
-              .connectionString(connectionString)
+              .endpoint(endpoint)
+              .credential(new DefaultAzureCredentialBuilder().build())
               .buildClient()
               .getBlobContainerClient(containerName);
       this.enabled = true;
@@ -40,7 +43,7 @@ public class AzureBlobStorageService {
       this.containerClient = null;
       this.enabled = false;
       log.warn(
-          "Azure Blob Storage not configured (blob-storage.connection-string / blob-storage.container-name missing)"
+          "Azure Blob Storage not configured (blob-storage.account-name / blob-storage.container-name missing)"
               + " — open-data daily CSV snapshots will not be saved");
     }
   }

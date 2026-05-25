@@ -34,14 +34,28 @@ locals {
     {
       name  = "AZURE_SEARCH_BASE_URL"
       value = "https://selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-srch.search.windows.net"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = var.blob_storage_account_name
     }
   ]
 
   secrets = {
     "AZURE_SEARCH_API_KEY"          = "azure-search-api-key"
     "APPINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "BLOB_STORAGE_CONN_STRING"      = "web-storage-connection-string"
   }
+}
+
+data "azurerm_storage_account" "web_storage" {
+  name                = var.blob_storage_account_name
+  resource_group_name = var.blob_storage_account_rg
+}
+
+resource "azurerm_role_assignment" "web_storage_blob_contributor" {
+  scope                = data.azurerm_storage_account.web_storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = module.container_app.cae_identity_principal_id
 }
 
 module "container_app" {
