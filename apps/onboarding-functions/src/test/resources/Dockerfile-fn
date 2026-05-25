@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y libicu70
 
 WORKDIR /usr/src/app
 
-RUN npm i -g azure-functions-core-tools@4.10.0 --unsafe-perm true
+RUN npm i -g azure-functions-core-tools@4.0.6610 --unsafe-perm true
 ENV AzureWebJobsScriptRoot=/usr/src/app AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
 WORKDIR /app
