@@ -45,7 +45,6 @@
     "DAPR_GRPC_PORT": "50001",
     "DAPR_HTTP_PORT": "3500",
     "AZURE_SEARCH_URL": "https://selc-d-weu-ar-srch.search.windows.net/",
-    "AZURE_SEARCH_INSTITUTION_INDEX": "institution-index-ar",
     "INFO_CAMERE_AUTHENTICATION_ENDPOINT": "/ic/ce/wspa/wspa/rest/authentication",
     "INFO_CAMERE_INSTITUTIONS_BY_LEGAL_ENDPOINT": "/ic/ce/wspa/wspa/rest/listaLegaleRappresentante/{taxId}",
     "INFO_CAMERE_URL": "https://icapiscl.infocamere.it",

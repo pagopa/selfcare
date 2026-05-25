@@ -14,7 +14,7 @@ resource "restapi_object" "search_index" {
       {
         "name" : "autocomplete_analyzer",
         "@odata.type" : "#Microsoft.Azure.Search.CustomAnalyzer",
-        "charFilters": [
+        "charFilters" : [
           "remove_dots"
         ],
         "tokenizer" : "autocomplete_tokenizer",
@@ -36,11 +36,11 @@ resource "restapi_object" "search_index" {
         "tokenChars" : ["letter", "digit"]
       }
     ],
-    "charFilters": [
+    "charFilters" : [
       {
-        "name": "remove_dots",
-        "@odata.type": "#Microsoft.Azure.Search.MappingCharFilter",
-        "mappings": [
+        "name" : "remove_dots",
+        "@odata.type" : "#Microsoft.Azure.Search.MappingCharFilter",
+        "mappings" : [
           ".=>"
         ]
       }
