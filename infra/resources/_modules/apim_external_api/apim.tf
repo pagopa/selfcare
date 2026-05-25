@@ -919,13 +919,13 @@ module "apim_selfcare_support_service_v1" {
     {
       operation_id = "getDelegateInstitutionsUsingGET"
       xml_content = templatefile("${path.module}/api/base_ms_url_policy.xml", {
-        MS_BACKEND_URL         = "https://selc-${var.env_short}-institution-ms-ca.${var.ca_suffix_dns_private_name}/"
+        MS_BACKEND_URL = "https://selc-${var.env_short}-institution-ms-ca.${var.ca_suffix_dns_private_name}/"
       })
     },
     {
       operation_id = "getDelegatorInstitutionsUsingGET"
       xml_content = templatefile("${path.module}/api/base_ms_url_policy.xml", {
-        MS_BACKEND_URL         = "https://selc-${var.env_short}-institution-ms-ca.${var.ca_suffix_dns_private_name}/"
+        MS_BACKEND_URL = "https://selc-${var.env_short}-institution-ms-ca.${var.ca_suffix_dns_private_name}/"
       })
     }
   ]
