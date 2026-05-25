@@ -22,6 +22,8 @@ module "local" {
 locals {
   image_tag = var.image_tag
 
+  blob_storage_account_name = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+
   app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
@@ -37,7 +39,7 @@ locals {
     },
     {
       name  = "AZURE_STORAGE_ACCOUNT_NAME"
-      value = var.blob_storage_account_name
+      value = local.blob_storage_account_name
     }
   ]
 
@@ -48,8 +50,8 @@ locals {
 }
 
 data "azurerm_storage_account" "web_storage" {
-  name                = var.blob_storage_account_name
-  resource_group_name = var.blob_storage_account_rg
+  name                = local.blob_storage_account_name
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
 }
 
 resource "azurerm_role_assignment" "web_storage_blob_contributor" {
@@ -64,7 +66,7 @@ module "container_app" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-registry-proxy-runner"
+  container_app_name             = "selc-${module.local.config.env_short}-reg-proxy-runner"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-registry-proxy-runner-ms"
   image_tag                      = var.image_tag
