@@ -33,12 +33,21 @@ public class RegistryProxyMain implements QuarkusApplication {
     log.info("Starting registry proxy runner");
     boolean success = true;
 
-    success &= runTask("ANAC stations", () -> stationIndexWriterService.index(anacDataService.fetch()));
-    success &= runTask("IPA institutions", () -> institutionIndexWriterService.index(ipaInstitutionOpenDataService.fetch()));
-    success &= runTask("IPA AOO", () -> ipaAOOIndexWriterService.index(ipaAooOpenDataService.fetch()));
-    success &= runTask("IPA categories", () -> categoryIndexWriterService.index(ipaCategoryOpenDataService.fetch()));
+    success &=
+        runTask(
+            "IPA institutions",
+            () -> institutionIndexWriterService.index(ipaInstitutionOpenDataService.fetch()));
+    success &=
+        runTask("IPA AOO", () -> ipaAOOIndexWriterService.index(ipaAooOpenDataService.fetch()));
+    success &=
+        runTask(
+            "IPA categories",
+            () -> categoryIndexWriterService.index(ipaCategoryOpenDataService.fetch()));
     success &= runTask("IPA UO", () -> ipaUOIndexWriterService.index(ipaUoOpenDataService.fetch()));
-    success &= runTask("IVASS insurance companies", () -> insuranceCompanyIndexWriterService.index(ivassDataService.fetch()));
+    // success &= runTask("ANAC stations", () ->
+    // stationIndexWriterService.index(anacDataService.fetch()));
+    // success &= runTask("IVASS insurance companies", () ->
+    // insuranceCompanyIndexWriterService.index(ivassDataService.fetch()));
 
     if (success) {
       log.info("All index updates completed successfully");
