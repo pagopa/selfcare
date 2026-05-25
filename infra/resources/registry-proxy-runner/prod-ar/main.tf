@@ -49,17 +49,6 @@ locals {
   }
 }
 
-data "azurerm_storage_account" "web_storage" {
-  name                = local.blob_storage_account_name
-  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
-}
-
-resource "azurerm_role_assignment" "web_storage_blob_contributor" {
-  scope                = data.azurerm_storage_account.web_storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = module.container_app.cae_identity_principal_id
-}
-
 module "container_app" {
   source = "../../_modules/container_app_job"
 
