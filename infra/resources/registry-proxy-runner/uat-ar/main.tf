@@ -59,7 +59,8 @@ module "container_app" {
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
 
-  manual_trigger_config = [{
+  schedule_trigger_config = [{
+    cron_expression          = "0 */6 * * *"
     parallelism              = 1
     replica_completion_count = 1
   }]
