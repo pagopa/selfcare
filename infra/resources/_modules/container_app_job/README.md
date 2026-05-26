@@ -62,6 +62,7 @@ No modules.
 | ---- | ----------- |
 | <a name="output_cae_identity_client_id"></a> [cae\_identity\_client\_id](#output\_cae\_identity\_client\_id) | n/a |
 | <a name="output_cae_identity_id"></a> [cae\_identity\_id](#output\_cae\_identity\_id) | n/a |
+| <a name="output_cae_identity_principal_id"></a> [cae\_identity\_principal\_id](#output\_cae\_identity\_principal\_id) | n/a |
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
 | <a name="output_container_app_job_name"></a> [container\_app\_job\_name](#output\_container\_app\_job\_name) | n/a |
 <!-- END_TF_DOCS -->

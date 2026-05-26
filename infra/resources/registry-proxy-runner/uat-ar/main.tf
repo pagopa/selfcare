@@ -19,8 +19,15 @@ module "local" {
 ###############################################################################
 # Registry Proxy Runner Container App Job
 ###############################################################################
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
 locals {
   image_tag = var.image_tag
+
+  blob_storage_account_name = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
 
   app_settings = [
     {
@@ -34,6 +41,15 @@ locals {
     {
       name  = "AZURE_SEARCH_BASE_URL"
       value = "https://selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-srch.search.windows.net"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = local.blob_storage_account_name
+    },
+    {
+      # Required for DefaultAzureCredential to use the correct user-assigned managed identity
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }
   ]
 
@@ -49,7 +65,7 @@ module "container_app" {
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-registry-proxy-runner"
+  container_app_name             = "selc-${module.local.config.env_short}-reg-proxy-runner"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-registry-proxy-runner-ms"
   image_tag                      = var.image_tag

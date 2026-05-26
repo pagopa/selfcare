@@ -17,6 +17,6 @@ public class IpaCategoryOpenDataService extends AbstractIpaOpenDataService<IpaCa
   @Override
   public List<IpaCategory> fetch() {
     log.info("Fetching IPA categories from open data...");
-    return parseCsv(restClient.retrieveDataSource(), IpaCategory.class, "categories");
+    return parseCsv(restClient.retrieveDataSource(), IpaCategory.class, "categories", "ipa-category");
   }
 }
