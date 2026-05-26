@@ -25,7 +25,7 @@ env:
 jobs:
   publish:
     name: Publish contracts template ${{ inputs.environment }}
-    runs-on: ["${{ inputs.agent }}", "${{ inputs.environment }}"]
+    runs-on: [ "${{ inputs.agent }}", "${{ inputs.environment }}" ]
     environment: ${{ inputs.environment }}-ci
     permissions:
       id-token: write
@@ -45,23 +45,15 @@ jobs:
 
       - name: Upload to blob storage
         id: storage_upload
-        # uses: azure/CLI@b0e31ae20280d899279f14c36e877b4c6916e2d3
         run: |
-            echo "Inizio upload..."
-
-            upload_status=$(az storage blob upload-batch \
-            --connection-string "${{ secrets.STORAGE_CONNECTION_STRING_DOCUMENTS }}" \
-            --source './src/core/contracts_template/contracts/' \
+          echo "Inizio upload..."
+          az storage blob upload-batch \
+            --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
+            --auth-mode login \
+            --source './infra/core/contracts_template/contracts/' \
             --destination "${{ env.STORAGE_CONTAINER }}/contracts" \
-            --overwrite)
-
-            echo "${upload_status}"
-            if [[ $? -eq 0 ]]; then
-              echo "Upload success."
-            else
-              echo "Error during contracts upload batch."
-              exit 1  # Esce dallo step con codice di errore
-            fi
+            --overwrite|| { echo "Error uploading aggregates."; exit 1; }
+          echo "Upload success."
 
       - name: Azure Logout
         id: az_logout
