@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class AnacDataServiceTest {
 
   @Mock AnacRestClient anacRestClient;
+  @Mock AzureBlobStorageService storageService;
 
   @InjectMocks AnacDataService anacDataService;
 

@@ -23,6 +23,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 class IvassDataServiceTest {
 
   @Mock IvassRestClient ivassRestClient;
+  @Mock AzureBlobStorageService storageService;
 
   @InjectMocks IvassDataService ivassDataService;
 
