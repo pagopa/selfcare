@@ -150,7 +150,7 @@ public class InstitutionFunctionsTest {
     function.deleteInstitutionAndUserOnboarding(orchestrationContext, executionContext);
 
     // then
-    Mockito.verify(orchestrationContext, times(3)).callActivity(any(), any(), any(), any());
+    Mockito.verify(orchestrationContext, times(4)).callActivity(any(), any(), any(), any());
   }
 
   @Test

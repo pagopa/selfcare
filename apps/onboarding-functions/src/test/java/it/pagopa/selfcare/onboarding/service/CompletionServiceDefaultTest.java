@@ -785,12 +785,12 @@ public class CompletionServiceDefaultTest {
                 .thenReturn(product);
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, user.getId()))
                 .thenReturn(userResource);
-        doNothing().when(notificationService).sendCompletedEmail(any(), any(), any(), any(), any());
+        doNothing().when(notificationService).sendCompletedEmail(any(), any(), any());
 
         completionServiceDefault.sendCompletedEmail(onboardingWorkflow);
 
         Mockito.verify(notificationService, times(1))
-                .sendCompletedEmail(any(), any(), any(), any(), any());
+                .sendCompletedEmail(any(), any(), any());
     }
 
     @Test
@@ -803,7 +803,7 @@ public class CompletionServiceDefaultTest {
         completionServiceDefault.sendCompletedEmail(onboardingWorkflow);
 
         Mockito.verify(notificationService, times(0))
-                .sendCompletedEmail(any(), any(), any(), any(), any());
+                .sendCompletedEmail(any(), any(), any());
         Mockito.verify(productService, times(0))
                 .getProductIsValid(any());
     }

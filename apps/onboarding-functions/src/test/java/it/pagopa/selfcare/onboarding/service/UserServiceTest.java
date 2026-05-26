@@ -1,22 +1,27 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import it.pagopa.selfcare.onboarding.entity.Institution;
-import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.User;
-import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import jakarta.inject.Inject;
-import java.util.List;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.core_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.api.InstitutionApi;
+import org.openapi.quarkus.user_json.api.UserApi;
 import org.openapi.quarkus.user_json.model.DeletedUserCountResponse;
+import java.util.List;
+
+import org.openapi.quarkus.user_json.model.SendMailDto;
+import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 @QuarkusTest
 class UserServiceTest {
@@ -26,76 +31,11 @@ class UserServiceTest {
 
   @RestClient @InjectMock
   InstitutionApi institutionApi;
-
-  @InjectMock
-  OnboardingRepository onboardingRepository;
+  @RestClient @InjectMock
+  UserApi userApi;
 
   private final String productId = "productId";
   private final String institutionId = "institutionId";
-
-  @Test
-  void findByInstitutionAndProduct() {
-    // given
-    Onboarding onboarding = new Onboarding();
-    Institution institution = new Institution();
-    institution.setId(institutionId);
-    onboarding.setInstitution(institution);
-    onboarding.setProductId(productId);
-    onboarding.setUsers(List.of());
-    // when
-    when(onboardingRepository.findByOnboardingUsers(institutionId, productId))
-        .thenReturn(List.of(onboarding));
-    // then
-    List<String> onboardings = userService.findByInstitutionAndProduct(institutionId, productId);
-    assertNotNull(onboardings);
-    assertTrue(onboardings.isEmpty());
-
-    Mockito.verify(onboardingRepository, times(1))
-            .findByOnboardingUsers(institutionId, productId);
-
-  }
-
-  @Test
-  void findByInstitutionAndProduct_NotEmptyList() {
-    // given
-    Onboarding onboarding = new Onboarding();
-    Institution institution = new Institution();
-    institution.setId(institutionId);
-    onboarding.setInstitution(institution);
-    onboarding.setProductId(productId);
-    User user = new User();
-    String userId = "userId";
-    user.setId(userId);
-    onboarding.setUsers(List.of(user));
-    // when
-    when(onboardingRepository.findByOnboardingUsers(institutionId, productId))
-            .thenReturn(List.of(onboarding));
-    // then
-    List<String> onboardings = userService.findByInstitutionAndProduct(institutionId, productId);
-    assertNotNull(onboardings);
-    assertFalse(onboardings.isEmpty());
-    assertEquals(1, onboardings.size());
-    assertEquals(userId, onboardings.get(0));
-
-    Mockito.verify(onboardingRepository, times(1))
-            .findByOnboardingUsers(institutionId, productId);
-
-  }
-
-  @Test
-  void findByInstitutionAndProduct_EmptyList() {
-    // when
-    when(onboardingRepository.findByOnboardingUsers(institutionId, productId))
-            .thenReturn(List.of());
-    // then
-    List<String> onboardings = userService.findByInstitutionAndProduct(institutionId, productId);
-    assertNotNull(onboardings);
-    assertTrue(onboardings.isEmpty());
-
-    Mockito.verify(onboardingRepository, times(1))
-            .findByOnboardingUsers(institutionId, productId);
-
-  }
 
   @Test
   void deleteByIdAndInstitutionIdAndProductId() {
@@ -138,6 +78,147 @@ class UserServiceTest {
     Mockito.verify(institutionApi, times(1)).deleteUserInstitutionProductUsers(any(), any());
 
 
+  }
+
+  @Test
+  void findEmailByInstitutionAndProducts_whenApiReturnsNull_returnsEmpty() {
+    List<String> products = List.of(productId);
+    when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
+        .thenReturn(null);
+
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+    verify(institutionApi, times(1))
+        .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void findEmailByInstitutionAndProducts_whenApiReturnsEmpty_returnsEmpty() {
+    List<String> products = List.of(productId);
+    when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
+        .thenReturn(List.of());
+
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+    verify(institutionApi, times(1))
+        .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void findEmailByInstitutionAndProducts_whenEmailsBlankOrNull_returnsEmpty() {
+    List<String> products = List.of(productId);
+    UserInstitutionResponse blankEmail = createUserInstitutionResponse(" ", " ");
+    UserInstitutionResponse nullEmail = createUserInstitutionResponse(null, null);
+    when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
+        .thenReturn(List.of(blankEmail, nullEmail));
+
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
+
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+    verify(institutionApi, times(1))
+        .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void findEmailByInstitutionAndProducts_filtersBlanks() {
+    List<String> products = List.of(productId);
+    UserInstitutionResponse first = createUserInstitutionResponse("email-uuid-1", "user-1");
+    UserInstitutionResponse second = createUserInstitutionResponse("email-uuid-2",  "user-3");
+    UserInstitutionResponse blank = createUserInstitutionResponse("  ", " ");
+    when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
+        .thenReturn(List.of(first, second, blank));
+
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
+
+    assertEquals(List.of("email-uuid-1", "email-uuid-2"), result.stream().map(UserMail::getUserMailUuid).toList());
+    assertEquals(List.of("user-1", "user-3"), result.stream().map(UserMail::getUserId).toList());
+    verify(institutionApi, times(1))
+        .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void findEmailByInstitutionAndProducts_returnsEmails() {
+    List<String> products = List.of(productId);
+    UserInstitutionResponse first = createUserInstitutionResponse("email-uuid-1",  "user-1");
+    UserInstitutionResponse second = createUserInstitutionResponse("email-uuid-2",   "user-2");
+    when(institutionApi.retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull()))
+        .thenReturn(List.of(first, second));
+
+    List<UserMail> result = userService.findEmailByInstitutionAndProducts(institutionId, products);
+
+    assertEquals(List.of("email-uuid-1", "email-uuid-2"), result.stream().map(UserMail::getUserMailUuid).toList());
+    assertEquals(List.of("user-1", "user-2"), result.stream().map(UserMail::getUserId).toList());
+    verify(institutionApi, times(1))
+        .retrieveUserInstitutions(eq(institutionId), isNull(), eq(products), isNull(), isNull(), isNull());
+  }
+
+  @Test
+  void getActiveManagersByInstitutionAndProduct_shouldCallApiWithExpectedFilters() {
+    // given
+    List<UserInstitutionResponse> expected = List.of(new UserInstitutionResponse());
+    when(
+      institutionApi.retrieveUserInstitutions(
+        eq("institution-id"),
+        isNull(),
+        eq(List.of("product-id")),
+        eq(List.of(String.valueOf(PartyRole.MANAGER))),
+        eq(List.of(String.valueOf(OnboardedProductResponse.StatusEnum.ACTIVE))),
+        isNull()))
+      .thenReturn(expected);
+
+    // when
+    List<UserInstitutionResponse> actual = userService.getActiveManagersByInstitutionAndProduct(
+      "institution-id",
+      "product-id",
+      OnboardedProductResponse.StatusEnum.ACTIVE);
+
+    // then
+    assertEquals(expected, actual);
+    verify(institutionApi)
+      .retrieveUserInstitutions(
+        eq("institution-id"),
+        isNull(),
+        eq(List.of("product-id")),
+        eq(List.of(String.valueOf(PartyRole.MANAGER))),
+        eq(List.of(String.valueOf(OnboardedProductResponse.StatusEnum.ACTIVE))),
+        isNull());
+  }
+
+  @Test
+  void sendMailRequest_shouldDelegateToApi() {
+    // given
+    SendMailDto mailDto = new SendMailDto();
+
+    // when
+    userService.sendMailRequest("user-id", mailDto);
+
+    // then
+    verify(userApi).sendMailRequest("user-id", mailDto);
+  }
+
+  @Test
+  void sendMailRequest_shouldNotThrowWhenApiFails() {
+    // given
+    SendMailDto mailDto = new SendMailDto();
+    doThrow(new RuntimeException("boom")).when(userApi).sendMailRequest("user-id", mailDto);
+
+    // when
+    userService.sendMailRequest("user-id", mailDto);
+
+    // then
+    verify(userApi).sendMailRequest("user-id", mailDto);
+  }
+
+  private UserInstitutionResponse createUserInstitutionResponse(String emailUuid, String userId) {
+    UserInstitutionResponse response = new UserInstitutionResponse();
+    response.setUserMailUuid(emailUuid);
+    response.setUserId(userId);
+    return response;
   }
 
 }

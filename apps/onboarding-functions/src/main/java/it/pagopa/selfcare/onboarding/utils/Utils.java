@@ -10,6 +10,7 @@ import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
 import it.pagopa.selfcare.onboarding.dto.AggregatesBatchOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 
@@ -151,6 +153,22 @@ public class Utils {
       throw new FunctionOrchestratedException(e);
     }
     return batchInputString;
+  }
+
+  public static String getEmailListString(ObjectMapper objectMapper, List<UserMail> emails) {
+    try {
+      return objectMapper.writeValueAsString(emails);
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static List<UserMail> readEmailList(ObjectMapper objectMapper, String emailsString) {
+    try {
+      return objectMapper.readValue(emailsString, new TypeReference<>() {});
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
   }
 
   public static AggregatesBatchOrchestratorInput readAggregatesBatchInput(

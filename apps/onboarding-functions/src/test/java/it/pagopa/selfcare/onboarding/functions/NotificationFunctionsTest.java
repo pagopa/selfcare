@@ -19,6 +19,8 @@ import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.service.NotificationEventResenderService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.service.TelemetryService;
+import it.pagopa.selfcare.onboarding.service.CompletionService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -53,6 +55,12 @@ public class NotificationFunctionsTest {
 
     @InjectMock
     NotificationEventResenderService notificationEventResenderService;
+
+    @InjectMock
+    TelemetryService telemetryService;
+
+    @InjectMock
+    CompletionService completionService;
 
 
     final String onboardinString = "{\"onboardingId\":\"onboardingId\"}";
@@ -379,5 +387,15 @@ public class NotificationFunctionsTest {
 
         Mockito.verifyNoInteractions(notificationEventResenderService);
     }
-}
 
+    @Test
+    void sendMailCompletion_shouldTrackTelemetryAndSendDeletedEmail() {
+        ExecutionContext context = mock(ExecutionContext.class);
+        String onboardingId = "onboardingId";
+
+        function.sendMailCompletion(onboardingId, context);
+
+        verify(telemetryService, times(1)).trackFunction(any(), any(), any(), any());
+        verify(completionService, times(1)).sendDeletedEmail(onboardingId);
+    }
+}

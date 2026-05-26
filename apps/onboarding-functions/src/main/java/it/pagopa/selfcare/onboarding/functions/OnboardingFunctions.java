@@ -15,7 +15,10 @@ import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.AggregateBatchConfig;
 import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
@@ -27,8 +30,10 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
+import it.pagopa.selfcare.product.entity.ManagingInstitution;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -57,20 +62,28 @@ public class OnboardingFunctions {
       "Created new Onboarding orchestration with instance ID = ";
   private static final String CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG =
       "Created new Build Attachments orchestration with instance ID = ";
+  public static final String PRODUCT_ID = "productId";
+  public static final String ONBOARDING_ID = "onboardingId";
+  public static final String MANAGING_INSTITUTION_ID = "managingInstitutionId";
+  public static final String MANAGING_INSTITUTION_DESCRIPTION = "managingInstitutionDescription";
+  public static final String USER_MAIL_UUID = "userMailUuid";
 
-  private final OnboardingService service;
+  private final OnboardingService onboardingService;
   private final CompletionService completionService;
   private final ContractService contractService;
-  private final ObjectMapper objectMapper;
-  private final TaskOptions optionsRetry;
-  private final OnboardingMapper onboardingMapper;
+  private final DocumentService documentService;
+  private final UserService userService;
   private final TelemetryService telemetryService;
   private final ProductService productService;
+
+  private final ObjectMapper objectMapper;
+  private final TaskOptions optionsRetry;
+
+  private final OnboardingMapper onboardingMapper;
   private final AggregateBatchConfig aggregateBatchConfig;
-  private final DocumentService documentService;
 
   public OnboardingFunctions(
-      OnboardingService service,
+      OnboardingService onboardingService,
       ObjectMapper objectMapper,
       RetryPolicyConfig retryPolicyConfig,
       CompletionService completionService,
@@ -79,8 +92,9 @@ public class OnboardingFunctions {
       ProductService productService,
       AggregateBatchConfig aggregateBatchConfig,
       DocumentService documentService,
-      TelemetryService telemetryService) {
-    this.service = service;
+      TelemetryService telemetryService,
+      UserService userService) {
+    this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
     this.contractService = contractService;
@@ -89,6 +103,7 @@ public class OnboardingFunctions {
     this.aggregateBatchConfig = aggregateBatchConfig;
     this.documentService = documentService;
     this.telemetryService = telemetryService;
+    this.userService = userService;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -113,10 +128,10 @@ public class OnboardingFunctions {
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
 
-    final String onboardingId = request.getQueryParameters().get("onboardingId");
+    final String onboardingId = request.getQueryParameters().get(ONBOARDING_ID);
     final String timeoutString = request.getQueryParameters().get("timeout");
 
-    Map<String, String> properties = Map.of("onboardingId", onboardingId);
+    Map<String, String> properties = Map.of(ONBOARDING_ID, onboardingId);
 
     telemetryService.trackFunction(
         START_ONBOARDING_ORCHESTRATION,
@@ -180,7 +195,7 @@ public class OnboardingFunctions {
           functionContext.getFunctionName(),
           "Error checking delegation, proceeding as if it exist: " + e.getMessage(),
           SeverityLevel.Warning,
-          Map.of("onboardingId", onboardingId == null ? "unknown" : onboardingId));
+          Map.of(ONBOARDING_ID, onboardingId == null ? "unknown" : onboardingId));
       existsDelegation = true;
     }
     try {
@@ -240,7 +255,7 @@ public class OnboardingFunctions {
               String.format(
                   "Processing aggregate batch [%d-%d] of %d total for onboarding %s",
                   logCurrentIndex, logEndIndex - 1, allInputs.size(), batchInput.getOnboardingId()),
-          Map.of("onboardingId", batchInput.getOnboardingId()));
+          Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
 
       // Process batch in parallel (controlled)
       List<Task<String>> batchTasks = new ArrayList<>();
@@ -260,7 +275,7 @@ public class OnboardingFunctions {
               String.format(
                   "Single aggregate orchestration failed during batch processing for onboarding %s, input [%s]: %s",
                   batchInput.getOnboardingId(), failedInput, e.getMessage()),
-              Map.of("onboardingId", batchInput.getOnboardingId()));
+              Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
         }
       }
 
@@ -281,7 +296,7 @@ public class OnboardingFunctions {
       ctx.continueAsNew(nextInput);
     } else {
       log(ctx, functionContext, SeverityLevel.Information,() -> String.format(
-          "Completed all aggregate batches for onboarding %s", batchInput.getOnboardingId()), Map.of("onboardingId", batchInput.getOnboardingId()));
+          "Completed all aggregate batches for onboarding %s", batchInput.getOnboardingId()), Map.of(ONBOARDING_ID, batchInput.getOnboardingId()));
     }
   }
 
@@ -301,11 +316,11 @@ public class OnboardingFunctions {
         ONBOARDINGS,
         "OnboardingsOrchestrator trigger processed a request for onboardingId: " + onboardingId,
         SeverityLevel.Information,
-        Map.of("onboardingId", onboardingId));
+        Map.of(ONBOARDING_ID, onboardingId));
 
     try {
       onboarding =
-          service
+          onboardingService
               .getOnboarding(onboardingId)
               .orElseThrow(
                   () ->
@@ -350,7 +365,7 @@ public class OnboardingFunctions {
 
       Optional<OnboardingStatus> optNextStatus = workflowExecutor.execute(ctx, onboarding);
       optNextStatus.ifPresent(
-          onboardingStatus -> service.updateOnboardingStatus(onboardingId, onboardingStatus));
+          onboardingStatus -> onboardingService.updateOnboardingStatus(onboardingId, onboardingStatus));
     } catch (TaskFailedException | ResourceNotFoundException ex) {
       handleOrchestratorException(ctx, functionContext, onboardingId, ex);
       throw ex;
@@ -370,7 +385,7 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of("onboardingWorkflow", onboardingWorkflowString));
-    service.createContract(readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
+    onboardingService.createContract(readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
   }
 
   /** This HTTP-triggered function invokes an orchestration to build attachments and save tokens */
@@ -455,7 +470,7 @@ public class OnboardingFunctions {
         functionContext,
         SeverityLevel.Information,
         "BuildAttachmentAndSaveToken orchestration completed",
-        Map.of("onboardingId", onboarding.getId(), "productId", onboarding.getProductId()));
+        Map.of(ONBOARDING_ID, onboarding.getId(), PRODUCT_ID, onboarding.getProductId()));
   }
 
   private void log(
@@ -490,8 +505,8 @@ public class OnboardingFunctions {
         fCtx,
         SeverityLevel.Warning,
         "Error during workflow execution: " + ex.getMessage(),
-        Map.of("onboardingId", onboardingId));
-    service.updateOnboardingStatusAndInstanceId(onboardingId, OnboardingStatus.FAILED, ctx.getInstanceId());
+        Map.of(ONBOARDING_ID, onboardingId));
+    onboardingService.updateOnboardingStatusAndInstanceId(onboardingId, OnboardingStatus.FAILED, ctx.getInstanceId());
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -503,8 +518,8 @@ public class OnboardingFunctions {
 
     Map<String, String> properties =
         Map.of(
-            "onboardingId", onboardingAttachment.getOnboarding().getId(),
-            "productId", onboardingAttachment.getOnboarding().getProductId());
+            ONBOARDING_ID, onboardingAttachment.getOnboarding().getId(),
+            PRODUCT_ID, onboardingAttachment.getOnboarding().getProductId());
     telemetryService.trackFunction(
         BUILD_ATTACHMENT_ACTIVITY_NAME,
         String.format(
@@ -513,7 +528,7 @@ public class OnboardingFunctions {
             onboardingAttachmentString),
         SeverityLevel.Information,
         properties);
-    service.createAttachment(onboardingAttachment);
+    onboardingService.createAttachment(onboardingAttachment);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -525,8 +540,8 @@ public class OnboardingFunctions {
         readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString);
     Map<String, String> properties =
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId());
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId());
     telemetryService.trackFunction(
         SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME,
         String.format(
@@ -535,7 +550,7 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         properties);
-    service.saveTokenWithContract(
+    onboardingService.saveTokenWithContract(
         readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
   }
 
@@ -547,8 +562,8 @@ public class OnboardingFunctions {
     OnboardingAttachment onboardingAttachment = readOnboardingAttachmentValue(objectMapper, onboardingAttachmentString);
     Map<String, String> properties =
         Map.of(
-            "onboardingId", onboardingAttachment.getOnboarding().getId(),
-            "productId", onboardingAttachment.getOnboarding().getProductId());
+            ONBOARDING_ID, onboardingAttachment.getOnboarding().getId(),
+            PRODUCT_ID, onboardingAttachment.getOnboarding().getProductId());
     telemetryService.trackFunction(
         SAVE_TOKEN_WITH_ATTACHMENT_ACTIVITY_NAME,
         String.format(
@@ -557,7 +572,7 @@ public class OnboardingFunctions {
             onboardingAttachmentString),
         SeverityLevel.Information,
         properties);
-    service.saveTokenWithAttachment(onboardingAttachment);
+    onboardingService.saveTokenWithAttachment(onboardingAttachment);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -574,9 +589,9 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
-    service.sendMailRegistrationForContract(onboardingWorkflow);
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
+    onboardingService.sendMailRegistrationForContract(onboardingWorkflow);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_CONTRACT_WHEN_APPROVE_ACTIVITY)
@@ -592,9 +607,9 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
-    service.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
+    onboardingService.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_REQUEST_ACTIVITY)
@@ -610,9 +625,9 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.sendMailRegistration(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.sendMailRegistration(onboarding);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -627,9 +642,28 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, SEND_MAIL_REGISTRATION_FOR_USER, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.sendMailRegistrationForUser(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.sendMailRegistrationForUser(onboarding);
+  }
+
+  @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
+  public void sendMailNotificationManagerInstitution(
+          @DurableActivityTrigger(name = "managingInstitutionSendEmail") ManagingInstitutionSendEmail managingInstitutionSendEmail,
+          final ExecutionContext context) {
+    telemetryService.trackFunction(
+            SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION,
+                    managingInstitutionSendEmail),
+            SeverityLevel.Information,
+            Map.of(
+                    PRODUCT_ID, managingInstitutionSendEmail.getProductId(),
+                    MANAGING_INSTITUTION_ID, managingInstitutionSendEmail.getManagingInstitutionId(),
+                    MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getManagingInstitutionDescription(),
+                    USER_MAIL_UUID, managingInstitutionSendEmail.getUserMailUuid()));
+    onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
@@ -645,9 +679,9 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.sendMailRegistrationForUserRequester(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.sendMailRegistrationForUserRequester(onboarding);
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -661,9 +695,9 @@ public class OnboardingFunctions {
         String.format(FORMAT_LOGGER_ONBOARDING_STRING, SAVE_VISURA_FOR_MERCHANT, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.saveVisuraForMerchant(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.saveVisuraForMerchant(onboarding);
   }
 
 
@@ -680,9 +714,9 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.sendMailRegistrationApprove(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.sendMailRegistrationApprove(onboarding);
   }
 
   @FunctionName(SEND_MAIL_ONBOARDING_APPROVE_ACTIVITY)
@@ -698,9 +732,9 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.sendMailOnboardingApprove(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.sendMailOnboardingApprove(onboarding);
   }
 
   @FunctionName(CREATE_INSTITUTION_ACTIVITY)
@@ -714,8 +748,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, CREATE_INSTITUTION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.createInstitutionAndPersistInstitutionId(onboarding);
   }
 
@@ -730,8 +764,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, STORE_ONBOARDING_ACTIVATEDAT, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.persistActivatedAt(readOnboardingValue(objectMapper, onboardingString));
   }
 
@@ -746,8 +780,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, REJECT_OUTDATED_ONBOARDINGS, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.rejectOutdatedOnboardings(onboarding);
   }
 
@@ -762,8 +796,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, CREATE_ONBOARDING_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.persistOnboarding(onboarding);
   }
 
@@ -780,8 +814,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
     completionService.sendCompletedEmail(onboardingWorkflow);
   }
 
@@ -796,8 +830,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, SEND_MAIL_REJECTION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.sendMailRejection(context, onboarding);
   }
 
@@ -811,8 +845,8 @@ public class OnboardingFunctions {
         String.format(FORMAT_LOGGER_ONBOARDING_STRING, CREATE_USERS_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     completionService.persistUsers(onboarding);
   }
 
@@ -832,8 +866,8 @@ public class OnboardingFunctions {
             onboardingAggregateOrchestratorInputString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.createAggregateOnboardingRequest(onboarding);
   }
 
@@ -848,8 +882,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, CREATE_DELEGATION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.createDelegation(onboarding);
   }
 
@@ -865,8 +899,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, EXISTS_DELEGATION_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.existsDelegation(onboarding);
   }
 
@@ -884,8 +918,8 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return completionService.verifyOnboardingAggregate(onboarding);
   }
 
@@ -920,8 +954,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboardingWorkflow.getOnboarding().getId(),
-            "productId", onboardingWorkflow.getOnboarding().getProductId()));
+            ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
+            PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
     DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
         contractService.requestUploadAggregatesCsv(onboardingWorkflow);
     String onboardingId = onboardingWorkflow.getOnboarding().getId();
@@ -941,8 +975,8 @@ public class OnboardingFunctions {
             FORMAT_LOGGER_ONBOARDING_STRING, RETRIEVE_AGGREGATES_ACTIVITY, onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     List<DelegationResponse> delegationResponseList =
         completionService.retrieveAggregates(onboarding);
     return getDelegationResponseListString(objectMapper, delegationResponseList);
@@ -961,9 +995,9 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
-    service.updateOnboardingExpiringDate(onboarding);
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    onboardingService.updateOnboardingExpiringDate(onboarding);
   }
 
   @FunctionName(GET_SIGNING_CONFIGURATION_ACTIVITY)
@@ -979,9 +1013,51 @@ public class OnboardingFunctions {
             onboardingString),
         SeverityLevel.Information,
         Map.of(
-            "onboardingId", onboarding.getId(),
-            "productId", onboarding.getProductId()));
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
     return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
+  }
+
+  @FunctionName(GET_MANAGING_INSTITUTION_ACTIVITY)
+  public List<ManagingInstitution> getManagingInstitutions(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+    Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+            GET_MANAGING_INSTITUTION_ACTIVITY,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    GET_MANAGING_INSTITUTION_ACTIVITY,
+                    onboardingString),
+            SeverityLevel.Information,
+            Map.of(
+                    ONBOARDING_ID, onboarding.getId(),
+                    PRODUCT_ID, onboarding.getProductId()));
+      List<ManagingInstitution> managingInstitutions = productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
+      context.getLogger().info(String.format("Found %d managing institution(s) for product %s - %s", managingInstitutions.size(), onboarding.getProductId(), managingInstitutions.get(0).getInstitutionId()));
+      return managingInstitutions;
+  }
+
+  @FunctionName(GET_USER_EMAIL_UUID_ACTIVITY)
+  public String getUserEmailUuid(
+      @DurableActivityTrigger(name = "managingInstitutionGetEmailRequest") ManagingInstitutionGetEmailRequest request,
+      final ExecutionContext context) {
+    telemetryService.trackFunction(
+            GET_MANAGING_INSTITUTION_ACTIVITY,
+            String.format(
+                    FORMAT_LOGGER_ONBOARDING_STRING,
+                    GET_MANAGING_INSTITUTION_ACTIVITY,
+                    request),
+            SeverityLevel.Information,
+            Map.of(
+                    ONBOARDING_ID, request.getOnboardingId(),
+                    PRODUCT_ID, request.getProductId(),
+                    MANAGING_INSTITUTION_ID, request.getManagingInstitutionId()));
+    List<UserMail> emails = userService.findEmailByInstitutionAndProducts(
+        request.getManagingInstitutionId(),
+        List.of(request.getProductId()));
+
+    return getEmailListString(objectMapper, emails);
   }
 
   private void ensureSuccessfulDocumentResponse(

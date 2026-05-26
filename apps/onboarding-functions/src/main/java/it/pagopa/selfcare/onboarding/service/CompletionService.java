@@ -22,6 +22,8 @@ public interface CompletionService {
 
     void sendCompletedEmail(OnboardingWorkflow onboardingWorkflow);
 
+    void sendDeletedEmail(String  onboardingId);
+
     void sendCompletedEmailAggregate(Onboarding onboarding);
 
     void persistUsers(Onboarding onboarding);
