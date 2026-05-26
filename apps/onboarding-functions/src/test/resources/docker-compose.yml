@@ -55,6 +55,8 @@ services:
       - document-ms
     env_file:
       - test-integration-function.env
+    secrets:
+      - maven_settings
     environment:
       # - QUARKUS_LOG_LEVEL=TRACE
       # - QUARKUS_LOG_MIN_LEVEL=TRACE
