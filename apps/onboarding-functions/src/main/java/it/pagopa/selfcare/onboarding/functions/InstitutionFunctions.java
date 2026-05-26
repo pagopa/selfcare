@@ -139,7 +139,7 @@ public class InstitutionFunctions {
     userService.deleteByIdAndInstitutionIdAndProductId(filters.getInstitutionId(), filters.getProductId());
   }
 
-  private void processOnboardingDeletions(TaskOrchestrationContext ctx, String filters) throws JsonProcessingException {
+  private void processOnboardingDeletions(TaskOrchestrationContext ctx, String filters) {
     ctx.callActivity(
         DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME,
         filters,
@@ -178,9 +178,8 @@ public class InstitutionFunctions {
     logger.debug("processDocumentsDeletions completed");
   }
 
-  private void processSendEmailDeletions(TaskOrchestrationContext ctx, String onboardingId) throws JsonProcessingException {
+  private void processSendEmailDeletions(TaskOrchestrationContext ctx, String onboardingId) {
     logger.info("processSendEmailDeletions started with id: {}", onboardingId);
-    EntityFilter entityFilter = EntityFilter.builder().value(onboardingId).build();
 
     ctx.callActivity(
                     SEND_MAIL_DELETE_ACTIVITY,
