@@ -121,6 +121,24 @@ jobs:
             fi
           done
 
+      - name: Wait for function worker initialization
+        working-directory: apps/onboarding-functions
+        shell: bash
+        run: |
+          echo "Waiting for onboarding-function worker initialization log..."
+          for i in $(seq 1 120); do
+            if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -Eq "Worker process started and initialized|Host lock lease acquired"; then
+              echo "Function worker initialized (worker or host lock marker found)"
+              exit 0
+            fi
+            echo "Worker not ready yet ($i)..."
+            sleep 2
+          done
+
+          echo "Timeout waiting for function initialization markers ('Worker process started and initialized' or 'Host lock lease acquired')"
+          docker compose -f src/test/resources/docker-compose.yml logs onboarding-function || true
+          exit 1
+
       - name: Run Integration Tests
         id: test-step
         shell: bash

@@ -41,6 +41,6 @@ RUN chmod +x entrypoint.sh
 
 RUN --mount=type=secret,id=maven_settings,target=/run/secrets/maven_settings,required=true \
     --mount=type=cache,target=/root/.m2 \
-    mvn -s /run/secrets/maven_settings -f /app/selfcare/apps/onboarding-functions/pom.xml package -DskipTests -q
+    mvn -s /run/secrets/maven_settings -f /app/selfcare/apps/onboarding-functions/pom.xml package -DskipTests
 
 CMD ["./entrypoint.sh"]
