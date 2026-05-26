@@ -47,6 +47,8 @@ services:
     networks:
       - developer-network
     depends_on:
+      azurite:
+        condition: service_started
       mongo-db:
         condition: service_started
       mock-server:
@@ -80,9 +82,14 @@ services:
     networks:
       - developer-network
     depends_on:
-      - mongo-db
-      - mock-server
-      - azure-cli
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      mock-server:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
 
   institution-ms:
     platform: linux/amd64
@@ -94,9 +101,14 @@ services:
     env_file:
       - test-institution-ms.env
     depends_on:
-      - mongo-db
-      - mock-server
-      - azure-cli
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      mock-server:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
 
   mock-server:
     platform: linux/amd64
@@ -116,8 +128,12 @@ services:
     platform: linux/amd64
     image: ghcr.io/pagopa/selfcare-document-ms:${DOCUMENT_MS_IMAGE_TAG:-latest}
     depends_on:
-      - azurite
-      - mongo-db
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
     ports:
       - "8091:8091"
     networks:
