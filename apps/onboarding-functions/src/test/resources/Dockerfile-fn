@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y libicu70
 
 WORKDIR /usr/src/app
 
-RUN npm i -g azure-functions-core-tools@4.10.0 --unsafe-perm true
+RUN npm i -g azure-functions-core-tools@4 --unsafe-perm true
 
 ENV AzureWebJobsScriptRoot=/usr/src/app AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
@@ -36,8 +36,6 @@ COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/
 COPY apps/onboarding-functions/src/test/resources/fn/local.settings.json local.settings.json
 COPY apps/onboarding-functions/src/test/resources/fn/host.json host.json
 COPY apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh
-
-RUN func bundles download
 
 RUN chmod +x entrypoint.sh
 
