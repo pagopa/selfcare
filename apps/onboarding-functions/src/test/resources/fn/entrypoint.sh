@@ -1,1 +1,1 @@
-mvn -s /run/secrets/maven_settings -q quarkus:run -Dquarkus.profile=integration-function -DskipTests
+mvn -s /run/secrets/maven_settings quarkus:run -Dquarkus.profile=integration-function -DskipTests
