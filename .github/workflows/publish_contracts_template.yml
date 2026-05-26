@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "/contracts/template/**"
+      - "infra/core/contracts_template/contracts/template/**"
 
   workflow_dispatch:
     inputs:
@@ -14,11 +14,11 @@ on:
         type: choice
         description: 'Select the Environment'
         default: 'dev'
-        options: 
-        - dev
-        - uat
-        - prod
-        
+        options:
+          - dev
+          - uat
+          - prod
+
 jobs:
   release_dev:
     uses: ./.github/workflows/call_publish_contracts_template.yml

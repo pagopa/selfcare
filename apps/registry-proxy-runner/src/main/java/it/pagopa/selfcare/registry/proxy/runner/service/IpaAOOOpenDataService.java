@@ -17,6 +17,6 @@ public class IpaAOOOpenDataService extends AbstractIpaOpenDataService<IpaAoo> {
   @Override
   public List<IpaAoo> fetch() {
     log.info("Fetching IPA AOOs from open data...");
-    return parseCsv(restClient.retrieveDataSource(), IpaAoo.class, "AOOs");
+    return parseCsv(restClient.retrieveDataSource(), IpaAoo.class, "AOOs", "ipa-aoo");
   }
 }
