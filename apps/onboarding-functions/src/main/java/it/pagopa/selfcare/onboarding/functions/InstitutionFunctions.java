@@ -101,7 +101,7 @@ public class InstitutionFunctions {
     processDocumentsDeletions(ctx, onboarding.getId());
     processOnboardingDeletions(ctx, filtersString);
     processUserDeletions(ctx, filters);
-
+    processSendEmailDeletions(ctx, onboarding.getId());
     functionContext.getLogger().info("DeleteInstitutionAndUser orchestration completed");
   }
 
@@ -139,7 +139,7 @@ public class InstitutionFunctions {
     userService.deleteByIdAndInstitutionIdAndProductId(filters.getInstitutionId(), filters.getProductId());
   }
 
-  private void processOnboardingDeletions(TaskOrchestrationContext ctx, String filters) throws JsonProcessingException {
+  private void processOnboardingDeletions(TaskOrchestrationContext ctx, String filters) {
     ctx.callActivity(
         DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME,
         filters,
@@ -176,6 +176,19 @@ public class InstitutionFunctions {
       .await();
 
     logger.debug("processDocumentsDeletions completed");
+  }
+
+  private void processSendEmailDeletions(TaskOrchestrationContext ctx, String onboardingId) {
+    logger.info("processSendEmailDeletions started with id: {}", onboardingId);
+
+    ctx.callActivity(
+                    SEND_MAIL_DELETE_ACTIVITY,
+                    onboardingId,
+                    optionsRetry,
+                    String.class)
+            .await();
+
+    logger.debug("processSendEmailDeletions completed");
   }
 
   private static UserInstitutionFilters getUserInstitutionFilters(Onboarding onboarding) {
