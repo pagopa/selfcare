@@ -1,27 +1,27 @@
 FROM maven:3.9.6-eclipse-temurin-17
 
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 ENV QUARKUS_CLI_VERSION=3.10.0 \
-    NODE_VERSION=20.x \
-    AZURE_FUNCTIONS_CORE_TOOLS_VERSION=4.10.0 \
-    AzureWebJobsScriptRoot=/usr/src/app \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+    NODE_VERSION=20.x
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      curl \
-      git \
-      libicu70 \
-      unzip && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN curl -fsSL https://github.com/quarkusio/quarkus/releases/download/${QUARKUS_CLI_VERSION}/quarkus-cli-${QUARKUS_CLI_VERSION}.tar.gz \
+    apt-get install -y curl unzip git && \
+    curl -L https://github.com/quarkusio/quarkus/releases/download/${QUARKUS_CLI_VERSION}/quarkus-cli-${QUARKUS_CLI_VERSION}.tar.gz \
     | tar -xz -C /opt && \
-    ln -s /opt/quarkus-cli-${QUARKUS_CLI_VERSION}/bin/quarkus /usr/local/bin/quarkus
+    ln -s /opt/quarkus-cli-${QUARKUS_CLI_VERSION}/bin/quarkus /usr/local/bin/quarkus && \
+    rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
-    apt-get install -y --no-install-recommends nodejs && \
-    npm i -g azure-functions-core-tools@${AZURE_FUNCTIONS_CORE_TOOLS_VERSION} --unsafe-perm true && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y nodejs
+
+RUN apt-get update && apt-get install -y libicu70
+
+WORKDIR /usr/src/app
+
+RUN npm i -g azure-functions-core-tools@4 --unsafe-perm true
+
+ENV AzureWebJobsScriptRoot=/usr/src/app AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
 WORKDIR /app
 
@@ -40,7 +40,6 @@ COPY apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh
 RUN chmod +x entrypoint.sh
 
 RUN --mount=type=secret,id=maven_settings,target=/run/secrets/maven_settings,required=true \
-    --mount=type=cache,target=/root/.m2 \
-    mvn -s /run/secrets/maven_settings -f /app/selfcare/apps/onboarding-functions/pom.xml package -DskipTests
+    mvn -s /run/secrets/maven_settings clean install -DskipTests -q
 
 CMD ["./entrypoint.sh"]
