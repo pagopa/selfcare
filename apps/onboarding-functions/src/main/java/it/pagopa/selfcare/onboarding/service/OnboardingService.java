@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.service;
 
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -32,6 +33,8 @@ public interface OnboardingService {
 
   void sendMailRegistrationForUserRequester(Onboarding onboarding);
 
+  void sendMailManagingInstitution(ManagingInstitutionSendEmail managingInstitutionEmailRequest);
+
   void saveVisuraForMerchant(Onboarding onboarding);
 
   void sendMailRegistrationForContract(OnboardingWorkflow onboardingWorkflow);
@@ -58,4 +61,6 @@ public interface OnboardingService {
       String productId, String from, String to, ExecutionContext context);
 
   List<Onboarding> getOnboardingsToResend(ResendNotificationsFilters filters, int page, int pageSize);
+
+  List<String> findByInstitutionAndProduct(String institutionId, String productId);
 }
