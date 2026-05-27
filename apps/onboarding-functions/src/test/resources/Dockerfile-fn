@@ -2,7 +2,7 @@ FROM maven:3.9.6-eclipse-temurin-17
 
 ENV QUARKUS_CLI_VERSION=3.10.0 \
     NODE_VERSION=20.x \
-    CORE_TOOLS_VERSION=4.10.0 \
+    CORE_TOOLS_VERSION=4.0.5907 \
     AzureWebJobsScriptRoot=/usr/src/app \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
