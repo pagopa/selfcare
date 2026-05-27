@@ -125,17 +125,38 @@ jobs:
         working-directory: apps/onboarding-functions
         shell: bash
         run: |
+          dump_function_java_state() {
+            echo "Collecting onboarding-function Java diagnostics..."
+            docker compose -f src/test/resources/docker-compose.yml exec -T onboarding-function sh -c '
+              jps -lvm || true
+              for pid in $(jps -q 2>/dev/null); do
+                echo "===== jcmd Thread.print pid=${pid} ====="
+                jcmd "${pid}" Thread.print || true
+              done
+            ' || true
+          }
+
           echo "Waiting for onboarding-function Quarkus startup log..."
           for i in $(seq 1 180); do
             if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -Eq "onboarding-functions .* started|Installed features:"; then
               echo "Function application initialized"
               exit 0
             fi
+            if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -q "Loading function failed"; then
+              echo "Function worker reported a load failure"
+              dump_function_java_state
+              docker compose -f src/test/resources/docker-compose.yml logs onboarding-function || true
+              exit 1
+            fi
+            if [ "$i" -eq 130 ]; then
+              dump_function_java_state
+            fi
             echo "Function application not ready yet ($i)..."
             sleep 2
           done
 
           echo "Timeout waiting for onboarding-function Quarkus startup marker"
+          dump_function_java_state
           docker compose -f src/test/resources/docker-compose.yml logs onboarding-function || true
           exit 1
 
