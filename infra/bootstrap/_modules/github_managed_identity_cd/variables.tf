@@ -56,14 +56,6 @@ variable "cd_github_federations" {
   }))
 }
 
-variable "cd_github_federations_ms" {
-  description = "GitHub federations for CD microservices identity"
-  type = list(object({
-    repository = string
-    subject    = string
-  }))
-}
-
 variable "cd_github_federations_fe" {
   description = "GitHub federations for CD frontend identity"
   type = list(object({

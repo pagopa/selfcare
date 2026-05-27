@@ -15,11 +15,11 @@ data "azurerm_key_vault" "key_vault" {
 }
 
 data "azurerm_user_assigned_identity" "managed_identity_infra_ci" {
-  name                = "${var.prefix}-${var.env_short}-ms-github-ci-identity"
+  name                = "${var.prefix}-${var.env_short}-infra-github-ci-identity"
   resource_group_name = "${var.prefix}-${var.env_short}-identity-rg"
 }
 
 data "azurerm_user_assigned_identity" "managed_identity_infra_cd" {
-  name                = "${var.prefix}-${var.env_short}-ms-github-cd-identity"
+  name                = "${var.prefix}-${var.env_short}-infra-github-cd-identity"
   resource_group_name = "${var.prefix}-${var.env_short}-identity-rg"
 }

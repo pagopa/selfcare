@@ -14,7 +14,6 @@ module "identity_cd" {
   subscription_id   = data.azurerm_subscription.current.id
 
   cd_github_federations    = local.cd_github_federations
-  cd_github_federations_ms = local.cd_github_federations_ms
   cd_github_federations_fe = local.cd_github_federations_fe
 
   environment_cd_roles    = local.environment_cd_roles

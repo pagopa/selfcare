@@ -14,7 +14,6 @@ module "identity_ci" {
   subscription_id   = data.azurerm_subscription.current.id
 
   ci_github_federations    = local.ci_github_federations
-  ci_github_federations_ms = local.ci_github_federations_ms
   ci_github_federations_fe = local.ci_github_federations_fe
 
   environment_ci_roles    = local.environment_ci_roles
