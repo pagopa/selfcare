@@ -1708,6 +1708,28 @@ class OnboardingControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void complete_whenOnboardingStatusFailed_shouldReturnBadRequest() {
+        File testFile = new File("src/test/resources/application.properties");
+        String onboardingId = "actual-onboarding-id";
+
+        when(onboardingService.complete(any(), any()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Onboarding in FAILED status")));
+
+        given()
+                .when()
+                .pathParam("onboardingId", onboardingId)
+                .contentType(ContentType.MULTIPART)
+                .multiPart("contract", testFile)
+                .put("/{onboardingId}/complete")
+                .then()
+                .statusCode(400);
+
+        verify(onboardingService, times(1))
+                .complete(eq(onboardingId), any());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void deleteOnboardingUserOK() {
         final String onboardingId = "actual-onboarding-id";
         when(onboardingService.deleteOnboardingUser(onboardingId))

@@ -612,6 +612,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     private Uni<Onboarding> completeInternal(String onboardingId, FormItem formItem,
                                               boolean skipSignatureVerification, boolean isUsersFlow) {
         return queryHelper.retrieveOnboardingAndCheckIfExpired(onboardingId)
+                .onItem().call(this::abortIfOnboardingIsFailed)
                 .onItem().transformToUni(onboarding ->
                         verifyCompletionPreconditions(onboarding, isUsersFlow).replaceWith(onboarding))
                 .onItem().transformToUni(onboarding ->
@@ -623,6 +624,16 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                 fiscalCodes)
                                                 .replaceWith(onboarding)))
                 .onItem().transformToUni(this::triggerOrchestrationIfEnabled);
+    }
+
+    private Uni<Void> abortIfOnboardingIsFailed(Onboarding onboarding) {
+        if (OnboardingStatus.FAILED.equals(onboarding.getStatus())) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Onboarding with id %s is in status %s and can't be completed!",
+                            onboarding.getId(),
+                            OnboardingStatus.FAILED)));
+        }
+        return Uni.createFrom().voidItem();
     }
 
     private Uni<Boolean> verifyCompletionPreconditions(Onboarding onboarding, boolean isUsersFlow) {
