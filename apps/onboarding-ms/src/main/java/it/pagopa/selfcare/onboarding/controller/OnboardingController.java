@@ -690,9 +690,9 @@ public class OnboardingController {
     @Tag(name = "internal-v1")
     @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{onboardingId}/users")
-    public Uni<Response> deleteOnboardingUsers(@PathParam(value = "onboardingId") String onboardingId) {
-        return onboardingService.deleteOnboardingUsers(onboardingId)
+    @Path("/{onboardingId}/user")
+    public Uni<Response> deleteOnboardingUser(@PathParam(value = "onboardingId") String onboardingId) {
+        return onboardingService.deleteOnboardingUser(onboardingId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());

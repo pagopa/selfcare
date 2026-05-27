@@ -69,7 +69,7 @@ public interface OnboardingService {
 
     Uni<Long> deleteOnboarding(String onboardingId);
 
-    Uni<Long> deleteOnboardingUsers(String onboardingId);
+    Uni<Long> deleteOnboardingUser(String onboardingId);
 
     Uni<OnboardingGet> onboardingPending(String onboardingId);
 

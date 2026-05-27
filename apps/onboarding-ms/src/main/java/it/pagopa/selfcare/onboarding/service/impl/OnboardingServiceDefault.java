@@ -299,7 +299,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     @Override
-    public Uni<Long> deleteOnboardingUsers(String onboardingId) {
+    public Uni<Long> deleteOnboardingUser(String onboardingId) {
         log.info("Deleting user onboarding with id {}", onboardingId);
         return Onboarding.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(

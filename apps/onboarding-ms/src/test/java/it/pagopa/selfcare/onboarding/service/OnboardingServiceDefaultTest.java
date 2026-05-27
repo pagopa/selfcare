@@ -5128,18 +5128,18 @@ class OnboardingServiceDefaultTest {
     }
 
     // -------------------------------------------------------------------------
-    // deleteOnboardingUsers tests
+    // deleteOnboardingUser tests
     // -------------------------------------------------------------------------
 
     @Test
-    void deleteOnboardingUsers_shouldFailWhenOnboardingNotFound() {
+    void deleteOnboardingUser_shouldFailWhenOnboardingNotFound() {
         String onboardingId = "non-existing-id";
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.findById(onboardingId))
                 .thenReturn(Uni.createFrom().nullItem());
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUsers(onboardingId)
+                .deleteOnboardingUser(onboardingId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5147,7 +5147,7 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void deleteOnboardingUsers_shouldFailWhenWorkflowTypeIsNotUSERS() {
+    void deleteOnboardingUser_shouldFailWhenWorkflowTypeIsNotUSERS() {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.FOR_APPROVE);
@@ -5156,7 +5156,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUsers(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5164,7 +5164,7 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void deleteOnboardingUsers_shouldFailWhenAlreadyDeleted() {
+    void deleteOnboardingUser_shouldFailWhenAlreadyDeleted() {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.DELETED);
         onboarding.setWorkflowType(WorkflowType.USERS);
@@ -5173,7 +5173,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUsers(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5181,7 +5181,7 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void deleteOnboardingUsers_shouldFailWhenDeleteContractFails() {
+    void deleteOnboardingUser_shouldFailWhenDeleteContractFails() {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.USERS);
@@ -5193,7 +5193,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException("Document delete failed", 500)));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUsers(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5201,7 +5201,7 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void deleteOnboardingUsers_shouldSucceed() {
+    void deleteOnboardingUser_shouldSucceed() {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.USERS);
@@ -5215,7 +5215,7 @@ class OnboardingServiceDefaultTest {
         mockUpdateOnboarding(onboarding.getId(), 1L);
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUsers(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5223,7 +5223,7 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void deleteOnboardingUsers_shouldFailWhenWorkflowTypeIsNull() {
+    void deleteOnboardingUser_shouldFailWhenWorkflowTypeIsNull() {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(null);
@@ -5232,7 +5232,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUsers(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId())
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
