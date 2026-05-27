@@ -63,8 +63,6 @@ services:
         condition: service_started
     env_file:
       - test-integration-function.env
-    volumes:
-      - maven-repo-cache:/root/.m2
     environment:
       # - QUARKUS_LOG_LEVEL=TRACE
       # - QUARKUS_LOG_MIN_LEVEL=TRACE
@@ -156,6 +154,3 @@ networks:
 secrets:
   maven_settings:
     file: ~/.m2/settings.xml
-
-volumes:
-  maven-repo-cache:

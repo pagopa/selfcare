@@ -3,6 +3,7 @@ FROM maven:3.9.6-eclipse-temurin-17
 ENV QUARKUS_CLI_VERSION=3.10.0 \
     NODE_VERSION=20.x \
     CORE_TOOLS_VERSION=4.10.0 \
+    AzureWebJobsScriptRoot=/usr/src/app \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
 RUN apt-get update && \
@@ -18,6 +19,8 @@ RUN apt-get update && \
 RUN curl -L https://github.com/quarkusio/quarkus/releases/download/${QUARKUS_CLI_VERSION}/quarkus-cli-${QUARKUS_CLI_VERSION}.tar.gz \
     | tar -xz -C /opt && \
     ln -s /opt/quarkus-cli-${QUARKUS_CLI_VERSION}/bin/quarkus /usr/local/bin/quarkus
+
+WORKDIR /usr/src/app
 
 RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
     apt-get update && \
