@@ -11,7 +11,6 @@ on:
       - main
       - releases/*
     paths:
-      - "apps/onboarding-functions/**"
       - ".github/workflows/integration_tests_onboarding_functions.yml"
   workflow_dispatch:
 
