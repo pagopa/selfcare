@@ -1706,4 +1706,67 @@ class OnboardingControllerTest {
         assertNotNull(formItemCaptor.getValue());
     }
 
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteOnboardingUsersOK() {
+        final String onboardingId = "actual-onboarding-id";
+        when(onboardingService.deleteOnboardingUsers(onboardingId))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("onboardingId", onboardingId)
+                .delete("/{onboardingId}/users")
+                .then()
+                .statusCode(204);
+
+        ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        verify(onboardingService, times(1))
+                .deleteOnboardingUsers(expectedId.capture());
+        assertEquals(expectedId.getValue(), onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteOnboardingUsersNotFound() {
+        final String onboardingId = "actual-onboarding-id";
+        when(onboardingService.deleteOnboardingUsers(onboardingId))
+                .thenThrow(ResourceNotFoundException.class);
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("onboardingId", onboardingId)
+                .delete("/{onboardingId}/users")
+                .then()
+                .statusCode(404);
+
+        ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        verify(onboardingService, times(1))
+                .deleteOnboardingUsers(expectedId.capture());
+        assertEquals(expectedId.getValue(), onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteOnboardingUsersInvalidRequest() {
+        final String onboardingId = "actual-onboarding-id";
+        when(onboardingService.deleteOnboardingUsers(onboardingId))
+                .thenThrow(InvalidRequestException.class);
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("onboardingId", onboardingId)
+                .delete("/{onboardingId}/users")
+                .then()
+                .statusCode(400);
+
+        ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        verify(onboardingService, times(1))
+                .deleteOnboardingUsers(expectedId.capture());
+        assertEquals(expectedId.getValue(), onboardingId);
+    }
+
 }

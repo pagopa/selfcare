@@ -682,6 +682,22 @@ public class OnboardingController {
                         .build());
     }
 
+    @Operation(summary = "Perform delete operation of a USER type onboarding request",
+            description = "Perform delete operation of a USER type onboarding request receiving onboarding id. " +
+                    "It first deletes the associated document from document-ms, " +
+                    "then sets DELETED as status and updates date fields.")
+    @DELETE
+    @Tag(name = "internal-v1")
+    @Tag(name = "Onboarding Controller")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{onboardingId}/users")
+    public Uni<Response> deleteOnboardingUsers(@PathParam(value = "onboardingId") String onboardingId) {
+        return onboardingService.deleteOnboardingUsers(onboardingId)
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
+    }
+
     @Operation(
             summary = "Get onboarding COMPLETED by institutionId and productId.",
             description = "Retrieve an onboarding record given institutionId and productId"

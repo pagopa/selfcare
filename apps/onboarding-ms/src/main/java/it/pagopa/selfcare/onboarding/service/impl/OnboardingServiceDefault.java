@@ -298,6 +298,38 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 .map(ignore -> onboarding));
     }
 
+    @Override
+    public Uni<Long> deleteOnboardingUsers(String onboardingId) {
+        log.info("Deleting user onboarding with id {}", onboardingId);
+        return Onboarding.findById(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found", onboardingId)))
+                .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(o -> {
+                    if (!USERS.equals(o.getWorkflowType())) {
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("Onboarding with id %s is not of type USERS", onboardingId)));
+                    }
+                    if (OnboardingStatus.DELETED.equals(o.getStatus())) {
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("Onboarding with id %s is already deleted", onboardingId)));
+                    }
+                    return Uni.createFrom().item(o);
+                })
+                .onItem().transformToUni(o ->
+                        onboardingUtils.ensureSuccessfulDocumentResponse(
+                                documentService.deleteContract(onboardingId),
+                                "deleteContract", onboardingId)
+                                .replaceWith(o))
+                .onItem().transformToUni(o -> {
+                    Map<String, Object> params = Map.of(
+                            "status", OnboardingStatus.DELETED.name(),
+                            "updatedAt", LocalDateTime.now(),
+                            "deletedAt", LocalDateTime.now());
+                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                });
+    }
+
     // -------------------------------------------------------------------------
     // Public interface — queries
     // -------------------------------------------------------------------------

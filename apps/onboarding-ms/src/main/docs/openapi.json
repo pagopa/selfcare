@@ -1718,6 +1718,39 @@
         } ]
       }
     },
+    "/v1/onboarding/{onboardingId}/users" : {
+      "delete" : {
+        "tags" : [ "internal-v1", "Onboarding Controller" ],
+        "summary" : "Perform delete operation of a USER type onboarding request",
+        "description" : "Perform delete operation of a USER type onboarding request receiving onboarding id. It first deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
+        "operationId" : "deleteOnboardingUsers",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/onboarding/{onboardingId}/withUserInfo" : {
       "get" : {
         "tags" : [ "Onboarding Controller" ],
