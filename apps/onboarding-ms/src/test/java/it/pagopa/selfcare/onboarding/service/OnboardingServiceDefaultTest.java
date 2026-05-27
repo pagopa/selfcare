@@ -5140,4 +5140,133 @@ class OnboardingServiceDefaultTest {
         asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null), InvalidRequestException.class);
     }
 
+    // -------------------------------------------------------------------------
+    // deleteOnboardingUser tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenOnboardingNotFound() {
+        String onboardingId = "non-existing-id";
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboardingId))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboardingId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenWorkflowTypeIsNotUSERS() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.FOR_APPROVE);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenAlreadyDeleted() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.DELETED);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenDeleteContractFails() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        when(onboardingUtils.ensureSuccessfulDocumentResponse(any(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException("Document delete failed", 500)));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(WebApplicationException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldSucceed() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        when(onboardingUtils.ensureSuccessfulDocumentResponse(any(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        mockUpdateOnboarding(onboarding.getId(), 1L);
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenStatusIsNotCompleted() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenWorkflowTypeIsNull() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(null);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
 }
