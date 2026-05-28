@@ -1,62 +1,62 @@
-resource "github_actions_secret" "slack_webhook_url" {
-  repository      = github_repository.name
-  secret_name     = "SLACK_WEBHOOK_URL"
-  plaintext_value = "placeholder"
+# resource "github_actions_secret" "slack_webhook_url" {
+#   repository  = github_repository.name
+#   secret_name = "SLACK_WEBHOOK_URL"
+#   value       = "placeholder"
 
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [remote_updated_at]
+#   }
+# }
 
-resource "github_actions_secret" "lets_encrypt_private_key" {
-  repository      = github_repository.name
-  secret_name     = "LETS_ENCRYPT_PRIVATE_KEY_JSON"
-  plaintext_value = "placeholder"
+# resource "github_actions_secret" "lets_encrypt_private_key" {
+#   repository  = github_repository.name
+#   secret_name = "LETS_ENCRYPT_PRIVATE_KEY_JSON"
+#   value       = "placeholder"
 
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [remote_updated_at]
+#   }
+# }
 
-resource "github_actions_secret" "lets_encrypt_registration" {
-  repository      = github_repository.name
-  secret_name     = "LETS_ENCRYPT_REGISTRATION_JSON"
-  plaintext_value = "placeholder"
+# resource "github_actions_secret" "lets_encrypt_registration" {
+#   repository  = github_repository.name
+#   secret_name = "LETS_ENCRYPT_REGISTRATION_JSON"
+#   value       = "placeholder"
 
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [remote_updated_at]
+#   }
+# }
 
-locals {
-  stategraph_environments = toset([
-    for pair in setproduct(["dev", "uat", "prod"], ["ci", "cd"]) :
-    "infra-${pair[0]}-${pair[1]}"
-  ])
-}
+# locals {
+#   stategraph_environments = toset([
+#     for pair in setproduct(["dev", "uat", "prod"], ["ci", "cd"]) :
+#     "infra-${pair[0]}-${pair[1]}"
+#   ])
+# }
 
-resource "github_actions_environment_secret" "stategraph_username" {
-  for_each = local.stategraph_environments
+# resource "github_actions_environment_secret" "stategraph_username" {
+#   for_each = local.stategraph_environments
 
-  repository      = github_repository.name
-  environment     = each.value
-  secret_name     = "STATEGRAPH_USERNAME"
-  plaintext_value = "placeholder"
+#   repository  = github_repository.name
+#   environment = each.value
+#   secret_name = "STATEGRAPH_USERNAME"
+#   value       = "placeholder"
 
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [remote_updated_at]
+#   }
+# }
 
-resource "github_actions_environment_secret" "stategraph_token" {
-  for_each = local.stategraph_environments
+# resource "github_actions_environment_secret" "stategraph_token" {
+#   for_each = local.stategraph_environments
 
-  repository      = github_repository.name
-  environment     = each.value
-  secret_name     = "STATEGRAPH_TOKEN"
-  plaintext_value = "placeholder"
+#   repository  = github_repository.name
+#   environment = each.value
+#   secret_name = "STATEGRAPH_TOKEN"
+#   value       = "placeholder"
 
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
+#   lifecycle {
+#     ignore_changes = [remote_updated_at]
+#   }
+# }
