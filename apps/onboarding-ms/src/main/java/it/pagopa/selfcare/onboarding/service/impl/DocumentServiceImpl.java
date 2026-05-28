@@ -49,4 +49,9 @@ public class DocumentServiceImpl implements DocumentService {
                                               String onboardingId) {
         return documentContentControllerApi.uploadSignedContract(request, onboardingId);
     }
+
+    @Override
+    public Uni<Response> deleteContract(String onboardingId) {
+        return documentContentControllerApi.deleteContract(onboardingId);
+    }
 }
