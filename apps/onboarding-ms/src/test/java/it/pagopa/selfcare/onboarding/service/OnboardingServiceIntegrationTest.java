@@ -23,6 +23,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.controller.request.ReasonRequest;
 import it.pagopa.selfcare.onboarding.controller.request.UserRequest;
 import it.pagopa.selfcare.onboarding.controller.request.UserRequesterDto;
 import it.pagopa.selfcare.onboarding.entity.Institution;
@@ -296,12 +297,15 @@ class OnboardingServiceIntegrationTest {
     void testOnboardingUpdateStatusOK() {
         Onboarding onboarding = createDummyOnboarding();
         PanacheMock.mock(Onboarding.class);
+        ReasonRequest reasonRequest = new ReasonRequest();
+        reasonRequest.setUserUid("uuid");
+        reasonRequest.setReasonForReject("reason");
         when(Onboarding.findById(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         mockUpdateOnboarding(onboarding.getId(), 1L);
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .rejectOnboarding(onboarding.getId(), "string")
+                .rejectOnboarding(onboarding.getId(), reasonRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 

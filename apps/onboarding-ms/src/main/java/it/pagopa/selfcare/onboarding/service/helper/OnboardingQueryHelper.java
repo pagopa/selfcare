@@ -7,8 +7,10 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.tuples.Tuple2;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.controller.request.ApproveRequest;
 import it.pagopa.selfcare.onboarding.controller.request.CheckManagerRequest;
 import it.pagopa.selfcare.onboarding.controller.request.OnboardingUserRequest;
+import it.pagopa.selfcare.onboarding.controller.request.ReasonRequest;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingGet;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingGetResponse;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -125,9 +127,15 @@ public class OnboardingQueryHelper {
     // Aggiornamenti stato onboarding
     // -------------------------------------------------------------------------
 
-    public static Uni<Long> updateReasonForRejectAndUpdateStatus(String onboardingId, String reasonForReject) {
+    public static Uni<Long> updateReasonForRejectAndUpdateStatus(String onboardingId, ReasonRequest reasonForReject) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingReject(
                 reasonForReject, OnboardingStatus.REJECTED.name());
+        Document query = QueryUtils.buildUpdateDocument(params);
+        return performUpdate(onboardingId, query);
+    }
+
+    public static Uni<Long> updateApproverUserUuid(String onboardingId, ApproveRequest approveRequest) {
+        Map<String, Object> params = QueryUtils.createMapForOnboardingApprove(approveRequest);
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }

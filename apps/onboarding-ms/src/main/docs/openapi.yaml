@@ -974,6 +974,11 @@ paths:
         required: true
         schema:
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApproveRequest"
       responses:
         "200":
           description: OK
@@ -1446,6 +1451,11 @@ components:
         email:
           type: string
         role:
+          type: string
+    ApproveRequest:
+      type: object
+      properties:
+        userUid:
           type: string
     BillingPaRequest:
       type: object
@@ -2248,6 +2258,8 @@ components:
       type: object
       properties:
         reasonForReject:
+          type: string
+        userUid:
           type: string
     RecipientCodeStatus:
       enum:
