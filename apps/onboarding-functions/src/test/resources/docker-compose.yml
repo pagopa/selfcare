@@ -39,6 +39,10 @@ services:
     build:
       context: ../../../../..
       dockerfile: ./apps/onboarding-functions/src/test/resources/Dockerfile-fn
+      args:
+        REPO_SELFCARE: ${MAVEN_REPOSITORY_ID:-selfcare}
+        REPO_USERNAME: ${MAVEN_REPO_LOGIN}
+        REPO_PASSWORD: ${MAVEN_REPO_PWD}
     ports:
       - "8090:8081"
       # - "5005:5005"
@@ -66,9 +70,6 @@ services:
       # - QUARKUS_LOG_MIN_LEVEL=TRACE
       # - QUARKUS_LOG_CATEGORY__IO_QUARKUS_MONGODB__LEVEL=INFO
       - DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
-      - REPO_SELFCARE=${MAVEN_REPOSITORY_ID:-selfcare}
-      - REPO_USERNAME=${MAVEN_REPO_LOGIN}
-      - REPO_PASSWORD=${MAVEN_REPO_PWD}
       # - JAVA_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 
   user-ms:

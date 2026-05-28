@@ -56,4 +56,16 @@ RUN echo "<settings>\n" \
     "</servers>\n" \
     "</settings>\n" > settings.xml
 
+ARG REPO_SELFCARE
+ARG REPO_USERNAME
+ARG REPO_PASSWORD
+
+RUN mvn --global-settings settings.xml \
+    clean package \
+    -DskipTests \
+    -DskipITs \
+    -DrepositoryId=${REPO_SELFCARE} \
+    -DrepoLogin=${REPO_USERNAME} \
+    -DrepoPwd=${REPO_PASSWORD}
+
 CMD ["./entrypoint.sh"]
