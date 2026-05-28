@@ -2456,12 +2456,15 @@ class OnboardingServiceDefaultTest {
     void testOnboardingUpdateStatusOK() {
         Onboarding onboarding = createDummyOnboarding();
         PanacheMock.mock(Onboarding.class);
+        ReasonRequest reasonRequest = new ReasonRequest();
+        reasonRequest.setUserUid("uuid");
+        reasonRequest.setReasonForReject("reason");
         when(Onboarding.findById(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         mockUpdateOnboarding(onboarding.getId(), 1L);
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .rejectOnboarding(onboarding.getId(), "string")
+                .rejectOnboarding(onboarding.getId(), reasonRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -2473,12 +2476,15 @@ class OnboardingServiceDefaultTest {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         PanacheMock.mock(Onboarding.class);
+        ReasonRequest reasonRequest = new ReasonRequest();
+        reasonRequest.setUserUid("uuid");
+        reasonRequest.setReasonForReject("reason");
         when(Onboarding.findById(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         mockUpdateOnboarding(onboarding.getId(), 1L);
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .rejectOnboarding(onboarding.getId(), "string")
+                .rejectOnboarding(onboarding.getId(), reasonRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -2489,12 +2495,15 @@ class OnboardingServiceDefaultTest {
     void testOnboardingDeleteOnboardingNotFoundOrAlreadyDeleted() {
         Onboarding onboarding = createDummyOnboarding();
         PanacheMock.mock(Onboarding.class);
+        ReasonRequest reasonRequest = new ReasonRequest();
+        reasonRequest.setUserUid("uuid");
+        reasonRequest.setReasonForReject("reason");
         when(Onboarding.findById(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(onboarding));
         mockUpdateOnboarding(onboarding.getId(), 0L);
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .rejectOnboarding(onboarding.getId(), "string")
+                .rejectOnboarding(onboarding.getId(), reasonRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -2604,9 +2613,13 @@ class OnboardingServiceDefaultTest {
     void approve() {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
+        ApproveRequest approveRequest = new ApproveRequest();
+        approveRequest.setUserUid("useruid");
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
+
+        mockUpdateOnboarding(onboarding.getId(), 1L);
 
         when(productService.getProductIsValid(onboarding.getProductId()))
                 .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
@@ -2620,7 +2633,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(true);
 
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
-                .approve(onboarding.getId())
+                .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -2633,6 +2646,8 @@ class OnboardingServiceDefaultTest {
     void approve_throwExceptionIfOnboardingIsNotToBeValidated() {
         Onboarding onboarding = createDummyOnboarding();
         PanacheMock.mock(Onboarding.class);
+        ApproveRequest approveRequest = new ApproveRequest();
+        approveRequest.setUserUid("useruid");
         when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
 
@@ -2640,7 +2655,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
 
         onboardingService
-                .approve(onboarding.getId())
+                .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertFailedWith(InvalidRequestException.class);
@@ -2651,8 +2666,12 @@ class OnboardingServiceDefaultTest {
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         PanacheMock.mock(Onboarding.class);
+        ApproveRequest approveRequest = new ApproveRequest();
+        approveRequest.setUserUid("useruid");
         when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
+
+        mockUpdateOnboarding(onboarding.getId(), 1L);
 
         when(productService.getProductIsValid(onboarding.getProductId()))
                 .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
@@ -2663,7 +2682,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(true);
 
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
-                .approve(onboarding.getId())
+                .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 

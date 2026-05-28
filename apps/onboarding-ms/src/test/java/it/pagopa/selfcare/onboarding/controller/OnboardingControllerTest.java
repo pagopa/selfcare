@@ -461,8 +461,9 @@ class OnboardingControllerTest {
         String onboardingId = "actual-onboarding-id";
         ReasonRequest reasonRequest = new ReasonRequest();
         reasonRequest.setReasonForReject("string");
+        reasonRequest.setUserUid("uuid");
 
-        when(onboardingService.rejectOnboarding(onboardingId, "string"))
+        when(onboardingService.rejectOnboarding(onboardingId, reasonRequest))
                 .thenReturn(Uni.createFrom().item(1L));
 
         given()
@@ -476,7 +477,7 @@ class OnboardingControllerTest {
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .rejectOnboarding(expectedId.capture(), eq("string"));
+                .rejectOnboarding(expectedId.capture(), eq(reasonRequest));
         assertEquals(expectedId.getValue(), onboardingId);
     }
 
@@ -486,8 +487,9 @@ class OnboardingControllerTest {
         String onboardingId = "actual-onboarding-id";
         ReasonRequest reasonRequest = new ReasonRequest();
         reasonRequest.setReasonForReject("string");
+        reasonRequest.setUserUid("uuid");
 
-        when(onboardingService.rejectOnboarding(onboardingId, "string"))
+        when(onboardingService.rejectOnboarding(onboardingId, reasonRequest))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -501,7 +503,7 @@ class OnboardingControllerTest {
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .rejectOnboarding(expectedId.capture(), eq("string"));
+                .rejectOnboarding(expectedId.capture(), eq(reasonRequest));
         assertEquals(expectedId.getValue(), onboardingId);
     }
 
@@ -588,17 +590,22 @@ class OnboardingControllerTest {
     @TestSecurity(user = "userJwt")
     void approve() {
         OnboardingGet onboardingGet = dummyOnboardingGet();
-        when(onboardingService.approve(onboardingGet.getId()))
+        ApproveRequest approveRequest = new ApproveRequest();
+        approveRequest.setUserUid("user-uid-test");
+
+        when(onboardingService.approve(onboardingGet.getId(), approveRequest))
                 .thenReturn(Uni.createFrom().item(onboardingGet));
 
         given()
                 .when()
+                .body(approveRequest)
+                .contentType(ContentType.JSON)
                 .put("/{onboardingId}/approve", onboardingGet.getId())
                 .then()
                 .statusCode(200);
 
         verify(onboardingService, times(1))
-                .approve(onboardingGet.getId());
+                .approve(onboardingGet.getId(), approveRequest);
     }
 
     @Test

@@ -208,7 +208,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     // -------------------------------------------------------------------------
 
     @Override
-    public Uni<OnboardingGet> approve(String onboardingId) {
+    public Uni<OnboardingGet> approve(String onboardingId, ApproveRequest approveRequest) {
         return queryHelper.retrieveOnboardingAndCheckIfExpired(onboardingId)
                 .onItem().transformToUni(queryHelper::checkIfToBeValidated)
                 .onItem().transformToUni(onboarding ->
@@ -217,9 +217,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
                                                 onboarding.getInstitution(), product.getId(), product.getParentId()))
                                 .replaceWith(onboarding))
-                .onItem().transformToUni(onboarding ->
+            .onItem().call(onboarding ->
+                    OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
+            .onItem().transformToUni(onboarding ->
                         onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboarding.getId(), null).map(ignore -> onboarding)
+                                ? orchestrationService.triggerOrchestration(onboardingId, null).map(ignore -> onboarding)
                                 : Uni.createFrom().item(onboarding))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
@@ -260,7 +262,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     @Override
-    public Uni<Long> rejectOnboarding(String onboardingId, String reasonForReject) {
+    public Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reason) {
         return Onboarding.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
@@ -269,7 +271,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         String.format("Onboarding with id %s is COMPLETED!", onboardingId)))
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
-                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reasonForReject))
+                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
                 .onItem().transformToUni(onboarding ->
                         onboardingOrchestrationEnabled
                                 ? orchestrationService.triggerOrchestration(onboardingId, "60").map(ignore -> onboarding)

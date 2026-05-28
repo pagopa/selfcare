@@ -386,9 +386,9 @@ public class OnboardingController {
     )
     @PUT
     @Path("/{onboardingId}/approve")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Uni<Response> approve(@PathParam(value = "onboardingId") String onboardingId) {
-        return onboardingService.approve(onboardingId)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Uni<Response> approve(@PathParam(value = "onboardingId") String onboardingId, ApproveRequest approveRequest) {
+        return onboardingService.approve(onboardingId, approveRequest)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_OK)
                         .build());
@@ -443,8 +443,7 @@ public class OnboardingController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{onboardingId}/reject")
     public Uni<Response> delete(@PathParam(value = "onboardingId") String onboardingId, @Valid ReasonRequest reason) {
-        String reasonForReject = reason.getReasonForReject();
-        return onboardingService.rejectOnboarding(onboardingId, reasonForReject)
+        return onboardingService.rejectOnboarding(onboardingId, reason)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
