@@ -2619,6 +2619,8 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
 
+        mockUpdateOnboarding(onboarding.getId(), 1L);
+
         when(productService.getProductIsValid(onboarding.getProductId()))
                 .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
 
@@ -2668,6 +2670,8 @@ class OnboardingServiceDefaultTest {
         approveRequest.setUserUid("useruid");
         when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
+
+        mockUpdateOnboarding(onboarding.getId(), 1L);
 
         when(productService.getProductIsValid(onboarding.getProductId()))
                 .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
