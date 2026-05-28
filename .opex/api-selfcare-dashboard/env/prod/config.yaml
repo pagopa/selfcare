@@ -178,4 +178,3 @@ overrides:
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    
