@@ -1,0 +1,46 @@
+name: OpEx Dashboards
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+      - "apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
+      - "apps/auth/src/main/docs/openapi.json"
+      - "apps/iam/src/main/docs/openapi.json"
+      - "apps/external-api/src/main/resources/swagger/api-docs.json"
+      - "apps/product/src/main/docs/openapi.json"
+      - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
+      - "apps/webhook/src/main/docs/openapi.json"
+
+      - "apps/io-func-sign-issuer/openapi.yaml"
+      - "apps/io-func-sign-user/openapi.yaml"
+      - "apps/io-func-sign-support/openapi.yaml"
+      - "apps/io-sign-backoffice-func/openapi.yaml"
+      - ".opex/**"
+      - ".github/workflows/opex-dashboards.yaml"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "apps/io-func-sign-issuer/openapi.yaml"
+      - "apps/io-func-sign-user/openapi.yaml"
+      - "apps/io-func-sign-support/openapi.yaml"
+      - "apps/io-sign-backoffice-func/openapi.yaml"
+      - ".opex/**"
+      - ".github/workflows/opex-dashboards.yaml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  opex_dashboards:
+    name: OpEx Dashboards
+    uses: pagopa/dx/.github/workflows/opex-dashboard-deploy.yaml@main
+    secrets: inherit
