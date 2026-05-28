@@ -16,6 +16,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
@@ -1004,7 +1005,7 @@ class UserServiceTest {
                 any(Product.class))
         ).thenReturn(Uni.createFrom().voidItem());
 
-        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionId", "productId")
+        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionId", "productId", EmailType.USER_REQUEST, null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 

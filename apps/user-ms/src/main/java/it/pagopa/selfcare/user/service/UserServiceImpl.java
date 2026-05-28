@@ -10,6 +10,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
@@ -294,18 +295,40 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId) {
+    public Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, EmailType type, String institutionId) {
         PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
+        Function<PrepareNotificationData, Uni<Void>> emailStrategy = emailStrategy(type);
+
         return Uni.createFrom().nullItem()
                 .onItem().transformToUni(unused -> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userId))
-                .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(builder, userId, userMailUuid, institutionName))
+                .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(builder, userId, userMailUuid, institutionName, institutionId))
                 .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
                 .onItem().transform(PrepareNotificationData.PrepareNotificationDataBuilder::build)
-                .onItem().transformToUni(prepareNotificationData -> userNotificationService.buildDataModelRequestAndSendEmail(prepareNotificationData.getUserResource(), prepareNotificationData.getUserInstitution(), prepareNotificationData.getProduct())
+                .onItem().transformToUni(prepareNotificationData -> emailStrategy.apply(prepareNotificationData)
                         .onFailure().recoverWithNull()
                         .replaceWith(prepareNotificationData))
                 .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", Encode.forJava(userId), Encode.forJava(institutionName), Encode.forJava(productId), throwable.getMessage(), throwable))
                 .replaceWithVoid();
+    }
+
+
+    private Function<PrepareNotificationData, Uni<Void>> emailStrategy(EmailType type) {
+        return data -> switch (type) {
+
+            case CONVENTION_REQUEST ->
+                    userNotificationService.buildDataModelConventionRequestAndSendEmail(
+                            data.getUserResource(),
+                            data.getUserInstitution(),
+                            data.getProduct()
+                    );
+
+            default ->
+                    userNotificationService.buildDataModelRequestAndSendEmail(
+                            data.getUserResource(),
+                            data.getUserInstitution(),
+                            data.getProduct()
+                    );
+        };
     }
 
     private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveProductAndAddToPrepareNotificationData(PrepareNotificationData.PrepareNotificationDataBuilder builder, String productId) {
@@ -329,11 +352,12 @@ public class UserServiceImpl implements UserService {
                 .replaceWith(builder);
     }
 
-    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(PrepareNotificationData.PrepareNotificationDataBuilder builder, String userId, String userMailUuid, String institutionName) {
+    private Uni<PrepareNotificationData.PrepareNotificationDataBuilder> retrieveUserInstitutionAndAddToPrepareNotificationDataRequest(PrepareNotificationData.PrepareNotificationDataBuilder builder, String userId, String userMailUuid, String institutionName, String institutionId) {
         UserInstitution userInstitution = new UserInstitution();
         userInstitution.setUserId(userId);
         userInstitution.setUserMailUuid(userMailUuid);
         userInstitution.setInstitutionDescription(institutionName);
+        userInstitution.setInstitutionId(institutionId);
         builder.userInstitution(userInstitution);
         return Uni.createFrom().item(builder);
     }

@@ -51,6 +51,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     public static final String NO_ROLE_FOUND = "no_role_found";
     public static final String PRODUCT_ROLE = "productRole";
     public static final String DEFAULT_NAME = "Operatore PagoPa";
+    public static final String SELFCARE_DASHBOARD_INSTITUTION_URL = "dashboardInstitutionUrl";
 
     @Inject
     @RestClient
@@ -68,6 +69,9 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
     @ConfigProperty(name = "user-ms.retry")
     Integer maxRetry;
+
+    @ConfigProperty(name = "user-ms.selfcare-url")
+    String selfcareUrl;
 
 
     private final MailService mailService;
@@ -219,6 +223,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
+        dataModel.put(SELFCARE_DASHBOARD_INSTITUTION_URL, Optional.ofNullable(institution.getInstitutionId()).map(id -> String.format("%s/institutions/%s", selfcareUrl, id)).orElse(String.format("%s/institutions", selfcareUrl)));
         return dataModel;
     }
 
@@ -240,7 +245,15 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     public Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product) {
         String email = retrieveMail(user, institution);
         Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
-        return this.sendEmailNotification(REQUEST_TEMPLATE, REQUEST_SUBJECT, email, dataModel);}
+        return this.sendEmailNotification(REQUEST_TEMPLATE, REQUEST_SUBJECT, email, dataModel);
+    }
+
+    @Override
+    public Uni<Void> buildDataModelConventionRequestAndSendEmail(UserResource user, UserInstitution institution, Product product) {
+        String email = retrieveMail(user, institution);
+        Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
+        return this.sendEmailNotification(CONVENTION_TEMPLATE, String.format(CONVENTION_SUBJECT + "/%s", institution.getInstitutionId()) , email, dataModel);
+    }
 
     private Uni<Void> sendEmailNotification(String templateName, String subject, String email, Map<String, String> dataModel) {
         return Uni.createFrom().item(getContent(templateName, dataModel))

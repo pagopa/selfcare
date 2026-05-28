@@ -9,10 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.CertificationEnum;
-import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
-import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
-import it.pagopa.selfcare.user.controller.request.SendMailDto;
+import it.pagopa.selfcare.user.controller.request.*;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.entity.UserInfo;
@@ -886,7 +883,7 @@ class UserControllerTest {
                 .then()
                 .statusCode(204);
 
-        verify(userService, times(1)).sendMailUserRequest(anyString(), anyString(), anyString(), anyString());
+        verify(userService, times(1)).sendMailUserRequest("userId", "mailUuid", "institutionName", "prod-pagopa", EmailType.USER_REQUEST, null);
     }
 
     @Test
