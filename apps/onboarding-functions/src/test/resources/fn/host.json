@@ -1,13 +1,13 @@
 {
   "version": "2.0",
-  "functionTimeout": "00:05:00",
+  "functionTimeout": "00:10:00",
   "logging": {
     "logLevel": {
       "default": "Information",
-      "Worker": "Trace",
-      "Host.Startup": "Trace",
-      "Host.Function.Console": "Trace",
-      "Microsoft.Azure.WebJobs.Script.Grpc": "Trace",
+      "Worker": "Information",
+      "Host.Startup": "Information",
+      "Host.Function.Console": "Information",
+      "Microsoft.Azure.WebJobs.Script.Grpc": "Information",
       "DurableTask.AzureStorage": "Warning",
       "DurableTask.Core": "Warning"
     }

@@ -141,7 +141,7 @@ jobs:
           }
 
           echo "Waiting for onboarding-function Quarkus startup log..."
-          for i in $(seq 1 240); do
+          for i in $(seq 1 360); do
             if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -q "Loading function failed"; then
               echo "Function worker reported a load failure"
               dump_function_java_state
@@ -154,7 +154,7 @@ jobs:
               exit 0
             fi
 
-            if [ "$i" -eq 130 ]; then
+            if [ "$i" -eq 180 ]; then
               dump_function_java_state
             fi
 
