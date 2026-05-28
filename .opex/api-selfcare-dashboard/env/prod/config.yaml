@@ -5,7 +5,7 @@ timespan: 30m # Default, a number or a timespan https://docs.microsoft.com/en-us
 data_source: /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-vnet-rg/providers/Microsoft.Network/applicationGateways/selc-p-app-gw
 action_groups:
   - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/PagoPA
-  - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
+  # - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
 overrides:
   hosts: # Use these hosts instead of those inside the OpenApi spec
     - api.selfcare.pagopa.it
