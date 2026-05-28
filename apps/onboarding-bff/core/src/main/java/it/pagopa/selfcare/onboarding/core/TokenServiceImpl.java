@@ -45,21 +45,21 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void approveOnboarding(String onboardingId) {
+    public void approveOnboarding(String onboardingId, String userUid) {
         log.trace("approveOnboarding start");
         log.debug("approveOnboarding id = {}", onboardingId);
         Assert.notNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
-        onboardingMsConnector.approveOnboarding(onboardingId);
+        onboardingMsConnector.approveOnboarding(onboardingId, userUid);
         log.debug("approveOnboarding result = success");
         log.trace("approveOnboarding end");
     }
 
     @Override
-    public void rejectOnboarding(String onboardingId, String reason) {
+    public void rejectOnboarding(String onboardingId, String reason, String userUid) {
         log.trace("rejectOnboarding start");
         log.debug("rejectOnboarding id = {}", onboardingId);
         Assert.notNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
-        onboardingMsConnector.rejectOnboarding(onboardingId, reason);
+        onboardingMsConnector.rejectOnboarding(onboardingId, reason, userUid);
         log.debug("rejectOnboarding result = success");
         log.trace("rejectOnboarding end");
     }

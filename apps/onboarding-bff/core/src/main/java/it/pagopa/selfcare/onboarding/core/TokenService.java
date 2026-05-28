@@ -8,9 +8,9 @@ import org.springframework.web.multipart.MultipartFile;
 public interface TokenService {
   OnboardingData verifyOnboarding(String onboardingId);
 
-  void approveOnboarding(String onboardingId);
+  void approveOnboarding(String onboardingId, String userUid);
 
-  void rejectOnboarding(String onboardingId, String reason);
+  void rejectOnboarding(String onboardingId, String reason, String userUid);
 
   OnboardingData getOnboardingWithUserInfo(String onboardingId);
 
