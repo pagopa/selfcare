@@ -647,7 +647,7 @@ public class OnboardingFunctions {
     onboardingService.sendMailRegistrationForUser(onboarding);
   }
 
-    // Temporarily excluded from Functions metadata generation to isolate FunctionLoad regressions.
+    @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
   public void sendMailNotificationManagerInstitution(
           @DurableActivityTrigger(name = "managingInstitutionSendEmail") ManagingInstitutionSendEmail managingInstitutionSendEmail,
           final ExecutionContext context) {
@@ -1018,7 +1018,7 @@ public class OnboardingFunctions {
     return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
   }
 
-    // Temporarily excluded from Functions metadata generation to isolate FunctionLoad regressions.
+    @FunctionName(GET_MANAGING_INSTITUTION_ACTIVITY)
   public List<ManagingInstitution> getManagingInstitutions(
       @DurableActivityTrigger(name = "onboardingString") String onboardingString,
       final ExecutionContext context) {
@@ -1038,7 +1038,7 @@ public class OnboardingFunctions {
       return managingInstitutions;
   }
 
-    // Temporarily excluded from Functions metadata generation to isolate FunctionLoad regressions.
+    @FunctionName(GET_USER_EMAIL_UUID_ACTIVITY)
   public String getUserEmailUuid(
       @DurableActivityTrigger(name = "managingInstitutionGetEmailRequest") ManagingInstitutionGetEmailRequest request,
       final ExecutionContext context) {

@@ -233,7 +233,7 @@ public class NotificationFunctions {
     return Objects.nonNull(nextFilters) ? objectMapper.writeValueAsString(nextFilters) : null;
   }
 
-  // Temporarily excluded from Functions metadata generation to isolate FunctionLoad regressions.
+  @FunctionName(SEND_MAIL_DELETE_ACTIVITY)
   public void sendMailCompletion(
           @DurableActivityTrigger(name = "onboardingString") String onboardingId,
           final ExecutionContext context) {
