@@ -123,12 +123,13 @@ public class TokenServiceImplTest {
     void approveOnboarding() {
         //given
         String onboardingId = "example";
-        doNothing().when(onboardingMsConnector).approveOnboarding(onboardingId);
+        String userUid = "userUid";
+        doNothing().when(onboardingMsConnector).approveOnboarding(onboardingId,  userUid);
         // when
-        tokenService.approveOnboarding(onboardingId);
+        tokenService.approveOnboarding(onboardingId, userUid);
         //then
         Mockito.verify(onboardingMsConnector, Mockito.times(1))
-                .approveOnboarding(onboardingId);
+                .approveOnboarding(onboardingId, userUid);
     }
 
     @Test
@@ -136,12 +137,13 @@ public class TokenServiceImplTest {
         //given
         final String onboardingId = "example";
         final String reason = "reason";
-        doNothing().when(onboardingMsConnector).rejectOnboarding(onboardingId, reason);
+        final String userUid = "userUid";
+        doNothing().when(onboardingMsConnector).rejectOnboarding(onboardingId, reason, userUid);
         // when
-        tokenService.rejectOnboarding(onboardingId, reason);
+        tokenService.rejectOnboarding(onboardingId, reason, userUid);
         //then
         Mockito.verify(onboardingMsConnector, Mockito.times(1))
-                .rejectOnboarding(onboardingId, reason);
+                .rejectOnboarding(onboardingId, reason, userUid);
     }
 
     @Test
