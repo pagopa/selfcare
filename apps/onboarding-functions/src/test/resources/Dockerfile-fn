@@ -46,26 +46,23 @@ COPY apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh
 
 RUN chmod +x entrypoint.sh
 
-RUN echo "<settings>\n" \
-    "<servers>\n" \
-    "<server>\n" \
-    "<id>\${repositoryId}</id>\n" \
-    "<username>\${repoLogin}</username>\n" \
-    "<password>\${repoPwd}</password>\n" \
-    "</server>\n" \
-    "</servers>\n" \
-    "</settings>\n" > settings.xml
-
 ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
+RUN echo "<settings>" > settings.xml && \
+    echo "  <servers>" >> settings.xml && \
+    echo "    <server>" >> settings.xml && \
+    echo "      <id>${REPO_SELFCARE}</id>" >> settings.xml && \
+    echo "      <username>${REPO_USERNAME}</username>" >> settings.xml && \
+    echo "      <password>${REPO_PASSWORD}</password>" >> settings.xml && \
+    echo "    </server>" >> settings.xml && \
+    echo "  </servers>" >> settings.xml && \
+    echo "</settings>" >> settings.xml
+
 RUN mvn --global-settings settings.xml \
     clean package \
     -DskipTests \
-    -DskipITs \
-    -DrepositoryId=${REPO_SELFCARE} \
-    -DrepoLogin=${REPO_USERNAME} \
-    -DrepoPwd=${REPO_PASSWORD}
+    -DskipITs
 
 CMD ["./entrypoint.sh"]
