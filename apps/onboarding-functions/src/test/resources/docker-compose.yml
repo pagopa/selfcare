@@ -39,10 +39,8 @@ services:
     build:
       context: ../../../../..
       dockerfile: ./apps/onboarding-functions/src/test/resources/Dockerfile-fn
-      args:
-        REPO_SELFCARE: ${MAVEN_REPOSITORY_ID:-selfcare}
-        REPO_USERNAME: ${MAVEN_REPO_LOGIN}
-        REPO_PASSWORD: ${MAVEN_REPO_PWD}
+      secrets:
+        - maven_settings
     ports:
       - "8090:8081"
       # - "5005:5005"
@@ -153,3 +151,6 @@ networks:
   developer-network:
     name: selfcare-develop-network
 
+secrets:
+  maven_settings:
+    file: ~/.m2/settings.xml

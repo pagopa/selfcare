@@ -85,10 +85,6 @@ jobs:
 
       - name: Startup services
         working-directory: apps/onboarding-functions
-        env:
-          MAVEN_REPOSITORY_ID: selfcare
-          MAVEN_REPO_LOGIN: ${{ github.actor }}
-          MAVEN_REPO_PWD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker compose -f src/test/resources/docker-compose.yml up -d
 
@@ -130,7 +126,7 @@ jobs:
         shell: bash
         working-directory: apps/onboarding-functions
         run: |
-          mvn test \
+          mvn test -q \
               -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingFunctionStep \
               -Dsurefire.parallel=none \
               -Dsurefire.threadCount=1 \

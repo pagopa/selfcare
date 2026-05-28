@@ -1,35 +1,27 @@
 FROM maven:3.9.6-eclipse-temurin-17
 
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
 ENV QUARKUS_CLI_VERSION=3.10.0 \
-    NODE_VERSION=20.x \
-    CORE_TOOLS_VERSION=4.0.5907 \
-    AzureWebJobsScriptRoot=/usr/src/app \
-    AzureFunctionsJobHost__Logging__Console__IsEnabled=true
+    NODE_VERSION=20.x
 
 RUN apt-get update && \
-    apt-get install -y \
-      curl \
-      unzip \
-      git \
-      ca-certificates \
-      gnupg \
-      libicu70 && \
+    apt-get install -y curl unzip git && \
+    curl -L https://github.com/quarkusio/quarkus/releases/download/${QUARKUS_CLI_VERSION}/quarkus-cli-${QUARKUS_CLI_VERSION}.tar.gz \
+    | tar -xz -C /opt && \
+    ln -s /opt/quarkus-cli-${QUARKUS_CLI_VERSION}/bin/quarkus /usr/local/bin/quarkus && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -L https://github.com/quarkusio/quarkus/releases/download/${QUARKUS_CLI_VERSION}/quarkus-cli-${QUARKUS_CLI_VERSION}.tar.gz \
-    | tar -xz -C /opt && \
-    ln -s /opt/quarkus-cli-${QUARKUS_CLI_VERSION}/bin/quarkus /usr/local/bin/quarkus
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
+    apt-get install -y nodejs
+
+RUN apt-get update && apt-get install -y libicu70
 
 WORKDIR /usr/src/app
 
-RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION} | bash - && \
-    apt-get update && \
-    apt-get install -y nodejs && \
-    npm install -g azure-functions-core-tools@${CORE_TOOLS_VERSION} && \
-    func --version && \
-    node --version && \
-    npm --version && \
-    rm -rf /var/lib/apt/lists/*
+RUN npm i -g azure-functions-core-tools@4 --unsafe-perm true
+
+ENV AzureWebJobsScriptRoot=/usr/src/app AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
 WORKDIR /app
 
@@ -40,29 +32,14 @@ COPY apps/onboarding-functions /app/selfcare/apps/onboarding-functions
 WORKDIR /app/selfcare/apps/onboarding-functions
 
 COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/main/resources/application.properties
+COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/test/resources/application.properties
 COPY apps/onboarding-functions/src/test/resources/fn/local.settings.json local.settings.json
 COPY apps/onboarding-functions/src/test/resources/fn/host.json host.json
 COPY apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh
 
 RUN chmod +x entrypoint.sh
 
-ARG REPO_SELFCARE
-ARG REPO_USERNAME
-ARG REPO_PASSWORD
-
-RUN echo "<settings>" > settings.xml && \
-    echo "  <servers>" >> settings.xml && \
-    echo "    <server>" >> settings.xml && \
-    echo "      <id>${REPO_SELFCARE}</id>" >> settings.xml && \
-    echo "      <username>${REPO_USERNAME}</username>" >> settings.xml && \
-    echo "      <password>${REPO_PASSWORD}</password>" >> settings.xml && \
-    echo "    </server>" >> settings.xml && \
-    echo "  </servers>" >> settings.xml && \
-    echo "</settings>" >> settings.xml
-
-RUN mvn --global-settings settings.xml \
-    clean package \
-    -DskipTests \
-    -DskipITs
+RUN --mount=type=secret,id=maven_settings,target=/run/secrets/maven_settings,required=true \
+    mvn -s /run/secrets/maven_settings clean install -DskipTests -q
 
 CMD ["./entrypoint.sh"]
