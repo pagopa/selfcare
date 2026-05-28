@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.ReplaceOptions;
 import org.bson.Document;
 
 @Slf4j
@@ -36,8 +38,12 @@ public class IntegrationOperationUtils {
 
     public void persistInstitution(MongoDatabase mongoDatabase, Institution institution) {
         MongoCollection<Document> collection = mongoDatabase.getCollection("Institution");
-
-        collection.insertOne(insertInstitution(institution));
+        Document institutionDocument = insertInstitution(institution);
+        String institutionId = institutionDocument.getString("_id");
+        collection.replaceOne(
+                Filters.eq("_id", institutionId),
+                institutionDocument,
+                new ReplaceOptions().upsert(true));
     }
 
     public Document insertInstitution(Institution institution) {
