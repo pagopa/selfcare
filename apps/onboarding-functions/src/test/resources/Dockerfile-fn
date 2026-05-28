@@ -40,14 +40,20 @@ COPY apps/onboarding-functions /app/selfcare/apps/onboarding-functions
 WORKDIR /app/selfcare/apps/onboarding-functions
 
 COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/main/resources/application.properties
-COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/test/resources/application.properties
 COPY apps/onboarding-functions/src/test/resources/fn/local.settings.json local.settings.json
 COPY apps/onboarding-functions/src/test/resources/fn/host.json host.json
 COPY apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh
 
 RUN chmod +x entrypoint.sh
 
-RUN --mount=type=secret,id=maven_settings,target=/run/secrets/maven_settings,required=true \
-    mvn -s /run/secrets/maven_settings clean install -DskipTests -q
+RUN echo "<settings>\n" \
+    "<servers>\n" \
+    "<server>\n" \
+    "<id>\${repositoryId}</id>\n" \
+    "<username>\${repoLogin}</username>\n" \
+    "<password>\${repoPwd}</password>\n" \
+    "</server>\n" \
+    "</servers>\n" \
+    "</settings>\n" > settings.xml
 
 CMD ["./entrypoint.sh"]

@@ -85,6 +85,10 @@ jobs:
 
       - name: Startup services
         working-directory: apps/onboarding-functions
+        env:
+          MAVEN_REPOSITORY_ID: selfcare
+          MAVEN_REPO_LOGIN: ${{ github.actor }}
+          MAVEN_REPO_PWD: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker compose -f src/test/resources/docker-compose.yml up -d
 
@@ -137,25 +141,28 @@ jobs:
           }
 
           echo "Waiting for onboarding-function Quarkus startup log..."
-          for i in $(seq 1 180); do
-            if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -Eq "onboarding-functions .* started|Installed features:"; then
-              echo "Function application initialized"
-              exit 0
-            fi
+          for i in $(seq 1 240); do
             if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -q "Loading function failed"; then
               echo "Function worker reported a load failure"
               dump_function_java_state
               docker compose -f src/test/resources/docker-compose.yml logs onboarding-function || true
               exit 1
             fi
+
+            if docker compose -f src/test/resources/docker-compose.yml logs onboarding-function 2>&1 | grep -Eq "onboarding-functions .* started|Installed features:"; then
+              echo "Function application initialized"
+              exit 0
+            fi
+
             if [ "$i" -eq 130 ]; then
               dump_function_java_state
             fi
+
             echo "Function application not ready yet ($i)..."
             sleep 2
           done
 
-          echo "Timeout waiting for onboarding-function Quarkus startup marker"
+          echo "Timeout waiting for onboarding-function startup marker"
           dump_function_java_state
           docker compose -f src/test/resources/docker-compose.yml logs onboarding-function || true
           exit 1
@@ -165,7 +172,7 @@ jobs:
         shell: bash
         working-directory: apps/onboarding-functions
         run: |
-          mvn test -q \
+          mvn test \
               -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingFunctionStep \
               -Dsurefire.parallel=none \
               -Dsurefire.threadCount=1 \
