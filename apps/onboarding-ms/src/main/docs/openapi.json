@@ -1336,6 +1336,15 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1969,6 +1978,14 @@
             "type" : "string"
           },
           "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ApproveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userUid" : {
             "type" : "string"
           }
         }
@@ -3044,6 +3061,9 @@
         "type" : "object",
         "properties" : {
           "reasonForReject" : {
+            "type" : "string"
+          },
+          "userUid" : {
             "type" : "string"
           }
         }

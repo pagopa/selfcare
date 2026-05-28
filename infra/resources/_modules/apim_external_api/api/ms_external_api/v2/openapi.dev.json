@@ -7081,6 +7081,9 @@
         "properties": {
           "reasonForReject": {
             "type": "string"
+          },
+          "userUid": {
+            "type": "string"
           }
         }
       }

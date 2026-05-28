@@ -3,7 +3,8 @@ FROM maven:3.9.6-eclipse-temurin-17
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
 ENV QUARKUS_CLI_VERSION=3.10.0 \
-    NODE_VERSION=20.x
+    NODE_VERSION=20.x \
+    CORE_TOOLS_VERSION=4
 
 RUN apt-get update && \
     apt-get install -y curl unzip git && \
@@ -19,7 +20,7 @@ RUN apt-get update && apt-get install -y libicu70
 
 WORKDIR /usr/src/app
 
-RUN npm i -g azure-functions-core-tools@4 --unsafe-perm true
+RUN npm i -g azure-functions-core-tools@${CORE_TOOLS_VERSION} --unsafe-perm true
 
 ENV AzureWebJobsScriptRoot=/usr/src/app AzureFunctionsJobHost__Logging__Console__IsEnabled=true
 
@@ -32,7 +33,6 @@ COPY apps/onboarding-functions /app/selfcare/apps/onboarding-functions
 WORKDIR /app/selfcare/apps/onboarding-functions
 
 COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/main/resources/application.properties
-COPY apps/onboarding-functions/src/test/resources/fn/application.properties src/test/resources/application.properties
 COPY apps/onboarding-functions/src/test/resources/fn/local.settings.json local.settings.json
 COPY apps/onboarding-functions/src/test/resources/fn/host.json host.json
 COPY apps/onboarding-functions/src/test/resources/fn/entrypoint.sh entrypoint.sh

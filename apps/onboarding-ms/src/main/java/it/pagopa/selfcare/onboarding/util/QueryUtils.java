@@ -7,6 +7,8 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.controller.request.ApproveRequest;
+import it.pagopa.selfcare.onboarding.controller.request.ReasonRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import java.time.LocalDate;
@@ -116,11 +118,18 @@ public class QueryUtils {
     return Optional.ofNullable(value).filter(v -> !v.isBlank());
   }
 
-  public static Map<String, Object> createMapForOnboardingReject(String reasonForReject, String onboardingStatus) {
+  public static Map<String, Object> createMapForOnboardingReject(ReasonRequest reasonForReject, String onboardingStatus) {
     Map<String, Object> queryParameterMap = new HashMap<>();
-    Optional.ofNullable(reasonForReject).ifPresent(value -> queryParameterMap.put("reasonForReject", value));
+    Optional.ofNullable(reasonForReject.getReasonForReject()).ifPresent(value -> queryParameterMap.put("reasonForReject", value));
+    Optional.ofNullable(reasonForReject.getUserUid()).ifPresent(value -> queryParameterMap.put("processedByUserUid", value));
     Optional.ofNullable(onboardingStatus).ifPresent(value -> queryParameterMap.put(STATUS, value));
     queryParameterMap.put("updatedAt", LocalDateTime.now());
+    return queryParameterMap;
+  }
+
+  public static Map<String, Object> createMapForOnboardingApprove(ApproveRequest approveRequest) {
+    Map<String, Object> queryParameterMap = new HashMap<>();
+    Optional.ofNullable(approveRequest.getUserUid()).ifPresent(value -> queryParameterMap.put("processedByUserUid", value));
     return queryParameterMap;
   }
 

@@ -42,10 +42,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
@@ -177,7 +179,7 @@ class TokenV2ControllerTest {
     @Test
     void rejectOnboardingRequest_shouldBeProtectedByApprovePermission() throws NoSuchMethodException {
         // given
-        Method method = TokenV2Controller.class.getMethod("rejectOnboarding", String.class, ReasonForRejectDto.class);
+        Method method = TokenV2Controller.class.getMethod("rejectOnboarding", String.class, ReasonForRejectDto.class, Principal.class);
 
         // when
         PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
@@ -191,17 +193,25 @@ class TokenV2ControllerTest {
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#approveOnboarding(String)}
+     * Method under test: {@link TokenV2Controller#approveOnboarding(String, java.security.Principal)}
      */
     @Test
     void approveOnboardingRequest() throws Exception {
         // given
         final String onboardingId = UUID.randomUUID().toString();
-        doNothing().when(tokenService).approveOnboarding(onboardingId);
+        final String userUid = "userUid";
+        doNothing().when(tokenService).approveOnboarding(onboardingId, userUid);
+
+        JwtAuthenticationToken mockPrincipal = Mockito.mock(JwtAuthenticationToken.class);
+        SelfCareUser selfCareUser = SelfCareUser.builder("userUid")
+                .fiscalCode("fiscalCode")
+                .build();
+        Mockito.when(mockPrincipal.getPrincipal()).thenReturn(selfCareUser);
 
         // when
         mvc.perform(MockMvcRequestBuilders
                         .post("/v2/tokens/{onboardingId}/approve", onboardingId)
+                        .principal(mockPrincipal)
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
@@ -209,29 +219,36 @@ class TokenV2ControllerTest {
         // then
 
         verify(tokenService, times(1))
-                .approveOnboarding(onboardingId);
+                .approveOnboarding(onboardingId, userUid);
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#rejectOnboarding(String, ReasonForRejectDto)}
+     * Method under test: {@link TokenV2Controller#rejectOnboarding(String, ReasonForRejectDto, java.security.Principal)}
      */
     @Test
     void rejectOnboardingRequest() throws Exception {
 
         final String onboardingId = UUID.randomUUID().toString();
         final String reason = "reason";
+        final String userUid = "userUid";
         ReasonForRejectDto reasonDto = new ReasonForRejectDto();
         reasonDto.setReason(reason);
 
+        JwtAuthenticationToken mockPrincipal = Mockito.mock(JwtAuthenticationToken.class);
+        SelfCareUser selfCareUser = SelfCareUser.builder("userUid")
+                .fiscalCode("fiscalCode")
+                .build();
+        Mockito.when(mockPrincipal.getPrincipal()).thenReturn(selfCareUser);
+
         ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
         String json = ow.writeValueAsString(reasonDto);
-
-        doNothing().when(tokenService).rejectOnboarding(onboardingId, reason);
+        doNothing().when(tokenService).rejectOnboarding(onboardingId, reason, userUid);
 
         //when
         mvc.perform(MockMvcRequestBuilders
                         .post("/v2/tokens/{onboardingId}/reject", onboardingId)
                         .content(json)
+                        .principal(mockPrincipal)
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
@@ -239,30 +256,37 @@ class TokenV2ControllerTest {
         //then
 
         verify(tokenService, times(1))
-                .rejectOnboarding(onboardingId, reason);
+                .rejectOnboarding(onboardingId, reason, userUid);
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#deleteOnboarding(String)}
+     * Method under test: {@link TokenV2Controller#deleteOnboarding(String, java.security.Principal)}
      */
     @Test
     void deleteOnboarding() throws Exception {
 
         final String onboardingId = UUID.randomUUID().toString();
         final String reason = "REJECTED_BY_USER";
+        final String userUid = "userUid";
 
-        doNothing().when(tokenService).rejectOnboarding(onboardingId, reason);
+        JwtAuthenticationToken mockPrincipal = Mockito.mock(JwtAuthenticationToken.class);
+        SelfCareUser selfCareUser = SelfCareUser.builder("userUid")
+                .fiscalCode("fiscalCode")
+                .build();
+        Mockito.when(mockPrincipal.getPrincipal()).thenReturn(selfCareUser);
+        doNothing().when(tokenService).rejectOnboarding(onboardingId, reason, userUid);
 
         //when
         mvc.perform(MockMvcRequestBuilders
                         .delete("/v2/tokens/{onboardingId}/complete", onboardingId)
+                        .principal(mockPrincipal)
                         .contentType(APPLICATION_JSON_VALUE)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().is(204))
                 .andReturn();
         //then
         verify(tokenService, times(1))
-                .rejectOnboarding(onboardingId, reason);
+                .rejectOnboarding(onboardingId, reason, userUid);
     }
 
     /**
@@ -610,7 +634,7 @@ class TokenV2ControllerTest {
                                         productId)
                                 .principal(mockPrincipal)
                                 .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                .andExpect(result -> assertTrue(result.getResolvedException() instanceof UnauthorizedUserException))
+                .andExpect(result -> assertInstanceOf(UnauthorizedUserException.class, result.getResolvedException()))
                 .andExpect(status().isForbidden())
                 .andReturn();
 
