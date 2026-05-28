@@ -13,7 +13,6 @@ on:
       - "apps/product/src/main/docs/openapi.json"
       - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
       - "apps/webhook/src/main/docs/openapi.json"
-
       - "apps/io-func-sign-issuer/openapi.yaml"
       - "apps/io-func-sign-user/openapi.yaml"
       - "apps/io-func-sign-support/openapi.yaml"
@@ -27,6 +26,14 @@ on:
       - reopened
       - ready_for_review
     paths:
+      - "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+      - "apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
+      - "apps/auth/src/main/docs/openapi.json"
+      - "apps/iam/src/main/docs/openapi.json"
+      - "apps/external-api/src/main/resources/swagger/api-docs.json"
+      - "apps/product/src/main/docs/openapi.json"
+      - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
+      - "apps/webhook/src/main/docs/openapi.json"
       - "apps/io-func-sign-issuer/openapi.yaml"
       - "apps/io-func-sign-user/openapi.yaml"
       - "apps/io-func-sign-support/openapi.yaml"
