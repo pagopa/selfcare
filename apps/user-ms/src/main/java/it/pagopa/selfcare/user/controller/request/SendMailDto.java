@@ -18,8 +18,7 @@ public class SendMailDto {
     @ProductId
     private String productId;
 
-    @DefaultValue("REQUEST")
-    private EmailType type;
+    private EmailType type = EmailType.USER_REQUEST;
 
     private String institutionId;
 

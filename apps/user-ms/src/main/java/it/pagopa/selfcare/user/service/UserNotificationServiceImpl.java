@@ -223,7 +223,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put(SELFCARE_DASHBOARD_INSTITUTION_URL, Optional.ofNullable(institution.getInstitutionId()).map(id -> String.format("%s/institutions/%s", selfcareUrl, id)).orElse(String.format("%s/institutions", selfcareUrl)));
+        dataModel.put(SELFCARE_DASHBOARD_INSTITUTION_URL, Optional.ofNullable(institution.getInstitutionId()).map(id -> String.format("%s/dashboard/institutions/%s", selfcareUrl, id)).orElse(String.format("%s/institutions", selfcareUrl)));
         return dataModel;
     }
 
