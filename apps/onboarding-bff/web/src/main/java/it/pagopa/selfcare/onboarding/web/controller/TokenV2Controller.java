@@ -171,9 +171,13 @@ public class TokenV2Controller {
     @PostMapping("/{onboardingId}/approve")
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
     public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
-                                  @PathVariable("onboardingId") String onboardingId) {
+                                  @PathVariable("onboardingId") String onboardingId,
+                                  Principal principal) {
         log.debug("approve onboarding identified with {}", onboardingId);
-        tokenService.approveOnboarding(onboardingId);
+        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
+        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        String userUid = selfCareUser.getId();
+        tokenService.approveOnboarding(onboardingId, userUid);
     }
 
     /**
@@ -193,9 +197,13 @@ public class TokenV2Controller {
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
     public void rejectOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
                                  @PathVariable("onboardingId") String onboardingId,
-                                 @RequestBody ReasonForRejectDto reasonForRejectDto) {
+                                 @RequestBody ReasonForRejectDto reasonForRejectDto,
+                                 Principal principal) {
         log.debug("reject onboarding identified with {}", onboardingId);
-        tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason());
+        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
+        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        String userUid = selfCareUser.getId();
+        tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason(), userUid);
     }
 
     /**
@@ -213,11 +221,15 @@ public class TokenV2Controller {
             description = "${swagger.tokens.complete}", operationId = "deleteUsingDELETE")
     @DeleteMapping(value = "/{onboardingId}/complete")
     public ResponseEntity<Void> deleteOnboarding(@ApiParam("${swagger.tokens.tokenId}")
-                                                 @PathVariable(value = "onboardingId") String onboardingId) {
+                                                 @PathVariable(value = "onboardingId") String onboardingId,
+                                                 Principal principal) {
         log.trace("delete Token start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("delete Token tokenId = {}", sanitizedOnboardingId);
-        tokenService.rejectOnboarding(sanitizedOnboardingId, "REJECTED_BY_USER");
+        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
+        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+        String userUid = selfCareUser.getId();
+        tokenService.rejectOnboarding(sanitizedOnboardingId, "REJECTED_BY_USER", userUid);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

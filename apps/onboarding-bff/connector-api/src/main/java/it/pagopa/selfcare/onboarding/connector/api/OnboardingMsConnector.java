@@ -5,8 +5,6 @@ import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregateResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -27,9 +25,9 @@ public interface OnboardingMsConnector {
 
     void onboardingPending(String onboardingId);
 
-    void approveOnboarding(String onboardingId);
+    void approveOnboarding(String onboardingId, String userUid);
 
-    void rejectOnboarding(String onboardingId, String reason);
+    void rejectOnboarding(String onboardingId, String reason, String userUid);
 
     OnboardingData getOnboarding(String onboardingId);
 
