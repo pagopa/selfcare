@@ -104,6 +104,14 @@ public class OnboardingServiceImpl implements OnboardingService {
                         onboardingWorkflow.getContractTemplatePath(product),
                         notificationService.rejectOnboardingUrl());
 
+        log.info(
+                "Calling createContractPdf - onboardingId: {}, workflowType: {}, productId: {}, templatePath: {}, usersCount: {}",
+                onboarding.getId(),
+                onboarding.getWorkflowType(),
+                onboarding.getProductId(),
+                onboardingWorkflow.getContractTemplatePath(product),
+                onboarding.getUsers() == null ? 0 : onboarding.getUsers().size());
+
         documentService.createContractPdf(request);
     }
 
