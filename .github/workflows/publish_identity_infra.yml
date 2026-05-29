@@ -32,7 +32,8 @@ jobs:
     with:
       environment: dev-ar
       base_path: infra/bootstrap
-      # env_vars: ""
+      env_vars:  |
+       GITHUB_TOKEN=${{ secrets.GITHUB_PAT }}
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
@@ -46,7 +47,8 @@ jobs:
     with:
       environment: uat-ar 
       base_path: infra/bootstrap
-      # env_vars: ""
+      env_vars:  |
+       GITHUB_TOKEN=${{ secrets.GITHUB_PAT }}
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
@@ -60,7 +62,8 @@ jobs:
     with:
       environment: prod-ar
       base_path: infra/bootstrap
-      # env_vars: ""
+      env_vars:  |
+       GITHUB_TOKEN=${{ secrets.GITHUB_PAT }}
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
