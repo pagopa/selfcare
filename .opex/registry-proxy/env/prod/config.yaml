@@ -1,5 +1,5 @@
 oa3_spec: apps/registry-proxy/app/src/main/resources/swagger/api-docs.json
-name: opex_api-ms-party-registry-proxy
+name: opex_api-registry-proxy
 location: West Europe
 timespan: 30m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
 evaluation_frequency: 10
