@@ -1,4 +1,9 @@
-name: Run release Cert Infra
+name: Publish Cert Infra
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
 
 on:
   push:
@@ -6,79 +11,65 @@ on:
       - main
       - releases/*
     paths:
-      - './infra/cert/**'
+      - 'infra/cert/**'
 
   workflow_dispatch:
     inputs:
-      environment:
+      env:
+        required: true
         type: choice
-        description: Environment
+        description: 'Select the Environment'
+        default: dev
         options:
-          - dev-ar
-          - dev-pnpg
-          - uat-ar
-          - uat-pnpg
-          - prod-ar
-          - prod-pnpg
+          - dev
+          - uat
+          - prod
+      domain:
+        required: true
+        type: choice
+        description: 'Select the Domain'
+        default: ar
+        options:
+          - ar
+          - pnpg
 
 jobs:
 
-  release_dev_ar:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[Dev AR] Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.environment == null) || inputs.environment == 'dev-ar' }}
+  release_dev:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "DEV ${{ inputs.domain || 'ar' }} Cert Infra Release"
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
-      environment: dev
-      tf_environment: dev-ar
-      dir: ./infra/cert/dev-ar
+      environment: dev-${{ inputs.domain || 'ar' }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
 
-  release_dev_pnpg:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[Dev PNPG] Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.environment == null) || inputs.environment == 'dev-pnpg' }}
+  release_uat:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "UAT ${{ inputs.domain }} Cert Infra Release"
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
-      environment: dev
-      tf_environment: dev-pnpg
-      dir: ./infra/cert/dev-pnpg
+      environment: uat-${{ inputs.domain || 'ar' }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
 
-  release_uat_ar:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[UAT AR] Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.environment == null) || inputs.environment == 'uat-ar' }}
+  release_prod:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "PROD ${{ inputs.domain }} Cert Infra Release"
+    if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
-      environment: uat
-      tf_environment: uat-ar
-      dir: ./infra/cert/uat-ar
-
-  release_uat_pnpg:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[UAT PNPG] Run Cert Infra Release'
-    if: ${{ inputs.environment == 'uat-pnpg' }}
-    secrets: inherit
-    with:
-      environment: uat
-      tf_environment: uat-pnpg
-      dir: ./infra/cert/uat-pnpg
-
-  release_prod_ar:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[Prod AR] Run Cert Infra Release'
-    if: ${{ inputs.environment == 'prod-ar' }}
-    secrets: inherit
-    with:
-      environment: prod
-      tf_environment: prod-ar
-      dir: ./infra/cert/prod-ar
-
-  release_prod_pnpg:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[Prod PNPG] Run Cert Infra Release'
-    if: ${{ inputs.environment == 'prod-pnpg' }}
-    secrets: inherit
-    with:
-      environment: prod
-      tf_environment: prod-pnpg
-      dir: ./infra/cert/prod-pnpg
+      environment: prod-${{ inputs.domain || 'ar' }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
