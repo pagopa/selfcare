@@ -32,8 +32,8 @@ jobs:
     with:
       environment: dev-ar
       base_path: infra/bootstrap
-      env_vars: |
-        GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
+      secrets: |
+        GITHUB_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
       use_labels: true
