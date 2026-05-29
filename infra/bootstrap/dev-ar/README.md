@@ -27,7 +27,6 @@
 | <a name="module_github_secrets"></a> [github\_secrets](#module\_github\_secrets) | ../_modules/repository_secrets | n/a |
 | <a name="module_identity_cd"></a> [identity\_cd](#module\_identity\_cd) | ../_modules/github_managed_identity_cd | n/a |
 | <a name="module_identity_ci"></a> [identity\_ci](#module\_identity\_ci) | ../_modules/github_managed_identity_ci | n/a |
-| <a name="module_tfstate_access"></a> [tfstate\_access](#module\_tfstate\_access) | ../_modules/tfstate_access | n/a |
 
 ## Resources
 
