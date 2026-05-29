@@ -23,10 +23,14 @@
 | ---- | ------ | ------- |
 | <a name="module_github_environment_cd"></a> [github\_environment\_cd](#module\_github\_environment\_cd) | ../_modules/github_repository_environment | n/a |
 | <a name="module_github_environment_ci"></a> [github\_environment\_ci](#module\_github\_environment\_ci) | ../_modules/github_repository_environment | n/a |
+| <a name="module_github_environment_opex_cd"></a> [github\_environment\_opex\_cd](#module\_github\_environment\_opex\_cd) | ../_modules/github_repository_environment | n/a |
+| <a name="module_github_environment_opex_ci"></a> [github\_environment\_opex\_ci](#module\_github\_environment\_opex\_ci) | ../_modules/github_repository_environment | n/a |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ../_modules/github_runner | n/a |
 | <a name="module_github_secrets"></a> [github\_secrets](#module\_github\_secrets) | ../_modules/repository_secrets | n/a |
 | <a name="module_identity_cd"></a> [identity\_cd](#module\_identity\_cd) | ../_modules/github_managed_identity_cd | n/a |
 | <a name="module_identity_ci"></a> [identity\_ci](#module\_identity\_ci) | ../_modules/github_managed_identity_ci | n/a |
+| <a name="module_identity_opex_cd"></a> [identity\_opex\_cd](#module\_identity\_opex\_cd) | github.com/pagopa/terraform-azurerm-v4//github_federated_identity | v9.6.1 |
+| <a name="module_identity_opex_ci"></a> [identity\_opex\_ci](#module\_identity\_opex\_ci) | github.com/pagopa/terraform-azurerm-v4//github_federated_identity | v9.6.1 |
 | <a name="module_keyvault"></a> [keyvault](#module\_keyvault) | ../_modules/keyvault | n/a |
 | <a name="module_keyvault_pnpg"></a> [keyvault\_pnpg](#module\_keyvault\_pnpg) | ../_modules/keyvault | n/a |
 | <a name="module_tfstate_access"></a> [tfstate\_access](#module\_tfstate\_access) | ../_modules/tfstate_access | n/a |
@@ -35,6 +39,8 @@
 
 | Name | Type |
 | ---- | ---- |
+| [azurerm_key_vault_access_policy.key_vault_access_policy_opex_identity_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
+| [azurerm_key_vault_access_policy.key_vault_access_policy_opex_identity_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_resource_group.identity_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.registry_proxy_runner_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [github_actions_environment_secret.integration_environment_bruno](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |

@@ -6,13 +6,22 @@ module "github_secrets" {
     "selfcare" = "${local.env}"
   }
 
-  fe_cd_identity_client_id = module.identity_cd.identity_fe_client_id
-  fe_ci_identity_client_id = module.identity_ci.identity_fe_client_id
-  cd_identity_client_id    = module.identity_cd.identity_client_id
-  ci_identity_client_id    = module.identity_ci.identity_client_id
+  fe_cd_identity_client_id   = module.identity_cd.identity_fe_client_id
+  fe_ci_identity_client_id   = module.identity_ci.identity_fe_client_id
+  cd_identity_client_id      = module.identity_cd.identity_client_id
+  ci_identity_client_id      = module.identity_ci.identity_client_id
+  opex_cd_identity_client_id = module.identity_opex_cd.identity_client_id
+  opex_ci_identity_client_id = module.identity_opex_ci.identity_client_id
 
   tenant_id       = data.azurerm_client_config.current.tenant_id
   subscription_id = data.azurerm_client_config.current.subscription_id
   gh_pat_variable = data.azurerm_key_vault_secret.github_path_token.value
   opex            = true
+
+  depends_on = [
+    module.github_environment_ci,
+    module.github_environment_cd,
+    module.github_environment_opex_ci,
+    module.github_environment_opex_cd,
+  ]
 }
