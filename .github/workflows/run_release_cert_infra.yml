@@ -10,42 +10,75 @@ on:
 
   workflow_dispatch:
     inputs:
-      env:
+      environment:
         type: choice
         description: Environment
         options:
-          - dev
-          - uat
-          - prod
-      th_env:
-        type: choice
-        description: Terraform Environment
-        options:
-          - dev
+          - dev-ar
           - dev-pnpg
-          - uat
+          - uat-ar
           - uat-pnpg
-          - prod
+          - prod-ar
           - prod-pnpg
 
 jobs:
 
-  release_dev:
+  release_dev_ar:
     uses: ./.github/workflows/call_release_infra.yml
-    name: '[Dev] Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || startsWith(inputs.env, 'dev') }}
+    name: '[Dev AR] Run Cert Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.environment == null) || inputs.environment == 'dev-ar' }}
     secrets: inherit
     with:
       environment: dev
-      tf_environment: ${{ inputs.th_env }}
-      dir: ./infra/cert
+      tf_environment: dev-ar
+      dir: ./infra/cert/dev-ar
 
-  release_uat_prod:
+  release_dev_pnpg:
     uses: ./.github/workflows/call_release_infra.yml
-    name: 'Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') == true && startsWith(inputs.env, 'uat')) || (startsWith(github.ref_name, 'releases/') == true && startsWith(inputs.env, 'prod')) || startsWith(inputs.env, 'uat') || startsWith(inputs.env, 'prod') }}
+    name: '[Dev PNPG] Run Cert Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.environment == null) || inputs.environment == 'dev-pnpg' }}
     secrets: inherit
     with:
-      environment: ${{ inputs.env }}
-      tf_environment: ${{ inputs.th_env }}
-      dir: ./infra/cert
+      environment: dev
+      tf_environment: dev-pnpg
+      dir: ./infra/cert/dev-pnpg
+
+  release_uat_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[UAT AR] Run Cert Infra Release'
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.environment == null) || inputs.environment == 'uat-ar' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-ar
+      dir: ./infra/cert/uat-ar
+
+  release_uat_pnpg:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[UAT PNPG] Run Cert Infra Release'
+    if: ${{ inputs.environment == 'uat-pnpg' }}
+    secrets: inherit
+    with:
+      environment: uat
+      tf_environment: uat-pnpg
+      dir: ./infra/cert/uat-pnpg
+
+  release_prod_ar:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Prod AR] Run Cert Infra Release'
+    if: ${{ inputs.environment == 'prod-ar' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-ar
+      dir: ./infra/cert/prod-ar
+
+  release_prod_pnpg:
+    uses: ./.github/workflows/call_release_infra.yml
+    name: '[Prod PNPG] Run Cert Infra Release'
+    if: ${{ inputs.environment == 'prod-pnpg' }}
+    secrets: inherit
+    with:
+      environment: prod
+      tf_environment: prod-pnpg
+      dir: ./infra/cert/prod-pnpg
