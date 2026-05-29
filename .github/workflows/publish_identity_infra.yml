@@ -40,7 +40,6 @@ jobs:
   release_uat_ar:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
     name: '[UAT] Identity Bootstrap Infra Release (AR)'
-    needs: [prepare]
     if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') }}
     secrets: inherit
     with:
@@ -55,7 +54,6 @@ jobs:
   release_prod_ar:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
     name: '[Prod] Identity Bootstrap Infra Release (AR)'
-    needs: [prepare]
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
     with:
