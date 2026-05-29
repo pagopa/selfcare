@@ -43,11 +43,11 @@ resource "github_repository_environment_deployment_policy" "this" {
 }
 
 resource "github_actions_environment_secret" "env_secrets" {
-  for_each        = var.env_secrets
-  repository      = var.repository
-  environment     = github_repository_environment.this.environment
-  secret_name     = each.key
-  plaintext_value = each.value
+  for_each    = var.env_secrets
+  repository  = var.repository
+  environment = github_repository_environment.this.environment
+  secret_name = each.key
+  value       = each.value
 }
 
 data "azurerm_key_vault_secret" "kv_secrets" {
@@ -57,9 +57,9 @@ data "azurerm_key_vault_secret" "kv_secrets" {
 }
 
 resource "github_actions_environment_secret" "kv_secrets" {
-  for_each        = var.kv_secrets
-  repository      = var.repository
-  environment     = github_repository_environment.this.environment
-  secret_name     = each.key
-  plaintext_value = data.azurerm_key_vault_secret.kv_secrets[each.key].value
+  for_each    = var.kv_secrets
+  repository  = var.repository
+  environment = github_repository_environment.this.environment
+  secret_name = each.key
+  value       = data.azurerm_key_vault_secret.kv_secrets[each.key].value
 }
