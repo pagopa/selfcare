@@ -80,7 +80,7 @@ module "identity_opex_cd" {
     subject    = "opex-${local.env}-cd"
   }]
 
-  ci_rbac_roles = {
+  cd_rbac_roles = {
     subscription_roles = local.environment_cd_roles.subscription
     resource_groups = merge(local.environment_cd_roles.resource_groups,
       {
