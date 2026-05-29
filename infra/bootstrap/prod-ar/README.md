@@ -31,8 +31,6 @@
 | <a name="module_identity_ci"></a> [identity\_ci](#module\_identity\_ci) | ../_modules/github_managed_identity_ci | n/a |
 | <a name="module_identity_opex_cd"></a> [identity\_opex\_cd](#module\_identity\_opex\_cd) | github.com/pagopa/terraform-azurerm-v4//github_federated_identity | v9.6.1 |
 | <a name="module_identity_opex_ci"></a> [identity\_opex\_ci](#module\_identity\_opex\_ci) | github.com/pagopa/terraform-azurerm-v4//github_federated_identity | v9.6.1 |
-| <a name="module_keyvault"></a> [keyvault](#module\_keyvault) | ../_modules/keyvault | n/a |
-| <a name="module_keyvault_pnpg"></a> [keyvault\_pnpg](#module\_keyvault\_pnpg) | ../_modules/keyvault | n/a |
 | <a name="module_tfstate_access"></a> [tfstate\_access](#module\_tfstate\_access) | ../_modules/tfstate_access | n/a |
 
 ## Resources
