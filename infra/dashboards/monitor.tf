@@ -30,3 +30,16 @@ resource "azurerm_portal_dashboard" "monitoring_document_ms" {
       prefix          = "${var.prefix}-${var.env_short}"
   })
 }
+
+resource "azurerm_portal_dashboard" "monitoring_overview" {
+  name                = "${local.project}-monitoring-overview"
+  resource_group_name = azurerm_resource_group.monitor_rg.name
+  location            = azurerm_resource_group.monitor_rg.location
+  tags                = var.tags
+
+  dashboard_properties = templatefile("overview-dashboard.json",
+    {
+      subscription_id = data.azurerm_subscription.current.subscription_id
+      prefix          = "${var.prefix}-${var.env_short}"
+  })
+}
