@@ -6,11 +6,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4.0.0"
     }
-
-    azapi = {
-      source  = "azure/azapi"
-      version = "~> 1.9.0"
-    }
   }
 
   backend "azurerm" {}
@@ -19,7 +14,5 @@ terraform {
 provider "azurerm" {
   features {}
 }
-
-provider "azapi" {}
 
 data "azurerm_client_config" "current" {}
