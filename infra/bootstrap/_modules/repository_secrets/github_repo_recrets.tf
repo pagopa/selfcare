@@ -119,3 +119,55 @@ resource "github_actions_secret" "repo_ms_ci_secrets_client_id" {
   secret_name = "GH_PAT_VARIABLES"
   value       = var.gh_pat_variable
 }
+
+#############################################################################
+# GITHUB PAT VARIABLES REPOSITORIES SECRETS OPEX DASHBOARDS
+############################################################################_
+
+resource "github_actions_environment_secret" "repo_opex_ci_secrets_client_id" {
+  for_each    = var.opex ? var.github_federations : {}
+  repository  = each.key
+  environment = "opex-${each.value}-ci"
+  secret_name = "ARM_CLIENT_ID"
+  value       = var.opex_ci_identity_client_id
+}
+
+resource "github_actions_environment_secret" "repo_opex_ci_secrets_subscription_id" {
+  for_each    = var.opex ? var.github_federations : {}
+  repository  = each.key
+  environment = "opex-${each.value}-ci"
+  secret_name = "ARM_SUBSCRIPTION_ID"
+  value       = var.subscription_id
+}
+
+resource "github_actions_environment_secret" "repo_opex_ci_secrets_tenant_id" {
+  for_each    = var.opex ? var.github_federations : {}
+  repository  = each.key
+  environment = "opex-${each.value}-ci"
+  secret_name = "ARM_TENANT_ID"
+  value       = var.tenant_id
+}
+
+resource "github_actions_environment_secret" "repo_opex_cd_secrets_client_id" {
+  for_each    = var.opex ? var.github_federations : {}
+  repository  = each.key
+  environment = "opex-${each.value}-cd"
+  secret_name = "ARM_CLIENT_ID"
+  value       = var.opex_cd_identity_client_id
+}
+
+resource "github_actions_environment_secret" "repo_opex_cd_secrets_subscription_id" {
+  for_each    = var.opex ? var.github_federations : {}
+  repository  = each.key
+  environment = "opex-${each.value}-cd"
+  secret_name = "ARM_SUBSCRIPTION_ID"
+  value       = var.subscription_id
+}
+
+resource "github_actions_environment_secret" "repo_opex_cd_secrets_tenant_id" {
+  for_each    = var.opex ? var.github_federations : {}
+  repository  = each.key
+  environment = "opex-${each.value}-cd"
+  secret_name = "ARM_TENANT_ID"
+  value       = var.tenant_id
+}

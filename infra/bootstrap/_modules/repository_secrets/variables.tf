@@ -44,3 +44,21 @@ variable "ci_identity_client_id" {
   description = "Client ID of the Azure AD application for the backend CI pipeline"
   type        = string
 }
+
+variable "opex_cd_identity_client_id" {
+  description = "Client ID of the Azure AD application for the OPEX CD pipeline"
+  type        = string
+  default     = null
+}
+
+variable "opex_ci_identity_client_id" {
+  description = "Client ID of the Azure AD application for the OPEX CI pipeline"
+  type        = string
+  default     = null
+}
+
+variable "opex" {
+  description = "Opex Dashboards configuration enabled"
+  type        = bool
+  default     = false
+}

@@ -1,230 +1,180 @@
-#oa3_spec: src/main/resources/swagger/api-docs.json
-oa3_spec: src/main/resources/swagger/api-docs.json
+oa3_spec: apps/dashboard-bff/src/main/resources/swagger/api-docs.json
 name: opex_api-dashboard
 location: West Europe
 timespan: 30m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
 data_source: /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-vnet-rg/providers/Microsoft.Network/applicationGateways/selc-p-app-gw
 action_groups:
   - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/PagoPA
-  - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
+  # - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
 overrides:
   hosts: # Use these hosts instead of those inside the OpenApi spec
     - api.selfcare.pagopa.it
   endpoints:
-    /delegations:
+    /v1/delegations:
       response_time_threshold: 12 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.9
-    /institutions:
+    /v2/institutions:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/products:
+    /v1/institutions/products:
       response_time_threshold: 1.6 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}:
+    /v2/institutions/{institutionId}:
       response_time_threshold: 2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/geographicTaxonomy:
+    /v1/institutions/{institutionId}/geographic-taxonomy:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/institutions:
+    /v2/institutions/{institutionId}/institutions:
       response_time_threshold: 2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/logo:
+    /v1/institutions/{institutionId}/logo:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/partners:
+    /v1/institutions/{institutionId}/partners:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/products:
+    /v2/institutions/{institutionId}/onboardings-info:
       response_time_threshold: 15 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/products/{productId}/users:
+    /v2/institutions/{institutionId}/products/{productId}/users:
       response_time_threshold: 15 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/products/{productId}/users/{userId}:
+    /v2/institutions/{institutionId}/products/{productId}/users/{userId}:
       response_time_threshold: 1.4 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/users:
+    /v2/users/institution/{institutionId}:
       response_time_threshold: 1.2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /institutions/{institutionId}/users/{userId}:
+    /v2/institutions/{institutionId}/users/{userId}:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /onboarding-requests/approve/{tokenId}:
+    /v2/products/{productId}/back-office:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /onboarding-requests/reject/{tokenId}:
+    /v1/products/{productId}/brokers/{institutionType}:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /onboarding-requests/{tokenId}:
-      response_time_threshold: 1.5 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /pnPGInstitutions/{institutionId}/products:
-      response_time_threshold: 3 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /products/{productId}/back-office:
-      response_time_threshold: 3 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /products/{productId}/brokers/{institutionType}:
-      response_time_threshold: 3 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /products/{productId}/roles:
+    /v1/products/{productId}/roles:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /relationships/{relationshipId}:
-      response_time_threshold: 30 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /relationships/{relationshipId}/activate:
-      response_time_threshold: 1 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /relationships/{relationshipId}/suspend:
-      response_time_threshold: 1 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /support:
+    /v1/support:
       response_time_threshold: 10 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.9
-    /token/exchange:
+    /v2/token/exchange:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /token/exchange/fatturazione:
+    /v2/token/exchange/fatturazione:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /users:
-      response_time_threshold: 1.5 # Default: 1
-      response_time_evaluation_frequency: 10 # Default: 10
-      response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default:
-      availability_threshold: 0.95
-    /users/search:
+    /v2/users/search:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /users/{id}:
+    /v2/users/{id}:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.9
-    /user-groups:
+    /v2/user-groups:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.9
-    /user-groups/:
+    /v2/user-groups/:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /user-groups/{id}:
+    /v2/user-groups/{id}:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /user-groups/{id}/activate:
+    /v2/user-groups/{id}/activate:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /user-groups/{id}/members/{userId}:
+    /v2/user-groups/{id}/members/{userId}:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    /user-groups/{id}/suspend:
+    /v2/user-groups/{id}/suspend:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default: :
       availability_threshold: 0.95
-    /user-groups/{userGroupId}/members/{userId}:
+    /v2/user-groups/{userGroupId}/members/{userId}:
       response_time_threshold: 1.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
-    
