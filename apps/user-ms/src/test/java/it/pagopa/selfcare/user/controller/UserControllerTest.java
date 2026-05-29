@@ -888,6 +888,26 @@ class UserControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void testSendMailWithEmailType() {
+        String PATH_USER_ID = "userId";
+        String PATH_SEND_MAIL = "/{userId}/send-mail-request";
+        SendMailDto mailDto = createSendMailDto();
+        mailDto.setType(EmailType.CONVENTION_REQUEST);
+        mailDto.setInstitutionId("institutionId");
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam(PATH_USER_ID, "userId")
+                .body(mailDto)
+                .post(PATH_SEND_MAIL)
+                .then()
+                .statusCode(204);
+
+        verify(userService, times(1)).sendMailUserRequest("userId", "mailUuid", "institutionName", "prod-pagopa", EmailType.CONVENTION_REQUEST, "institutionId");
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void testSendMail_invalidRequestBody() {
         String PATH_USER_ID = "userId";
         String PATH_SEND_MAIL = "/{userId}/send-mail-request";
