@@ -14,4 +14,5 @@ module "github_secrets" {
   tenant_id       = data.azurerm_client_config.current.tenant_id
   subscription_id = data.azurerm_client_config.current.subscription_id
   gh_pat_variable = data.azurerm_key_vault_secret.github_path_token.value
+  opex            = true
 }
