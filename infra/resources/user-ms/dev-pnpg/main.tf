@@ -122,7 +122,7 @@ locals {
     },
     {
       name  = "SELFCARE_URL"
-      value = "https://imprese.notifichedigitali.it"
+      value = "https://pnpg.dev.selfcare.pagopa.it"
     }
   ]
 
