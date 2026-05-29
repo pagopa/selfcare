@@ -3,6 +3,7 @@ name: Publish - Identity Bootstrap - Identity
 permissions:
   contents: read
   id-token: write
+  pull-requests: write
 
 on:
   push:
