@@ -223,7 +223,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         Map<String, String> dataModel = new HashMap<>();
         dataModel.put(PRODUCT_NAME, Optional.ofNullable(product.getTitle()).orElse(""));
         dataModel.put(INSTITUTION_NAME, Optional.ofNullable(institution.getInstitutionDescription()).orElse(""));
-        dataModel.put(SELFCARE_DASHBOARD_INSTITUTION_URL, Optional.ofNullable(institution.getInstitutionId()).map(id -> String.format("%s/dashboard/%s", selfcareUrl, id)).orElse(String.format("%s/dashbaord", selfcareUrl)));
+        dataModel.put(SELFCARE_DASHBOARD_INSTITUTION_URL, Optional.ofNullable(institution.getInstitutionId()).map(id -> String.format("%s/dashboard/%s", selfcareUrl, id)).orElse(String.format("%s/dashboard/party-selection", selfcareUrl)));
         return dataModel;
     }
 
@@ -252,7 +252,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
     public Uni<Void> buildDataModelConventionRequestAndSendEmail(UserResource user, UserInstitution institution, Product product) {
         String email = retrieveMail(user, institution);
         Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
-        return this.sendEmailNotification(CONVENTION_TEMPLATE, String.format(CONVENTION_SUBJECT + "- %s", institution.getInstitutionDescription()), email, dataModel);
+        return this.sendEmailNotification(CONVENTION_TEMPLATE, String.format(CONVENTION_SUBJECT + " - %s", institution.getInstitutionDescription()), email, dataModel);
     }
 
     private Uni<Void> sendEmailNotification(String templateName, String subject, String email, Map<String, String> dataModel) {
