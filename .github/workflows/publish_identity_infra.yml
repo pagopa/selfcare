@@ -30,7 +30,7 @@ jobs:
     secrets: inherit
     with:
       environment: dev-ar
-      dir: infra/bootstrap
+      base_path: infra/bootstrap
       # env_vars: ""
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
@@ -44,7 +44,7 @@ jobs:
     secrets: inherit
     with:
       environment: uat-ar 
-      dir: infra/bootstrap
+      base_path: infra/bootstrap
       # env_vars: ""
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
@@ -58,7 +58,7 @@ jobs:
     secrets: inherit
     with:
       environment: prod-ar
-      dir: infra/bootstrap
+      base_path: infra/bootstrap
       # env_vars: ""
       use_private_agent: true
       override_github_environment: ${{ inputs.env }}
