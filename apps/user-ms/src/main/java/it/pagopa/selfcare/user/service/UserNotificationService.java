@@ -19,5 +19,7 @@ public interface UserNotificationService {
 
     Uni<Void> buildDataModelRequestAndSendEmail(UserResource user, UserInstitution institution, Product product);
 
+    Uni<Void> buildDataModelConventionRequestAndSendEmail(UserResource user, UserInstitution institution, Product product);
+
     Uni<Void> sendOtpNotification(String institutionalEmail, String name, String otp);
 }
