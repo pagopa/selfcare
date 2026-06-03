@@ -269,7 +269,7 @@ class ProductControllerTest {
         .statusCode(404)
         .contentType(ContentType.JSON)
         .body("title", equalTo("Product not found"))
-        .body("detail", equalTo("No product found with productId=" + productId))
+        .body("detail", equalTo("No product found with productId: " + productId))
         .body("status", equalTo(404))
         .body("instance", equalTo("/products/" + productId));
 
@@ -366,7 +366,7 @@ class ProductControllerTest {
         .statusCode(404)
         .contentType(ContentType.JSON)
         .body("title", equalTo("Product not found"))
-        .body("detail", equalTo("No product found with productId=" + productId))
+        .body("detail", equalTo("No product found with productId: " + productId))
         .body("status", equalTo(404))
         .body("instance", equalTo("/products/" + productId));
 
