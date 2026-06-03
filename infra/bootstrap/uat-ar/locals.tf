@@ -37,21 +37,21 @@ locals {
   }
 
   env_ci_secrets = {
-    "AZURE_CLIENT_ID_CI"    = module.identity_ci.identity_client_id
-    "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
-    "AZURE_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
-    "ARM_CLIENT_ID_CI"      = module.identity_ci.identity_client_id
-    "ARM_SUBSCRIPTION_ID"   = data.azurerm_client_config.current.subscription_id
-    "ARM_TENANT_ID"         = data.azurerm_client_config.current.tenant_id,
+    # "AZURE_CLIENT_ID_CI"    = module.identity_ci.identity_client_id
+    # "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
+    # "AZURE_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
+    # "ARM_CLIENT_ID_CI"      = module.identity_ci.identity_client_id
+    "ARM_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
+    "ARM_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
   }
 
   env_cd_secrets = {
-    "AZURE_CLIENT_ID_CD"    = module.identity_cd.identity_client_id
-    "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
-    "AZURE_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
-    "ARM_CLIENT_ID_CD"      = module.identity_cd.identity_client_id
-    "ARM_SUBSCRIPTION_ID"   = data.azurerm_client_config.current.subscription_id
-    "ARM_TENANT_ID"         = data.azurerm_client_config.current.tenant_id,
+    # "AZURE_CLIENT_ID_CD"    = module.identity_cd.identity_client_id
+    # "AZURE_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
+    # "AZURE_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
+    # "ARM_CLIENT_ID_CD"      = module.identity_cd.identity_client_id
+    "ARM_SUBSCRIPTION_ID" = data.azurerm_client_config.current.subscription_id
+    "ARM_TENANT_ID"       = data.azurerm_client_config.current.tenant_id,
   }
 
   ci_github_federations = [
@@ -111,32 +111,32 @@ locals {
     }
   ]
 
-  ci_github_federations_ms = [
-    {
-      repository = "selfcare-dashboard-backend"
-      subject    = "${local.env}-ci"
-    },
-    {
-      repository = "selfcare-external-api-backend"
-      subject    = "${local.env}-ci"
-    },
-    {
-      repository = "selfcare-ms-core"
-      subject    = "${local.env}-ci"
-    },
-    {
-      repository = "selfcare-user"
-      subject    = "${local.env}-ci"
-    },
-    {
-      repository = "selfcare-institution"
-      subject    = "${local.env}-ci"
-    },
-    {
-      repository = "selfcare"
-      subject    = "${local.env}-ci"
-    }
-  ]
+  # ci_github_federations_ms = [
+  #   # {
+  #   #   repository = "selfcare-dashboard-backend"
+  #   #   subject    = "${local.env}-ci"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-external-api-backend"
+  #   #   subject    = "${local.env}-ci"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-ms-core"
+  #   #   subject    = "${local.env}-ci"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-user"
+  #   #   subject    = "${local.env}-ci"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-institution"
+  #   #   subject    = "${local.env}-ci"
+  #   # },
+  #   {
+  #     repository = "selfcare"
+  #     subject    = "${local.env}-ci"
+  #   }
+  # ]
 
   cd_github_federations_fe = [
     {
@@ -181,38 +181,39 @@ locals {
     }
   ]
 
-  cd_github_federations_ms = [
-    {
-      repository = "selfcare-dashboard-backend"
-      subject    = "${local.env}-cd"
-    },
-    {
-      repository = "selfcare-external-api-backend"
-      subject    = "${local.env}-cd"
-    },
-    {
-      repository = "selfcare-ms-core"
-      subject    = "${local.env}-cd"
-    },
-    {
-      repository = "selfcare-user"
-      subject    = "${local.env}-cd"
-    },
-    {
-      repository = "selfcare-institution"
-      subject    = "${local.env}-cd"
-    },
-    {
-      repository = "selfcare"
-      subject    = "${local.env}-cd"
-    }
-  ]
+  # cd_github_federations_ms = [
+  #   # {
+  #   #   repository = "selfcare-dashboard-backend"
+  #   #   subject    = "${local.env}-cd"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-external-api-backend"
+  #   #   subject    = "${local.env}-cd"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-ms-core"
+  #   #   subject    = "${local.env}-cd"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-user"
+  #   #   subject    = "${local.env}-cd"
+  #   # },
+  #   # {
+  #   #   repository = "selfcare-institution"
+  #   #   subject    = "${local.env}-cd"
+  #   # },
+  #   {
+  #     repository = "selfcare"
+  #     subject    = "${local.env}-cd"
+  #   }
+  # ]
 
   environment_ci_roles = {
     subscription = [
       "Reader",
       "PagoPA IaC Reader",
-      "Reader and Data Access"
+      "Reader and Data Access",
+      "ContainerApp Reader"
     ]
     resource_groups = {
       "terraform-state-rg" = [
@@ -245,7 +246,16 @@ locals {
       ],
       "selc-${local.env_short}-weu-pnpg-cosmosdb-mongodb-rg" = [
         "DocumentDB Account Contributor"
-      ]
+      ],
+      "selc-${local.env_short}-contracts-storage-rg" = [
+        "Storage Blob Data Contributor"
+      ],
+      "selc-${local.env_short}-onboarding-fn-rg" = [
+        "Storage Account Key Operator Service Role"
+      ],
+      "selc-${local.env_short}-pnpg-onboarding-fn-rg" = [
+        "Storage Account Key Operator Service Role"
+      ],
     }
   }
 
@@ -254,6 +264,9 @@ locals {
       "Contributor"
     ]
     resource_groups = {
+      terraform-state-rg = [
+        "Storage Blob Data Contributor"
+      ],
       "selc-${local.env_short}-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
@@ -277,26 +290,32 @@ locals {
 
   environment_ci_roles_ms = {
     subscription = [
-      "Reader",
-      "PagoPA IaC Reader",
-      "ContainerApp Reader"
+      # "Reader",
+      # "PagoPA IaC Reader",
+      # "ContainerApp Reader"
     ]
     resource_groups = {
-      terraform-state-rg = [
-        "Storage Blob Data Contributor"
-      ],
-      "selc-${local.env_short}-contracts-storage-rg" = [
-        "Storage Blob Data Contributor"
-      ],
-      io-infra-rg = [
-        "Storage Blob Data Contributor"
-      ],
-      "selc-${local.env_short}-onboarding-fn-rg" = [
-        "Storage Account Key Operator Service Role"
-      ],
-      "selc-${local.env_short}-pnpg-onboarding-fn-rg" = [
-        "Storage Account Key Operator Service Role"
-      ],
+      # terraform-state-rg = [
+      #   "Storage Blob Data Contributor"
+      # ],
+      # "selc-${local.env_short}-contracts-storage-rg" = [
+      #   "Storage Blob Data Contributor"
+      # ],
+      # io-infra-rg = [
+      #   "Storage Blob Data Contributor"
+      # ],
+      # "selc-${local.env_short}-onboarding-fn-rg" = [
+      #   "Storage Account Key Operator Service Role"
+      # ],
+      # "selc-${local.env_short}-pnpg-onboarding-fn-rg" = [
+      #   "Storage Account Key Operator Service Role"
+      # # ],
+      # "selc-${local.env_short}-documents-storage-rg" = [
+      #   "Storage Blob Data Contributor"
+      # ],
+      # "selc-${local.env_short}-contracts-storage-rg" = [
+      #   "Storage Blob Data Contributor"
+      # ]
     }
   }
 
@@ -305,12 +324,12 @@ locals {
       "Contributor"
     ]
     resource_groups = {
-      terraform-state-rg = [
-        "Storage Blob Data Contributor"
-      ],
-      io-infra-rg = [
-        "Storage Blob Data Contributor"
-      ],
+      # terraform-state-rg = [
+      #   "Storage Blob Data Contributor"
+      # ],
+      # io-infra-rg = [
+      #   "Storage Blob Data Contributor"
+      # ],
     }
   }
 
@@ -340,15 +359,7 @@ locals {
     "selfcare-onboarding-frontend"            = "${local.env}"
     "selfcare-pnpg-dashboard-frontend"        = "${local.env}"
   }
-  github_federations_ms = {
-    "selfcare"                         = "${local.env}"
-    "selfcare-dashboard-backend"       = "${local.env}"
-    "selfcare-external-api-backend"    = "${local.env}"
-    "selfcare-infra"                   = "${local.env}"
-    "selfcare-institution"             = "${local.env}"
-    "selfcare-ms-external-interceptor" = "${local.env}"
-    "selfcare-ms-party-registry-proxy" = "${local.env}"
-    "selfcare-onboarding-backend"      = "${local.env}"
-    "selfcare-user"                    = "${local.env}"
-  }
+  # github_federations_ms = {
+  #   "selfcare"                         = "${local.env}"
+  # }
 }

@@ -1336,6 +1336,15 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1718,6 +1727,39 @@
         } ]
       }
     },
+    "/v1/onboarding/{onboardingId}/user" : {
+      "delete" : {
+        "tags" : [ "internal-v1", "Onboarding Controller" ],
+        "summary" : "Perform delete operation of a USER type onboarding request",
+        "description" : "Perform delete operation of a USER type onboarding request receiving onboarding id. It first deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
+        "operationId" : "deleteOnboardingUser",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/onboarding/{onboardingId}/withUserInfo" : {
       "get" : {
         "tags" : [ "Onboarding Controller" ],
@@ -1936,6 +1978,14 @@
             "type" : "string"
           },
           "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ApproveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userUid" : {
             "type" : "string"
           }
         }
@@ -3011,6 +3061,9 @@
         "type" : "object",
         "properties" : {
           "reasonForReject" : {
+            "type" : "string"
+          },
+          "userUid" : {
             "type" : "string"
           }
         }

@@ -9,10 +9,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.CertificationEnum;
-import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
-import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
-import it.pagopa.selfcare.user.controller.request.SendMailDto;
+import it.pagopa.selfcare.user.controller.request.*;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -884,7 +881,27 @@ class UserControllerTest {
                 .then()
                 .statusCode(204);
 
-        verify(userService, times(1)).sendMailUserRequest(anyString(), anyString(), anyString(), anyString());
+        verify(userService, times(1)).sendMailUserRequest("userId", "mailUuid", "institutionName", "prod-pagopa", EmailType.USER_REQUEST, null);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void testSendMailWithEmailType() {
+        String PATH_USER_ID = "userId";
+        String PATH_SEND_MAIL = "/{userId}/send-mail-request";
+        SendMailDto mailDto = createSendMailDto();
+        mailDto.setType(EmailType.CONVENTION_REQUEST);
+        mailDto.setInstitutionId("institutionId");
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam(PATH_USER_ID, "userId")
+                .body(mailDto)
+                .post(PATH_SEND_MAIL)
+                .then()
+                .statusCode(204);
+
+        verify(userService, times(1)).sendMailUserRequest("userId", "mailUuid", "institutionName", "prod-pagopa", EmailType.CONVENTION_REQUEST, "institutionId");
     }
 
     @Test

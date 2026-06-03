@@ -16,6 +16,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
@@ -987,13 +988,45 @@ class UserServiceTest {
                 any(Product.class))
         ).thenReturn(Uni.createFrom().voidItem());
 
-        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionId", "productId")
+        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionId", "productId", EmailType.USER_REQUEST, null)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.awaitItem();
 
         verify(userNotificationService, times(1)).buildDataModelRequestAndSendEmail(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class)
+        );
+    }
+
+    @Test
+    void testSendMail_CONVENTION_REQUEST() {
+        UserResource user = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(USERS_WORKS_FIELD_LIST, "userId"))
+                .thenReturn(Uni.createFrom().item(user));
+
+        UserResource loggedUser = new UserResource();
+        loggedUser.setName(new NameCertifiableSchema(NameCertifiableSchema.CertificationEnum.SPID,"name"));
+        loggedUser.setFamilyName(new FamilyNameCertifiableSchema(FamilyNameCertifiableSchema.CertificationEnum.SPID, "familyName"));
+
+        Product product = mock(Product.class);
+        when(productService.getProduct(any())).thenReturn(product);
+
+        when(userNotificationService.buildDataModelRequestAndSendEmail(
+                any(UserResource.class),
+                any(UserInstitution.class),
+                any(Product.class))
+        ).thenReturn(Uni.createFrom().voidItem());
+
+        var subscriber = userService.sendMailUserRequest("userId", "userMailUuid", "institutionName", "productId", EmailType.CONVENTION_REQUEST, "institutionId")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.awaitItem();
+
+        verify(userNotificationService, times(1)).buildDataModelConventionRequestAndSendEmail(
                 any(UserResource.class),
                 any(UserInstitution.class),
                 any(Product.class)

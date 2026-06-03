@@ -439,7 +439,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Void> sendMailRequest(@PathParam("userId") String userId,
                                             @Valid SendMailDto sendMailDto) {
-        return userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId());
+        return userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getType(), sendMailDto.getInstitutionId());
     }
 
     @APIResponses({

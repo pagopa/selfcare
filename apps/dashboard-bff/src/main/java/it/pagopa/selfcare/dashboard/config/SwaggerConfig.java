@@ -12,8 +12,6 @@ import io.swagger.v3.oas.models.responses.ApiResponses;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.oas.models.servers.Server;
-import io.swagger.v3.oas.models.servers.ServerVariable;
-import io.swagger.v3.oas.models.servers.ServerVariables;
 import io.swagger.v3.oas.models.tags.Tag;
 import it.pagopa.selfcare.commons.web.model.Problem;
 import org.springdoc.core.customizers.OpenApiCustomizer;
@@ -48,12 +46,10 @@ public class SwaggerConfig {
 
     private final Environment environment;
 
-
     @Autowired
     SwaggerConfig(Environment environment) {
         this.environment = environment;
     }
-
 
     @Bean
     @Primary
@@ -62,27 +58,31 @@ public class SwaggerConfig {
                 .info(new Info()
                         .title("Dashboard BFF API")
                         .description(environment.getProperty("swagger.description", "Api and Models"))
-                        .version(environment.getProperty("swagger.version", environment.getProperty("spring.application.version")))
-                )
+                        .version(environment.getProperty("swagger.version",
+                                environment.getProperty("spring.application.version"))))
                 .servers(List.of(
-                        new Server().url("{url}:{port}{basePath}").variables(new ServerVariables()
-                                .addServerVariable("url", new ServerVariable()._default("http://localhost"))
-                                .addServerVariable("port", new ServerVariable()._default("80"))
-                                .addServerVariable("basePath", new ServerVariable()._default(""))
-                        )
-                ))
+                        new Server().url("http://localhost:80")))
                 .tags(List.of(
-                        new Tag().name("delegations").description(environment.getProperty("swagger.dashboard.delegations.api.description")),
-                        new Tag().name("institutions").description(environment.getProperty("swagger.dashboard.institutions.api.description")),
-                        new Tag().name("onboarding").description(environment.getProperty("swagger.dashboard.onboarding.api.description")),
-                        new Tag().name("pnPGInstitutions").description(environment.getProperty("swagger.dashboard.pnPGInstitutions.api.description")),
-                        new Tag().name("products").description(environment.getProperty("swagger.dashboard.product.api.description")),
-                        new Tag().name("relationships").description(environment.getProperty("swagger.dashboard.relationships.api.description")),
-                        new Tag().name("support").description(environment.getProperty("swagger.dashboard.support.api.description")),
-                        new Tag().name("token").description(environment.getProperty("swagger.dashboard.token.api.description")),
-                        new Tag().name("user").description(environment.getProperty("swagger.dashboard.user.api.description")),
-                        new Tag().name("user-groups").description(environment.getProperty("swagger.dashboard.user-groups.api.description"))
-                ))
+                        new Tag().name("delegations")
+                                .description(environment.getProperty("swagger.dashboard.delegations.api.description")),
+                        new Tag().name("institutions")
+                                .description(environment.getProperty("swagger.dashboard.institutions.api.description")),
+                        new Tag().name("onboarding")
+                                .description(environment.getProperty("swagger.dashboard.onboarding.api.description")),
+                        new Tag().name("pnPGInstitutions").description(
+                                environment.getProperty("swagger.dashboard.pnPGInstitutions.api.description")),
+                        new Tag().name("products")
+                                .description(environment.getProperty("swagger.dashboard.product.api.description")),
+                        new Tag().name("relationships").description(
+                                environment.getProperty("swagger.dashboard.relationships.api.description")),
+                        new Tag().name("support")
+                                .description(environment.getProperty("swagger.dashboard.support.api.description")),
+                        new Tag().name("token")
+                                .description(environment.getProperty("swagger.dashboard.token.api.description")),
+                        new Tag().name("user")
+                                .description(environment.getProperty("swagger.dashboard.user.api.description")),
+                        new Tag().name("user-groups")
+                                .description(environment.getProperty("swagger.dashboard.user-groups.api.description"))))
                 .components(new Components()
                         .addSecuritySchemes(
                                 AUTH_SCHEMA_NAME,
@@ -91,9 +91,8 @@ public class SwaggerConfig {
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
                                         .bearerFormat("JWT")
-                                        .description(environment.getProperty("swagger.security.schema.bearer.description"))
-                        )
-                );
+                                        .description(environment
+                                                .getProperty("swagger.security.schema.bearer.description"))));
     }
 
     @Bean
@@ -107,12 +106,15 @@ public class SwaggerConfig {
     @Bean
     public OpenApiCustomizer openApiCustomizer() {
         final Map<String, Schema> problemComponent = ModelConverters.getInstance().read(Problem.class);
-        final Map<String, Schema> invalidParamComponent = ModelConverters.getInstance().read(Problem.InvalidParam.class);
-        final Schema<?> problemSchema = new Schema<>().$ref("#/components/schemas/Problem").jsonSchemaImpl(Problem.class);
-        final Content problemContent = new Content().addMediaType("application/problem+json", new MediaType().schema(problemSchema));
+        final Map<String, Schema> invalidParamComponent = ModelConverters.getInstance()
+                .read(Problem.InvalidParam.class);
+        final Schema<?> problemSchema = new Schema<>().$ref("#/components/schemas/Problem")
+                .jsonSchemaImpl(Problem.class);
+        final Content problemContent = new Content().addMediaType("application/problem+json",
+                new MediaType().schema(problemSchema));
         return openApi -> {
-            openApi.getPaths().values().forEach(pathItem ->
-                    pathItem.readOperationsMap().forEach((httpMethod, operation) -> {
+            openApi.getPaths().values()
+                    .forEach(pathItem -> pathItem.readOperationsMap().forEach((httpMethod, operation) -> {
                         final ApiResponses responses = operation.getResponses();
 
                         // Remove 404 for non-GET methods
@@ -127,7 +129,8 @@ public class SwaggerConfig {
                             responses.addApiResponse("404", forced404Response);
                         }
 
-                        // Include HTTP method in operationId (if it doesn't start with # and not already present)
+                        // Include HTTP method in operationId (if it doesn't start with # and not
+                        // already present)
                         Optional.ofNullable(operation.getOperationId()).ifPresent(opid -> {
                             if (opid.startsWith("#")) {
                                 operation.setOperationId(opid.replace("#", ""));
@@ -136,7 +139,8 @@ public class SwaggerConfig {
                             }
                         });
 
-                        // Set parameter descriptions to parameter names if missing and configure array query parameters
+                        // Set parameter descriptions to parameter names if missing and configure array
+                        // query parameters
                         Optional.ofNullable(operation.getParameters()).ifPresent(params -> {
                             params.forEach(p -> {
                                 if (p.getDescription() == null) {
@@ -147,7 +151,8 @@ public class SwaggerConfig {
                                 // FE expects springfox style: param=element1,element2
                                 if (p.getIn() != null && p.getIn().equals("query")) {
                                     if (p.getSchema() instanceof ArraySchema && p.getSchema().getItems() != null) {
-                                        if ("array".equals(p.getSchema().getType()) && "string".equals(p.getSchema().getItems().getType())) {
+                                        if ("array".equals(p.getSchema().getType())
+                                                && "string".equals(p.getSchema().getItems().getType())) {
                                             p.setStyle(Parameter.StyleEnum.FORM);
                                             p.setExplode(true);
                                             p.setSchema(new StringSchema());
@@ -171,15 +176,15 @@ public class SwaggerConfig {
 
                         // Security requirement
                         operation.addSecurityItem(new SecurityRequirement().addList("bearerAuth", List.of("global")));
-                    })
-            );
+                    }));
 
             // Add Problem to components
             openApi.getComponents().addSchemas("Problem", problemComponent.get("Problem"));
             openApi.getComponents().addSchemas("InvalidParam", invalidParamComponent.get("InvalidParam"));
 
             // Sort components alphabetically
-            //openApi.getComponents().setSchemas(new TreeMap<>(openApi.getComponents().getSchemas()));
+            // openApi.getComponents().setSchemas(new
+            // TreeMap<>(openApi.getComponents().getSchemas()));
 
             // Resolve description placeholders in schemas
             openApi.getComponents().getSchemas().values().forEach(c -> {

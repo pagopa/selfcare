@@ -1295,6 +1295,11 @@ components:
         deletedUserCount:
           format: int64
           type: integer
+    EmailType:
+      enum:
+      - USER_REQUEST
+      - CONVENTION_REQUEST
+      type: string
     Env:
       enum:
       - ROOT
@@ -1490,6 +1495,10 @@ components:
           type: string
         productId:
           minLength: 1
+          type: string
+        type:
+          $ref: "#/components/schemas/EmailType"
+        institutionId:
           type: string
     UpdateDescriptionDto:
       required:

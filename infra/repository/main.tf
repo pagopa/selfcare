@@ -1,10 +1,6 @@
 terraform {
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "<= 3.112.0"
-    }
 
     github = {
       source  = "integrations/github"
@@ -17,11 +13,6 @@ terraform {
     storage_account_name = "tfappprodselfcare"
     container_name       = "terraform-state"
     key                  = "selfcare.repository.tfstate"
-  }
-}
-
-provider "azurerm" {
-  features {
   }
 }
 

@@ -4,7 +4,7 @@ variable "github_federations_fe" {
   default     = {}
 }
 
-variable "github_federations_ms" {
+variable "github_federations" {
   description = "Micro-services mapping for GitHub Workload Identity Federation"
   type        = map(string)
   default     = {}
@@ -35,12 +35,30 @@ variable "fe_ci_identity_client_id" {
   type        = string
 }
 
-variable "ms_cd_identity_client_id" {
+variable "cd_identity_client_id" {
   description = "Client ID of the Azure AD application for the backend CD pipeline"
   type        = string
 }
 
-variable "ms_ci_identity_client_id" {
+variable "ci_identity_client_id" {
   description = "Client ID of the Azure AD application for the backend CI pipeline"
   type        = string
+}
+
+variable "opex_cd_identity_client_id" {
+  description = "Client ID of the Azure AD application for the OPEX CD pipeline"
+  type        = string
+  default     = null
+}
+
+variable "opex_ci_identity_client_id" {
+  description = "Client ID of the Azure AD application for the OPEX CI pipeline"
+  type        = string
+  default     = null
+}
+
+variable "opex" {
+  description = "Opex Dashboards configuration enabled"
+  type        = bool
+  default     = false
 }

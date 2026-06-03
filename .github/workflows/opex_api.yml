@@ -1,4 +1,4 @@
-name: Opex Dashboard
+xname: Opex Dashboard
 
 on:
   push:

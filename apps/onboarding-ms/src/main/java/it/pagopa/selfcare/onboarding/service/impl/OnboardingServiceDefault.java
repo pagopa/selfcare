@@ -208,7 +208,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     // -------------------------------------------------------------------------
 
     @Override
-    public Uni<OnboardingGet> approve(String onboardingId) {
+    public Uni<OnboardingGet> approve(String onboardingId, ApproveRequest approveRequest) {
         return queryHelper.retrieveOnboardingAndCheckIfExpired(onboardingId)
                 .onItem().transformToUni(queryHelper::checkIfToBeValidated)
                 .onItem().transformToUni(onboarding ->
@@ -217,9 +217,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
                                                 onboarding.getInstitution(), product.getId(), product.getParentId()))
                                 .replaceWith(onboarding))
-                .onItem().transformToUni(onboarding ->
+            .onItem().call(onboarding ->
+                    OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
+            .onItem().transformToUni(onboarding ->
                         onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboarding.getId(), null).map(ignore -> onboarding)
+                                ? orchestrationService.triggerOrchestration(onboardingId, null).map(ignore -> onboarding)
                                 : Uni.createFrom().item(onboarding))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
@@ -260,7 +262,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     @Override
-    public Uni<Long> rejectOnboarding(String onboardingId, String reasonForReject) {
+    public Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reason) {
         return Onboarding.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
@@ -269,7 +271,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         String.format("Onboarding with id %s is COMPLETED!", onboardingId)))
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
-                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reasonForReject))
+                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
                 .onItem().transformToUni(onboarding ->
                         onboardingOrchestrationEnabled
                                 ? orchestrationService.triggerOrchestration(onboardingId, "60").map(ignore -> onboarding)
@@ -281,8 +283,9 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Deleting onboarding with id {}", onboardingId);
         return Onboarding.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o ->
-                        PENDING.equals(o.getStatus()) || USERS.equals(o.getWorkflowType())
+                        USERS.equals(o.getWorkflowType())
                                 ? Uni.createFrom().failure(new InvalidRequestException(
                                         String.format("Onboarding with id %s can't be deleted", onboardingId)))
                                 : Uni.createFrom().item(o))
@@ -296,6 +299,35 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().transformToUni(onboarding ->
                         orchestrationService.triggerOrchestrationDeleteInstitutionAndUser(onboardingId)
                                 .map(ignore -> onboarding));
+    }
+
+    @Override
+    public Uni<Long> deleteOnboardingUser(String onboardingId) {
+        log.info("Deleting user onboarding with id {}", onboardingId);
+        return Onboarding.findById(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found", onboardingId)))
+                .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
+                .onItem().transformToUni(o -> {
+                    if (!USERS.equals(o.getWorkflowType())) {
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("Onboarding with id %s is not of type USERS", onboardingId)));
+                    }
+                    return Uni.createFrom().item(o);
+                })
+                .onItem().transformToUni(o ->
+                        onboardingUtils.ensureSuccessfulDocumentResponse(
+                                documentService.deleteContract(onboardingId),
+                                "deleteContract", onboardingId)
+                                .replaceWith(o))
+                .onItem().transformToUni(o -> {
+                    Map<String, Object> params = Map.of(
+                            "status", OnboardingStatus.DELETED.name(),
+                            "updatedAt", LocalDateTime.now(),
+                            "deletedAt", LocalDateTime.now());
+                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                });
     }
 
     // -------------------------------------------------------------------------
@@ -652,6 +684,15 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .filter(u -> u.getRole().equals(PartyRole.MANAGER))
                 .map(UserRequest::getTaxCode)
                 .findFirst().orElse(null);
+    }
+
+    private Uni<Onboarding> validateOnboardingForDeletion(Onboarding onboarding, String onboardingId) {
+        if (!COMPLETED.equals(onboarding.getStatus())) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Onboarding with id %s can only be deleted if status is COMPLETED, current status: %s",
+                            onboardingId, onboarding.getStatus())));
+        }
+        return Uni.createFrom().item(onboarding);
     }
 
     private Uni<LocalDateTime> computeExpiry(String productId) {

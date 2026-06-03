@@ -4,11 +4,15 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.WorkflowRule;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.ProductUtils;
@@ -28,6 +32,9 @@ import org.owasp.encoder.Encode;
 public class ProductServiceImpl implements ProductService {
 
   public static final String GETTING_INFO_FROM_PRODUCT = "Getting info from product {}";
+  private static final String MISSING_PRODUCT_BY_ID = "Missing product by productId: %s";
+  private static final String PRODUCT_NOT_FOUND = "Product %s not found";
+
 
   // JPA
   private final ProductRepository productRepository;
@@ -106,7 +113,7 @@ public class ProductServiceImpl implements ProductService {
       return Uni.createFrom()
           .failure(
               new IllegalArgumentException(
-                  String.format("Missing product by productId: %s", productId)));
+                  String.format(MISSING_PRODUCT_BY_ID, productId)));
     }
 
     String sanitizedProductId = Encode.forJava(productId);
@@ -116,7 +123,7 @@ public class ProductServiceImpl implements ProductService {
         .findProductById(productId)
         .onItem()
         .ifNull()
-        .failWith(() -> new NotFoundException("Product " + productId + " not found"))
+        .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, productId)))
         .map(productMapperResponse::toProductResponse);
   }
 
@@ -126,7 +133,7 @@ public class ProductServiceImpl implements ProductService {
       return Uni.createFrom()
           .failure(
               new IllegalArgumentException(
-                  String.format("Missing product by productId: %s", productId)));
+                  String.format(MISSING_PRODUCT_BY_ID, productId)));
     }
 
     String sanitizedProductId = Encode.forJava(productId);
@@ -136,7 +143,7 @@ public class ProductServiceImpl implements ProductService {
         .findProductById(sanitizedProductId)
         .onItem()
         .ifNull()
-        .failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
+        .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
         .invoke(currentProduct -> currentProduct.setStatus(ProductStatus.DELETED))
         .call(productRepository::update)
         .map(productMapperResponse::toProductBaseResponse);
@@ -170,7 +177,7 @@ public class ProductServiceImpl implements ProductService {
                     .findProductById(productId)
                     .onItem()
                     .ifNull()
-                    .failWith(() -> new NotFoundException("Product " + productId + " not found"))
+                    .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, productId)))
                     .onItem()
                     .transformToUni(
                         current -> {
@@ -193,7 +200,7 @@ public class ProductServiceImpl implements ProductService {
       return Uni.createFrom()
           .failure(
               new IllegalArgumentException(
-                  String.format("Missing product by productId: %s", productId)));
+                  String.format(MISSING_PRODUCT_BY_ID, productId)));
     }
 
     String sanitizedProductId = Encode.forJava(productId);
@@ -203,7 +210,59 @@ public class ProductServiceImpl implements ProductService {
         .findProductById(productId)
         .onItem()
         .ifNull()
-        .failWith(() -> new NotFoundException("Product " + sanitizedProductId + " not found"))
+        .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
         .map(productMapperResponse::toProductOriginResponse);
+  }
+
+  @Override
+  public Uni<WorkflowTypeResponse> getWorkflowType(
+      String productId, InstitutionType institutionType, Origin origin) {
+
+    if (StringUtils.isBlank(productId)) {
+      return Uni.createFrom()
+          .failure(new IllegalArgumentException("Missing productId"));
+    }
+    if (institutionType == null) {
+      return Uni.createFrom()
+          .failure(new IllegalArgumentException("Missing institutionType"));
+    }
+    if (origin == null) {
+      return Uni.createFrom()
+          .failure(new IllegalArgumentException("Missing origin"));
+    }
+
+    String sanitizedProductId = Encode.forJava(productId);
+    log.info("Resolving workflowType for product {}, institutionType {}, origin {}",
+        sanitizedProductId, institutionType, origin);
+
+    return productRepository
+        .findProductById(productId)
+        .onItem()
+        .ifNull()
+        .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+        .map(product -> resolveWorkflowType(product, institutionType, origin, sanitizedProductId));
+  }
+
+  private WorkflowTypeResponse resolveWorkflowType(
+      Product product,
+      InstitutionType institutionType,
+      Origin origin,
+      String sanitizedProductId) {
+
+    if (product.getWorkflowRules() == null || product.getWorkflowRules().isEmpty()) {
+      throw new NotFoundException(
+          String.format("No workflowRules configured for Product %s", sanitizedProductId));
+    }
+
+    return product.getWorkflowRules().stream()
+        .filter(rule -> institutionType.equals(rule.getInstitutionType()))
+        .filter(rule -> origin.equals(rule.getOrigin()))
+        .findFirst()
+        .map(WorkflowRule::getWorkflowType)
+        .map(wt -> WorkflowTypeResponse.builder().workflowType(wt).build())
+        .orElseThrow(() -> new NotFoundException(
+            String.format(
+                "No workflowRule found for product %s, institutionType %s, origin %s",
+                sanitizedProductId, institutionType, origin)));
   }
 }
