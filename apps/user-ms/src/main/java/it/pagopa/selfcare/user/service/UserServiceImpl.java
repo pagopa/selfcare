@@ -13,7 +13,6 @@ import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
-import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
@@ -39,6 +38,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -364,19 +364,39 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states) {
-        String[] finalStates = states != null && states.length > 0 ? states : null;
-        return UserInfo.findByIdOptional(userId)
-                .map(opt -> opt.map(UserInfo.class::cast)
-                        .map(userInfo -> {
-                            UserInfo filteredUserInfo = userUtils.filterInstitutionRoles(userInfo, finalStates, institutionId);
-                            if (filteredUserInfo.getInstitutions() == null || filteredUserInfo.getInstitutions().isEmpty()) {
-                                throw new ResourceNotFoundException(String.format("User with id %s and institution id %s not found!", userId, institutionId));
-                            }
-                            return filteredUserInfo;
-                        })
-                        .orElseThrow(() -> new ResourceNotFoundException(String.format("User with id %s not found!", userId)))
-                );
+    public Uni<UserInfoResponse> retrieveBindings(String institutionId, String userId, String[] states) {
+        // Build optional filters
+        states = states != null && states.length > 0 ? states : new String[]{OnboardedProductState.ACTIVE.name()};
+        final Set<OnboardedProductState> statusFilter = Stream.of(states)
+            .map(String::toUpperCase)
+            .filter(s -> EnumUtils.isValidEnum(OnboardedProductState.class, s))
+            .map(OnboardedProductState::valueOf)
+            .collect(Collectors.toSet());
+        final Map<String, Object> filters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+        // Find all user institutions with filters and batch size
+        final Multi<UserInstitution> userInstitutions = userInstitutionService.findAllWithFilter(filters, 500);
+        return userInstitutions.onItem().transform(ui -> {
+            // Find the minimum status and role for each user institution
+            record RoleStatus(String role, OnboardedProductState status) {}
+            final RoleStatus minRoleStatus = ui.getProducts().stream()
+                .filter(p -> statusFilter.contains(p.getStatus()))
+                .min(Comparator.comparing(OnboardedProduct::getStatus)
+                    .thenComparing(OnboardedProduct::getRole))
+                .map(p -> new RoleStatus(p.getRole().name(), p.getStatus()))
+                .orElse(null);
+            final UserInstitutionRoleResponse userInstitutionRole = new UserInstitutionRoleResponse();
+            userInstitutionRole.setInstitutionId(ui.getInstitutionId());
+            userInstitutionRole.setRole(Optional.ofNullable(minRoleStatus).map(RoleStatus::role).orElse(null));
+            userInstitutionRole.setStatus(Optional.ofNullable(minRoleStatus).map(RoleStatus::status).orElse(null));
+            userInstitutionRole.setInstitutionName(ui.getInstitutionDescription());
+            userInstitutionRole.setInstitutionRootName(ui.getInstitutionRootName());
+            return userInstitutionRole;
+        }).select().where(r -> r.getRole() != null).collect().asList().map(l -> {
+            final UserInfoResponse userInfoResponse = new UserInfoResponse();
+            userInfoResponse.setUserId(userId);
+            userInfoResponse.setInstitutions(l);
+            return userInfoResponse;
+        });
     }
 
     /**
@@ -835,11 +855,6 @@ public class UserServiceImpl implements UserService {
         var prodFilter = OnboardedProductFilter.builder().role(roles).status(states).productRole(productRoles).productId(products).build().constructMap();
         var queryParam = userUtils.retrieveMapForFilter(institutionFilters, prodFilter);
         return userInstitutionService.findAllWithFilter(queryParam);
-    }
-
-    private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, OffsetDateTime fromDate){
-        var queryParam = retrieveFilteredUserInstitutionsByDateQueryParam(userId,institutionId,fromDate);
-        return userInstitutionService.findUserInstitutionsAfterDateWithFilter(queryParam, fromDate);
     }
 
     private Multi<UserInstitution> retrieveFilteredUserInstitutionsByDate(String userId, String institutionId, OffsetDateTime fromDate, Integer page){

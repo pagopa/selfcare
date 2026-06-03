@@ -7,7 +7,6 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.*;
-import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
@@ -24,7 +23,7 @@ public interface UserService {
 
     Uni<UserResponse> retrievePerson(String userId, String productId, String institutionId);
 
-    Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states);
+    Uni<UserInfoResponse> retrieveBindings(String institutionId, String userId, String[] states);
 
     Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
 

@@ -25,6 +25,8 @@ public interface UserInstitutionService {
 
     Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter);
 
+    Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter, Integer batchSize);
+
     Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String,Object> queryParameter, OffsetDateTime fromDate);
 
     Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter);

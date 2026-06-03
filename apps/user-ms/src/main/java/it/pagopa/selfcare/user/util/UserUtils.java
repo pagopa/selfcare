@@ -5,7 +5,6 @@ import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.NotificationMapper;
@@ -94,43 +93,6 @@ public class UserUtils {
                 })
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    /**
-     * The filterProduct function takes in a UserInstitution object and an array of states.
-     * It then creates a list of OnboardedProductState objects from the array of strings, if the array is not null.
-     * If it is null, it sets relationshipStates to be null as well.
-     * Then, for each product in userInstitution's products list:
-     * if relationshipStates is not null and does not contain that product's status (which should be an OnboardedProductState),
-     * remove that product from the list.
-     */
-    public UserInstitution filterProduct(UserInstitution userInstitution, String[] states) {
-        List<OnboardedProductState> onboardedProductStates = Optional.ofNullable(states)
-                .map(this::convertStatesToOnboardedProductStates)
-                .orElse(null);
-
-        userInstitution.getProducts().removeIf(onboardedProduct -> !Objects.isNull(onboardedProductStates) && !onboardedProductStates.contains(onboardedProduct.getStatus()));
-
-        return userInstitution;
-    }
-
-    public List<OnboardedProductState> convertStatesToOnboardedProductStates(String[] states) {
-        return Arrays.stream(states)
-                .map(OnboardedProductState::valueOf)
-                .toList();
-    }
-
-    public UserInfo filterInstitutionRoles(UserInfo userInfo, String[] states, String institutionId) {
-        List<OnboardedProductState> onboardedProductStates = Optional.ofNullable(states)
-                .map(this::convertStatesToOnboardedProductStates)
-                .orElse(null);
-
-        if (Objects.nonNull(userInfo.getInstitutions())) {
-            userInfo.getInstitutions().removeIf(institution -> (!Objects.isNull(onboardedProductStates) && !onboardedProductStates.contains(institution.getStatus()))
-                    || (!Objects.isNull(institutionId) && !institution.getInstitutionId().equalsIgnoreCase(institutionId))
-            );
-        }
-        return userInfo;
     }
 
     public static WorkContactResource buildWorkContact(String mail) {
