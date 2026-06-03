@@ -48,6 +48,9 @@ public class ProductController {
   // SERVICE
   private final ProductService productService;
 
+  private static final String PRODUCT_NOT_FOUND = "Product not found";
+  private static final String PRODUCT_NOT_FOUND_WITH_PRODUCTID = "No product found with productId: %s";
+
   @Operation(summary = "Ping endpoint", operationId = "ping")
   @APIResponses(
       value = {
@@ -162,8 +165,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId)
                             .build())
@@ -233,8 +236,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId)
                             .build())
@@ -335,8 +338,8 @@ public class ProductController {
                     .type("application/problem+json")
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + sanitizedProductId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(404)
                             .instance("/products/" + sanitizedProductId)
                             .build())
@@ -406,8 +409,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId + "/origins")
                             .build())
