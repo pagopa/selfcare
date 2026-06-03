@@ -5,6 +5,7 @@ import it.pagopa.selfcare.product.model.dto.response.Problem;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotAllowedException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpStatus;
 import org.jboss.resteasy.reactive.RestResponse;
@@ -38,6 +39,30 @@ public class ExceptionHandler {
     LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
     return RestResponse.status(
         Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
+  }
+
+/**
+ * Intercepts the NotFoundException thrown by JAX-RS when conversion of a @QueryParam
+ * or @PathParam fails (e.g., invalid value for an enum).
+ * In this case, the framework throws a NotFoundException with the generic message "HTTP 404 Not Found"
+ * without indicating which parameter caused the issue; this mapper logs a more meaningful message
+ * and returns 400 Bad Request.
+ */
+  @ServerExceptionMapper
+  public Response toResponse(NotFoundException exception) {
+    LOGGER.warn(
+        "Invalid or unrecognized request parameter - likely an unknown enum value in a @QueryParam/@PathParam. Cause: {}",
+        exception.getMessage());
+    Problem problem =
+        Problem.builder()
+            .title("Bad Request")
+            .detail("One or more query or path parameters contain an invalid value. Please check the allowed values for enum parameters.")
+            .status(Response.Status.BAD_REQUEST.getStatusCode())
+            .build();
+    return Response.status(Response.Status.BAD_REQUEST)
+        .type("application/problem+json")
+        .entity(problem)
+        .build();
   }
 
   @ServerExceptionMapper

@@ -14,14 +14,17 @@ import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
+import it.pagopa.selfcare.product.model.WorkflowRule;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
+import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.JsonUtils;
 import jakarta.inject.Inject;
@@ -480,5 +483,193 @@ class ProductServiceImplTest {
     assertThrows(
         NotFoundException.class,
         () -> productService.getProductOriginsById("prod-test").await().indefinitely());
+  }
+
+  // -------------------------------------------------------------------------
+  // getWorkflowType
+  // -------------------------------------------------------------------------
+
+  @Test
+  void getWorkflowType_ok_exactOriginMatch() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .workflowRules(
+                List.of(
+                    WorkflowRule.builder()
+                        .institutionType(InstitutionType.PA)
+                        .origin(Origin.IPA)
+                        .workflowType(WorkflowType.CONTRACT_REGISTRATION)
+                        .build(),
+                    WorkflowRule.builder()
+                        .institutionType(InstitutionType.GSP)
+                        .origin(Origin.SELC)
+                        .workflowType(WorkflowType.FOR_APPROVE)
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    WorkflowTypeResponse response =
+        productService
+            .getWorkflowType("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertNotNull(response);
+    assertEquals(WorkflowType.CONTRACT_REGISTRATION, response.getWorkflowType());
+    verify(productRepository, times(1)).findProductById("prod-test");
+  }
+
+  @Test
+  void getWorkflowType_ok_secondRuleMatchedWhenFirstDoesNotMatch() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .workflowRules(
+                List.of(
+                    WorkflowRule.builder()
+                        .institutionType(InstitutionType.PA)
+                        .origin(Origin.IPA)
+                        .workflowType(WorkflowType.CONTRACT_REGISTRATION)
+                        .build(),
+                    WorkflowRule.builder()
+                        .institutionType(InstitutionType.GSP)
+                        .origin(Origin.SELC)
+                        .workflowType(WorkflowType.FOR_APPROVE)
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    WorkflowTypeResponse response =
+        productService
+            .getWorkflowType("prod-test", InstitutionType.GSP, Origin.SELC)
+            .await()
+            .indefinitely();
+
+    // then
+    assertNotNull(response);
+    assertEquals(WorkflowType.FOR_APPROVE, response.getWorkflowType());
+  }
+
+  @Test
+  void getWorkflowType_throwsIllegalArgument_whenProductIdIsBlank() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getWorkflowType("  ", InstitutionType.PA, Origin.IPA).await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing productId");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void getWorkflowType_throwsIllegalArgument_whenInstitutionTypeIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getWorkflowType("prod-test", null, Origin.IPA).await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void getWorkflowType_throwsIllegalArgument_whenOriginIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getWorkflowType("prod-test", InstitutionType.PA, null).await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void getWorkflowType_throwsNotFound_whenProductDoesNotExist() {
+    // given
+    when(productRepository.findProductById("prod-missing")).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getWorkflowType("prod-missing", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown)
+        .isInstanceOf(NotFoundException.class)
+        .hasMessageContaining("prod-missing");
+  }
+
+  @Test
+  void getWorkflowType_throwsNotFound_whenWorkflowRulesIsEmpty() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .workflowRules(List.of())
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getWorkflowType("prod-test", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown)
+        .isInstanceOf(NotFoundException.class)
+        .hasMessageContaining("No workflowRules configured");
+  }
+
+  @Test
+  void getWorkflowType_throwsNotFound_whenNoRuleMatchesInstitutionTypeAndOrigin() {
+    // given - rule per PA/IPA, si cerca PA/SELC → nessun match
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .workflowRules(
+                List.of(
+                    WorkflowRule.builder()
+                        .institutionType(InstitutionType.PA)
+                        .origin(Origin.IPA)
+                        .workflowType(WorkflowType.CONTRACT_REGISTRATION)
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getWorkflowType("prod-test", InstitutionType.PA, Origin.SELC)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown)
+        .isInstanceOf(NotFoundException.class)
+        .hasMessageContaining("PA")
+        .hasMessageContaining("SELC");
   }
 }
