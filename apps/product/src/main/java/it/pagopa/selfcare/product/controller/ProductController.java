@@ -8,6 +8,9 @@ import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -44,6 +47,9 @@ public class ProductController {
 
   // SERVICE
   private final ProductService productService;
+
+  private static final String PRODUCT_NOT_FOUND = "Product not found";
+  private static final String PRODUCT_NOT_FOUND_WITH_PRODUCTID = "No product found with productId: %s";
 
   @Operation(summary = "Ping endpoint", operationId = "ping")
   @APIResponses(
@@ -159,8 +165,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId)
                             .build())
@@ -230,8 +236,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId)
                             .build())
@@ -332,8 +338,8 @@ public class ProductController {
                     .type("application/problem+json")
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + sanitizedProductId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(404)
                             .instance("/products/" + sanitizedProductId)
                             .build())
@@ -403,10 +409,89 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId + "/origins")
+                            .build())
+                    .build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/workflow-type")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Resolve workflow type for a product",
+      description =
+          "Returns the WorkflowType to use for the given combination of productId, institutionType and origin, "
+              + "based on the workflowRules configured for the product.",
+      operationId = "getWorkflowType")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "WorkflowType resolved",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = WorkflowTypeResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found or no matching workflowRule",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getWorkflowType(
+      @Parameter(name = "productId", required = true) @QueryParam("productId") String productId,
+      @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
+          InstitutionType institutionType,
+      @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+
+    return productService
+        .getWorkflowType(productId, institutionType, origin)
+        .onItem()
+        .transform(response -> Response.ok(response).build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.BAD_REQUEST)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Bad Request")
+                            .detail(t.getMessage())
+                            .status(Response.Status.BAD_REQUEST.getStatusCode())
+                            .instance("/product/workflow-type")
+                            .build())
+                    .build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Not Found")
+                            .detail(t.getMessage())
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance("/product/workflow-type")
                             .build())
                     .build());
   }

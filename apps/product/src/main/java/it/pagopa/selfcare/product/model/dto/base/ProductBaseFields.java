@@ -33,4 +33,5 @@ public class ProductBaseFields {
   private List<String> testEnvProductIds;
   private SigningConfiguration signingConfiguration;
   private List<ManagingInstitution> managingInstitutions;
+  private List<WorkflowRule> workflowRules;
 }

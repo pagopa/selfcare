@@ -53,4 +53,6 @@ public class Product {
 
   private List<ManagingInstitution> managingInstitutions;
 
+  private List<WorkflowRule> workflowRules;
+
 }
