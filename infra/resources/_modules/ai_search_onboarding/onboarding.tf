@@ -176,6 +176,42 @@ resource "restapi_object" "search_index" {
         "filterable" : true,
         "sortable" : true,
         "searchable" : false
+      },
+      {
+        "name": "isTest",
+        "type": "Edm.Boolean",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
+      },
+      {
+        "name" : "city",
+        "type" : "Edm.String",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
+      },
+      {
+        "name" : "county",
+        "type" : "Edm.String",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
+      },
+      {
+        "name" : "country",
+        "type" : "Edm.String",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
       }
     ]
   })
