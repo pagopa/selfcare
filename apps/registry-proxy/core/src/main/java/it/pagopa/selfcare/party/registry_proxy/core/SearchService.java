@@ -5,6 +5,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSe
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ public interface SearchService {
   List<SearchServiceInstitution> searchInstitution(String search, Long top);
 
   boolean indexOnboarding(OnboardingIndex onboardingIndex);
-  OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, Long page, Long pageSize, List<String> orderBy);
+  OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, OffsetDateTime createdFromDate, OffsetDateTime createdToDate, Long page, Long pageSize, List<String> orderBy);
 
   IpaInstitutionSearchResult searchIpaInstitutions(String searchText, String category, Integer page, Integer pageSize);
 }
