@@ -49,7 +49,7 @@ services:
       - develop-network
 
   userms:
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:3c1fc23a1fda1552b94c288a0f62508af6b61da95bd7c4322b1f7cdb1f60d9d8
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -62,7 +62,7 @@ services:
       - mongodb
 
   onboardingms:
-    image: ghcr.io/pagopa/selfcare-onboarding-ms:latest
+    image: ghcr.io/pagopa/selfcare-onboarding-ms:latest@sha256:9f6e1dd86c9e8522c05d69b9ae0fd47cd7737a01c79ec452bd6708bbff03f74b
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -75,7 +75,7 @@ services:
       - mongodb
 
   documentms:
-    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    image: ghcr.io/pagopa/selfcare-document-ms:latest@sha256:678504cdc7207c7639803de33d523755ff41e1df0541b51595bfdfbbcbaf30de
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -88,7 +88,7 @@ services:
       - mongodb
 
   institutionms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:e7c8bd1b470880470475878ad61af9d2fba927050f50fa703cddc22725c0a904
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -101,7 +101,7 @@ services:
       - mongodb
 
   usergroupms:
-    image: ghcr.io/pagopa/selfcare-user-group-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-group-ms:latest@sha256:c0b326c4fbacb8957f8f3b339094b9085ddf6e8a2cd464efe39a59b1d049070d
     pull_policy: always
     platform: linux/amd64
     ports:
@@ -114,7 +114,7 @@ services:
       - mongodb
 
   iamms:
-    image: ghcr.io/pagopa/selfcare-iam-ms:latest
+    image: ghcr.io/pagopa/selfcare-iam-ms:latest@sha256:7be64cd04d1113c0355d05fbb11f8ac72869d264a47b0b59d4a7008e0ca6b157
     pull_policy: always
     platform: linux/amd64
     ports:
