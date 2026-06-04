@@ -29,12 +29,14 @@ No modules.
 | Name | Type |
 | ---- | ---- |
 | [azurerm_container_app.container_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
+| [azurerm_monitor_metric_alert.container_restart](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
 | [azurerm_private_dns_a_record.private_dns_record_a_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_a_record) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_container_app_environment.container_app_environment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
 | [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
 | [azurerm_key_vault_secret.keyvault_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 | [azurerm_key_vault_secrets.key_vault_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secrets) | data source |
+| [azurerm_monitor_action_group.restart_alert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/monitor_action_group) | data source |
 | [azurerm_private_dns_zone.private_azurecontainerapps_io](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
 | [azurerm_resource_group.resource_group_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_resource_group.rg_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
@@ -57,6 +59,7 @@ No modules.
 | <a name="input_port"></a> [port](#input\_port) | Container binding port | `number` | `8080` | no |
 | <a name="input_probes"></a> [probes](#input\_probes) | n/a | <pre>list(object({<br/>    type                = string<br/>    timeoutSeconds      = number<br/>    failureThreshold    = number<br/>    initialDelaySeconds = number<br/>    httpGet = object({<br/>      path   = string<br/>      scheme = string<br/>      port   = number<br/>    })<br/>  }))</pre> | <pre>[<br/>  {<br/>    "failureThreshold": 3,<br/>    "httpGet": {<br/>      "path": "actuator/health",<br/>      "port": 8080,<br/>      "scheme": "HTTP"<br/>    },<br/>    "initialDelaySeconds": 1,<br/>    "timeoutSeconds": 30,<br/>    "type": "Liveness"<br/>  },<br/>  {<br/>    "failureThreshold": 30,<br/>    "httpGet": {<br/>      "path": "actuator/health",<br/>      "port": 8080,<br/>      "scheme": "HTTP"<br/>    },<br/>    "initialDelaySeconds": 3,<br/>    "timeoutSeconds": 30,<br/>    "type": "Readiness"<br/>  },<br/>  {<br/>    "failureThreshold": 30,<br/>    "httpGet": {<br/>      "path": "actuator/health",<br/>      "port": 8080,<br/>      "scheme": "HTTP"<br/>    },<br/>    "initialDelaySeconds": 30,<br/>    "timeoutSeconds": 30,<br/>    "type": "Startup"<br/>  }<br/>]</pre> | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Container app environment resource group name | `string` | n/a | yes |
+| <a name="input_restart_alert"></a> [restart\_alert](#input\_restart\_alert) | Container restart alert configuration | <pre>object({<br/>    enabled              = optional(bool, true)<br/>    action_group_name    = optional(string, "SlackPagoPA")<br/>    action_group_rg_name = optional(string)<br/>    frequency            = optional(string, "PT1M")<br/>    window_size          = optional(string, "PT5M")<br/>    severity             = optional(number, 2)<br/>    threshold            = optional(number, 0)<br/>  })</pre> | `{}` | no |
 | <a name="input_secrets_names"></a> [secrets\_names](#input\_secrets\_names) | KeyVault secrets to get values from <env,secret-ref> | `map(string)` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | n/a | yes |
 | <a name="input_workload_profile_name"></a> [workload\_profile\_name](#input\_workload\_profile\_name) | Workload Profile name to use | `string` | `"Consumption"` | no |

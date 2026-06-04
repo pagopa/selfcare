@@ -35,3 +35,10 @@ data "azurerm_user_assigned_identity" "cae_identity" {
   name                = "${var.container_app_environment_name}-managed_identity"
   resource_group_name = var.resource_group_name
 }
+
+data "azurerm_monitor_action_group" "restart_alert" {
+  count = local.restart_alert_enabled ? 1 : 0
+
+  name                = local.restart_alert_action_group_name
+  resource_group_name = local.restart_alert_action_group_rg_name
+}
