@@ -49,8 +49,13 @@ try:
 
     onboardings = list(
         onboarding_collection.find({
-            "workflowType": {"$in": list(VALID_WORKFLOW_TYPES)}
+            "workflowType": {"$in": list(VALID_WORKFLOW_TYPES)},
+            "status": "COMPLETED"
         })
+    )
+
+    onboardings.sort(
+        key=lambda o: o.get("createdAt")
     )
 
     print(f"Onboarding caricati: {len(onboardings)}")
@@ -70,14 +75,21 @@ try:
         institution_id = onboarding.get("institution", {}).get("id")
         product_id = onboarding.get("productId")
         users = onboarding.get("users", [])
-        previousManagerId = onboarding.get("previousManagerId")
 
         for user in users:
             user_id = user.get("_id")
             user_role = user.get("role")
 
-            if(user_role == "MANAGER" and previousManagerId == user_id):
-                continue
+            if user_role == "MANAGER":
+
+                has_delegate_same_user = any(
+                    other_user.get("_id") == user_id
+                    and other_user.get("role") == "DELEGATE"
+                    for other_user in users
+                )
+
+                if not has_delegate_same_user:
+                    continue
 
             processed_users += 1
 
