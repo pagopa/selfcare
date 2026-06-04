@@ -61,6 +61,17 @@ services:
      env_file:
       - test-integration-document.env
 
+  product-ms:
+     image: ghcr.io/pagopa/selfcare-product-ms:latest
+     ports:
+       - "9090:8080"
+     networks:
+       - develop-network
+     env_file:
+       - test-product-ms.env
+     depends_on:
+       - mongo-db
+
 networks:
   develop-network:
     name: selfcare-develop-network

@@ -156,6 +156,10 @@ locals {
     {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
+    },
+    {
+      name = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
