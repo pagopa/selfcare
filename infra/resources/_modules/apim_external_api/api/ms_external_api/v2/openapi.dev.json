@@ -4617,6 +4617,18 @@
           "status": {
             "type": "string"
           },
+          "isTest": {
+            "type": "boolean"
+          },
+          "city": {
+            "type": "string"
+          },
+          "county": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -5161,6 +5173,12 @@
             "items": {
               "$ref": "#/components/schemas/ManagingInstitution"
             }
+          },
+          "workflowRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRule"
+            }
           }
         }
       },
@@ -5342,6 +5360,7 @@
         "type": "string",
         "enum": [
           "CONTRACT_REGISTRATION",
+          "CONTRACT_WITH_COUNTERSIGNATURE",
           "FOR_APPROVE",
           "FOR_APPROVE_PT",
           "FOR_APPROVE_GPU",
@@ -5484,6 +5503,20 @@
           }
         }
       },
+      "WorkflowRule": {
+        "type": "object",
+        "properties": {
+          "institutionType": {
+            "$ref": "#/components/schemas/InstitutionType1"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin1"
+          },
+          "workflowType": {
+            "$ref": "#/components/schemas/WorkflowType"
+          }
+        }
+      },
       "ProductOriginResponse": {
         "type": "object",
         "properties": {
@@ -5573,6 +5606,12 @@
             "items": {
               "$ref": "#/components/schemas/ManagingInstitution"
             }
+          },
+          "workflowRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRule"
+            }
           }
         }
       },
@@ -5653,6 +5692,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ManagingInstitution"
+            }
+          },
+          "workflowRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRule"
             }
           },
           "id": {
