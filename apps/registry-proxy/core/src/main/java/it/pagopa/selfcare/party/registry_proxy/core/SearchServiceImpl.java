@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,7 +53,7 @@ public class SearchServiceImpl implements SearchService {
     final long limit = top != null && top > 0L && top < Long.MAX_VALUE ? top : 50L;
     final Set<String> institutionIds = new HashSet<>();
     return Stream.iterate(0L, p -> p + 1)
-        .map(p -> searchOnboarding(search, null, null, List.of("COMPLETED", "DELETED"), p, limit * 2L, List.of("description_ASC")))
+        .map(p -> searchOnboarding(search, null, null, List.of("COMPLETED", "DELETED"), null, null, p, limit * 2L, List.of("description_ASC")))
         .takeWhile(result -> !result.getOnboardings().isEmpty())
         .flatMap(result -> result.getOnboardings().stream())
         .filter(onboarding -> Optional.ofNullable(onboarding.getInstitutionId()).map(institutionIds::add).orElse(false))
@@ -88,20 +90,23 @@ public class SearchServiceImpl implements SearchService {
 
   @Override
   public OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes,
-                                                List<String> statuses, Long page, Long pageSize, List<String> orderBy) {
+                                                List<String> statuses, OffsetDateTime createdFromDate, OffsetDateTime createdToDate,
+                                                Long page, Long pageSize, List<String> orderBy) {
     page = page != null && page > 0L && page < Long.MAX_VALUE ? page : 0L;
     pageSize = pageSize != null && pageSize > 0L && pageSize < Long.MAX_VALUE ? pageSize : 15L;
     orderBy = orderBy != null && !orderBy.isEmpty() ? orderBy : List.of("description_ASC");
-    String orderByString = buildOrderBy(orderBy);
-    final OnboardingIndexSearch onboardingIndexSearch = searchServiceConnector.searchOnboarding(searchText,
-            buildOnboardingFilter(products, institutionTypes, statuses), pageSize, page * pageSize, orderByString);
+    final String filter = buildOnboardingFilter(products, institutionTypes, statuses, createdFromDate, createdToDate);
+    final String orderByString = buildOrderBy(orderBy);
+    final OnboardingIndexSearch onboardingIndexSearch = searchServiceConnector.searchOnboarding(searchText, filter,
+        pageSize, page * pageSize, orderByString);
     onboardingIndexSearch.setPage(page);
     onboardingIndexSearch.setPageSize(pageSize);
     onboardingIndexSearch.setTotalPages((onboardingIndexSearch.getTotalElements() + pageSize - 1) / pageSize);
     return onboardingIndexSearch;
   }
 
-  private String buildOnboardingFilter(List<String> products, List<String> institutionTypes, List<String> statuses) {
+  private String buildOnboardingFilter(List<String> products, List<String> institutionTypes, List<String> statuses,
+                                       OffsetDateTime createdFromDate, OffsetDateTime createdToDate) {
     final StringBuilder filter = new StringBuilder();
 
     if (products != null && !products.isEmpty()) {
@@ -123,6 +128,20 @@ public class SearchServiceImpl implements SearchService {
         filter.append(AND);
       }
       filter.append("search.in(status, '").append(String.join(",", statuses)).append("')");
+    }
+
+    if (createdFromDate != null) {
+      if (!filter.isEmpty()) {
+        filter.append(AND);
+      }
+      filter.append("createdAt ge ").append(createdFromDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+    }
+
+    if (createdToDate != null) {
+      if (!filter.isEmpty()) {
+        filter.append(AND);
+      }
+      filter.append("createdAt le ").append(createdToDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
     }
 
     return filter.toString();
