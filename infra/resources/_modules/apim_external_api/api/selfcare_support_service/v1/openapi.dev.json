@@ -3256,6 +3256,18 @@
           "status": {
             "type": "string"
           },
+          "isTest": {
+            "type": "boolean"
+          },
+          "city": {
+            "type": "string"
+          },
+          "county": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
