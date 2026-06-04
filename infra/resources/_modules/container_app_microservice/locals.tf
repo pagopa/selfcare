@@ -7,7 +7,7 @@ locals {
   key_vault_resource_group_name           = var.key_vault_resource_group_name
   key_vault_name                          = var.key_vault_name
   app_name                                = "${var.container_app_name}-ca"
-  restart_alert_enabled                   = var.restart_alert.enabled && var.env_short != "d"
+  restart_alert_enabled                   = var.restart_alert.enabled
   restart_alert_name                      = "${var.container_app_name}-restart-alert"
   restart_alert_action_group_name         = var.restart_alert.action_group_name
   restart_alert_action_group_rg_name      = coalesce(var.restart_alert.action_group_rg_name, local.monitor_resource_group_name)
