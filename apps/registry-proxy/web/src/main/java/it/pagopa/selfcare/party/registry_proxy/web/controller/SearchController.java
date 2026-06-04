@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Slf4j
@@ -71,11 +72,13 @@ public class SearchController {
                                                          @RequestParam(required = false) List<String> products,
                                                          @RequestParam(required = false) List<String> institutionTypes,
                                                          @RequestParam(required = false) List<String> statuses,
+                                                         @RequestParam(required = false) OffsetDateTime createdFromDate,
+                                                         @RequestParam(required = false) OffsetDateTime createdToDate,
                                                          @RequestParam(defaultValue = "0") @PositiveOrZero Long page,
                                                          @RequestParam(defaultValue = "15") @Positive Long pageSize,
                                                          @RequestParam(required = false) List<String> orderBy) {
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products,
-            institutionTypes, statuses, page, pageSize, orderBy);
+            institutionTypes, statuses, createdFromDate, createdToDate, page, pageSize, orderBy);
     return onboardingMapper.toOnboardingIndexSearchResource(onboardingIndexSearch);
   }
 }
