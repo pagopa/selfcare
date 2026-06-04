@@ -14,6 +14,7 @@ module "local" {
   private_dns_name_domain        = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-p-pnpg-cae-cp"
   ca_resource_group_name         = "selc-p-container-app-rg"
+  container_app_min_replicas     = 2
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
   container_app_cpu              = 1.25
