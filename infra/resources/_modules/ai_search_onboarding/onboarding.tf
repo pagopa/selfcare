@@ -4,10 +4,6 @@ resource "restapi_object" "search_index" {
   id_attribute = "name"
   path         = "/indexes"
 
-  lifecycle {
-    ignore_changes = [data, api_data, api_response]
-  }
-
   data = jsonencode({
     "name" : "onboarding-index-${var.domain}",
     "analyzers" : [
@@ -176,6 +172,42 @@ resource "restapi_object" "search_index" {
         "filterable" : true,
         "sortable" : true,
         "searchable" : false
+      },
+      {
+        "name": "isTest",
+        "type": "Edm.Boolean",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
+      },
+      {
+        "name" : "city",
+        "type" : "Edm.String",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
+      },
+      {
+        "name" : "county",
+        "type" : "Edm.String",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
+      },
+      {
+        "name" : "country",
+        "type" : "Edm.String",
+        "searchable" : false,
+        "filterable" : true,
+        "sortable" : true,
+        "facetable" : true,
+        "retrievable" : true
       }
     ]
   })
