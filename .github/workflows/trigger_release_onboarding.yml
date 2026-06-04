@@ -62,10 +62,10 @@ jobs:
           gh workflow run release_app.yml \
             --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-ms
 
-      - name: Trigger PNPG Onboarding CDC Release
-        run: |
-          gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-cdc
+#      - name: Trigger PNPG Onboarding CDC Release
+#        run: |
+#          gh workflow run release_app.yml \
+#            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-cdc
 
   update_prod_variable:
     name: "Update PROD Version Variable"
