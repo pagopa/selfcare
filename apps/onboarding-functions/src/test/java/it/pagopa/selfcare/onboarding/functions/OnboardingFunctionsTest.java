@@ -395,6 +395,12 @@ class OnboardingFunctionsTest {
             .thenReturn(verifyTask);
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    Mockito.verify(orchestrationContext, times(2))
+            .callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(1));
+
     Mockito.verify(service, times(1))
             .updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
   }
@@ -412,6 +418,12 @@ class OnboardingFunctionsTest {
     // With the new batch orchestrator, we call ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR once
     Mockito.verify(orchestrationContext, times(1))
             .callSubOrchestrator(eq(ONBOARDINGS_AGGREGATE_BATCH_ORCHESTRATOR), any(), any());
+
+    ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
+    Mockito.verify(orchestrationContext, times(2))
+            .callActivity(captorActivity.capture(), any(), any(), any());
+    assertEquals(CREATE_USERS_ACTIVITY, captorActivity.getAllValues().get(0));
+    assertEquals(STORE_ONBOARDING_ACTIVATEDAT, captorActivity.getAllValues().get(1));
 
     Mockito.verify(service, times(1))
             .updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
