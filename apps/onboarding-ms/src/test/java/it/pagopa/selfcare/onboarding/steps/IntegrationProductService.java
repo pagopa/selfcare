@@ -4,13 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.quarkus.test.junit.TestProfile;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
-import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import java.io.File;
@@ -24,9 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import lombok.extern.slf4j.Slf4j;
 
 @Alternative
-@Priority(1)
 @ApplicationScoped
-@TestProfile(IntegrationProfile.class)
 @Slf4j
 public class IntegrationProductService implements ProductService {
 

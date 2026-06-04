@@ -2,10 +2,8 @@ package it.pagopa.selfcare.onboarding.steps;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.service.ProductMsService;
-import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.ws.rs.NotFoundException;
@@ -21,9 +19,7 @@ import java.util.Map;
 
 @Slf4j
 @Alternative
-@Priority(1)
 @ApplicationScoped
-@TestProfile(IntegrationProfile.class)
 public class IntegrationProductMsService implements ProductMsService {
 
     private final Map<String, List<WorkflowRuleEntry>> workflowRulesMap;
