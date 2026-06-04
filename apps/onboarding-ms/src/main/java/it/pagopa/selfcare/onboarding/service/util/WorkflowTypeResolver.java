@@ -1,89 +1,103 @@
 package it.pagopa.selfcare.onboarding.service.util;
 
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.service.ProductMsService;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 
-import java.util.Objects;
-import java.util.Set;
+import java.util.Optional;
 
-import static it.pagopa.selfcare.onboarding.common.Origin.IPA;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PAGOPA;
-
-/**
- * Determina il {@link WorkflowType} da associare all'onboarding
- * in base a tipo istituzione, prodotto e flag aggregatore.
- */
 @ApplicationScoped
 public class WorkflowTypeResolver {
 
     @Inject
     ProductService productService;
 
-    /**
-     * Identifica il workflow corretto per l'onboarding in modo non-bloccante.
-     * La risoluzione avviene sul worker pool per evitare di bloccare l'event loop.
-     *
-     * @param onboarding richiesta di onboarding
-     * @return Uni con il WorkflowType appropriato
-     */
-    public Uni<WorkflowType> resolve(Onboarding onboarding) {
-        return Uni.createFrom()
-                .item(() -> resolveWorkflow(onboarding))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-    }
+    @Inject
+    ProductMsService productMsService;
 
-    /**
-     * Logica sincrona di risoluzione del workflow (da invocare solo su worker thread).
-     */
-    private WorkflowType resolveWorkflow(Onboarding onboarding) {
-        InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
+    public Uni<WorkflowType> resolve(Onboarding onboarding) {
         Product product = productService.getProductIsValid(onboarding.getProductId());
 
-        if (InstitutionType.PT.equals(institutionType)) {
-            return WorkflowType.FOR_APPROVE_PT;
+        Optional<WorkflowType> priorityOverride = resolveByPriority(onboarding, product);
+        if (priorityOverride.isPresent()) {
+            return Uni.createFrom().item(priorityOverride.get());
         }
 
-        if (Boolean.TRUE.equals(onboarding.getIsAggregator())) {
-            return WorkflowType.CONTRACT_REGISTRATION_AGGREGATOR;
-        }
-
-        if (Objects.nonNull(product.getSigningConfiguration()) && product.getSigningConfiguration().getRequiredSignatures() > 1){
-            return WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE;
-        }
-
-        if (InstitutionType.PA.equals(institutionType)
-                || isGspOrScecOnIpa(institutionType, onboarding.getInstitution().getOrigin().getValue())
-                || InstitutionType.SA.equals(institutionType)
-                || InstitutionType.AS.equals(institutionType)
-                || Objects.nonNull(product.getParentId())
-                || InstitutionType.PRV_PF.equals(institutionType)
-                || (InstitutionType.PRV.equals(institutionType)
-                        && !PROD_PAGOPA.getValue().equals(onboarding.getProductId()))) {
-            return WorkflowType.CONTRACT_REGISTRATION;
-        }
-
-        if (InstitutionType.PG.equals(institutionType)) {
-            return WorkflowType.CONFIRMATION;
-        }
-
-        if (InstitutionType.GPU.equals(institutionType)) {
-            return WorkflowType.FOR_APPROVE_GPU;
-        }
-
-        return WorkflowType.FOR_APPROVE;
+        return resolveFromProductApi(onboarding);
     }
 
-    private boolean isGspOrScecOnIpa(InstitutionType institutionType, String origin) {
-        return Objects.nonNull(institutionType)
-                && Set.of(InstitutionType.GSP, InstitutionType.SCEC).contains(institutionType)
-                && IPA.getValue().equals(origin);
+    // ─── Level 1: Global priority overrides ─────────────────────────────────────
+
+    private Optional<WorkflowType> resolveByPriority(Onboarding onboarding, Product product) {
+        return resolvePtOverride(onboarding)
+                .or(() -> resolveAggregatorOverride(onboarding))
+                .or(() -> resolveCountersignatureOverride(product))
+                .or(() -> resolveSubProductOverride(product));
+    }
+
+    private Optional<WorkflowType> resolvePtOverride(Onboarding onboarding) {
+        if (InstitutionType.PT.equals(onboarding.getInstitution().getInstitutionType())) {
+            return Optional.of(WorkflowType.FOR_APPROVE_PT);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<WorkflowType> resolveAggregatorOverride(Onboarding onboarding) {
+        if (Boolean.TRUE.equals(onboarding.getIsAggregator())) {
+            return Optional.of(WorkflowType.CONTRACT_REGISTRATION_AGGREGATOR);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<WorkflowType> resolveCountersignatureOverride(Product product) {
+        if (product.getSigningConfiguration() != null
+                && product.getSigningConfiguration().getRequiredSignatures() > 1) {
+            return Optional.of(WorkflowType.CONTRACT_WITH_COUNTERSIGNATURE);
+        }
+        return Optional.empty();
+    }
+
+    private Optional<WorkflowType> resolveSubProductOverride(Product product) {
+        if (product.getParentId() != null) {
+            return Optional.of(WorkflowType.CONTRACT_REGISTRATION);
+        }
+        return Optional.empty();
+    }
+
+    // ─── Level 2: Resolve via Product MS REST API ────────────────────────────────
+
+    private Uni<WorkflowType> resolveFromProductApi(Onboarding onboarding) {
+        InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
+        it.pagopa.selfcare.onboarding.common.Origin origin = onboarding.getInstitution().getOrigin();
+
+        org.openapi.quarkus.product_json.model.InstitutionType apiInstitutionType =
+                institutionType != null
+                        ? org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType.name())
+                        : null;
+
+        org.openapi.quarkus.product_json.model.Origin apiOrigin =
+                origin != null
+                        ? org.openapi.quarkus.product_json.model.Origin.valueOf(origin.name())
+                        : null;
+
+        return productMsService.getWorkflowType(apiInstitutionType, apiOrigin, onboarding.getProductId())
+                .onItem().transform(this::mapWorkflowType)
+                .onFailure().transform(ex -> new IllegalStateException(String.format(
+                        "Failed to resolve workflowType from Product MS for product '%s', institutionType '%s', origin '%s': %s",
+                        onboarding.getProductId(), institutionType, origin, ex.getMessage()), ex));
+    }
+
+    private WorkflowType mapWorkflowType(WorkflowTypeResponse response) {
+        if (response == null || response.getWorkflowType() == null) {
+            throw new IllegalStateException("Product MS returned a null workflowType in the response.");
+        }
+        return WorkflowType.valueOf(response.getWorkflowType().name());
     }
 }
-

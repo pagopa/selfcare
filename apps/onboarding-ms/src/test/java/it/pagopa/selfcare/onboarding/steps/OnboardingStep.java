@@ -28,6 +28,7 @@ import it.pagopa.selfcare.onboarding.common.*;
 import it.pagopa.selfcare.onboarding.controller.OnboardingController;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.service.ProductMsService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 import java.io.File;
@@ -73,6 +74,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
 
   @InjectMock @RestClient OrchestrationApi orchestrationApi;
   @InjectMock @RestClient InstitutionApi institutionApi;
+  @InjectMock ProductMsService productMsService;
 
   @Inject ScenarioContext context;
 
@@ -115,6 +117,18 @@ public class OnboardingStep extends CucumberQuarkusTest {
   void init() {
     when(orchestrationApi.apiStartOnboardingOrchestrationGet(any(), any()))
             .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+    when(productMsService.getWorkflowType(any(), any(), any()))
+            .thenAnswer(invocation -> {
+              org.openapi.quarkus.product_json.model.Origin origin = invocation.getArgument(1);
+              org.openapi.quarkus.product_json.model.WorkflowTypeResponse response =
+                      new org.openapi.quarkus.product_json.model.WorkflowTypeResponse();
+              if (origin == org.openapi.quarkus.product_json.model.Origin.SELC) {
+                response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE);
+              } else {
+                response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
+              }
+              return Uni.createFrom().item(response);
+            });
     mockMSCoreResponses();
   }
 

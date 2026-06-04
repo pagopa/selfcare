@@ -74,6 +74,9 @@ class OnboardingServiceIntegrationTest {
     ProductService productService;
 
     @InjectMock
+    ProductMsService productMsService;
+
+    @InjectMock
     @RestClient
     org.openapi.quarkus.party_registry_proxy_json.api.InstitutionApi institutionRegistryProxyApi;
 
@@ -150,6 +153,15 @@ class OnboardingServiceIntegrationTest {
                 .value(manager.getSurname())
                 .certification(CertifiableFieldResourceOfstring.CertificationEnum.SPID));
         managerResourceWkSpid.setWorkContacts(map);
+    }
+
+    @org.junit.jupiter.api.BeforeEach
+    void setupDefaultMocks() {
+        org.openapi.quarkus.product_json.model.WorkflowTypeResponse defaultResponse =
+                new org.openapi.quarkus.product_json.model.WorkflowTypeResponse();
+        defaultResponse.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
+        when(productMsService.getWorkflowType(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(defaultResponse));
     }
 
     @Test
