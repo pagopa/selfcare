@@ -69,6 +69,10 @@ def update_onboarding_index(onboardings: list[dict]):
                 **({"updatedAt": get_date_string(updatedAt)} if (updatedAt := o.get("updatedAt")) else {}),
                 **({"activatedAt": get_date_string(activatedAt)} if (activatedAt := o.get("activatedAt")) else {}),
                 **({"expiringDate": get_date_string(expiringDate)} if (expiringDate := o.get("expiringDate")) else {}),
+                **({"isTest": isTest} if (isTest := o.get("institution", {}).get("isTest")) else {}),
+                **({"city": city} if (city := o.get("institution", {}).get("city")) else {}),
+                **({"county": county} if (county := o.get("institution", {}).get("county")) else {}),
+                **({"country": country} if (country := o.get("institution", {}).get("country")) else {}),
             }
             for o in onboardings
         ]
