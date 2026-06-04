@@ -12,8 +12,6 @@ import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.*;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
-import it.pagopa.selfcare.user.entity.UserInfo;
-import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
@@ -332,14 +330,14 @@ class UserControllerTest {
     @Test
     @TestSecurity(user = "userJwt")
     void testGetUserProductsInfoOk() {
-        UserInfo userInfoResponse = new UserInfo();
+        UserInfoResponse userInfoResponse = new UserInfoResponse();
         userInfoResponse.setUserId("test-user");
 
-        UserInstitutionRole userInstitution = new UserInstitutionRole();
+        UserInstitutionRoleResponse userInstitution = new UserInstitutionRoleResponse();
         userInstitution.setInstitutionName("test-institutionId");
         userInstitution.setStatus(OnboardedProductState.ACTIVE);
 
-        List<UserInstitutionRole> userInstitutionRoleResponses = new ArrayList<>();
+        List<UserInstitutionRoleResponse> userInstitutionRoleResponses = new ArrayList<>();
         userInstitutionRoleResponses.add(userInstitution);
         userInfoResponse.setInstitutions(userInstitutionRoleResponses);
 
