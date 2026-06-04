@@ -23,7 +23,7 @@ Make sure your PAT has access to this repository. Then, follow these steps:
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | n/a |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.74.0 |
 
 ## Modules
 
