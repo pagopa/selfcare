@@ -166,6 +166,10 @@ locals {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
       value = "prod-pn-pg"
     },
+    {
+      name = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
+    }
   ]
 
   onboarding_ms_secrets_names = {

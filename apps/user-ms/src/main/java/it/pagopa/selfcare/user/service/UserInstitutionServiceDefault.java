@@ -187,6 +187,14 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     }
 
     @Override
+    public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter, Integer batchSize) {
+        batchSize = Optional.ofNullable(batchSize).orElse(100);
+        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        log.debug("Query: {}", query);
+        return UserInstitution.find(query).withBatchSize(batchSize).stream();
+    }
+
+    @Override
     public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate) {
         Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
         return runUserInstitutionFindQuery(query, null).stream();

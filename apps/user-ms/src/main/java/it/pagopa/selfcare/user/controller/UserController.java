@@ -116,8 +116,7 @@ public class UserController {
     public Uni<UserInfoResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
                                                      @QueryParam(value = "institutionId") String institutionId,
                                                      @QueryParam(value = "states") String[] states) {
-        return userService.retrieveBindings(institutionId, userId, states)
-                .map(userMapper::toUserInfoResponse);
+        return userService.retrieveBindings(institutionId, userId, states);
     }
 
     /**

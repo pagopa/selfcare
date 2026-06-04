@@ -169,6 +169,10 @@ locals {
     {
       name  = "MS_DOCUMENT_URL"
       value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
