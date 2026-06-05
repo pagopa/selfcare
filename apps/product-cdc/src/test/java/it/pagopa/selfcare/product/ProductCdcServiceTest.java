@@ -229,8 +229,8 @@ class ProductCdcServiceTest {
     // given
     it.pagopa.selfcare.product.entity.Product child =
         new it.pagopa.selfcare.product.entity.Product();
-    child.setId("prod-io-premium");
-    child.setParentId("prod-io");
+    child.setId("prod-xy");
+    child.setParentId("prod-x");
     child.setRequiresParentOnboarding(true);
 
     // when
@@ -239,6 +239,6 @@ class ProductCdcServiceTest {
     // then
     String json = new String(bytes);
     Assertions.assertTrue(json.contains("\"requiresParentOnboarding\" : true"));
-    Assertions.assertTrue(json.contains("\"parentId\" : \"prod-io\""));
+    Assertions.assertTrue(json.contains("\"parentId\" : \"prod-x\""));
   }
 }
