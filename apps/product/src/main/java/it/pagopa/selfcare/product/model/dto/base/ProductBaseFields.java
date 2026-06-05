@@ -15,6 +15,7 @@ public class ProductBaseFields {
 
   @NotBlank private String productId;
 
+  private String parentId;
   private String alias;
   private String title;
   private String description;

@@ -224,5 +224,21 @@ class ProductCdcServiceTest {
     Assertions.assertTrue(bytes.length > 0);
     String json = new String(bytes);
     Assertions.assertTrue(json.contains("\"id\" : \"p1\"")); // Check for pretty print format
+  @Test
+  void convertListToJsonBytes_shouldSerializeParentRelationshipFields() {
+    // given
+    it.pagopa.selfcare.product.entity.Product child =
+        new it.pagopa.selfcare.product.entity.Product();
+    child.setId("prod-xy");
+    child.setParentId("prod-x");
+    child.setRequiresParentOnboarding(true);
+
+    // when
+    byte[] bytes = productCdcService.convertListToJsonBytes(List.of(child));
+
+    // then
+    String json = new String(bytes);
+    Assertions.assertTrue(json.contains("\"requiresParentOnboarding\" : true"));
+    Assertions.assertTrue(json.contains("\"parentId\" : \"prod-x\""));
   }
 }

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.product.service;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.WorkflowRule;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
@@ -34,6 +35,9 @@ public class ProductServiceImpl implements ProductService {
   public static final String GETTING_INFO_FROM_PRODUCT = "Getting info from product {}";
   private static final String MISSING_PRODUCT_BY_ID = "Missing product by productId: %s";
   private static final String PRODUCT_NOT_FOUND = "Product %s not found";
+  private static final String PARENT_PRODUCT_NOT_FOUND = "Parent product %s not found";
+  private static final String PARENT_CANNOT_BE_CHILD = "Parent product %s cannot be a child product";
+  private static final String PARENT_ID_SELF_REFERENCE = "parentId cannot be equal to productId";
 
 
   // JPA
@@ -74,38 +78,43 @@ public class ProductServiceImpl implements ProductService {
     }
 
     requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
+    applyParentOnboardingDefaults(requestProduct, true);
 
-    return productRepository
-        .findProductById(productCreateRequest.getProductId())
+    return validateParentRelationship(requestProduct)
         .onItem()
-        .ifNotNull()
         .transformToUni(
-            currentProduct -> {
-              int nextVersion = currentProduct.getVersion() + 1;
-              requestProduct.setVersion(nextVersion);
-              log.info(
-                  "Updating configuration of product {} with version {}",
-                  sanitizedProductId,
-                  nextVersion);
-              return productRepository
-                  .persist(productMapperRequest.cloneObject(currentProduct, requestProduct))
-                  .replaceWith(requestProduct);
-            })
-        .onItem()
-        .ifNull()
-        .switchTo(
-            () -> {
-              log.info("Adding new config of product {}", sanitizedProductId);
-              return productRepository.persist(requestProduct).replaceWith(requestProduct);
-            })
-        .map(
-            productUpdated ->
-                productMapperResponse.toProductBaseResponse(
-                    Product.builder()
-                        .id(productUpdated.getId())
-                        .productId(productUpdated.getProductId())
-                        .status(productUpdated.getStatus())
-                        .build()));
+            ignored ->
+                productRepository
+                    .findProductById(productCreateRequest.getProductId())
+                    .onItem()
+                    .ifNotNull()
+                    .transformToUni(
+                        currentProduct -> {
+                          int nextVersion = currentProduct.getVersion() + 1;
+                          requestProduct.setVersion(nextVersion);
+                          log.info(
+                              "Updating configuration of product {} with version {}",
+                              sanitizedProductId,
+                              nextVersion);
+                          return productRepository
+                              .persist(productMapperRequest.cloneObject(currentProduct, requestProduct))
+                              .replaceWith(requestProduct);
+                        })
+                    .onItem()
+                    .ifNull()
+                    .switchTo(
+                        () -> {
+                          log.info("Adding new config of product {}", sanitizedProductId);
+                          return productRepository.persist(requestProduct).replaceWith(requestProduct);
+                        })
+                    .map(
+                        productUpdated ->
+                            productMapperResponse.toProductBaseResponse(
+                                Product.builder()
+                                    .id(productUpdated.getId())
+                                    .productId(productUpdated.getProductId())
+                                    .status(productUpdated.getStatus())
+                                    .build())));
   }
 
   public Uni<ProductResponse> getProductById(String productId) {
@@ -181,17 +190,24 @@ public class ProductServiceImpl implements ProductService {
                     .onItem()
                     .transformToUni(
                         current -> {
-                          current = productMapperRequest.toPatch(patchRequest, current);
+                          Product patched = productMapperRequest.toPatch(patchRequest, current);
+                          applyParentOnboardingDefaults(patched, patchRequest.getParentId() != null);
 
-                          current.setId(UUID.randomUUID().toString());
-                          current.setProductId(current.getProductId());
-                          current.setMetadata(productUtils.buildProductMetadata(createdBy));
-                          current.setVersion(current.getVersion() + 1);
+                          return validateParentRelationship(patched)
+                              .onItem()
+                              .transformToUni(
+                                  ignored -> {
+                                    patched.setId(UUID.randomUUID().toString());
+                                    patched.setProductId(patched.getProductId());
+                                    patched.setMetadata(
+                                        productUtils.buildProductMetadata(createdBy));
+                                    patched.setVersion(patched.getVersion() + 1);
 
-                          return productRepository
-                              .persist(current)
-                              .map(productMapperResponse::toProductResponse);
-                        }));
+                                    return productRepository
+                                        .persist(patched)
+                                        .map(productMapperResponse::toProductResponse);
+                                  });
+                                }));
   }
 
   @Override
@@ -241,6 +257,60 @@ public class ProductServiceImpl implements ProductService {
         .ifNull()
         .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
         .map(product -> resolveWorkflowType(product, institutionType, origin, sanitizedProductId));
+  }
+
+  private void applyParentOnboardingDefaults(Product product, boolean parentIdWasProvided) {
+    if (!parentIdWasProvided) {
+      return;
+    }
+    setRequiresParentOnboarding(product, hasParentId(product));
+  }
+
+  private boolean hasParentId(Product product) {
+    return StringUtils.isNotBlank(product.getParentId());
+  }
+
+  private void setRequiresParentOnboarding(Product product, boolean enabled) {
+    if (product.getFeatures() == null) {
+      if (!enabled) {
+        return;
+      }
+      product.setFeatures(Features.builder().requiresParentOnboarding(true).build());
+      return;
+    }
+    product.getFeatures().setRequiresParentOnboarding(enabled);
+  }
+
+  private void validateParentRelationshipSync(Product product) {
+    if (!hasParentId(product)) {
+      return;
+    }
+    if (product.getParentId().equals(product.getProductId())) {
+      throw new BadRequestException(PARENT_ID_SELF_REFERENCE);
+    }
+  }
+
+  private Uni<Void> validateParentRelationship(Product product) {
+    validateParentRelationshipSync(product);
+    if (!hasParentId(product)) {
+      return Uni.createFrom().voidItem();
+    }
+
+    String parentId = product.getParentId();
+    return productRepository
+        .findProductById(parentId)
+        .onItem()
+        .ifNull()
+        .failWith(() -> new BadRequestException(String.format(PARENT_PRODUCT_NOT_FOUND, parentId)))
+        .onItem()
+        .invoke(parent -> validateParentProduct(parent, parentId))
+        .replaceWithVoid();
+  }
+
+  private void validateParentProduct(Product parent, String parentId) {
+    if (hasParentId(parent)) {
+      throw new BadRequestException(String.format(PARENT_CANNOT_BE_CHILD, parentId));
+    }
   }
 
   private WorkflowTypeResponse resolveWorkflowType(

@@ -185,6 +185,9 @@
           "invoiceable" : {
             "type" : "boolean"
           },
+          "requiresParentOnboarding" : {
+            "type" : "boolean"
+          },
           "expirationDays" : {
             "type" : "integer",
             "format" : "int32"
@@ -286,6 +289,9 @@
           "productId" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "parentId" : {
+            "type" : "string"
           },
           "alias" : {
             "type" : "string"
@@ -394,6 +400,9 @@
             "type" : "string",
             "pattern" : "\\S"
           },
+          "parentId" : {
+            "type" : "string"
+          },
           "alias" : {
             "type" : "string"
           },
@@ -478,6 +487,9 @@
           "productId" : {
             "type" : "string",
             "pattern" : "\\S"
+          },
+          "parentId" : {
+            "type" : "string"
           },
           "alias" : {
             "type" : "string"

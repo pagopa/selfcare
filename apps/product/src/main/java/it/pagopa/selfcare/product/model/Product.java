@@ -20,6 +20,7 @@ public class Product {
   @BsonId @Builder.Default private String id = UUID.randomUUID().toString();
 
   private String productId;
+  private String parentId;
   private String alias;
 
   private String title;
