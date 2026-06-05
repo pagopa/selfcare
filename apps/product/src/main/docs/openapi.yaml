@@ -127,6 +127,8 @@ components:
           type: boolean
         invoiceable:
           type: boolean
+        requiresParentOnboarding:
+          type: boolean
         expirationDays:
           type: integer
           format: int32
@@ -232,6 +234,8 @@ components:
         productId:
           type: string
           pattern: \S
+        parentId:
+          type: string
         alias:
           type: string
         title:
@@ -304,6 +308,8 @@ components:
         productId:
           type: string
           pattern: \S
+        parentId:
+          type: string
         alias:
           type: string
         title:
@@ -362,6 +368,8 @@ components:
         productId:
           type: string
           pattern: \S
+        parentId:
+          type: string
         alias:
           type: string
         title:

@@ -7,7 +7,7 @@ action_groups:
   - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/PagoPA
   - /subscriptions/813119d7-0943-46ed-8ebe-cebe24f9106c/resourceGroups/selc-p-monitor-rg/providers/microsoft.insights/actionGroups/SlackPagoPA
 overrides:
-  hosts: # Use these hosts instead of those inside the OpenApi spec
+  hosts: 
     - api.selfcare.pagopa.it
   endpoints:
     /v1/institutions:
