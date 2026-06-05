@@ -458,6 +458,22 @@
             }
           }
         }, {
+          "name" : "createdFromDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "name": "createdToDate",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -521,33 +537,6 @@
         "tags" : [ "search-controller" ],
         "operationId" : "searchInstitutions",
         "parameters" : [ {
-          "name" : "products",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }, {
-          "name" : "institutionTypes",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }, {
-          "name" : "taxCode",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
           "name" : "searchText",
           "in" : "query",
           "required" : false,
@@ -561,17 +550,8 @@
           "required" : false,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
+            "format" : "int64",
             "default" : 50
-          }
-        }, {
-          "name" : "skip",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0
           }
         } ],
         "responses" : {
@@ -2028,6 +2008,18 @@
           "status" : {
             "type" : "string"
           },
+          "isTest" : {
+            "type" : "boolean"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "county" : {
+            "type" : "string"
+          },
+          "country" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -2087,18 +2079,6 @@
           },
           "taxCode" : {
             "type" : "string"
-          },
-          "products" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "institutionTypes" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
           },
           "lastModified" : {
             "type" : "string",

@@ -9,6 +9,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -39,8 +40,15 @@ public class OnboardingMsConfig {
     @ConfigProperty(name = "onboarding-ms.blob-storage.path-aggregates")
     String aggregatesPath;
 
+    @Inject
+    ProductService productService;
+
     void onStart(@Observes StartupEvent ev) {
         log.info(String.format("Database %s is starting...", Onboarding.mongoDatabase().getName()));
+        // Force eager initialization of ProductServiceCacheable so that the blocking
+        // Azure Blob Storage call happens at startup (on a non-eventloop thread)
+        // instead of lazily during the first request on the Vert.x event loop.
+        log.info("ProductService eagerly initialized: {}", productService.getClass().getSimpleName());
     }
 
     @ApplicationScoped
