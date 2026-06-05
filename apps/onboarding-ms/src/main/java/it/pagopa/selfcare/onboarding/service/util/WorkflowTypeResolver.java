@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.util;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -23,11 +24,13 @@ public class WorkflowTypeResolver {
     ProductMsService productMsService;
 
     public Uni<WorkflowType> resolve(Onboarding onboarding) {
-        Product product = productService.getProductIsValid(onboarding.getProductId());
-
-        return resolveByPriority(onboarding, product)
-                .map(Uni.createFrom()::item)
-                .orElseGet(() -> resolveFromProductApi(onboarding));
+        return Uni.createFrom().item(() -> productService.getProductIsValid(onboarding.getProductId()))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onItem().transformToUni(product ->
+                    resolveByPriority(onboarding, product)
+                            .map(Uni.createFrom()::item)
+                            .orElseGet(() -> resolveFromProductApi(onboarding))
+                );
     }
 
     private Optional<WorkflowType> resolveByPriority(Onboarding onboarding, Product product) {
