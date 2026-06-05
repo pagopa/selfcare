@@ -916,6 +916,24 @@
             }
           },
           {
+            "name": "createdFromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "createdToDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -4615,6 +4633,18 @@
             "type": "string"
           },
           "status": {
+            "type": "string"
+          },
+          "isTest": {
+            "type": "boolean"
+          },
+          "city": {
+            "type": "string"
+          },
+          "county": {
+            "type": "string"
+          },
+          "country": {
             "type": "string"
           },
           "createdAt": {
