@@ -6,18 +6,7 @@
     "version" : "0.0.1-SNAPSHOT"
   },
   "servers" : [ {
-    "url" : "{url}:{port}{basePath}",
-    "variables" : {
-      "url" : {
-        "default" : "http://localhost"
-      },
-      "port" : {
-        "default" : "80"
-      },
-      "basePath" : {
-        "default" : ""
-      }
-    }
+    "url" : "http://localhost:80"
   } ],
   "tags" : [ {
     "name" : "Institution",

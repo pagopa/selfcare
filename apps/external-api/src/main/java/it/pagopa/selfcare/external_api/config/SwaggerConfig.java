@@ -86,8 +86,9 @@ class SwaggerConfig {
                         .version(environment.getProperty("swagger.version", environment.getProperty("spring.application.version")))
                 )
                 .servers(List.of(
-                        new Server().url("{url}:{port}{basePath}").variables(new ServerVariables()
-                                .addServerVariable("url", new ServerVariable()._default("http://localhost"))
+                        new Server().url("{scheme}://{url}:{port}{basePath}").variables(new ServerVariables()
+                                .addServerVariable("scheme", new ServerVariable()._default("http"))
+                                .addServerVariable("url", new ServerVariable()._default("localhost"))
                                 .addServerVariable("port", new ServerVariable()._default("80"))
                                 .addServerVariable("basePath", new ServerVariable()._default(""))
                         )
