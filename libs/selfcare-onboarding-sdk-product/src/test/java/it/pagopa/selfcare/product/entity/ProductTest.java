@@ -56,6 +56,19 @@ public class ProductTest {
   }
 
   @Test
+  @DisplayName("Test requiresParentOnboarding getter/setter")
+  public void testRequiresParentOnboarding() {
+    // given
+    Product product = new Product();
+
+    // when
+    product.setRequiresParentOnboarding(true);
+
+    // then
+    assertTrue(product.isRequiresParentOnboarding());
+  }
+
+  @Test
   @DisplayName("Test when only roleMappingsByInstitutionType is non-null")
   public void testGetAllRoleMappings_OnlyRoleMappingsByInstitutionType() {
     Map<String, Map<PartyRole, ProductRoleInfo>> roleMappingsByInstitutionType = new HashMap<>();
