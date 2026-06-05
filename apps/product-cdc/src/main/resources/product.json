@@ -1,6 +1,7 @@
  {
-  "productId": "prod-x",
-  "alias": "prod-x",
+  "productId": "prod-io-premium",
+  "parentId": "prod-io",
+  "alias": "prod-io-premium",
   "status": "ACTIVE",
   "title": "X",
   "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
@@ -17,6 +18,7 @@
     "allowIndividualOnboarding": false,
     "delegable": false,
     "invoiceable": true,
+    "requiresParentOnboarding": true,
     "expirationDays": 30,
     "enabled": true
   },

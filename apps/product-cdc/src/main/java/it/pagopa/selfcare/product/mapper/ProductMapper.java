@@ -32,6 +32,10 @@ public interface ProductMapper {
   @Mapping(target = "allowIndividualOnboarding", source = "features.allowIndividualOnboarding")
   @Mapping(target = "delegable", source = "features.delegable")
   @Mapping(target = "invoiceable", source = "features.invoiceable")
+  @Mapping(
+      target = "requiresParentOnboarding",
+      source = "features.requiresParentOnboarding")
+  @Mapping(target = "parentId", source = "parentId")
   @Mapping(target = "allowedInstitutionTaxCode", source = "features.allowedInstitutionTaxCode")
   @Mapping(target = "enabled", source = "features.enabled")
   @Mapping(target = "expirationDate", source = "features.expirationDays")
