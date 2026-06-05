@@ -26,6 +26,7 @@ import io.quarkus.test.vertx.UniAsserter;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import org.junit.jupiter.api.BeforeEach;
 import it.pagopa.selfcare.onboarding.common.*;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.controller.request.*;
@@ -66,6 +67,7 @@ import org.openapi.quarkus.core_json.model.InstitutionsResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
+import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.*;
 import org.openapi.quarkus.party_registry_proxy_json.model.*;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
@@ -97,6 +99,9 @@ class OnboardingServiceDefaultTest {
 
     @InjectMock
     ProductService productService;
+
+    @InjectMock
+    ProductMsService productMsService;
 
     @InjectMock
     @RestClient
@@ -230,6 +235,21 @@ class OnboardingServiceDefaultTest {
                 .value(manager.getSurname())
                 .certification(CertifiableFieldResourceOfstring.CertificationEnum.SPID));
         managerResourceWkSpid.setWorkContacts(map);
+    }
+
+    @BeforeEach
+    void setupDefaultMocks() {
+        when(productMsService.getWorkflowType(any(), any(), any()))
+                .thenAnswer(invocation -> {
+                    org.openapi.quarkus.product_json.model.Origin origin = invocation.getArgument(1);
+                    WorkflowTypeResponse response = new WorkflowTypeResponse();
+                    if (origin == org.openapi.quarkus.product_json.model.Origin.SELC) {
+                        response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE);
+                    } else {
+                        response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
+                    }
+                    return Uni.createFrom().item(response);
+                });
     }
 
     @Test
