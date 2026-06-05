@@ -1,7 +1,7 @@
  {
-  "productId": "prod-io-premium",
-  "parentId": "prod-io",
-  "alias": "prod-io-premium",
+  "productId": "prod-x",
+  "parentId": "prod-xy",
+  "alias": "prod-x",
   "status": "ACTIVE",
   "title": "X",
   "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
