@@ -11,6 +11,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
@@ -671,5 +672,167 @@ class ProductServiceImplTest {
         .isInstanceOf(NotFoundException.class)
         .hasMessageContaining("PA")
         .hasMessageContaining("SELC");
+  }
+
+  @Test
+  void createProductTest_whenChildProduct_thenSetsRequiresParentOnboardingAndValidatesParent() {
+    // given
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-io-premium");
+    request.setParentId("prod-io");
+
+    Product product =
+        Product.builder().productId("prod-io-premium").parentId("prod-io").build();
+
+    Product parent = Product.builder().productId("prod-io").build();
+
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+    when(productRepository.findProductById("prod-io")).thenReturn(Uni.createFrom().item(parent));
+    when(productRepository.findProductById("prod-io-premium"))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(product));
+    when(productMapperResponse.toProductBaseResponse(any(Product.class)))
+        .thenAnswer(
+            inv -> {
+              Product mapped = inv.getArgument(0, Product.class);
+              ProductBaseResponse response = new ProductBaseResponse();
+              response.setProductId(mapped.getProductId());
+              return response;
+            });
+
+    // when
+    productService.createProduct(request, "createdBy").await().indefinitely();
+
+    // then
+    ArgumentCaptor<Product> persisted = ArgumentCaptor.forClass(Product.class);
+    verify(productRepository).persist(persisted.capture());
+    assertThat(persisted.getValue().getParentId()).isEqualTo("prod-io");
+    assertThat(persisted.getValue().getFeatures().isRequiresParentOnboarding()).isTrue();
+  }
+
+  @Test
+  void createProductTest_whenParentNotFound_thenBadRequest() {
+    // given
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-io-premium");
+    request.setParentId("prod-io");
+
+    Product product =
+        Product.builder().productId("prod-io-premium").parentId("prod-io").build();
+
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+    when(productRepository.findProductById("prod-io")).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.createProduct(request, "createdBy").await().indefinitely());
+
+    // then
+    assertThat(thrown)
+        .isInstanceOf(BadRequestException.class)
+        .hasMessage("Parent product prod-io not found");
+    verify(productRepository, never()).persist(any(Product.class));
+  }
+
+  @Test
+  void createProductTest_whenParentIdEqualsProductId_thenBadRequest() {
+    // given
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-io");
+    request.setParentId("prod-io");
+
+    Product product = Product.builder().productId("prod-io").parentId("prod-io").build();
+
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.createProduct(request, "createdBy").await().indefinitely());
+
+    // then
+    assertThat(thrown)
+        .isInstanceOf(BadRequestException.class)
+        .hasMessage("parentId cannot be equal to productId");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void patchProductByIdTest_whenSettingParentId_thenAppliesDefaultsAndValidatesParent() {
+    // given
+    ProductPatchRequest patchRequest =
+        ProductPatchRequest.builder().parentId("prod-io").build();
+
+    Product current = new Product();
+    current.setProductId("prod-io-premium");
+    current.setVersion(2);
+
+    Product parent = Product.builder().productId("prod-io").build();
+
+    when(productRepository.findProductById("prod-io-premium"))
+        .thenReturn(Uni.createFrom().item(current));
+    when(productRepository.findProductById("prod-io")).thenReturn(Uni.createFrom().item(parent));
+
+    Product patched = new Product();
+    patched.setProductId("prod-io-premium");
+    patched.setParentId("prod-io");
+    patched.setVersion(2);
+
+    when(productMapperRequest.toPatch(patchRequest, current)).thenReturn(patched);
+    when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(patched));
+    when(productMapperResponse.toProductResponse(any(Product.class)))
+        .thenReturn(new ProductResponse());
+
+    // when
+    productService
+        .patchProductById("prod-io-premium", "createdBy", patchRequest)
+        .await()
+        .indefinitely();
+
+    // then
+    ArgumentCaptor<Product> persisted = ArgumentCaptor.forClass(Product.class);
+    verify(productRepository).persist(persisted.capture());
+    assertThat(persisted.getValue().getParentId()).isEqualTo("prod-io");
+    assertThat(persisted.getValue().getFeatures().isRequiresParentOnboarding()).isTrue();
+  }
+
+  @Test
+  void patchProductByIdTest_whenClearingParentId_thenRemovesRequiresParentOnboarding() {
+    // given
+    ProductPatchRequest patchRequest =
+        ProductPatchRequest.builder().parentId("").build();
+
+    Product current = new Product();
+    current.setProductId("prod-io-premium");
+    current.setVersion(2);
+    current.setFeatures(Features.builder().requiresParentOnboarding(true).build());
+
+    when(productRepository.findProductById("prod-io-premium"))
+        .thenReturn(Uni.createFrom().item(current));
+
+    Product patched = new Product();
+    patched.setProductId("prod-io-premium");
+    patched.setParentId("");
+    patched.setVersion(2);
+    patched.setFeatures(Features.builder().requiresParentOnboarding(true).build());
+
+    when(productMapperRequest.toPatch(patchRequest, current)).thenReturn(patched);
+    when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(patched));
+    when(productMapperResponse.toProductResponse(any(Product.class)))
+        .thenReturn(new ProductResponse());
+
+    // when
+    productService
+        .patchProductById("prod-io-premium", "createdBy", patchRequest)
+        .await()
+        .indefinitely();
+
+    // then
+    ArgumentCaptor<Product> persisted = ArgumentCaptor.forClass(Product.class);
+    verify(productRepository).persist(persisted.capture());
+    assertThat(persisted.getValue().getParentId()).isEmpty();
+    assertThat(persisted.getValue().getFeatures().isRequiresParentOnboarding()).isFalse();
+    verify(productRepository, never()).findProductById("");
   }
 }
