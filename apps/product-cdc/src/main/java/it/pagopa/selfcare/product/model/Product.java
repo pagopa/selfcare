@@ -22,6 +22,8 @@ public class Product {
   private String productId;
   private String parentId;
   private String alias;
+  private String urlPublic;
+  private String roleManagementURL;
 
   private String title;
   private String description;
@@ -47,6 +49,7 @@ public class Product {
   private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
 
   private List<String> testEnvProductIds;
+  private List<String> institutionTypesAllowed;
 
   private ProductMetadata metadata;
 

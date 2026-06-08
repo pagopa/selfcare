@@ -296,6 +296,12 @@
           "alias" : {
             "type" : "string"
           },
+          "urlPublic" : {
+            "type" : "string"
+          },
+          "roleManagementURL" : {
+            "type" : "string"
+          },
           "title" : {
             "type" : "string"
           },
@@ -348,6 +354,12 @@
             }
           },
           "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "institutionTypesAllowed" : {
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -406,6 +418,12 @@
           "alias" : {
             "type" : "string"
           },
+          "urlPublic" : {
+            "type" : "string"
+          },
+          "roleManagementURL" : {
+            "type" : "string"
+          },
           "title" : {
             "type" : "string"
           },
@@ -458,6 +476,12 @@
             }
           },
           "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "institutionTypesAllowed" : {
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -494,6 +518,12 @@
           "alias" : {
             "type" : "string"
           },
+          "urlPublic" : {
+            "type" : "string"
+          },
+          "roleManagementURL" : {
+            "type" : "string"
+          },
           "title" : {
             "type" : "string"
           },
@@ -546,6 +576,12 @@
             }
           },
           "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "institutionTypesAllowed" : {
             "type" : "array",
             "items" : {
               "type" : "string"

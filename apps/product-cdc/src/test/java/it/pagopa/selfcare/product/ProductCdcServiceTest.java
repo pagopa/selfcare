@@ -211,19 +211,21 @@ class ProductCdcServiceTest {
 
   @Test
   void convertListToJsonBytes_shouldSerializeCorrectly() {
-    // Arrange
+    // given
     it.pagopa.selfcare.product.entity.Product p1 = new it.pagopa.selfcare.product.entity.Product();
     p1.setId("p1");
     List<it.pagopa.selfcare.product.entity.Product> list = List.of(p1);
 
-    // Act
+    // when
     byte[] bytes = productCdcService.convertListToJsonBytes(list);
 
-    // Assert
+    // then
     Assertions.assertNotNull(bytes);
     Assertions.assertTrue(bytes.length > 0);
     String json = new String(bytes);
-    Assertions.assertTrue(json.contains("\"id\" : \"p1\"")); // Check for pretty print format
+    Assertions.assertTrue(json.contains("\"id\" : \"p1\""));
+  }
+
   @Test
   void convertListToJsonBytes_shouldSerializeParentRelationshipFields() {
     // given
@@ -232,6 +234,9 @@ class ProductCdcServiceTest {
     child.setId("prod-xy");
     child.setParentId("prod-x");
     child.setRequiresParentOnboarding(true);
+    child.setUrlPublic("https://io.italia.it/");
+    child.setRoleManagementURL("https://io.italia.it/roles");
+    child.setInstitutionTypesAllowed(List.of("PSP"));
 
     // when
     byte[] bytes = productCdcService.convertListToJsonBytes(List.of(child));
@@ -239,6 +244,9 @@ class ProductCdcServiceTest {
     // then
     String json = new String(bytes);
     Assertions.assertTrue(json.contains("\"requiresParentOnboarding\" : true"));
-    Assertions.assertTrue(json.contains("\"parentId\" : \"prod-x\""));
+    Assertions.assertTrue(json.contains("\"urlPublic\" : \"https://io.italia.it/\""));
+    Assertions.assertTrue(
+        json.contains("\"roleManagementURL\" : \"https://io.italia.it/roles\""));
+    Assertions.assertTrue(json.contains("\"institutionTypesAllowed\" : [ \"PSP\" ]"));
   }
 }

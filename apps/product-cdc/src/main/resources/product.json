@@ -2,6 +2,8 @@
   "productId": "prod-x",
   "parentId": "prod-xy",
   "alias": "prod-x",
+ "urlPublic": "https://io.italia.it/",
+  "roleManagementURL": "https://selfcare.pagopa.it/products/prod-io-premium/roles",  
   "status": "ACTIVE",
   "title": "X",
   "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
@@ -265,6 +267,7 @@
       "labelKey": "scp"
     }
   ],
+  "institutionTypesAllowed": ["PSP"],
   "emailTemplates": [
     {
       "type": "IMPORT",
@@ -295,6 +298,7 @@
       "identityTokenAudience": "identity.it"
     }
   ],
+   "institutionTypesAllowed": ["PSP"],
    "testEnvProductIds": ["prod-interop-coll", "prod-interop-atst"],
    "metadata": {
     "createdAt": "2021-12-15T15:54:55.190Z",

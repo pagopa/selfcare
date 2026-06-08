@@ -238,6 +238,10 @@ components:
           type: string
         alias:
           type: string
+        urlPublic:
+          type: string
+        roleManagementURL:
+          type: string
         title:
           type: string
         description:
@@ -273,6 +277,10 @@ components:
           items:
             $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
         testEnvProductIds:
+          type: array
+          items:
+            type: string
+        institutionTypesAllowed:
           type: array
           items:
             type: string
@@ -312,6 +320,10 @@ components:
           type: string
         alias:
           type: string
+        urlPublic:
+          type: string
+        roleManagementURL:
+          type: string
         title:
           type: string
         description:
@@ -347,6 +359,10 @@ components:
           items:
             $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
         testEnvProductIds:
+          type: array
+          items:
+            type: string
+        institutionTypesAllowed:
           type: array
           items:
             type: string
@@ -372,6 +388,10 @@ components:
           type: string
         alias:
           type: string
+        urlPublic:
+          type: string
+        roleManagementURL:
+          type: string
         title:
           type: string
         description:
@@ -407,6 +427,10 @@ components:
           items:
             $ref: "#/components/schemas/BackOfficeEnvironmentConfiguration"
         testEnvProductIds:
+          type: array
+          items:
+            type: string
+        institutionTypesAllowed:
           type: array
           items:
             type: string
