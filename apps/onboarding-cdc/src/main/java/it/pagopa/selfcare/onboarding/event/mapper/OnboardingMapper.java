@@ -23,6 +23,10 @@ public interface OnboardingMapper {
     @Mapping(target = "subunitCode", source = "institution.subunitCode")
     @Mapping(target = "subunitType", source = "institution.subunitType")
     @Mapping(target = "institutionType", source = "institution.institutionType")
+    @Mapping(target = "isTest", source = "institution.isTest")
+    @Mapping(target = "city", source = "institution.city")
+    @Mapping(target = "county", source = "institution.county")
+    @Mapping(target = "country", source = "institution.country")
     OnboardingIndexResource toIndexResource(it.pagopa.selfcare.onboarding.event.entity.Onboarding model);
 
     default OffsetDateTime map(LocalDateTime localDateTime) {
