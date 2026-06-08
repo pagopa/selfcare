@@ -1671,6 +1671,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -1781,6 +1784,9 @@
             "type": "boolean"
           },
           "invoiceable": {
+            "type": "boolean"
+          },
+          "requiresParentOnboarding": {
             "type": "boolean"
           },
           "expirationDays": {
@@ -2104,6 +2110,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -2190,6 +2199,9 @@
           "productId": {
             "type": "string",
             "pattern": "\\S"
+          },
+          "parentId": {
+            "type": "string"
           },
           "alias": {
             "type": "string"
