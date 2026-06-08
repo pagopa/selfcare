@@ -42,4 +42,5 @@ public class Institution {
     private DataProtectionOfficer dataProtectionOfficer;
 
     private String parentDescription;
+    private Boolean isTest;
 }
