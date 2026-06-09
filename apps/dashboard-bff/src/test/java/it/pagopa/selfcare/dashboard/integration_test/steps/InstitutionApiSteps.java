@@ -7,10 +7,7 @@ import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
-import it.pagopa.selfcare.dashboard.model.CreateUserDto;
-import it.pagopa.selfcare.dashboard.model.GeographicTaxonomyDto;
-import it.pagopa.selfcare.dashboard.model.GeographicTaxonomyListDto;
-import it.pagopa.selfcare.dashboard.model.UpdateInstitutionDto;
+import it.pagopa.selfcare.dashboard.model.*;
 import it.pagopa.selfcare.dashboard.model.user.UserCountResource;
 import it.pagopa.selfcare.dashboard.model.user.UserProductRoles;
 import org.apache.commons.lang3.StringUtils;
@@ -23,6 +20,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class InstitutionApiSteps {
 
@@ -339,9 +338,14 @@ public class InstitutionApiSteps {
     @And("the response should contain institutions list")
     public void theResponseShouldContainInstitutionsList() {
         Assertions.assertFalse(dashboardStepsUtil.responses.getInstitutionBaseResourceList().isEmpty());
-        Assertions.assertEquals(2, dashboardStepsUtil.responses.getInstitutionBaseResourceList().size());
-        Assertions.assertEquals("467ac77d-7faa-47bf-a60e-38ea74bd5fd2", dashboardStepsUtil.responses.getInstitutionBaseResourceList().get(0).getId());
-        Assertions.assertEquals("c9a50656-f345-4c81-84be-5b2474470544", dashboardStepsUtil.responses.getInstitutionBaseResourceList().get(1).getId());
+        final Set<String> institutionIds = dashboardStepsUtil.responses.getInstitutionBaseResourceList().stream()
+            .map(InstitutionBaseResource::getId)
+            .collect(Collectors.toSet());
+        Assertions.assertEquals(4, institutionIds.size());
+        Assertions.assertTrue(institutionIds.contains("467ac77d-7faa-47bf-a60e-38ea74bd5fd2"));
+        Assertions.assertTrue(institutionIds.contains("2a4c94f1-5d11-41f1-89e9-9fef0de4fbfe"));
+        Assertions.assertTrue(institutionIds.contains("067327d3-bdd6-408d-8655-87e8f1960046"));
+        Assertions.assertTrue(institutionIds.contains("c9a50656-f345-4c81-84be-5b2474470544"));
     }
 
     @When("I send a POST request to {string} to create a new user related to a product for institutions")

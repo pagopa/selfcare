@@ -137,13 +137,13 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-common</artifactId>
-            <version>0.15.6</version>
+            <version>0.16.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
-            <version>0.15.6</version>
+            <version>0.16.2</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -181,8 +181,8 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>cucumber-sdk</artifactId>
-            <version>0.0.13</version>
+            <artifactId>selfcare-cucumber-sdk</artifactId>
+            <version>0.1.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

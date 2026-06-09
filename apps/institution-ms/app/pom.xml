@@ -124,8 +124,8 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>cucumber-sdk</artifactId>
-            <version>0.0.10</version>
+            <artifactId>selfcare-cucumber-sdk</artifactId>
+            <version>0.1.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

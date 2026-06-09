@@ -24,7 +24,7 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <cucumber-sdk.version>0.0.7</cucumber-sdk.version>
+        <cucumber-sdk.version>0.1.2</cucumber-sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -146,7 +146,7 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>cucumber-sdk</artifactId>
+            <artifactId>selfcare-cucumber-sdk</artifactId>
             <version>${cucumber-sdk.version}</version>
             <scope>test</scope>
         </dependency>

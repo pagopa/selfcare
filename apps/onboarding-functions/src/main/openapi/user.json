@@ -1811,6 +1811,10 @@
           }
         }
       },
+      "EmailType" : {
+        "enum" : [ "USER_REQUEST", "CONVENTION_REQUEST" ],
+        "type" : "string"
+      },
       "Env" : {
         "enum" : [ "ROOT", "DEV", "COLL", "PROD" ],
         "type" : "string"
@@ -2041,6 +2045,12 @@
           },
           "productId" : {
             "minLength" : 1,
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/EmailType"
+          },
+          "institutionId" : {
             "type" : "string"
           }
         }
