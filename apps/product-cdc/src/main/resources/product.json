@@ -3,7 +3,6 @@
   "parentId": "prod-xy",
   "alias": "prod-x",
  "urlPublic": "https://io.italia.it/",
-  "roleManagementURL": "https://selfcare.pagopa.it/products/prod-io-premium/roles",  
   "status": "ACTIVE",
   "title": "X",
   "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",

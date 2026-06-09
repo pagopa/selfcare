@@ -23,7 +23,6 @@ public class Product {
   private String parentId;
   private String alias;
   private String urlPublic;
-  private String roleManagementURL;
 
   private String title;
   private String description;

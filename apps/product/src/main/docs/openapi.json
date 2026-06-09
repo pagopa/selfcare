@@ -299,9 +299,6 @@
           "urlPublic" : {
             "type" : "string"
           },
-          "roleManagementURL" : {
-            "type" : "string"
-          },
           "title" : {
             "type" : "string"
           },
@@ -421,9 +418,6 @@
           "urlPublic" : {
             "type" : "string"
           },
-          "roleManagementURL" : {
-            "type" : "string"
-          },
           "title" : {
             "type" : "string"
           },
@@ -519,9 +513,6 @@
             "type" : "string"
           },
           "urlPublic" : {
-            "type" : "string"
-          },
-          "roleManagementURL" : {
             "type" : "string"
           },
           "title" : {

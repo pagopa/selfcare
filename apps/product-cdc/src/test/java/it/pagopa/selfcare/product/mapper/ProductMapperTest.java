@@ -59,7 +59,6 @@ class ProductMapperTest {
       assertEquals(product.getProductId(), productEntity.getId());
       assertEquals(product.getParentId(), productEntity.getParentId());
       assertEquals(product.getUrlPublic(), productEntity.getUrlPublic());
-      assertEquals(product.getRoleManagementURL(), productEntity.getRoleManagementURL());
       assertEquals(
           product.getInstitutionTypesAllowed(), productEntity.getInstitutionTypesAllowed());
       assertEquals(

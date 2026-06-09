@@ -240,8 +240,6 @@ components:
           type: string
         urlPublic:
           type: string
-        roleManagementURL:
-          type: string
         title:
           type: string
         description:
@@ -322,8 +320,6 @@ components:
           type: string
         urlPublic:
           type: string
-        roleManagementURL:
-          type: string
         title:
           type: string
         description:
@@ -389,8 +385,6 @@ components:
         alias:
           type: string
         urlPublic:
-          type: string
-        roleManagementURL:
           type: string
         title:
           type: string

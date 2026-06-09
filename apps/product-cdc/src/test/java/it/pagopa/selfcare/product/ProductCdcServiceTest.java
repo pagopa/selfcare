@@ -235,7 +235,6 @@ class ProductCdcServiceTest {
     child.setParentId("prod-x");
     child.setRequiresParentOnboarding(true);
     child.setUrlPublic("https://io.italia.it/");
-    child.setRoleManagementURL("https://io.italia.it/roles");
     child.setInstitutionTypesAllowed(List.of("PSP"));
 
     // when
@@ -245,8 +244,6 @@ class ProductCdcServiceTest {
     String json = new String(bytes);
     Assertions.assertTrue(json.contains("\"requiresParentOnboarding\" : true"));
     Assertions.assertTrue(json.contains("\"urlPublic\" : \"https://io.italia.it/\""));
-    Assertions.assertTrue(
-        json.contains("\"roleManagementURL\" : \"https://io.italia.it/roles\""));
     Assertions.assertTrue(json.contains("\"institutionTypesAllowed\" : [ \"PSP\" ]"));
   }
 }

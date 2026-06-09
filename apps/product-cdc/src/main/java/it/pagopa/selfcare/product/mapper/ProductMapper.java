@@ -30,7 +30,6 @@ public interface ProductMapper {
   // Flattening delle Features
   @Mapping(target = "id", source = "productId")
   @Mapping(target = "urlPublic", expression = "java(resolveUrlPublic(entity))")
-  @Mapping(target = "roleManagementURL", source = "roleManagementURL")
   @Mapping(target = "allowCompanyOnboarding", source = "features.allowCompanyOnboarding")
   @Mapping(target = "allowIndividualOnboarding", source = "features.allowIndividualOnboarding")
   @Mapping(target = "delegable", source = "features.delegable")
