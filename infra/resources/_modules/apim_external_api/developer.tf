@@ -2,8 +2,6 @@ locals {
   resource_groups_name   = local.rg_apim_name
   service_name           = data.azurerm_api_management.apim.name
   azure_apim_api_version = "2021-08-01"
-  checkout_cdn_name      = "${local.project}-checkout-cdn-endpoint"
-  checkout_cdn_name_pnpg = "${local.project}-weu-pnpg-checkout-cdn-endpoint"
   profile_name           = "${local.project}-${var.location_short}-ar-checkout-afd-01"
   endpoint_name          = "${local.project}-${var.location_short}-ar-checkout-fde-01"
 }
