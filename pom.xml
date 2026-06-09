@@ -10,6 +10,10 @@
 
     <name>Selfcare</name>
 
+    <properties>
+        <java.version>17</java.version>
+    </properties>
+
     <modules>
         <module>libs</module>
         <module>apps</module>
@@ -35,8 +39,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>

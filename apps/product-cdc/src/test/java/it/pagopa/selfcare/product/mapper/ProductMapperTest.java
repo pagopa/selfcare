@@ -58,6 +58,15 @@ class ProductMapperTest {
       assertNotNull(productEntity);
       assertEquals(product.getProductId(), productEntity.getId());
       assertEquals(product.getParentId(), productEntity.getParentId());
+      assertEquals("https://baseurl.it/", productEntity.getUrlPublic());
+      assertEquals(
+          "https://baseurl.it/idp/selfcare/resolve-identity?id=<IdentityToken>",
+          productEntity.getUrlBO());
+      assertNotNull(productEntity.getBackOfficeEnvironmentConfigurations());
+      assertFalse(productEntity.getBackOfficeEnvironmentConfigurations().containsKey("PROD"));
+      assertTrue(productEntity.getBackOfficeEnvironmentConfigurations().containsKey("Locale"));
+      assertEquals(
+          product.getInstitutionTypesAllowed(), productEntity.getInstitutionTypesAllowed());
       assertEquals(
           product.getFeatures().isRequiresParentOnboarding(),
           productEntity.isRequiresParentOnboarding());
