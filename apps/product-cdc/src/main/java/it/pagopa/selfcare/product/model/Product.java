@@ -47,6 +47,7 @@ public class Product {
   private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
 
   private List<String> testEnvProductIds;
+  private List<String> institutionTypesAllowed;
 
   private ProductMetadata metadata;
 

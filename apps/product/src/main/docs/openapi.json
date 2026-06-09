@@ -353,6 +353,12 @@
               "type" : "string"
             }
           },
+          "institutionTypesAllowed" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "signingConfiguration" : {
             "$ref" : "#/components/schemas/SigningConfiguration"
           },
@@ -463,6 +469,12 @@
               "type" : "string"
             }
           },
+          "institutionTypesAllowed" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "signingConfiguration" : {
             "$ref" : "#/components/schemas/SigningConfiguration"
           },
@@ -546,6 +558,12 @@
             }
           },
           "testEnvProductIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "institutionTypesAllowed" : {
             "type" : "array",
             "items" : {
               "type" : "string"
