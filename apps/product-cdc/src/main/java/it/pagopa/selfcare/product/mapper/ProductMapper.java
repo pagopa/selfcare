@@ -207,6 +207,7 @@ public interface ProductMapper {
       return null;
     }
     return list.stream()
+        .filter(config -> !config.getEnv().equalsIgnoreCase("prod"))
         .collect(
             Collectors.toMap(
                 BackOfficeEnvironmentConfiguration::getEnv, this::toBackOfficeResource));
