@@ -26,13 +26,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class DashboardBaseSteps{
+public class DashboardBaseSteps {
 
     @Autowired
     protected ObjectMapper objectMapper;
 
     @Autowired
-    private  DashboardStepsUtil dashboardStepsUtil;
+    private DashboardStepsUtil dashboardStepsUtil;
 
     @Given("user login with username {string} and password {string}")
     public void login(String user, String pass) {
@@ -45,7 +45,7 @@ public class DashboardBaseSteps{
         dashboardStepsUtil.token = generateToken(jwtData);
     }
 
-    @Given("A bad jwt token")
+    @Given("A bad dashboard jwt token")
     public void badToken() {
         dashboardStepsUtil.filter = new Filter();
         dashboardStepsUtil.token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Imp3dF9hMjo3YTo0NjozYjoyYTo2MDo1Njo0MDo4ODphMDo1ZDphNDpmODowMToxZTozZSJ9.eyJmYW1pbHlfbmFtZSI6IlNhcnRvcmkiLCJmaXNjYWxfbnVtYmVyIjoiU1JUTkxNMDlUMDZHNjM1UyIsIm5hbWUiOiJBbnNlbG1vIiwic3BpZF9sZXZlbCI6Imh0dHBzOi8vd3d3LnNwaWQuZ292Lml0L1NwaWRMMiIsImZyb21fYWEiOmZhbHNlLCJ1aWQiOiI1MDk2ZTRjNi0yNWExLTQ1ZDUtOWJkZi0yZmI5NzRhN2MxYzgiLCJsZXZlbCI6IkwyIiwiaWF0IjoxNzM5MzYxMzUzLCJhdWQiOiJhcGkuZGV2LnNlbGZjYXJlLnBhZ29wYS5pdCIsImlzcyI6IlNQSUQiLCJqdGkiOiJfOWE2M2ZiNTQyYzk4NDJjZWMyNmQifQ.X9zoPHuLq6GafRM6zV6hnN09SQ1rL0rFWK5d-RfwJACHam1nPjqX6INx9Qd-_E69GFlr4O1JzzIzc3wfnbIhRlKMVTLjw5xjadc_sxoq-6sH-8Ek_aPeWqL44m_RKcngFCzh-7KrD32wrh4fyC_tdhFbS0SSWjTLgDy0mn3gGPLwFGmv2ASW7xZvw-DfQpsNZhEDJAOQgQ4qC5Lyxo_RriBHDIq1pZvtmW6RkIYsLJ8EGNoOGM4SzUOM3ZSSieh-48DLb8HsDwJgrle6gJJZoqZ0saeAN-7Gy-q55tl3E0hLhfif81RQ_nFH7nc3I9kLffaxWfpH7Oym5F3Nur-btg";
@@ -55,7 +55,8 @@ public class DashboardBaseSteps{
     public void checkResponseBody(Map<String, String> expectedKeyValues) {
         expectedKeyValues.forEach((expectedKey, expectedValue) -> {
             final String currentValue = dashboardStepsUtil.getResponse().body().jsonPath().getString(expectedKey);
-            Assertions.assertEquals(expectedValue, currentValue, String.format("The field %s does not contain the expected value", expectedKey));
+            Assertions.assertEquals(expectedValue, currentValue,
+                    String.format("The field %s does not contain the expected value", expectedKey));
         });
     }
 
@@ -65,24 +66,26 @@ public class DashboardBaseSteps{
         Assertions.assertEquals(expectedSize, currentSize);
     }
 
-
     @And("The response body contains at path {string} the following list of objects in any order:")
     public void checkResponseBodyObjectList(String expectedJsonPath, List<Map<String, Object>> expectedObjects) {
-        List<Map<String, Object>> currentObjects = dashboardStepsUtil.getResponse().body().jsonPath().getList(expectedJsonPath);
-        Assertions.assertEquals(expectedObjects.size(), currentObjects.size(), String.format("The lists have different sizes. Expected: %s, Current: %s", expectedObjects, currentObjects));
+        List<Map<String, Object>> currentObjects = dashboardStepsUtil.getResponse().body().jsonPath()
+                .getList(expectedJsonPath);
+        Assertions.assertEquals(expectedObjects.size(), currentObjects.size(), String
+                .format("The lists have different sizes. Expected: %s, Current: %s", expectedObjects, currentObjects));
         ObjectMapper objMapper = new ObjectMapper();
-        Set<String> expectedKeySet = ((Map)expectedObjects.get(0)).keySet();
-        Set<String> expectedJsonSet = (Set)expectedObjects.stream().map(obj -> {
+        Set<String> expectedKeySet = ((Map) expectedObjects.get(0)).keySet();
+        Set<String> expectedJsonSet = (Set) expectedObjects.stream().map(obj -> {
             return this.filterExpectedObject(obj, expectedKeySet);
         }).map(obj -> {
             return this.toJson(objMapper, obj);
         }).collect(Collectors.toSet());
-        Set<String> currentJsonSet = (Set)currentObjects.stream().map(obj -> {
+        Set<String> currentJsonSet = (Set) currentObjects.stream().map(obj -> {
             return this.filterCurrentObject(obj, expectedKeySet);
         }).map(obj -> {
             return this.toJson(objMapper, obj);
         }).collect(Collectors.toSet());
-        Assertions.assertEquals(expectedJsonSet, currentJsonSet, String.format("The lists contain different objects. Expected: %s, Current: %s", expectedJsonSet, currentJsonSet));
+        Assertions.assertEquals(expectedJsonSet, currentJsonSet, String.format(
+                "The lists contain different objects. Expected: %s, Current: %s", expectedJsonSet, currentJsonSet));
     }
 
     @And("The response body doesn't contain field {string}")
@@ -94,8 +97,9 @@ public class DashboardBaseSteps{
     public TestProperties readDataPopulation() {
         TestProperties testProperties = null;
         try {
-            testProperties = objectMapper.readValue(new File("src/test/resources/dataPopulation/data.json"), new TypeReference<>() {
-            });
+            testProperties = objectMapper.readValue(new File("src/test/resources/dataPopulation/data.json"),
+                    new TypeReference<>() {
+                    });
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -106,7 +110,8 @@ public class DashboardBaseSteps{
         if (Objects.nonNull(jwtData)) {
             try {
                 File file = new File("integration-test-config/key/private-key.pem");
-                Algorithm alg = Algorithm.RSA256(KeyGenerator.getPrivateKey(new String(Files.readAllBytes(file.toPath()))));
+                Algorithm alg = Algorithm
+                        .RSA256(KeyGenerator.getPrivateKey(new String(Files.readAllBytes(file.toPath()))));
                 String jwt = JWT.create()
                         .withHeader(jwtData.getJwtHeader())
                         .withPayload(jwtData.getJwtPayload())
@@ -170,12 +175,10 @@ public class DashboardBaseSteps{
         dashboardStepsUtil.filter.setMobilePhone(mobilePhone);
     }
 
-
     @And("the email is {string}")
     public void theEmailIs(String email) {
         dashboardStepsUtil.filter.setEmail(email);
     }
-
 
     @And("the roles are {string}")
     public void theRolesAre(String roles) {
@@ -193,7 +196,6 @@ public class DashboardBaseSteps{
     public void languageIs(String lang) {
         dashboardStepsUtil.filter.setLang(lang);
     }
-
 
     @And("the institutionId is {string}")
     public void theInstitutionIdIs(String institutionId) {
@@ -233,7 +235,6 @@ public class DashboardBaseSteps{
         dashboardStepsUtil.filter.setSize(size);
     }
 
-
     @And("I set the page number to {int} and page size to {int}")
     public void iSetThePageNumberToAndPageSizeTo(int page, int size) {
         dashboardStepsUtil.filter.setPageable(Pageable.ofSize(size).withPage(page));
@@ -244,11 +245,11 @@ public class DashboardBaseSteps{
         dashboardStepsUtil.filter.setSort(sort);
     }
 
-
     @And("the response should contain an error message {string}")
     public void verifyErrorMessage(String expectedErrorMessage) {
         String[] errorMessageArray = expectedErrorMessage.split(",");
-        Arrays.stream(errorMessageArray).forEach(s -> Assertions.assertTrue(dashboardStepsUtil.errorMessage.contains(s)));
+        Arrays.stream(errorMessageArray)
+                .forEach(s -> Assertions.assertTrue(dashboardStepsUtil.errorMessage.contains(s)));
     }
 
     @Then("the response status should be {int}")
@@ -271,21 +272,21 @@ public class DashboardBaseSteps{
     @And("the response should contain a {string} query param for language")
     public void theResponseShouldContainAValidLanguage(String lang) {
         String uri = dashboardStepsUtil.responses.getBackOfficeUrl().toString();
-        Assertions.assertTrue(uri.contains("lang="+lang));
+        Assertions.assertTrue(uri.contains("lang=" + lang));
     }
 
     private Map<String, Object> filterExpectedObject(Map<String, Object> obj, Set<String> expectedKeys) {
         Map<String, Object> filteredMap = new HashMap();
         Iterator var4 = expectedKeys.iterator();
 
-        while(var4.hasNext()) {
-            String key = (String)var4.next();
+        while (var4.hasNext()) {
+            String key = (String) var4.next();
             if (obj.containsKey(key) && Objects.nonNull(obj.get(key))) {
                 Object value = obj.get(key);
                 if (value instanceof String) {
-                    if (Boolean.TRUE.toString().equalsIgnoreCase((String)value)) {
+                    if (Boolean.TRUE.toString().equalsIgnoreCase((String) value)) {
                         value = true;
-                    } else if (Boolean.FALSE.toString().equalsIgnoreCase((String)value)) {
+                    } else if (Boolean.FALSE.toString().equalsIgnoreCase((String) value)) {
                         value = false;
                     }
                 }
@@ -303,13 +304,13 @@ public class DashboardBaseSteps{
         String[] var5 = keys;
         int var6 = keys.length;
 
-        for(int var7 = 0; var7 < var6; ++var7) {
+        for (int var7 = 0; var7 < var6; ++var7) {
             String k = var5[var7];
             if (!(value instanceof Map)) {
                 return null;
             }
 
-            value = ((Map)value).get(k);
+            value = ((Map) value).get(k);
             if (value == null) {
                 return null;
             }
@@ -322,8 +323,8 @@ public class DashboardBaseSteps{
         Map<String, Object> filteredMap = new HashMap();
         Iterator var4 = expectedKeys.iterator();
 
-        while(var4.hasNext()) {
-            String key = (String)var4.next();
+        while (var4.hasNext()) {
+            String key = (String) var4.next();
             Object value = this.getNestedValue(obj, key);
             if (value != null) {
                 filteredMap.put(key, value);

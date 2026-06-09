@@ -376,6 +376,6 @@ Feature: User
       | canUserChangeOtpEmail     | false                                        |
 
   Scenario: Unauthorized when i try to get user otp info with a bad token
-    Given A bad jwt token
+    Given A bad dashboard jwt token
     When I send a GET request to "/v2/users/otp-info" to retrieve user otp info
     Then the response status should be 401
