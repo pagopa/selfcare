@@ -16,6 +16,8 @@ import it.pagopa.selfcare.mscore.web.model.delegation.DelegationWithPaginationRe
 import it.pagopa.selfcare.mscore.web.model.mapper.*;
 import it.pagopa.selfcare.mscore.web.util.EncryptedTaxCodeParamResolver;
 import jakarta.servlet.ServletException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -23,6 +25,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -39,289 +44,332 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
-@ContextConfiguration(classes = {DelegationV2Controller.class})
+@ContextConfiguration(classes = { DelegationV2Controller.class })
 @ExtendWith(MockitoExtension.class)
 class DelegationV2ControllerTest {
 
-    @InjectMocks
-    private DelegationV2Controller delegationController;
+        @InjectMocks
+        private DelegationV2Controller delegationController;
 
-    @Mock
-    private DelegationService delegationService;
+        @Mock
+        private DelegationService delegationService;
 
-    private final InstitutionUpdateMapper institutionUpdateMapper = new InstitutionUpdateMapperImpl();
-    private final OnboardingResourceMapper onboardingResourceMapper = new OnboardingResourceMapperImpl(institutionUpdateMapper);
-    private final InstitutionResourceMapper institutionResourceMapper = new InstitutionResourceMapperImpl(onboardingResourceMapper);
+        private final InstitutionUpdateMapper institutionUpdateMapper = new InstitutionUpdateMapperImpl();
+        private final OnboardingResourceMapper onboardingResourceMapper = new OnboardingResourceMapperImpl(
+                        institutionUpdateMapper);
+        private final InstitutionResourceMapper institutionResourceMapper = new InstitutionResourceMapperImpl(
+                        onboardingResourceMapper);
 
-    @Spy
-    private DelegationMapper delegationResourceMapper = new DelegationMapperImpl(institutionResourceMapper);
+        @Spy
+        private DelegationMapper delegationResourceMapper = new DelegationMapperImpl(institutionResourceMapper);
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
-    final String FROM1 = "from1";
-    final String FROM2 = "from2";
-    final String TO1 = "to1";
+        final String FROM1 = "from1";
+        final String FROM2 = "from2";
+        final String TO1 = "to1";
+        final String fakeJwt = "eyJhbGciOiJIUzI1NiJ9."
+                        + "eyJhdWQiOlsiYWx0cm8tYXVkaWVuY2UiXSwic3ViIjoidGVzdCJ9."
+                        + "abc123fakeSignature";
 
-    /**
-     * Method under test: {@link InstitutionController#findFromProduct(String, Integer, Integer)}
-     */
-    @Test
-    void getDelegations_shouldInvalidRequest() {
+        @BeforeEach
+        void setup() {
+                Authentication authentication = mock(Authentication.class);
+                lenient().when(authentication.getCredentials()).thenReturn(fakeJwt);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?&productId={productId}", "productId");
+                SecurityContext context = SecurityContextHolder.createEmptyContext();
+                context.setAuthentication(authentication);
+                SecurityContextHolder.setContext(context);
+        }
 
-        assertThrows(ServletException.class, () ->
-            MockMvcBuilders.standaloneSetup(delegationController)
-                    .build()
-                    .perform(requestBuilder));
-        
-    }
+        @AfterEach
+        void tearDown() {
+                SecurityContextHolder.clearContext();
+        }
 
-    /**
-     * Method under test: {@link DelegationController#getDelegations(String, String, String, String, String, Optional, Optional, Optional)}
-     */
-    @Test
-    void getDelegations_shouldGetData() throws Exception {
-        // Given
-        Delegation expectedDelegation = dummyDelegation();
-        PageInfo exptectedPageInfo = new PageInfo(10, 0, 1, 1);
+        /**
+         * Method under test:
+         * {@link InstitutionController#findFromProduct(String, Integer, Integer)}
+         */
+        @Test
+        void getDelegations_shouldInvalidRequest() {
 
-        DelegationWithPagination expectedDelegationWithPagination = new DelegationWithPagination(List.of(expectedDelegation), exptectedPageInfo);
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?&productId={productId}", "productId");
 
-        when(delegationService.getDelegationsV2(createDelegationParameters(expectedDelegation.getFrom(), expectedDelegation.getTo(),
-                expectedDelegation.getProductId(), null, null, Order.ASC, 0, 10)))
-                .thenReturn(expectedDelegationWithPagination);
-        // When
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?institutionId={institutionId}&brokerId={brokerId}&productId={productId}&order={order}&page={page}&size={size}",
-                        expectedDelegation.getFrom(), expectedDelegation.getTo(), expectedDelegation.getProductId(),
-                        Order.ASC ,exptectedPageInfo.getPageNo(), exptectedPageInfo.getPageSize());
-        MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
-                .build()
-                .perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-                .andReturn();
+                assertThrows(ServletException.class, () -> MockMvcBuilders.standaloneSetup(delegationController)
+                                .build()
+                                .perform(requestBuilder));
 
-        DelegationWithPaginationResponse response = objectMapper.readValue(
-                result.getResponse().getContentAsString(), new TypeReference<>() {});
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getDelegations()).isNotNull();
-        assertThat(response.getPageInfo()).isNotNull();
-        assertThat((long) response.getDelegations().size()).isEqualTo(1);
-        DelegationResponse actualDelegation = response.getDelegations().get(0);
-        PageInfo actualPageInfo = response.getPageInfo();
-        assertThat(actualDelegation.getId()).isEqualTo(expectedDelegation.getId());
-        assertThat(actualDelegation.getInstitutionName()).isEqualTo(expectedDelegation.getInstitutionFromName());
-        assertThat(actualDelegation.getBrokerId()).isEqualTo(expectedDelegation.getTo());
-        assertThat(actualDelegation.getProductId()).isEqualTo(expectedDelegation.getProductId());
-        assertThat(actualDelegation.getInstitutionId()).isEqualTo(expectedDelegation.getFrom());
-        assertThat(actualDelegation.getInstitutionRootName()).isEqualTo(expectedDelegation.getInstitutionFromRootName());
-        assertThat(actualPageInfo).isEqualTo(exptectedPageInfo);
+        }
 
-        verify(delegationService, times(1))
-                .getDelegationsV2(createDelegationParameters(expectedDelegation.getFrom(), expectedDelegation.getTo(),
-                        expectedDelegation.getProductId(), null, null, Order.ASC,
-                        0, 10));
+        /**
+         * Method under test:
+         * {@link DelegationController#getDelegations(String, String, String, String, String, Optional, Optional, Optional)}
+         */
+        @Test
+        void getDelegations_shouldGetData() throws Exception {
+                // Given
+                Delegation expectedDelegation = dummyDelegation();
+                PageInfo exptectedPageInfo = new PageInfo(10, 0, 1, 1);
 
-        verifyNoMoreInteractions(delegationService);
-    }
+                DelegationWithPagination expectedDelegationWithPagination = new DelegationWithPagination(
+                                List.of(expectedDelegation), exptectedPageInfo);
 
-    @Test
-    void getDelegations_shouldGetDataCustom() throws Exception {
-        // Given
-        List<Delegation> expectedDelegations = new ArrayList<>();
-        Delegation delegation1 = createDelegation("1", FROM1, TO1);
-        Delegation delegation2 = createDelegation("2", FROM2, TO1);
-        expectedDelegations.add(delegation1);
-        expectedDelegations.add(delegation2);
+                when(delegationService.getDelegationsV2(
+                                createDelegationParameters(expectedDelegation.getFrom(), expectedDelegation.getTo(),
+                                                expectedDelegation.getProductId(), null, null, Order.ASC, 0, 10)))
+                                .thenReturn(expectedDelegationWithPagination);
+                // When
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?institutionId={institutionId}&brokerId={brokerId}&productId={productId}&order={order}&page={page}&size={size}",
+                                                expectedDelegation.getFrom(), expectedDelegation.getTo(),
+                                                expectedDelegation.getProductId(),
+                                                Order.ASC, exptectedPageInfo.getPageNo(),
+                                                exptectedPageInfo.getPageSize());
+                MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
+                                .build()
+                                .perform(requestBuilder)
+                                .andExpect(MockMvcResultMatchers.status().isOk())
+                                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                                .andReturn();
 
-        PageInfo exptectedPageInfo = new PageInfo(10000, 0, 2, 1);
+                DelegationWithPaginationResponse response = objectMapper.readValue(
+                                result.getResponse().getContentAsString(), new TypeReference<>() {
+                                });
+                // Then
+                assertThat(response).isNotNull();
+                assertThat(response.getDelegations()).isNotNull();
+                assertThat(response.getPageInfo()).isNotNull();
+                assertThat((long) response.getDelegations().size()).isEqualTo(1);
+                DelegationResponse actualDelegation = response.getDelegations().get(0);
+                PageInfo actualPageInfo = response.getPageInfo();
+                assertThat(actualDelegation.getId()).isEqualTo(expectedDelegation.getId());
+                assertThat(actualDelegation.getInstitutionName())
+                                .isEqualTo(expectedDelegation.getInstitutionFromName());
+                assertThat(actualDelegation.getBrokerId()).isEqualTo(expectedDelegation.getTo());
+                assertThat(actualDelegation.getProductId()).isEqualTo(expectedDelegation.getProductId());
+                assertThat(actualDelegation.getInstitutionId()).isEqualTo(expectedDelegation.getFrom());
+                assertThat(actualDelegation.getInstitutionRootName())
+                                .isEqualTo(expectedDelegation.getInstitutionFromRootName());
+                assertThat(actualPageInfo).isEqualTo(exptectedPageInfo);
 
-        DelegationWithPagination expectedDelegationWithPagination = new DelegationWithPagination(expectedDelegations, exptectedPageInfo);
+                verify(delegationService, times(1))
+                                .getDelegationsV2(createDelegationParameters(expectedDelegation.getFrom(),
+                                                expectedDelegation.getTo(),
+                                                expectedDelegation.getProductId(), null, null, Order.ASC,
+                                                0, 10));
 
-        when(delegationService.getDelegationsV2(createDelegationParameters(null, TO1,
-                null, null, null, Order.DESC, 0, 10000)))
-                .thenReturn(expectedDelegationWithPagination);
-        // When
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?brokerId={brokerId}&order={order}", TO1, Order.DESC);
-        MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
-                .build()
-                .perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-                .andReturn();
+                verifyNoMoreInteractions(delegationService);
+        }
 
-        DelegationWithPaginationResponse response = objectMapper.readValue(
-                result.getResponse().getContentAsString(), new TypeReference<>() {});
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getDelegations()).isNotNull();
-        assertThat(response.getPageInfo()).isNotNull();
-        assertThat((long) response.getDelegations().size()).isEqualTo(2);
-        DelegationResponse actualDelegation = response.getDelegations().get(0);
-        PageInfo actualPageInfo = response.getPageInfo();
-        assertThat(actualDelegation.getId()).isEqualTo(delegation1.getId());
-        assertThat(actualDelegation.getInstitutionName()).isEqualTo(delegation1.getInstitutionFromName());
-        assertThat(actualDelegation.getBrokerId()).isEqualTo(delegation1.getTo());
-        assertThat(actualDelegation.getProductId()).isEqualTo(delegation1.getProductId());
-        assertThat(actualDelegation.getInstitutionId()).isEqualTo(delegation1.getFrom());
-        assertThat(actualDelegation.getInstitutionRootName()).isEqualTo(delegation1.getInstitutionFromRootName());
-        assertThat(actualPageInfo).isEqualTo(exptectedPageInfo);
+        @Test
+        void getDelegations_shouldGetDataCustom() throws Exception {
+                // Given
+                List<Delegation> expectedDelegations = new ArrayList<>();
+                Delegation delegation1 = createDelegation("1", FROM1, TO1);
+                Delegation delegation2 = createDelegation("2", FROM2, TO1);
+                expectedDelegations.add(delegation1);
+                expectedDelegations.add(delegation2);
 
-        verify(delegationService, times(1))
-                .getDelegationsV2(createDelegationParameters(null, TO1, null,
-                        null, null, Order.DESC,
-                        0, 10000));
-        verifyNoMoreInteractions(delegationService);
-    }
+                PageInfo exptectedPageInfo = new PageInfo(10000, 0, 2, 1);
 
-    /**
-     * Method under test: {@link DelegationController#getDelegations(String, String, String, String, String, Optional, Optional, Optional)}
-     */
-    @Test
-    void getDelegations_shouldGetData_nullMode() throws Exception {
-        // Given
-        Delegation expectedDelegation = dummyDelegation();
-        PageInfo exptectedPageInfo = new PageInfo(10000, 0, 1, 1);
+                DelegationWithPagination expectedDelegationWithPagination = new DelegationWithPagination(
+                                expectedDelegations, exptectedPageInfo);
 
-        DelegationWithPagination expectedDelegationWithPagination = new DelegationWithPagination(List.of(expectedDelegation), exptectedPageInfo);
+                when(delegationService.getDelegationsV2(createDelegationParameters(null, TO1,
+                                null, null, null, Order.DESC, 0, 10000)))
+                                .thenReturn(expectedDelegationWithPagination);
+                // When
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?brokerId={brokerId}&order={order}", TO1, Order.DESC);
+                MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
+                                .build()
+                                .perform(requestBuilder)
+                                .andExpect(MockMvcResultMatchers.status().isOk())
+                                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                                .andReturn();
 
-        when(delegationService.getDelegationsV2(createDelegationParameters(expectedDelegation.getFrom(), expectedDelegation.getTo(),
-                expectedDelegation.getProductId(), null, null, Order.NONE, 0, 10000)))
-                .thenReturn(expectedDelegationWithPagination);
-        // When
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?institutionId={institutionId}&brokerId={brokerId}&productId={productId}", expectedDelegation.getFrom(),
-                        expectedDelegation.getTo(), expectedDelegation.getProductId());
-        MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
-                .build()
-                .perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-                .andReturn();
+                DelegationWithPaginationResponse response = objectMapper.readValue(
+                                result.getResponse().getContentAsString(), new TypeReference<>() {
+                                });
+                // Then
+                assertThat(response).isNotNull();
+                assertThat(response.getDelegations()).isNotNull();
+                assertThat(response.getPageInfo()).isNotNull();
+                assertThat((long) response.getDelegations().size()).isEqualTo(2);
+                DelegationResponse actualDelegation = response.getDelegations().get(0);
+                PageInfo actualPageInfo = response.getPageInfo();
+                assertThat(actualDelegation.getId()).isEqualTo(delegation1.getId());
+                assertThat(actualDelegation.getInstitutionName()).isEqualTo(delegation1.getInstitutionFromName());
+                assertThat(actualDelegation.getBrokerId()).isEqualTo(delegation1.getTo());
+                assertThat(actualDelegation.getProductId()).isEqualTo(delegation1.getProductId());
+                assertThat(actualDelegation.getInstitutionId()).isEqualTo(delegation1.getFrom());
+                assertThat(actualDelegation.getInstitutionRootName())
+                                .isEqualTo(delegation1.getInstitutionFromRootName());
+                assertThat(actualPageInfo).isEqualTo(exptectedPageInfo);
 
-        DelegationWithPaginationResponse response = objectMapper.readValue(
-                result.getResponse().getContentAsString(), new TypeReference<>() {});
-        // Then
-        assertThat(response).isNotNull();
-        assertThat(response.getDelegations()).isNotNull();
-        assertThat(response.getPageInfo()).isNotNull();
-        assertThat((long) response.getDelegations().size()).isEqualTo(1);
-        DelegationResponse actualDelegation = response.getDelegations().get(0);
-        PageInfo actualPageInfo = response.getPageInfo();
-        assertThat(actualDelegation.getId()).isEqualTo(expectedDelegation.getId());
-        assertThat(actualDelegation.getInstitutionName()).isEqualTo(expectedDelegation.getInstitutionFromName());
-        assertThat(actualDelegation.getBrokerId()).isEqualTo(expectedDelegation.getTo());
-        assertThat(actualDelegation.getProductId()).isEqualTo(expectedDelegation.getProductId());
-        assertThat(actualDelegation.getInstitutionId()).isEqualTo(expectedDelegation.getFrom());
-        assertThat(actualDelegation.getInstitutionRootName()).isEqualTo(expectedDelegation.getInstitutionFromRootName());
-        assertThat(actualPageInfo).isEqualTo(exptectedPageInfo);
+                verify(delegationService, times(1))
+                                .getDelegationsV2(createDelegationParameters(null, TO1, null,
+                                                null, null, Order.DESC,
+                                                0, 10000));
+                verifyNoMoreInteractions(delegationService);
+        }
 
-        verify(delegationService, times(1))
-                .getDelegationsV2(createDelegationParameters(expectedDelegation.getFrom(), expectedDelegation.getTo(),
-                        expectedDelegation.getProductId(), null, null, Order.NONE,0, 10000));
-        verifyNoMoreInteractions(delegationService);
-    }
+        /**
+         * Method under test:
+         * {@link DelegationController#getDelegations(String, String, String, String, String, Optional, Optional, Optional)}
+         */
+        @Test
+        void getDelegations_shouldGetData_nullMode() throws Exception {
+                // Given
+                Delegation expectedDelegation = dummyDelegation();
+                PageInfo exptectedPageInfo = new PageInfo(10000, 0, 1, 1);
 
-    @Test
-    void getDelegations_shouldInvalidRequest_wrongPageSize() throws Exception {
+                DelegationWithPagination expectedDelegationWithPagination = new DelegationWithPagination(
+                                List.of(expectedDelegation), exptectedPageInfo);
 
-        Delegation expectedDelegation = dummyDelegation();
+                when(delegationService.getDelegationsV2(
+                                createDelegationParameters(expectedDelegation.getFrom(), expectedDelegation.getTo(),
+                                                expectedDelegation.getProductId(), null, null, Order.NONE, 0, 10000)))
+                                .thenReturn(expectedDelegationWithPagination);
+                // When
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?institutionId={institutionId}&brokerId={brokerId}&productId={productId}",
+                                                expectedDelegation.getFrom(),
+                                                expectedDelegation.getTo(), expectedDelegation.getProductId());
+                MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
+                                .build()
+                                .perform(requestBuilder)
+                                .andExpect(MockMvcResultMatchers.status().isOk())
+                                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                                .andReturn();
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?brokerId={brokerId}&size={size}",
-                        expectedDelegation.getTo(), 0);
+                DelegationWithPaginationResponse response = objectMapper.readValue(
+                                result.getResponse().getContentAsString(), new TypeReference<>() {
+                                });
+                // Then
+                assertThat(response).isNotNull();
+                assertThat(response.getDelegations()).isNotNull();
+                assertThat(response.getPageInfo()).isNotNull();
+                assertThat((long) response.getDelegations().size()).isEqualTo(1);
+                DelegationResponse actualDelegation = response.getDelegations().get(0);
+                PageInfo actualPageInfo = response.getPageInfo();
+                assertThat(actualDelegation.getId()).isEqualTo(expectedDelegation.getId());
+                assertThat(actualDelegation.getInstitutionName())
+                                .isEqualTo(expectedDelegation.getInstitutionFromName());
+                assertThat(actualDelegation.getBrokerId()).isEqualTo(expectedDelegation.getTo());
+                assertThat(actualDelegation.getProductId()).isEqualTo(expectedDelegation.getProductId());
+                assertThat(actualDelegation.getInstitutionId()).isEqualTo(expectedDelegation.getFrom());
+                assertThat(actualDelegation.getInstitutionRootName())
+                                .isEqualTo(expectedDelegation.getInstitutionFromRootName());
+                assertThat(actualPageInfo).isEqualTo(exptectedPageInfo);
 
-        MockMvcBuilders.standaloneSetup(delegationController)
-                .build()
-                .perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
+                verify(delegationService, times(1))
+                                .getDelegationsV2(createDelegationParameters(expectedDelegation.getFrom(),
+                                                expectedDelegation.getTo(),
+                                                expectedDelegation.getProductId(), null, null, Order.NONE, 0, 10000));
+                verifyNoMoreInteractions(delegationService);
+        }
 
-    @Test
-    void getDelegations_shouldInvalidRequest_wrongPageNumber() throws Exception {
+        @Test
+        void getDelegations_shouldInvalidRequest_wrongPageSize() throws Exception {
 
-        Delegation expectedDelegation = dummyDelegation();
+                Delegation expectedDelegation = dummyDelegation();
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?brokerId={brokerId}&page={size}",
-                        expectedDelegation.getTo(), -1);
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?brokerId={brokerId}&size={size}",
+                                                expectedDelegation.getTo(), 0);
 
-        MockMvcBuilders.standaloneSetup(delegationController)
-                .build()
-                .perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status().isBadRequest());
-    }
+                MockMvcBuilders.standaloneSetup(delegationController)
+                                .build()
+                                .perform(requestBuilder)
+                                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        }
 
-    @Test
-    void getDelegationsWithEncryptedTaxCode() throws Exception {
-        final UserRegistryConnector userRegistryConnector = mock(UserRegistryConnector.class);
+        @Test
+        void getDelegations_shouldInvalidRequest_wrongPageNumber() throws Exception {
 
-        final User user = new User();
-        user.setId("userUid");
-        when(userRegistryConnector.getUserByFiscalCode("RSSMRA00R20H501M")).thenReturn(user);
+                Delegation expectedDelegation = dummyDelegation();
 
-        final ArgumentCaptor<GetDelegationParameters> captor = ArgumentCaptor.forClass(GetDelegationParameters.class);
-        final DelegationWithPagination delegationWithPagination = new DelegationWithPagination(new ArrayList<>(), new PageInfo(0,0,0,0));
-        when(delegationService.getDelegationsV2(any())).thenReturn(delegationWithPagination);
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?brokerId={brokerId}&page={size}",
+                                                expectedDelegation.getTo(), -1);
 
-        MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
-                .get("/v2/delegations?institutionId={institutionId}&taxCode={taxCode}", "institutionId", "RSSMRA00R20H501M");
-        MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
-                .setCustomArgumentResolvers(new EncryptedTaxCodeParamResolver(userRegistryConnector))
-                .build()
-                .perform(requestBuilder)
-                .andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
-                .andReturn();
+                MockMvcBuilders.standaloneSetup(delegationController)
+                                .build()
+                                .perform(requestBuilder)
+                                .andExpect(MockMvcResultMatchers.status().isBadRequest());
+        }
 
-        verify(delegationService).getDelegationsV2(captor.capture());
-        final GetDelegationParameters params = captor.getValue();
-        assertEquals("userUid", params.getTaxCode());
-        assertEquals("institutionId", params.getFrom());
-    }
+        @Test
+        void getDelegationsWithEncryptedTaxCode() throws Exception {
+                final UserRegistryConnector userRegistryConnector = mock(UserRegistryConnector.class);
 
-    private Delegation dummyDelegation() {
-        Delegation delegation = new Delegation();
-        delegation.setFrom("from");
-        delegation.setTo("to");
-        delegation.setId("setId");
-        delegation.setProductId("setProductId");
-        delegation.setType(DelegationType.PT);
-        delegation.setInstitutionFromName("setInstitutionFromName");
-        delegation.setInstitutionFromRootName("setInstitutionFromRootName");
-        return delegation;
-    }
+                final User user = new User();
+                user.setId("userUid");
+                when(userRegistryConnector.getUserByFiscalCode("RSSMRA00R20H501M")).thenReturn(user);
 
-    private Delegation createDelegation(String pattern, String from, String to) {
-        Delegation delegation = new Delegation();
-        delegation.setId("id_" + pattern);
-        delegation.setProductId("productId");
-        delegation.setType(DelegationType.PT);
-        delegation.setTo(to);
-        delegation.setFrom(from);
-        delegation.setInstitutionFromName("name_" + from);
-        delegation.setInstitutionFromRootName("name_" + to);
-        return delegation;
-    }
+                final ArgumentCaptor<GetDelegationParameters> captor = ArgumentCaptor
+                                .forClass(GetDelegationParameters.class);
+                final DelegationWithPagination delegationWithPagination = new DelegationWithPagination(
+                                new ArrayList<>(), new PageInfo(0, 0, 0, 0));
+                when(delegationService.getDelegationsV2(any())).thenReturn(delegationWithPagination);
 
-    private GetDelegationParameters createDelegationParameters(String from, String to, String productId,
-                                                               String search, String taxCode, Order order,
-                                                               Integer page, Integer size) {
-        return GetDelegationParameters.builder()
-                .from(from)
-                .to(to)
-                .productId(productId)
-                .search(search)
-                .taxCode(taxCode)
-                .order(order)
-                .page(page)
-                .size(size)
-                .build();
-    }
+                MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+                                .get("/v2/delegations?institutionId={institutionId}&taxCode={taxCode}", "institutionId",
+                                                "RSSMRA00R20H501M");
+                MvcResult result = MockMvcBuilders.standaloneSetup(delegationController)
+                                .setCustomArgumentResolvers(new EncryptedTaxCodeParamResolver(userRegistryConnector))
+                                .build()
+                                .perform(requestBuilder)
+                                .andExpect(MockMvcResultMatchers.status().isOk())
+                                .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+                                .andReturn();
+
+                verify(delegationService).getDelegationsV2(captor.capture());
+                final GetDelegationParameters params = captor.getValue();
+                assertEquals("userUid", params.getTaxCode());
+                assertEquals("institutionId", params.getFrom());
+        }
+
+        private Delegation dummyDelegation() {
+                Delegation delegation = new Delegation();
+                delegation.setFrom("from");
+                delegation.setTo("to");
+                delegation.setId("setId");
+                delegation.setProductId("setProductId");
+                delegation.setType(DelegationType.PT);
+                delegation.setInstitutionFromName("setInstitutionFromName");
+                delegation.setInstitutionFromRootName("setInstitutionFromRootName");
+                return delegation;
+        }
+
+        private Delegation createDelegation(String pattern, String from, String to) {
+                Delegation delegation = new Delegation();
+                delegation.setId("id_" + pattern);
+                delegation.setProductId("productId");
+                delegation.setType(DelegationType.PT);
+                delegation.setTo(to);
+                delegation.setFrom(from);
+                delegation.setInstitutionFromName("name_" + from);
+                delegation.setInstitutionFromRootName("name_" + to);
+                return delegation;
+        }
+
+        private GetDelegationParameters createDelegationParameters(String from, String to, String productId,
+                        String search, String taxCode, Order order,
+                        Integer page, Integer size) {
+                return GetDelegationParameters.builder()
+                                .from(from)
+                                .to(to)
+                                .productId(productId)
+                                .search(search)
+                                .taxCode(taxCode)
+                                .order(order)
+                                .page(page)
+                                .size(size)
+                                .build();
+        }
 
 }
