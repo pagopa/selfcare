@@ -265,6 +265,7 @@
       "labelKey": "scp"
     }
   ],
+  "institutionTypesAllowed": ["PSP"],
   "emailTemplates": [
     {
       "type": "IMPORT",
@@ -295,6 +296,7 @@
       "identityTokenAudience": "identity.it"
     }
   ],
+   "institutionTypesAllowed": ["PSP"],
    "testEnvProductIds": ["prod-interop-coll", "prod-interop-atst"],
    "metadata": {
     "createdAt": "2021-12-15T15:54:55.190Z",
