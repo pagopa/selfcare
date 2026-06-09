@@ -101,7 +101,7 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         userGroupEntityFilter = new UserGroupEntity();
     }
 
-    @When("I send a GET request to {string}")
+    @When("I send a GET request to {string} to retrieve the group details")
     public void iSendAGETRequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
                 .pathParam("id", userGroupId)
