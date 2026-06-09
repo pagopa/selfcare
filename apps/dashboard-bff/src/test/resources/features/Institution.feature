@@ -299,7 +299,7 @@ Feature: Institution
     And the response should contain institutions list
 
   Scenario: Successfully retrieve empty institutions list
-    Given user login with username "s.froid" and password "test"
+    Given user login with username "b.barnes" and password "test"
     When I send a GET request to "/v2/institutions" to retrieve institutions list
     Then the response status should be 200
     And the response should contain an empty institutions list

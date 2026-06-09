@@ -27,7 +27,8 @@ import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 @ConfigurationParameters({
     @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty"),
     @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "html:target/cucumber-report/cucumber.html"),
-    @ConfigurationParameter(key = "cucumber.filter.tags", value = "not @skip")
+    @ConfigurationParameter(key = "cucumber.filter.tags", value = "not @skip"),
+    @ConfigurationParameter(key = "cucumber.glue", value = "it.pagopa.selfcare.dashboard.integration_test")
 })
 @CucumberContextConfiguration
 @TestPropertySource(locations = "classpath:application-test.properties")
