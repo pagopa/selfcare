@@ -9,7 +9,6 @@ import it.pagopa.selfcare.product.model.*;
 import it.pagopa.selfcare.product.model.enums.OnboardingType;
 import java.util.*;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -29,7 +28,10 @@ public interface ProductMapper {
 
   // Flattening delle Features
   @Mapping(target = "id", source = "productId")
-  @Mapping(target = "urlPublic", expression = "java(resolveUrlPublic(entity))")
+  @Mapping(
+      target = "urlPublic",
+      expression =
+          "java(mapBackOfficeConfigsProdurlBOurlPublic(entity.getBackOfficeEnvironmentConfigurations()))")
   @Mapping(target = "allowCompanyOnboarding", source = "features.allowCompanyOnboarding")
   @Mapping(target = "allowIndividualOnboarding", source = "features.allowIndividualOnboarding")
   @Mapping(target = "delegable", source = "features.delegable")
@@ -183,13 +185,6 @@ public interface ProductMapper {
         .findFirst()
         .map(BackOfficeEnvironmentConfiguration::getUrlPublic)
         .orElse(null);
-  }
-
-  default String resolveUrlPublic(Product product) {
-    if (StringUtils.isNotBlank(product.getUrlPublic())) {
-      return product.getUrlPublic();
-    }
-    return mapBackOfficeConfigsProdurlBOurlPublic(product.getBackOfficeEnvironmentConfigurations());
   }
 
   @Named("mapBackOfficeConfigsIdentityTokenAudience")

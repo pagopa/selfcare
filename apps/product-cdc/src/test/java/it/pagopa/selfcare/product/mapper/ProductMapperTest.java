@@ -58,7 +58,7 @@ class ProductMapperTest {
       assertNotNull(productEntity);
       assertEquals(product.getProductId(), productEntity.getId());
       assertEquals(product.getParentId(), productEntity.getParentId());
-      assertEquals(product.getUrlPublic(), productEntity.getUrlPublic());
+      assertEquals("https://baseurl.it/", productEntity.getUrlPublic());
       assertEquals(
           product.getInstitutionTypesAllowed(), productEntity.getInstitutionTypesAllowed());
       assertEquals(

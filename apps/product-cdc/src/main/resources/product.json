@@ -2,7 +2,6 @@
   "productId": "prod-x",
   "parentId": "prod-xy",
   "alias": "prod-x",
- "urlPublic": "https://io.italia.it/",
   "status": "ACTIVE",
   "title": "X",
   "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",

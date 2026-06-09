@@ -296,9 +296,6 @@
           "alias" : {
             "type" : "string"
           },
-          "urlPublic" : {
-            "type" : "string"
-          },
           "title" : {
             "type" : "string"
           },
@@ -415,9 +412,6 @@
           "alias" : {
             "type" : "string"
           },
-          "urlPublic" : {
-            "type" : "string"
-          },
           "title" : {
             "type" : "string"
           },
@@ -510,9 +504,6 @@
             "type" : "string"
           },
           "alias" : {
-            "type" : "string"
-          },
-          "urlPublic" : {
             "type" : "string"
           },
           "title" : {

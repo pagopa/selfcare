@@ -238,8 +238,6 @@ components:
           type: string
         alias:
           type: string
-        urlPublic:
-          type: string
         title:
           type: string
         description:
@@ -318,8 +316,6 @@ components:
           type: string
         alias:
           type: string
-        urlPublic:
-          type: string
         title:
           type: string
         description:
@@ -383,8 +379,6 @@ components:
         parentId:
           type: string
         alias:
-          type: string
-        urlPublic:
           type: string
         title:
           type: string

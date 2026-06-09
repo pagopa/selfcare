@@ -22,7 +22,6 @@ public class Product {
   private String productId;
   private String parentId;
   private String alias;
-  private String urlPublic;
 
   private String title;
   private String description;
