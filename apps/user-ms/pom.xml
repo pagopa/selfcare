@@ -26,7 +26,7 @@
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <cucumber-sdk.version>0.1.2</cucumber-sdk.version>
-        <common-sdk-security-version>0.0.1</common-sdk-security-version>
+        <common-sdk-security-version>0.2.3</common-sdk-security-version>
         <onboarding-sdk.version>0.16.2</onboarding-sdk.version>
     </properties>
     <dependencyManagement>
