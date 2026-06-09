@@ -28,6 +28,10 @@ public interface ProductMapper {
 
   // Flattening delle Features
   @Mapping(target = "id", source = "productId")
+  @Mapping(
+      target = "urlPublic",
+      expression =
+          "java(mapBackOfficeConfigsProdurlBOurlPublic(entity.getBackOfficeEnvironmentConfigurations()))")
   @Mapping(target = "allowCompanyOnboarding", source = "features.allowCompanyOnboarding")
   @Mapping(target = "allowIndividualOnboarding", source = "features.allowIndividualOnboarding")
   @Mapping(target = "delegable", source = "features.delegable")
@@ -36,6 +40,7 @@ public interface ProductMapper {
       target = "requiresParentOnboarding",
       source = "features.requiresParentOnboarding")
   @Mapping(target = "parentId", source = "parentId")
+  @Mapping(target = "institutionTypesAllowed", source = "institutionTypesAllowed")
   @Mapping(target = "allowedInstitutionTaxCode", source = "features.allowedInstitutionTaxCode")
   @Mapping(target = "enabled", source = "features.enabled")
   @Mapping(target = "expirationDate", source = "features.expirationDays")
@@ -72,10 +77,6 @@ public interface ProductMapper {
       target = "urlBO",
       expression =
           "java(mapBackOfficeConfigsProdurlBOurl(entity.getBackOfficeEnvironmentConfigurations()))")
-  @Mapping(
-      target = "urlPublic",
-      expression =
-          "java(mapBackOfficeConfigsProdurlBOurlPublic(entity.getBackOfficeEnvironmentConfigurations()))")
   @Mapping(
       target = "identityTokenAudience",
       expression =
@@ -182,7 +183,7 @@ public interface ProductMapper {
     return list.stream()
         .filter(config -> config.getEnv().equalsIgnoreCase("prod"))
         .findFirst()
-        .map(BackOfficeEnvironmentConfiguration::getIdentityTokenAudience)
+        .map(BackOfficeEnvironmentConfiguration::getUrlPublic)
         .orElse(null);
   }
 
@@ -206,6 +207,7 @@ public interface ProductMapper {
       return null;
     }
     return list.stream()
+        .filter(config -> !config.getEnv().equalsIgnoreCase("prod"))
         .collect(
             Collectors.toMap(
                 BackOfficeEnvironmentConfiguration::getEnv, this::toBackOfficeResource));
