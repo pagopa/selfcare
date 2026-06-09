@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
-
 public class RetrieveUserGroupSteps extends UserGroupSteps {
 
     @Before("@FirstRetrieveGroupScenario")
@@ -55,7 +54,6 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         return request;
     }
 
-
     @Override
     @Then("[RETRIEVE] the response status should be {int}")
     public void verifyResponseStatus(int status) {
@@ -67,7 +65,6 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     public void verifyErrorMessage(String expectedErrorMessage) {
         super.verifyErrorMessage(expectedErrorMessage);
     }
-
 
     @Given("I have a valid group ID to retrieve: {string}")
     public void iHaveAValidGroupId(String validGroupId) {
@@ -101,7 +98,7 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         userGroupEntityFilter = new UserGroupEntity();
     }
 
-    @When("I send a GET request to {string}")
+    @When("I send a GET request to {string} to retrieve a user group by id")
     public void iSendAGETRequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
                 .pathParam("id", userGroupId)
@@ -135,9 +132,9 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         }
 
         if (Objects.nonNull(pageable)) {
-            requestSpecification.queryParam("size",pageable.getPageSize());
-            requestSpecification.queryParam("page",pageable.getPageNumber());
-            if(pageable.getSort().isSorted()){
+            requestSpecification.queryParam("size", pageable.getPageSize());
+            requestSpecification.queryParam("page", pageable.getPageNumber());
+            if (pageable.getSort().isSorted()) {
                 requestSpecification.queryParam("sort", pageable.getSort().toString());
             }
         }
@@ -170,7 +167,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals("prod-test", userGroupEntityResponse.getProductId());
         Assertions.assertEquals("ACTIVE", userGroupEntityResponse.getStatus().name());
         Assertions.assertEquals(1, userGroupEntityResponse.getMembers().size());
-        Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7", userGroupEntityResponse.getMembers().iterator().next());
+        Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7",
+                userGroupEntityResponse.getMembers().iterator().next());
         Assertions.assertNotNull(userGroupEntityResponse.getCreatedAt());
         Assertions.assertEquals("4ba2832d-9c4c-40f3-9126-e1c72905ef14", userGroupEntityResponse.getCreatedBy());
         Assertions.assertNull(userGroupEntityResponse.getModifiedBy());
@@ -182,11 +180,13 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals("io group with parent", userGroupEntityResponse.getName());
         Assertions.assertEquals("io group with parent description", userGroupEntityResponse.getDescription());
         Assertions.assertEquals("9c7ae123-d990-4400-b043-67a60aff31bc", userGroupEntityResponse.getInstitutionId());
-        Assertions.assertEquals("5d1ae124-d870-4400-b043-67a60aff32cb", userGroupEntityResponse.getParentInstitutionId());
+        Assertions.assertEquals("5d1ae124-d870-4400-b043-67a60aff32cb",
+                userGroupEntityResponse.getParentInstitutionId());
         Assertions.assertEquals("prod-test", userGroupEntityResponse.getProductId());
         Assertions.assertEquals("ACTIVE", userGroupEntityResponse.getStatus().name());
         Assertions.assertEquals(1, userGroupEntityResponse.getMembers().size());
-        Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7", userGroupEntityResponse.getMembers().iterator().next());
+        Assertions.assertEquals("75003d64-7b8c-4768-b20c-cf66467d44c7",
+                userGroupEntityResponse.getMembers().iterator().next());
         Assertions.assertNotNull(userGroupEntityResponse.getCreatedAt());
         Assertions.assertEquals("4ba2832d-9c4c-40f3-9126-e1c72905ef14", userGroupEntityResponse.getCreatedBy());
         Assertions.assertNull(userGroupEntityResponse.getModifiedBy());
@@ -214,7 +214,6 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
                 "Expected at least one group to have a parentInstitutionId");
     }
 
-
     @Given("I have valid filters institutionId {string} productId {string} and status {string}")
     public void iHaveValidFiltersAndAnd(String institutionId, String productId, String status) {
         userGroupEntityFilter = new UserGroupEntity();
@@ -224,7 +223,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     }
 
     @Given("I have valid filters institutionId {string} productId {string} and parentInstitutionId {string}")
-    public void iHaveValidFiltersInstitutionProductAndParent(String institutionId, String productId, String parentInstitutionId) {
+    public void iHaveValidFiltersInstitutionProductAndParent(String institutionId, String productId,
+            String parentInstitutionId) {
         userGroupEntityFilter = new UserGroupEntity();
         userGroupEntityFilter.setInstitutionId(institutionId);
         userGroupEntityFilter.setProductId(productId);
@@ -234,7 +234,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     @And("the response should contains groupIds {string}")
     public void theResponseShouldContainGroupIds(String ids) {
         List<String> idsList = Arrays.asList(ids.split(","));
-        Assertions.assertEquals(idsList, userGroupEntityResponsePage.getContent().stream().map(UserGroupEntity::getId).toList());
+        Assertions.assertEquals(idsList,
+                userGroupEntityResponsePage.getContent().stream().map(UserGroupEntity::getId).toList());
     }
 
     @And("the response should contain an empty list")
@@ -269,4 +270,3 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         Assertions.assertEquals(expectedName, userGroupEntityResponse.getName());
     }
 }
-

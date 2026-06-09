@@ -66,7 +66,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
             this.userGroupDetails = userGroupEntityList.get(0);
     }
 
-    @When("I send a POST request to {string}")
+    @When("I send a POST request to {string} to change user group status")
     public void iSendAPOSTRequestTo(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
@@ -111,7 +111,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
         }
     }
 
-    @When("I send a DELETE request to {string}")
+    @When("I send a DELETE request to {string} to delete a user group")
     public void iSendADeleteRequestTo(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");

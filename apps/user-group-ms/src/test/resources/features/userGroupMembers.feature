@@ -5,20 +5,20 @@ Feature: User Group Members
   Scenario: Successfully add a member to a group
     Given [MEMBERS] user login with username "j.doe" and password "test"
     And I have group ID "6759f8df78b6af202b222d29" and member ID "78bb7f07-0464-4ff9-a0ee-82568902b7bf"
-    When I send a PUT request to "/v1/user-groups/{id}/members/{memberId}"
+    When I send a PUT request to "/v1/user-groups/{id}/members/{memberId}" to manage a user group member
     Then [MEMBERS] the response status should be 204
 
   Scenario: Attempt to add a member to a non-existent group
     Given [MEMBERS] user login with username "j.doe" and password "test"
     And I have group ID "99999" and member ID "78bb7f07-0464-4ff9-a0ee-82568902b7bf"
-    When I send a PUT request to "/v1/user-groups/{id}/members/{memberId}"
+    When I send a PUT request to "/v1/user-groups/{id}/members/{memberId}" to manage a user group member
     Then [MEMBERS] the response status should be 404
     And [MEMBERS] the response should contain an error message "Not Found"
 
   Scenario: Attempt to add a member to a suspended group
     Given [MEMBERS] user login with username "j.doe" and password "test"
     And I have group ID "6759f8df78b6af202b222d2b" and member ID "78bb7f07-0464-4ff9-a0ee-82568902b7bf"
-    When I send a PUT request to "/v1/user-groups/{id}/members/{memberId}"
+    When I send a PUT request to "/v1/user-groups/{id}/members/{memberId}" to manage a user group member
     Then [MEMBERS] the response status should be 400
     And [MEMBERS] the response should contain an error message "Trying to modify suspended group"
 

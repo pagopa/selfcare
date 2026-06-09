@@ -109,7 +109,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
             this.deleteMembersRequest = deleteMembersFromUserGroupDtos.get(0);
     }
 
-    @When("I send a PUT request to {string}")
+    @When("I send a PUT request to {string} to manage a user group member")
     public void iSendAPutRequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
                 .header("Authorization", "Bearer " + token)

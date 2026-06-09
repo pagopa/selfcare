@@ -5,42 +5,42 @@ Feature: Update User Group
   Scenario: Successfully suspend a group with a valid ID
     Given [UPDATE] user login with username "j.doe" and password "test"
     And I have a valid group ID to update: "6759f8df78b6af202b222d29"
-    When I send a POST request to "/v1/user-groups/{groupId}/suspend"
+    When I send a POST request to "/v1/user-groups/{groupId}/suspend" to change user group status
     Then [UPDATE] the response status should be 204
     And the retrieved group should be changed status to "SUSPENDED"
 
   Scenario: Attempt to suspend a group with a non-existent ID
     Given [UPDATE] user login with username "j.doe" and password "test"
     And I have a non-existent group ID "99999"
-    When I send a POST request to "/v1/user-groups/{groupId}/suspend"
+    When I send a POST request to "/v1/user-groups/{groupId}/suspend" to change user group status
     Then [UPDATE] the response status should be 404
     And [UPDATE] the response should contain an error message "Not Found"
 
   Scenario: Successfully activate a group with a valid ID
     Given [UPDATE] user login with username "j.doe" and password "test"
     And I have a valid group ID to update: "6759f8df78b6af202b222d29"
-    When I send a POST request to "/v1/user-groups/{groupId}/activate"
+    When I send a POST request to "/v1/user-groups/{groupId}/activate" to change user group status
     Then [UPDATE] the response status should be 204
     And the retrieved group should be changed status to "ACTIVE"
 
   Scenario: Attempt to activate a group with a non-existent ID
     Given [UPDATE] user login with username "j.doe" and password "test"
     And I have a non-existent group ID "99999"
-    When I send a POST request to "/v1/user-groups/{groupId}/activate"
+    When I send a POST request to "/v1/user-groups/{groupId}/activate" to change user group status
     Then [UPDATE] the response status should be 404
     And [UPDATE] the response should contain an error message "Not Found"
 
   Scenario: Successfully delete a group with a valid ID
     Given [UPDATE] user login with username "j.doe" and password "test"
     And I have a valid group ID to update: "6759f8df78b6af202b222d29"
-    When I send a DELETE request to "/v1/user-groups/{groupId}"
+    When I send a DELETE request to "/v1/user-groups/{groupId}" to delete a user group
     Then [UPDATE] the response status should be 204
     And the retrieved group should be changed status to "DELETED"
 
   Scenario: Attempt to delete a group with a non-existent ID
     Given [UPDATE] user login with username "j.doe" and password "test"
     And I have a non-existent group ID "99999"
-    When I send a DELETE request to "/v1/user-groups/{groupId}"
+    When I send a DELETE request to "/v1/user-groups/{groupId}" to delete a user group
     Then [UPDATE] the response status should be 404
     And [UPDATE] the response should contain an error message "Not Found"
 

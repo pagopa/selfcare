@@ -5,21 +5,21 @@ Feature: Get User Group
   Scenario: Successfully retrieve a group with a valid ID
     Given [RETRIEVE] user login with username "j.doe" and password "test"
     And I have a valid group ID to retrieve: "6759f8df78b6af202b222d29"
-    When I send a GET request to "/v1/user-groups/{id}"
+    When I send a GET request to "/v1/user-groups/{id}" to retrieve a user group by id
     Then [RETRIEVE] the response status should be 200
     And the response should contain the group details
 
   Scenario: Successfully retrieve a group with a valid ID with parent institution
     Given [RETRIEVE] user login with username "j.doe" and password "test"
     And I have a valid group ID to retrieve: "6759f8df78b6af202b222d2c"
-    When I send a GET request to "/v1/user-groups/{id}"
+    When I send a GET request to "/v1/user-groups/{id}" to retrieve a user group by id
     Then [RETRIEVE] the response status should be 200
     And the response should contain the group details with parent institution
 
   Scenario: Attempt to retrieve a non-existent group
     Given [RETRIEVE] user login with username "j.doe" and password "test"
     And I have a non-existent group ID to retrieve "99999"
-    When I send a GET request to "/v1/user-groups/{id}"
+    When I send a GET request to "/v1/user-groups/{id}" to retrieve a user group by id
     Then [RETRIEVE] the response status should be 404
     And [RETRIEVE] the response should contain an error message "Not Found"
 
