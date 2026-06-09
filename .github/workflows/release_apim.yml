@@ -8,47 +8,136 @@ on:
   push:
     branches:
       - main
+      - releases/**
     paths:
       - 'infra/resources/api/**'
 
   workflow_dispatch:
     inputs:
-      env:
+      environment:
         type: choice
         description: Environment
         options:
           - dev
           - uat
           - prod
+      notification:
+        required: true
+        type: boolean
+        description: "Send notification to Slack"
+        default: true
+
+env:
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
 
 jobs:
-  release_dev_ar:
+  setup:
+    name: Setup Environment
+    runs-on: 'ubuntu-latest'
+    outputs:
+      env: ${{ steps.set-env.outputs.env }}
+      notification: ${{ steps.set-env.outputs.notification }}
+    steps:
+      - name: Set Environment Variable
+        id: set-env
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "env=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+            echo "notification=${{ github.event.inputs.notification }}" >> $GITHUB_OUTPUT
+          else
+            if [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "env=dev" >> $GITHUB_OUTPUT
+            else
+              echo "env=uat" >> $GITHUB_OUTPUT
+              echo "notification=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  release:
     uses: ./.github/workflows/call_release_infra.yml
-    name: '[Dev] APIM'
-    if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') }}
+    name: '[${{ needs.setup.outputs.env }}] APIM'
+    # if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') }}
+    needs: setup
     secrets: inherit
     with:
-      environment: dev
-      dir: infra/resources/api/dev-ar
+      environment: ${{ needs.setup.outputs.env }}
+      dir: infra/resources/api/${{ needs.setup.outputs.env }}-ar
       runner: "self-hosted"
 
-  release_uat_ar:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[UAT] APIM'
-    if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') }}
-    secrets: inherit
+  update_docs_and_notification_external:
+    name: "[MS External] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
+    uses: ./.github/workflows/call_update_docs_and_notification.yml
+    needs: [ setup,release ]
     with:
-      environment: uat
-      dir: infra/resources/api/uat-ar
-      runner: "self-hosted"
+      env: ${{ needs.setup.outputs.env }}
+      api_folder_path: /api/ms_external_api/v2
+      docs_openapi_path: developer/external/v2/ms-external-api.json
+      api_title: External API v2
+      enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
 
-  release_prod_ar:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[Prod] APIM'
-    if: ${{ inputs.env == 'prod' }}
-    secrets: inherit
+    secrets:
+      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_EXTERNAL }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+  update_docs_and_notification_support:
+    name: "[Support API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
+    uses: ./.github/workflows/call_update_docs_and_notification.yml
+    needs: [ setup,release ]
     with:
-      environment: prod
-      dir: infra/resources/api/prod-ar
-      runner: "self-hosted"
+      env: ${{ needs.setup.outputs.env }}
+      api_folder_path: /api/selfcare_support_service/v1
+      docs_openapi_path: developer/support/v1/selc-support-api.json
+      api_title: Support API v1
+      enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
 
+    secrets:
+      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+  update_docs_and_notification_internal:
+    name: "[Internal API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
+    uses: ./.github/workflows/call_update_docs_and_notification.yml
+    needs: [ setup,release ]
+    with:
+      env: ${{ needs.setup.outputs.env }}
+      api_folder_path: /api/ms_internal_api/v1
+      docs_openapi_path: developer/internal/v1/selc-internal-api.json
+      api_title: Internal API v1
+      enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
+
+    secrets:
+      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_INTERNAL }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+  update_docs_and_notification_support_pnpg:
+    name: "[Support PNPG API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
+    uses: ./.github/workflows/call_update_docs_and_notification.yml
+    needs: [ setup,release ]
+    with:
+      env: ${{ needs.setup.outputs.env }}
+      api_folder_path: /api_pnpg/pnpg_support_service/v1
+      docs_openapi_path: developer/support-pnpg/v1/pnpg-support-api.json
+      api_title: Support PNPG API v1
+      enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
+      is_pnpg: true
+
+    secrets:
+      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
+  update_docs_and_notification_billing_portal:
+    name: "[Billing Portal API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
+    uses: ./.github/workflows/call_update_docs_and_notification.yml
+    needs: [ setup,release ]
+    with:
+      env: ${{ needs.setup.outputs.env }}
+      api_folder_path: /api/billing-portal-api/v1
+      docs_openapi_path: developer/billing-portal/v1/billing-portal-api.json
+      api_title: Billing Portal API v1
+      enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
+
+    secrets:
+      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
