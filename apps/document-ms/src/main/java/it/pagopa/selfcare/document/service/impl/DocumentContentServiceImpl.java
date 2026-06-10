@@ -368,26 +368,24 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
   @Override
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
-                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck) {
+                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck, int signingStep) {
 
-    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
-        sanitize(onboardingId), sanitize(request.getProductId()));
+    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}, signingStep={}",
+        sanitize(onboardingId), sanitize(request.getProductId()), signingStep);
     long start = System.currentTimeMillis();
 
     return saveInputStreamToTempFile(fileUpload, fileName)
         .chain(physicalFile ->
-                resolveNextSigningStep(onboardingId)
-                    .chain(nextStep ->
-                            handleSignedContractUpload(
-                                onboardingId,
-                                request,
-                                skipSignatureVerification,
-                                physicalFile,
-                                fileName,
-                                nextStep,
-                                skipSignerIdentityCheck))
-                    .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
-                    .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
+                handleSignedContractUpload(
+                    onboardingId,
+                    request,
+                    skipSignatureVerification,
+                    physicalFile,
+                    fileName,
+                    signingStep,
+                    skipSignerIdentityCheck)
+                .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
+                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
   }
 
     private Uni<File> saveInputStreamToTempFile(InputStream fileUpload, String fileName) {
@@ -481,26 +479,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 sanitize(onboardingId), sanitize(productId));
     }
 
-    /**
-     * Determina il prossimo signingStep interrogando il repository.
-     * Sfrutta findByOnboardingId già esistente (createdAt DESC).
-     * - Se non esiste documento o signingStep è null → 1 (primo upload)
-     * - Se esiste con signingStep = N → N + 1
-     */
-    private Uni<Integer> resolveNextSigningStep(String onboardingId) {
-        return documentRepository.findByOnboardingId(onboardingId)
-            .onItem().transform(latestDoc -> {
-                if (latestDoc == null || latestDoc.getSigningStep() == null) {
-                    log.info("resolveNextSigningStep for onboardingId={}: no previous signingStep found, nextStep=1",
-                            sanitize(onboardingId));
-                    return 1;
-                }
-                int nextStep = latestDoc.getSigningStep() + 1;
-                log.info("resolveNextSigningStep for onboardingId={}: latest signingStep={}, nextStep={}",
-                        sanitize(onboardingId), latestDoc.getSigningStep(), nextStep);
-                return nextStep;
-            });
-    }
 
     // ==================== Private Reactive I/O isolation methods ====================
 

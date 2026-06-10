@@ -260,10 +260,11 @@ public class DocumentContentController {
             @RestForm("request") @PartType(MediaType.APPLICATION_JSON) DocumentBuilderRequest request,
             @RestForm("skipSignatureVerification") @DefaultValue("false") boolean skipSignatureVerification,
             @RestForm("skipSignerIdentityCheck") @DefaultValue("false") boolean skipSignerIdentityCheck,
+            @RestForm("signingStep") int signingStep,
             @RestForm("file") InputStream file,
             @RestForm("fileName") String fileName) {
         return documentContentService.uploadSignedContract(
-                        onboardingId, request, skipSignatureVerification, file, fileName, skipSignerIdentityCheck)
+                        onboardingId, request, skipSignatureVerification, file, fileName, skipSignerIdentityCheck, signingStep)
                 .replaceWith(() -> Response.noContent().build());
     }
 }

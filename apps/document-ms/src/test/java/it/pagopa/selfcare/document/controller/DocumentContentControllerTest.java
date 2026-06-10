@@ -948,7 +948,8 @@ class DocumentContentControllerTest {
                     eq(false),
                     any(InputStream.class),
                     anyString(),
-                    anyBoolean()))
+                    anyBoolean(),
+                    anyInt()))
             .thenReturn(Uni.createFrom().item("success-path")); // O .voidItem() se il service restituisce Uni<Void>
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -963,6 +964,7 @@ class DocumentContentControllerTest {
                 .multiPart("fiscalCodes", "FC1") // Puoi aggiungere più multiPart con lo stesso nome per le liste
                 .multiPart("fiscalCodes", "FC2")
                 .multiPart("skipSignatureVerification", "false")
+                .multiPart("signingStep", "1")
                 .multiPart("file", dummyFile)
                 .multiPart("fileName", "filename")
                 .when()
@@ -978,7 +980,7 @@ class DocumentContentControllerTest {
 
         // SOSTITUISCI QUI: Usa InvalidRequestException invece di IllegalArgumentException
         Mockito.when(documentContentService.uploadSignedContract(
-                    any(), any(), anyBoolean(), any(), anyString(), anyBoolean()))
+                    any(), any(), anyBoolean(), any(), anyString(), anyBoolean(), anyInt()))
             .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -990,6 +992,7 @@ class DocumentContentControllerTest {
                 .multiPart("productTitle", "Product Title")
                 .multiPart("institutionType", "INSTITUTION") // Modificato nome param per allinearsi al controller
                 .multiPart("contractPath", "/path/to/template")
+                .multiPart("signingStep", "1")
                 .multiPart("file", dummyFile)
                 .multiPart("fileName", "filename")
                 .when()
@@ -1004,7 +1007,7 @@ class DocumentContentControllerTest {
         String onboardingId = "onb-123";
 
         Mockito.when(documentContentService.uploadSignedContract(
-                    eq(onboardingId), any(), anyBoolean(), any(), anyString(), anyBoolean()))
+                    eq(onboardingId), any(), anyBoolean(), any(), anyString(), anyBoolean(), anyInt()))
             .thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
 
         File dummyFile = new File("src/test/resources/pdf/dummy.pdf");
@@ -1014,6 +1017,7 @@ class DocumentContentControllerTest {
                 .pathParam("onboardingId", onboardingId)
                 .multiPart("productId", "prod-1")
                 .multiPart("institutionType", "INSTITUTION")
+                .multiPart("signingStep", "1")
                 .multiPart("file", dummyFile)
                 .multiPart("fileName",  "filename")
                 .when()
