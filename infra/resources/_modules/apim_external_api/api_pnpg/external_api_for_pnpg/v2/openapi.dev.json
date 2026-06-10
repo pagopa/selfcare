@@ -1671,6 +1671,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -1731,6 +1734,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -1781,6 +1790,9 @@
             "type": "boolean"
           },
           "invoiceable": {
+            "type": "boolean"
+          },
+          "requiresParentOnboarding": {
             "type": "boolean"
           },
           "expirationDays": {
@@ -2104,6 +2116,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -2159,6 +2174,12 @@
             }
           },
           "testEnvProductIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "institutionTypesAllowed": {
             "type": "array",
             "items": {
               "type": "string"
@@ -2191,6 +2212,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -2246,6 +2270,12 @@
             }
           },
           "testEnvProductIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "institutionTypesAllowed": {
             "type": "array",
             "items": {
               "type": "string"
