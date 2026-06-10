@@ -1395,6 +1395,12 @@
           }
         },
         "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
           "204" : {
             "description" : "No Content"
           },

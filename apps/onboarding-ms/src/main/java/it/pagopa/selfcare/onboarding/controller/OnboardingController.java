@@ -338,6 +338,7 @@ public class OnboardingController {
       operationId = "completeOnboardingUsingPUT")
     @APIResponses(
       value = {
+        @APIResponse(responseCode = "200", description = "OK"),
         @APIResponse(responseCode = "204", description = "No Content"),
         @APIResponse(
             responseCode = "400",

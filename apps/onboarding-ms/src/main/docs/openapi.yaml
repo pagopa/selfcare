@@ -1023,6 +1023,10 @@ paths:
                   format: binary
                   type: string
       responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
         "204":
           description: No Content
         "400":
