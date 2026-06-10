@@ -243,8 +243,8 @@ Feature: User
     And the productId is "prod-interop"
     When I send a GET request to "/v2/users/all/institution/{institutionId}" to retrieve all user product data
     Then the response status should be 200
-    And The response body contains the list "" of size 2
-    And The response body contains at path "" the following list of objects in any order:
+    And The dashboard response body contains the list "" of size 2
+    And The dashboard response body contains at path "" the following list of objects in any order:
       | id                                   | name  | surname | fiscalCode       | email                                        | partyRole | status    |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john  | Doe     | PRVTNT80A41H401T | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it | OPERATOR  | ACTIVE    |
       | 97a511a7-2acc-47b9-afed-2f3c65753ccc | Mario | Test    | MRATST80M15F205E | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it | OPERATOR  | SUSPENDED |
@@ -256,8 +256,8 @@ Feature: User
     And the roles are "DELEGATE"
     When I send a GET request to "/v2/users/all/institution/{institutionId}" to retrieve all user product data
     Then the response status should be 200
-    And The response body contains the list "" of size 1
-    And The response body contains at path "" the following list of objects in any order:
+    And The dashboard response body contains the list "" of size 1
+    And The dashboard response body contains at path "" the following list of objects in any order:
       | id                                   | name  | surname | fiscalCode       | email                                        | partyRole | status |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john  | Doe     | PRVTNT80A41H401T | 8370aa38-a2ab-404b-9b8a-10487167332e@test.it | DELEGATE  | ACTIVE |
 
@@ -269,8 +269,8 @@ Feature: User
     And the states are "SUSPENDED"
     When I send a GET request to "/v2/users/all/institution/{institutionId}" to retrieve all user product data
     Then the response status should be 200
-    And The response body contains the list "" of size 1
-    And The response body contains at path "" the following list of objects in any order:
+    And The dashboard response body contains the list "" of size 1
+    And The dashboard response body contains at path "" the following list of objects in any order:
       | id                                   | name  | surname | fiscalCode       | email  | partyRole | status    |
       | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | rocky | Balboa  | blbrki80A41H401T |        | OPERATOR  | SUSPENDED |
 
@@ -282,7 +282,7 @@ Feature: User
     And the states are "SUSPENDED"
     When I send a GET request to "/v2/users/all/institution/{institutionId}" to retrieve all user product data
     Then the response status should be 200
-    And The response body contains the list "" of size 0
+    And The dashboard response body contains the list "" of size 0
 
   Scenario: Unsuccessfully retrieve all users for given institutionId with productId filter for AR Backstage when user has no permission
     Given user login with username "b.barnes" and password "test"
@@ -369,7 +369,7 @@ Feature: User
     Given user login with username "m.polo" and password "test"
     When I send a GET request to "/v2/users/otp-info" to retrieve user otp info
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | userId                    | 9b8e2b3f-4c7d-4f91-a6e2-3d1f8a7c5b42         |
       | otpEmail                  | mail2@test.test                              |
       | otpReferenceInstitutionId | 467ac77d-7faa-47bf-a60e-38ea74bd5fd2         |
