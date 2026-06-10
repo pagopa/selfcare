@@ -35,6 +35,7 @@ public class RegistryProxyMain implements QuarkusApplication {
     log.info("Starting registry proxy runner");
     boolean success = true;
 
+    /*
     success &=
         runTask(
             "IPA institutions",
@@ -46,6 +47,8 @@ public class RegistryProxyMain implements QuarkusApplication {
             "IPA categories",
             () -> categoryIndexWriterService.index(ipaCategoryOpenDataService.fetch()));
     success &= runTask("IPA UO", () -> ipaUOIndexWriterService.index(ipaUoOpenDataService.fetch()));
+
+     */
     success &=
         runTask(
                 "Onboarding expiration status update",
