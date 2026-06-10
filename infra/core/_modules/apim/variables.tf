@@ -78,3 +78,9 @@ variable "application_insight_enabled" {
   description = "Logger application insight enabled"
   default     = false
 }
+
+variable "diagnostic_sampling_percentage" {
+  type        = number
+  description = "Sampling percentage for APIM diagnostics sent to Application Insights. Valid values are between 0.0 and 100.0."
+  default     = 100.0
+}
