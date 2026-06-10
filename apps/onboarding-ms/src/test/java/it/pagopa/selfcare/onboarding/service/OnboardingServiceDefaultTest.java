@@ -2264,6 +2264,88 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void complete_shouldFailWhenNextStepExceedsRequiredSignatures(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        // Product with SigningConfiguration requiring 2 signatures
+        Product product = createDummyProduct(onboarding.getProductId(), false, false, true);
+        SigningConfiguration signingConfig = new SigningConfiguration();
+        signingConfig.setRequiredSignatures(2);
+        product.setSigningConfiguration(signingConfig);
+        asserter.execute(() -> when(productService.getProductIsValid(onboarding.getProductId()))
+                .thenReturn(product));
+
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
+
+        // Mock find manager user fiscal code
+        String actualUserUid = onboarding.getUsers().get(0).getId();
+        UserResource actualUserResource = new UserResource();
+        actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUserUid))
+                .thenReturn(Uni.createFrom().item(actualUserResource)));
+
+        // Document already at signingStep=2, so nextStep=3 > requiredSignatures=2
+        org.openapi.quarkus.document_json.model.DocumentResponse docResponse =
+                org.openapi.quarkus.document_json.model.DocumentResponse.builder()
+                        .signingStep(2)
+                        .build();
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().item(docResponse)));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void complete_shouldSucceedWithSigningConfigurationAndValidStep(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+
+        // Product with SigningConfiguration requiring 2 signatures
+        Product product = createDummyProduct(onboarding.getProductId(), false, false, true);
+        SigningConfiguration signingConfig = new SigningConfiguration();
+        signingConfig.setRequiredSignatures(2);
+        product.setSigningConfiguration(signingConfig);
+        asserter.execute(() -> when(productService.getProductIsValid(onboarding.getProductId()))
+                .thenReturn(product));
+
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
+
+        when(onboardingUtils.buildUploadSignedContractRequest(
+                any(Onboarding.class),
+                anyBoolean(),
+                any(FormItem.class),
+                any(Product.class),
+                any(DocumentType.class),
+                anyList(),
+                anyInt()))
+                .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
+
+        // Document at signingStep=1, so nextStep=2 <= requiredSignatures=2: valid
+        org.openapi.quarkus.document_json.model.DocumentResponse docResponse =
+                org.openapi.quarkus.document_json.model.DocumentResponse.builder()
+                        .signingStep(1)
+                        .build();
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().item(docResponse)));
+
+        asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
+                Assertions::assertNotNull);
+    }
+
+    @Test
+    @RunOnVertxContext
     void completeOnboardingUsers_throwProductNotOnboardedInReferenceOnboarding(UniAsserter asserter) {
         Onboarding onboarding = createDummyUsersOnboarding();
         onboarding.setStatus(OnboardingStatus.PENDING);
