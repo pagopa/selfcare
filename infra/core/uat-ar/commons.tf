@@ -260,6 +260,8 @@ module "appgateway" {
   action_group_error_id = module.monitor.action_group_error_id
   action_group_slack_id = module.monitor.action_group_slack_id
   action_group_email_id = module.monitor.action_group_email_id
+
+  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
 }
 
 ###############################################################################

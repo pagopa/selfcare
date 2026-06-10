@@ -452,3 +452,29 @@ module "app_gw" {
 
   tags = var.tags
 }
+
+#
+# Diagnostic Settings
+#
+resource "azurerm_monitor_diagnostic_setting" "app_gw" {
+  name                       = "${local.project}-app-gw-diagnostics"
+  target_resource_id         = module.app_gw.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category = "ApplicationGatewayAccessLog"
+  }
+
+  enabled_log {
+    category = "ApplicationGatewayPerformanceLog"
+  }
+
+  enabled_log {
+    category = "ApplicationGatewayFirewallLog"
+  }
+
+  metric {
+    category = "AllMetrics"
+    enabled  = false
+  }
+}

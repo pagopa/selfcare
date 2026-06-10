@@ -137,3 +137,8 @@ variable "tenant_id" {
   type        = string
   description = "Tenant Id"
 }
+
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "Log Analytics Workspace ID for Application Gateway diagnostic settings"
+}
