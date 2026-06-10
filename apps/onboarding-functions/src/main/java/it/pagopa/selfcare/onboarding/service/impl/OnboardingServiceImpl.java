@@ -23,6 +23,7 @@ import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentType;
+import org.openapi.quarkus.user_json.model.EmailType;
 import org.openapi.quarkus.user_json.model.SendMailDto;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
@@ -193,6 +194,8 @@ public class OnboardingServiceImpl implements OnboardingService {
         sendMailDto.setInstitutionName(request.getManagingInstitutionDescription());
         sendMailDto.setProductId(request.getProductId());
         sendMailDto.setUserMailUuid(request.getUserMailUuid());
+        sendMailDto.setType(EmailType.CONVENTION_REQUEST);
+        sendMailDto.institutionId(request.getManagingInstitutionId());
         userService.sendMailRequest(request.getUserId(), sendMailDto);
     }
 
