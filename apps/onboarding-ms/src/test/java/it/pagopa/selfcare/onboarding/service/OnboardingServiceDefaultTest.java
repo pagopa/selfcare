@@ -2191,8 +2191,12 @@ class OnboardingServiceDefaultTest {
                 any(FormItem.class),
                 any(Product.class),
                 any(DocumentType.class),
-                anyList()))
+                anyList(),
+                anyInt()))
                 .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
+
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2222,6 +2226,9 @@ class OnboardingServiceDefaultTest {
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
+
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
     }
@@ -2247,6 +2254,9 @@ class OnboardingServiceDefaultTest {
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
         mockSimpleProductValidAssert(onboarding.getProductId(), true, asserter, false, true);
         mockVerifyOnboardingNotFound();
+
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         asserter.assertThat(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -4760,6 +4770,8 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
         asserter.execute(() -> when(documentControllerApi.updateDocumentUpdatedAt(any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         asserter.assertThat(() -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
                 result -> {
@@ -4797,6 +4809,8 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
         asserter.execute(() -> when(documentControllerApi.updateDocumentUpdatedAt(any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         mockUpdateOnboarding(onboardingId, 1L);
 
@@ -4825,13 +4839,16 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
         asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.status(500).build())));
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
         asserter.execute(() -> when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
                 any(Product.class),
                 any(DocumentType.class),
-                anyList()))
+                anyList(),
+                anyInt()))
                 .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm())));
         asserter.execute(() -> when(onboardingUtils.ensureSuccessfulDocumentResponse(any(), anyString(), anyString()))
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException(500))));
