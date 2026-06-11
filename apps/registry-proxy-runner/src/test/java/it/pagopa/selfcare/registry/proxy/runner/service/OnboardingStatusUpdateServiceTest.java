@@ -87,7 +87,7 @@ class OnboardingStatusUpdateServiceTest {
     }
 
     @Test
-    void updateExpiredOnboardings_OneExpiredOnboarding_UpdatesStatus() {
+    void updateExpiredOnboardings_OneBatch_UpdatesStatus() {
 
         when(azureSearchRestClient.searchOnboarding(
                 anyString(),
@@ -98,7 +98,8 @@ class OnboardingStatusUpdateServiceTest {
                 anyInt(),
                 anyInt(),
                 anyString()))
-                .thenReturn(buildResponse(List.of(buildDocument("ONB-1"))));
+                .thenReturn(buildResponse(List.of(buildDocument("ONB-1"))))
+                .thenReturn(new OnboardingSearchResponse()); // stop condition
 
         service.updateExpiredOnboardings();
 
@@ -113,23 +114,16 @@ class OnboardingStatusUpdateServiceTest {
                 (List<Map<String, Object>>) captor.getValue().getValue();
 
         assertEquals(1, updates.size());
-
-        Map<String, Object> update = updates.get(0);
-
-        assertEquals("merge", update.get("@search.action"));
-        assertEquals("ONB-1", update.get("onboardingId"));
-        assertEquals("EXPIRED", update.get("status"));
+        assertEquals("ONB-1", updates.get(0).get("onboardingId"));
+        assertEquals("EXPIRED", updates.get(0).get("status"));
+        assertEquals("merge", updates.get(0).get("@search.action"));
     }
 
     @Test
-    void updateExpiredOnboardings_MultiplePages_UpdatesAllPages() {
+    void updateExpiredOnboardings_MultipleIterations_StopsOnEmpty() {
 
-        List<OnboardingSearchDocument> firstPage =
-                java.util.stream.IntStream.range(0, 1000)
-                        .mapToObj(i -> buildDocument("ONB-" + i))
-                        .toList();
-
-        OnboardingSearchResponse secondPage = new OnboardingSearchResponse();
+        List<OnboardingSearchDocument> firstBatch =
+                List.of(buildDocument("ONB-1"), buildDocument("ONB-2"));
 
         when(azureSearchRestClient.searchOnboarding(
                 anyString(),
@@ -140,15 +134,18 @@ class OnboardingStatusUpdateServiceTest {
                 anyInt(),
                 anyInt(),
                 anyString()))
-                .thenReturn(buildResponse(firstPage))
-                .thenReturn(secondPage);
+                .thenReturn(buildResponse(firstBatch))   // 1st loop
+                .thenReturn(buildResponse(firstBatch))   // 2nd loop (still data)
+                .thenReturn(new OnboardingSearchResponse()); // stop
 
         service.updateExpiredOnboardings();
 
-        verify(azureSearchRestClient, times(1))
-                .index(eq("onboarding-index"), eq("2023-11-01"), any(SearchServiceIndexRequest.class));
-
+        // 2 update calls (one per loop iteration with data)
         verify(azureSearchRestClient, times(2))
+                .index(anyString(), anyString(), any(SearchServiceIndexRequest.class));
+
+        // 3 searches: data + data + empty
+        verify(azureSearchRestClient, times(3))
                 .searchOnboarding(
                         anyString(),
                         anyString(),

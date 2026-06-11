@@ -40,9 +40,7 @@ public class OnboardingStatusUpdateService {
                         + " and status ne 'EXPIRED'";
 
         int totalUpdated = 0;
-        boolean hasMoreResults;
-
-        int skip = 0;
+        boolean hasMoreResults = true;
 
         do {
 
@@ -54,7 +52,7 @@ public class OnboardingStatusUpdateService {
                             "onboardingId,status,expiringDate",
                             true,
                             PAGE_SIZE,
-                            skip,
+                            0,
                             filter
                     );
 
@@ -79,10 +77,6 @@ public class OnboardingStatusUpdateService {
             azureSearchRestClient.index(indexName, apiVersion, request);
 
             totalUpdated += batchUpdates.size();
-
-            skip += PAGE_SIZE;
-
-            hasMoreResults = response.getValue().size() == PAGE_SIZE;
 
         } while (hasMoreResults);
 
