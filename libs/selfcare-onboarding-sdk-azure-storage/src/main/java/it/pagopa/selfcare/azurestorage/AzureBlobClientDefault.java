@@ -12,7 +12,10 @@ import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.ListBlobsOptions;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageError;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
+import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -20,10 +23,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 public class AzureBlobClientDefault implements AzureBlobClient {
@@ -33,61 +32,61 @@ public class AzureBlobClientDefault implements AzureBlobClient {
   private final BlobServiceClient blobClient;
   private final String containerName;
 
-  /**
-   * Creates a blob client using either a connection string or account-based authentication.
-   *
-   * @param containerName container name
-   * @param accountName optional storage account name
-   * @param managedIdentityClientId optional user-assigned managed identity client id
-   */
-  public AzureBlobClientDefault(String containerName,
-                                 String accountName, String managedIdentityClientId) {
-    log.trace("AzureBlobClientDefault initialization with dual-mode auth: connectionString={}, accountName={}, managedIdentityClientId={}",
-      StringUtils.isNotEmpty(accountName) ? accountName : "empty",
-      StringUtils.isNotEmpty(managedIdentityClientId) ? "***" : "empty");
+    /**
+     * Creates a blob client using either a connection string or account-based authentication.
+     *
+     * @param containerName           container name
+     * @param accountName             optional storage account name
+     * @param managedIdentityClientId optional user-assigned managed identity client id
+     */
+    public AzureBlobClientDefault(String containerName,
+                                  String accountName, String managedIdentityClientId) {
+        log.trace("AzureBlobClientDefault initialization with dual-mode auth: accountName={}, managedIdentityClientId={}",
+                StringUtils.isNotEmpty(accountName) ? accountName : "empty",
+                StringUtils.isNotEmpty(managedIdentityClientId) ? "***" : "empty");
 
-    this.containerName = containerName;
-    this.blobClient = buildBlobServiceClient(accountName, managedIdentityClientId);
-  }
-
-  /**
-   * Creates a blob client using a connection string.
-   *
-   * @param connectionString connection string
-   * @param containerName container name
-   */
-  public AzureBlobClientDefault(String connectionString, String containerName) {
-      log.trace("it.pagopa.selfcare.azurestorage.AzureBlobClient.it.pagopa.selfcare.azurestorage.AzureBlobClient");
-      this.containerName = containerName;
-      this.blobClient = new BlobServiceClientBuilder()
-              .connectionString(connectionString)
-              .buildClient();
-  }
-
-  private BlobServiceClient buildBlobServiceClient(String accountName, String managedIdentityClientId) {
-    BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
-
-    String currentAccountName = StringUtils.trimToEmpty(accountName);
-    String currentClientId = StringUtils.trimToEmpty(managedIdentityClientId);
-
-    if (!currentAccountName.isEmpty()) {
-      String endpoint = "https://" + currentAccountName + ".blob.core.windows.net";
-      var credentialBuilder = new DefaultAzureCredentialBuilder();
-      if (!currentClientId.isEmpty()) {
-        credentialBuilder.managedIdentityClientId(currentClientId);
-        log.info("Azure Blob Storage: using DefaultAzureCredential with managed identity client ID (account: {})", currentAccountName);
-      } else {
-        log.info("Azure Blob Storage: using DefaultAzureCredential (account: {})", currentAccountName);
-      }
-      builder.endpoint(endpoint).credential(credentialBuilder.build());
-    } else {
-      log.warn("Azure Blob Storage: no authentication configured (neither connectionString nor accountName is set)");
-      throw new SelfcareAzureStorageException("Azure Blob Storage not configured: set connectionString or accountName",
-        "BLOB_CONFIG_ERROR");
+        this.containerName = containerName;
+        this.blobClient = buildBlobServiceClient(accountName, managedIdentityClientId);
     }
 
-    return builder.buildClient();
-  }
+    /**
+     * Creates a blob client using a connection string.
+     *
+     * @param connectionString connection string
+     * @param containerName    container name
+     */
+    public AzureBlobClientDefault(String connectionString, String containerName) {
+        log.trace("it.pagopa.selfcare.azurestorage.AzureBlobClient.it.pagopa.selfcare.azurestorage.AzureBlobClient");
+        this.containerName = containerName;
+        this.blobClient = new BlobServiceClientBuilder()
+                .connectionString(connectionString)
+                .buildClient();
+    }
+
+    private BlobServiceClient buildBlobServiceClient(String accountName, String managedIdentityClientId) {
+        BlobServiceClientBuilder builder = new BlobServiceClientBuilder();
+
+        String currentAccountName = StringUtils.trimToEmpty(accountName);
+        String currentClientId = StringUtils.trimToEmpty(managedIdentityClientId);
+
+        if (!currentAccountName.isEmpty()) {
+            String endpoint = "https://" + currentAccountName + ".blob.core.windows.net";
+            var credentialBuilder = new DefaultAzureCredentialBuilder();
+            if (!currentClientId.isEmpty()) {
+                credentialBuilder.managedIdentityClientId(currentClientId);
+                log.info("Azure Blob Storage: using DefaultAzureCredential with managed identity client ID (account: {})", currentAccountName);
+            } else {
+                log.info("Azure Blob Storage: using DefaultAzureCredential (account: {})", currentAccountName);
+            }
+            builder.endpoint(endpoint).credential(credentialBuilder.build());
+        } else {
+            log.warn("Azure Blob Storage: no authentication configured (neither connectionString nor accountName is set)");
+            throw new SelfcareAzureStorageException("Azure Blob Storage not configured: set connectionString or accountName",
+                    "BLOB_CONFIG_ERROR");
+        }
+
+        return builder.buildClient();
+    }
 
   @Override
   public byte[] getFile(String filePath) {
