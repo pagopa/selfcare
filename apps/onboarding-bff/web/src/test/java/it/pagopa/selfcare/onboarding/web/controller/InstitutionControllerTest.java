@@ -209,7 +209,7 @@ class InstitutionControllerTest {
                 .thenReturn(institutionOnboardingData);
         //when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                        .get(BASE_URL + "/onboarding/")
+                        .get(BASE_URL + "/onboarding")
                         .queryParam("institutionId", institutionInfo.getId())
                         .queryParam("productId", productId)
                         .contentType(APPLICATION_JSON_VALUE)
