@@ -167,19 +167,18 @@ locals {
       value = "prod-pn-pg"
     },
     {
-      name = "MS_PRODUCT_URL"
+      name  = "MS_PRODUCT_URL"
       value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
   onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
+    "JWT-PUBLIC-KEY"                         = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"              = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                  = "user-registry-api-key"
+    "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
+    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING" = "blob-storage-product-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
   }
 
 
@@ -203,4 +202,3 @@ module "container_app_onboarding_ms" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-

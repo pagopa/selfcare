@@ -143,10 +143,6 @@ locals {
       value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "STORAGE_CONTAINER_CONTRACT"
-      value = "sc-${module.local.config.env_short}-documents-blob"
-    },
-    {
       name  = "MS_USER_URL"
       value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
@@ -171,7 +167,7 @@ locals {
       value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name = "MS_PRODUCT_URL"
+      name  = "MS_PRODUCT_URL"
       value = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
@@ -183,7 +179,6 @@ locals {
     "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
     "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
     "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "ONBOARDING_DATA_ENCRIPTION_KEY"          = "onboarding-data-encryption-key"
     "ONBOARDING_DATA_ENCRIPTION_IV"           = "onboarding-data-encryption-iv"

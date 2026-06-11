@@ -1,8 +1,6 @@
 package it.pagopa.selfcare.onboarding.conf;
 
 import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -34,12 +32,6 @@ public class OnboardingMsConfig {
     @ConfigProperty(name = "onboarding-ms.blob-storage.connection-string-product")
     String connectionStringProduct;
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.path-contracts")
-    String contractPath;
-
-    @ConfigProperty(name = "onboarding-ms.blob-storage.path-aggregates")
-    String aggregatesPath;
-
     @Inject
     ProductService productService;
 
@@ -54,14 +46,6 @@ public class OnboardingMsConfig {
     @ApplicationScoped
     public ProductService productService(){
         return new ProductServiceCacheable(connectionStringProduct, containerProduct, filepathProduct);
-    }
-
-    @ApplicationScoped
-    public AzureBlobClient azureBobClientContract(@ConfigProperty(name = "onboarding-ms.blob-storage.connection-string-contracts")
-                                                      String connectionStringContracts,
-                                                  @ConfigProperty(name = "onboarding-ms.blob-storage.container-contracts")
-                                                      String containerContracts){
-        return new AzureBlobClientDefault(connectionStringContracts, containerContracts);
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){
