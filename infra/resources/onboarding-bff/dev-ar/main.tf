@@ -23,7 +23,7 @@ locals {
   image_tag = var.image_tag
 
   app_settings_onboarding_bff = [
-    { name = "APPLICATIONINSIGHTS_ROLE_NAME", value = "b4f-onboarding" },
+    { name = "APPLICATIONINSIGHTS_ROLE_NAME", value = "bff-onboarding" },
     { name = "JAVA_TOOL_OPTIONS", value = "-javaagent:applicationinsights-agent.jar" },
     { name = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL", value = "OFF" },
     { name = "B4F_ONBOARDING_LOG_LEVEL", value = "DEBUG" },
@@ -32,7 +32,7 @@ locals {
     { name = "MS_CORE_URL", value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "MS_IAM_URL", value = "https://selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_PARTY_PROCESS_URL", value = "http://selc-d-institution-ms-ca" },
-    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "http://selc-d-party-reg-proxy-ca" },
+    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_USER_REGISTRY_URL", value = "https://api.uat.pdv.pagopa.it/user-registry/v1" },
     { name = "REST_CLIENT_CONNECT_TIMEOUT", value = "60000" },
     { name = "REST_CLIENT_READ_TIMEOUT", value = "60000" },
