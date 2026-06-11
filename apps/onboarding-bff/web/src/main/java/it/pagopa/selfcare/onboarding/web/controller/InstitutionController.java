@@ -100,7 +100,7 @@ public class InstitutionController {
         log.trace(ONBOARDING_END);
     }
 
-    @GetMapping(value = "/onboarding/")
+    @GetMapping(value = "/onboarding")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
