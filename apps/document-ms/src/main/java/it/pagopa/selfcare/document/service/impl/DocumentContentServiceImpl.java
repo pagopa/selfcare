@@ -58,6 +58,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 public class DocumentContentServiceImpl implements DocumentContentService {
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
     private static final String FILE_NAME_AGGREGATES_CSV = "aggregates.csv";
+    private static final String PATH_SEPARATOR = "/";
 
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
@@ -239,7 +240,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                     String basePath = documentMsConfig.getContractPath();
                     String originalSignedPath = DocumentFileUtils.buildAndValidateContractFilePath(document.getContractSigned(), basePath, true);
-                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), basePath, false);
+                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + PATH_SEPARATOR + document.getContractFilename(), basePath, false);
 
                     String deletedSignedContract;
                     String deletedContractFile;
@@ -593,7 +594,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             try {
                 azureBlobClient.uploadFile(ctx.storagePath, ctx.filename, Files.readAllBytes(ctx.pdfFile.toPath()));
                 return CreatePdfResponse.builder()
-                        .storagePath(ctx.storagePath + "/" + ctx.filename)
+                        .storagePath(ctx.storagePath + PATH_SEPARATOR + ctx.filename)
                         .filename(ctx.filename)
                         .build();
             } catch (IOException e) {
