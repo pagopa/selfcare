@@ -30,7 +30,6 @@
   "modifiedBy": "d0aaccddfdfdfdfdf418f01b130b",
   "roleMappings": {
     "OPERATOR": {
-      "multiroleAllowed": false,
       "phasesAdditionAllowed": [
         "onboarding"
       ],
