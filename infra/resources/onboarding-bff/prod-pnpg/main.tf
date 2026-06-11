@@ -32,7 +32,7 @@ locals {
     { name = "MS_CORE_URL", value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "MS_IAM_URL", value = "https://selc-${module.local.config.env_short}-pnpg-iam-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_PARTY_PROCESS_URL", value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca" },
-    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca" },
+    { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_USER_REGISTRY_URL", value = "https://api.pdv.pagopa.it/user-registry/v1" },
     { name = "REST_CLIENT_CONNECT_TIMEOUT", value = "60000" },
     { name = "REST_CLIENT_READ_TIMEOUT", value = "60000" },
