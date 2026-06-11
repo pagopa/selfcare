@@ -37,7 +37,7 @@ public class OnboardingStatusUpdateService {
 
         String filter =
                 "expiringDate le " + now.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                        + " and status ne 'EXPIRED'";
+                        + " and status eq 'PENDING'";
 
         int totalUpdated = 0;
         boolean hasMoreResults = true;
