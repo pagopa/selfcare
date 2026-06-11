@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.registry.proxy.runner.client;
 
-import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexRequest;
-import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexResponse;
+import it.pagopa.selfcare.registry.proxy.runner.model.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
@@ -33,4 +32,17 @@ public interface AzureSearchRestClient {
       @QueryParam("$top") Integer top,
       @QueryParam("$skip") Integer skip,
       @QueryParam("$filter") String filter);
+
+  @GET
+  @Path("indexes/{indexName}/docs")
+  @Produces(MediaType.APPLICATION_JSON)
+  OnboardingSearchResponse searchOnboarding(
+          @PathParam("indexName") String indexName,
+          @QueryParam("api-version") String apiVersion,
+          @QueryParam("search") String search,
+          @QueryParam("$select") String select,
+          @QueryParam("$count") Boolean count,
+          @QueryParam("$top") Integer top,
+          @QueryParam("$skip") Integer skip,
+          @QueryParam("$filter") String filter);
 }
