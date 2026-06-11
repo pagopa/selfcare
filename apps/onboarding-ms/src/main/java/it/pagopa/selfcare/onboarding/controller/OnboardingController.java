@@ -682,16 +682,19 @@ public class OnboardingController {
     }
 
     @Operation(summary = "Perform delete operation of a USER type onboarding request",
-            description = "Perform delete operation of a USER type onboarding request receiving onboarding id. " +
-                    "It first deletes the associated document from document-ms, " +
+            description = "Perform delete operation of a USER type onboarding request receiving onboarding id and userId. " +
+                    "It verifies that the userId corresponds to a DELEGATE role in the onboarding users list. " +
+                    "If the user is a MANAGER (and not also a DELEGATE), a 400 error is returned. " +
+                    "If the user is a DELEGATE, it deletes the associated document from document-ms, " +
                     "then sets DELETED as status and updates date fields.")
     @DELETE
     @Tag(name = "internal-v1")
     @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.APPLICATION_JSON)
-    @Path("/{onboardingId}/user")
-    public Uni<Response> deleteOnboardingUser(@PathParam(value = "onboardingId") String onboardingId) {
-        return onboardingService.deleteOnboardingUser(onboardingId)
+    @Path("/{onboardingId}/user/{userId}")
+    public Uni<Response> deleteOnboardingUser(@PathParam(value = "onboardingId") String onboardingId,
+                                             @PathParam(value = "userId") String userId) {
+        return onboardingService.deleteOnboardingUser(onboardingId, userId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());

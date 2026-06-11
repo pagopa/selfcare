@@ -1273,18 +1273,26 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /v1/onboarding/{onboardingId}/user:
+  /v1/onboarding/{onboardingId}/user/{userId}:
     delete:
       tags:
       - internal-v1
       - Onboarding Controller
       summary: Perform delete operation of a USER type onboarding request
       description: "Perform delete operation of a USER type onboarding request receiving\
-        \ onboarding id. It first deletes the associated document from document-ms,\
-        \ then sets DELETED as status and updates date fields."
+        \ onboarding id and userId. It verifies that the userId corresponds to a DELEGATE\
+        \ role in the onboarding users list. If the user is a MANAGER (and not also\
+        \ a DELEGATE), a 400 error is returned. If the user is a DELEGATE, it deletes\
+        \ the associated document from document-ms, then sets DELETED as status and\
+        \ updates date fields."
       operationId: deleteOnboardingUser
       parameters:
       - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userId
         in: path
         required: true
         schema:
