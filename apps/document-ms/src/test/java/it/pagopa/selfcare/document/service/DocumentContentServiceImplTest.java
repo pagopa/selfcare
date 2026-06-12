@@ -1586,7 +1586,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName, false).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName, false, 1).await();
 
         // Assert
         assertDoesNotThrow(awaiter::indefinitely);
@@ -1613,7 +1613,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false, 1).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1650,7 +1650,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false, 1).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1685,7 +1685,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false, 1).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1719,7 +1719,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false, 1).await();
 
         // Assert
         SelfcareAzureStorageException ex = assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
@@ -1756,7 +1756,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false, 1).await();
 
         // Assert
         RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);

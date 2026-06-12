@@ -39,8 +39,9 @@ public class Document extends ReactivePanacheMongoEntityBase {
 
     /**
      * Step di firma a cui questo documento corrisponde.
-     * AUTO-CALCOLATO da document-ms ad ogni upload di contratto firmato.
-     * Usato ESCLUSIVAMENTE per comporre il filename su Blob Storage.
+     * Calcolato da onboarding-ms e fornito come parametro obbligatorio
+     * nell'endpoint di upload del contratto firmato.
+     * Usato per comporre il filename su Blob Storage (es. signed_step2_contract.pdf).
      * NON usato per la logica di recupero (che si basa su createdAt DESC).
      */
     private Integer signingStep;
