@@ -484,11 +484,11 @@ components:
         institutionType:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/InstitutionType"
         origin:
           type: array
           items:
-            type: string
+            $ref: "#/components/schemas/Origin"
     RoleMapping:
       type: object
       properties:
