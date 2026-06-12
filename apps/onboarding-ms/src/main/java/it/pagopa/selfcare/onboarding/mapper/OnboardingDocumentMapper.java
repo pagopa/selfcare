@@ -5,7 +5,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.util.InstitutionUtils;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -19,7 +19,7 @@ public interface OnboardingDocumentMapper {
     @Mapping(target = "templateVersion", expression = "java(getContractTemplateVersion(onboarding, product))")
     @Mapping(target = "contractFilePath", source = "contractImported.filePath")
     @Mapping(target = "contractFileName", source = "contractImported.fileName")
-    @Mapping(target = "contractCreatedAt", expression = "java(toOffsetDateTime(contractImported))")
+    @Mapping(target = "contractCreatedAt", expression = "java(toLocalDateTime(contractImported))")
     @Mapping(target = "productId", source = "onboarding.productId")
     OnboardingDocumentRequest toRequest(
             Onboarding onboarding,
@@ -39,9 +39,9 @@ public interface OnboardingDocumentMapper {
         return contractTemplate.getContractTemplateVersion();
     }
 
-    default OffsetDateTime toOffsetDateTime(OnboardingImportContract contractImported) {
+    default LocalDateTime toLocalDateTime(OnboardingImportContract contractImported) {
         if (Objects.nonNull(contractImported) && Objects.nonNull(contractImported.getCreatedAt())) {
-            return contractImported.getCreatedAt().atOffset(java.time.ZoneOffset.UTC);
+            return contractImported.getCreatedAt();
         }
         return null;
     }

@@ -137,7 +137,7 @@ class OnboardingUtilsTest {
                 .build();
 
         Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> result = onboardingUtils.buildUploadSignedContractRequest(
-                onboarding, false, formItem, product, DocumentType.INSTITUTION, Collections.emptyList());
+                onboarding, false, formItem, product, DocumentType.INSTITUTION, Collections.emptyList(), 1);
 
         UniAssertSubscriber<DocumentContentControllerApi.UploadSignedContractMultipartForm> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
         DocumentContentControllerApi.UploadSignedContractMultipartForm form = subscriber.getItem();
@@ -145,6 +145,7 @@ class OnboardingUtilsTest {
         assertNotNull(form);
         assertFalse(form.skipSignatureVerification);
         assertEquals(formItem.getFile(), form._file);
+        assertEquals(1, form.signingStep);
         assertNotNull(form.request);
         assertEquals(onboarding.getId(), form.request.getOnboardingId());
     }
