@@ -8,6 +8,8 @@ target/
 ### FILES ###
 **/*.env
 !test**.env
+!/.github/workflows/env/
+!/.github/workflows/env/**
 
 ### STS ###
 .apt_generated

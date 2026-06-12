@@ -20,21 +20,6 @@ module "local" {
 ###############################################################################
 
 locals {
-  onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "ONBOARDING_DATA_ENCRIPTION_KEY"          = "onboarding-data-encryption-key"
-    "ONBOARDING_DATA_ENCRIPTION_IV"           = "onboarding-data-encryption-iv"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
-  }
-
   onboarding_cdc_app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
@@ -58,7 +43,7 @@ locals {
     },
     {
       name  = "PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 
@@ -89,4 +74,3 @@ module "container_app_onboarding_cdc" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
 }
-
