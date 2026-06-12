@@ -30,6 +30,13 @@ public class ProductServiceCacheable implements ProductService {
     refreshProduct();
   }
 
+  public ProductServiceCacheable(String containerName, String filePath,
+                                  String accountName, String managedIdentityClientId) {
+    this.azureBlobClient = new AzureBlobClientDefault(containerName, accountName, managedIdentityClientId);
+    this.filePath = filePath;
+    refreshProduct();
+  }
+
   public void refreshProduct() {
     LocalDateTime currentLastModifiedDate =
         azureBlobClient.getProperties(filePath).getLastModified().toLocalDateTime();
