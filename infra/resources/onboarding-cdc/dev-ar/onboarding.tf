@@ -17,61 +17,6 @@ module "local" {
 }
 
 locals {
-  app_settings_onboarding_ms = [
-    {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
-    },
-    {
-      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-ms",
-    },
-    {
-      name  = "USER_REGISTRY_URL"
-      value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
-    },
-    {
-      name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net"
-    },
-    {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
-    },
-    {
-      name  = "MS_CORE_URL"
-      value = "https://selc-${module.local.config.env_short}-ms-institution-ca.${module.local.config.private_dns_name_domain}"
-    },
-    {
-      name  = "MS_PARTY_REGISTRY_URL"
-      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
-    },
-    {
-      name  = "SIGNATURE_VALIDATION_ENABLED"
-      value = "false"
-    },
-    {
-      name  = "MS_USER_URL"
-      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
-    },
-    {
-      name  = "ALLOWED_ATECO_CODES"
-      value = "47.12.10,47.54.00,47.11.02,47.12.20,47.12.30,47.12.40"
-    },
-    {
-      name  = "PAGOPA_SIGNATURE_SOURCE"
-      value = "namirial"
-    },
-    {
-      name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
-    },
-    {
-      name  = "ONBOARDING-UPDATE-USER-REQUESTER"
-      value = "true"
-    }
-  ]
-
   app_settings_onboarding_cdc = [
     {
       name  = "JAVA_TOOL_OPTIONS"
