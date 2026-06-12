@@ -39,7 +39,7 @@ services:
     entrypoint: [ "sh", "/init_azurite.sh" ]
 
   onboarding-ms:
-    image: ghcr.io/pagopa/selfcare-onboarding-ms:latest
+    image: ghcr.io/pagopa/selfcare-onboarding-ms:sha-f9055bd
     ports:
       - "8085:8080"
     env_file:
