@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.conf;
 
 import io.quarkus.runtime.StartupEvent;
+import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.InputStream;
+import java.util.Optional;
 
 @ApplicationScoped
 @Slf4j
@@ -30,38 +32,63 @@ public class OnboardingMsConfig {
     String filepathProduct;
 
     @ConfigProperty(name = "onboarding-ms.blob-storage.connection-string-product")
-    String connectionStringProduct;
+    Optional<String> connectionStringProduct;
+
+    @ConfigProperty(name = "onboarding-ms.blob-storage.account-name-product")
+    Optional<String> accountNameProduct;
+
+    @ConfigProperty(name = "onboarding-ms.blob-storage.managed-identity-client-id-product")
+    Optional<String> managedIdentityClientIdProduct;
 
     @Inject
     ProductService productService;
 
     void onStart(@Observes StartupEvent ev) {
         log.info(String.format("Database %s is starting...", Onboarding.mongoDatabase().getName()));
-        // Force eager initialization of ProductServiceCacheable so that the blocking
-        // Azure Blob Storage call happens at startup (on a non-eventloop thread)
-        // instead of lazily during the first request on the Vert.x event loop.
         log.info("ProductService eagerly initialized: {}", productService.getClass().getSimpleName());
     }
 
     @ApplicationScoped
-    public ProductService productService(){
-        return new ProductServiceCacheable(connectionStringProduct, containerProduct, filepathProduct);
+    public ProductService productService() {
+        AzureBlobClientDefault azureBlobClient = connectionStringProduct
+                .filter(connectionString -> !connectionString.isBlank())
+                .map(connectionString -> {
+                    log.info("Configuring ProductService with Azure Blob connection string: container={}, filepath={}",
+                            containerProduct, filepathProduct);
+                    return new AzureBlobClientDefault(connectionString, containerProduct);
+                })
+                .orElseGet(this::azureBlobClientWithManagedIdentity);
+
+        return new ProductServiceCacheable(azureBlobClient, filepathProduct);
     }
 
-    public Pkcs7HashSignService arubaPkcs7HashSignService(){
+    private AzureBlobClientDefault azureBlobClientWithManagedIdentity() {
+        String accountName = accountNameProduct.orElse("");
+        String managedIdentityClientId = managedIdentityClientIdProduct.orElse("");
+
+        log.info("Configuring ProductService with Azure Blob managed identity: container={}, accountNameConfigured={}, managedIdentityClientIdConfigured={}, filepath={}",
+                containerProduct,
+                !accountName.isBlank(),
+                !managedIdentityClientId.isBlank(),
+                filepathProduct);
+
+        return new AzureBlobClientDefault(containerProduct, accountName, managedIdentityClientId);
+    }
+
+    public Pkcs7HashSignService arubaPkcs7HashSignService() {
         log.info("Signature will be performed using ArubaPkcs7HashSignServiceImpl");
         return new ArubaPkcs7HashSignServiceImpl(new ArubaSignServiceImpl());
     }
 
-    public Pkcs7HashSignService namirialPkcs7HashSignService(){
+    public Pkcs7HashSignService namirialPkcs7HashSignService() {
         log.info("Signature will be performed using NamirialPkcs7HashSignServiceImpl");
         return new NamirialPkcs7HashSignServiceImpl(new NamiralSignServiceImpl());
     }
 
 
-    public Pkcs7HashSignService disabledPkcs7HashSignService(){
+    public Pkcs7HashSignService disabledPkcs7HashSignService() {
         log.info("Signature will be performed using Pkcs7HashSignService");
-        return new Pkcs7HashSignService(){
+        return new Pkcs7HashSignService() {
             @Override
             public boolean returnsFullPdf() {
                 return false;
@@ -75,11 +102,12 @@ public class OnboardingMsConfig {
         };
     }
 
-    public Pkcs7HashSignService pkcs7HashSignService(){
+    public Pkcs7HashSignService pkcs7HashSignService() {
         return new Pkcs7HashSignServiceImpl();
     }
+
     @ApplicationScoped
-    public PadesSignService padesSignService(@ConfigProperty(name = "onboarding-ms.pagopa-signature.source") String source){
+    public PadesSignService padesSignService(@ConfigProperty(name = "onboarding-ms.pagopa-signature.source") String source) {
         return switch (source) {
             case SIGNATURE_SOURCE_ARUBA -> new PadesSignServiceImpl(arubaPkcs7HashSignService());
             case SIGNATURE_SOURCE_NAMIRIAL -> new PadesSignServiceImpl(namirialPkcs7HashSignService());
