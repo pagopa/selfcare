@@ -60,7 +60,8 @@ public interface DocumentContentService {
       boolean skipSignatureVerification,
       InputStream file,
       String fileName,
-      boolean skipSignerIdentityCheck);
+      boolean skipSignerIdentityCheck,
+      int signingStep);
 
     Uni<RestResponse<File>> retrieveAggregatesCsv(String onboardingId, String productId);
 }
