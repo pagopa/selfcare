@@ -1027,6 +1027,26 @@ paths:
           description: OK
           content:
             application/json: {}
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
         "403":
@@ -2253,6 +2273,23 @@ components:
         contractType:
           type: string
         contractId:
+          type: string
+    Problem:
+      type: object
+      properties:
+        status:
+          format: int32
+          type: integer
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProblemError"
+    ProblemError:
+      type: object
+      properties:
+        code:
+          type: string
+        detail:
           type: string
     ReasonRequest:
       type: object

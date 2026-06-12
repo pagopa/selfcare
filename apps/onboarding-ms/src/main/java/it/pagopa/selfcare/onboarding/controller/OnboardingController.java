@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAggregationImportRequest;
 import it.pagopa.selfcare.onboarding.entity.UserRequester;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.exception.model.Problem;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
@@ -36,6 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.extensions.Extension;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
@@ -323,13 +328,40 @@ public class OnboardingController {
     }
 
     @Operation(
-            summary = "Complete onboarding by verifying and uploading contract, then trigger async activities.",
-            description = "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution." +
-                    "It checks the contract's signature and upload the contract on an azure storage" +
-                    "At the end, function triggers async activities related to complete onboarding " +
-                    "that consist of create the institution, activate the onboarding and sending data to notification queue.",
-            operationId = "completeOnboardingUsingPUT"
-    )
+      summary =
+          "Complete onboarding by verifying and uploading contract, then trigger async activities.",
+      description =
+          "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution."
+              + "It checks the contract's signature and upload the contract on an azure storage"
+              + "At the end, function triggers async activities related to complete onboarding "
+              + "that consist of create the institution, activate the onboarding and sending data to notification queue.",
+      operationId = "completeOnboardingUsingPUT")
+    @APIResponses(
+      value = {
+        @APIResponse(responseCode = "200", description = "OK"),
+        @APIResponse(responseCode = "204", description = "No Content"),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "409",
+            description = "Conflict",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
     @PUT
     @Path("/{onboardingId}/complete")
     @Tag(name = "internal-v1")

@@ -1131,6 +1131,10 @@
                     "default" : false,
                     "type" : "boolean"
                   },
+                  "signingStep" : {
+                    "format" : "int32",
+                    "type" : "integer"
+                  },
                   "file" : {
                     "format" : "binary",
                     "type" : "string"
