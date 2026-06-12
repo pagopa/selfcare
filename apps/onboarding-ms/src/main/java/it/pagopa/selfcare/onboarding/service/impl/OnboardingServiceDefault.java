@@ -302,8 +302,8 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     @Override
-    public Uni<Long> deleteOnboardingUser(String onboardingId) {
-        log.info("Deleting user onboarding with id {}", onboardingId);
+    public Uni<Long> deleteOnboardingUser(String onboardingId, String userId) {
+        log.info("Deleting user onboarding with id {} for userId {}", onboardingId, userId);
         return Onboarding.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
@@ -316,6 +316,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                     }
                     return Uni.createFrom().item(o);
                 })
+                .onItem().transformToUni(o -> validateUserRoleForDeletion(o, userId))
                 .onItem().transformToUni(o ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
                                 documentService.deleteContract(onboardingId),
@@ -656,12 +657,51 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                              boolean skipSignatureVerification,
                                                              DocumentType documentType, List<String> fiscalCodes) {
         return getProductByOnboarding(onboarding)
-                .flatMap(product -> onboardingUtils.buildUploadSignedContractRequest(
-                        onboarding, skipSignatureVerification, formItem, product, documentType, fiscalCodes))
+                .flatMap(product -> resolveNextSigningStep(onboarding.getId(), product)
+                        .flatMap(nextStep -> onboardingUtils.buildUploadSignedContractRequest(
+                                onboarding, skipSignatureVerification, formItem, product, documentType, fiscalCodes, nextStep)))
                 .flatMap(request ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
                                 documentService.uploadSignedContract(request, onboarding.getId()),
                                 "uploadSignedContract", onboarding.getId()));
+    }
+
+    /**
+     * Calculates the next signing step for the given onboarding by querying document-ms
+     * for the latest document. Validates that the next step does not exceed the required
+     * number of signatures defined in the product's signing configuration.
+     *
+     * @param onboardingId the onboarding ID
+     * @param product      the product with signing configuration
+     * @return the next signing step (1-based)
+     * @throws InvalidRequestException if all required signatures have already been collected
+     */
+    private Uni<Integer> resolveNextSigningStep(String onboardingId, Product product) {
+        return documentService.getDocumentByOnboardingId(onboardingId)
+                .onItem().transform(doc -> {
+                    if (doc == null || doc.getSigningStep() == null) {
+                        return 1;
+                    }
+                    return doc.getSigningStep() + 1;
+                })
+                .onItem().transformToUni(nextStep -> {
+                    int requiredSignatures = resolveRequiredSignatures(product);
+                    if (nextStep > requiredSignatures) {
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("All required signatures already collected for onboarding %s " +
+                                        "(nextStep=%d, requiredSignatures=%d)", onboardingId, nextStep, requiredSignatures)));
+                    }
+                    log.info("resolveNextSigningStep for onboardingId={}: nextStep={}, requiredSignatures={}",
+                            onboardingId, nextStep, requiredSignatures);
+                    return Uni.createFrom().item(nextStep);
+                });
+    }
+
+    private int resolveRequiredSignatures(Product product) {
+        if (product.getSigningConfiguration() != null) {
+            return product.getSigningConfiguration().getRequiredSignatures();
+        }
+        return 1;
     }
 
     private Uni<Product> product(String productId) {
@@ -693,6 +733,23 @@ public class OnboardingServiceDefault implements OnboardingService {
                             onboardingId, onboarding.getStatus())));
         }
         return Uni.createFrom().item(onboarding);
+    }
+
+    private Uni<Onboarding> validateUserRoleForDeletion(Onboarding onboarding, String userId) {
+        boolean hasDelegate = onboarding.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId) && PartyRole.DELEGATE.equals(u.getRole()));
+        boolean hasManager = onboarding.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId) && PartyRole.MANAGER.equals(u.getRole()));
+
+        if (hasDelegate) {
+            return Uni.createFrom().item(onboarding);
+        } else if (hasManager) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("User with id %s has role MANAGER and cannot be deleted. Only DELEGATE role is allowed for deletion.", userId)));
+        } else {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("User with id %s not found in onboarding with id %s", userId, onboarding.getId())));
+        }
     }
 
     private Uni<LocalDateTime> computeExpiry(String productId) {

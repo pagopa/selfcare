@@ -106,6 +106,7 @@ Feature: Document content health
       | onboardingId | onb-123 |
     And The following form params:
       | request | {"onboardingId":"onb-123","productId":"prod-test","documentType":"INSTITUTION"} |
+      | signingStep | 1 |
     When I send a POST request to "/v1/document-content/{onboardingId}/upload-signed-contract" with form data only
     Then The status code is 500
 
