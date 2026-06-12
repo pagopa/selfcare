@@ -302,8 +302,8 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     @Override
-    public Uni<Long> deleteOnboardingUser(String onboardingId) {
-        log.info("Deleting user onboarding with id {}", onboardingId);
+    public Uni<Long> deleteOnboardingUser(String onboardingId, String userId) {
+        log.info("Deleting user onboarding with id {} for userId {}", onboardingId, userId);
         return Onboarding.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
@@ -316,6 +316,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                     }
                     return Uni.createFrom().item(o);
                 })
+                .onItem().transformToUni(o -> validateUserRoleForDeletion(o, userId))
                 .onItem().transformToUni(o ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
                                 documentService.deleteContract(onboardingId),
@@ -732,6 +733,23 @@ public class OnboardingServiceDefault implements OnboardingService {
                             onboardingId, onboarding.getStatus())));
         }
         return Uni.createFrom().item(onboarding);
+    }
+
+    private Uni<Onboarding> validateUserRoleForDeletion(Onboarding onboarding, String userId) {
+        boolean hasDelegate = onboarding.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId) && PartyRole.DELEGATE.equals(u.getRole()));
+        boolean hasManager = onboarding.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId) && PartyRole.MANAGER.equals(u.getRole()));
+
+        if (hasDelegate) {
+            return Uni.createFrom().item(onboarding);
+        } else if (hasManager) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("User with id %s has role MANAGER and cannot be deleted. Only DELEGATE role is allowed for deletion.", userId)));
+        } else {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("User with id %s not found in onboarding with id %s", userId, onboarding.getId())));
+        }
     }
 
     private Uni<LocalDateTime> computeExpiry(String productId) {
