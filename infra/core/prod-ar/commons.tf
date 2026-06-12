@@ -268,8 +268,6 @@ module "appgateway" {
   app_gateway_waf_enabled = true
   app_gateway_sku_name    = "WAF_v2"
   app_gateway_sku_tier    = "WAF_v2"
-
-  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
 }
 
 ###############################################################################
