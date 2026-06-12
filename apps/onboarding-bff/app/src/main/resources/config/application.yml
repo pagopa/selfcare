@@ -12,13 +12,13 @@ spring:
 
 management:
   tracing:
-      sampling:
-        probability: 1.0
+    sampling:
+      probability: 1.0
   zipkin:
     enabled: false
   baggage:
-      remote-fields: X-Client-Ip
-      correlation-fields: X-Client-Ip
+    remote-fields: X-Client-Ip
+    correlation-fields: X-Client-Ip
 
 info:
   build:
@@ -32,6 +32,7 @@ logging:
   level:
     it.pagopa.selfcare: ${B4F_ONBOARDING_LOG_LEVEL:DEBUG}
   pattern:
+    level: "%5p [${spring.application.name:},%X{trace_id:-},%X{span_id:-}]"
     additional-info: ",%X{X-Client-Ip:-}]"
 
 
