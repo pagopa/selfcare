@@ -122,18 +122,25 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
 
     @Override
     @Retry(name = "retryTimeout")
-    public void approveOnboarding(String onboardingId) {
-        msOnboardingApiClient._approve(onboardingId);
+    public void approveOnboarding(String onboardingId, String userUid) {
+        ApproveRequest approveRequest = new ApproveRequest();
+        if (StringUtils.hasText(userUid)) {
+            approveRequest.setUserUid(userUid);
+        }
+        msOnboardingApiClient._approve(onboardingId, approveRequest);
     }
 
     @Override
     @Retry(name = "retryTimeout")
-    public void rejectOnboarding(String onboardingId, String reason) {
+    public void rejectOnboarding(String onboardingId, String reason, String userUid) {
         ReasonRequest reasonForReject = new ReasonRequest();
         if (StringUtils.hasText(reason)) {
             reasonForReject.setReasonForReject(reason);
         }
-        msOnboardingApiClient._delete(onboardingId, reasonForReject);
+        if (StringUtils.hasText(userUid)) {
+            reasonForReject.setUserUid(userUid);
+        }
+        msOnboardingApiClient._rejectOnboardingUsingPUT(onboardingId, reasonForReject);
     }
 
     @Override

@@ -127,7 +127,7 @@ locals {
 
   dapr_sidecar_settings = [
     {
-      app_id       = "party-reg-proxy"
+      app_id       = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
       app_port     = 8080
       app_protocol = "http"
     }
@@ -237,10 +237,6 @@ locals {
     {
       name  = "AZURE_SEARCH_URL"
       value = "https://selc-${module.local.config.env_short}-weu-ar-srch.search.windows.net/"
-    },
-    {
-      name  = "AZURE_SEARCH_INSTITUTION_INDEX"
-      value = "institution-index-ar"
     },
     {
       name  = "AZURE_SEARCH_IPA_INSTITUTION_INDEX"

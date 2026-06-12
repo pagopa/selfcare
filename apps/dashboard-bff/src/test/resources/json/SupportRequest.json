@@ -1,0 +1,10 @@
+{
+  "email": "user@example.com",
+  "productId": "productId",
+  "userId": "user-12345",
+  "institutionId": "institutionId",
+  "name": "name surname",
+  "userFields": {
+    "aux_data": "FFFFFFFF"
+  }
+}

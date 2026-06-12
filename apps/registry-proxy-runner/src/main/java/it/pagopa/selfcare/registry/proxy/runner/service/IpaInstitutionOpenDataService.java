@@ -17,6 +17,6 @@ public class IpaInstitutionOpenDataService extends AbstractIpaOpenDataService<Ip
   @Override
   public List<IpaInstitution> fetch() {
     log.info("Fetching IPA institutions from open data...");
-    return parseCsv(restClient.retrieveDataSource(), IpaInstitution.class, "institutions");
+    return parseCsv(restClient.retrieveDataSource(), IpaInstitution.class, "institutions", "ipa-institution");
   }
 }

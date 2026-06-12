@@ -1,0 +1,13 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "External PNPG API service",
+      "description": "This service is the proxy for external services",
+      "version": "2.0.0"
+    },
+    "servers": [
+      {
+        "url": "https://${host}/${basePath}"
+      }
+    ]
+  }

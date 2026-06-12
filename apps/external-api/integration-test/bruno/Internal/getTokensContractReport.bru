@@ -1,0 +1,37 @@
+meta {
+  name: getTokensContractReport
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{apiBaseUrl}}/external/internal/v1/tokens/contract-report?onboardingId={{onboardingId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  onboardingId: {{onboardingId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyInternal}}
+}
+
+script:post-response {
+  test("getTokensContractReport ok", function() {
+    const status = res.getStatus();
+    // 200 OK or 404 Not Found (if onboardingId doesn't exist)
+    expect([200, 404]).to.include(status);
+
+    if (status === 200) {
+      const jsonData = res.getBody();
+      expect(jsonData).to.be.an("object");
+      expect(jsonData).to.have.property("cades").that.is.a("boolean");
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

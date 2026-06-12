@@ -1,10 +1,6 @@
 package it.pagopa.selfcare.iam.repository;
 
-import com.mongodb.client.model.Accumulators;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Projections;
-import com.mongodb.client.model.UnwindOptions;
+import com.mongodb.client.model.*;
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.smallrye.mutiny.Uni;
@@ -93,8 +89,19 @@ public class UserPermissionsRepository {
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
-        .ifPresent(
-            pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
+            .ifPresent(pid -> {
+              pipeline.add(Aggregates.match(
+                      Filters.or(
+                              Filters.eq("productRoles.productId", pid),
+                              Filters.eq("productRoles.productId", "ALL"))));
+
+              // priority when productId corresponds
+              pipeline.add(
+                      Aggregates.addFields(
+                              new Field<>("isAll", new Document("$eq", Arrays.asList("$productRoles.productId", "ALL")))));
+              pipeline.add(Aggregates.sort(Sorts.ascending("isAll")));
+              pipeline.add(Aggregates.limit(1));
+            });
 
     List<Bson> pipelinePost =
         Arrays.asList(

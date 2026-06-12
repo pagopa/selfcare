@@ -116,8 +116,7 @@ public class UserController {
     public Uni<UserInfoResponse> getUserProductsInfo(@PathParam(value = "userId") String userId,
                                                      @QueryParam(value = "institutionId") String institutionId,
                                                      @QueryParam(value = "states") String[] states) {
-        return userService.retrieveBindings(institutionId, userId, states)
-                .map(userMapper::toUserInfoResponse);
+        return userService.retrieveBindings(institutionId, userId, states);
     }
 
     /**
@@ -440,7 +439,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Void> sendMailRequest(@PathParam("userId") String userId,
                                             @Valid SendMailDto sendMailDto) {
-        return userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId());
+        return userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getType(), sendMailDto.getInstitutionId());
     }
 
     @APIResponses({

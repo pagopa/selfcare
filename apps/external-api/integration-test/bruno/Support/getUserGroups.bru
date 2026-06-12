@@ -1,0 +1,52 @@
+meta {
+  name: getUserGroups
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/user-groups?institutionId={{institutionId}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  institutionId: {{institutionId}}
+  ~productId: {{productId}}
+  ~userId: {{userId}}
+  ~status: ACTIVE
+  ~page: 0
+  ~size: 20
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  test("getUserGroups ok", function() {
+    expect(res.getStatus()).to.equal(200);
+
+    const jsonData = res.getBody();
+
+    expect(jsonData).to.have.property("content").that.is.an("array");
+    expect(jsonData).to.have.property("totalElements").that.is.a("number");
+    expect(jsonData).to.have.property("totalPages").that.is.a("number");
+
+    if (jsonData.content.length > 0) {
+      jsonData.content.forEach(group => {
+        expect(group).to.have.property("id").that.is.a("string");
+        expect(group).to.have.property("institutionId").that.is.a("string");
+        expect(group).to.have.property("productId").that.is.a("string");
+        expect(group).to.have.property("name").that.is.a("string");
+        expect(group).to.have.property("status").that.is.a("string");
+      });
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

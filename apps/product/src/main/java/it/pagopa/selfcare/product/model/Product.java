@@ -20,6 +20,7 @@ public class Product {
   @BsonId @Builder.Default private String id = UUID.randomUUID().toString();
 
   private String productId;
+  private String parentId;
   private String alias;
 
   private String title;
@@ -46,11 +47,14 @@ public class Product {
   private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
 
   private List<String> testEnvProductIds;
+  private List<String> institutionTypesAllowed;
 
   private ProductMetadata metadata;
 
   private SigningConfiguration signingConfiguration;
 
   private List<ManagingInstitution> managingInstitutions;
+
+  private List<WorkflowRule> workflowRules;
 
 }

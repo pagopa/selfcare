@@ -1,0 +1,69 @@
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        required: true
+      path:
+        type: string
+        required: false
+
+jobs:
+  integration-test:
+    environment: ${{ inputs.environment }}-ci
+    name: "Run Bruno collection on ${{ inputs.environment }}"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        name: Checkout
+      - name: "Download Bruno environment"
+        working-directory: ${{ inputs.path }}
+        env:
+          INTEGRATION_ENVIRONMENT_BRUNO: ${{ secrets.INTEGRATION_ENVIRONMENT_BRUNO }}
+        run: 'echo "$INTEGRATION_ENVIRONMENT_BRUNO" | base64 --decode > Selfcare-External-Integration-Environment.json'
+        shell: bash
+      - uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+        with:
+          node-version: "22.x"
+      - name: Install bruno cli
+        shell: bash
+        run: npm install -g @usebruno/cli
+      - name: Run bruno cli
+        id: bruno
+        continue-on-error: true
+        shell: bash
+        working-directory: ${{ inputs.path }}
+        run: bru run . -r --env-file Selfcare-External-Integration-Environment.json --reporter-json integration-test-result.json --reporter-skip-all-headers
+      - name: Send bruno report
+        if: ${{ always() }}
+        shell: bash
+        working-directory: ${{ inputs.path }}
+        run: |
+          if [ ! -f integration-test-result.json ]; then
+            echo "integration-test-result.json not found, skipping Bruno report conversion"
+            exit 0
+          fi
+          node convert_bruno.js "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      - name: "Send message on Slack"
+        if: ${{ always() }}
+        shell: bash
+        working-directory: ${{ inputs.path }}
+        run: |
+          if [ ! -f stats.json ]; then
+            echo "stats.json not found, skipping Slack notification"
+            exit 0
+          fi
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -H 'Content-type: application/json' -d @stats.json
+      - name: Fail job when Bruno collection has failing requests
+        if: ${{ always() && steps.bruno.outcome == 'failure' }}
+        shell: bash
+        working-directory: ${{ inputs.path }}
+        run: |
+          echo "Bruno collection has failing requests. Slack notification was sent before failing the job."
+          if [ -f integration-test-result.json ]; then
+            node -e 'const fs = require("fs"); const report = JSON.parse(fs.readFileSync("integration-test-result.json", "utf8")); const summary = (report[0] || {}).summary || {}; console.error(`Summary: total=${summary.totalRequests ?? "n/a"} passed=${summary.passedRequests ?? "n/a"} failed=${summary.failedRequests ?? "n/a"} skipped=${summary.skippedRequests ?? "n/a"} errors=${summary.errorRequests ?? "n/a"}`);'
+          fi
+          exit 1

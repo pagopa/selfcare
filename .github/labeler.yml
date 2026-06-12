@@ -95,6 +95,10 @@ institution-send-mail-scheduler:
   - changed-files:
       - any-glob-to-any-file: ["apps/institution-send-mail-scheduler/**", "infra/resources/institution-send-mail-scheduler/**"]
 
+dashboard-bff:
+  - changed-files:
+      - any-glob-to-any-file: ["apps/dashboard-bff/**", "infra/resources/dashboard-bff/**"]
+
 security-sdk:
   - changed-files:
       - any-glob-to-any-file: ["libs/selfcare-sdk-security/**"]

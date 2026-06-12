@@ -3,19 +3,19 @@
 This module deploys SelfCare jobs on a Container App Job. It gives the job access to the KeyVault instance to grab secrets.
 
 <!-- markdownlint-disable -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.6.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | > 4 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | > 4 |
+| ---- | ------- |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
 
 ## Modules
 
@@ -24,7 +24,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_container_app_job.container_app_job](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_job) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_container_app_environment.container_app_environment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
@@ -37,7 +37,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | n/a | <pre>list(object({<br/>    name                  = string<br/>    value                 = optional(string, "")<br/>    key_vault_secret_name = optional(string)<br/>  }))</pre> | n/a | yes |
 | <a name="input_container_app"></a> [container\_app](#input\_container\_app) | Container App Job configuration | <pre>object({<br/>    cpu    = number<br/>    memory = string<br/>  })</pre> | n/a | yes |
 | <a name="input_container_app_environment_name"></a> [container\_app\_environment\_name](#input\_container\_app\_environment\_name) | Container app environment name to use | `string` | n/a | yes |
@@ -59,9 +59,10 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cae_identity_client_id"></a> [cae\_identity\_client\_id](#output\_cae\_identity\_client\_id) | n/a |
 | <a name="output_cae_identity_id"></a> [cae\_identity\_id](#output\_cae\_identity\_id) | n/a |
+| <a name="output_cae_identity_principal_id"></a> [cae\_identity\_principal\_id](#output\_cae\_identity\_principal\_id) | n/a |
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
 | <a name="output_container_app_job_name"></a> [container\_app\_job\_name](#output\_container\_app\_job\_name) | n/a |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

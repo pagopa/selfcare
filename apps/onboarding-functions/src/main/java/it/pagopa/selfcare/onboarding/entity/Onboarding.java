@@ -35,6 +35,7 @@ public class Onboarding {
     private LocalDateTime activatedAt;
     private LocalDateTime deletedAt;
     private String reasonForReject;
+    private String processedByUserUid;
     private Boolean isAggregator;
     private Aggregator aggregator;
     private String delegationId;

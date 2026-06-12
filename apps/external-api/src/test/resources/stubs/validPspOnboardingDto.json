@@ -1,0 +1,42 @@
+{
+  "billingData": {
+    "businessName": "string",
+    "digitalAddress": "string",
+    "publicServices": false,
+    "recipientCode": "string",
+    "registeredOffice": "string",
+    "taxCode": "string",
+    "vatNumber": "string",
+    "zipCode": "string"
+  },
+  "institutionType": "PSP",
+  "origin": "string",
+  "pricingPlan": "string",
+  "pspData": {
+    "abiCode": "string",
+    "businessRegisterNumber": "string",
+    "dpoData": {
+      "address": "string",
+      "email": "email@example.com",
+      "pec": "email@example.com"
+    },
+    "legalRegisterName": "string",
+    "legalRegisterNumber": "string",
+    "vatNumberGroup": false
+  },
+  "users": [
+    {
+      "email": "email@example.com",
+      "name": "string",
+      "role": "DELEGATE",
+      "surname": "string",
+      "taxCode": "string"
+    }
+  ],
+  "geographicTaxonomies": [
+    {
+      "code": "string",
+      "desc": "string"
+    }
+  ]
+}

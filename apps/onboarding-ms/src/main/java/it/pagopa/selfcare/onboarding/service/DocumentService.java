@@ -19,4 +19,6 @@ public interface DocumentService {
 
     Uni<Response> uploadSignedContract(DocumentContentControllerApi.UploadSignedContractMultipartForm request,
                                        String onboardingId);
+
+    Uni<Response> deleteContract(String onboardingId);
 }

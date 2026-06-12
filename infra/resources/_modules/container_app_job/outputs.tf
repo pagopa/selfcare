@@ -13,3 +13,7 @@ output "cae_identity_id" {
 output "cae_identity_client_id" {
   value = data.azurerm_user_assigned_identity.cae_identity.client_id
 }
+
+output "cae_identity_principal_id" {
+  value = data.azurerm_user_assigned_identity.cae_identity.principal_id
+}

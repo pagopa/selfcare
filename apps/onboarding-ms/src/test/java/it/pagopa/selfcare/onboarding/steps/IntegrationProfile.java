@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +26,11 @@ public class IntegrationProfile implements QuarkusTestProfile {
   @Override
   public String getConfigProfile() {
     return "integrationProfile";
+  }
+
+  @Override
+  public Set<Class<?>> getEnabledAlternatives() {
+    return Set.of(IntegrationProductMsService.class, IntegrationProductService.class);
   }
 
   @Override

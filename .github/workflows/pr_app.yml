@@ -47,22 +47,8 @@ on:
           - user-group-ms
           - user-ms
           - webhook
+          - dashboard-bff
         required: true
-
-  pull_request:
-    branches:
-      - main
-      - releases/**
-    types:
-      - opened
-      - edited
-      - synchronize
-      - reopened
-      - ready_for_review
-    paths:
-      - 'apps/**'
-      - '.github/workflows/pr_app.yml'
-      - '.github/workflows/call_code_review.yml'
 
 jobs:
   code_review:

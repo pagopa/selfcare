@@ -180,31 +180,31 @@ Feature: User
   Scenario: Successfully get products info and role which the user is enabled with userId
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | userId        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                               |
-    When I send a GET request to "users/{userId}/institutions"
-    Then The status code is 200
-    And The response body contains the list "institutions" of size 2
-    And The response body contains:
-      | userId        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                               |
-    And The response body contains at path "institutions" the following list of objects in any order:
-      | institutionId                                   | institutionName                  | role                    | status             |
-      | a1b2c3d4-5678-90ab-cdef-1234567890ab            | Regione Lazio                    | SUB_DELEGATE            | ACTIVE             |
-      | f2e4d6c8-9876-5432-ba10-abcdef123456            | Università di Bologna            | MANAGER                 | PENDING            |
-
-  Scenario: Successfully get products info and role which the user is enabled with userId and institutionId
-    Given User login with username "j.doe" and password "test"
-    And The following path params:
-      | userId        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                               |
-    And The following query params:
-      | institutionId | f2e4d6c8-9876-5432-ba10-abcdef123456                               |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     When I send a GET request to "users/{userId}/institutions"
     Then The status code is 200
     And The response body contains the list "institutions" of size 1
     And The response body contains:
-      | userId        | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                               |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The response body contains at path "institutions" the following list of objects in any order:
-      | institutionId                                   | institutionName                  | role                    | status             |
-      | f2e4d6c8-9876-5432-ba10-abcdef123456            | Università di Bologna            | MANAGER                 | PENDING            |
+      | institutionId                        | institutionName | role         | status |
+      | a1b2c3d4-5678-90ab-cdef-1234567890ab | Regione Lazio   | SUB_DELEGATE | ACTIVE |
+
+  Scenario: Successfully get products info and role which the user is enabled with userId and institutionId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The following query params:
+      | institutionId | f2e4d6c8-9876-5432-ba10-abcdef123456 |
+      | states        | PENDING                              |
+    When I send a GET request to "users/{userId}/institutions"
+    Then The status code is 200
+    And The response body contains the list "institutions" of size 1
+    And The response body contains:
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The response body contains at path "institutions" the following list of objects in any order:
+      | institutionId                        | institutionName       | role    | status  |
+      | f2e4d6c8-9876-5432-ba10-abcdef123456 | Università di Bologna | MANAGER | PENDING |
 
   Scenario: Successfully get products info and role which the user is enabled with userId and states
     Given User login with username "j.doe" and password "test"
@@ -241,65 +241,62 @@ Feature: User
   Scenario: Unsuccessfully get products info and role which the user is enabled with userId and not present state
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | userId                                   | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                                                   |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The following query params:
-      | states                                   | DELETED                                                                                |
+      | states | DELETED |
     When I send a GET request to "users/{userId}/institutions"
-    Then The status code is 404
+    Then The status code is 200
     And The response body contains:
-      | detail                                   | User with id 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 and institution id null not found!   |
-      | status                                   | 404                                                                                    |
-      | title                                    | User with id 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 and institution id null not found!   |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The response body contains the list "institutions" of size 0
 
   Scenario: Unsuccessfully get products info and role which the user is enabled with userId and wrong institution
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | userId                                   | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                                                        |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The following query params:
-      | institutionId                            | asdfghjkl                                                                                   |
+      | institutionId | asdfghjkl |
     When I send a GET request to "users/{userId}/institutions"
-    Then The status code is 404
+    Then The status code is 200
     And The response body contains:
-      | detail                                   | User with id 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 and institution id asdfghjkl not found!   |
-      | status                                   | 404                                                                                         |
-      | title                                    | User with id 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 and institution id asdfghjkl not found!   |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The response body contains the list "institutions" of size 0
 
   Scenario: Unsuccessfully get products info and role which the user is enabled with userId and states and wrong institution
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | userId                                   | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7                                                        |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The following query params:
-      | institutionId                            | asdfghjkl                                                                                   |
-      | states                                   | ACTIVE                                                                                      |
-      | states                                   | PENDING                                                                                     |
+      | institutionId | asdfghjkl |
+      | states        | ACTIVE    |
+      | states        | PENDING   |
     When I send a GET request to "users/{userId}/institutions"
-    Then The status code is 404
+    Then The status code is 200
     And The response body contains:
-      | detail                                   | User with id 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 and institution id asdfghjkl not found!   |
-      | status                                   | 404                                                                                         |
-      | title                                    | User with id 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 and institution id asdfghjkl not found!   |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The response body contains the list "institutions" of size 0
 
   Scenario: Unsuccessfully get products info and role which the user is enabled with userId and wrong state
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | userId                                   | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7               |
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The following query params:
-      | states                                   | ASDFGH                                             |
+      | states | ASDFGH |
     When I send a GET request to "users/{userId}/institutions"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 200
+    And The response body contains:
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The response body contains the list "institutions" of size 0
 
   Scenario: Unsuccessfully get products info and role which the user is enabled with wrong userId
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | userId                                   | asdfghjkl                                          |
+      | userId | asdfghjkl |
     When I send a GET request to "users/{userId}/institutions"
-    Then The status code is 404
+    Then The status code is 200
     And The response body contains:
-      | detail                                   | User with id asdfghjkl not found!                  |
-      | status                                   | 404                                                |
-      | title                                    | User with id asdfghjkl not found!                  |
+      | userId | asdfghjkl |
+    And The response body contains the list "institutions" of size 0
 
   Scenario: Bad Token get products info and role which the user is enabled with userId
     Given A bad jwt token
@@ -4913,7 +4910,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 15
+    And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4930,6 +4927,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
+      | Selc:CreateProductUsers           |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE and prod-idpay-merchant)
@@ -4951,7 +4949,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 15
+    And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -4968,6 +4966,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
+      | Selc:CreateProductUsers           |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE and prod-idpay-merchant)
@@ -4989,7 +4988,7 @@ Feature: User
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"
-    And The response body contains the list "products[0].userProductActions" of size 15
+    And The response body contains the list "products[0].userProductActions" of size 16
     And The response body contains at path "products[0].userProductActions" the following list of values in any order:
       | Selc:UploadLogo                   |
       | Selc:ViewBilling                  |
@@ -5006,6 +5005,7 @@ Feature: User
       | Selc:CreateDelegation             |
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
+      | Selc:CreateProductUsers           |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR and prod-idpay-merchant)

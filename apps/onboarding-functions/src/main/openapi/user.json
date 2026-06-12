@@ -532,7 +532,7 @@
     },
     "/institutions/{institutionId}/users" : {
       "get" : {
-        "tags" : [ "support", "support-pnpg", "Institution" ],
+        "tags" : [ "Institution", "support", "support-pnpg" ],
         "summary" : "Retrieve user's information including product role details",
         "description" : "Fetches detailed information about users associated with a specific institution, including their roles on various products. This endpoint is useful for administrators to obtain comprehensive user-role mappings within an institution.",
         "operationId" : "getInstitutionUsersUsingGET",
@@ -540,6 +540,30 @@
           "name" : "institutionId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "products",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "roles",
+          "in" : "query",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
           "schema" : {
             "type" : "string"
           }
@@ -1579,6 +1603,43 @@
         } ]
       }
     },
+    "/users/{userId}/otp-info" : {
+      "get" : {
+        "tags" : [ "User", "internal-v1", "support" ],
+        "summary" : "Get user's email for OTP",
+        "description" : "Get the user's email configured to receive the OTP",
+        "operationId" : "getUserOtpEmailInfo",
+        "parameters" : [ {
+          "name" : "userId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UserOtpEmailInfoResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/users/{userId}/send-mail-otp" : {
       "post" : {
         "tags" : [ "User" ],
@@ -1749,6 +1810,10 @@
             "type" : "integer"
           }
         }
+      },
+      "EmailType" : {
+        "enum" : [ "USER_REQUEST", "CONVENTION_REQUEST" ],
+        "type" : "string"
       },
       "Env" : {
         "enum" : [ "ROOT", "DEV", "COLL", "PROD" ],
@@ -1980,6 +2045,12 @@
           },
           "productId" : {
             "minLength" : 1,
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/EmailType"
+          },
+          "institutionId" : {
             "type" : "string"
           }
         }
@@ -2224,6 +2295,23 @@
           }
         }
       },
+      "UserOtpEmailInfoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "otpEmail" : {
+            "type" : "string"
+          },
+          "otpReferenceInstitutionId" : {
+            "type" : "string"
+          },
+          "canUserChangeOtpEmail" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "UserProductResponse" : {
         "type" : "object",
         "properties" : {
@@ -2240,6 +2328,12 @@
             "type" : "string"
           },
           "email" : {
+            "type" : "string"
+          },
+          "mobilePhone" : {
+            "type" : "string"
+          },
+          "telephone" : {
             "type" : "string"
           },
           "products" : {
@@ -2361,6 +2455,12 @@
         "type" : "object",
         "properties" : {
           "email" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResponseString"
+          },
+          "mobilePhone" : {
+            "$ref" : "#/components/schemas/CertifiableFieldResponseString"
+          },
+          "telephone" : {
             "$ref" : "#/components/schemas/CertifiableFieldResponseString"
           }
         }

@@ -50,17 +50,28 @@ public interface DocumentService {
 
     Uni<Document> persistDocumentForImport(OnboardingDocumentRequest request);
 
+    /**
+     * Handles a contract document, reusing the existing record if unsigned,
+     * or creating a new one for subsequent signing steps.
+     *
+     * @param request the document builder request
+     * @return the document (existing or newly created)
+     */
     Uni<Document> handleContractDocument(DocumentBuilderRequest request);
 
     /**
-     * Handles a contract document for multi-signature flows.
-     * When signingStep > 1, always creates a new document record.
-     * When signingStep == 1, behaves like the standard single-signature flow.
+     * Variant of handleContractDocument that accepts a previously-loaded Document.
+     * This avoids an extra repository lookup when the caller already fetched the
+     * most-recent document (useful for upload flows that already called findByOnboardingId).
+     *
+     * Implementations should prefer the provided existingDocument when non-null.
      *
      * @param request the document builder request
-     * @param signingStep the signing step (1-based)
+     * @param existingDocument the previously loaded document (may be null)
      * @return the document (existing or newly created)
      */
-    Uni<Document> handleContractDocument(DocumentBuilderRequest request, Integer signingStep);
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request, Document existingDocument);
+
+    Uni<Boolean> deleteDocumentById(String documentId);
 
 }

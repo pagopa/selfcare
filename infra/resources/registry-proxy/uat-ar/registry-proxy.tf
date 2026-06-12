@@ -237,10 +237,6 @@ locals {
       value = "https://selc-${module.local.config.env_short}-weu-ar-srch.search.windows.net/"
     },
     {
-      name  = "AZURE_SEARCH_INSTITUTION_INDEX"
-      value = "institution-index-ar"
-    },
-    {
       name  = "AZURE_SEARCH_IPA_INSTITUTION_INDEX"
       value = module.ai_search_ipa.institution_index_name
     },
@@ -400,7 +396,7 @@ module "container_app_registry_proxy_ms" {
   probes                         = local.probes
   tags                           = module.local.config.tags
   dapr_settings = [{
-    app_id       = "party-reg-proxy"
+    app_id       = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
     app_port     = "8080"
     app_protocol = "http"
   }]

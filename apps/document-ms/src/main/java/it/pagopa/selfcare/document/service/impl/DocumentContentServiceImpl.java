@@ -58,6 +58,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 public class DocumentContentServiceImpl implements DocumentContentService {
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
     private static final String FILE_NAME_AGGREGATES_CSV = "aggregates.csv";
+    private static final String PATH_SEPARATOR = "/";
 
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
@@ -239,7 +240,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                     String basePath = documentMsConfig.getContractPath();
                     String originalSignedPath = DocumentFileUtils.buildAndValidateContractFilePath(document.getContractSigned(), basePath, true);
-                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), basePath, false);
+                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + PATH_SEPARATOR + document.getContractFilename(), basePath, false);
 
                     String deletedSignedContract;
                     String deletedContractFile;
@@ -368,19 +369,24 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
   @Override
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
-      InputStream fileUpload, String fileName) {
+                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck, int signingStep) {
 
-    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
-        sanitize(onboardingId), sanitize(request.getProductId()));
+    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}, signingStep={}",
+        sanitize(onboardingId), sanitize(request.getProductId()), signingStep);
     long start = System.currentTimeMillis();
 
     return saveInputStreamToTempFile(fileUpload, fileName)
         .chain(physicalFile ->
-            resolveNextSigningStep(onboardingId)
-                .chain(nextStep -> handleSignedContractUpload(onboardingId, request, skipSignatureVerification, physicalFile, fileName, nextStep))
+                handleSignedContractUpload(
+                    onboardingId,
+                    request,
+                    skipSignatureVerification,
+                    physicalFile,
+                    fileName,
+                    signingStep,
+                    skipSignerIdentityCheck)
                 .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
-                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId()))
-        );
+                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
   }
 
     private Uni<File> saveInputStreamToTempFile(InputStream fileUpload, String fileName) {
@@ -396,28 +402,67 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private Uni<String> handleSignedContractUpload(String onboardingId, DocumentBuilderRequest request,
-            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep) {
+            boolean skipSignatureVerification, File physicalFile, String fileName, int nextStep, boolean skipSignerIdentityCheck) {
 
         log.info("handleSignedContractUpload: onboardingId={}, nextStep={}, fileName={}",
                 sanitize(onboardingId), nextStep, sanitize(fileName));
 
-        return documentService.handleContractDocument(request, nextStep)
-            .onFailure().retry()
+        return documentRepository.findByOnboardingId(onboardingId)
+                .onFailure().retry()
                 .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
                 .atMost(retryMaxAttempts)
-            .invoke(document -> {
-                document.setSigningStep(nextStep);
-                log.info("Document id={} for onboardingId={}: signingStep set to {}",
-                        sanitize(document.getId()), sanitize(onboardingId), nextStep);
-            })
-            .call(document -> signatureService.verifyContractSignature(
-                    onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification))
-            .chain(document -> {
-                String signedName = buildSignedFileName(document, fileName, onboardingId, nextStep);
-                log.info("Uploading signed contract for onboardingId={}, signingStep={}, blobFileName={}",
-                        sanitize(onboardingId), nextStep, sanitize(signedName));
-                return uploadToAzureAndUpdateDb(document, physicalFile, signedName);
-            });
+                .chain(previousDocument -> documentService.handleContractDocument(request, previousDocument)
+                        .onFailure().retry()
+                        .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                        .atMost(retryMaxAttempts)
+                        .invoke(document -> {
+                            document.setSigningStep(nextStep);
+                            log.info("Document id={} for onboardingId={}: signingStep set to {}",
+                                    sanitize(document.getId()), sanitize(onboardingId), nextStep);
+                        })
+                        .chain(document -> {
+                            boolean isNewlyDocument = Objects.isNull(previousDocument)
+                                    || !Objects.equals(previousDocument.getId(), document.getId());
+
+                            return signatureService.verifyContractSignature(
+                                            onboardingId, physicalFile, request.getFiscalCodes(), skipSignatureVerification, skipSignerIdentityCheck)
+                                    .onFailure().call(signatureError -> rollbackCreatedDocumentAfterSignatureFailure(
+                                            isNewlyDocument, document))
+                                    .replaceWith(document);
+                        })
+                        .chain(document -> {
+                            String signedName = buildSignedFileName(document, fileName, onboardingId, nextStep);
+                            log.info("Uploading signed contract for onboardingId={}, signingStep={}, blobFileName={}",
+                                    sanitize(onboardingId), nextStep, sanitize(signedName));
+                            return uploadToAzureAndUpdateDb(document, physicalFile, signedName);
+                        }));
+    }
+
+    private Uni<Void> rollbackCreatedDocumentAfterSignatureFailure(boolean isNewlyDocument, Document document) {
+        if (!isNewlyDocument) {
+            log.warn("Signature verification failed for onboardingId={}. Reused document id={} not deleted.",
+                    sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
+            return Uni.createFrom().voidItem();
+        }
+
+        return documentService.deleteDocumentById(document.getId())
+                .onFailure()
+                .retry()
+                .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                .atMost(retryMaxAttempts)
+                .invoke(deleted -> {
+                    if (Boolean.TRUE.equals(deleted)) {
+                        log.warn("Signature verification failed for onboardingId={}. Rollback deleted document id={}",
+                                sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
+                    } else {
+                        log.warn("Signature verification failed for onboardingId={}. Rollback found no document to delete for id={}",
+                                sanitize(document.getRootOnboardingId()), sanitize(document.getId()));
+                    }
+                })
+                .onFailure().invoke(error -> log.error(
+                        "Signature verification rollback failed for onboardingId={}, documentId={}",
+                        sanitize(document.getRootOnboardingId()), sanitize(document.getId()), error))
+                .onFailure().recoverWithNull().replaceWithVoid();
     }
 
     private String buildSignedFileName(Document document, String originalFileName, String onboardingId, int signingStep) {
@@ -435,26 +480,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 sanitize(onboardingId), sanitize(productId));
     }
 
-    /**
-     * Determina il prossimo signingStep interrogando il repository.
-     * Sfrutta findByOnboardingId già esistente (createdAt DESC).
-     * - Se non esiste documento o signingStep è null → 1 (primo upload)
-     * - Se esiste con signingStep = N → N + 1
-     */
-    private Uni<Integer> resolveNextSigningStep(String onboardingId) {
-        return documentRepository.findByOnboardingId(onboardingId)
-            .onItem().transform(latestDoc -> {
-                if (latestDoc == null || latestDoc.getSigningStep() == null) {
-                    log.info("resolveNextSigningStep for onboardingId={}: no previous signingStep found, nextStep=1",
-                            sanitize(onboardingId));
-                    return 1;
-                }
-                int nextStep = latestDoc.getSigningStep() + 1;
-                log.info("resolveNextSigningStep for onboardingId={}: latest signingStep={}, nextStep={}",
-                        sanitize(onboardingId), latestDoc.getSigningStep(), nextStep);
-                return nextStep;
-            });
-    }
 
     // ==================== Private Reactive I/O isolation methods ====================
 
@@ -569,7 +594,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             try {
                 azureBlobClient.uploadFile(ctx.storagePath, ctx.filename, Files.readAllBytes(ctx.pdfFile.toPath()));
                 return CreatePdfResponse.builder()
-                        .storagePath(ctx.storagePath + "/" + ctx.filename)
+                        .storagePath(ctx.storagePath + PATH_SEPARATOR + ctx.filename)
                         .filename(ctx.filename)
                         .build();
             } catch (IOException e) {

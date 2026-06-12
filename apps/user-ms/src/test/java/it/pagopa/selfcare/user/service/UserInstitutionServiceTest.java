@@ -351,6 +351,26 @@ class UserInstitutionServiceTest {
     }
 
     @Test
+    void findAllWithFilterBatch() {
+        Map<String, Object> parameterMap = new HashMap<>();
+        parameterMap.put("institutionId", "institutionId");
+        UserInstitution userInstitution = createDummyUserInstitution();
+        PanacheMock.mock(UserInstitution.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(UserInstitution.find(any(Document.class))).thenReturn(query);
+        when(query.withBatchSize(anyInt())).thenReturn(query);
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+
+        AssertSubscriber<UserInstitution> subscriber = userInstitutionService.findAllWithFilter(parameterMap, 500)
+            .subscribe().withSubscriber(AssertSubscriber.create(10));
+
+        List<UserInstitution> actual = subscriber.assertCompleted().getItems();
+        assertNotNull(actual);
+        assertEquals(1, actual.size());
+    }
+
+    @Test
     void findAllAfterDate(){
         Map<String, Object> parameterMap = new HashMap<>();
         parameterMap.put("institutionId", "institutionId");

@@ -15,6 +15,7 @@ public class ProductBaseFields {
 
   @NotBlank private String productId;
 
+  private String parentId;
   private String alias;
   private String title;
   private String description;
@@ -31,6 +32,8 @@ public class ProductBaseFields {
   private List<EmailTemplateConfig> emailTemplates;
   private List<BackOfficeEnvironmentConfiguration> backOfficeEnvironmentConfigurations;
   private List<String> testEnvProductIds;
+  private List<String> institutionTypesAllowed;
   private SigningConfiguration signingConfiguration;
   private List<ManagingInstitution> managingInstitutions;
+  private List<WorkflowRule> workflowRules;
 }

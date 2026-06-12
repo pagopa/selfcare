@@ -12,7 +12,7 @@ terraform {
     }
     github = {
       source  = "integrations/github"
-      version = "~> 6.0"
+      version = "~> 6.12"
     }
 
   }
@@ -41,6 +41,7 @@ provider "azurerm" {
 
 provider "github" {
   owner = "pagopa"
+  token = data.azurerm_key_vault_secret.github_path_token.value
 }
 
 data "azurerm_subscription" "current" {}

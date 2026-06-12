@@ -1,0 +1,40 @@
+{
+  "id": "group_id",
+  "institutionId": "institution_id",
+  "productId": "product_id",
+  "name": "group_name",
+  "description": "group_description",
+  "status": "ACTIVE",
+  "members": [
+    {
+      "id": "7c83a18e-e4aa-4dc5-8546-f1a3fd7890a9",
+      "name": "user_name",
+      "surname": "user_family_name",
+      "email": "user_contact_email",
+      "role": "ADMIN",
+      "product": {
+        "id": "product_id",
+        "title": "product_title",
+        "roleInfos": [
+          {
+            "relationshipId": "relationship_id",
+            "role": "role",
+            "status": "status",
+            "selcRole": "ADMIN"
+          }
+        ]
+      },
+      "status": "active"
+    }
+  ],
+  "createdBy": {
+    "id": "f8bce6fc-848c-4a03-8ef3-01ac36a38299",
+    "name": "creator_name",
+    "surname": "creator_family_name"
+  },
+  "modifiedBy": {
+    "id": "3f62c13b-9d33-4768-9a43-0e10a0bea2a9",
+    "name": "modifier_name",
+    "surname": "modifier_family_name"
+  }
+}

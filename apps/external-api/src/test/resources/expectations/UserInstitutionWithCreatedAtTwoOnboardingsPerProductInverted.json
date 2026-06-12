@@ -1,0 +1,30 @@
+[
+  {
+    "institutionId": "123e4567-e89b-12d3-a456-426614174000",
+    "userId": "123e4567-e89b-12d3-a456-426614174000",
+    "userMailUuid": "123e4567-e89b-12d3-a456-426614174000",
+    "products": [
+      {
+        "productId": "product1",
+        "status": "ACTIVE",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "createdAt": "2022-08-08T09:13:00.837Z"
+      },
+      {
+        "productId": "product2",
+        "status": "ACTIVE",
+        "productRole": "referente amministrativo",
+        "role": "MANAGER",
+        "createdAt": "2023-09-10T13:14:00.837Z"
+      },
+      {
+        "productId": "product2",
+        "status": "REJECTED",
+        "productRole": "admin",
+        "role": "DELEGATE",
+        "createdAt": "2022-08-08T09:13:00.837Z"
+      }
+    ]
+  }
+]

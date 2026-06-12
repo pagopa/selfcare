@@ -39,6 +39,7 @@ class ProductMapperTest {
 
   @Test
   void mapContracts_shouldConvertModel() throws IOException {
+    // given
     try (InputStream inputStream =
         getClass().getClassLoader().getResourceAsStream("product.json")) {
       assertNotNull(inputStream, "File product.json not found  in src/test/resources");
@@ -50,10 +51,25 @@ class ProductMapperTest {
 
       assertNotNull(product);
 
+      // when
       it.pagopa.selfcare.product.entity.Product productEntity = mapper.toResource(product);
 
+      // then
       assertNotNull(productEntity);
       assertEquals(product.getProductId(), productEntity.getId());
+      assertEquals(product.getParentId(), productEntity.getParentId());
+      assertEquals("https://baseurl.it/", productEntity.getUrlPublic());
+      assertEquals(
+          "https://baseurl.it/idp/selfcare/resolve-identity?id=<IdentityToken>",
+          productEntity.getUrlBO());
+      assertNotNull(productEntity.getBackOfficeEnvironmentConfigurations());
+      assertFalse(productEntity.getBackOfficeEnvironmentConfigurations().containsKey("PROD"));
+      assertTrue(productEntity.getBackOfficeEnvironmentConfigurations().containsKey("Locale"));
+      assertEquals(
+          product.getInstitutionTypesAllowed(), productEntity.getInstitutionTypesAllowed());
+      assertEquals(
+          product.getFeatures().isRequiresParentOnboarding(),
+          productEntity.isRequiresParentOnboarding());
       assertEquals(product.getDescription(), productEntity.getDescription());
       assertEquals("identity.it", productEntity.getIdentityTokenAudience());
       String jsonEntity =

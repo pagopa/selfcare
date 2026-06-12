@@ -29,6 +29,7 @@ public class Product {
     private boolean enabled = false;
     private boolean delegable;
     private boolean invoiceable;
+    private boolean requiresParentOnboarding;
     private ProductStatus status;
     private String parentId;
     private List<String> testEnvProductIds;
@@ -246,6 +247,14 @@ public class Product {
 
     public void setInvoiceable(boolean invoiceable) {
         this.invoiceable = invoiceable;
+    }
+
+    public boolean isRequiresParentOnboarding() {
+        return requiresParentOnboarding;
+    }
+
+    public void setRequiresParentOnboarding(boolean requiresParentOnboarding) {
+        this.requiresParentOnboarding = requiresParentOnboarding;
     }
 
     public ProductStatus getStatus() {

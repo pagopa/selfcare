@@ -1,0 +1,63 @@
+meta {
+  name: getUserInstitution
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiBaseUrl}}/external/v2/users?institutionId={{institutionId}}&userId={{userId}}&roles=DELEGATE&states=ACTIVE&products=prod-pn&productRoles=admin&page=0&size=100
+  body: none
+  auth: inherit
+}
+
+params:query {
+  institutionId: {{institutionId}}
+  userId: {{userId}}
+  roles: DELEGATE
+  states: ACTIVE
+  products: prod-pn
+  productRoles: admin
+  page: 0
+  size: 100
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeyPN}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  const objectIdRegex = /^[0-9a-f]{24}$/;
+  const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/; 
+  
+  test("getUserInstitution ok", function() {
+      expect(res.getStatus()).to.equal(200);
+  
+      const jsonData = res.getBody();
+  
+      expect(jsonData).to.be.an("array");
+  
+      jsonData.forEach(userInstitution => {
+          expect(userInstitution).to.have.property("id").to.match(objectIdRegex);
+          expect(userInstitution).to.have.property("userId").to.match(uuidRegex);
+          expect(userInstitution).to.have.property("institutionId").to.match(uuidRegex);
+          expect(userInstitution).to.have.property("institutionDescription").that.is.a("string").and.is.not.empty;
+          expect(userInstitution).to.have.property("institutionRootName").that.is.a("string").and.is.not.empty;         
+          // Products array validation
+          expect(userInstitution).to.have.property("products").that.is.an("array");
+          
+          userInstitution.products.forEach(product => {               
+              expect(product).to.have.property("productId").that.is.a("string").and.is.not.empty;
+              expect(product).to.have.property("productRole").that.is.a("string");
+              expect(product.productRoleLabel).to.be.a("string");
+              expect(product).to.have.property("status").that.is.a("string"); 
+              expect(product).to.have.property("role").that.is.a("string");                     
+              expect(product.createdAt).to.match(isoDateRegex);                
+          });
+      });
+  });
+}
+
+settings {
+  encodeUrl: true
+}

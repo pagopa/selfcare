@@ -1565,6 +1565,7 @@ class DocumentContentServiceImplTest {
         String fileName = "filename";
         List<String> fiscalCodes = List.of("FC123");
         boolean skipVerification = false;
+        boolean skipSignerIdentityCheck = false;
 
         InputStream dummyFile = new ByteArrayInputStream("dummy content".getBytes());
 
@@ -1573,9 +1574,9 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
-        when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification)))
+        when(signatureService.verifyContractSignature(eq(ONBOARDING_ID), any(File.class), eq(fiscalCodes), eq(skipVerification), eq(skipSignerIdentityCheck)))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
         when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
@@ -1585,8 +1586,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, dummyFile, fileName, false, 1).await();
 
         // Assert
         assertDoesNotThrow(awaiter::indefinitely);
@@ -1604,17 +1604,16 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
 
         // Simuliamo il fallimento della firma
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false, 1).await();
 
         // Assert
         InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
@@ -1623,6 +1622,79 @@ class DocumentContentServiceImplTest {
         // Azure e DB non devono essere mai chiamati
         verify(azureBlobClient, Mockito.never()).uploadFile(anyString(), anyString(), any(byte[].class));
         verify(documentService, Mockito.never()).updateDocumentContractFilesById(any());
+    }
+
+    @Test
+    void uploadSignedContract_shouldRollbackNewDocument_whenSignatureVerificationFails_andDocumentCreatedInCall() {
+        // Arrange
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
+        String fileName = "filename";
+
+        // No previous document in DB
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // handleContractDocument creates a new document for this call
+        Document newDoc = buildDocument();
+        newDoc.setId("new-doc-id");
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
+                .thenReturn(Uni.createFrom().item(newDoc));
+
+        // signature verification fails
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
+
+        // deleteDocumentById will be invoked as part of rollback - mock success
+        when(documentService.deleteDocumentById("new-doc-id"))
+                .thenReturn(Uni.createFrom().item(true));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false, 1).await();
+
+        // Assert
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("Invalid Signature", ex.getMessage());
+
+        // Rollback: the newly created document must be deleted
+        verify(documentService).deleteDocumentById("new-doc-id");
+        // Azure and DB update must not be called
+        verify(azureBlobClient, never()).uploadFile(anyString(), anyString(), any(byte[].class));
+        verify(documentService, never()).updateDocumentContractFilesById(any());
+    }
+
+    @Test
+    void uploadSignedContract_shouldNotRollbackWhenReusingExistingDocument_onSignatureFailure() {
+        // Arrange
+        InputStream mockFile = new ByteArrayInputStream("dummy content".getBytes());
+        String fileName = "filename";
+
+        // There is a previous document in DB
+        Document existingDoc = buildDocument();
+        existingDoc.setId("existing-id");
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(existingDoc));
+
+        // handleContractDocument returns the same existing document (reuse)
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), any(Document.class)))
+                .thenReturn(Uni.createFrom().item(existingDoc));
+
+        // signature verification fails
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid Signature", "400")));
+
+        // Act
+        var awaiter = documentContentService.uploadSignedContract(
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false, 1).await();
+
+        // Assert
+        InvalidRequestException ex = assertThrows(InvalidRequestException.class, awaiter::indefinitely);
+        assertEquals("Invalid Signature", ex.getMessage());
+
+        // Since the document was reused (not newly created), rollback should NOT delete it
+        verify(documentService, never()).deleteDocumentById(anyString());
+        verify(azureBlobClient, never()).uploadFile(anyString(), anyString(), any(byte[].class));
+        verify(documentService, never()).updateDocumentContractFilesById(any());
     }
 
     @Test
@@ -1635,9 +1707,9 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
 
@@ -1647,8 +1719,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName, false, 1).await();
 
         // Assert
         SelfcareAzureStorageException ex = assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
@@ -1669,9 +1740,9 @@ class DocumentContentServiceImplTest {
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().nullItem());
-        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), anyInt()))
+        when(documentService.handleContractDocument(any(DocumentBuilderRequest.class), isNull()))
                 .thenReturn(Uni.createFrom().item(mockDocument));
-        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean()))
+        when(signatureService.verifyContractSignature(anyString(), any(File.class), any(), anyBoolean(), anyBoolean()))
                 .thenReturn(Uni.createFrom().voidItem());
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
 
@@ -1685,8 +1756,7 @@ class DocumentContentServiceImplTest {
 
         // Act
         var awaiter = documentContentService.uploadSignedContract(
-                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName
-        ).await();
+                ONBOARDING_ID, new DocumentBuilderRequest(), false, mockFile, fileName,false, 1).await();
 
         // Assert
         RuntimeException ex = assertThrows(RuntimeException.class, awaiter::indefinitely);

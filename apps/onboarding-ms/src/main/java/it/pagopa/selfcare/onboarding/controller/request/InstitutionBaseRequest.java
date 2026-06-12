@@ -46,4 +46,6 @@ public class InstitutionBaseRequest {
 
     /* when onboarding is for PRV prod-idpay-merchant */
     private List<String> atecoCodes;
+
+    private Boolean isTest;
 }

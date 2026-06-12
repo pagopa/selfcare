@@ -24,7 +24,7 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
-        <onboarding-sdk.version>0.16.0</onboarding-sdk.version>
+        <onboarding-sdk.version>0.16.2</onboarding-sdk.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -227,4 +227,17 @@
             </properties>
         </profile>
     </profiles>
+    <repositories>
+        <repository>
+            <id>selfcare-platform</id>
+            <url>
+                https://pkgs.dev.azure.com/pagopaspa/selfcare-platform-app-projects/_packaging/selfcare-platform/maven/v1
+            </url>
+        </repository>
+        <repository>
+            <id>selfcare</id>
+            <name>Selfcare SDK</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+        </repository>
+    </repositories>
 </project>

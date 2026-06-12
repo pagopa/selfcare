@@ -138,7 +138,7 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "https://selc-${module.local.config.env_short}-ms-institution-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
@@ -171,6 +171,10 @@ locals {
     {
       name  = "MS_DOCUMENT_URL"
       value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 

@@ -139,32 +139,32 @@ public class DocumentServiceImpl implements DocumentService {
         return handleContractDocument(request);
     }
 
+    @Override
     public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
-        return handleContractDocument(request, null);
+        return documentRepository.findByOnboardingId(request.getOnboardingId())
+                .chain(existing -> handleContractDocument(request, existing));
     }
 
-    @Override
-    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, Integer signingStep) {
-        String onboardingId = request.getOnboardingId();
 
-        return documentRepository.findByOnboardingId(onboardingId)
-                .chain(existing -> {
-                    if (existing == null) {
-                        log.info("No document found for onboardingId={}. Creating new document record.",
-                                sanitize(onboardingId));
-                        return createNewContractDocument(request);
-                    }
-                    if (existing.getSigningStep() != null) {
-                        log.info("Document found for onboardingId={} with signingStep={}. " +
-                                "Document already signed, creating NEW document record for next signing step.",
-                                sanitize(onboardingId), existing.getSigningStep());
-                        return createNewContractDocument(request);
-                    }
-                    log.info("Document found for onboardingId={} with signingStep=null (not yet signed). " +
-                            "Reusing existing document id={}.",
-                            sanitize(onboardingId), sanitize(existing.getId()));
-                    return Uni.createFrom().item(existing);
-                });
+    @Override
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, Document existingDocument) {
+        if (existingDocument == null) {
+            log.info("No document found for onboardingId={}. Creating new document record.",
+                    sanitize(request.getOnboardingId()));
+            return createNewContractDocument(request);
+        }
+
+        if (existingDocument.getSigningStep() != null) {
+            log.info("Document found for onboardingId={} with signingStep={}. " +
+                            "Document already signed, creating NEW document record for next signing step.",
+                    sanitize(request.getOnboardingId()), existingDocument.getSigningStep());
+            return createNewContractDocument(request);
+        }
+
+        log.info("Document found for onboardingId={} with signingStep=null (not yet signed). " +
+                        "Reusing existing document id={}.",
+                sanitize(request.getOnboardingId()), sanitize(existingDocument.getId()));
+        return Uni.createFrom().item(existingDocument);
     }
 
     private Uni<Document> createNewContractDocument(DocumentBuilderRequest request) {
@@ -242,6 +242,19 @@ public class DocumentServiceImpl implements DocumentService {
                 .onItem().invoke(() -> {
                     log.info("Document persisted for onboardingId: {}", sanitize(request.getOnboardingId()));
                     telemetryService.trackDocumentImported(request.getOnboardingId(), request.getProductId());
+                });
+    }
+
+    @Override
+    public Uni<Boolean> deleteDocumentById(String documentId) {
+        return documentRepository.deleteDocument(documentId)
+                .onItem().transform(deleted -> {
+                    if (deleted) {
+                        log.info("Document with id {} deleted successfully", sanitize(documentId));
+                    } else {
+                        log.info("Document with id {} not found for deletion", sanitize(documentId));
+                    }
+                    return deleted;
                 });
     }
 

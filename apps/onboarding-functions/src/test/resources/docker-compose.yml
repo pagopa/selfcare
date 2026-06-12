@@ -9,7 +9,7 @@ services:
       - "./db:/docker-entrypoint-initdb.d"
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: mcr.microsoft.com/azure-storage/azurite:${AZURITE_IMAGE_TAG:-latest}
     ports:
       - "10000:10000"
       - "10001:10001"
@@ -22,8 +22,8 @@ services:
 
   azure-cli:
     build:
-      context: "."
-      dockerfile: "Dockerfile-azure-cli"
+      context: ../../../../..
+      dockerfile: ./apps/onboarding-functions/src/test/resources/Dockerfile-azure-cli
     depends_on:
       - azurite
     volumes:
@@ -37,8 +37,8 @@ services:
   onboarding-function:
     platform: linux/amd64
     build:
-      context: ../../../../../..
-      dockerfile: ./selfcare/apps/onboarding-functions/src/test/resources/Dockerfile-fn
+      context: ../../../../..
+      dockerfile: ./apps/onboarding-functions/src/test/resources/Dockerfile-fn
       secrets:
         - maven_settings
     ports:
@@ -47,12 +47,20 @@ services:
     networks:
       - developer-network
     depends_on:
-      - mongo-db
-      - mock-server
-      - azure-cli
-      - user-ms
-      - institution-ms
-      - document-ms
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      mock-server:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
+      user-ms:
+        condition: service_started
+      institution-ms:
+        condition: service_started
+      document-ms:
+        condition: service_started
     env_file:
       - test-integration-function.env
     environment:
@@ -64,7 +72,7 @@ services:
 
   user-ms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:${USER_MS_IMAGE_TAG:-latest}
     ports:
       - "8087:8087"
     env_file:
@@ -72,13 +80,18 @@ services:
     networks:
       - developer-network
     depends_on:
-      - mongo-db
-      - mock-server
-      - azure-cli
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      mock-server:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
 
   institution-ms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:${INSTITUTION_MS_IMAGE_TAG:-latest}
     ports:
       - "8082:8082"
     networks:
@@ -86,9 +99,14 @@ services:
     env_file:
       - test-institution-ms.env
     depends_on:
-      - mongo-db
-      - mock-server
-      - azure-cli
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      mock-server:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
 
   mock-server:
     platform: linux/amd64
@@ -106,10 +124,14 @@ services:
 
   document-ms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    image: ghcr.io/pagopa/selfcare-document-ms:${DOCUMENT_MS_IMAGE_TAG:-latest}
     depends_on:
-      - azurite
-      - mongo-db
+      azurite:
+        condition: service_started
+      mongo-db:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
     ports:
       - "8091:8091"
     networks:

@@ -5,9 +5,9 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.*;
-import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
@@ -24,7 +24,7 @@ public interface UserService {
 
     Uni<UserResponse> retrievePerson(String userId, String productId, String institutionId);
 
-    Uni<UserInfo> retrieveBindings(String institutionId, String userId, String[] states);
+    Uni<UserInfoResponse> retrieveBindings(String institutionId, String userId, String[] states);
 
     Uni<Void> updateUserStatusWithOptionalFilter(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status);
 
@@ -66,7 +66,7 @@ public interface UserService {
 
     Uni<Boolean> checkUser(String fiscalCode, String institutionId, String productId);
 
-    Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId);
+    Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, EmailType type, String institutionId);
 
     Uni<Void> sendEmailOtp(String userId, String institutionalEmail, String otp);
 

@@ -38,8 +38,8 @@ public class SignatureController {
             request.getOnboardingId(),
             request.getFile(),
             request.getFiscalCodes(),
-            request.getSkipSignatureVerification()
-    );
+            request.getSkipSignatureVerification(),
+            false);
   }
 
 }

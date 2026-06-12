@@ -178,7 +178,7 @@ locals {
     },
     {
       name  = "OTP_DAILY_LIMIT"
-      value = 200
+      value = -1
     }
   ]
 

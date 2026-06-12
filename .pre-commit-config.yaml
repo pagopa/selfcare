@@ -8,10 +8,14 @@ repos:
         files: infra/(apps|cert|commons|repository)
 
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.92.2
+    rev: v1.105.0
     hooks:
       - id: terraform_fmt
       - id: terraform_docs
+      - id: terraform_validate
+        args:
+          - --args=-json
+          - --args=-no-color
 #      - id: terraform_tfsec
 #        args:
 #          - --hook-config=--retry-once-with-cleanup=true

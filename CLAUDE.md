@@ -40,7 +40,7 @@ mvn -f apps/webhook/pom.xml quarkus:dev
 mvn --projects :test-coverage --also-make verify -Pproduct,report
 
 # Change library version
-mvn versions:set -DnewVersion=0.1.1 --projects :cucumber-sdk && mvn versions:commit
+mvn versions:set -DnewVersion=0.1.2 --projects :cucumber-sdk && mvn versions:commit
 ```
 
 ## Architecture

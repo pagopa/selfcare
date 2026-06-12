@@ -26,8 +26,10 @@ on:
         options:
           - auth
           - iam
+          - dashboard-bff
           - delegation-cdc
           - document-ms
+          - external-api
           - institution-ms
           - institution-send-mail-scheduler
           - onboarding-bff

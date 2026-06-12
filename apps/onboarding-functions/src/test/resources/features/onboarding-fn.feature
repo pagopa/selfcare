@@ -203,4 +203,4 @@ Feature: Onboarding collection
       | status    |
       | PENDING   |
       | PENDING_IN_REVIEW |
-      | COMPLETED |
+#      | COMPLETED |

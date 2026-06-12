@@ -1,14 +1,14 @@
 package it.pagopa.selfcare.onboarding.service.impl;
-import it.pagopa.selfcare.onboarding.service.*;
-
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.*;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
-import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
+import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
@@ -16,12 +16,17 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.ProductMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
+import it.pagopa.selfcare.onboarding.service.CompletionService;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
+import it.pagopa.selfcare.onboarding.service.NotificationService;
+import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -42,10 +47,9 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
-
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.REJECTED;
 import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_CED;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_PN;
 import static it.pagopa.selfcare.onboarding.common.WorkflowType.*;
 import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
@@ -57,6 +61,18 @@ import static org.openapi.quarkus.core_json.model.DelegationResponse.StatusEnum.
 public class CompletionServiceImpl implements CompletionService {
 
 
+    private static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
+    private final InstitutionMapper institutionMapper;
+    private final OnboardingRepository onboardingRepository;
+    private final ObjectMapper objectMapper;
+    private final UserMapper userMapper;
+    private final ProductMapper productMapper;
+    private final NotificationService notificationService;
+    private final ProductService productService;
+    private final OnboardingMapper onboardingMapper;
+    private final OnboardingService onboardingService;
+    private final boolean hasToSendEmail;
+    private final boolean forceInstitutionCreation;
     @RestClient
     @Inject
     InstitutionApi institutionApi;
@@ -90,28 +106,15 @@ public class CompletionServiceImpl implements CompletionService {
     @Inject
     DocumentService documentService;
 
-
-    private final InstitutionMapper institutionMapper;
-    private final OnboardingRepository onboardingRepository;
-    private final ObjectMapper objectMapper;
-    private final UserMapper userMapper;
-    private final ProductMapper productMapper;
-    private final NotificationService notificationService;
-    private final ProductService productService;
-    private final OnboardingMapper onboardingMapper;
-    private final boolean hasToSendEmail;
-    private final boolean forceInstitutionCreation;
-    private static final String USERS_FIELD_LIST = "fiscalCode,familyName,name";
-
     public CompletionServiceImpl(ProductService productService,
-                                    NotificationService notificationService,
-                                    OnboardingMapper onboardingMapper,
-                                    UserMapper userMapper,
-                                    ProductMapper productMapper,
-                                    InstitutionMapper institutionMapper,
-                                    OnboardingRepository onboardingRepository, ObjectMapper objectMapper,
-                                    @ConfigProperty(name = "onboarding-functions.persist-users.send-mail") boolean hasToSendEmail,
-                                    @ConfigProperty(name = "onboarding-functions.force-institution-persist") boolean forceInstitutionCreation) {
+                                 NotificationService notificationService,
+                                 OnboardingMapper onboardingMapper,
+                                 UserMapper userMapper,
+                                 ProductMapper productMapper,
+                                 InstitutionMapper institutionMapper,
+                                 OnboardingRepository onboardingRepository, ObjectMapper objectMapper, OnboardingService onboardingService,
+                                 @ConfigProperty(name = "onboarding-functions.persist-users.send-mail") boolean hasToSendEmail,
+                                 @ConfigProperty(name = "onboarding-functions.force-institution-persist") boolean forceInstitutionCreation) {
         this.institutionMapper = institutionMapper;
         this.onboardingRepository = onboardingRepository;
         this.objectMapper = objectMapper;
@@ -120,8 +123,21 @@ public class CompletionServiceImpl implements CompletionService {
         this.onboardingMapper = onboardingMapper;
         this.userMapper = userMapper;
         this.productMapper = productMapper;
+        this.onboardingService = onboardingService;
         this.hasToSendEmail = hasToSendEmail;
         this.forceInstitutionCreation = forceInstitutionCreation;
+    }
+
+    private static DelegationRequest getDelegationRequest(Onboarding onboarding) {
+        DelegationRequest delegationRequest = new DelegationRequest();
+        delegationRequest.setProductId(onboarding.getProductId());
+        delegationRequest.setType(DelegationRequest.TypeEnum.EA);
+        delegationRequest.setInstitutionFromName(onboarding.getInstitution().getDescription());
+        delegationRequest.setFrom(onboarding.getInstitution().getId());
+        delegationRequest.setTo(onboarding.getAggregator().getId());
+        delegationRequest.setInstitutionToName(onboarding.getAggregator().getDescription());
+        delegationRequest.setInstitutionFromRootName(onboarding.getInstitution().getParentDescription());
+        return delegationRequest;
     }
 
     @Override
@@ -199,9 +215,28 @@ public class CompletionServiceImpl implements CompletionService {
         List<String> destinationMails = getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
         Product product = productService.getProductIsValid(onboarding.getProductId());
-        notificationService.sendCompletedEmail(onboarding.getInstitution().getDescription(),
-                destinationMails, product, onboarding.getInstitution().getInstitutionType(),
-                onboardingWorkflow);
+        notificationService.sendCompletedEmail(destinationMails, product, onboardingWorkflow);
+    }
+
+    @Override
+    public void sendDeletedEmail(String onboardingId) {
+        Optional<Onboarding> onboardingOpt = onboardingService.getOnboarding(onboardingId);
+        if (onboardingOpt.isEmpty()) {
+            log.warn("Onboarding {} not found, skipping deleted email notification", onboardingId);
+            return;
+        }
+        Onboarding onboarding = onboardingOpt.get();
+        if (Objects.isNull(onboarding.getInstitution().getDigitalAddress())) {
+            log.warn("Digital address is null for onboarding {}, skipping deleted email notification", onboardingId);
+            return;
+        }
+        // TODO only for CED RN, asap for all delete action
+        if (PROD_CED.getValue().equalsIgnoreCase(onboarding.getProductId())) {
+            List<String> destinationMails = getDestinationMails(onboarding);
+            destinationMails.add(onboarding.getInstitution().getDigitalAddress());
+            Product product = productService.getProductIsValid(onboarding.getProductId());
+            notificationService.sendDeletedEmail(destinationMails, product, onboarding);
+        }
     }
 
     @Override
@@ -234,10 +269,12 @@ public class CompletionServiceImpl implements CompletionService {
         }
     }
 
-    boolean verifyAllowedOnboardingByWorkflowType(WorkflowType workflowType){
+    boolean verifyAllowedOnboardingByWorkflowType(WorkflowType workflowType) {
         EnumSet<WorkflowType> allowedWorkflowType = EnumSet.of(
                 IMPORT_AGGREGATION,
-                INCREMENT_REGISTRATION_AGGREGATOR
+                INCREMENT_REGISTRATION_AGGREGATOR,
+                CONFIRMATION_AGGREGATOR,
+                CONTRACT_REGISTRATION_AGGREGATOR
         );
         return allowedWorkflowType.contains(workflowType);
     }
@@ -256,7 +293,7 @@ public class CompletionServiceImpl implements CompletionService {
     public void sendMailRejection(ExecutionContext context, Onboarding onboarding) {
         List<String> destinationMails = Collections.singletonList(onboarding.getInstitution().getDigitalAddress());
         Product product = productService.getProductIsValid(onboarding.getProductId());
-        notificationService.sendMailRejection(destinationMails, product, onboarding.getReasonForReject());
+        notificationService.sendMailRejection(destinationMails, product, onboarding);
     }
 
     @Override
@@ -283,7 +320,7 @@ public class CompletionServiceImpl implements CompletionService {
         onboardingRequest.setInstitutionType(InstitutionOnboardingRequest.InstitutionTypeEnum.valueOf(onboarding.getInstitution().getInstitutionType().name()));
         onboardingRequest.setIsAggregator(onboarding.getIsAggregator());
         //If contract exists we send the path of the contract
-        if(!onboarding.getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
+        if (!onboarding.getInstitution().getInstitutionType().equals(InstitutionType.PG)) {
             DocumentResponse document = documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
             if (Objects.nonNull(document)) {
                 onboardingRequest.setContractPath(document.getContractSigned());
@@ -396,8 +433,8 @@ public class CompletionServiceImpl implements CompletionService {
     private void setAggregatorInstitutionId(OnboardingAggregateOrchestratorInput input) {
         if (Objects.isNull(input.getInstitution().getId())) {
             Onboarding onboardingAggregator = onboardingRepository.findByFilters(input.getInstitution().getTaxCode(),
-                    null, input.getInstitution().getOrigin().getValue(),
-                    input.getInstitution().getOriginId(), input.getProductId()).stream()
+                            null, input.getInstitution().getOrigin().getValue(),
+                            input.getInstitution().getOriginId(), input.getProductId()).stream()
                     .findFirst()
                     .orElseThrow(() -> new GenericOnboardingException("Onboarding not found"));
             input.getInstitution().setId(onboardingAggregator.getInstitution().getId());
@@ -405,18 +442,6 @@ public class CompletionServiceImpl implements CompletionService {
             onboarding.getInstitution().setId(onboardingAggregator.getInstitution().getId());
             onboardingRepository.persistOrUpdate(onboarding);
         }
-    }
-
-    private static DelegationRequest getDelegationRequest(Onboarding onboarding) {
-        DelegationRequest delegationRequest = new DelegationRequest();
-        delegationRequest.setProductId(onboarding.getProductId());
-        delegationRequest.setType(DelegationRequest.TypeEnum.EA);
-        delegationRequest.setInstitutionFromName(onboarding.getInstitution().getDescription());
-        delegationRequest.setFrom(onboarding.getInstitution().getId());
-        delegationRequest.setTo(onboarding.getAggregator().getId());
-        delegationRequest.setInstitutionToName(onboarding.getAggregator().getDescription());
-        delegationRequest.setInstitutionFromRootName(onboarding.getInstitution().getParentDescription());
-        return delegationRequest;
     }
 
     private void setGSPCategory(InstitutionRequest institutionRequest) {

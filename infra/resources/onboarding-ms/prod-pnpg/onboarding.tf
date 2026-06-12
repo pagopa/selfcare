@@ -14,6 +14,7 @@ module "local" {
   private_dns_name_domain        = "calmmoss-0be48755.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-p-pnpg-cae-cp"
   ca_resource_group_name         = "selc-p-container-app-rg"
+  container_app_min_replicas     = 2
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
   container_app_cpu              = 1.25
@@ -139,7 +140,7 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "https://selc-${module.local.config.env_short}-pnpg-ms-institution-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
@@ -165,6 +166,10 @@ locals {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
       value = "prod-pn-pg"
     },
+    {
+      name = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
+    }
   ]
 
   onboarding_ms_secrets_names = {

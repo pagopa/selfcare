@@ -135,3 +135,6 @@ crash.log
 **/*.p12
 **/*.pfx
 **/secrets.json
+
+### OPEX ###
+!.opex/**

@@ -1,35 +1,57 @@
-name: Run code review infra
+name: Code Review - Cert Infra
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
 
 on:
   workflow_dispatch:
     inputs:
       env:
+        required: true
         type: choice
-        description: Module
+        description: 'Select the Environment'
+        default: dev
         options:
           - dev
           - uat
           - prod
-      th_env:
+      domain:
+        required: true
         type: choice
-        description: Terraform Environment
+        description: 'Select the Domain'
+        default: ar
         options:
-          - dev
-          - dev-pnpg
-          - uat
-          - uat-pnpg
-          - prod
-          - prod-pnpg
+          - ar
+          - pnpg
+
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/cert/**'
+      - '.github/workflows/run_code_review_cert_infra.yml'
+
 jobs:
 
-  code_review_dev:
-    uses: ./.github/workflows/call_code_review_infra.yml
-    name: '[Dev] Code review cert'
+  plan:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: "${{ inputs.env }}-${{ inputs.domain }} Cert Infra Plan"
+    if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
     with:
-      environment: dev
-      tf_environment: ${{ inputs.th_env }}
-      dir: 'infra/cert'
-      env_vars: |
-        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      environment: ${{ inputs.env }}-${{ inputs.domain }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
 

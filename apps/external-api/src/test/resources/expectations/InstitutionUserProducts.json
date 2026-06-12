@@ -1,0 +1,72 @@
+[
+  {
+    "id": "123",
+    "logo": "logoUrl",
+    "logoBgColor": "#FFFFFF",
+    "depictImageUrl": "depictImageUrl",
+    "title": "Title",
+    "description": "ProductDescription",
+    "urlPublic": "urlPublic",
+    "urlBO": "backOfficeUrl",
+    "status": "ACTIVE",
+    "identityTokenAudience": "audience",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": true,
+        "roles": [
+          {
+            "code": "code1",
+            "label": "label1",
+            "description": "description1"
+          },
+          {
+            "code": "code2",
+            "label": "label2",
+            "description": "description2"
+          }
+        ]
+      }
+    },
+    "parentId": "parentProduct",
+    "contractTemplatePath": "contractTemplatePath",
+    "contractTemplateVersion": "1.0.0",
+    "contractTemplateUpdatedAt": "2024-04-17T01:00:00Z",
+    "createdAt": "2024-04-17T01:00:00Z",
+    "roleManagementURL": "roleManagementUrl"
+  },
+  {
+    "id": "321",
+    "logo": "logoUrl",
+    "logoBgColor": "#FFFFFF",
+    "depictImageUrl": "depictImageUrl",
+    "title": "Title",
+    "description": "ProductDescription",
+    "urlPublic": "urlPublic",
+    "urlBO": "backOfficeUrl",
+    "status": "ACTIVE",
+    "identityTokenAudience": "audience",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": true,
+        "roles": [
+          {
+            "code": "code1",
+            "label": "label1",
+            "description": "description1"
+          },
+          {
+            "code": "code2",
+            "label": "label2",
+            "description": "description2"
+          }
+        ]
+      }
+    },
+    "parentId": "parentProduct",
+    "contractTemplatePath": "contractTemplatePath",
+    "contractTemplateVersion": "1.0.0",
+    "contractTemplateUpdatedAt": "2024-04-17T01:00:00Z",
+    "createdAt": "2024-04-17T01:00:00Z",
+    "roleManagementURL": "roleManagementUrl"
+  }
+]

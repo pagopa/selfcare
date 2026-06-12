@@ -191,6 +191,31 @@ resource "azurerm_container_app" "container_app" {
   }
 }
 
+resource "azurerm_monitor_metric_alert" "container_restart" {
+  count = local.restart_alert_enabled ? 1 : 0
+
+  name                = local.restart_alert_name
+  resource_group_name = local.restart_alert_action_group_rg_name
+  scopes              = [azurerm_container_app.container_app.id]
+  description         = "Action will be triggered when the Container App restart count is greater than the configured threshold."
+  severity            = var.restart_alert.severity
+  frequency           = var.restart_alert.frequency
+  window_size         = var.restart_alert.window_size
+  auto_mitigate       = true
+
+  criteria {
+    metric_namespace = "Microsoft.App/containerApps"
+    metric_name      = "RestartCount"
+    aggregation      = "Maximum"
+    operator         = "GreaterThan"
+    threshold        = var.restart_alert.threshold
+  }
+
+  action {
+    action_group_id = data.azurerm_monitor_action_group.restart_alert[0].id
+  }
+}
+
 # data "azurerm_key_vault_access_policy" "keyvault_containerapp_access_policy" {
 #   name        = "${local.project}-keyvault-access-policy-containerapp"
 # }

@@ -104,7 +104,7 @@ locals {
       value = true
     },
     {
-      name = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
+      name  = "USER_MS_EVENTHUB_SELFCARE_FD_ENABLED"
       value = true
     },
     {
@@ -118,6 +118,10 @@ locals {
     {
       name  = "USER_MS_RETRY"
       value = 3
+    },
+    {
+      name  = "SELFCARE_URL"
+      value = "https://dev.selfcare.pagopa.it"
     }
   ]
 

@@ -1,0 +1,15 @@
+{
+  "id": "id",
+  "institutionId": "setInstitutionId",
+  "productId": "productId",
+  "description": "A user group",
+  "name": "UserGroup1",
+  "status": "ACTIVE",
+  "members": [
+    "123e4567-e89b-12d3-a456-426614174000"
+  ],
+  "createdAt": "2022-01-01T00:00:00Z",
+  "createdBy": "123e4567-e89b-12d3-a456-426614174000",
+  "modifiedAt": "2022-01-02T00:00:00Z",
+  "modifiedBy": "123e4567-e89b-12d3-a456-426614174000"
+}

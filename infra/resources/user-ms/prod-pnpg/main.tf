@@ -115,7 +115,11 @@ locals {
     {
       name  = "USER_MS_RETRY"
       value = 3
-    }
+    },
+    {
+      name  = "SELFCARE_URL"
+      value = "https://imprese.notifichedigitali.it"
+    },
   ]
 
   secrets_names_user_ms = {

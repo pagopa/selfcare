@@ -1,0 +1,116 @@
+name: Update OpenAPI JSON
+permissions:
+  id-token: write
+  contents: write
+  actions: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_user:
+        type: boolean
+        description: "Include selfcare-user OpenAPI"
+        default: true
+      include_institution:
+        type: boolean
+        description: "Include selfcare-institution OpenAPI"
+        default: true
+      include_onboarding:
+        type: boolean
+        description: "Include selfcare-onboaridng OpenAPI"
+        default: true
+      include_registry_proxy:
+        type: boolean
+        description: "Include selfcare-registry-proxy OpenAPI"
+        default: true
+
+jobs:
+  update-openapi:
+    runs-on: ubuntu-latest
+    environment: dev-cd
+
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      ARM_STORAGE_USE_AZUREAD: true
+      OPENAPI_DIR: src/main/docs/openapi
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1.6.1
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Download OpenAPI files from Azure
+        run: |
+          mkdir -p ${{ env.OPENAPI_DIR }}
+
+          if [ "${{ github.event.inputs.include_user }}" = "true" ]; then
+            echo "Downloading selfcare-user OpenAPI..."
+            az storage blob download \
+              --account-name selcdcheckoutsa \
+              --container-name selc-openapi \
+              --name pagopa/selfcare-user-ms/openapi.json \
+              --file ${{ env.OPENAPI_DIR }}/api-selfcare-user-docs.json
+          fi
+          
+          if [ "${{ github.event.inputs.include_institution }}" = "true" ]; then
+            echo "Downloading selfcare-institution OpenAPI..."
+            az storage blob download \
+              --account-name selcdcheckoutsa \
+              --container-name selc-openapi \
+              --name pagopa/selfcare-institution-ms/openapi.json \
+              --file ${{ env.OPENAPI_DIR }}/api-selfcare-core-docs.json
+          fi
+          
+          if [ "${{ github.event.inputs.include_onboarding }}" = "true" ]; then
+            echo "Downloading selfcare-onboarding OpenAPI..."
+            az storage blob download \
+              --account-name selcdcheckoutsa \
+              --container-name selc-openapi \
+              --name pagopa/selfcare-onboarding-ms/openapi.json \
+              --file ${{ env.OPENAPI_DIR }}/api-selfcare-onboarding-docs.json
+          fi
+
+          if [ "${{ github.event.inputs.include_registry_proxy }}" = "true" ]; then
+            echo "Downloading registry-proxy OpenAPI..."
+            az storage blob download \
+              --account-name selcdcheckoutsa \
+              --container-name selc-openapi \
+              --name pagopa/selfcare-ms-party-registry-proxy/openapi.json \
+              --file ${{ env.OPENAPI_DIR }}/api-selfcare-registry-proxy-docs.json
+          fi
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Generate dynamic branch name
+        id: branch
+        run: echo "name=docs/openapi-update-$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@d53f4d71fdd876f4f4b170d05ce7f1a7dd2bef03
+        with:
+          title: "Update OpenAPI specs"
+          commit-message: "Update OpenAPI specs"
+          body: |
+            This PR updates the OpenAPI specs:
+
+            - selfcare-user: ${{ github.event.inputs.include_user }}
+            - selfcare-institution: ${{ github.event.inputs.include_institution }}
+            - selfcare-onboarding: ${{ github.event.inputs.include_onboarding }}
+            - selfcare-registry-proxy: ${{ github.event.inputs.include_registry_proxy }}
+          branch: ${{ steps.branch.outputs.name }}
+          base: main
+          labels: "automation, openapi"

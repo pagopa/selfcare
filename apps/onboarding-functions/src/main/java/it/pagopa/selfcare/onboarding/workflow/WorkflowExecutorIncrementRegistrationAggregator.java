@@ -14,6 +14,7 @@ import java.util.Optional;
 import static it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowType.AGGREGATOR;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.BUILD_CONTRACT_ACTIVITY_NAME;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.CREATE_USERS_ACTIVITY;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.STORE_ONBOARDING_ACTIVATEDAT;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingWorkflowString;
 
@@ -36,6 +37,7 @@ public record WorkflowExecutorIncrementRegistrationAggregator(ObjectMapper objec
         String onboardingWithInstitutionIdString = getOnboardingString(objectMapper, onboardingWorkflow.getOnboarding());
         createInstitutionAndOnboardingAggregate(ctx, onboardingWorkflow.getOnboarding(), onboardingMapper);
         ctx.callActivity(CREATE_USERS_ACTIVITY, onboardingWithInstitutionIdString, optionsRetry(), String.class).await();
+        ctx.callActivity(STORE_ONBOARDING_ACTIVATEDAT, onboardingWithInstitutionIdString, optionsRetry(), String.class).await();
         return Optional.of(OnboardingStatus.COMPLETED);
     }
 
