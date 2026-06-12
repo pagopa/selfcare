@@ -42,6 +42,12 @@
           },
           "productLabel" : {
             "type" : "string"
+          },
+          "multiroleGroups" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
@@ -611,9 +617,6 @@
           },
           "institutionType" : {
             "$ref" : "#/components/schemas/InstitutionType"
-          },
-          "multiroleAllowed" : {
-            "type" : "boolean"
           },
           "phasesAdditionAllowed" : {
             "type" : "array",
