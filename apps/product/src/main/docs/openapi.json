@@ -373,6 +373,12 @@
             "items" : {
               "$ref" : "#/components/schemas/WorkflowRule"
             }
+          },
+          "requiredDocuments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RequiredDocument"
+            }
           }
         }
       },
@@ -489,6 +495,12 @@
             "items" : {
               "$ref" : "#/components/schemas/WorkflowRule"
             }
+          },
+          "requiredDocuments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RequiredDocument"
+            }
           }
         }
       },
@@ -584,6 +596,12 @@
               "$ref" : "#/components/schemas/WorkflowRule"
             }
           },
+          "requiredDocuments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RequiredDocument"
+            }
+          },
           "id" : {
             "type" : "string"
           },
@@ -602,6 +620,50 @@
       "ProductStatus" : {
         "type" : "string",
         "enum" : [ "TESTING", "ACTIVE", "DELETED", "SUSPEND" ]
+      },
+      "RequiredDocument" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "labelKey" : {
+            "type" : "string"
+          },
+          "required" : {
+            "type" : "boolean"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "maxDocumentsRequired" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "filter" : {
+            "$ref" : "#/components/schemas/RequiredDocumentFilter"
+          }
+        }
+      },
+      "RequiredDocumentFilter" : {
+        "type" : "object",
+        "properties" : {
+          "institutionType" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "origin" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }
       },
       "RoleMapping" : {
         "type" : "object",
