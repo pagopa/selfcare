@@ -1484,6 +1484,67 @@
           "SecurityScheme" : [ ]
         } ]
       }
+    },
+    "/product/{productId}/required-documents/enabled" : {
+      "head" : {
+        "summary" : "Check if required documents are enabled",
+        "description" : "Returns HTTP 200 with header X-Required-Documents-Enabled set to true if required documents are configured for the given product, institutionType and origin combination; false otherwise.",
+        "operationId" : "isRequiredDocumentsEnabled",
+        "tags" : [ "Product" ],
+        "parameters" : [ {
+          "name" : "productId",
+          "required" : true,
+          "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionType",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          }
+        }, {
+          "name" : "origin",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/Origin"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Check completed",
+            "content" : {
+              "application/json" : { }
+            },
+            "headers" : {
+              "X-Required-Documents-Enabled" : {
+                "description" : "Whether required documents are enabled (true/false)"
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          },
+          "404" : {
+            "description" : "Product not found"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
     }
   },
   "info" : {

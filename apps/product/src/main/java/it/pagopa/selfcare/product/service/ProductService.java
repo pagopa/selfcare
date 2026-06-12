@@ -25,4 +25,6 @@ public interface ProductService {
   Uni<ProductOriginResponse> getProductOriginsById(String productId);
 
   Uni<WorkflowTypeResponse> getWorkflowType(String productId, InstitutionType institutionType, Origin origin);
+
+  Uni<Boolean> isRequiredDocumentsEnabled(String productId, InstitutionType institutionType, Origin origin);
 }
