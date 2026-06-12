@@ -36,7 +36,7 @@ services:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:
       - develop-network
-    entrypoint: [ "sh", "/init_azurite.sh" ]
+    entrypoint: ["sh", "/init_azurite.sh"]
 
   onboarding-ms:
     image: ghcr.io/pagopa/selfcare-onboarding-ms:latest
@@ -78,7 +78,6 @@ services:
       - mongo-db
       - mock-server
       - azure-cli
-
 
   product-ms:
     image: ghcr.io/pagopa/selfcare-product-ms:latest
@@ -124,7 +123,6 @@ services:
       - "8025:1080"
     networks:
       - develop-network
-
 
 #  onboarding-fn:
 #    build:

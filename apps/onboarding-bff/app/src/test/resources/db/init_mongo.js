@@ -716,6 +716,32 @@ db = db.getSiblingDB("selcDocument");
 
 db.documents.insertMany([
   {
+    _id: "89ad7142-24bb-48ad-8504-9c9231137i103",
+    contractFilename: "IO_accordo_adesione.pdf",
+    contractTemplate:
+      "contracts/template/io/2.4.2/io-accordo_di_adesione-v.2.4.2.html",
+    contractVersion: "2.4.2",
+    createdAt: ISODate("2024-10-18T12:24:50.050Z"),
+    onboardingId: "89ad7142-24bb-48ad-8504-9c9231137i103",
+    productId: "prod-io",
+    rootOnboardingId: "89ad7142-24bb-48ad-8504-9c9231137i103",
+    type: "INSTITUTION",
+    updatedAt: ISODate("2024-10-18T12:24:50.050Z"),
+  },
+  {
+    _id: "89ad7142-24bb-48ad-8504-9c9231137i105",
+    contractFilename: "IO_accordo_adesione.pdf",
+    contractTemplate:
+      "contracts/template/io/2.4.2/io-accordo_di_adesione-v.2.4.2.html",
+    contractVersion: "2.4.2",
+    createdAt: ISODate("2024-10-18T12:24:50.050Z"),
+    onboardingId: "89ad7142-24bb-48ad-8504-9c9231137i105",
+    productId: "prod-io",
+    rootOnboardingId: "89ad7142-24bb-48ad-8504-9c9231137i103",
+    type: "USER",
+    updatedAt: ISODate("2024-10-18T12:24:50.050Z"),
+  },
+  {
     _id: "37f7609b-5a4b-4200-82e7-2117756d64aa",
     attachmentName: "Dichiarazione_sostitutiva_certificazione",
     checksum: "2B0zPYLxWtxaxofkRnueQLvdXv+tCiB9tDBTqM3H6l8=",
