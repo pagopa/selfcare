@@ -1,0 +1,67 @@
+name: 'Swagger Detect Conflict and Update with Quarkus in monorepo'
+description: 'Detects conflicts in the OpenAPI documentation and updates the Quarkus application'
+
+inputs:
+  path_openapi_docs:
+    type: string
+    required: true
+    description: 'Path to the OpenAPI documentation'
+  module:
+    type: string
+    required: true
+    description: 'Module to build'
+  github_token:
+    type: string
+    required: true
+    description: 'Github token'
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      name: Checkout
+      with:
+        fetch-depth: 0
+    - name: Set up JDK 17
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    # Selfcare-onboarding
+    - uses: s4u/maven-settings-action@7802f6aec16c9098b4798ad1f1d8ac75198194bd # v3.0.0
+      with:
+        servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ inputs.github_token }}"}, {"id": "selfcare-github", "username": "${{ github.actor }}", "password": "${{ inputs.github_token }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ inputs.github_token }}"}]'
+
+    - name: Build with Maven
+      run: mvn --projects :${{ inputs.module }} --also-make package -DskipTests
+      shell: bash
+
+    - name: Install Optic
+      run: npm install --location global @useoptic/optic
+      shell: bash
+
+    - name: Extract branch name
+      id: extract_branch
+      run: echo "branch=${GITHUB_BASE_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Download optic.yml
+      run: curl https://raw.githubusercontent.com/pagopa/selfcare/refs/heads/main/optic.yml -o optic.yml
+      shell: bash
+
+    - name: Check Open API by Optic
+      id: optic_diff
+      run: optic diff apps/${{ inputs.module }}/${{ inputs.path_openapi_docs }} --base origin/${{ steps.extract_branch.outputs.branch }} --check
+      shell: bash
+
+    - name: Commit api-docs
+      shell: bash
+      env:
+        HEAD_REF: ${{ github.head_ref }}
+      run: |
+        if git diff --name-only HEAD | grep -q 'apps/.*/openapi'; then
+          echo "Swagger documentation is older!!"
+          exit 1
+        fi

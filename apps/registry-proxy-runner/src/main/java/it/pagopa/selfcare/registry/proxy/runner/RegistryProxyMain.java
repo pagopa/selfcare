@@ -28,6 +28,8 @@ public class RegistryProxyMain implements QuarkusApplication {
   @Inject IvassDataService ivassDataService;
   @Inject InsuranceCompanyIndexWriterService insuranceCompanyIndexWriterService;
 
+  @Inject OnboardingStatusUpdateService onboardingStatusUpdateService;
+
   @Override
   public int run(String... args) {
     log.info("Starting registry proxy runner");
@@ -44,6 +46,11 @@ public class RegistryProxyMain implements QuarkusApplication {
             "IPA categories",
             () -> categoryIndexWriterService.index(ipaCategoryOpenDataService.fetch()));
     success &= runTask("IPA UO", () -> ipaUOIndexWriterService.index(ipaUoOpenDataService.fetch()));
+    success &=
+        runTask(
+                "Onboarding expiration status update",
+                () -> onboardingStatusUpdateService.updateExpiredOnboardings()
+        );
     // success &= runTask("ANAC stations", () ->
     // stationIndexWriterService.index(anacDataService.fetch()));
     // success &= runTask("IVASS insurance companies", () ->

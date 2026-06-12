@@ -65,11 +65,13 @@ public class OnboardingUtils {
     public Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> buildUploadSignedContractRequest(
             Onboarding onboarding,
             boolean skipSignatureVerification,
-            FormItem formItem, Product product, DocumentType documentType, List<String> fiscalCodes) {
+            FormItem formItem, Product product, DocumentType documentType, List<String> fiscalCodes,
+            int signingStep) {
         DocumentContentControllerApi.UploadSignedContractMultipartForm request = new DocumentContentControllerApi.UploadSignedContractMultipartForm();
         request.skipSignatureVerification = skipSignatureVerification;
         request._file = formItem.getFile();
         request.fileName = formItem.getFileName();
+        request.signingStep = signingStep;
         if (OnboardingStatus.PENDING_IN_REVIEW.equals(onboarding.getStatus())) {
             request.skipSignerIdentityCheck =
                     Objects.nonNull(product.getSigningConfiguration())

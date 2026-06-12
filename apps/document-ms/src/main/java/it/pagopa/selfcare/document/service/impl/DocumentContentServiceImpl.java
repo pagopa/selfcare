@@ -58,6 +58,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 public class DocumentContentServiceImpl implements DocumentContentService {
     public static final String HTTP_HEADER_VALUE_ATTACHMENT_FILENAME = "attachment;filename=";
     private static final String FILE_NAME_AGGREGATES_CSV = "aggregates.csv";
+    private static final String PATH_SEPARATOR = "/";
 
     private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
@@ -239,7 +240,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
                     String basePath = documentMsConfig.getContractPath();
                     String originalSignedPath = DocumentFileUtils.buildAndValidateContractFilePath(document.getContractSigned(), basePath, true);
-                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + "/" + document.getContractFilename(), basePath, false);
+                    String originalContractPath = DocumentFileUtils.buildAndValidateContractFilePath(onboardingId + PATH_SEPARATOR + document.getContractFilename(), basePath, false);
 
                     String deletedSignedContract;
                     String deletedContractFile;
@@ -368,26 +369,24 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
   @Override
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
-                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck) {
+                                          InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck, int signingStep) {
 
-    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}",
-        sanitize(onboardingId), sanitize(request.getProductId()));
+    log.info("START - Uploading and verifying signed contract for onboardingId={}, productId={}, signingStep={}",
+        sanitize(onboardingId), sanitize(request.getProductId()), signingStep);
     long start = System.currentTimeMillis();
 
     return saveInputStreamToTempFile(fileUpload, fileName)
         .chain(physicalFile ->
-                resolveNextSigningStep(onboardingId)
-                    .chain(nextStep ->
-                            handleSignedContractUpload(
-                                onboardingId,
-                                request,
-                                skipSignatureVerification,
-                                physicalFile,
-                                fileName,
-                                nextStep,
-                                skipSignerIdentityCheck))
-                    .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
-                    .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
+                handleSignedContractUpload(
+                    onboardingId,
+                    request,
+                    skipSignatureVerification,
+                    physicalFile,
+                    fileName,
+                    signingStep,
+                    skipSignerIdentityCheck)
+                .invoke(ignored -> telemetryService.trackSignedContractUploaded(onboardingId, System.currentTimeMillis() - start))
+                .onTermination().invoke(() -> cleanupTempFile(physicalFile, onboardingId, request.getProductId())));
   }
 
     private Uni<File> saveInputStreamToTempFile(InputStream fileUpload, String fileName) {
@@ -481,26 +480,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 sanitize(onboardingId), sanitize(productId));
     }
 
-    /**
-     * Determina il prossimo signingStep interrogando il repository.
-     * Sfrutta findByOnboardingId già esistente (createdAt DESC).
-     * - Se non esiste documento o signingStep è null → 1 (primo upload)
-     * - Se esiste con signingStep = N → N + 1
-     */
-    private Uni<Integer> resolveNextSigningStep(String onboardingId) {
-        return documentRepository.findByOnboardingId(onboardingId)
-            .onItem().transform(latestDoc -> {
-                if (latestDoc == null || latestDoc.getSigningStep() == null) {
-                    log.info("resolveNextSigningStep for onboardingId={}: no previous signingStep found, nextStep=1",
-                            sanitize(onboardingId));
-                    return 1;
-                }
-                int nextStep = latestDoc.getSigningStep() + 1;
-                log.info("resolveNextSigningStep for onboardingId={}: latest signingStep={}, nextStep={}",
-                        sanitize(onboardingId), latestDoc.getSigningStep(), nextStep);
-                return nextStep;
-            });
-    }
 
     // ==================== Private Reactive I/O isolation methods ====================
 
@@ -615,7 +594,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             try {
                 azureBlobClient.uploadFile(ctx.storagePath, ctx.filename, Files.readAllBytes(ctx.pdfFile.toPath()));
                 return CreatePdfResponse.builder()
-                        .storagePath(ctx.storagePath + "/" + ctx.filename)
+                        .storagePath(ctx.storagePath + PATH_SEPARATOR + ctx.filename)
                         .filename(ctx.filename)
                         .build();
             } catch (IOException e) {

@@ -2191,8 +2191,12 @@ class OnboardingServiceDefaultTest {
                 any(FormItem.class),
                 any(Product.class),
                 any(DocumentType.class),
-                anyList()))
+                anyList(),
+                anyInt()))
                 .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
+
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2222,6 +2226,9 @@ class OnboardingServiceDefaultTest {
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
+
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
     }
@@ -2248,7 +2255,92 @@ class OnboardingServiceDefaultTest {
         mockSimpleProductValidAssert(onboarding.getProductId(), true, asserter, false, true);
         mockVerifyOnboardingNotFound();
 
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
+
         asserter.assertThat(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
+                Assertions::assertNotNull);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void complete_shouldFailWhenNextStepExceedsRequiredSignatures(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        // Product with SigningConfiguration requiring 2 signatures
+        Product product = createDummyProduct(onboarding.getProductId(), false, false, true);
+        SigningConfiguration signingConfig = new SigningConfiguration();
+        signingConfig.setRequiredSignatures(2);
+        product.setSigningConfiguration(signingConfig);
+        asserter.execute(() -> when(productService.getProductIsValid(onboarding.getProductId()))
+                .thenReturn(product));
+
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
+
+        // Mock find manager user fiscal code
+        String actualUserUid = onboarding.getUsers().get(0).getId();
+        UserResource actualUserResource = new UserResource();
+        actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUserUid))
+                .thenReturn(Uni.createFrom().item(actualUserResource)));
+
+        // Document already at signingStep=2, so nextStep=3 > requiredSignatures=2
+        org.openapi.quarkus.document_json.model.DocumentResponse docResponse =
+                org.openapi.quarkus.document_json.model.DocumentResponse.builder()
+                        .signingStep(2)
+                        .build();
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().item(docResponse)));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void complete_shouldSucceedWithSigningConfigurationAndValidStep(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+
+        // Product with SigningConfiguration requiring 2 signatures
+        Product product = createDummyProduct(onboarding.getProductId(), false, false, true);
+        SigningConfiguration signingConfig = new SigningConfiguration();
+        signingConfig.setRequiredSignatures(2);
+        product.setSigningConfiguration(signingConfig);
+        asserter.execute(() -> when(productService.getProductIsValid(onboarding.getProductId()))
+                .thenReturn(product));
+
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
+
+        when(onboardingUtils.buildUploadSignedContractRequest(
+                any(Onboarding.class),
+                anyBoolean(),
+                any(FormItem.class),
+                any(Product.class),
+                any(DocumentType.class),
+                anyList(),
+                anyInt()))
+                .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm()));
+
+        // Document at signingStep=1, so nextStep=2 <= requiredSignatures=2: valid
+        org.openapi.quarkus.document_json.model.DocumentResponse docResponse =
+                org.openapi.quarkus.document_json.model.DocumentResponse.builder()
+                        .signingStep(1)
+                        .build();
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().item(docResponse)));
+
+        asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
     }
 
@@ -2450,6 +2542,32 @@ class OnboardingServiceDefaultTest {
         user.setId("actual-user-id");
         user.setRole(PartyRole.MANAGER);
         onboarding.setUsers(List.of(user));
+        return onboarding;
+    }
+
+    private Onboarding createDummyOnboardingWithDelegate() {
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setProductId("prod-id");
+
+        UserRequester userRequester = UserRequester.builder()
+                .userRequestUid(UUID.randomUUID().toString())
+                .build();
+
+        Institution institution = new Institution();
+        institution.setTaxCode("taxCode");
+        institution.setSubunitCode("subunitCode");
+        institution.setOrigin(Origin.IPA);
+        onboarding.setInstitution(institution);
+        onboarding.setUserRequester(userRequester);
+
+        User manager = new User();
+        manager.setId("manager-user-id");
+        manager.setRole(PartyRole.MANAGER);
+        User delegate = new User();
+        delegate.setId("delegate-user-id");
+        delegate.setRole(PartyRole.DELEGATE);
+        onboarding.setUsers(List.of(manager, delegate));
         return onboarding;
     }
 
@@ -4760,6 +4878,8 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
         asserter.execute(() -> when(documentControllerApi.updateDocumentUpdatedAt(any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         asserter.assertThat(() -> onboardingService.uploadContractSigned(onboardingId, TEST_FORM_ITEM),
                 result -> {
@@ -4797,6 +4917,8 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
         asserter.execute(() -> when(documentControllerApi.updateDocumentUpdatedAt(any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
 
         mockUpdateOnboarding(onboardingId, 1L);
 
@@ -4825,13 +4947,16 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
         asserter.execute(() -> when(documentContentControllerApi.uploadSignedContract(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.status(500).build())));
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().nullItem()));
         asserter.execute(() -> when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
                 any(Product.class),
                 any(DocumentType.class),
-                anyList()))
+                anyList(),
+                anyInt()))
                 .thenReturn(Uni.createFrom().item(new DocumentContentControllerApi.UploadSignedContractMultipartForm())));
         asserter.execute(() -> when(onboardingUtils.ensureSuccessfulDocumentResponse(any(), anyString(), anyString()))
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException(500))));
@@ -5186,12 +5311,13 @@ class OnboardingServiceDefaultTest {
     @Test
     void deleteOnboardingUser_shouldFailWhenOnboardingNotFound() {
         String onboardingId = "non-existing-id";
+        String userId = "some-user-id";
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.findById(onboardingId))
                 .thenReturn(Uni.createFrom().nullItem());
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboardingId)
+                .deleteOnboardingUser(onboardingId, userId)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5200,7 +5326,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void deleteOnboardingUser_shouldFailWhenWorkflowTypeIsNotUSERS() {
-        Onboarding onboarding = createDummyOnboarding();
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.FOR_APPROVE);
         PanacheMock.mock(Onboarding.class);
@@ -5208,7 +5334,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId(), "delegate-user-id")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5217,7 +5343,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void deleteOnboardingUser_shouldFailWhenAlreadyDeleted() {
-        Onboarding onboarding = createDummyOnboarding();
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
         onboarding.setStatus(OnboardingStatus.DELETED);
         onboarding.setWorkflowType(WorkflowType.USERS);
         PanacheMock.mock(Onboarding.class);
@@ -5225,7 +5351,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId(), "delegate-user-id")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5234,7 +5360,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void deleteOnboardingUser_shouldFailWhenDeleteContractFails() {
-        Onboarding onboarding = createDummyOnboarding();
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.USERS);
         PanacheMock.mock(Onboarding.class);
@@ -5245,7 +5371,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException("Document delete failed", 500)));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId(), "delegate-user-id")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5254,7 +5380,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void deleteOnboardingUser_shouldSucceed() {
-        Onboarding onboarding = createDummyOnboarding();
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.USERS);
         PanacheMock.mock(Onboarding.class);
@@ -5267,7 +5393,7 @@ class OnboardingServiceDefaultTest {
         mockUpdateOnboarding(onboarding.getId(), 1L);
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId(), "delegate-user-id")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5275,8 +5401,81 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
-    void deleteOnboardingUser_shouldFailWhenStatusIsNotCompleted() {
+    void deleteOnboardingUser_shouldFailWhenUserIsOnlyManager() {
         Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId(), "actual-user-id")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldSucceedWhenUserIsBothManagerAndDelegate() {
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setProductId("prod-id");
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+
+        Institution institution = new Institution();
+        institution.setTaxCode("taxCode");
+        institution.setSubunitCode("subunitCode");
+        institution.setOrigin(Origin.IPA);
+        onboarding.setInstitution(institution);
+
+        User manager = new User();
+        manager.setId("same-user-id");
+        manager.setRole(PartyRole.MANAGER);
+        User delegate = new User();
+        delegate.setId("same-user-id");
+        delegate.setRole(PartyRole.DELEGATE);
+        onboarding.setUsers(List.of(manager, delegate));
+
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        when(onboardingUtils.ensureSuccessfulDocumentResponse(any(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        mockUpdateOnboarding(onboarding.getId(), 1L);
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId(), "same-user-id")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted().assertItem(1L);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenUserNotFoundInOnboarding() {
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.USERS);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboardingUser(onboarding.getId(), "non-existing-user-id")
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void deleteOnboardingUser_shouldFailWhenStatusIsNotCompleted() {
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
         onboarding.setStatus(OnboardingStatus.PENDING);
         onboarding.setWorkflowType(WorkflowType.USERS);
         PanacheMock.mock(Onboarding.class);
@@ -5284,7 +5483,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId(), "delegate-user-id")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
@@ -5293,7 +5492,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void deleteOnboardingUser_shouldFailWhenWorkflowTypeIsNull() {
-        Onboarding onboarding = createDummyOnboarding();
+        Onboarding onboarding = createDummyOnboardingWithDelegate();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(null);
         PanacheMock.mock(Onboarding.class);
@@ -5301,7 +5500,7 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(onboarding));
 
         UniAssertSubscriber<Long> subscriber = onboardingService
-                .deleteOnboardingUser(onboarding.getId())
+                .deleteOnboardingUser(onboarding.getId(), "delegate-user-id")
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 

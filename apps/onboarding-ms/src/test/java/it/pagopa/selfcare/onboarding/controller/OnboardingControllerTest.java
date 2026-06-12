@@ -1739,63 +1739,75 @@ class OnboardingControllerTest {
     @TestSecurity(user = "userJwt")
     void deleteOnboardingUserOK() {
         final String onboardingId = "actual-onboarding-id";
-        when(onboardingService.deleteOnboardingUser(onboardingId))
+        final String userId = "actual-user-id";
+        when(onboardingService.deleteOnboardingUser(onboardingId, userId))
                 .thenReturn(Uni.createFrom().item(1L));
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("onboardingId", onboardingId)
-                .delete("/{onboardingId}/user")
+                .pathParam("userId", userId)
+                .delete("/{onboardingId}/user/{userId}")
                 .then()
                 .statusCode(204);
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> expectedUserId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .deleteOnboardingUser(expectedId.capture());
-        assertEquals(expectedId.getValue(), onboardingId);
+                .deleteOnboardingUser(expectedId.capture(), expectedUserId.capture());
+        assertEquals(onboardingId, expectedId.getValue());
+        assertEquals(userId, expectedUserId.getValue());
     }
 
     @Test
     @TestSecurity(user = "userJwt")
     void deleteOnboardingUserNotFound() {
         final String onboardingId = "actual-onboarding-id";
-        when(onboardingService.deleteOnboardingUser(onboardingId))
+        final String userId = "actual-user-id";
+        when(onboardingService.deleteOnboardingUser(onboardingId, userId))
                 .thenThrow(ResourceNotFoundException.class);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("onboardingId", onboardingId)
-                .delete("/{onboardingId}/user")
+                .pathParam("userId", userId)
+                .delete("/{onboardingId}/user/{userId}")
                 .then()
                 .statusCode(404);
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> expectedUserId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .deleteOnboardingUser(expectedId.capture());
-        assertEquals(expectedId.getValue(), onboardingId);
+                .deleteOnboardingUser(expectedId.capture(), expectedUserId.capture());
+        assertEquals(onboardingId, expectedId.getValue());
+        assertEquals(userId, expectedUserId.getValue());
     }
 
     @Test
     @TestSecurity(user = "userJwt")
     void deleteOnboardingUserInvalidRequest() {
         final String onboardingId = "actual-onboarding-id";
-        when(onboardingService.deleteOnboardingUser(onboardingId))
+        final String userId = "actual-user-id";
+        when(onboardingService.deleteOnboardingUser(onboardingId, userId))
                 .thenThrow(InvalidRequestException.class);
 
         given()
                 .when()
                 .contentType(ContentType.JSON)
                 .pathParam("onboardingId", onboardingId)
-                .delete("/{onboardingId}/user")
+                .pathParam("userId", userId)
+                .delete("/{onboardingId}/user/{userId}")
                 .then()
                 .statusCode(400);
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> expectedUserId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .deleteOnboardingUser(expectedId.capture());
-        assertEquals(expectedId.getValue(), onboardingId);
+                .deleteOnboardingUser(expectedId.capture(), expectedUserId.capture());
+        assertEquals(onboardingId, expectedId.getValue());
+        assertEquals(userId, expectedUserId.getValue());
     }
 
 }

@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.entity;
 
+import java.util.List;
 import java.util.Objects;
 
 public class ProductRole {
@@ -8,6 +9,7 @@ public class ProductRole {
     private String label;
     private String productLabel;
     private String description;
+    private List<String> multiroleGroups;
 
     public String getCode() {
         return code;
@@ -39,6 +41,14 @@ public class ProductRole {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<String> getMultiroleGroups() {
+        return multiroleGroups;
+    }
+
+    public void setMultiroleGroups(List<String> multiroleGroups) {
+        this.multiroleGroups = multiroleGroups;
     }
 
     @Override
