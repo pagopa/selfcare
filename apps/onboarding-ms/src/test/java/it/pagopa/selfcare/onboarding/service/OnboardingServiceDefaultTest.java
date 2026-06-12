@@ -2384,6 +2384,33 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void complete_shouldFailWhenDocumentServiceReturnsNon404Error(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
+
+        String actualUserUid = onboarding.getUsers().get(0).getId();
+        UserResource actualUserResource = new UserResource();
+        actualUserResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUserUid))
+                .thenReturn(Uni.createFrom().item(actualUserResource)));
+
+        // Simulate document-ms returning 500 (should NOT be recovered)
+        asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(500).build()))));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
+                WebApplicationException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
     void completeOnboardingUsers_throwProductNotOnboardedInReferenceOnboarding(UniAsserter asserter) {
         Onboarding onboarding = createDummyUsersOnboarding();
         onboarding.setStatus(OnboardingStatus.PENDING);
