@@ -150,6 +150,14 @@ locals {
     {
       name  = "DOCUMENT_URL"
       value = "http://selc-d-document-ms-ca"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }
   ]
 
