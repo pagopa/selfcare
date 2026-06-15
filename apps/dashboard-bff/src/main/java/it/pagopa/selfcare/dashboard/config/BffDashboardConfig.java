@@ -17,6 +17,7 @@ public class BffDashboardConfig {
     @Bean
     public ProductService productService(){
         return Optional.ofNullable(config.getBlobStorage().getConnectionStringProduct())
+            .filter(cs -> !cs.isBlank())
             .map(cs -> new ProductServiceCacheable(cs, config.getBlobStorage().getContainerProduct(), config.getBlobStorage().getFilepathProduct()))
             .orElseGet(() -> new ProductServiceCacheable(config.getBlobStorage().getContainerProduct(), config.getBlobStorage().getFilepathProduct(),
                 config.getBlobStorage().getAccountNameProduct(), config.getBlobStorage().getManagedIdentityClientIdProduct()));
