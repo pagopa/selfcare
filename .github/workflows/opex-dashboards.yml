@@ -13,10 +13,6 @@ on:
       - "apps/product/src/main/docs/openapi.json"
       - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
       - "apps/webhook/src/main/docs/openapi.json"
-      - "apps/io-func-sign-issuer/openapi.yaml"
-      - "apps/io-func-sign-user/openapi.yaml"
-      - "apps/io-func-sign-support/openapi.yaml"
-      - "apps/io-sign-backoffice-func/openapi.yaml"
       - ".opex/**"
       - ".github/workflows/opex-dashboards.yaml"
   pull_request:
@@ -34,10 +30,6 @@ on:
       - "apps/product/src/main/docs/openapi.json"
       - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
       - "apps/webhook/src/main/docs/openapi.json"
-      - "apps/io-func-sign-issuer/openapi.yaml"
-      - "apps/io-func-sign-user/openapi.yaml"
-      - "apps/io-func-sign-support/openapi.yaml"
-      - "apps/io-sign-backoffice-func/openapi.yaml"
       - ".opex/**"
       - ".github/workflows/opex-dashboards.yaml"
   workflow_dispatch:

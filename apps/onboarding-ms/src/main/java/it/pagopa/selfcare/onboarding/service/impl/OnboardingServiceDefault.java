@@ -29,6 +29,7 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.Document;
@@ -684,6 +685,10 @@ public class OnboardingServiceDefault implements OnboardingService {
                     }
                     return doc.getSigningStep() + 1;
                 })
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> ((WebApplicationException) ex).getResponse().getStatus() == 404
+                        ? Uni.createFrom().item(1)
+                        : Uni.createFrom().failure(ex))
                 .onItem().transformToUni(nextStep -> {
                     int requiredSignatures = resolveRequiredSignatures(product);
                     if (nextStep > requiredSignatures) {

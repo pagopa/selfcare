@@ -12,6 +12,7 @@
 
     <properties>
         <cucumber.version>7.20.1</cucumber.version>
+        <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -125,7 +126,7 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-cucumber-sdk</artifactId>
-            <version>0.1.2</version>
+            <version>${selfcare-cucumber-sdk.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
