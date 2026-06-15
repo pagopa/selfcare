@@ -117,8 +117,8 @@ Feature: Product
     Given user login with username "b.king" and password "test"
     When I send a GET request to "/v1/products/my-permissions" to retrieve my permissions
     Then the response status should be 200
-    And The response body contains the list "items" of size 2
-    And The response body contains:
+    And The dashboard response body contains the list "items" of size 2
+    And The dashboard response body contains:
       | items[0].productId   | prod-interop                                                                                                      |
       | items[0].role        | OPERATOR                                                                                                          |
       | items[0].group       | operator                                                                                                          |

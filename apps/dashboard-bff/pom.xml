@@ -17,6 +17,7 @@
     <properties>
         <selc-commons.version>2.9.3</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
+        <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
     </properties>
 
     <dependencyManagement>
@@ -182,7 +183,7 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-cucumber-sdk</artifactId>
-            <version>0.1.2</version>
+            <version>${selfcare-cucumber-sdk.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -468,7 +469,7 @@
             <plugin>
                 <groupId>org.sonarsource.scanner.maven</groupId>
                 <artifactId>sonar-maven-plugin</artifactId>
-                <version>4.0.0.4121</version>
+                <version>5.5.0.6356</version>
             </plugin>
         </plugins>
     </build>
