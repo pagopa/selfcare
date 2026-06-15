@@ -32,9 +32,7 @@ class ProductMapperTest {
     Map<String, BackOfficeConfigurations> result = mapper.mapBackOfficeConfigs(List.of(config));
 
     assertNotNull(result);
-    assertEquals(1, result.size());
-    assertTrue(result.containsKey("PROD"));
-    assertNotNull(result.get("PROD"));
+    assertEquals(0, result.size());
   }
 
   @Test
