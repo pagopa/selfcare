@@ -37,7 +37,7 @@ public class ProductRoleMappingsResource {
         private String description;
 
         @Schema(description = "${swagger.dashboard.product-role.model.multiroleGroups}")
-        private String multiroleGroups;
+        private List<String> multiroleGroups;
         
     }
 

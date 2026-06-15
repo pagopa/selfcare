@@ -5419,8 +5419,12 @@
             "description" : "Product role description"
           },
           "multiroleGroups" : {
-            "type" : "string",
-            "description" : "Product role groups that allow to assign multiple roles to the same user"
+            "type" : "array",
+            "description" : "Product role groups that allow to assign multiple roles to the same user",
+            "items" : {
+              "type" : "string",
+              "description" : "Product role groups that allow to assign multiple roles to the same user"
+            }
           }
         },
         "description" : "Available product roles"
