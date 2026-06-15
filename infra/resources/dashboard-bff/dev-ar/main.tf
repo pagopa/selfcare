@@ -30,15 +30,6 @@ data "azurerm_user_assigned_identity" "cae_identity" {
 }
 
 ###############################################################################
-# RBAC
-###############################################################################
-resource "azurerm_role_assignment" "dashboard_bff_product_blob_reader" {
-  scope                = data.azurerm_storage_account.product_storage.id
-  role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_user_assigned_identity.cae_identity.principal_id
-}
-
-###############################################################################
 # Dashboard BFF
 ###############################################################################
 locals {
@@ -163,7 +154,6 @@ locals {
 
   secrets_names_dashboard_bff = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "BLOB_STORAGE_CONN_STRING"               = "web-storage-connection-string"
     "USER_REGISTRY_API_KEY"                  = "user-registry-api-key"
     "BACKOFFICE_PAGO_PA_API_KEY"             = "pagopa-backoffice-api-key"
     "SUPPORT_API_KEY"                        = "zendesk-support-api-key"
