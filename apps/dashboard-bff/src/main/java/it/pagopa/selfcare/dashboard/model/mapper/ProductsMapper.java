@@ -117,6 +117,7 @@ public class ProductsMapper {
             resource.setCode(productRole.getCode());
             resource.setLabel(productRole.getLabel());
             resource.setDescription(productRole.getDescription());
+            resource.setMultiroleGroups(productRole.getMultiroleGroups());
         }
         return resource;
     }
