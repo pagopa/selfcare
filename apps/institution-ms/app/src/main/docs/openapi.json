@@ -1698,8 +1698,8 @@
           "style" : "form",
           "schema" : {
             "type" : "string",
-            "default" : "NONE",
-            "enum" : [ "NONE", "ASC", "DESC" ]
+            "enum" : [ "NONE", "ASC", "DESC" ],
+            "default" : "NONE"
           }
         }, {
           "name" : "page",
@@ -1822,8 +1822,8 @@
           "style" : "form",
           "schema" : {
             "type" : "string",
-            "default" : "NONE",
-            "enum" : [ "NONE", "ASC", "DESC" ]
+            "enum" : [ "NONE", "ASC", "DESC" ],
+            "default" : "NONE"
           }
         }, {
           "name" : "page",

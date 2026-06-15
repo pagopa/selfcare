@@ -18,7 +18,7 @@ Feature: Institution
     And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
     When I send a GET request to "/v1/institutions/{institutionId}" to retrieve institution
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | id                          | 067327d3-bdd6-408d-8655-87e8f1960046  |
       | externalId                  | 99000870064                           |
       | originId                    | c_d277                                |
@@ -35,9 +35,9 @@ Feature: Institution
       | products[0].productId       | prod-io                               |
       | products[0].institutionType | PSP                                   |
       | products[0].createdAt       | 2022-06-10T13:29:10.462Z              |
-    And The response body contains the list "products" of size 4
+    And The dashboard response body contains the list "products" of size 4
     # Field institutionType not present if productId not specified in request
-    And The response body doesn't contain field "institutionType"
+    And The dashboard response body doesn't contain field "institutionType"
 
   Scenario: Attempt to retrieve institution by institutionId without permissions (not onboarded)
     Given user login with username "r.balboa" and password "test"
@@ -50,7 +50,7 @@ Feature: Institution
     And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
     When I send a GET request to "/v2/institutions/{institutionId}" to retrieve institution
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | id                          | 067327d3-bdd6-408d-8655-87e8f1960046  |
       | externalId                  | 99000870064                           |
       | originId                    | c_d277                                |
@@ -68,9 +68,9 @@ Feature: Institution
       | products[0].institutionType | PSP                                   |
       | products[0].tokenId         | string                                |
       | products[0].createdAt       | 2022-06-10T13:29:10.462Z              |
-    And The response body contains the list "products" of size 4
+    And The dashboard response body contains the list "products" of size 4
     # Field institutionType not present if productId not specified in request
-    And The response body doesn't contain field "institutionType"
+    And The dashboard response body doesn't contain field "institutionType"
 
   Scenario: Unsuccessfully retrieve institution by institutionId v2 with PAGOPA issuer
     Given user login with username "b.king" and password "test"
@@ -83,7 +83,7 @@ Feature: Institution
     And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
     When I send a GET request to "/v2/institutions/all/{institutionId}" to retrieve institution
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | id                             | 067327d3-bdd6-408d-8655-87e8f1960046                                                                              |
       | externalId                     | 99000870064                                                                                                       |
       | originId                       | c_d277                                                                                                            |
@@ -107,19 +107,19 @@ Feature: Institution
       | products[3].institutionType    | PT                                                                                                                |
       | products[3].userRole           | SUPPORT                                                                                                           |
       | products[3].userProductActions | [read:users, write:users, Selc:AccessProductBackofficeAdmin, Selc:ListAllProductUsers, Selc:ListAllProductGroups] |
-    And The response body contains the list "products" of size 4
+    And The dashboard response body contains the list "products" of size 4
     # Field institutionType not present if productId not specified in request
-    And The response body doesn't contain field "institutionType"
-    And The response body doesn't contain field "products[0].userProductActions"
-    And The response body doesn't contain field "products[1].userProductActions"
-    And The response body doesn't contain field "products[2].userProductActions"
+    And The dashboard response body doesn't contain field "institutionType"
+    And The dashboard response body doesn't contain field "products[0].userProductActions"
+    And The dashboard response body doesn't contain field "products[1].userProductActions"
+    And The dashboard response body doesn't contain field "products[2].userProductActions"
 
   Scenario: Successfully retrieve all institution by institutionId v2 with PAGOPA issuer with both interop and ALL permissions
     Given user login with username "b.king" and password "test"
     And the institutionId is "067327d3-bdd6-408d-8655-87e8f1960046"
     When I send a GET request to "/v2/institutions/all/{institutionId}" to retrieve institution
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | id                             | 067327d3-bdd6-408d-8655-87e8f1960046                                                                                |
       | externalId                     | 99000870064                                                                                                         |
       | originId                       | c_d277                                                                                                              |
@@ -148,10 +148,10 @@ Feature: Institution
       | products[3].authorized         | true                                                                                                                |
       | products[3].userProductActions | [read:users, Selc:AccessProductBackofficeAdmin]                                                                     |
       | products[3].tokenId            | string                                                                                                              |
-    And The response body contains the list "products" of size 4
+    And The dashboard response body contains the list "products" of size 4
     # Field institutionType not present if productId not specified in request
-    And The response body doesn't contain field "institutionType"
-    And The response body doesn't contain field "products[1].userProductActions"
+    And The dashboard response body doesn't contain field "institutionType"
+    And The dashboard response body doesn't contain field "products[1].userProductActions"
 
   Scenario: Attempt to retrieve institution by institutionId v2 without permission (not onboarded)
     Given user login with username "r.balboa" and password "test"
@@ -174,7 +174,7 @@ Feature: Institution
     When I send a PUT request to "/v1/institutions/{institutionId}/geographic-taxonomy" to update institutions geo-taxonomy
     Then the response status should be 200
     And I send a GET request to "/v1/institutions/{institutionId}" to retrieve institution
-    And The response body contains:
+    And The dashboard response body contains:
       | geographicTaxonomies | [[code:058091, desc:ROMA - COMUNE]] |
 
   Scenario: Attempt to update institution geo-taxonomy by institutionId with invalid request body
@@ -213,7 +213,7 @@ Feature: Institution
     Then the response status should be 200
     And the Institution response should contain an institution id
     And I send a GET request to "/v1/institutions/{institutionId}" to retrieve institution
-    And The response body contains:
+    And The dashboard response body contains:
       | name        | COMUNE DI MORANSENGO-TONENGO2 |
       | mailAddress | test@test.it                  |
 
@@ -241,8 +241,8 @@ Feature: Institution
     And the institutionId is "c9a50656-f345-4c81-84be-5b2474470544"
     When I send a GET request to "/v2/institutions/{institutionId}/users/{userId}" to retrieve institution user
     Then the response status should be 200
-    And The response body contains the list "products" of size 4
-    And The response body contains:
+    And The dashboard response body contains the list "products" of size 4
+    And The dashboard response body contains:
       | id                                 | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
       | name                               | john                                 |
       | surname                            | Doe                                  |
@@ -388,9 +388,9 @@ Feature: Institution
     Then the response status should be 201
     And I send a GET request to "/v2/institutions/{institutionId}/users/{userId}" to retrieve institution user
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | id         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
-    And The response body contains the list "products" of size 3
+    And The dashboard response body contains the list "products" of size 3
 
   Scenario: Attempt to add user by institutionId, productId and userId without permission
     Given user login with username "j.doe" and password "test"
@@ -455,7 +455,7 @@ Feature: Institution
     And the institution ID is "c9a50656-f345-4c81-84be-5b2474470544" and the product ID is "prod-pagopa"
     When I send a GET request to "/v2/institutions/{institutionId}/products/{productId}/users/count" to get users count
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | count | 3 |
 
   Scenario: Attempt to get User Count without permission (OPERATOR)
@@ -475,7 +475,7 @@ Feature: Institution
     And the institution ID is "067327d3-bdd6-408d-8655-87e8f1960046"
     When I send a GET request to "/v2/institutions/{institutionId}/onboardings-info" to get onboardings info
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
       | [0].productId         | prod-io      |
       | [0].status            | ACTIVE       |
       | [0].contractAvailable | true         |
@@ -502,7 +502,7 @@ Feature: Institution
     And the products are "prod-io,prod-pagopa"
     When I send a GET request to "/v2/institutions/{institutionId}/onboardings-info" to get onboardings info
     Then the response status should be 200
-    And The response body contains:
+    And The dashboard response body contains:
     | [0].productId         | prod-io     |
     | [0].status            | ACTIVE      |
     | [0].contractAvailable | true        |

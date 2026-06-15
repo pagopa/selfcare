@@ -6,7 +6,9 @@ import it.pagopa.selfcare.dashboard.SelfCareDashboardApplication;
 import it.pagopa.selfcare.dashboard.integration_test.steps.DashboardStepsUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.platform.suite.api.*;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
@@ -19,22 +21,29 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
+import static io.cucumber.junit.platform.engine.Constants.GLUE_PROPERTY_NAME;
 import static io.cucumber.junit.platform.engine.Constants.PLUGIN_PROPERTY_NAME;
 
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
 @ConfigurationParameters({
-    @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty"),
-    @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "html:target/cucumber-report/cucumber.html"),
-    @ConfigurationParameter(key = "cucumber.filter.tags", value = "not @skip"),
-    @ConfigurationParameter(key = "cucumber.glue", value = "it.pagopa.selfcare.dashboard.integration_test")
+        @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty"),
+        @ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "html:target/cucumber-report/cucumber.html"),
+        @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "it.pagopa.selfcare.cucumber.utils,it.pagopa.selfcare.dashboard.integration_test"),
+        @ConfigurationParameter(key = "cucumber.filter.tags", value = "not @skip")
 })
 @CucumberContextConfiguration
 @TestPropertySource(locations = "classpath:application-test.properties")
-@SpringBootTest(classes = {SelfCareDashboardApplication.class}, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = { SelfCareDashboardApplication.class,
+        CucumberSuite.CucumberSdkTestConfiguration.class }, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @Slf4j
 public class CucumberSuite {
+
+    @TestConfiguration
+    @ComponentScan("it.pagopa.selfcare.cucumber.utils")
+    static class CucumberSdkTestConfiguration {
+    }
 
     private DashboardStepsUtil dashboardStepsUtil;
 
@@ -46,13 +55,26 @@ public class CucumberSuite {
         composeContainer = new ComposeContainer(new File("docker-compose.yml"))
                 .withLocalCompose(true)
                 .withPull(true)
-                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1).withStartupTimeout(Duration.ofMinutes(5)))
-                .waitingFor("onboardingms", Wait.forLogMessage(".*onboarding-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-                .waitingFor("documentms", Wait.forLogMessage(".*document-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-                .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-                .waitingFor("usergroupms", Wait.forLogMessage(".*Started SelfCareUserGroupApplication.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-                .waitingFor("userms", Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-                .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)));
+                .waitingFor("azure-cli",
+                        Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1)
+                                .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("onboardingms",
+                        Wait.forLogMessage(".*onboarding-ms.*started in.*Listening on.*", 1)
+                                .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("documentms",
+                        Wait.forLogMessage(".*document-ms.*started in.*Listening on.*", 1)
+                                .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("institutionms",
+                        Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1)
+                                .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("usergroupms",
+                        Wait.forLogMessage(".*Started SelfCareUserGroupApplication.*", 1)
+                                .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("userms",
+                        Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1)
+                                .withStartupTimeout(Duration.ofMinutes(5)))
+                .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1)
+                        .withStartupTimeout(Duration.ofMinutes(5)));
         composeContainer.start();
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 
@@ -82,4 +104,3 @@ public class CucumberSuite {
         registry.add("JWT_TOKEN_EXCHANGE_PRIVATE_KEY", () -> privateKey);
     }
 }
-
