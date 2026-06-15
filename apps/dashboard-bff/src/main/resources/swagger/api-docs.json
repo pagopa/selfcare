@@ -5386,10 +5386,6 @@
             "description" : "Self Care role",
             "enum" : [ "ADMIN", "LIMITED", "ADMIN_EA" ]
           },
-          "multiroleAllowed" : {
-            "type" : "boolean",
-            "description" : "Indicates if an User can have more than one product role"
-          },
           "phasesAdditionAllowed" : {
             "type" : "array",
             "description" : "List of phases where addition of the role is allowed",
@@ -5421,6 +5417,10 @@
           "description" : {
             "type" : "string",
             "description" : "Product role description"
+          },
+          "multiroleGroups" : {
+            "type" : "string",
+            "description" : "Product role groups that allow to assign multiple roles to the same user"
           }
         },
         "description" : "Available product roles"
