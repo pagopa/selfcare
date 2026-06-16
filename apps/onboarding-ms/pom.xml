@@ -266,6 +266,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core-http-okhttp</artifactId>
+            <version>${azure-core-http-okhttp.version}</version>
+        </dependency>
+        <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-crypto</artifactId>
             <version>${commons-sdk-version}</version>
@@ -280,11 +285,6 @@
                     <artifactId>azure-core-http-netty</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>com.azure</groupId>
-            <artifactId>azure-core-http-okhttp</artifactId>
-            <version>${azure-core-http-okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
