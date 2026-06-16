@@ -18,6 +18,7 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
@@ -494,5 +495,50 @@ public class ProductController {
                             .instance("/product/workflow-type")
                             .build())
                     .build());
+  }
+
+  @HEAD
+  @Tag(name = "Product")
+  @Path("/{productId}/required-documents/enabled")
+  @Operation(
+      summary = "Check if required documents are enabled",
+      description =
+          "Returns HTTP 200 with header X-Required-Documents-Enabled set to true if required documents "
+              + "are configured for the given product, institutionType and origin combination; false otherwise.",
+      operationId = "isRequiredDocumentsEnabled")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Check completed",
+            headers = {
+              @org.eclipse.microprofile.openapi.annotations.headers.Header(
+                  name = "X-Required-Documents-Enabled",
+                  description = "Whether required documents are enabled (true/false)")
+            }),
+        @APIResponse(responseCode = "400", description = "Bad Request"),
+        @APIResponse(responseCode = "404", description = "Product not found"),
+        @APIResponse(responseCode = "500", description = "Internal Server Error")
+      })
+  public Uni<Response> isRequiredDocumentsEnabled(
+      @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
+      @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
+          InstitutionType institutionType,
+      @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+
+    return productService
+        .isRequiredDocumentsEnabled(productId, institutionType, origin)
+        .onItem()
+        .transform(
+            enabled ->
+                Response.ok()
+                    .header("X-Required-Documents-Enabled", enabled)
+                    .build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t -> Response.status(Response.Status.BAD_REQUEST).build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t -> Response.status(Response.Status.NOT_FOUND).build());
   }
 }

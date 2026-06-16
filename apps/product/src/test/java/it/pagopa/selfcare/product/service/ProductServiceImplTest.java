@@ -15,6 +15,8 @@ import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
+import it.pagopa.selfcare.product.model.RequiredDocument;
+import it.pagopa.selfcare.product.model.RequiredDocumentFilter;
 import it.pagopa.selfcare.product.model.WorkflowRule;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
@@ -834,5 +836,284 @@ class ProductServiceImplTest {
     assertThat(persisted.getValue().getParentId()).isEmpty();
     assertThat(persisted.getValue().getFeatures().isRequiresParentOnboarding()).isFalse();
     verify(productRepository, never()).findProductById("");
+  }
+
+  // -------------------------------------------------------------------------
+  // isRequiredDocumentsEnabled
+  // -------------------------------------------------------------------------
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsTrue_whenFilterMatchesInstitutionTypeAndOrigin() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("doc-1")
+                        .name("Allegato A")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.SELC))
+                                .build())
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.GSP, Origin.SELC)
+            .await()
+            .indefinitely();
+
+    // then
+    assertTrue(enabled);
+    verify(productRepository, times(1)).findProductById("prod-test");
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsFalse_whenFilterDoesNotMatch() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("doc-1")
+                        .name("Allegato A")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.SELC))
+                                .build())
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertFalse(enabled);
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsFalse_whenRequiredDocumentsIsNull() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(null)
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertFalse(enabled);
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsFalse_whenRequiredDocumentsIsEmpty() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(List.of())
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertFalse(enabled);
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsFalse_whenFilterIsNull() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("doc-1")
+                        .name("Allegato A")
+                        .filter(null)
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertFalse(enabled);
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsTrue_whenOneOfMultipleDocumentsMatches() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("doc-1")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.SELC))
+                                .build())
+                        .build(),
+                    RequiredDocument.builder()
+                        .id("doc-2")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.PA))
+                                .origin(List.of(Origin.IPA))
+                                .build())
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertTrue(enabled);
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_throwsNotFound_whenProductDoesNotExist() {
+    // given
+    when(productRepository.findProductById("prod-missing")).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .isRequiredDocumentsEnabled("prod-missing", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown)
+        .isInstanceOf(NotFoundException.class)
+        .hasMessageContaining("prod-missing");
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_throwsIllegalArgument_whenProductIdIsBlank() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .isRequiredDocumentsEnabled("  ", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing productId");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_throwsIllegalArgument_whenInstitutionTypeIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .isRequiredDocumentsEnabled("prod-test", null, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_throwsIllegalArgument_whenOriginIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, null)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void isRequiredDocumentsEnabled_returnsFalse_whenOriginMatchesButInstitutionTypeDoesNot() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("doc-1")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.IPA))
+                                .build())
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when — origin IPA matches but institutionType PA does not match GSP
+    Boolean enabled =
+        productService
+            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertFalse(enabled);
   }
 }
