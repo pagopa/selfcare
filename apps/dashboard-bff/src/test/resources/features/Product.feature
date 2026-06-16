@@ -127,9 +127,9 @@ Feature: Product
       | DELEGATE     | ADMIN    | ["onboarding"]                  |
       | SUB_DELEGATE | ADMIN    | ["dashboard-async"]             |
     And The dashboard response body contains at path "find { it.partyRole == 'OPERATOR' }.productRoles" the following list of objects in any order:
-      | code          | label               | description                                                       |
-      | api           | Operatore API       | Gestisce il ciclo di vita degli e-service                         |
-      | security      | Operatore Sicurezza | Gestisce il ciclo di vita dei client di connessione               |
+      | code          | label               | description                                              | multiroleGroups |
+      | api           | Operatore API       | Gestisce il ciclo di vita degli e-service                | ["group1"]      |
+      | security      | Operatore Sicurezza | Gestisce il ciclo di vita dei client di connessione      | ["group1"]      |
     And The dashboard response body doesn't contain field "find { it.partyRole == 'OPERATOR' }.multiroleAllowed"
     And The dashboard response body contains at path "find { it.partyRole == 'DELEGATE' }.productRoles" the following list of objects in any order:
       | code           | label              | description                                                       |
