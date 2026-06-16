@@ -33,5 +33,7 @@ public class CoreConfig {
         private String containerProduct;
         private String filepathProduct;
         private String connectionStringProduct;
+        private String accountNameProduct;
+        private String managedIdentityClientIdProduct;
     }
 }

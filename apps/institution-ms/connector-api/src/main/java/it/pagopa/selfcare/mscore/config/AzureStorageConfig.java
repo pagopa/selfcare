@@ -15,10 +15,8 @@ public class AzureStorageConfig {
 
     private String connectionString;
     private String accountName;
+    private String managedIdentityClientId;
     private String endpointSuffix;
-
     private String container;
-    private String contractPath;
 
-    private String checkoutTemplateContainer;
 }
