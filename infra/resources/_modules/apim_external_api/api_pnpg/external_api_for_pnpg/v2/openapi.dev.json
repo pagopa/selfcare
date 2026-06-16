@@ -235,7 +235,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -251,7 +251,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -306,7 +306,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -316,7 +316,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -382,7 +382,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -398,7 +398,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -408,7 +408,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -461,7 +461,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -471,7 +471,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -518,7 +518,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -534,7 +534,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -544,7 +544,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem2"
+                  "$ref": "#/components/schemas/Problem3"
                 }
               }
             }
@@ -1640,7 +1640,7 @@
           "SUSPEND"
         ]
       },
-      "Problem2": {
+      "Problem3": {
         "type": "object",
         "properties": {
           "detail": {
@@ -1670,6 +1670,9 @@
           "productId": {
             "type": "string",
             "pattern": "\\S"
+          },
+          "parentId": {
+            "type": "string"
           },
           "alias": {
             "type": "string"
@@ -1731,6 +1734,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -1744,6 +1753,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WorkflowRule"
+            }
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocument"
             }
           }
         }
@@ -1783,6 +1798,9 @@
           "invoiceable": {
             "type": "boolean"
           },
+          "requiresParentOnboarding": {
+            "type": "boolean"
+          },
           "expirationDays": {
             "type": "integer",
             "format": "int32"
@@ -1800,9 +1818,6 @@
           },
           "institutionType": {
             "$ref": "#/components/schemas/InstitutionType1"
-          },
-          "multiroleAllowed": {
-            "type": "boolean"
           },
           "phasesAdditionAllowed": {
             "type": "array",
@@ -1855,6 +1870,12 @@
           },
           "productLabel": {
             "type": "string"
+          },
+          "multiroleGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -2083,6 +2104,50 @@
           }
         }
       },
+      "RequiredDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "labelKey": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "maxDocumentsRequired": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/RequiredDocumentFilter"
+          }
+        }
+      },
+      "RequiredDocumentFilter": {
+        "type": "object",
+        "properties": {
+          "institutionType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionType1"
+            }
+          },
+          "origin": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Origin1"
+            }
+          }
+        }
+      },
       "ProductOriginResponse": {
         "type": "object",
         "properties": {
@@ -2104,6 +2169,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -2164,6 +2232,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -2177,6 +2251,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WorkflowRule"
+            }
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocument"
             }
           }
         }
@@ -2191,6 +2271,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -2251,6 +2334,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -2264,6 +2353,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WorkflowRule"
+            }
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocument"
             }
           },
           "id": {
