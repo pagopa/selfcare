@@ -32,6 +32,15 @@ data "azurerm_user_assigned_identity" "cae_identity" {
 }
 
 ###############################################################################
+# RBAC
+###############################################################################
+resource "azurerm_role_assignment" "delegation_cdc_table_contributor" {
+  scope                = data.azurerm_storage_account.product_storage.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.cae_identity.principal_id
+}
+
+###############################################################################
 # Delegation CDC
 ###############################################################################
 
