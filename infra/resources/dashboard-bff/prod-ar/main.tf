@@ -19,6 +19,19 @@ module "local" {
   container_app_memory           = "2.5Gi"
 }
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
 locals {
   app_settings_dashboard_bff = [
     {
@@ -132,12 +145,19 @@ locals {
     {
       name  = "DOCUMENT_URL"
       value = "http://selc-p-document-ms-ca"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }
   ]
 
   secrets_names_dashboard_bff = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "BLOB_STORAGE_CONN_STRING"               = "web-storage-connection-string"
     "USER_REGISTRY_API_KEY"                  = "user-registry-api-key"
     "BACKOFFICE_PAGO_PA_API_KEY"             = "pagopa-backoffice-api-key"
     "SUPPORT_API_KEY"                        = "zendesk-support-api-key"
@@ -145,7 +165,6 @@ locals {
     "JWT_TOKEN_EXCHANGE_KID"                 = "jwt-exchange-kid"
     "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
     "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
   }
 }
 
