@@ -30,7 +30,7 @@
         <common-sdk-security-version>0.2.3</common-sdk-security-version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <owasp.encoder.version>1.4.0</owasp.encoder.version>
-        <azure-core-http-vertx.version>1.0.5</azure-core-http-vertx.version>
+        <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
     </properties>
 
     <dependencyManagement>
@@ -267,8 +267,8 @@
         </dependency>
         <dependency>
             <groupId>com.azure</groupId>
-            <artifactId>azure-core-http-vertx</artifactId>
-            <version>${azure-core-http-vertx.version}</version>
+            <artifactId>azure-core-http-okhttp</artifactId>
+            <version>${azure-core-http-okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
@@ -279,6 +279,12 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
             <version>${commons-sdk-version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.azure</groupId>
+                    <artifactId>azure-core-http-netty</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
