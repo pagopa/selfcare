@@ -162,7 +162,7 @@ module "appgateway_snet" {
 # Application Gateway
 #
 module "app_gw" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//app_gateway?ref=v9.6.1"
+  source = "./app_gateway"
 
   resource_group_name = var.rg_vnet_name
   location            = var.rg_vnet_location
