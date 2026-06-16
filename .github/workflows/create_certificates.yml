@@ -61,7 +61,7 @@ jobs:
       force_renewal: ${{ inputs.force_renewal }}
       key_vault_name: "selc-${{ inputs.environment == 'prod' && 'p' || inputs.environment == 'uat' && 'u' || 'd' }}-kv"
       csr_common_name: "${{ inputs.api_prefix != '-' && format('{0}.', inputs.api_prefix) || '' }}${{ inputs.environment != 'prod' && format('{0}.', inputs.environment) || '' }}${{ inputs.target }}.pagopa.it"
-      dns_zone: "${{ inputs.api_prefix != '-' && format('{0}.', inputs.api_prefix) || '' }}${{ inputs.environment != 'prod' && format('{0}.', inputs.environment) || '' }}${{ inputs.target }}.pagopa.it"
+      dns_zone: "${{ inputs.environment != 'prod' && format('{0}.', inputs.environment) || '' }}${{ inputs.target }}.pagopa.it"
       dns_zone_resource_group: "selc-${{ inputs.environment == 'prod' && 'p' || inputs.environment == 'uat' && 'u' || 'd' }}-vnet-rg"
       environment: ${{ inputs.environment }}
 
@@ -86,9 +86,9 @@ jobs:
           - environment: dev
             api_prefix: api-pnpg
             target: selfcare
-          - environment: dev
-            api_prefix: pnpg
-            target: selfcare
+          # - environment: dev
+          #   api_prefix: pnpg
+          #   target: selfcare
           - environment: uat
             api_prefix: "-"
             target: areariservata
@@ -104,9 +104,9 @@ jobs:
           - environment: uat
             api_prefix: api-pnpg
             target: selfcare
-          - environment: uat
-            api_prefix: pnpg
-            target: selfcare
+          # - environment: uat
+          #   api_prefix: pnpg
+          #   target: selfcare
           - environment: prod
             api_prefix: "-"
             target: areariservata
@@ -122,15 +122,15 @@ jobs:
           - environment: prod
             api_prefix: api-pnpg
             target: selfcare
-          - environment: prod
-            api_prefix: pnpg
-            target: selfcare
+          # - environment: prod
+          #   api_prefix: pnpg
+          #   target: selfcare
     uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
       force_renewal: false
       key_vault_name: "selc-${{ matrix.environment == 'prod' && 'p' || matrix.environment == 'uat' && 'u' || 'd' }}-kv"
       csr_common_name: "${{ matrix.api_prefix != '-' && format('{0}.', matrix.api_prefix) || '' }}${{ matrix.environment != 'prod' && format('{0}.', matrix.environment) || '' }}${{ matrix.target }}.pagopa.it"
-      dns_zone: "${{ matrix.api_prefix != '-' && format('{0}.', matrix.api_prefix) || '' }}${{ matrix.environment != 'prod' && format('{0}.', matrix.environment) || '' }}${{ matrix.target }}.pagopa.it"
+      dns_zone: "${{ matrix.environment != 'prod' && format('{0}.', matrix.environment) || '' }}${{ matrix.target }}.pagopa.it"
       dns_zone_resource_group: "selc-${{ matrix.environment == 'prod' && 'p' || matrix.environment == 'uat' && 'u' || 'd' }}-vnet-rg"
       environment: ${{ matrix.environment }}
