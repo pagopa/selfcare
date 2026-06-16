@@ -21,6 +21,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+
+import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -234,29 +236,83 @@ public class ProductServiceImpl implements ProductService {
   public Uni<WorkflowTypeResponse> getWorkflowType(
       String productId, InstitutionType institutionType, Origin origin) {
 
-    if (StringUtils.isBlank(productId)) {
-      return Uni.createFrom()
-          .failure(new IllegalArgumentException("Missing productId"));
-    }
-    if (institutionType == null) {
-      return Uni.createFrom()
-          .failure(new IllegalArgumentException("Missing institutionType"));
-    }
-    if (origin == null) {
-      return Uni.createFrom()
-          .failure(new IllegalArgumentException("Missing origin"));
-    }
-
-    String sanitizedProductId = Encode.forJava(productId);
-    log.info("Resolving workflowType for product {}, institutionType {}, origin {}",
-        sanitizedProductId, institutionType, origin);
-
-    return productRepository
-        .findProductById(productId)
+    return validateProductContext(productId, institutionType, origin)
         .onItem()
-        .ifNull()
-        .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
-        .map(product -> resolveWorkflowType(product, institutionType, origin, sanitizedProductId));
+        .transformToUni(ignored -> {
+          String sanitizedProductId = Encode.forJava(productId);
+          log.info("Resolving workflowType for product {}, institutionType {}, origin {}",
+              sanitizedProductId, institutionType, origin);
+
+          return productRepository
+              .findProductById(productId)
+              .onItem()
+              .ifNull()
+              .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+              .map(product -> {
+                WorkflowTypeResponse result = resolveWorkflowType(product, institutionType, origin, sanitizedProductId);
+                log.info("Workflow type resolved - productId: {}, institutionType: {}, origin: {}, workflowType: {}",
+                    sanitizedProductId, institutionType, origin, result.getWorkflowType());
+                return result;
+              });
+        });
+  }
+
+  @Override
+  public Uni<Boolean> isRequiredDocumentsEnabled(
+      String productId, InstitutionType institutionType, Origin origin) {
+
+    return validateProductContext(productId, institutionType, origin)
+        .onItem()
+        .transformToUni(ignored -> {
+          String sanitizedProductId = Encode.forJava(productId);
+          log.info("Checking if required documents are enabled for product {}, institutionType {}, origin {}",
+              sanitizedProductId, institutionType, origin);
+
+          return productRepository
+              .findProductById(productId)
+              .onItem()
+              .ifNull()
+              .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+              .map(product -> {
+                boolean enabled = hasRequiredDocumentsForContext(product, institutionType, origin);
+                log.info("Required documents check - productId: {}, institutionType: {}, origin: {}, enabled: {}",
+                    sanitizedProductId, institutionType, origin, enabled);
+                return enabled;
+              });
+        });
+  }
+
+  private Uni<Void> validateProductContext(
+      String productId, InstitutionType institutionType, Origin origin) {
+    if (StringUtils.isBlank(productId)) {
+      return Uni.createFrom().failure(new IllegalArgumentException("Missing productId"));
+    }
+    if (Objects.isNull(institutionType)) {
+      return Uni.createFrom().failure(new IllegalArgumentException("Missing institutionType"));
+    }
+    if (Objects.isNull(origin)) {
+      return Uni.createFrom().failure(new IllegalArgumentException("Missing origin"));
+    }
+    return Uni.createFrom().voidItem();
+  }
+
+  private boolean hasRequiredDocumentsForContext(
+      Product product, InstitutionType institutionType, Origin origin) {
+    if (Objects.isNull(product.getRequiredDocuments()) || product.getRequiredDocuments().isEmpty()) {
+      return false;
+    }
+
+    return product.getRequiredDocuments().stream()
+        .anyMatch(doc -> {
+          if ( Objects.isNull(doc.getFilter())) {
+            return false;
+          }
+          boolean institutionTypeMatch =
+              Objects.nonNull(doc.getFilter().getInstitutionType()) && doc.getFilter().getInstitutionType().contains(institutionType);
+          boolean originMatch =
+              Objects.nonNull(doc.getFilter().getOrigin()) && doc.getFilter().getOrigin().contains(origin);
+          return institutionTypeMatch && originMatch;
+        });
   }
 
   private void applyParentOnboardingDefaults(Product product, boolean parentIdWasProvided) {
@@ -319,7 +375,7 @@ public class ProductServiceImpl implements ProductService {
       Origin origin,
       String sanitizedProductId) {
 
-    if (product.getWorkflowRules() == null || product.getWorkflowRules().isEmpty()) {
+    if (Objects.isNull(product.getWorkflowRules()) || product.getWorkflowRules().isEmpty()) {
       throw new NotFoundException(
           String.format("No workflowRules configured for Product %s", sanitizedProductId));
     }

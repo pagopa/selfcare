@@ -662,6 +662,108 @@ class ProductControllerTest {
     verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
   }
 
+  // -------------------------------------------------------------------------
+  // HEAD /{productId}/required-documents/enabled
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn200_withHeaderTrue() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.GSP, Origin.SELC))
+        .thenReturn(Uni.createFrom().item(true));
+
+    // when
+    given()
+        .queryParam("institutionType", "GSP")
+        .queryParam("origin", "SELC")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(200)
+        .header("X-Required-Documents-Enabled", "true");
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.GSP, Origin.SELC);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn200_withHeaderFalse() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().item(false));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(200)
+        .header("X-Required-Documents-Enabled", "false");
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn404_whenProductNotFound() {
+    // given
+    String productId = "prod-missing";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new NotFoundException("Product prod-missing not found")));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(404);
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn400_whenServiceThrowsIllegalArgument() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new IllegalArgumentException("Missing productId")));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(400);
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+  }
+
   // UTILS
   private ProductCreateRequest getProductCreateRequest() {
     ProductCreateRequest productCreateRequest = null;
