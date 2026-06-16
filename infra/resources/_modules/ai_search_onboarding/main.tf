@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">=1.10.0"
   required_providers {
     restapi = {
       source  = "mastercard/restapi"
@@ -9,7 +10,7 @@ terraform {
 provider "restapi" {
   alias                = "search"
   uri                  = "https://${var.srch_service_name}.search.windows.net"
-  write_returns_object = true
+  write_returns_object = true // required for PUT operations        wwwwwww
   debug                = true
   insecure             = false
 
