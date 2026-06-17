@@ -26,18 +26,9 @@ data "azurerm_storage_account" "product_storage" {
   resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
 }
 
-data "azurerm_user_assigned_identity" "cae_identity" {
-  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+data "azurerm_user_assigned_identity" "cdc_identity" {
+  name                = "${module.local.config.container_app_environment_name}-cdc-managed_identity"
   resource_group_name = module.local.config.ca_resource_group_name
-}
-
-###############################################################################
-# RBAC
-###############################################################################
-resource "azurerm_role_assignment" "delegation_cdc_table_contributor" {
-  scope                = data.azurerm_storage_account.product_storage.id
-  role_definition_name = "Storage Table Data Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.cae_identity.principal_id
 }
 
 ###############################################################################
@@ -76,7 +67,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cae_identity.client_id
+      value = data.azurerm_user_assigned_identity.cdc_identity.client_id
     }
   ]
 
@@ -104,4 +95,5 @@ module "container_app_delegation_cdc" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.cdc_identity.id]
 }
