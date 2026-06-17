@@ -637,6 +637,9 @@ module "container_app_environments" {
   zone_redundant = false
 
   tags = local.tags
+
+  cdc_table_storage_account_name = "${local.prefix}${local.env_short}weuarcheckoutst01"
+  cdc_table_storage_account_resource_group = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }
 
 resource "azurerm_key_vault_access_policy" "container_app_environment" {

@@ -46,3 +46,30 @@ resource "azurerm_management_lock" "identity_lock" {
 
   notes = "Lock for the user-assigned managed identity"
 }
+
+resource "azurerm_user_assigned_identity" "cdc_identity" {
+  name                = "${var.cae_name}-cdc-managed_identity"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+
+  tags = var.tags
+}
+
+resource "azurerm_management_lock" "cdc_identity_lock" {
+  name       = azurerm_user_assigned_identity.cdc_identity.name
+  scope      = azurerm_user_assigned_identity.cdc_identity.id
+  lock_level = "CanNotDelete"
+
+  notes = "Lock for the CDC managed identity"
+}
+
+data "azurerm_storage_account" "cdc_table_storage" {
+  name                = var.cdc_table_storage_account_name
+  resource_group_name = var.cdc_table_storage_account_resource_group
+}
+
+resource "azurerm_role_assignment" "cdc_identity_role_assignment" {
+  scope                = data.azurerm_storage_account.cdc_table_storage.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.cdc_identity.principal_id
+}
