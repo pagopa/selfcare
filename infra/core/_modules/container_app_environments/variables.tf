@@ -89,13 +89,3 @@ variable "infrastructure_resource_group_name" {
 #     }
 #   ]
 # }
-
-variable "cdc_table_storage_account_name" {
-  type        = string
-  description = "Name of the storage account for CDC tables"
-}
-
-variable "cdc_table_storage_account_resource_group" {
-  type        = string
-  description = "Name of the resource group where the storage account for CDC tables is located"
-}

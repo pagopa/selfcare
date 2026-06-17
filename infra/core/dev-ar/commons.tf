@@ -637,9 +637,6 @@ module "container_app_environments" {
   zone_redundant = false
 
   tags = local.tags
-
-  cdc_table_storage_account_name = "${local.prefix}${local.env_short}weuarcheckoutst01"
-  cdc_table_storage_account_resource_group = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }
 
 resource "azurerm_key_vault_access_policy" "container_app_environment" {
@@ -776,4 +773,22 @@ module "apim" {
   apim_sku                         = "Developer_1"
   app_gateway_api_certificate_name = local.app_gateway_api_certificate_name
 
+}
+
+###############################################################################
+# User Managed Identity
+###############################################################################
+
+resource "azurerm_resource_group" "user_managed_identity_rg" {
+  name = "${local.project}-user-managed-identity-rg"
+  location = local.location
+}
+
+module "user_managed_identity" {
+  source = "../_modules/user_managed_identity"
+
+  location = local.location
+  resource_group_name = azurerm_resource_group.user_managed_identity_rg.name
+  env_short = local.env_short
+  tags = local.tags
 }
