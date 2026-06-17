@@ -277,17 +277,29 @@ public class DashboardBaseSteps {
 
     private Map<String, Object> filterExpectedObject(Map<String, Object> obj, Set<String> expectedKeys) {
         Map<String, Object> filteredMap = new HashMap();
-        Iterator var4 = expectedKeys.iterator();
+        ObjectMapper mapper = new ObjectMapper();
 
-        while (var4.hasNext()) {
-            String key = (String) var4.next();
+        for (String key : expectedKeys) {
             if (obj.containsKey(key) && Objects.nonNull(obj.get(key))) {
                 Object value = obj.get(key);
-                if (value instanceof String) {
-                    if (Boolean.TRUE.toString().equalsIgnoreCase((String) value)) {
+                if (value instanceof String str) {
+                    String trimmed = str.trim();
+                    // 1. boolean normalization
+                    if (Boolean.TRUE.toString().equalsIgnoreCase(trimmed)) {
                         value = true;
-                    } else if (Boolean.FALSE.toString().equalsIgnoreCase((String) value)) {
+                    } else if (Boolean.FALSE.toString().equalsIgnoreCase(trimmed)) {
                         value = false;
+                    }
+                    // 2. JSON array/object parsing
+                    else if (
+                            (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+                                    (trimmed.startsWith("{") && trimmed.endsWith("}"))
+                    ) {
+                        try {
+                            value = mapper.readValue(trimmed, Object.class);
+                        } catch (Exception ignored) {
+                            // leave as string if not valid JSON
+                        }
                     }
                 }
 
