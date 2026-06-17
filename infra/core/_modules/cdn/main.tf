@@ -428,8 +428,9 @@ resource "azurerm_cdn_frontdoor_rule" "x_content_type_options" {
 # Security Headers Applied:
 # - frame-ancestors 'none': Prevents embedding in any frame/iframe by default
 # - object-src 'none': Disables plugins (Flash, Java, etc.)
-# - frame-src 'self' *.{dns_zone_prefix}.{external_domain}: Allows framing only 
-#   from same origin and subdomains within the configured external domain
+# - frame-src 'self' *.{dns_zone_prefix}.{external_domain} *.qualtrics.com: Allows
+#   framing from same origin, subdomains within the configured external domain, and
+#   Qualtrics (pagopa.qualtrics.com survey iframe + *.siteintercept.qualtrics.com)
 #
 # This protects against clickjacking attacks and ensures the application
 # can only be embedded within trusted internal subdomains.
@@ -443,7 +444,7 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors" {
     response_header_action {
       header_action = "Append"
       header_name   = "Content-Security-Policy"
-      value         = format("frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.%s.%s;", var.dns_zone_prefix, var.external_domain)
+      value         = format("frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.%s.%s *.qualtrics.com;", var.dns_zone_prefix, var.external_domain)
     }
   }
 }
@@ -540,7 +541,7 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors_ar" {
     response_header_action {
       header_action = "Append"
       header_name   = "Content-Security-Policy"
-      value         = "frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain};"
+      value         = "frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain} *.qualtrics.com;"
     }
   }
 }
