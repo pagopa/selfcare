@@ -2741,6 +2741,12 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "multiroleGroups" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }
       },
