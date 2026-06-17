@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 public class RoleMapping {
   private String role;
   private InstitutionType institutionType;
-  private boolean multiroleAllowed;
   private List<String> phasesAdditionAllowed;
   private boolean skipUserCreation;
   private List<BackOfficeRole> backOfficeRoles;
