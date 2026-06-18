@@ -321,7 +321,7 @@ public class UserController {
     public Uni<Response> createOrUpdateByUserId(@PathParam("userId") String userId,
                                                 @Valid AddUserRoleDto userDto,
                                                 @Context SecurityContext ctx) {
-        return userUtils.checkProductRoles(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
+        return userUtils.checkProductRolesAndValidateMultirole(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
                 .chain(() -> readUserIdFromToken(ctx))
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByUserId(userDto, userId, loggedUser, OnboardedProductState.ACTIVE))
                 .onItem().ifNotNull().transform(ignore -> Response.status(HttpStatus.SC_CREATED).build())
@@ -349,7 +349,7 @@ public class UserController {
                                             @Valid AddUserRoleDto userDto,
                                             @Context SecurityContext ctx) {
 
-        return userUtils.checkProductRoles(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
+        return userUtils.checkProductRolesAndValidateMultirole(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
                 .chain(() -> readUserIdFromToken(ctx))
                 .onItem().transformToUni(loggedUser -> userService.createUserByUserId(userDto, userId, loggedUser))
                 .onItem().transform(ignore -> Response.status(HttpStatus.SC_CREATED).entity(userId).build())
@@ -377,7 +377,7 @@ public class UserController {
     @Produces(MediaType.APPLICATION_JSON)
     public Uni<Response> createOrUpdateByFiscalCode(@Valid CreateUserDto userDto,
                                                   @Context SecurityContext ctx) {
-        return userUtils.checkProductRoles(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
+        return userUtils.checkProductRolesAndValidateMultirole(userDto.getProduct().getProductId(), PartyRole.valueOf(userDto.getProduct().getRole()), userDto.getProduct().getProductRoles())
                 .chain(() -> readUserIdFromToken(ctx))
                 .onItem().transformToUni(loggedUser -> userService.createOrUpdateUserByFiscalCode(userDto, loggedUser))
                 .map(response -> Response

@@ -4,6 +4,7 @@ import io.quarkus.security.identity.CurrentIdentityAssociation;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -22,11 +23,12 @@ import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.user_registry_json.model.*;
-import org.owasp.encoder.Encode;
 
 import java.util.*;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
+import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.SUSPENDED;
 
 @ApplicationScoped
 @RequiredArgsConstructor
@@ -38,7 +40,7 @@ public class UserUtils {
 
     private final ProductService productService;
     private final NotificationMapper notificationMapper;
-    public static final List<String> VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION = List.of(OnboardedProductState.ACTIVE.name(), OnboardedProductState.DELETED.name(), OnboardedProductState.SUSPENDED.name());
+    public static final List<String> VALID_USER_PRODUCT_STATES_FOR_NOTIFICATION = List.of(ACTIVE.name(), OnboardedProductState.DELETED.name(), SUSPENDED.name());
 
     @SafeVarargs
     public final Map<String, Object> retrieveMapForFilter(Map<String, Object>... maps) {
@@ -47,20 +49,73 @@ public class UserUtils {
         return map;
     }
 
-        public Uni<Void> checkProductRoles(String productId, PartyRole role, List<String> productRoles) {
-        if (StringUtils.isNotBlank(productId) && productRoles != null) {
-            try {
-                for (String productRole : productRoles) {
-                    if (StringUtils.isNotBlank(productRole)) {
+    public Uni<Void> checkProductRolesAndValidateMultirole(String productId, PartyRole role, List<String> productRoles) {
+
+        if (StringUtils.isBlank(productId) || productRoles == null || productRoles.isEmpty()) {
+            return Uni.createFrom().voidItem();
+        }
+
+        try {
+            List<List<String>> groupsPerRole = new ArrayList<>();
+
+            // validate each requested product role
+            for (String productRole : productRoles) {
+
+                // validate role via product sdk
+                ProductRole validatedRole =
                         productService.validateProductRole(productId, productRole, role);
-                        log.debug("Product role {} is valid for product {}", Encode.forJava(productRole), Encode.forJava(productId));
-                    }
-                }
-            } catch (IllegalArgumentException e) {
-                throw new InvalidRequestException(e.getMessage());
+
+                groupsPerRole.add(validatedRole.getMultiroleGroups());
+            }
+
+            validateMultiroleRules(productRoles, groupsPerRole);
+
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException(e.getMessage());
+        }
+
+        return Uni.createFrom().voidItem();
+    }
+
+
+
+
+    private void validateMultiroleRules(List<String> productRoles, List<List<String>> groupsPerRole) {
+
+        boolean hasMultipleRoles = productRoles.size() > 1;
+
+        Set<String> intersection = null;
+
+        // Multirole rules apply only when more than one role is requested
+        if (!hasMultipleRoles) {
+            return;
+        }
+
+        for (List<String> groups : groupsPerRole) {
+
+            // RULE 1: cannot combine single-role with others
+            if (groups == null || groups.isEmpty()) {
+                throw new InvalidRequestException(
+                        "A product role that does not support multirole cannot be combined with others"
+                );
+            }
+
+            // build the intersection of groups between all the roles, if at least one role does not share any group with the others the intersection will be empty and the check will fail
+            Set<String> current = new HashSet<>(groups);
+
+            if (intersection == null) {
+                intersection = current;
+            } else {
+                intersection.retainAll(current);
             }
         }
-        return Uni.createFrom().voidItem();
+
+        // RULE 2: must share at least one group
+        if (intersection == null || intersection.isEmpty()) {
+            throw new InvalidRequestException(
+                    "Product roles must share at least one multirole group"
+            );
+        }
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {

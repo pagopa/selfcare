@@ -621,7 +621,7 @@ class UserControllerTest {
         CreateUserDto userDto = buildCreateUserDto();
 
         // Mock the userService.createOrUpdateUser method
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenReturn(Uni.createFrom().nullItem());
         when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any()))
                 .thenReturn(Uni.createFrom().item(CreateOrUpdateUserByFiscalCodeResponse.builder().build()));
@@ -643,7 +643,7 @@ class UserControllerTest {
         CreateUserDto userDto = buildCreateUserDto_withChildProduct();
 
         // Mock the userService.createOrUpdateUser method
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenReturn(Uni.createFrom().nullItem());
         when(userService.createOrUpdateUserByFiscalCode(any(CreateUserDto.class), any()))
                 .thenReturn(Uni.createFrom().item(CreateOrUpdateUserByFiscalCodeResponse.builder().build()));
@@ -688,7 +688,7 @@ class UserControllerTest {
         CreateUserDto userDto = buildCreateUserDto();
 
         // Mock the userService.createOrUpdateUser method
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenThrow(new IllegalArgumentException());
 
         // Perform the API call
@@ -709,7 +709,7 @@ class UserControllerTest {
 
 
         // Mock the userService.createOrUpdateUser method
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenReturn(Uni.createFrom().nullItem());
         when(userService.createOrUpdateUserByUserId(any(AddUserRoleDto.class), anyString(), any(), any()))
                 .thenReturn(Uni.createFrom().item("example"));
@@ -753,7 +753,7 @@ class UserControllerTest {
 
 
         // Mock the userService.createOrUpdateUser method
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenThrow(new IllegalArgumentException());
 
         // Perform the API call
@@ -770,7 +770,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testCheckRoleOrCreateOrUpdateByUserIdWhenUserIsManager() {
         AddUserRoleDto userDto = buildAddUserRoleDto();
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenReturn(Uni.createFrom().nullItem());
         when(userService.createUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
                 .thenReturn(Uni.createFrom().failure(new UserRoleAlreadyPresentException("test")));
@@ -787,7 +787,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testCheckRoleOrCreateOrUpdateByUserIdWhenUserIsNotManager() {
         AddUserRoleDto userDto = buildAddUserRoleDtoWithOtherRole();
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenReturn(Uni.createFrom().nullItem());
         when(userService.createUserByUserId(any(AddUserRoleDto.class), anyString(), any()))
                 .thenReturn(Uni.createFrom().nullItem());
@@ -817,7 +817,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void testCheckRoleOrCreateOrUpdateByUserIdWithInvalidProductRole() {
         AddUserRoleDto userDto = buildAddUserRoleDto();
-        when(userUtils.checkProductRoles(anyString(), any(), anyList()))
+        when(userUtils.checkProductRolesAndValidateMultirole(anyString(), any(), anyList()))
                 .thenThrow(new IllegalArgumentException());
         given()
                 .when()

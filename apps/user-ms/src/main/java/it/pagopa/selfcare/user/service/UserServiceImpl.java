@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
@@ -698,7 +699,7 @@ public class UserServiceImpl implements UserService {
             throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
-        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution, userDto.getProduct().getRole());
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole, status)));
@@ -740,13 +741,12 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
 
         if(checkAlreadyOnboardedRole(userDto.getProduct(), userInstitution)){
             throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
-        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution, userDto.getProduct().getRole());
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         userInstitution.setUserMailUuid(mailUuid);
@@ -755,7 +755,7 @@ public class UserServiceImpl implements UserService {
         return Uni.createFrom().item(userInstitution);
     }
 
-    private List<String> checkAlreadyOnboardedProductRole(String productId, List<String> productRole, UserInstitution userInstitution) {
+    private List<String> checkAlreadyOnboardedProductRole(String productId, List<String> productRole, UserInstitution userInstitution, String role) {
 
         List<String> productAlreadyOnboarded = new ArrayList<>(Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
@@ -772,7 +772,55 @@ public class UserServiceImpl implements UserService {
         if (!productAlreadyOnboarded.isEmpty() && CollectionUtils.isNullOrEmpty(productRoleFinal)) {
             throw new InvalidRequestException(String.format("User already has roles on Product %s", productId));
         }
+
+        // Final roles after the operation
+        List<String> finalRoles = new ArrayList<>(productAlreadyOnboarded);
+        finalRoles.addAll(productRoleFinal);
+
+        userUtils.checkProductRolesAndValidateMultirole(
+                productId,
+                PartyRole.valueOf(role),
+                finalRoles
+        );
+
+
         return productRoleFinal;
+    }
+
+
+    public Uni<Void> checkMultiroleWithPreviousUserInstitution(String productId, PartyRole role, String productRole, UserInstitution userInstitution, OnboardedProductState status) {
+
+        if (org.gradle.internal.impldep.org.apache.commons.lang.StringUtils.isBlank(productId) || productRole == null) {
+            return Uni.createFrom().voidItem();
+        }
+
+        try {
+            List<List<String>> groupsPerRole = new ArrayList<>();
+
+            // validate role via product sdk
+            ProductRole validatedRole =
+                    productService.validateProductRole(productId, productRole, role);
+            groupsPerRole.add(validatedRole.getMultiroleGroups());
+
+        } catch (IllegalArgumentException e) {
+            throw new InvalidRequestException(e.getMessage());
+        }
+
+        if(ACTIVE == status || SUSPENDED == status) {
+
+
+
+            ArrayList<String> productAlreadyOnboarded = new ArrayList<>(Optional.ofNullable(userInstitution.getProducts())
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
+                    .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
+                    .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
+                    .map(OnboardedProduct::getProductRole)
+                    .toList());
+        }
+
+        return Uni.createFrom().voidItem();
     }
 
 
