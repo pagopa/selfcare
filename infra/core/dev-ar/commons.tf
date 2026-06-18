@@ -779,16 +779,13 @@ module "apim" {
 # User Managed Identity
 ###############################################################################
 
-resource "azurerm_resource_group" "user_managed_identity_rg" {
-  name = "${local.project}-user-managed-identity-rg"
-  location = local.location
-}
-
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
   location = local.location
-  resource_group_name = azurerm_resource_group.user_managed_identity_rg.name
   env_short = local.env_short
+  domain = local.app_domain
   tags = local.tags
+  product_storage_name = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }

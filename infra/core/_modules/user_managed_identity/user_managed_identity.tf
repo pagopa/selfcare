@@ -1,29 +1,34 @@
 
+resource "azurerm_resource_group" "user_managed_identity_rg" {
+  name = "${var.prefix}-${var.env_short}-${var.domain}-user-managed-identity-rg"
+  location = var.location
+}
+
 ###############################################################################
-# CDC Managed Identity
+# Product Storage Table Managed Identity
 ###############################################################################
 
-resource "azurerm_user_assigned_identity" "cdc_identity" {
-  name                = "${var.prefix}-${var.env_short}${var.is_pnpg ? "-pnpg" : ""}-cdc-managed_identity"
+resource "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "${var.prefix}-${var.env_short}-${var.domain}-product-storage-table-managed-identity"
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.user_managed_identity_rg.name
   tags                = var.tags
 }
 
-resource "azurerm_management_lock" "cdc_identity_lock" {
-  name       = azurerm_user_assigned_identity.cdc_identity.name
-  scope      = azurerm_user_assigned_identity.cdc_identity.id
+resource "azurerm_management_lock" "product_storage_table_identity_lock" {
+  name       = azurerm_user_assigned_identity.product_storage_table_identity.name
+  scope      = azurerm_user_assigned_identity.product_storage_table_identity.id
   lock_level = "CanNotDelete"
-  notes      = "Lock for the CDC managed identity"
+  notes      = "Lock for the Product Storage Table Managed Identity"
 }
 
-data "azurerm_storage_account" "cdc_table_storage" {
-  name                = "${var.prefix}${var.env_short}${var.is_pnpg ? "weupnpgcheckoutst01" : "weuarcheckoutst01"}"
-  resource_group_name = "${var.prefix}-${var.env_short}${var.is_pnpg ? "-weu-pnpg-checkout-fe-rg" : "-checkout-fe-rg"}"
+data "azurerm_storage_account" "product_storage_table" {
+  name                = var.product_storage_name
+  resource_group_name = var.product_storage_rg
 }
 
-resource "azurerm_role_assignment" "cdc_identity_role_assignment" {
-  scope                = data.azurerm_storage_account.cdc_table_storage.id
+resource "azurerm_role_assignment" "product_storage_table_identity_role_assignment" {
+  scope                = data.azurerm_storage_account.product_storage_table.id
   role_definition_name = "Storage Table Data Contributor"
-  principal_id         = azurerm_user_assigned_identity.cdc_identity.principal_id
+  principal_id         = azurerm_user_assigned_identity.product_storage_table_identity.principal_id
 }

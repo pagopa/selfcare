@@ -4,11 +4,6 @@ variable "location" {
   description = "Azure region"
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = "Name of the resource group where resources will be created"
-}
-
 variable "prefix" {
   type        = string
   description = "Prefix for resource names"
@@ -24,13 +19,22 @@ variable "env_short" {
   }
 }
 
-variable "is_pnpg" {
-  type        = bool
-  description = "Indicates if the environment is PNPG"
-  default     = false
+variable "domain" {
+  type        = string
+  description = "Domain name for resource naming"
 }
 
 variable "tags" {
   type        = map(any)
   description = "Resource tags"
+}
+
+variable "product_storage_name" {
+  type        = string
+  description = "Complete name for the product storage"
+}
+
+variable "product_storage_rg" {
+  type        = string
+  description = "Resource group name for the product storage"
 }
