@@ -125,14 +125,6 @@ data "azurerm_user_assigned_identity" "cae_identity" {
   resource_group_name = module.local.config.ca_resource_group_name
 }
 
-###############################################################################
-# RBAC
-###############################################################################
-resource "azurerm_role_assignment" "onboarding_ms_product_blob_contributor" {
-  scope                = data.azurerm_storage_account.product_storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.cae_identity.principal_id
-}
 
 ###############################################################################
 # LOCAL VARIABLES
