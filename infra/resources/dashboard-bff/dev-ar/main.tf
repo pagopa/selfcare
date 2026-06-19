@@ -24,9 +24,9 @@ data "azurerm_storage_account" "product_storage" {
   resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
 }
 
-data "azurerm_user_assigned_identity" "cae_identity" {
-  name                = "${module.local.config.container_app_environment_name}-managed_identity"
-  resource_group_name = module.local.config.ca_resource_group_name
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
 ###############################################################################
@@ -148,7 +148,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cae_identity.client_id
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
