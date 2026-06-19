@@ -18,19 +18,6 @@ SelfCare platform monorepo: services, SDKs, infrastructure, releases.
 
 ![Selfcare Architecture](infra/docs/architectures/selfcare-architecture.png)
 
-### Domains
-
-| Domain | Services |
-| --- | --- |
-| Access & Identity | `auth`, `iam` |
-| Institution | `institution-ms`, `institution-send-mail-scheduler`, `dashboard-bff` |
-| Onboarding | `onboarding-ms`, `onboarding-bff`, `onboarding-cdc`, `onboarding-functions` |
-| Products | `product`, `product-cdc` |
-| Users | `user-ms`, `user-cdc`, `user-group-ms`, `user-group-cdc` |
-| Documents & Delegation | `document-ms`, `delegation-cdc` |
-| APIs & Integration | `external-api`, `webhook` |
-| Registry Proxy | `registry-proxy`, `registry-proxy-runner` |
-
 ## Platform Map
 
 | Area | Path | What lives here |
