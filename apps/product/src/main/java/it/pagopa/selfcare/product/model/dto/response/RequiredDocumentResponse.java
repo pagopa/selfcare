@@ -1,23 +1,21 @@
-package it.pagopa.selfcare.product.model;
+package it.pagopa.selfcare.product.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bson.codecs.pojo.annotations.BsonProperty;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RequiredDocument {
+public class RequiredDocumentResponse {
 
-  @BsonProperty("id")
   private String id;
   private String name;
   private String labelKey;
   private boolean required;
   private String mimeType;
   private Integer maxDocumentsRequired;
-  private RequiredDocumentFilter filter;
 }
+

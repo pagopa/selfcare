@@ -138,13 +138,13 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-common</artifactId>
-            <version>0.16.2</version>
+            <version>0.16.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
-            <version>0.16.2</version>
+            <version>0.16.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
