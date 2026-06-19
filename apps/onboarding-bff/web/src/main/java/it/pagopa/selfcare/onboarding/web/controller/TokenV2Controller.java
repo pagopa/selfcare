@@ -99,7 +99,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.completeOnboardingUsers}", summary = "${swagger.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
-    @PostMapping(value = "/{onboardingId}/complete-onboarding-users")
+    @PostMapping(value = "/{onboardingId}/complete-onboarding-users", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> completeOnboardingUsers(@ApiParam("${swagger.tokens.onboardingId}")
                                                         @PathVariable(value = "onboardingId") String onboardingId,
                                                         @RequestPart MultipartFile contract) {
@@ -295,7 +295,7 @@ public class TokenV2Controller {
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
-    @PostMapping(value = "/{onboardingId}/attachment")
+    @PostMapping(value = "/{onboardingId}/attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
                                                  @RequestParam("attachmentName") String attachmentName,
