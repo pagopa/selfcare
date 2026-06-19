@@ -2,6 +2,7 @@
   {
     "partyRole": "MANAGER",
     "selcRole": "ADMIN",
+    "multiroleAllowed": true,
     "phasesAdditionAllowed": ["onboarding","dashboard"],
     "productRoles": [
       {

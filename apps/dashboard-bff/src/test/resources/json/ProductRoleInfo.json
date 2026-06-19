@@ -1,4 +1,5 @@
 {
+  "multiroleAllowed": true,
   "phasesAdditionAllowed": ["onboarding","dashboard"],
   "roles": [
     {

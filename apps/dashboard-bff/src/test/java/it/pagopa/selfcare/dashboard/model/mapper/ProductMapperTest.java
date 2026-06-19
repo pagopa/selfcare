@@ -133,7 +133,7 @@ class ProductMapperTest {
         assertEquals(productRoleInfo.getRoles().size(), resource.getProductRoles().size());
         assertEquals(input.getKey().name(), resource.getPartyRole());
         assertEquals(SelfCareAuthority.ADMIN, resource.getSelcRole());
-        //assertEquals(input.getValue().isMultiroleAllowed(), resource.isMultiroleAllowed());
+        assertEquals(input.getValue().isMultiroleAllowed(), resource.isMultiroleAllowed());
     }
 
     @Test

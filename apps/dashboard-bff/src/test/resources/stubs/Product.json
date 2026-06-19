@@ -13,6 +13,7 @@
   "modifiedBy": "modifierId",
   "roleMappings": {
     "MANAGER": {
+      "multiroleAllowed": true,
       "roles": [
         {
           "code": "code1",
