@@ -189,7 +189,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cae_identity.client_id
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
