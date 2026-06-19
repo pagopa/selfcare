@@ -107,6 +107,7 @@ For each notification, the service must:
 - use the configured HTTP method;
 - set `Content-Type: application/json`;
 - add configured custom headers;
+- add a signed JWT header to authenticate the notification source;
 - send the notification payload as request body;
 - follow HTTP redirects;
 - apply configured timeouts.

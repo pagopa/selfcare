@@ -31,11 +31,19 @@ public class WebhookNotificationService {
 
   @Inject Vertx vertx;
 
+  @Inject WebhookJwtService webhookJwtService;
+
   @ConfigProperty(name = "webhook.timeout.connect", defaultValue = "5000")
   int connectTimeout;
 
   @ConfigProperty(name = "webhook.timeout.read", defaultValue = "10000")
   int readTimeout;
+
+  @ConfigProperty(name = "webhook.jwt.header-name", defaultValue = "Authorization")
+  String jwtHeaderName;
+
+  @ConfigProperty(name = "webhook.jwt.header-prefix", defaultValue = "Bearer ")
+  String jwtHeaderPrefix;
 
   private WebClient webClient;
 
@@ -173,8 +181,12 @@ public class WebhookNotificationService {
         webhook.getHeaders().forEach(request::putHeader);
       }
 
-      return request
-          .sendBuffer(Buffer.buffer(notification.getPayload()))
+      return webhookJwtService
+          .generateNotificationToken(webhook, notification)
+          .onItem()
+          .invoke(token -> request.putHeader(jwtHeaderName, jwtHeaderPrefix + token))
+          .onItem()
+          .transformToUni(token -> request.sendBuffer(Buffer.buffer(notification.getPayload())))
           .onItem()
           .transformToUni(response -> handleHttpResponse(webhook, notification, response))
           .onFailure()

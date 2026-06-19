@@ -22,7 +22,7 @@ The service is a single Quarkus microservice deployed as an Azure Container App 
 
 Webhook configuration requests are handled by a REST controller and application service boundary. Webhook data is persisted in Cosmos DB Mongo API through reactive MongoDB Panache repositories. Webhook headers are encrypted before persistence and decrypted when included in API responses.
 
-Notification submission is asynchronous from the caller perspective: the API accepts a product-level notification request, finds active webhooks for that product, creates notification records, and starts HTTP delivery through Vert.x WebClient. Delivery success is represented by a target response with status code `2xx`; non-`2xx` responses and communication errors update notification state for retry or permanent failure.
+Notification submission is asynchronous from the caller perspective: the API accepts a product-level notification request, finds active webhooks for that product, creates notification records, signs a short-lived JWT with the Selfcare private key, and starts HTTP delivery through Vert.x WebClient. Delivery success is represented by a target response with status code `2xx`; non-`2xx` responses and communication errors update notification state for retry or permanent failure.
 
 Retry processing runs inside the same service process through Quarkus Scheduler. The scheduler periodically claims pending or retryable notification records with MongoDB-side locking so multiple replicas do not process the same notification concurrently. Each scheduler cycle is bounded to 100 records and lock duration is 5 minutes.
 

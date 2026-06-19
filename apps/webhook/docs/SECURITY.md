@@ -49,7 +49,7 @@
 
 ### Secrets, encryption, and sensitive data
 
-- Keep `MONGODB_CONNECTION_STRING`, `JWT_PUBLIC_KEY`, `APPLICATIONINSIGHTS_CONNECTION_STRING`, `SELFCARE_DATA_ENCRIPTION_KEY`, and `SELFCARE_DATA_ENCRIPTION_IV` in Key Vault-backed Container App secrets only.
+- Keep `MONGODB_CONNECTION_STRING`, `JWT_PUBLIC_KEY`, `WEBHOOK_JWT_PRIVATE_KEY`, `APPLICATIONINSIGHTS_CONNECTION_STRING`, `SELFCARE_DATA_ENCRIPTION_KEY`, and `SELFCARE_DATA_ENCRIPTION_IV` in Key Vault-backed Container App secrets only.
 - Never commit real tokens, keys, connection strings, JWT public/private material, or repository credentials.
 - Webhook headers must remain encrypted at rest. Do not log decrypted headers or include them in traces.
 - Treat webhook payloads as potentially sensitive. Avoid logging full payloads by default.
