@@ -9,9 +9,10 @@ resource "azurerm_container_app" "container_app" {
   # Managed Identity
   identity {
     type = "SystemAssigned, UserAssigned"
-    identity_ids = [
-      data.azurerm_user_assigned_identity.cae_identity.id
-    ]
+    identity_ids = concat(
+      [data.azurerm_user_assigned_identity.cae_identity.id],
+      var.additional_user_assigned_identity_ids
+    )
   }
 
   # Secrets configuration
