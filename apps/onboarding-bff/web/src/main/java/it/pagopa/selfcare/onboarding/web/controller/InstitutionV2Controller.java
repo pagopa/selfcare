@@ -59,6 +59,12 @@ public class InstitutionV2Controller {
                     @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
                             schema = @Schema(implementation = Problem.class))
             })
+    @ApiResponse(responseCode = "409",
+            description = "Conflict",
+            content = {
+                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                            schema = @Schema(implementation = Problem.class))
+            })
     @PostMapping(value = "/onboarding")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
@@ -129,7 +135,7 @@ public class InstitutionV2Controller {
         return institutions;
     }
 
-    @PostMapping(value = "/onboarding/aggregation/verification")
+    @PostMapping(value = "/onboarding/aggregation/verification", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")

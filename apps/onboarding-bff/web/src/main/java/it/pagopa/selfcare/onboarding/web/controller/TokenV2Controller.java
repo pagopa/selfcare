@@ -70,7 +70,7 @@ public class TokenV2Controller {
      */
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.complete}", summary = "${swagger.tokens.complete}", operationId = "completeUsingPOST")
-    @PostMapping(value = "/{onboardingId}/complete")
+    @PostMapping(value = "/{onboardingId}/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> complete(@ApiParam("${swagger.tokens.onboardingId}")
                                          @PathVariable(value = "onboardingId") String onboardingId,
                                          @RequestPart MultipartFile contract) {
