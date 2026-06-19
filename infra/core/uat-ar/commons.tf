@@ -669,4 +669,6 @@ module "user_managed_identity" {
   tags = local.tags
   product_storage_name = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
   product_storage_rg = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  documents_storage_name = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
+  documents_storage_rg = "${local.prefix}-${local.env_short}-documents-storage-rg"
 }
