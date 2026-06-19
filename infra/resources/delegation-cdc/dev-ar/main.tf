@@ -26,9 +26,9 @@ data "azurerm_storage_account" "product_storage" {
   resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
 }
 
-data "azurerm_user_assigned_identity" "cdc_identity" {
-  name                = "${module.local.config.container_app_environment_name}-cdc-managed_identity"
-  resource_group_name = module.local.config.ca_resource_group_name
+data "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-table-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
 ###############################################################################
@@ -67,7 +67,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cdc_identity.client_id
+      value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
     }
   ]
 
@@ -95,5 +95,5 @@ module "container_app_delegation_cdc" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
-  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.cdc_identity.id]
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_table_identity.id]
 }
