@@ -60,4 +60,4 @@ jobs:
           -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
           -Dsonar.pullrequest.key="$PR_NUMBER"
           -Dsonar.pullrequest.branch="$SOURCE_BRANCH"
-          -Dsonar.pullrequest.base=refs/remotes/origin/"$TARGET_BRANCH"
+          -Dsonar.pullrequest.base="$TARGET_BRANCH"

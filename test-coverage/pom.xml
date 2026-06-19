@@ -14,7 +14,6 @@
     <name>test-coverage</name>
 
     <properties>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.coverage.exclusions>
             src/test/**,**/steps/**,**/cucumber/**,**/*IT.java,**/*Test.java,**/*Tests.java,**/*TestCase.java,**/exception/**,**/response/**,**/request/**,**/entity/**,**/common/**,**/utils/**,**/*Constant*,**/*Config.java,**/error/**,**/filter/**,org/**
         </sonar.coverage.exclusions>
