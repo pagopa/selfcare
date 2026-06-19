@@ -1,0 +1,89 @@
+name: SonarCloud Analysis
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'test-coverage/**'
+      - 'pom.xml'
+      - '.github/workflows/pr_sonar.yml'
+      - '.github/workflows/call_code_review.yml'
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'test-coverage/**'
+      - 'pom.xml'
+      - '.github/workflows/pr_sonar.yml'
+      - '.github/workflows/call_code_review.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: SonarCloud Monorepo Analysis
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Set missing library
+        run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Build and Analyze
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_PROFILES: auth,registry-proxy,libs,onboarding-ms,institution-ms,delegation-cdc,institution-send-mail-scheduler,onboarding-functions,onboarding-cdc,onboarding-bff,iam,product,document-ms,product-cdc,selfcare-sdk-security,selfcare-cucumber-sdk,user-ms,user-cdc,user-group-cdc,user-group-ms,dashboard-bff,webhook,onboarding-sdk,selfcare-user-sdk-model,selfcare-user-sdk-event,report,coverage
+        run: |
+          SONAR_ARGS=(
+            -Dsonar.organization=pagopa
+            -Dsonar.projectKey=pagopa_selfcare
+            -Dsonar.token="$SONAR_TOKEN"
+          )
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            SONAR_ARGS+=(
+              -Dsonar.pullrequest.key="${{ github.event.pull_request.number }}"
+              -Dsonar.pullrequest.branch="${{ github.head_ref }}"
+              -Dsonar.pullrequest.base="${{ github.base_ref }}"
+            )
+          fi
+
+          mvn --projects :test-coverage --also-make verify -P"$SONAR_PROFILES" "${SONAR_ARGS[@]}"
