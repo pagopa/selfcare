@@ -135,7 +135,7 @@ public class InstitutionV2Controller {
         return institutions;
     }
 
-    @PostMapping(value = "/onboarding/aggregation/verification")
+    @PostMapping(value = "/onboarding/aggregation/verification", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
