@@ -125,6 +125,11 @@ data "azurerm_user_assigned_identity" "cae_identity" {
   resource_group_name = module.local.config.ca_resource_group_name
 }
 
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 ###############################################################################
 # LOCAL VARIABLES
 ###############################################################################
@@ -225,6 +230,7 @@ module "container_app_onboarding_ms" {
   secrets_names                  = local.secrets_names_onboarding_ms
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  probes                                = module.local.config.quarkus_health_probes
+  tags                                  = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_blob_identity.id]
 }
