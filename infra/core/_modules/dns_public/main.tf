@@ -359,3 +359,13 @@ resource "azurerm_dns_cname_record" "dkim-aws-ses-areariservata-pagopa-it" {
   record              = each.value.value
   tags                = var.tags
 }
+
+
+resource "azurerm_dns_a_record" "dns_a_api_areariservata" {
+  name                = "api"
+  zone_name           = azurerm_dns_zone.areariservata_public[0].name
+  resource_group_name = var.rg_vnet_name
+  ttl                 = var.dns_default_ttl_sec
+  records             = [var.appgateway_public_ip_address]
+  tags                = var.tags
+}
