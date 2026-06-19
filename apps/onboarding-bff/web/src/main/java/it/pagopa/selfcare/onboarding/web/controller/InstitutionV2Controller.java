@@ -59,6 +59,12 @@ public class InstitutionV2Controller {
                     @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
                             schema = @Schema(implementation = Problem.class))
             })
+    @ApiResponse(responseCode = "409",
+            description = "Conflict",
+            content = {
+                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                            schema = @Schema(implementation = Problem.class))
+            })
     @PostMapping(value = "/onboarding")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",

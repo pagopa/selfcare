@@ -680,6 +680,16 @@
               }
             }
           },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "201" : {
             "description" : "Created"
           },
