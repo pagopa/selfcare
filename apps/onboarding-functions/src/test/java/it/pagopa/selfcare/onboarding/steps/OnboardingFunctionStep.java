@@ -1,5 +1,11 @@
 package it.pagopa.selfcare.onboarding.steps;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.hasKey;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
@@ -16,6 +22,9 @@ import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import jakarta.inject.Inject;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
@@ -25,16 +34,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.hasKey;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @EqualsAndHashCode(callSuper = true)
 @CucumberOptions(
@@ -133,7 +132,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
                         .log()
                         .all()
                         .queryParam("onboardingId", getOnboardingId())
-                        // .queryParam("timeout", 55000)
+                        .queryParam("timeout", 1) //ToDo fix: APZ
                         .when()
                         .get()
                         .then()
