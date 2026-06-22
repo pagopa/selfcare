@@ -535,6 +535,63 @@ class UserServiceTest {
         subscriber.assertFailedWith(InvalidRequestException.class, STATUS_IS_MANDATORY.getMessage());
     }
 
+  @Test
+  void updateUserStatusWithOptionalFilter_deleted_shouldCallOnboardingAndUpdate() {
+
+    String userId = "userId";
+    String institutionId = "institutionId";
+    String productId = "prod-pagopa";
+
+
+    Map<String, String> onboardingMap = Map.of(
+      "token-1", "user-1"
+    );
+
+    Mockito.doReturn(Uni.createFrom().item(onboardingMap))
+      .when(userInstitutionService)
+      .findTokenIdUserIdMap(
+        eq(userId),
+        eq(institutionId),
+        eq(productId),
+        eq(MANAGER),
+        isNull()
+      );
+
+    // 2. mock delete onboarding
+    Mockito.doReturn(Uni.createFrom().nullItem())
+      .when(userInstitutionService)
+      .callOnboardingDelete(anyString(), anyString(), eq(false));
+
+    // 3. mock update finale
+    Mockito.doReturn(Uni.createFrom().item(1L))
+      .when(userInstitutionService)
+      .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+        eq(userId),
+        eq(institutionId),
+        eq(productId),
+        eq(MANAGER),
+        isNull(),
+        eq(OnboardedProductState.DELETED)
+      );
+
+    UniAssertSubscriber<Void> subscriber =
+      userService.updateUserStatusWithOptionalFilter(
+          userId,
+          institutionId,
+          productId,
+          MANAGER,
+          null,
+          OnboardedProductState.DELETED
+        )
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.assertCompleted();
+
+    Mockito.verify(userInstitutionService, Mockito.times(1))
+      .callOnboardingDelete(anyString(), anyString(), eq(false));
+  }
+
     @Test
     void retrieveUsersTest() {
         UserInstitution userInstitution = createUserInstitution();
