@@ -27,11 +27,15 @@ on:
         type: boolean
         required: false
         default: false
-    
+
     secrets:
       API_NOTIFICATION_TRIGGERS_ID:
         required: true
       ARM_CLIENT_ID:
+        required: true
+      ARM_SUBSCRIPTION_ID:
+        required: true
+      ARM_TENANT_ID:
         required: true
 
 env:
@@ -42,7 +46,7 @@ env:
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
-  
+
 jobs:
   detect:
     name: 'Update Developer Docs And Sending Slack notification'
@@ -68,7 +72,7 @@ jobs:
         run: |
           env=${{ inputs.env }}
           echo "env_short=${env:0:1}" >> $GITHUB_OUTPUT
-          
+
           if ${{ inputs.is_pnpg }}; then
             echo "checkout_cdn_name=selc-${env:0:1}-weu-pnpg-checkout-fde-01" >> $GITHUB_OUTPUT
             echo "checkout_cdn_profile=selc-${env:0:1}-weu-pnpg-checkout-afd-01" >> $GITHUB_OUTPUT
@@ -137,7 +141,7 @@ jobs:
               --account-name ${{ steps.extract_env_short.outputs.storage_account_name }} \
               --file "${{ env.DIR }}${{ inputs.api_folder_path }}/openapi.${{ inputs.env }}.json" \
               --overwrite true \
-              --name '${{ inputs.docs_openapi_path }}' 
+              --name '${{ inputs.docs_openapi_path }}'
 
       - name: Purge blob storage assets
         uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2

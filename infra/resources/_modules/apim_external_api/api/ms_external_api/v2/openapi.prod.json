@@ -1199,7 +1199,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem4"
+                  "$ref": "#/components/schemas/Problem5"
                 }
               }
             }
@@ -1209,7 +1209,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem4"
+                  "$ref": "#/components/schemas/Problem5"
                 }
               }
             }
@@ -1219,7 +1219,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem4"
+                  "$ref": "#/components/schemas/Problem5"
                 }
               }
             }
@@ -1319,7 +1319,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1335,7 +1335,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1345,7 +1345,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1405,7 +1405,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1421,7 +1421,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1486,7 +1486,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1502,7 +1502,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1512,7 +1512,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1570,7 +1570,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1586,7 +1586,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1641,7 +1641,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1651,7 +1651,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1717,7 +1717,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1733,7 +1733,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1743,7 +1743,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1796,7 +1796,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1806,7 +1806,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1853,7 +1853,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1869,7 +1869,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -1879,7 +1879,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem5"
+                  "$ref": "#/components/schemas/Problem6"
                 }
               }
             }
@@ -2055,7 +2055,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2071,7 +2071,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2133,7 +2133,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2188,7 +2188,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2204,7 +2204,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2214,7 +2214,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2270,7 +2270,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2286,7 +2286,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2296,7 +2296,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2352,7 +2352,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2368,7 +2368,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -2378,7 +2378,7 @@
             "content": {
               "application/problem+json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Problem6"
+                  "$ref": "#/components/schemas/Problem7"
                 }
               }
             }
@@ -3724,11 +3724,44 @@
               "application/json": {}
             }
           },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Not Authorized"
           },
           "403": {
             "description": "Not Allowed"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4692,7 +4725,7 @@
           }
         }
       },
-      "Problem4": {
+      "Problem5": {
         "title": "Problem",
         "required": [
           "status",
@@ -4778,7 +4811,7 @@
           "PDF"
         ]
       },
-      "Problem5": {
+      "Problem6": {
         "type": "object",
         "properties": {
           "detail": {
@@ -4843,6 +4876,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -4903,6 +4939,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -4910,6 +4952,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ManagingInstitution"
+            }
+          },
+          "workflowRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRule"
             }
           }
         }
@@ -4947,6 +4995,9 @@
             "type": "boolean"
           },
           "invoiceable": {
+            "type": "boolean"
+          },
+          "requiresParentOnboarding": {
             "type": "boolean"
           },
           "expirationDays": {
@@ -5092,6 +5143,7 @@
         "type": "string",
         "enum": [
           "CONTRACT_REGISTRATION",
+          "CONTRACT_WITH_COUNTERSIGNATURE",
           "FOR_APPROVE",
           "FOR_APPROVE_PT",
           "FOR_APPROVE_GPU",
@@ -5234,6 +5286,20 @@
           }
         }
       },
+      "WorkflowRule": {
+        "type": "object",
+        "properties": {
+          "institutionType": {
+            "$ref": "#/components/schemas/InstitutionType1"
+          },
+          "origin": {
+            "$ref": "#/components/schemas/Origin1"
+          },
+          "workflowType": {
+            "$ref": "#/components/schemas/WorkflowType"
+          }
+        }
+      },
       "ProductOriginResponse": {
         "type": "object",
         "properties": {
@@ -5255,6 +5321,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -5315,6 +5384,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -5322,6 +5397,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ManagingInstitution"
+            }
+          },
+          "workflowRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRule"
             }
           }
         }
@@ -5336,6 +5417,9 @@
             "type": "string",
             "pattern": "\\S"
           },
+          "parentId": {
+            "type": "string"
+          },
           "alias": {
             "type": "string"
           },
@@ -5396,6 +5480,12 @@
               "type": "string"
             }
           },
+          "institutionTypesAllowed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "signingConfiguration": {
             "$ref": "#/components/schemas/SigningConfiguration"
           },
@@ -5403,6 +5493,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ManagingInstitution"
+            }
+          },
+          "workflowRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowRule"
             }
           },
           "id": {
@@ -5517,7 +5613,7 @@
           }
         }
       },
-      "Problem6": {
+      "Problem7": {
         "type": "object",
         "properties": {
           "detail": {
@@ -5956,9 +6052,6 @@
         "title": "ProductRoleInfo",
         "type": "object",
         "properties": {
-          "multiroleAllowed": {
-            "type": "boolean"
-          },
           "skipUserCreation": {
             "type": "boolean"
           },
@@ -5992,6 +6085,12 @@
           },
           "description": {
             "type": "string"
+          },
+          "multiroleGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -6820,6 +6919,32 @@
           "DELETED"
         ],
         "type": "string"
+      },
+      "Problem3": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProblemError"
+            }
+          }
+        }
+      },
+      "ProblemError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
       },
       "ReasonRequest": {
         "type": "object",
