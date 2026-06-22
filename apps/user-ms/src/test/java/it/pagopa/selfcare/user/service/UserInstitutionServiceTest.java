@@ -796,6 +796,55 @@ class UserInstitutionServiceTest {
     }
 
     @Test
+    void deleteUserInstitutionProductUsers_shouldCallOnboarding_whenMapNotEmpty() {
+
+        String institutionId = "institutionId";
+        String productId = "productId";
+
+        PanacheMock.mock(UserInstitution.class);
+
+        ReactiveMongoCollection mockCollection = Mockito.mock(ReactiveMongoCollection.class);
+        when(UserInstitution.mongoCollection()).thenReturn(mockCollection);
+
+        // FIND result not empty map
+        UserInstitution ui = new UserInstitution();
+        ui.setUserId("user-1");
+
+        OnboardedProduct product = new OnboardedProduct();
+        product.setProductId(productId);
+        product.setTokenId("token-1");
+        product.setStatus(OnboardedProductState.ACTIVE);
+
+        ui.setProducts(List.of(product));
+
+        when(mockCollection.find(any(Document.class), eq(UserInstitution.class)))
+                .thenReturn(Multi.createFrom().item(ui));
+
+        // UPDATE finale
+        UpdateResult updateResult = Mockito.mock(UpdateResult.class);
+        when(updateResult.getModifiedCount()).thenReturn(1L);
+
+        when(mockCollection.updateMany(
+                any(Document.class),
+                any(Document.class),
+                any(UpdateOptions.class)
+        )).thenReturn(Uni.createFrom().item(updateResult));
+
+        when(onboardingControllerApi.deleteOnboardingUser(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        UniAssertSubscriber<Long> subscriber =
+                userInstitutionService.deleteUserInstitutionProductUsers(institutionId, productId)
+                        .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+        subscriber.assertItem(1L);
+
+        verify(onboardingControllerApi, times(1))
+                .deleteOnboardingUser(anyString(), anyString());
+    }
+
+    @Test
     void updateUserProductCreatedAt() {
         final String userId = "userId";
         final String institutionId = "institutionId";
