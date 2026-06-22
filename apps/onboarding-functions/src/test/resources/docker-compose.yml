@@ -4,7 +4,7 @@ services:
     ports:
       - "27017:27017"
     networks:
-      - developer-network
+      - developer-network-fn
     volumes:
       - "./db:/docker-entrypoint-initdb.d"
 
@@ -15,7 +15,7 @@ services:
       - "10001:10001"
       - "10002:10002"
     networks:
-      - developer-network
+      - developer-network-fn
     environment:
       - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
     command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence"
@@ -32,7 +32,7 @@ services:
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:
-      - developer-network
+      - developer-network-fn
 
   onboarding-function:
     platform: linux/amd64
@@ -45,7 +45,7 @@ services:
       - "8090:8081"
       # - "5005:5005"
     networks:
-      - developer-network
+      - developer-network-fn
     depends_on:
       azurite:
         condition: service_started
@@ -78,7 +78,7 @@ services:
     env_file:
       - test-user-ms.env
     networks:
-      - developer-network
+      - developer-network-fn
     depends_on:
       azurite:
         condition: service_started
@@ -95,7 +95,7 @@ services:
     ports:
       - "8082:8082"
     networks:
-      - developer-network
+      - developer-network-fn
     env_file:
       - test-institution-ms.env
     depends_on:
@@ -114,7 +114,7 @@ services:
     ports:
       - "1080:1080"
     networks:
-      - developer-network
+      - developer-network-fn
     environment:
       - MOCKSERVER_INITIALIZATION_JSON_PATH=/config/*.json
       - MOCKSERVER_ENABLE_CORS_FOR_API="true"
@@ -135,7 +135,7 @@ services:
     ports:
       - "8091:8091"
     networks:
-      - developer-network
+      - developer-network-fn
     env_file:
       - test-integration-document.env
 
@@ -145,11 +145,11 @@ services:
 #      - "1025:1025"
 #      - "8025:1080"
 #    networks:
-#      - developer-network
+#      - developer-network-fn
 
 networks:
-  developer-network:
-    name: selfcare-develop-network
+  developer-network-fn:
+    name: selfcare-develop-network-fn
 
 secrets:
   maven_settings:
