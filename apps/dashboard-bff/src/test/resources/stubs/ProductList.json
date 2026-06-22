@@ -12,7 +12,6 @@
     "identityTokenAudience": "audience",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": true,
         "roles": [
           {
             "code": "code1",
@@ -51,7 +50,6 @@
     "identityTokenAudience": "audience",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": true,
         "roles": [
           {
             "code": "code1",

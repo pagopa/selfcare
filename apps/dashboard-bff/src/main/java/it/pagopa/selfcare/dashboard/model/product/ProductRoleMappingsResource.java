@@ -16,9 +16,6 @@ public class ProductRoleMappingsResource {
     @Schema(description = "${swagger.dashboard.product-role-mappings.model.selcRole}")
     private SelfCareAuthority selcRole;
 
-    @Schema(description = "${swagger.dashboard.product-role-mappings.model.multiroleAllowed}")
-    private boolean multiroleAllowed;
-
     @Schema(description = "${swagger.dashboard.product-role-mappings.model.phasesAdditionAllowed}")
     private List<String> phasesAdditionAllowed;
 
@@ -38,6 +35,9 @@ public class ProductRoleMappingsResource {
 
         @Schema(description = "${swagger.dashboard.product-role.model.description}")
         private String description;
+
+        @Schema(description = "${swagger.dashboard.product-role.model.multiroleGroups}")
+        private List<String> multiroleGroups;
         
     }
 

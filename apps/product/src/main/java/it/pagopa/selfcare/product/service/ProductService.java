@@ -7,8 +7,10 @@ import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
+import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
+import java.util.List;
 
 public interface ProductService {
   Uni<String> ping();
@@ -27,4 +29,6 @@ public interface ProductService {
   Uni<WorkflowTypeResponse> getWorkflowType(String productId, InstitutionType institutionType, Origin origin);
 
   Uni<Boolean> isRequiredDocumentsEnabled(String productId, InstitutionType institutionType, Origin origin);
+
+  Uni<List<RequiredDocumentResponse>> getRequiredDocuments(String productId, InstitutionType institutionType, Origin origin);
 }
