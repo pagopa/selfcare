@@ -36,6 +36,8 @@ class WebhookNotificationServiceTest {
 
   @InjectMock WebhookNotificationRepository notificationRepository;
 
+  @InjectMock WebhookJwtService webhookJwtService;
+
   Vertx vertx;
 
   private WebClient webClient;
@@ -52,6 +54,8 @@ class WebhookNotificationServiceTest {
     when(httpRequest.ssl(anyBoolean())).thenReturn(httpRequest);
     when(httpRequest.timeout(anyLong())).thenReturn(httpRequest);
     when(httpRequest.putHeader(anyString(), anyString())).thenReturn(httpRequest);
+    when(webhookJwtService.generateNotificationToken(any(Webhook.class), any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item("signed-token"));
 
     Object serviceInstance = io.quarkus.arc.ClientProxy.unwrap(notificationService);
     Field field = WebhookNotificationService.class.getDeclaredField("webClient");
@@ -81,6 +85,7 @@ class WebhookNotificationServiceTest {
     WebhookNotification captured = captor.getValue();
     assertEquals(WebhookNotification.NotificationStatus.SUCCESS, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
+    verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
   }
 
   @Test

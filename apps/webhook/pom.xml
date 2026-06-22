@@ -96,6 +96,10 @@
       <artifactId>quarkus-smallrye-jwt</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-smallrye-jwt-build</artifactId>
+    </dependency>
+    <dependency>
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-sdk-security</artifactId>
       <version>${security-sdk.version}</version>
