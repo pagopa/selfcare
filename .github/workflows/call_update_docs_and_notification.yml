@@ -33,6 +33,10 @@ on:
         required: true
       ARM_CLIENT_ID:
         required: true
+      ARM_SUBSCRIPTION_ID:
+        required: true
+      ARM_TENANT_ID:
+        required: true
 
 env:
   DIR: "./infra/resources/_modules/apim_external_api"
