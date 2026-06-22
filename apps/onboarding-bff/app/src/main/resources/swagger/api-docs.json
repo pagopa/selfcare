@@ -670,6 +670,16 @@
           "required" : true
         },
         "responses" : {
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "403" : {
             "description" : "Forbidden",
             "content" : {

@@ -87,13 +87,14 @@ jobs:
         uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
         with:
           inlineScript: |
-            mkdir docs
+            mkdir -p docs
             az storage blob download-batch --auth-mode key -d ./docs/ --account-name ${{ steps.extract_env_short.outputs.storage_account_name }}  -s '$web' --pattern ${{ inputs.docs_openapi_path }}
 
       - name: Setup Node
         uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 22
+          package-manager-cache: false
 
       - name: Install Optic
         run: |
