@@ -58,7 +58,7 @@ public class ProductResource {
 
   @Schema(description = "${swagger.external_api.products.model.roleMappings}")
   @NotEmpty
-  private EnumMap<PartyRole, it.pagopa.selfcare.product.entity.ProductRoleInfo> roleMappings;
+  private EnumMap<PartyRole, ProductRoleInfo> roleMappings;
 
   @Schema(description = "${swagger.external_api.products.model.roleManagementURL}")
   private String roleManagementURL;
