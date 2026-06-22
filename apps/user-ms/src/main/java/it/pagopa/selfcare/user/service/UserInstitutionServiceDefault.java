@@ -126,7 +126,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                         log.warn(
                                 "Error deleting onboarding {} for user {}",
                                 tokenId,
-                                userId,
+                                Encode.forJava(userId),
                                 error))
                 .onFailure()
                 .recoverWithNull();
