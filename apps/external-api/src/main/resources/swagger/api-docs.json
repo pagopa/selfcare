@@ -6,7 +6,21 @@
     "version" : "0.0.1-SNAPSHOT"
   },
   "servers" : [ {
-    "url" : "http://localhost:80"
+    "url" : "{scheme}://{url}:{port}{basePath}",
+    "variables" : {
+      "scheme" : {
+        "default" : "http"
+      },
+      "url" : {
+        "default" : "localhost"
+      },
+      "port" : {
+        "default" : "80"
+      },
+      "basePath" : {
+        "default" : ""
+      }
+    }
   } ],
   "tags" : [ {
     "name" : "Institution",
@@ -2754,9 +2768,6 @@
         "title" : "ProductRoleInfo",
         "type" : "object",
         "properties" : {
-          "multiroleAllowed" : {
-            "type" : "boolean"
-          },
           "skipUserCreation" : {
             "type" : "boolean"
           },

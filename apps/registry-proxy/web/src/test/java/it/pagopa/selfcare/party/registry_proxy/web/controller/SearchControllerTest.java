@@ -1,11 +1,23 @@
 package it.pagopa.selfcare.party.registry_proxy.web.controller;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 import it.pagopa.selfcare.party.registry_proxy.core.SearchService;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.OnboardingMapperImpl;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.TimeZone;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -15,17 +27,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @WebMvcTest(value = {SearchController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ContextConfiguration(classes = {SearchController.class, WebTestConfig.class, OnboardingMapperImpl.class})
 public class SearchControllerTest {
@@ -34,6 +35,11 @@ public class SearchControllerTest {
 
   @MockBean
   private SearchService searchService;
+
+  @BeforeAll
+  static void setUp() {
+    TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+  }
 
   @Test
   void searchInstitutionTest() throws Exception {

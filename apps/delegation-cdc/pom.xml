@@ -12,6 +12,8 @@
     <artifactId>delegation-cdc</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <properties>
+        <azure-data-tables.version>12.5.8</azure-data-tables.version>
+        <azure-identity.version>1.18.4</azure-identity.version>
         <compiler-plugin.version>3.12.1</compiler-plugin.version>
         <lombok.version>1.18.28</lombok.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
@@ -20,7 +22,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-        <quarkus.platform.version>3.11.0</quarkus.platform.version>
+        <quarkus.platform.version>3.36.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
@@ -58,7 +60,12 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-data-tables</artifactId>
-            <version>12.1.1</version>
+            <version>${azure-data-tables.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>${azure-identity.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -132,7 +139,7 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-common</artifactId>
-            <version>0.16.2</version>
+            <version>0.17.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

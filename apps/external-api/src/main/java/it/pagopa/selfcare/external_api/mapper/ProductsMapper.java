@@ -68,5 +68,4 @@ public interface ProductsMapper {
             model.getInstitutionContractTemplate(institutionType).getContractTemplateVersion())
         .orElse(null);
   }
-
 }
