@@ -178,8 +178,8 @@ resource "restapi_object" "search_index" {
         "searchable" : false
       },
       {
-        "name": "isTest",
-        "type": "Edm.Boolean",
+        "name" : "isTest",
+        "type" : "Edm.Boolean",
         "searchable" : false,
         "filterable" : true,
         "sortable" : true,
