@@ -38,11 +38,11 @@ jobs:
       pr_number: ${{ github.event.pull_request.number }}
       source_branch: ${{ github.head_ref }}
       target_branch: ${{ github.base_ref }}
-      sonar_key: "pagopa_selfcare-onboarding-backend"
+      sonar_key: "pagopa_selfcare"
       module: "onboarding-bff"
 
   openapi_check:
-    needs: [code_review]
+    needs: [ code_review ]
     permissions: write-all
     uses: ./.github/workflows/call_openapi_verification.yml
     name: Onboarding BFF OpenAPI Check

@@ -94,7 +94,8 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -106,7 +107,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
