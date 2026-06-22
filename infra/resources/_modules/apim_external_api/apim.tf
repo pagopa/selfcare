@@ -173,7 +173,8 @@ module "apim_external_api_ms_v2" {
     module.apim_product_fd.product_id,
     module.apim_product_fd_garantito.product_id,
     module.apim_product_registro_beni.product_id,
-    module.apim_product_idpay_gi.product_id
+    module.apim_product_idpay_gi.product_id,
+    module.apim_product_ced.product_id
   ]
 
   api_operation_policies = [
@@ -1646,6 +1647,23 @@ module "apim_product_registro_beni" {
   approval_required     = false
 
   policy_xml = file("${path.module}/api_product/registro-beni/policy.xml")
+}
+
+module "apim_product_ced" {
+  source = "github.com/pagopa/terraform-azurerm-v4.git//api_management_product?ref=v10.9.0"
+
+  product_id   = "prod-ced"
+  display_name = "CED"
+  description  = "CED"
+
+  api_management_name = data.azurerm_api_management.apim.name
+  resource_group_name = local.rg_apim_name
+
+  published             = true
+  subscription_required = true
+  approval_required     = false
+
+  policy_xml = file("${path.module}/api_product/ced/policy.xml")
 }
 
 ##################
