@@ -1859,12 +1859,12 @@
             "style": "form",
             "schema": {
               "type": "string",
-              "default": "NONE",
               "enum": [
                 "NONE",
                 "ASC",
                 "DESC"
-              ]
+              ],
+              "default": "NONE"
             }
           },
           {
