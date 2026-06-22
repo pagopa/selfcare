@@ -1,0 +1,14 @@
+packages:
+  - libs/*
+  - apps/*
+  - infra/*
+
+linkWorkspacePackages: true
+packageImportMethod: "clone-or-copy"
+cleanupUnusedCatalogs: true
+
+onlyBuiltDependencies:
+  - nx
+
+allowBuilds:
+  nx: false

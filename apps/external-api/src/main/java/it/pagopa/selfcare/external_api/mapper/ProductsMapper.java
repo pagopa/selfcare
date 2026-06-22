@@ -36,7 +36,6 @@ public interface ProductsMapper {
           (key, value) -> {
             ProductRoleInfo productRoleInfo = new ProductRoleInfo();
             productRoleInfo.setRoles(roleMappings.get(key).getRoles());
-            productRoleInfo.setMultiroleAllowed(roleMappings.get(key).isMultiroleAllowed());
             result.put(key, productRoleInfo);
           });
     } else {
