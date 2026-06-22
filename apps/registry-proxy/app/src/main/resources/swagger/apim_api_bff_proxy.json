@@ -2214,6 +2214,10 @@
             "type": "string",
             "description": "UO fiscal code"
           },
+          "codiceFiscaleSfe": {
+            "type": "string",
+            "description": "UO tax code for invoicing (SFE)"
+          },
           "codiceIpa": {
             "type": "string",
             "description": "UO ipa code"
