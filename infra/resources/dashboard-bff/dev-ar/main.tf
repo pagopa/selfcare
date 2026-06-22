@@ -29,6 +29,16 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_storage_account" "web_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "web_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-web-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 ###############################################################################
 # Dashboard BFF
 ###############################################################################
@@ -143,12 +153,20 @@ locals {
       value = "http://selc-d-document-ms-ca"
     },
     {
-      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      name  = "PRODUCT_AZURE_STORAGE_ACCOUNT_NAME"
       value = data.azurerm_storage_account.product_storage.name
     },
     {
-      name  = "AZURE_CLIENT_ID"
+      name  = "PRODUCT_AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "WEB_AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.web_storage.name
+    },
+    {
+      name  = "WEB_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.web_storage_blob_identity.client_id
     }
   ]
 
@@ -179,7 +197,10 @@ module "container_app_dashboard_bff" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
-  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_blob_identity.id]
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.web_storage_blob_identity.id
+  ]
 }
 
 ###############################################################################
