@@ -123,6 +123,10 @@ locals {
     {
       name  = "SELFCARE_URL"
       value = "https://pnpg.dev.selfcare.pagopa.it"
+    },
+    {
+      name  = "ONBOARDING_URL"
+      value = "http://selc-d-pnpg-onboarding-ms-ca"
     }
   ]
 

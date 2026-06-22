@@ -801,6 +801,72 @@ Feature: User
       | DELETED   | prod-pagopa |
     And The response body doesn't contain field "[0].products[0].roleId"
 
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Successfully delete logically the association institution and product when onboarding returns an handled error
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and tokenId "550e8400-e29b-41d4-a716-446655440001"
+    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                      |
+      | ACTIVE                      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+      | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
+      | productId                  | prod-pagopa                                          |
+    When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                                                                            |
+      | DELETED                                                                           |
+    And The response body doesn't contain field "[0].products[0].roleId"
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessully delete logically the association institution and product when onboarding returns an unhandled error
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and tokenId "550e8400-e29b-41d4-a716-446655440000"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                      |
+      | ACTIVE                      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+      | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
+      | productId                  | prod-pagopa                                          |
+    When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
+    Then The status code is 500
+    And The response body contains the string "Something has gone wrong in the server"
+
   # Cancellazione di prodotto già cancellato
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully delete logically the association institution and product because product is already deleted
