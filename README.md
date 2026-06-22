@@ -16,7 +16,7 @@ SelfCare platform monorepo: services, SDKs, infrastructure, releases.
 
 ## Architecture
 
-![Selfcare Architecture](infra/docs/architectures/selfcare-architecture.png)
+![Selfcare Architecture](infra/docs/architectures/selfcare-architecture.drawio.png)
 
 ## Platform Map
 
