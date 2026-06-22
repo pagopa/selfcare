@@ -107,13 +107,60 @@ public class UserServiceImpl implements UserService {
             return Uni.createFrom().failure(new InvalidRequestException(STATUS_IS_MANDATORY.getMessage()));
         }
 
-        return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, role, productRole, status)
-                .onItem().transformToUni(aLong -> {
-                    if (aLong < 1) {
-                        return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));
-                    }
-                    return Uni.createFrom().nullItem();
-                });
+        Uni<Long> updateChain;
+
+        if (OnboardedProductState.DELETED.equals(status)) {
+
+            updateChain = userInstitutionService
+                    .findTokenIdUserIdMap(
+                            userId,
+                            institutionId,
+                            productId,
+                            role,
+                            productRole)
+                    .flatMap(onboardingUsers ->
+                            Multi.createFrom()
+                                    .iterable(onboardingUsers.entrySet())
+                                    .onItem()
+                                    .transformToUniAndConcatenate(entry ->
+                                            userInstitutionService.callOnboardingDelete(
+                                                    entry.getKey(), // tokenId
+                                                    entry.getValue(), // userId
+                                                    false
+                                            ))
+                                    .collect()
+                                    .asList()
+                                    .flatMap(ignore ->
+                                            userInstitutionService
+                                                    .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                                                            userId,
+                                                            institutionId,
+                                                            productId,
+                                                            role,
+                                                            productRole,
+                                                            status))
+                    );
+
+        } else {
+
+            updateChain =
+                    userInstitutionService
+                            .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                                    userId,
+                                    institutionId,
+                                    productId,
+                                    role,
+                                    productRole,
+                                    status);
+        }
+
+        return updateChain.flatMap(updated -> {
+            if (updated < 1) {
+                return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));
+            }
+
+            return Uni.createFrom().nullItem();
+        });
     }
 
     @Override

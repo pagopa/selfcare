@@ -20,16 +20,21 @@ import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.onboarding_ms_json.api.OnboardingControllerApi;
 import org.owasp.encoder.Encode;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
@@ -47,6 +52,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
+
+    @RestClient
+    @Inject
+    private OnboardingControllerApi onboardingClient;
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
@@ -80,14 +89,160 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+
         OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).status(ACTIVE.name()).build();
         UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
+
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
-        return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
+
+        return findTokenId(userId, institutionId, productId)
+                .flatMap(tokenId ->
+                        callOnboardingDelete(tokenId, userId, true)
+                                .flatMap(ignore ->
+                                        updateUserStatusDao(filterMap, OnboardedProductState.DELETED)
+                                )
+                );
     }
 
     @Override
+    public Uni<Void> callOnboardingDelete(String tokenId, String userId, boolean isBlocking) {
+
+        if (tokenId == null) {
+            return Uni.createFrom().voidItem();
+        }
+
+        Uni<Void> deleteUni = onboardingClient
+                .deleteOnboardingUser(tokenId, userId)
+                .replaceWithVoid();
+
+        //if isBlocking is true, we want to propagate the error if it is not ignorable, otherwise we log the error and continue
+        return isBlocking
+                ? deleteUni
+                .onFailure(this::isIgnorableOnboardingError)
+                .recoverWithNull()
+                : deleteUni
+                .onFailure()
+                .invoke(error ->
+                        log.warn(
+                                "Error deleting onboarding {} for user {}",
+                                tokenId,
+                                userId,
+                                error))
+                .onFailure()
+                .recoverWithNull();
+    }
+
+    private boolean isIgnorableOnboardingError(Throwable e) {
+
+        if (e instanceof WebApplicationException wae) {
+            int status = wae.getResponse().getStatus();
+
+            return status == 404 || status == 400;
+        }
+
+        return false;
+    }
+
+    @Override
+    public Uni<Map<String, String>> findTokenIdUserIdMap(
+            String userId,
+            String institutionId,
+            String productId,
+            PartyRole role,
+            String productRole) {
+
+        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder()
+                .userId(userId)
+                .institutionId(institutionId)
+                .build()
+                .constructMap();
+
+        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder()
+                .productId(productId)
+                .role(role)
+                .productRole(productRole)
+                .build()
+                .constructMap();
+
+        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(
+                userInstitutionFilterMap,
+                onboardedProductFilterMap
+        );
+
+        Document query = queryUtils.buildQueryDocument(
+                filterMap,
+                USER_INSTITUTION_COLLECTION
+        );
+
+        return UserInstitution.mongoCollection()
+                .find(query, UserInstitution.class)
+                .collect()
+                .asList()
+                .map(userInstitutions ->
+                        userInstitutions.stream()
+                                .flatMap(userInstitution ->
+                                        Optional.ofNullable(userInstitution.getProducts())
+                                                .orElse(List.of())
+                                                .stream()
+                                                .filter(product ->
+                                                        product.getTokenId() != null
+                                                                && (ACTIVE.equals(product.getStatus()) || SUSPENDED.equals(product.getStatus()))
+                                                                && (productId == null || productId.equals(product.getProductId()))
+                                                                && (role == null || role.equals(product.getRole()))
+                                                                && (productRole == null || productRole.equals(product.getProductRole()))
+                                                )
+                                                .map(product -> Map.entry(
+                                                        product.getTokenId(),
+                                                        userInstitution.getUserId()
+                                                ))
+                                )
+                                .collect(Collectors.toMap(
+                                        Map.Entry::getKey,
+                                        Map.Entry::getValue,
+                                        (v1, v2) -> v1
+                                ))
+                );
+    }
+
+    private Uni<String> findTokenId(String userId, String institutionId, String productId) {
+        return findTokenIdUserIdMap(userId, institutionId, productId, null, null)
+                .map(tokenIdUserIdMap -> tokenIdUserIdMap.entrySet().stream()
+                        .findFirst()
+                        .map(Map.Entry::getKey)
+                        .orElse(null)
+                );
+    }
+
+
+    @Override
     public Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId) {
+
+        return findTokenIdUserIdMap(null, institutionId, productId, null, null)
+                .flatMap(onboardingUsers -> {
+
+                    if (onboardingUsers.isEmpty()) {
+                        return updateUserInstitutionProductUsers(institutionId, productId);
+                    }
+
+                    return Multi.createFrom()
+                            .iterable(onboardingUsers.entrySet())
+                            .onItem()
+                            .transformToUniAndMerge(entry ->
+                                    callOnboardingDelete(
+                                            entry.getKey(),
+                                            entry.getValue(),
+                                            false
+                                    )
+                            )
+                            .collect()
+                            .asList()
+                            .flatMap(ignore ->
+                                    updateUserInstitutionProductUsers(institutionId, productId)
+                            );
+                });
+    }
+
+    private Uni<Long> updateUserInstitutionProductUsers(String institutionId, String productId) {
         final String institutionIdField = UserInstitution.Fields.institutionId.name();
         final String statusField = UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.status.name();
         final String productIdField = UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.productId.name();

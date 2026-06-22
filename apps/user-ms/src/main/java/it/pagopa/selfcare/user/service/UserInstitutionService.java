@@ -55,4 +55,8 @@ public interface UserInstitutionService {
 
     Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId);
 
+    Uni<Void> callOnboardingDelete(String tokenId, String userId, boolean isBlocking);
+
+    Uni<Map<String, String>> findTokenIdUserIdMap(String userId, String institutionId, String productId, PartyRole roles, String productRole);
+
 }

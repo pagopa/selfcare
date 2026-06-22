@@ -587,6 +587,8 @@ class UserInstitutionServiceTest {
         String institutionId = "institutionId";
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+        ReactiveMongoCollection mockCollection = Mockito.mock(ReactiveMongoCollection.class);
+        when(UserInstitution.mongoCollection()).thenReturn(mockCollection);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
         when(update.where(any())).thenReturn(Uni.createFrom().item(1L));
