@@ -228,6 +228,12 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
             <version>${commons-sdk-version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>com.azure</groupId>
+              <artifactId>azure-core-http-netty</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
             <groupId>eu.europa.ec.joinup.sd-dss</groupId>
