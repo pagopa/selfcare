@@ -218,19 +218,19 @@ locals {
 module "container_app_onboarding_ms" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = module.local.config.env_short
-  resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-pnpg-onboarding-ms"
-  container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-onboarding-ms"
-  image_tag                      = var.image_tag
-  app_settings                   = local.app_settings_onboarding_ms
-  secrets_names                  = local.onboarding_ms_secrets_names
-  workload_profile_name          = null
-  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
-  key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  env_short                             = module.local.config.env_short
+  resource_group_name                   = module.local.config.ca_resource_group_name
+  container_app                         = module.local.config.container_app
+  container_app_name                    = "selc-${module.local.config.env_short}-pnpg-onboarding-ms"
+  container_app_environment_name        = module.local.config.container_app_environment_name
+  image_name                            = "selfcare-onboarding-ms"
+  image_tag                             = var.image_tag
+  app_settings                          = local.app_settings_onboarding_ms
+  secrets_names                         = local.onboarding_ms_secrets_names
+  workload_profile_name                 = null
+  key_vault_resource_group_name         = module.local.config.key_vault_resource_group_name
+  key_vault_name                        = module.local.config.key_vault_name
+  probes                                = module.local.config.quarkus_health_probes
+  tags                                  = module.local.config.tags
   additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_blob_identity.id]
 }

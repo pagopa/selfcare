@@ -286,10 +286,74 @@ module "container_app_environments" {
   tags = local.tags
 }
 
+### apz init
+
+resource "azurerm_subnet" "container_app_environment_workload_profiles" {
+  name                 = "${local.project}-pnpg-cae-wp-snet"
+  resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  address_prefixes     = local.cidr_subnet_pnpg_cae_wp
+
+  private_endpoint_network_policies = "Enabled"
+
+  delegation {
+    name = "Microsoft.App/environments"
+
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "container_app_environment_workload_profiles" {
+  subnet_id                 = azurerm_subnet.container_app_environment_workload_profiles.id
+  network_security_group_id = module.networking.network_security_group_id
+}
+
+module "container_app_environments_workload_profiles" {
+  source = "../_modules/container_app_environments"
+
+  project             = "${local.prefix}-${local.env_short}"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+
+  infrastructure_resource_group_name = "ME_selc-p-pnpg-cae-wp_selc-p-container-app-rg_westeurope"
+
+  enable_log = true
+  subnet_id  = azurerm_subnet.container_app_environment_workload_profiles.id
+  cae_name   = "${local.project}-pnpg-cae-wp"
+
+  # Enables the workload profiles Container Apps environment mode.
+  # Changing this list updates the compute profiles available to apps deployed in this environment.
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
+
+  zone_redundant = true
+
+  tags = local.tags
+}
+
+### apz end
+
 resource "azurerm_key_vault_access_policy" "container_app_environment" {
   key_vault_id = module.key_vault.key_vault_id
   tenant_id    = module.key_vault.tenant_id
   object_id    = module.container_app_environments.user_assigned_identity.principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+resource "azurerm_key_vault_access_policy" "container_app_environment_workload_profiles" {
+  key_vault_id = module.key_vault.key_vault_id
+  tenant_id    = module.key_vault.tenant_id
+  object_id    = module.container_app_environments_workload_profiles.user_assigned_identity.principal_id
 
   secret_permissions = ["Get", "List"]
 }
@@ -301,10 +365,10 @@ resource "azurerm_key_vault_access_policy" "container_app_environment" {
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location = local.location
-  env_short = local.env_short
-  domain = local.app_domain
-  tags = local.tags
+  location             = local.location
+  env_short            = local.env_short
+  domain               = local.app_domain
+  tags                 = local.tags
   product_storage_name = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutsa"
-  product_storage_rg = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
+  product_storage_rg   = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
 }

@@ -15,7 +15,7 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.68.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.77.0 |
 
 ## Modules
 
@@ -32,6 +32,7 @@
 | <a name="module_networking"></a> [networking](#module\_networking) | ../_modules/networking | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ../_modules/redis | n/a |
 | <a name="module_spid_test_env"></a> [spid\_test\_env](#module\_spid\_test\_env) | ../_modules/spid_testenv | n/a |
+| <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 
 ## Resources
 

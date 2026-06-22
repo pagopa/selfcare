@@ -47,5 +47,6 @@ No modules.
 
 | Name | Description |
 | ---- | ----------- |
+| <a name="output_network_security_group_id"></a> [network\_security\_group\_id](#output\_network\_security\_group\_id) | ID of the network security group associated with the Container App Environment subnet, when managed by this module. |
 | <a name="output_subnet"></a> [subnet](#output\_subnet) | n/a |
 <!-- END_TF_DOCS -->

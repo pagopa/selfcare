@@ -36,6 +36,7 @@
 | <a name="module_redis"></a> [redis](#module\_redis) | ../_modules/redis | n/a |
 | <a name="module_spid_logs_encryption_keys"></a> [spid\_logs\_encryption\_keys](#module\_spid\_logs\_encryption\_keys) | ../_modules/spid_logs_encryption_keys | n/a |
 | <a name="module_spid_test_env"></a> [spid\_test\_env](#module\_spid\_test\_env) | ../_modules/spid_testenv | n/a |
+| <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 
 ## Resources
 

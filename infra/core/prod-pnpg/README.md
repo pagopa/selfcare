@@ -24,18 +24,21 @@
 | <a name="module_azure_group"></a> [azure\_group](#module\_azure\_group) | ../_modules/data/azure_group | n/a |
 | <a name="module_cdn"></a> [cdn](#module\_cdn) | ../_modules/cdn | n/a |
 | <a name="module_container_app_environments"></a> [container\_app\_environments](#module\_container\_app\_environments) | ../_modules/container_app_environments | n/a |
+| <a name="module_container_app_environments_workload_profiles"></a> [container\_app\_environments\_workload\_profiles](#module\_container\_app\_environments\_workload\_profiles) | ../_modules/container_app_environments | n/a |
 | <a name="module_cosmos_db"></a> [cosmos\_db](#module\_cosmos\_db) | ../_modules/cosmos_db | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ../_modules/key_vault | n/a |
 | <a name="module_logs_storage"></a> [logs\_storage](#module\_logs\_storage) | ../_modules/storage_account_template | n/a |
 | <a name="module_network"></a> [network](#module\_network) | ../_modules/data/network | n/a |
 | <a name="module_networking"></a> [networking](#module\_networking) | ../_modules/networking | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ../_modules/redis | n/a |
+| <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
 | [azurerm_key_vault_access_policy.container_app_environment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
+| [azurerm_key_vault_access_policy.container_app_environment_workload_profiles](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_key_vault_secret.appinsights-instrumentation-key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_monitor_action_group.http_status](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_action_group) | resource |
 | [azurerm_monitor_metric_alert.functions_exceptions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
@@ -51,6 +54,8 @@
 | [azurerm_role_assignment.storage_blob_contributor_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.storage_blob_contributor_developers](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.storage_blob_contributor_externals](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_subnet.container_app_environment_workload_profiles](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
+| [azurerm_subnet_network_security_group_association.container_app_environment_workload_profiles](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) | resource |
 | [azurerm_application_insights.application_insights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/application_insights) | data source |
 | [azurerm_dns_zone.public](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/dns_zone) | data source |
 | [azurerm_key_vault_secret.alert_pnpg_http_status_slack](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
