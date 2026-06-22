@@ -48,3 +48,13 @@ variable "documents_storage_rg" {
   type        = string
   description = "Resource group name for the documents storage"
 }
+
+variable "web_storage_name" {
+  type        = string
+  description = "Complete name for the web storage"
+}
+
+variable "web_storage_rg" {
+  type        = string
+  description = "Resource group name for the web storage"
+}

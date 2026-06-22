@@ -17,13 +17,12 @@ Make sure your PAT has access to this repository. Then, follow these steps:
 
 | Name | Version |
 | ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.10.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.0 |
 
 ## Providers
 
-| Name | Version |
-| ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.74.0 |
+No providers.
 
 ## Modules
 
@@ -33,10 +32,7 @@ Make sure your PAT has access to this repository. Then, follow these steps:
 
 ## Resources
 
-| Name | Type |
-| ---- | ---- |
-| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+No resources.
 
 ## Inputs
 
@@ -44,5 +40,8 @@ No inputs.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_repository_id"></a> [repository\_id](#output\_repository\_id) | The ID of the GitHub repository |
+| <a name="output_repository_name"></a> [repository\_name](#output\_repository\_name) | The name of the GitHub repository |
 <!-- END_TF_DOCS -->

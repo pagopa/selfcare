@@ -96,7 +96,8 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -108,7 +109,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -116,8 +118,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
 # DATA SOURCES
 ###############################################################################
 data "azurerm_storage_account" "product_storage" {
-  name                =  "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
-  resource_group_name =  "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "cae_identity" {
