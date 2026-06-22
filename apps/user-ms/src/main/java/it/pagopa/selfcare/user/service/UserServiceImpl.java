@@ -112,7 +112,7 @@ public class UserServiceImpl implements UserService {
         if (OnboardedProductState.DELETED.equals(status)) {
 
             updateChain = userInstitutionService
-                    .findTokenIdUserIdMap(
+                    .findTokenIdUserIdList(
                             userId,
                             institutionId,
                             productId,
@@ -120,12 +120,12 @@ public class UserServiceImpl implements UserService {
                             productRole)
                     .flatMap(onboardingUsers ->
                             Multi.createFrom()
-                                    .iterable(onboardingUsers.entrySet())
+                                    .iterable(onboardingUsers)
                                     .onItem()
                                     .transformToUniAndConcatenate(entry ->
                                             userInstitutionService.callOnboardingDelete(
-                                                    entry.getKey(), // tokenId
-                                                    entry.getValue(), // userId
+                                                    entry.getTokenId(), // tokenId
+                                                    entry.getUserId(), // userId
                                                     false
                                             ))
                                     .collect()

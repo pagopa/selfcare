@@ -16,6 +16,7 @@ import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.OnboardingUserDeleteInfo;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
@@ -34,7 +35,6 @@ import org.owasp.encoder.Encode;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.*;
 import static it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter.OnboardedProductEnum.*;
@@ -143,72 +143,68 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         return false;
     }
 
-    @Override
-    public Uni<Map<String, String>> findTokenIdUserIdMap(
-            String userId,
-            String institutionId,
-            String productId,
-            PartyRole role,
-            String productRole) {
+  @Override
+  public Uni<List<OnboardingUserDeleteInfo>> findTokenIdUserIdList(
+    String userId,
+    String institutionId,
+    String productId,
+    PartyRole role,
+    String productRole) {
 
-        Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder()
-                .userId(userId)
-                .institutionId(institutionId)
-                .build()
-                .constructMap();
+    Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder()
+      .userId(userId)
+      .institutionId(institutionId)
+      .build()
+      .constructMap();
 
-        Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder()
-                .productId(productId)
-                .role(role)
-                .productRole(productRole)
-                .build()
-                .constructMap();
+    Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder()
+      .productId(productId)
+      .role(role)
+      .productRole(productRole)
+      .build()
+      .constructMap();
 
-        Map<String, Object> filterMap = userUtils.retrieveMapForFilter(
-                userInstitutionFilterMap,
-                onboardedProductFilterMap
-        );
+    Map<String, Object> filterMap = userUtils.retrieveMapForFilter(
+      userInstitutionFilterMap,
+      onboardedProductFilterMap
+    );
 
-        Document query = queryUtils.buildQueryDocument(
-                filterMap,
-                USER_INSTITUTION_COLLECTION
-        );
+    Document query = queryUtils.buildQueryDocument(
+      filterMap,
+      USER_INSTITUTION_COLLECTION
+    );
 
-        return UserInstitution.mongoCollection()
-                .find(query, UserInstitution.class)
-                .collect()
-                .asList()
-                .map(userInstitutions ->
-                        userInstitutions.stream()
-                                .flatMap(userInstitution ->
-                                        Optional.ofNullable(userInstitution.getProducts())
-                                                .orElse(List.of())
-                                                .stream()
-                                                .filter(product ->
-                                                        product.getTokenId() != null
-                                                                && (ACTIVE.equals(product.getStatus()) || SUSPENDED.equals(product.getStatus()))
-                                                                && (productId == null || productId.equals(product.getProductId()))
-                                                                && (role == null || role.equals(product.getRole()))
-                                                                && (productRole == null || productRole.equals(product.getProductRole()))
-                                                )
-                                                .map(product -> Map.entry(
-                                                        product.getTokenId(),
-                                                        userInstitution.getUserId()
-                                                ))
-                                )
-                                .collect(Collectors.toMap(
-                                        Map.Entry::getKey,
-                                        Map.Entry::getValue,
-                                        (v1, v2) -> v1
-                                ))
-                );
-    }
+    return UserInstitution.mongoCollection()
+      .find(query, UserInstitution.class)
+      .collect()
+      .asList()
+      .map(userInstitutions ->
+        userInstitutions.stream()
+          .flatMap(userInstitution ->
+            Optional.ofNullable(userInstitution.getProducts())
+              .orElse(List.of())
+              .stream()
+              .filter(product ->
+                product.getTokenId() != null
+                  && (ACTIVE.equals(product.getStatus()) || SUSPENDED.equals(product.getStatus()))
+                  && (productId == null || productId.equals(product.getProductId()))
+                  && (role == null || role.equals(product.getRole()))
+                  && (productRole == null || productRole.equals(product.getProductRole()))
+              )
+              .map(product -> new OnboardingUserDeleteInfo(
+                product.getTokenId(),
+                userInstitution.getUserId()
+              ))
+          )
+          .toList()
+      );
+  }
 
     private Uni<String> findTokenId(String userId, String institutionId, String productId) {
-        return findTokenIdUserIdMap(userId, institutionId, productId, null, null)
-                .map(tokenIdUserIdMap -> tokenIdUserIdMap.entrySet().stream()
+        return findTokenIdUserIdList(userId, institutionId, productId, null, null)
+                .map(tokenIdUserIdMap -> tokenIdUserIdMap.stream()
                         .findFirst()
-                        .map(Map.Entry::getKey)
+                        .map(OnboardingUserDeleteInfo::getTokenId)
                         .orElse(null)
                 );
     }
@@ -217,7 +213,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     @Override
     public Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId) {
 
-        return findTokenIdUserIdMap(null, institutionId, productId, null, null)
+        return findTokenIdUserIdList(null, institutionId, productId, null, null)
                 .flatMap(onboardingUsers -> {
 
                     if (onboardingUsers.isEmpty()) {
@@ -225,13 +221,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                     }
 
                     return Multi.createFrom()
-                            .iterable(onboardingUsers.entrySet())
+                            .iterable(onboardingUsers)
                             .onItem()
                             .transformToUniAndMerge(entry ->
                                     callOnboardingDelete(
-                                            entry.getKey(),
-                                            entry.getValue(),
-                                            false
+                                      entry.getTokenId(),
+                                      entry.getUserId(),
+                                      false
                                     )
                             )
                             .collect()

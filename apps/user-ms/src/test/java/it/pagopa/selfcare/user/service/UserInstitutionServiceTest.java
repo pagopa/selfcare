@@ -20,6 +20,7 @@ import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.OnboardingUserDeleteInfo;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -730,11 +731,11 @@ class UserInstitutionServiceTest {
         Mockito.when(mockCollection.find(any(Document.class), eq(UserInstitution.class)))
                 .thenReturn(Multi.createFrom().item(ui));
 
-        UniAssertSubscriber<Map<String, String>> subscriber =
-                userInstitutionService.findTokenIdUserIdMap("user", "institution", "productID", null, null)
+        UniAssertSubscriber<List<OnboardingUserDeleteInfo>> subscriber =
+                userInstitutionService.findTokenIdUserIdList("user", "institution", "productID", null, null)
                         .subscribe().withSubscriber(UniAssertSubscriber.create());
 
-        Map<String, String> result = subscriber.assertCompleted().getItem();
+        List<OnboardingUserDeleteInfo> result = subscriber.assertCompleted().getItem();
 
         assertEquals(2, result.size());
     }
@@ -786,7 +787,7 @@ class UserInstitutionServiceTest {
 
         // simulate findTokenIdUserIdMap returning empty (no onboarding calls)
         Mockito.doReturn(Uni.createFrom().item(Collections.emptyMap()))
-                .when(spy).findTokenIdUserIdMap(any(), any(), any(), any(), any());
+                .when(spy).findTokenIdUserIdList(any(), any(), any(), any(), any());
 
         UniAssertSubscriber<Long> subscriber =
                 spy.deleteUserInstitutionProductUsers("inst", "product")

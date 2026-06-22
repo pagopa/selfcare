@@ -28,10 +28,7 @@ import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
 import it.pagopa.selfcare.user.mapper.UserMapper;
-import it.pagopa.selfcare.user.model.LoggedUser;
-import it.pagopa.selfcare.user.model.OnboardedProduct;
-import it.pagopa.selfcare.user.model.UserNotificationToSend;
-import it.pagopa.selfcare.user.model.UserToNotify;
+import it.pagopa.selfcare.user.model.*;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.utils.CreateOrUpdateUserByFiscalCodeResponse;
 import it.pagopa.selfcare.user.util.UserUtils;
@@ -542,14 +539,11 @@ class UserServiceTest {
     String institutionId = "institutionId";
     String productId = "prod-pagopa";
 
-
-    Map<String, String> onboardingMap = Map.of(
-      "token-1", "user-1"
-    );
+    List<OnboardingUserDeleteInfo> onboardingMap = List.of(new OnboardingUserDeleteInfo("tokenId", userId));
 
     Mockito.doReturn(Uni.createFrom().item(onboardingMap))
       .when(userInstitutionService)
-      .findTokenIdUserIdMap(
+      .findTokenIdUserIdList(
         eq(userId),
         eq(institutionId),
         eq(productId),
