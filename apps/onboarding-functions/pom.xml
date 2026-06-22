@@ -29,6 +29,7 @@
         <lombok.version>1.18.36</lombok.version>
         <quarkus-openapi-generator.version>2.2.10</quarkus-openapi-generator.version>
         <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
+        <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <dependencyManagement>
@@ -47,6 +48,11 @@
                 <type>pom</type>
                 <scope>import</scope>
 			</dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
