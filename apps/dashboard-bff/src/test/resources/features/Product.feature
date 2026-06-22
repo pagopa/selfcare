@@ -50,7 +50,34 @@ Feature: Product
     When I send a GET request to "/v1/products/{productId}/roles" to retrieve productRoles
     Then the response status should be 200
     And the response should contain a list of product roles
-    And the response should contains "operator-psp" as productRole code
+    And The dashboard response body contains the list "" of size 5
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | partyRole    | selcRole | phasesAdditionAllowed           |
+      | OPERATOR     | LIMITED  | ["dashboard"]                   |
+      | MANAGER      | ADMIN    | ["onboarding"]                  |
+      | DELEGATE     | ADMIN    | ["onboarding"]                  |
+      | SUB_DELEGATE | ADMIN    | ["dashboard-async"]             |
+      | ADMIN_EA     | ADMIN    | ["onboarding"]                  |
+    And The dashboard response body contains at path "find { it.partyRole == 'OPERATOR' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | operator-psp   | Operatore          | Gestisce l’integrazione tecnologica e/o l'operatività dei servizi |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'OPERATOR' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'DELEGATE' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | admin-psp      | Amministratore     | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'DELEGATE' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'ADMIN_EA' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | admin-psp      | Amministratore     | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'ADMIN_EA' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'SUB_DELEGATE' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                             |
+      | admin-psp      | Amministratore     | Ha tutti i permessi e gestisce gli utenti. Possono essere al massimo 4. |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'SUB_DELEGATE' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'MANAGER' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | admin-psp      | Amministratore     | Stipula il contratto e identifica gli amministratori              |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'MANAGER' }.multiroleAllowed"
 
   Scenario: Successfully retrieving the product roles for given productId
     Given user login with username "j.doe" and password "test"
@@ -58,7 +85,64 @@ Feature: Product
     When I send a GET request to "/v1/products/{productId}/roles" to retrieve productRoles
     Then the response status should be 200
     And the response should contain a list of product roles
-    And the response should contains "operator" as productRole code
+    And The dashboard response body contains the list "" of size 5
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | partyRole    | selcRole | phasesAdditionAllowed           |
+      | OPERATOR     | LIMITED  | ["dashboard"]                   |
+      | MANAGER      | ADMIN    | ["onboarding"]                  |
+      | DELEGATE     | ADMIN    | ["onboarding"]                  |
+      | SUB_DELEGATE | ADMIN    | ["dashboard"]                   |
+      | ADMIN_EA     | ADMIN    | ["onboarding"]                  |
+    And The dashboard response body contains at path "find { it.partyRole == 'OPERATOR' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | operator       | Operatore          | Gestisce l’integrazione tecnologica e/o l'operatività dei servizi |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'OPERATOR' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'DELEGATE' }.productRoles" the following list of objects in any order:
+      | code           | label                   | description                                                       |
+      | admin          | Referente dei Pagamenti | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'DELEGATE' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'ADMIN_EA' }.productRoles" the following list of objects in any order:
+      | code           | label                   | description                                                       |
+      | admin          | Referente dei Pagamenti | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'ADMIN_EA' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'SUB_DELEGATE' }.productRoles" the following list of objects in any order:
+      | code           | label                   | description                                                       |
+      | admin          | Referente dei Pagamenti | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'SUB_DELEGATE' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'MANAGER' }.productRoles" the following list of objects in any order:
+      | code           | label                   | description                                                       |
+      | admin          | Referente dei Pagamenti | Stipula il contratto e identifica gli amministratori              |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'MANAGER' }.multiroleAllowed"
+
+  Scenario: Successfully retrieving the product roles for given productId for prod-interop
+    Given user login with username "j.doe" and password "test"
+    And the productId is "prod-interop"
+    When I send a GET request to "/v1/products/{productId}/roles" to retrieve productRoles
+    Then the response status should be 200
+    And The dashboard response body contains the list "" of size 4
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | partyRole    | selcRole | phasesAdditionAllowed           |
+      | OPERATOR     | LIMITED  | ["dashboard"]                   |
+      | MANAGER      | ADMIN    | ["onboarding"]                  |
+      | DELEGATE     | ADMIN    | ["onboarding"]                  |
+      | SUB_DELEGATE | ADMIN    | ["dashboard-async"]             |
+    And The dashboard response body contains at path "find { it.partyRole == 'OPERATOR' }.productRoles" the following list of objects in any order:
+      | code          | label               | description                                              | multiroleGroups |
+      | api           | Operatore API       | Gestisce il ciclo di vita degli e-service                | ["group1"]      |
+      | security      | Operatore Sicurezza | Gestisce il ciclo di vita dei client di connessione      | ["group1"]      |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'OPERATOR' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'DELEGATE' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | admin          | Amministratore     | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'DELEGATE' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'SUB_DELEGATE' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | admin          | Amministratore     | Ha tutti i permessi e gestisce gli utenti                         |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'SUB_DELEGATE' }.multiroleAllowed"
+    And The dashboard response body contains at path "find { it.partyRole == 'MANAGER' }.productRoles" the following list of objects in any order:
+      | code           | label              | description                                                       |
+      | admin          | Amministratore     | Stipula il contratto e identifica gli amministratori              |
+    And The dashboard response body doesn't contain field "find { it.partyRole == 'MANAGER' }.multiroleAllowed"
 
   Scenario: Successfully retrieving the product brokers for product PagoPA and institutionType PSP found
     Given user login with username "j.doe" and password "test"

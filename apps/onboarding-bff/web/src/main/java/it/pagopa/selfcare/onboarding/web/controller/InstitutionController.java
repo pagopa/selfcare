@@ -246,6 +246,47 @@ public class InstitutionController {
         log.trace("verifyOnboarding end");
     }
 
+    /**
+     * GET equivalent of the {@link #verifyOnboarding} HEAD endpoint.
+     * Added because the OpenAPI codegen v14 used by some consumers does not support the HEAD HTTP method.
+     * Same query parameters and same semantics: returns 200 on success (no body), 404 when not found.
+     */
+    @ApiResponse(responseCode = "403",
+            description = "Forbidden",
+            content = {
+                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                            schema = @Schema(implementation = Problem.class))
+            })
+    @GetMapping(value = "/onboarding/verify")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "${swagger.onboarding.institutions.api.verifyOnboarding}",
+            description = "${swagger.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingGET")
+    public void verifyOnboardingGet(@ApiParam("${swagger.onboarding.institutions.model.taxCode}")
+                                        @RequestParam(value = "taxCode", required = false)
+                                        String taxCode,
+                                    @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
+                                        @RequestParam(value = "subunitCode", required = false)
+                                        String subunitCode,
+                                    @ApiParam("${swagger.onboarding.product.model.id}")
+                                        @RequestParam("productId")
+                                        String productId,
+                                    @ApiParam("${swagger.onboarding.institutions.model.origin}")
+                                        @RequestParam(value = "origin", required = false)
+                                        String origin,
+                                    @ApiParam("${swagger.onboarding.institutions.model.originId}")
+                                        @RequestParam(value = "originId", required = false)
+                                        String originId,
+                                    @ApiParam("${swagger.onboarding.institutions.model.vatNumber}")
+                                        @RequestParam(value = "vatNumber", required = false)
+                                        Optional<String> vatNumber,
+                                    @ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+                                        @RequestParam(value = "institutionType", required = false)
+                                        String institutionType,
+                                    @ApiParam("${swagger.onboarding.institutions.model.verifyType}")
+                                        @RequestParam(value = "verifyType", required = false) VerifyType type) {
+        verifyOnboarding(taxCode, subunitCode, productId, origin, originId, vatNumber, institutionType, type);
+    }
+
     @GetMapping(value = "/from-infocamere/")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionsByUser}",
