@@ -23,7 +23,7 @@ on:
       - 'libs/**'
       - 'test-coverage/**'
       - 'pom.xml'
-      - '.github/workflows/pr_sonar.yml'
+      - '.github/workflows/pr_sonar_analysis.yml'
       - '.github/workflows/call_code_review.yml'
 
   push:
@@ -34,7 +34,7 @@ on:
       - 'libs/**'
       - 'test-coverage/**'
       - 'pom.xml'
-      - '.github/workflows/pr_sonar.yml'
+      - '.github/workflows/pr_sonar_analysis.yml'
       - '.github/workflows/call_code_review.yml'
 
 concurrency:
@@ -86,4 +86,4 @@ jobs:
             )
           fi
 
-          mvn --projects :test-coverage --also-make verify -P"$SONAR_PROFILES" "${SONAR_ARGS[@]}"
+          mvn -fae --projects :test-coverage --also-make verify -P"$SONAR_PROFILES" "${SONAR_ARGS[@]}"
