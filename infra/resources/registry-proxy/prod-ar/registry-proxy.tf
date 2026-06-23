@@ -47,7 +47,6 @@ module "apim_api_registry_proxy" {
 module "ai_search_onboarding" {
   source                   = "../../_modules/ai_search_onboarding"
   domain                   = module.local.config.domain
-  search_service_id        = data.azurerm_search_service.srch_service.id
   srch_service_name        = data.azurerm_search_service.srch_service.name
   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
 }
@@ -55,7 +54,6 @@ module "ai_search_onboarding" {
 module "ai_search_ipa" {
   source                   = "../../_modules/ai_search_ipa"
   domain                   = module.local.config.domain
-  search_service_id        = data.azurerm_search_service.srch_service.id
   srch_service_name        = data.azurerm_search_service.srch_service.name
   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
 }
