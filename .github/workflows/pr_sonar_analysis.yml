@@ -65,18 +65,36 @@ jobs:
         with:
           servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
-      - name: Build and Analyze
+      - name: Build all modules with coverage
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mvn clean verify -DskipITs
+
+      - name: Aggregate JaCoCo reports
+        shell: bash
+        run: |
+          mvn jacoco:report-aggregate -DskipTests --projects :test-coverage --also-make -Preport
+
+      - name: Analyze with SonarCloud
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_PROFILES: auth,registry-proxy,libs,onboarding-ms,institution-ms,delegation-cdc,institution-send-mail-scheduler,onboarding-functions,onboarding-cdc,onboarding-bff,iam,product,document-ms,product-cdc,selfcare-sdk-security,selfcare-cucumber-sdk,user-ms,user-cdc,user-group-cdc,user-group-ms,dashboard-bff,webhook,onboarding-sdk,selfcare-user-sdk-model,selfcare-user-sdk-event,report,coverage
         run: |
+          # Collect all jacoco.xml files from modules
+          JACOCO_PATHS=$(find . -path '*/target/site/jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
+          
           SONAR_ARGS=(
             -Dsonar.organization=pagopa
             -Dsonar.projectKey=pagopa_selfcare
             -Dsonar.token="$SONAR_TOKEN"
           )
+
+          if [[ ! -z "$JACOCO_PATHS" ]]; then
+            SONAR_ARGS+=(-Dsonar.coverage.jacoco.xmlReportPaths="$JACOCO_PATHS")
+          fi
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             SONAR_ARGS+=(
@@ -86,4 +104,4 @@ jobs:
             )
           fi
 
-          mvn -fae --projects :test-coverage --also-make verify -P"$SONAR_PROFILES" "${SONAR_ARGS[@]}"
+          mvn sonar:sonar --projects :root --also-make "${SONAR_ARGS[@]}"
