@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.util;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.service.ProductMsService;
@@ -62,7 +63,7 @@ public class WorkflowTypeResolver {
                 ? org.openapi.quarkus.product_json.model.Origin.valueOf(origin.name())
                 : null;
 
-        return productMsService.getWorkflowType(apiInstitutionType, apiOrigin, onboarding.getProductId())
+        return productMsService.getWorkflowType(apiInstitutionType, apiOrigin, ProductId.fromValue(onboarding.getProductId()))
                 .onItem().transform(this::mapWorkflowType)
                 .onFailure().transform(ex -> new IllegalStateException(
                         "Failed to resolve workflowType from Product MS for product '%s', institutionType '%s', origin '%s': %s"

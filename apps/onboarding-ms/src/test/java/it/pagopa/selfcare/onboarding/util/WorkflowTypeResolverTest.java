@@ -72,7 +72,7 @@ class WorkflowTypeResolverTest {
 
         WorkflowTypeResponse response = new WorkflowTypeResponse();
         response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-        when(productMsService.getWorkflowType(any(), any(), anyString())).thenReturn(Uni.createFrom().item(response));
+        when(productMsService.getWorkflowType(any(), any(), any(it.pagopa.selfcare.onboarding.common.ProductId.class))).thenReturn(Uni.createFrom().item(response));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
