@@ -260,7 +260,7 @@ public class ExchangeTokenServiceV2 {
         TokenExchangeClaims claims = new TokenExchangeClaims(selcClaims);
         claims.setId(UUID.randomUUID().toString());
 
-        claims.setIssuer(selfCareUser.getIssuer());
+        claims.setIssuer(issuer);
 
         claims.setEmail(selfCareUser.getEmail());
         claims.setInstitution(institution);
