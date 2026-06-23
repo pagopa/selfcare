@@ -89,4 +89,4 @@ jobs:
             )
           fi
 
-          mvn -T 1C -B -ntp sonar:sonar --projects :root --also-make "${SONAR_ARGS[@]}"
+          mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
