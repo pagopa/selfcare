@@ -566,7 +566,7 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>report</id>
+                <id>aggregate</id>
                 <goals>
                   <goal>report-aggregate</goal>
                 </goals>
