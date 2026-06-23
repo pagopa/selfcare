@@ -59,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn -T 1C -B -ntp clean verify -DskipITs -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          mvn -T 1C -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
 
       - name: Analyze with SonarCloud
         shell: bash
@@ -71,6 +71,7 @@ jobs:
           JACOCO_PATHS=$(find . -path '*/target/site/jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
           
           SONAR_ARGS=(
+            -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.organization=pagopa
             -Dsonar.projectKey=pagopa_selfcare
             -Dsonar.token="$SONAR_TOKEN"
