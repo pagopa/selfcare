@@ -139,7 +139,7 @@ public class SearchServiceImplTest {
     final Long page = 2L;
     final Long pageSize = 10L;
     final String orderByString = "createdAt asc,description desc";
-    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING') and createdAt ge 2023-01-01T00:00:00Z and createdAt le 2023-12-31T23:59:59Z and isTest eq false";
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING') and createdAt ge 2023-01-01T00:00:00Z and createdAt le 2023-12-31T23:59:59Z and isTest ne true";
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
     when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderByString)).thenReturn(mockResponse);
@@ -175,7 +175,7 @@ public class SearchServiceImplTest {
     final List<String> products = List.of("prod-io", "prod-pagopa");
     final List<String> institutionTypes = null;
     final List<String> statuses = List.of();
-    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and isTest eq false";
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and isTest ne true";
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
     when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
