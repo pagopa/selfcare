@@ -286,7 +286,24 @@ module "container_app_environments" {
   tags = local.tags
 }
 
-### apz init
+resource "azurerm_key_vault_access_policy" "container_app_environment" {
+  key_vault_id = module.key_vault.key_vault_id
+  tenant_id    = module.key_vault.tenant_id
+  object_id    = module.container_app_environments.user_assigned_identity.principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+###############################################################################
+### Network for new container app environment for workload profiles - init
+###############################################################################
+
+resource "azurerm_resource_group" "selc_container_app_wp_rg" {
+  name     = "${local.project}-container-app-wp-rg" //prod  "${local.project}-container-app-rg" 
+  location = local.location
+
+  tags = local.tags
+}
 
 resource "azurerm_subnet" "container_app_environment_workload_profiles" {
   name                 = "${local.project}-pnpg-cae-wp-snet"
@@ -306,19 +323,55 @@ resource "azurerm_subnet" "container_app_environment_workload_profiles" {
   }
 }
 
+resource "azurerm_network_security_group" "subnet_nsg_wp" {
+  name                = "${local.project}-pnpg-container-app-wp-nsg"
+  location            = data.azurerm_virtual_network.vnet.location
+  resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
+}
+
+resource "azurerm_network_security_rule" "cae_subnet_outbound_rule" {
+  name                        = "BlockAnyCidrCaeSubnetOutBound"
+  priority                    = 110
+  direction                   = "Outbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = local.cidr_subnet_selc[0]
+  resource_group_name         = data.azurerm_virtual_network.vnet.resource_group_name
+  network_security_group_name = azurerm_network_security_group.subnet_nsg_wp.name
+}
+
+resource "azurerm_network_security_rule" "cae_subnet_inbound_rule" {
+  name                        = "BlockCidrCaeSubnetAnyInBound"
+  priority                    = 110
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = local.cidr_subnet_selc[0]
+  destination_address_prefix  = "*"
+  resource_group_name         = data.azurerm_virtual_network.vnet.resource_group_name
+  network_security_group_name = azurerm_network_security_group.subnet_nsg_wp.name
+}
+
 resource "azurerm_subnet_network_security_group_association" "container_app_environment_workload_profiles" {
   subnet_id                 = azurerm_subnet.container_app_environment_workload_profiles.id
-  network_security_group_id = module.networking.network_security_group_id
+  network_security_group_id = azurerm_network_security_group.subnet_nsg_wp.id
 }
+
+
 
 module "container_app_environments_workload_profiles" {
   source = "../_modules/container_app_environments"
 
   project             = "${local.prefix}-${local.env_short}"
   location            = local.location
-  resource_group_name = azurerm_resource_group.selc_container_app_rg.name
+  resource_group_name = azurerm_resource_group.selc_container_app_wp_rg.name
 
-  infrastructure_resource_group_name = "ME_selc-p-pnpg-cae-wp_selc-p-container-app-rg_westeurope"
+  # infrastructure_resource_group_name = "ME_selc-p-pnpg-cae-wp_selc-p-container-app-rg_westeurope"
 
   enable_log = true
   subnet_id  = azurerm_subnet.container_app_environment_workload_profiles.id
@@ -340,15 +393,6 @@ module "container_app_environments_workload_profiles" {
   tags = local.tags
 }
 
-### apz end
-
-resource "azurerm_key_vault_access_policy" "container_app_environment" {
-  key_vault_id = module.key_vault.key_vault_id
-  tenant_id    = module.key_vault.tenant_id
-  object_id    = module.container_app_environments.user_assigned_identity.principal_id
-
-  secret_permissions = ["Get", "List"]
-}
 
 resource "azurerm_key_vault_access_policy" "container_app_environment_workload_profiles" {
   key_vault_id = module.key_vault.key_vault_id
@@ -357,6 +401,11 @@ resource "azurerm_key_vault_access_policy" "container_app_environment_workload_p
 
   secret_permissions = ["Get", "List"]
 }
+
+
+### Network for new container app environment for workload profiles - end
+
+
 
 ###############################################################################
 # User Managed Identity

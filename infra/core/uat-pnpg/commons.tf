@@ -291,6 +291,115 @@ resource "azurerm_key_vault_access_policy" "container_app_environment" {
   secret_permissions = ["Get", "List"]
 }
 
+### Network for new container app environment for workload profiles - init
+
+resource "azurerm_resource_group" "selc_container_app_wp_rg" {
+  name     = "${local.project}-container-app-wp-rg" //prod  "${local.project}-container-app-rg" 
+  location = local.location
+
+  tags = local.tags
+}
+
+resource "azurerm_subnet" "container_app_environment_workload_profiles" {
+  name                 = "${local.project}-pnpg-cae-wp-snet"
+  resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  address_prefixes     = local.cidr_subnet_pnpg_cae_wp
+
+  private_endpoint_network_policies = "Enabled"
+
+  delegation {
+    name = "Microsoft.App/environments"
+
+    service_delegation {
+      name    = "Microsoft.App/environments"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
+    }
+  }
+}
+
+resource "azurerm_network_security_group" "subnet_nsg" {
+  name                = "${local.project}-pnpg-container-app-wp-nsg"
+  location            = data.azurerm_virtual_network.vnet.location
+  resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
+}
+
+resource "azurerm_network_security_rule" "cae_subnet_outbound_rule" {
+  name                        = "BlockAnyCidrCaeSubnetOutBound"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = local.cidr_subnet_selc[0]
+  resource_group_name         = data.azurerm_virtual_network.vnet.resource_group_name
+  network_security_group_name = azurerm_network_security_group.subnet_nsg.name
+}
+
+resource "azurerm_network_security_rule" "cae_subnet_inbound_rule" {
+  name                        = "BlockCidrCaeSubnetAnyInBound"
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = local.cidr_subnet_selc[0]
+  destination_address_prefix  = "*"
+  resource_group_name         = data.azurerm_virtual_network.vnet.resource_group_name
+  network_security_group_name = azurerm_network_security_group.subnet_nsg.name
+}
+
+resource "azurerm_subnet_network_security_group_association" "container_app_environment_workload_profiles" {
+  subnet_id                 = azurerm_subnet.container_app_environment_workload_profiles.id
+  network_security_group_id = azurerm_network_security_group.subnet_nsg.id
+}
+
+
+
+module "container_app_environments_workload_profiles" {
+  source = "../_modules/container_app_environments"
+
+  project             = "${local.prefix}-${local.env_short}"
+  location            = local.location
+  resource_group_name = azurerm_resource_group.selc_container_app_wp_rg.name
+
+  # infrastructure_resource_group_name = "ME_selc-p-pnpg-cae-wp_selc-p-container-app-rg_westeurope"
+
+  enable_log = true
+  subnet_id  = azurerm_subnet.container_app_environment_workload_profiles.id
+  cae_name   = "${local.project}-pnpg-cae-wp"
+
+  # Enables the workload profiles Container Apps environment mode.
+  # Changing this list updates the compute profiles available to apps deployed in this environment.
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
+
+  zone_redundant = true
+
+  tags = local.tags
+}
+
+
+resource "azurerm_key_vault_access_policy" "container_app_environment_workload_profiles" {
+  key_vault_id = module.key_vault.key_vault_id
+  tenant_id    = module.key_vault.tenant_id
+  object_id    = module.container_app_environments_workload_profiles.user_assigned_identity.principal_id
+
+  secret_permissions = ["Get", "List"]
+}
+
+
+### Network for new container app environment for workload profiles - end
+
 ###############################################################################
 # User Managed Identity
 ###############################################################################
