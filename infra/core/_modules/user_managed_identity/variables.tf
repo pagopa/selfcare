@@ -39,6 +39,16 @@ variable "product_storage_rg" {
   description = "Resource group name for the product storage"
 }
 
+variable "documents_storage_name" {
+  type        = string
+  description = "Complete name for the documents storage"
+}
+
+variable "documents_storage_rg" {
+  type        = string
+  description = "Resource group name for the documents storage"
+}
+
 variable "web_storage_name" {
   type        = string
   description = "Complete name for the web storage"

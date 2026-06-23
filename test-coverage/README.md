@@ -1,24 +1,82 @@
 # Test Coverage
 
-It is a submodule designed to assess the test coverage of the entire project. It contains various configurations to evaluate the coverage of individual modules. Specifically, it leverages the Maven plugin, Jacoco, using the 'report-aggregate' goal to aggregate reports from the individual modules and provide them to Sonarqube for test coverage and code quality verification. It's essential for each module to have the same plugin or library that generates the jacoco.xml file, summarizing the test coverage for that specific module.
+This module aggregates JaCoCo coverage reports from all modules in the monorepo and sends them to SonarCloud under a **single project key** (`pagopa_selfcare`).
 
-## Usage
+## Architecture
 
-To run coverage on a specific module, dedicated profiles have been configured. For example, to execute it on the `apps/user-ms module`, you can use the following command:
+The coverage aggregation follows a **clean separation of concerns**:
 
-```shell script
-mvn --projects :test-coverage --also-make verify -Puser-ms,report
+1. **Build & Test**: All modules build and run tests independently
+   - Each module generates its own `jacoco.exec` and `jacoco.xml` reports
+   - Failures in tests cause the build to fail immediately
+
+2. **Coverage Aggregation**: After all modules succeed, `test-coverage` collects all reports
+   - Uses JaCoCo's `report-aggregate` goal
+   - Combines all `jacoco.xml` files into `test-coverage/target/site/jacoco-aggregate/jacoco.xml`
+
+3. **SonarCloud Upload**: Coverage data is sent with a **single organization key and project key**
+   - All modules contribute to the same SonarCloud project
+   - Pull request analysis works across the entire monorepo
+
+## Local Usage
+
+### Test a specific module's coverage
+```bash
+# Build and test a single module with coverage report
+mvn --projects :test-coverage --also-make verify -Pdelegation-cdc,report -DskipITs
+
+# Generates: test-coverage/target/site/jacoco-aggregate/jacoco.xml
 ```
 
-* **report** is used for generating reports.
-* **user-ms** is used to perform the scan on user-ms module.
+### Full monorepo coverage aggregation
+```bash
+# Build all modules
+mvn clean verify -DskipITs
 
-Make sure you have the necessary configurations and dependencies in place for accurate test coverage analysis.
+# Then aggregate coverage reports
+mvn --projects :test-coverage --also-make package -Preport -DskipTests
 
-## Sonarcloud
-
-To enable performing the scan on Sonarcloud you can add profile `coverage` and some other information:
-
-```shell script
-mvn --projects :test-coverage --also-make verify -Puser-ms,report,coverage -Dsonar.organization=xxx -Dsonar.projectKey=yyy -Dsonar.token=zzzz -Dsonar.pullrequest.key=123
+# Generates complete: test-coverage/target/site/jacoco-aggregate/jacoco.xml
 ```
+
+## CI/CD Pipeline
+
+The GitHub Actions workflow (`pr_sonar_analysis.yml`) follows this pattern:
+
+```bash
+# Step 1: Build all modules and run tests
+mvn clean verify -DskipITs
+
+# Step 2: Aggregate JaCoCo reports from all modules
+mvn jacoco:report-aggregate -DskipTests \
+  --projects :test-coverage --also-make -Preport
+
+# Step 3: Collect all jacoco.xml paths and upload to SonarCloud
+# Dynamically finds all jacoco.xml files and sends them to SonarCloud
+mvn sonar:sonar --projects :root --also-make \
+  -Dsonar.coverage.jacoco.xmlReportPaths="<all jacoco.xml files>" \
+  -Dsonar.organization=pagopa \
+  -Dsonar.projectKey=pagopa_selfcare \
+  -Dsonar.token=$SONAR_TOKEN
+```
+
+## Key Points
+
+- ✅ **Single SonarCloud key**: All modules report to `pagopa_selfcare` 
+- ✅ **Fail-fast on test failures**: No `-fae` flag means the build stops on first test failure
+- ✅ **Scalable**: Adding new modules automatically included in coverage reporting
+- ✅ **Clean separation**: Build, aggregation, and analysis are separate concerns
+
+## Troubleshooting
+
+### No coverage reports generated
+- Ensure all modules have the JaCoCo plugin configured (inherited from `selfcare-sdk-pom`)
+- Check that `jacoco.exec` files exist in each module's `target/` directory
+
+### SonarCloud showing 0% coverage
+- Verify `test-coverage/target/site/jacoco-aggregate/jacoco.xml` exists and contains data
+- Check that the `-Dsonar.coverage.jacoco.xmlReportPaths` in CI workflow points to correct locations
+
+### Test failures not stopping the build
+- Remove `-fae` flag from Maven command
+- Ensure no `skipTests` or `skipITs` flags that bypass coverage
