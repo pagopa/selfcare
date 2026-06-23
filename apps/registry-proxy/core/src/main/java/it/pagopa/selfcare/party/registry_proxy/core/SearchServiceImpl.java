@@ -53,7 +53,7 @@ public class SearchServiceImpl implements SearchService {
     final long limit = top != null && top > 0L && top < Long.MAX_VALUE ? top : 50L;
     final Set<String> institutionIds = new HashSet<>();
     return Stream.iterate(0L, p -> p + 1)
-        .map(p -> searchOnboarding(search, null, null, List.of("COMPLETED", "DELETED"), null, null, p, limit * 2L, List.of("description_ASC")))
+        .map(p -> searchOnboarding(search, null, null, List.of("COMPLETED", "DELETED"), null, null, p, limit * 2L, List.of("description_ASC"), true))
         .takeWhile(result -> !result.getOnboardings().isEmpty())
         .flatMap(result -> result.getOnboardings().stream())
         .filter(onboarding -> Optional.ofNullable(onboarding.getInstitutionId()).map(institutionIds::add).orElse(false))
@@ -91,11 +91,11 @@ public class SearchServiceImpl implements SearchService {
   @Override
   public OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes,
                                                 List<String> statuses, OffsetDateTime createdFromDate, OffsetDateTime createdToDate,
-                                                Long page, Long pageSize, List<String> orderBy) {
+                                                Long page, Long pageSize, List<String> orderBy, boolean includeTest) {
     page = page != null && page > 0L && page < Long.MAX_VALUE ? page : 0L;
     pageSize = pageSize != null && pageSize > 0L && pageSize < Long.MAX_VALUE ? pageSize : 15L;
     orderBy = orderBy != null && !orderBy.isEmpty() ? orderBy : List.of("description_ASC");
-    final String filter = buildOnboardingFilter(products, institutionTypes, statuses, createdFromDate, createdToDate);
+    final String filter = buildOnboardingFilter(products, institutionTypes, statuses, createdFromDate, createdToDate, includeTest);
     final String orderByString = buildOrderBy(orderBy);
     final OnboardingIndexSearch onboardingIndexSearch = searchServiceConnector.searchOnboarding(searchText, filter,
         pageSize, page * pageSize, orderByString);
@@ -106,7 +106,7 @@ public class SearchServiceImpl implements SearchService {
   }
 
   private String buildOnboardingFilter(List<String> products, List<String> institutionTypes, List<String> statuses,
-                                       OffsetDateTime createdFromDate, OffsetDateTime createdToDate) {
+                                       OffsetDateTime createdFromDate, OffsetDateTime createdToDate, boolean includeTest) {
     final StringBuilder filter = new StringBuilder();
 
     if (products != null && !products.isEmpty()) {
@@ -142,6 +142,13 @@ public class SearchServiceImpl implements SearchService {
         filter.append(AND);
       }
       filter.append("createdAt le ").append(createdToDate.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+    }
+
+    if(!includeTest) {
+      if (!filter.isEmpty()) {
+        filter.append(AND);
+      }
+      filter.append("isTest eq ").append(false);
     }
 
     return filter.toString();

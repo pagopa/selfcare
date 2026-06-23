@@ -98,7 +98,7 @@ public class SearchControllerTest {
     onboardingIndex.setDescription("Test Onboarding");
     response.setOnboardings(List.of(onboardingIndex));
 
-    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, 0L, 15L, orderBy))
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, 0L, 15L, orderBy, false))
             .thenReturn(response);
 
     mockMvc.perform(get("/search/onboardings")
@@ -121,8 +121,51 @@ public class SearchControllerTest {
   }
 
   @Test
+  void searchOnboardingTest_includeTest() throws Exception {
+    final String searchText = "Test";
+    final List<String> products = List.of("prod-io", "prod-pagopa");
+    final List<String> institutionTypes = List.of("PA", "GSP");
+    final List<String> statuses = List.of("ACTIVE", "PENDING");
+    final OffsetDateTime createdFromDate = OffsetDateTime.parse("2024-01-01T00:00:00Z");
+    final OffsetDateTime createdToDate = OffsetDateTime.parse("2024-12-31T23:59:59Z");
+    final List<String> orderBy = List.of("description_ASC");
+
+    final OnboardingIndexSearch response = new OnboardingIndexSearch();
+    response.setTotalPages(1L);
+    response.setPage(0L);
+    response.setPageSize(15L);
+    response.setTotalElements(1L);
+    final OnboardingIndex onboardingIndex = new OnboardingIndex();
+    onboardingIndex.setOnboardingId("123");
+    onboardingIndex.setDescription("Test Onboarding");
+    response.setOnboardings(List.of(onboardingIndex));
+
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, 0L, 15L, orderBy, true))
+      .thenReturn(response);
+
+    mockMvc.perform(get("/search/onboardings")
+        .param("searchText", searchText)
+        .param("products", String.join(",", products))
+        .param("institutionTypes", String.join(",", institutionTypes))
+        .param("statuses", String.join(",", statuses))
+        .param("createdFromDate", createdFromDate.toString())
+        .param("createdToDate", createdToDate.toString())
+        .param("orderBy", String.join(",", orderBy))
+        .param("includeTest", "true")
+        .contentType(MediaType.APPLICATION_JSON))
+      .andExpect(status().isOk())
+      .andExpect(jsonPath("$.totalPages", is(1)))
+      .andExpect(jsonPath("$.page", is(0)))
+      .andExpect(jsonPath("$.pageSize", is(15)))
+      .andExpect(jsonPath("$.totalElements", is(1)))
+      .andExpect(jsonPath("$.onboardings", hasSize(1)))
+      .andExpect(jsonPath("$.onboardings[0].onboardingId", is("123")))
+      .andExpect(jsonPath("$.onboardings[0].description", is("Test Onboarding")));
+  }
+
+  @Test
   void searchOnboardingTest_internalServerError() throws Exception {
-    when(searchService.searchOnboarding(anyString(), any(), any(), any(), any(), any(), anyLong(), anyLong(), any()))
+    when(searchService.searchOnboarding(anyString(), any(), any(), any(), any(), any(), anyLong(), anyLong(), any(), any()))
             .thenThrow(new RuntimeException("Internal service error"));
 
     mockMvc.perform(get("/search/onboardings")
