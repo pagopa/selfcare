@@ -148,7 +148,7 @@ public class SearchServiceImpl implements SearchService {
       if (!filter.isEmpty()) {
         filter.append(AND);
       }
-      filter.append("isTest eq ").append("false");
+      filter.append("isTest ne ").append(true);
     }
 
     return filter.toString();
