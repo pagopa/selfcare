@@ -191,7 +191,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     public void sendMailManagingInstitution(ManagingInstitutionSendEmail request) {
         log.info("Sending mail to managing institution");
         SendMailDto sendMailDto = new SendMailDto();
-        sendMailDto.setInstitutionName(request.getManagingInstitutionDescription());
+        sendMailDto.setInstitutionName(request.getOnboardingInstitutionDescription());
         sendMailDto.setProductId(request.getProductId());
         sendMailDto.setUserMailUuid(request.getUserMailUuid());
         sendMailDto.setType(EmailType.CONVENTION_REQUEST);
