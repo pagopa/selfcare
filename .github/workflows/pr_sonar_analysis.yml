@@ -14,21 +14,9 @@ on:
       - releases/**
     types:
       - opened
-      - edited
       - synchronize
       - reopened
       - ready_for_review
-    paths:
-      - 'apps/**'
-      - 'libs/**'
-      - 'test-coverage/**'
-      - 'pom.xml'
-      - '.github/workflows/pr_sonar_analysis.yml'
-      - '.github/workflows/call_code_review.yml'
-
-  push:
-    branches:
-      - main
     paths:
       - 'apps/**'
       - 'libs/**'
@@ -45,6 +33,7 @@ jobs:
   sonar:
     name: SonarCloud Monorepo Analysis
     runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
 
     steps:
       - name: Set missing library
@@ -70,12 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn clean verify -DskipITs
-
-      - name: Aggregate JaCoCo reports
-        shell: bash
-        run: |
-          mvn jacoco:report-aggregate -DskipTests --projects :test-coverage --also-make -Preport
+          mvn -T 1C -B -ntp clean verify -DskipITs
 
       - name: Analyze with SonarCloud
         shell: bash
@@ -104,4 +88,4 @@ jobs:
             )
           fi
 
-          mvn sonar:sonar --projects :root --also-make "${SONAR_ARGS[@]}"
+          mvn -T 1C -B -ntp sonar:sonar --projects :root --also-make "${SONAR_ARGS[@]}"
