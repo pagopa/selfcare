@@ -1067,7 +1067,7 @@ class OnboardingServiceTest {
     @Test
     void testSendMailManagingInstitution_Success() {
         ManagingInstitutionSendEmail request = new ManagingInstitutionSendEmail();
-        request.setManagingInstitutionDescription("Test Institution");
+        request.setOnboardingInstitutionDescription("Test Institution");
         request.setProductId("prod-123");
         request.setUserMailUuid("uuid-123");
         request.setUserId("user-1");
@@ -1086,7 +1086,7 @@ class OnboardingServiceTest {
     @Test
     void testSendMailManagingInstitution_Exception() {
         ManagingInstitutionSendEmail request = new ManagingInstitutionSendEmail();
-        request.setManagingInstitutionDescription("Test Institution");
+        request.setOnboardingInstitutionDescription("Test Institution");
         request.setProductId("prod-123");
         request.setUserMailUuid("uuid-123");
         request.setUserId("user-1");
