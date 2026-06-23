@@ -80,7 +80,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 signingContext.signingStep(),
                 onboardingWorkflow.getOnboarding().getProductId());
 
-        notifyManagingInstitution(ctx, managingInstitution, signingContext.document(), onboardingWorkflow.getOnboarding().getId());
+        notifyManagingInstitution(ctx, managingInstitution, signingContext.document(), onboardingWorkflow.getOnboarding());
         return Optional.of(OnboardingStatus.PENDING_IN_REVIEW);
     }
 
@@ -101,7 +101,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                     managingInstitutions,
                     signingContext.signingStep(),
                     onboardingWorkflow.getOnboarding().getProductId());
-            notifyManagingInstitution(ctx, managingInstitution, signingContext.document(), onboardingWorkflow.getOnboarding().getId());
+            notifyManagingInstitution(ctx, managingInstitution, signingContext.document(), onboardingWorkflow.getOnboarding());
             return Optional.empty();
         }
         log.info("Contract with onboardingId={} set to {} state", onboardingWorkflow.getOnboarding().getId(), OnboardingStatus.COMPLETED);
@@ -202,17 +202,17 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
      * @param ctx                 the orchestration context used to call activities
      * @param managingInstitution the managing institution to be notified
      * @param document            the latest document, used to retrieve product information
-     * @param onboardingId       the onboarding ID, used for retrieving email addresses and constructing the notification
+     * @param onboarding       the onboarding, used for retrieving email addresses and constructing the notification
      */
     private void notifyManagingInstitution(
             TaskOrchestrationContext ctx,
             ManagingInstitution managingInstitution,
             DocumentResponse document,
-            String onboardingId) {
+            Onboarding onboarding) {
         ManagingInstitutionGetEmailRequest managingInstitutionGetEmailRequest = ManagingInstitutionGetEmailRequest.builder()
                 .managingInstitutionId(managingInstitution.getInstitutionId())
                 .productId(document.getProductId())
-                .onboardingId(onboardingId)
+                .onboardingId(onboarding.getId())
                 .build();
 
         String emailsString =
@@ -230,7 +230,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
 
         ManagingInstitutionSendEmail managingInstitutionSendEmail = ManagingInstitutionSendEmail.builder()
                 .managingInstitutionId(managingInstitution.getInstitutionId())
-                .managingInstitutionDescription(managingInstitution.getDescription())
+                .onboardingInstitutionDescription(onboarding.getInstitution().getDescription())
                 .productId(document.getProductId())
                 .build();
 
