@@ -122,7 +122,11 @@ locals {
     {
       name  = "SELFCARE_URL"
       value = "https://dev.selfcare.pagopa.it"
-    }
+    },
+    {
+      name  = "ONBOARDING_URL"
+      value = "http://selc-d-onboarding-ms-ca"
+    },
   ]
 
   secrets_names_user_ms = {

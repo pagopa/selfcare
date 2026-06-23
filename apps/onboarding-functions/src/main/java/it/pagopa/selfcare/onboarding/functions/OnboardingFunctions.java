@@ -661,7 +661,7 @@ public class OnboardingFunctions {
             Map.of(
                     PRODUCT_ID, managingInstitutionSendEmail.getProductId(),
                     MANAGING_INSTITUTION_ID, managingInstitutionSendEmail.getManagingInstitutionId(),
-                    MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getManagingInstitutionDescription(),
+                    MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getOnboardingInstitutionDescription(),
                     USER_MAIL_UUID, managingInstitutionSendEmail.getUserMailUuid()));
     onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
   }

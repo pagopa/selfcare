@@ -120,6 +120,10 @@ locals {
       name  = "SELFCARE_URL"
       value = "https://imprese.notifichedigitali.it"
     },
+    {
+      name  = "ONBOARDING_URL"
+      value = "http://selc-p-pnpg-onboarding-ms-ca"
+    }
   ]
 
   secrets_names_user_ms = {
