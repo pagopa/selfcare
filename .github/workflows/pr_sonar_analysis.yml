@@ -1,0 +1,149 @@
+name: SonarCloud Analysis
+
+permissions:
+  contents: read
+  packages: read
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'test-coverage/**'
+      - 'pom.xml'
+      - '.github/workflows/pr_sonar_analysis.yml'
+      - '.github/workflows/call_code_review.yml'
+
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'test-coverage/**'
+      - 'pom.xml'
+      - '.github/workflows/pr_sonar_analysis.yml'
+      - '.github/workflows/call_code_review.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    name: SonarCloud Monorepo Analysis
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+
+    steps:
+      - name: Set missing library
+        run: |
+          wget http://nz2.archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+          sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Select analysis scope
+        id: scope
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "projects=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          declare -A MODULES=()
+          FULL_ANALYSIS=false
+
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+            if [[ "$file" =~ ^apps/([^/]+)/ ]]; then
+              MODULES["apps/${BASH_REMATCH[1]}"]=1
+            elif [[ "$file" =~ ^libs/([^/]+)/ ]]; then
+              MODULES["libs/${BASH_REMATCH[1]}"]=1
+            elif [[ "$file" == "pom.xml" || "$file" == test-coverage/* || "$file" == .github/workflows/pr_sonar_analysis.yml || "$file" == .github/workflows/call_code_review.yml ]]; then
+              FULL_ANALYSIS=true
+            else
+              FULL_ANALYSIS=true
+            fi
+          done <<< "$CHANGED_FILES"
+
+          if [[ "$FULL_ANALYSIS" == "true" || "${#MODULES[@]}" -eq 0 ]]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "projects=" >> "$GITHUB_OUTPUT"
+          else
+            PROJECTS=$(printf '%s\n' "${!MODULES[@]}" | sort | paste -sd, -)
+            echo "mode=partial" >> "$GITHUB_OUTPUT"
+            echo "projects=$PROJECTS" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build modules with coverage
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
+            mvn -T 1C -B -ntp clean test --projects "${{ steps.scope.outputs.projects }}" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          else
+            mvn -T 1C -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          fi
+
+      - name: Analyze with SonarCloud
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          JACOCO_PATHS=$(find "$PWD" -path '*/target/*jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
+          
+          SONAR_ARGS=(
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.organization=pagopa
+            -Dsonar.projectKey=pagopa_selfcare
+            -Dsonar.token="$SONAR_TOKEN"
+          )
+
+          if [[ ! -z "$JACOCO_PATHS" ]]; then
+            SONAR_ARGS+=(-Dsonar.coverage.jacoco.xmlReportPaths="$JACOCO_PATHS")
+          fi
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            SONAR_ARGS+=(
+              -Dsonar.pullrequest.key="${{ github.event.pull_request.number }}"
+              -Dsonar.pullrequest.branch="${{ github.head_ref }}"
+              -Dsonar.pullrequest.base="${{ github.base_ref }}"
+            )
+          fi
+
+          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
+            mvn -T 1C -B -ntp sonar:sonar --projects "${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
+          else
+            mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
+          fi
