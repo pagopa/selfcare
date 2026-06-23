@@ -25,6 +25,17 @@ on:
       - '.github/workflows/pr_sonar_analysis.yml'
       - '.github/workflows/call_code_review.yml'
 
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'libs/**'
+      - 'test-coverage/**'
+      - 'pom.xml'
+      - '.github/workflows/pr_sonar_analysis.yml'
+      - '.github/workflows/call_code_review.yml'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -54,12 +65,55 @@ jobs:
         with:
           servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
-      - name: Build all modules with coverage
+      - name: Select analysis scope
+        id: scope
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "projects=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          declare -A MODULES=()
+          FULL_ANALYSIS=false
+
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+            if [[ "$file" =~ ^apps/([^/]+)/ ]]; then
+              MODULES["apps/${BASH_REMATCH[1]}"]=1
+            elif [[ "$file" =~ ^libs/([^/]+)/ ]]; then
+              MODULES["libs/${BASH_REMATCH[1]}"]=1
+            elif [[ "$file" == "pom.xml" || "$file" == test-coverage/* || "$file" == .github/workflows/pr_sonar_analysis.yml || "$file" == .github/workflows/call_code_review.yml ]]; then
+              FULL_ANALYSIS=true
+            else
+              FULL_ANALYSIS=true
+            fi
+          done <<< "$CHANGED_FILES"
+
+          if [[ "$FULL_ANALYSIS" == "true" || "${#MODULES[@]}" -eq 0 ]]; then
+            echo "mode=full" >> "$GITHUB_OUTPUT"
+            echo "projects=" >> "$GITHUB_OUTPUT"
+          else
+            PROJECTS=$(printf '%s\n' "${!MODULES[@]}" | sort | paste -sd, -)
+            echo "mode=partial" >> "$GITHUB_OUTPUT"
+            echo "projects=$PROJECTS" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build modules with coverage
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn -T 1C -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
+            mvn -T 1C -B -ntp clean test --projects "${{ steps.scope.outputs.projects }}" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          else
+            mvn -T 1C -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          fi
 
       - name: Analyze with SonarCloud
         shell: bash
@@ -67,7 +121,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          # Collect all jacoco.xml files from modules
           JACOCO_PATHS=$(find . -path '*/target/site/jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
           
           SONAR_ARGS=(
@@ -89,4 +142,8 @@ jobs:
             )
           fi
 
-          mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
+          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
+            mvn -T 1C -B -ntp sonar:sonar --projects "${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
+          else
+            mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
+          fi

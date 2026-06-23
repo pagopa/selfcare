@@ -105,7 +105,7 @@ See [`test-coverage/README.md`](test-coverage/) for full details on the aggregat
 | OpenAPI release | [`release_open_api.yml`](.github/workflows/release_open_api.yml) | OpenAPI artifacts |
 | Web assets release | [`publish_web_assets.yml`](.github/workflows/publish_web_assets.yml) | Static assets |
 | Status page publish | [`publish_status_page.yml`](.github/workflows/publish_status_page.yml) | GitHub Pages/status page |
-| Contracts release | [`release_contracts.yml`](.github/workflows/release_contracts.yml) | API contracts |
+| Contracts release | [`publish_contracts_templates.yml`](.github/workflows/publish_contracts_templates.yml) | API contracts |
 
 Current workflow status is available in [GitHub Actions](https://github.com/pagopa/selfcare/actions).
 
