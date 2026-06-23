@@ -34,7 +34,7 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
 
 data "azurerm_storage_account" "documents_storage" {
   name                = "sc${module.local.config.env_short}${module.local.config.location_short}ardocumentsst01"
-  resource_group_name = "selc-${module.local.config.env_short}-documents-fe-rg"
+  resource_group_name = "selc-${module.local.config.env_short}-documents-storage-rg"
 }
 
 data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
