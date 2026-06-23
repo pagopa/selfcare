@@ -57,33 +57,43 @@ Requirements:
 
 ## Quality
 
-Pull requests are analyzed through GitHub Actions and SonarCloud. Coverage and quality metrics are available here:
-
-- [`pagopa_selfcare`](https://sonarcloud.io/summary/new_code?id=pagopa_selfcare)
-- [`pagopa_selfcare-onboarding-backend`](https://sonarcloud.io/summary/new_code?id=pagopa_selfcare-onboarding-backend)
+All pull requests and code contributions are analyzed through GitHub Actions and SonarCloud under a **single project key**: [`pagopa_selfcare`](https://sonarcloud.io/summary/new_code?id=pagopa_selfcare)
 
 | Signal | Source |
 | --- | --- |
 | Quality gate | Shared code-review workflows and SonarCloud analysis. |
-| Coverage | JaCoCo aggregate reports from [`test-coverage/`](test-coverage/). |
+| Coverage | JaCoCo aggregate reports from all modules via [`test-coverage/`](test-coverage/). |
 | Security scan | CodeQL workflow. |
 | Drift detection | Terraform drift workflows. |
 
-Generate aggregate coverage for a module:
+### Generate and upload coverage
+
+**Locally** — aggregate coverage for a specific module:
 
 ```shell
-mvn --projects :test-coverage --also-make verify -P<module-name>,report
+# Build module with coverage
+mvn --projects :test-coverage --also-make verify -P<module-name>,report -DskipITs
+
+# Output: test-coverage/target/site/jacoco-aggregate/jacoco.xml
 ```
 
-Generate coverage and send it to SonarCloud:
+**In CI** — upload full monorepo coverage to SonarCloud:
 
 ```shell
-mvn --projects :test-coverage --also-make verify -P<module-name>,report,coverage \
-  -Dsonar.organization=<organization> \
-  -Dsonar.projectKey=<project-key> \
-  -Dsonar.token=<token> \
-  -Dsonar.pullrequest.key=<pr-number>
+# Step 1: Build all modules
+mvn clean verify -DskipITs
+
+# Step 2: Aggregate all jacoco.xml reports
+mvn jacoco:report-aggregate -DskipTests --projects :test-coverage --also-make -Preport
+
+# Step 3: Send to SonarCloud (single project key)
+mvn sonar:sonar --projects :root --also-make \
+  -Dsonar.organization=pagopa \
+  -Dsonar.projectKey=pagopa_selfcare \
+  -Dsonar.token=$SONAR_TOKEN
 ```
+
+See [`test-coverage/README.md`](test-coverage/) for full details on the aggregation strategy.
 
 | Flow | Workflow | Target |
 | --- | --- | --- |
