@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.util;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -53,7 +54,7 @@ public class WorkflowTypeResolver {
 
     private Uni<WorkflowType> resolveFromProductApi(Onboarding onboarding) {
         InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
-        it.pagopa.selfcare.onboarding.common.Origin origin = onboarding.getInstitution().getOrigin();
+        Origin origin = onboarding.getInstitution().getOrigin();
 
         var apiInstitutionType = institutionType != null
                 ? org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType.name())

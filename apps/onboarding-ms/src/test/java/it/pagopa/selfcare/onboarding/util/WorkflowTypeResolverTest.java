@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.Origin;
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -72,7 +73,7 @@ class WorkflowTypeResolverTest {
 
         WorkflowTypeResponse response = new WorkflowTypeResponse();
         response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-        when(productMsService.getWorkflowType(any(), any(), any(it.pagopa.selfcare.onboarding.common.ProductId.class))).thenReturn(Uni.createFrom().item(response));
+        when(productMsService.getWorkflowType(any(), any(), any(ProductId.class))).thenReturn(Uni.createFrom().item(response));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
