@@ -1,12 +1,5 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import static it.pagopa.selfcare.onboarding.common.InstitutionType.PSP;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_DASHBOARD_PSP;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_INTEROP;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
@@ -38,10 +31,8 @@ import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -57,6 +48,15 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
+import java.util.*;
+
+import static it.pagopa.selfcare.onboarding.common.InstitutionType.PSP;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_DASHBOARD_PSP;
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_INTEROP;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 @Slf4j
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
@@ -71,10 +71,10 @@ class OnboardingServiceIntegrationTest {
     UserApi userRegistryApi;
 
     @InjectMock
-    ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productAzureService;
 
     @InjectMock
-    ProductMsService productMsService;
+    ProductService productService;
 
     @InjectMock
     @RestClient
@@ -160,7 +160,7 @@ class OnboardingServiceIntegrationTest {
         org.openapi.quarkus.product_json.model.WorkflowTypeResponse defaultResponse =
                 new org.openapi.quarkus.product_json.model.WorkflowTypeResponse();
         defaultResponse.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-        when(productMsService.getWorkflowType(any(), any(), any()))
+        when(productService.getWorkflowType(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(defaultResponse));
     }
 
@@ -245,7 +245,7 @@ class OnboardingServiceIntegrationTest {
 
     private void mockSimpleProductValidAssert(String productId, UniAsserter asserter) {
         Product productResource = createDummyProduct(productId);
-        asserter.execute(() -> when(productService.getProductIsValid(productId))
+        asserter.execute(() -> when(productAzureService.getProductIsValid(productId))
                 .thenReturn(productResource));
     }
 
@@ -343,7 +343,7 @@ class OnboardingServiceIntegrationTest {
     }
 
     void mockVerifyisProductEnabled(String productId, UniAsserter asserter) {
-        asserter.execute(() -> when(productService.isProductEnabled(productId)).thenReturn(true));
+        asserter.execute(() -> when(productAzureService.isProductEnabled(productId)).thenReturn(true));
     }
 
 }
