@@ -4,7 +4,6 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.service.ProductMsService;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.product_json.api.ProductApi;
@@ -38,8 +37,11 @@ public class ProductMsServiceImpl implements ProductMsService {
     }
 
     @Override
-    public Uni<Response> isRequiredDocumentsEnabled(ProductId productId, InstitutionType institutionType, Origin origin) {
+    public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin) {
         log.info("Calling isRequiredDocumentsEnabled: productId={}, institutionType={}, origin={}", productId.getValue(), institutionType, origin);
-        return productController.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin);
+        return productController.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin)
+                .onItem()
+                .transform(response -> Boolean.parseBoolean(
+                        response.getHeaderString("X-Required-Documents-Enabled")));
     }
 }

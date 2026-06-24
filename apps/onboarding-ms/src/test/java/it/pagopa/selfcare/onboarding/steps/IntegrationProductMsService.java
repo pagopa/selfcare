@@ -8,7 +8,6 @@ import it.pagopa.selfcare.onboarding.service.ProductMsService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.ws.rs.NotFoundException;
-import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.openapi.quarkus.product_json.model.*;
 
@@ -56,8 +55,8 @@ public class IntegrationProductMsService implements ProductMsService {
   }
 
   @Override
-  public Uni<Response> isRequiredDocumentsEnabled(ProductId productId, InstitutionType institutionType, Origin origin) {
-    return Uni.createFrom().item(Response.ok().header("X-Required-Documents-Enabled", "false").build());
+  public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin) {
+    return Uni.createFrom().item(false);
   }
 
   private boolean matches(String ruleValue, Enum<?> requestValue) {

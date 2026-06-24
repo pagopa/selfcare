@@ -88,7 +88,7 @@ class ProductMsServiceImplTest {
     }
 
     @Test
-    void isRequiredDocumentsEnabled_shouldReturnResponse() {
+    void isRequiredDocuments_shouldReturnBooleanFromHeader() {
         // Given
         ProductId productId = ProductId.PROD_IO;
         InstitutionType institutionType = InstitutionType.PA;
@@ -100,15 +100,14 @@ class ProductMsServiceImplTest {
                 .thenReturn(Uni.createFrom().item(expectedResponse));
 
         // When
-        Response result = productMsService
-                .isRequiredDocumentsEnabled(productId, institutionType, origin)
+        Boolean result = productMsService
+                .isRequiredDocuments(productId, institutionType, origin)
                 .await().indefinitely();
 
         // Then
         assertNotNull(result);
-        assertEquals(200, result.getStatus());
+        assertEquals(Boolean.TRUE, result);
         verify(productApi).isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin);
         verifyNoMoreInteractions(productApi);
     }
 }
-
