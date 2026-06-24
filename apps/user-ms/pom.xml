@@ -27,7 +27,7 @@
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <cucumber-sdk.version>0.1.2</cucumber-sdk.version>
         <common-sdk-security-version>0.2.3</common-sdk-security-version>
-        <onboarding-sdk.version>0.17.0</onboarding-sdk.version>
+        <onboarding-sdk.version>0.17.1</onboarding-sdk.version>
         <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
     </properties>
     <dependencyManagement>
