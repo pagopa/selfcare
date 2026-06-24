@@ -14,6 +14,8 @@ module "local" {
   container_app_environment_name = "selc-u-cae-002"
   ca_resource_group_name         = "selc-u-container-app-002-rg"
   container_app_min_replicas     = 0
+  container_app_cpu              = 1.0
+  container_app_memory           = "2.0Gi"
 }
 
 ###############################################################################

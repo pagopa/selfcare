@@ -1,128 +1,82 @@
 package it.pagopa.selfcare.onboarding.steps;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRole;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.service.ProductService;
+import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.onboarding.common.ProductId;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
+import jakarta.ws.rs.NotFoundException;
+import lombok.extern.slf4j.Slf4j;
+import org.openapi.quarkus.product_json.model.*;
+
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Alternative
 @ApplicationScoped
-@Slf4j
 public class IntegrationProductService implements ProductService {
 
-    private boolean initialized = false;
-    private List<Product> products;
-    private final CountDownLatch initLatch = new CountDownLatch(1);
-    private static final int DEFAULT_EXPIRATION_DATE = 30;
+    private final Map<String, List<WorkflowRuleEntry>> workflowRulesMap;
 
-    public void initializeBlocking() {
-        if (!initialized) {
-            getProducts();
-            initialized = true;
-            initLatch.countDown();
-        }
+    public IntegrationProductService() {
+        this.workflowRulesMap = loadWorkflowRules();
     }
 
-    private void getProducts() {
-        try {
-            ClassLoader classLoader = getClass().getClassLoader();
-            URL resourceDirectory = classLoader.getResource("integration-data/products.json");
+    @Override
+    public Uni<WorkflowTypeResponse> getWorkflowType(InstitutionType institutionType, Origin origin, ProductId productId) {
+        List<WorkflowRuleEntry> rules = workflowRulesMap.get(productId.getValue());
 
-            File jsonFile = new File(resourceDirectory.toURI());
-            String content = Files.readString(jsonFile.toPath());
+        if (rules == null || rules.isEmpty()) {
+            return Uni.createFrom().failure(new NotFoundException(
+                    String.format("No workflowRules configured for Product %s", productId.getValue())));
+        }
+
+        return rules.stream()
+                .filter(rule -> matches(rule.institutionType, institutionType))
+                .filter(rule -> matches(rule.origin, origin))
+                .findFirst()
+                .map(rule -> {
+                    WorkflowTypeResponse response = new WorkflowTypeResponse();
+                    response.setWorkflowType(WorkflowType.valueOf(rule.workflowType));
+                    return Uni.createFrom().item(response);
+                })
+                .orElseGet(() -> Uni.createFrom().failure(new NotFoundException(
+                        String.format("No workflowRule found for product %s, institutionType %s, origin %s",
+                                productId.getValue(), institutionType, origin))));
+    }
+
+  @Override
+  public Uni<List<RequiredDocumentResponse>> getRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin) {
+    return Uni.createFrom().item(List.of());
+  }
+
+  @Override
+  public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin) {
+    return Uni.createFrom().item(false);
+  }
+
+  private boolean matches(String ruleValue, Enum<?> requestValue) {
+        if (ruleValue == null && requestValue == null) return true;
+        if (ruleValue == null || requestValue == null) return false;
+        return ruleValue.equals(requestValue.name());
+    }
+
+    private Map<String, List<WorkflowRuleEntry>> loadWorkflowRules() {
+        try (InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("integration-data/workflow-rules.json")) {
+            if (is == null) {
+                throw new IllegalStateException("workflow-rules.json not found in integration-data");
+            }
             ObjectMapper mapper = new ObjectMapper();
-            mapper.registerModule(new JavaTimeModule());
-
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
-            products = mapper.readValue(content, new TypeReference<>() {});
-
-        } catch (IOException | URISyntaxException e) {
-            System.err.println("Errore nel caricamento dei template JSON: " + e.getMessage());
-            e.printStackTrace();
+            return mapper.readValue(is, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load workflow-rules.json", e);
         }
     }
 
-    @Override
-    public List<Product> getProducts(boolean rootOnly, boolean valid) {
-        if (!initialized) {
-            try {
-                initializeBlocking();
-            } catch (Exception e) {
-                getProducts();
-                initialized = true;
-                initLatch.countDown();
-            }
-        }
-        return products;
-    }
-
-    @Override
-    public void validateRoleMappings(Map<PartyRole, ? extends ProductRoleInfo> roleMappings) {
-
-    }
-
-    @Override
-    public Product getProduct(String productId) {
-        return null;
-    }
-
-    @Override
-    public Product getProductRaw(String productId) {
-        return null;
-    }
-
-    @Override
-    public Product getProductIsValid(String productId) {
-        if (!initialized) {
-            try {
-                initializeBlocking();
-            } catch (Exception e) {
-                getProducts();
-                initialized = true;
-                initLatch.countDown();
-            }
-        }
-    return products.stream()
-        .filter(product -> product.getId().equals(productId))
-        .findAny()
-        .orElse(null);
-    }
-
-    @Override
-    public ProductRole validateProductRole(String productId, String productRole, PartyRole role) {
-        return null;
-    }
-
-    @Override
-    public boolean verifyAllowedByInstitutionTaxCode(String productId, String taxCode) {
-        return false;
-    }
-
-    @Override
-    public Integer getProductExpirationDate(String productId) {
-        return DEFAULT_EXPIRATION_DATE;
-    }
-
-    @Override
-    public boolean isProductEnabled(String productId) {
-        return true;
-    }
+    private record WorkflowRuleEntry(String institutionType, String origin, String workflowType) {}
 }

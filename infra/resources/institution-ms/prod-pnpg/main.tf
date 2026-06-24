@@ -112,7 +112,7 @@ locals {
     },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -163,15 +163,15 @@ locals {
       value = "true"
     },
     {
-      name = "STORAGE_AZURE_CLIENT_ID"
+      name  = "STORAGE_AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {
-      name = "AZURE_STORAGE_ACCOUNT_NAME"
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
       value = data.azurerm_storage_account.product_storage.name
     },
     {
-      name = "AZURE_CLIENT_ID"
+      name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
