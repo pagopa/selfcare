@@ -29,7 +29,7 @@ class WorkflowTypeResolverTest {
     WorkflowTypeResolver workflowTypeResolver;
 
     @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productAzureService;
 
     @InjectMock
     ProductService productService;
@@ -46,7 +46,7 @@ class WorkflowTypeResolverTest {
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setRequiredSignatures(2);
         product.setSigningConfiguration(signingConfiguration);
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -68,7 +68,7 @@ class WorkflowTypeResolverTest {
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setRequiredSignatures(1);
         product.setSigningConfiguration(signingConfiguration);
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         WorkflowTypeResponse response = new WorkflowTypeResponse();
         response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
@@ -91,7 +91,7 @@ class WorkflowTypeResolverTest {
         onboarding.setIsAggregator(false);
 
         Product product = new Product();
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -110,7 +110,7 @@ class WorkflowTypeResolverTest {
         onboarding.setIsAggregator(true);
 
         Product product = new Product();
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
