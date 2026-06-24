@@ -16,11 +16,11 @@ import java.util.List;
 
 @Slf4j
 @ApplicationScoped
-public class ProductMsServiceImpl implements ProductMsService {
+public class ProductServiceImpl implements ProductMsService {
 
     private final ProductApi productController;
 
-    public ProductMsServiceImpl(@RestClient ProductApi productController) {
+    public ProductServiceImpl(@RestClient ProductApi productController) {
         this.productController = productController;
     }
 
