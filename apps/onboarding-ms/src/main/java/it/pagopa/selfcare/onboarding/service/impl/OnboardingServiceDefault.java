@@ -64,7 +64,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject OnboardingMapper onboardingMapper;
     @Inject OnboardingResponseFactory onboardingResponseFactory;
     @Inject InstitutionMapper institutionMapper;
-    @Inject ProductService productService;
+    @Inject ProductService productAzureService;
     @Inject OnboardingDocumentMapper onboardingDocumentMapper;
     @Inject RegistryResourceFactory registryResourceFactory;
     @Inject OrchestrationService orchestrationService;
@@ -135,7 +135,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Starting onboardingUsers: origin={}, institutionType={}, workflowType={}",
                 request.getOrigin(), request.getInstitutionType(), workflowType);
         return Uni.createFrom()
-                .item(() -> productService.getProductExpirationDate(request.getProductId()))
+                .item(() -> productAzureService.getProductExpirationDate(request.getProductId()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transformToUni(expirationDays ->
                         queryHelper.getInstitutionFromUserRequest(request)
@@ -711,7 +711,7 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     private Uni<Product> product(String productId) {
         return Uni.createFrom()
-                .item(() -> productService.getProductIsValid(productId))
+                .item(() -> productAzureService.getProductIsValid(productId))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
@@ -760,7 +760,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     private Uni<LocalDateTime> computeExpiry(String productId) {
         return Uni.createFrom()
                 .item(() -> OffsetDateTime.now()
-                        .plusDays(productService.getProductExpirationDate(productId))
+                        .plusDays(productAzureService.getProductExpirationDate(productId))
                         .toLocalDateTime())
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }

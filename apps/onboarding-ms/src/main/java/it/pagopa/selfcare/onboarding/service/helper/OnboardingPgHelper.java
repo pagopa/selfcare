@@ -51,7 +51,7 @@ public class OnboardingPgHelper {
 
     @Inject OnboardingMapper onboardingMapper;
     @Inject OrchestrationService orchestrationService;
-    @Inject ProductService productService;
+    @Inject ProductService productAzureService;
     @Inject UserService userService;
     @Inject
     UserRegistryHelper userRegistryHelper;
@@ -211,7 +211,7 @@ public class OnboardingPgHelper {
 
     private Uni<Product> getProductByOnboarding(Onboarding onboarding) {
         return Uni.createFrom()
-                .item(() -> productService.getProductIsValid(onboarding.getProductId()))
+                .item(() -> productAzureService.getProductIsValid(onboarding.getProductId()))
                 .onFailure().transform(ex -> new OnboardingNotAllowedException(
                         String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
                                 onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
@@ -226,4 +226,3 @@ public class OnboardingPgHelper {
                         onboarding.getProductId()));
     }
 }
-
