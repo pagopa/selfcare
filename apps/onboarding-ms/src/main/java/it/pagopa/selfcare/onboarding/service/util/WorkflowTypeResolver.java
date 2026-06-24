@@ -19,13 +19,13 @@ import java.util.Optional;
 public class WorkflowTypeResolver {
 
     @Inject
-    it.pagopa.selfcare.product.service.ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productAzureService;
 
     @Inject
     ProductService productService;
 
     public Uni<WorkflowType> resolve(Onboarding onboarding) {
-        return Uni.createFrom().item(() -> productService.getProductIsValid(onboarding.getProductId()))
+        return Uni.createFrom().item(() -> productAzureService.getProductIsValid(onboarding.getProductId()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transformToUni(product ->
                     resolveByPriority(onboarding, product)
