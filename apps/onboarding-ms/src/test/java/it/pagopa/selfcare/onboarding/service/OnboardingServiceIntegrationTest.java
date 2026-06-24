@@ -38,7 +38,6 @@ import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import java.util.*;
@@ -71,10 +70,10 @@ class OnboardingServiceIntegrationTest {
     UserApi userRegistryApi;
 
     @InjectMock
-    ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productService;
 
     @InjectMock
-    ProductMsService productMsService;
+    ProductService productService;
 
     @InjectMock
     @RestClient
@@ -160,7 +159,7 @@ class OnboardingServiceIntegrationTest {
         org.openapi.quarkus.product_json.model.WorkflowTypeResponse defaultResponse =
                 new org.openapi.quarkus.product_json.model.WorkflowTypeResponse();
         defaultResponse.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-        when(productMsService.getWorkflowType(any(), any(), any()))
+        when(productService.getWorkflowType(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(defaultResponse));
     }
 

@@ -10,11 +10,10 @@ import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.service.ProductMsService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.util.WorkflowTypeResolver;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
@@ -30,10 +29,10 @@ class WorkflowTypeResolverTest {
     WorkflowTypeResolver workflowTypeResolver;
 
     @InjectMock
-    ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productService;
 
     @InjectMock
-    ProductMsService productMsService;
+    ProductService productService;
 
     @Test
     void resolve_shouldReturnContractWithCountersignatureWhenRequiredSignaturesGreaterThanOne() {
@@ -73,7 +72,7 @@ class WorkflowTypeResolverTest {
 
         WorkflowTypeResponse response = new WorkflowTypeResponse();
         response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-        when(productMsService.getWorkflowType(any(), any(), any(ProductId.class))).thenReturn(Uni.createFrom().item(response));
+        when(productService.getWorkflowType(any(), any(), any(ProductId.class))).thenReturn(Uni.createFrom().item(response));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)

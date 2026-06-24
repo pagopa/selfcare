@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.ProductId;
-import it.pagopa.selfcare.onboarding.service.ProductMsService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Alternative;
 import jakarta.ws.rs.NotFoundException;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Slf4j
 @Alternative
 @ApplicationScoped
-public class IntegrationProductMsService implements ProductMsService {
+public class IntegrationProductService implements ProductService {
 
     private final Map<String, List<WorkflowRuleEntry>> workflowRulesMap;
 

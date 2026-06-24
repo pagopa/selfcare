@@ -45,7 +45,6 @@ import it.pagopa.selfcare.onboarding.service.profile.OnboardingTestProfile;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.*;
 import it.pagopa.selfcare.product.exception.ProductNotFoundException;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -98,10 +97,10 @@ class OnboardingServiceDefaultTest {
     InsuranceCompaniesApi insuranceCompaniesApi;
 
     @InjectMock
-    ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productService;
 
     @InjectMock
-    ProductMsService productMsService;
+    ProductService productService;
 
     @InjectMock
     @RestClient
@@ -239,7 +238,7 @@ class OnboardingServiceDefaultTest {
 
     @BeforeEach
     void setupDefaultMocks() {
-        when(productMsService.getWorkflowType(any(), any(), any()))
+        when(productService.getWorkflowType(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     org.openapi.quarkus.product_json.model.Origin origin = invocation.getArgument(1);
                     WorkflowTypeResponse response = new WorkflowTypeResponse();

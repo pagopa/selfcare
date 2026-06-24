@@ -9,7 +9,7 @@ import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 
 import java.util.List;
 
-public interface ProductMsService {
+public interface ProductService {
   Uni<WorkflowTypeResponse> getWorkflowType(InstitutionType institutionType, Origin origin, ProductId productId);
 
   Uni<List<RequiredDocumentResponse>> getRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin);

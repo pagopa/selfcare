@@ -4,7 +4,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.ProductId;
-import it.pagopa.selfcare.onboarding.service.ProductMsService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class ProductServiceImplTest {
 
     @Inject
-    ProductMsService productMsService;
+    ProductService productService;
 
     @InjectMock
     @RestClient
@@ -47,7 +47,7 @@ class ProductServiceImplTest {
                 .thenReturn(Uni.createFrom().item(expected));
 
         // When
-        WorkflowTypeResponse result = productMsService
+        WorkflowTypeResponse result = productService
                 .getWorkflowType(institutionType, origin, productId)
                 .await().indefinitely();
 
@@ -74,7 +74,7 @@ class ProductServiceImplTest {
                 .thenReturn(Uni.createFrom().item(List.of(doc)));
 
         // When
-        List<RequiredDocumentResponse> result = productMsService
+        List<RequiredDocumentResponse> result = productService
                 .getRequiredDocuments(productId, institutionType, origin)
                 .await().indefinitely();
 
@@ -100,7 +100,7 @@ class ProductServiceImplTest {
                 .thenReturn(Uni.createFrom().item(expectedResponse));
 
         // When
-        Boolean result = productMsService
+        Boolean result = productService
                 .isRequiredDocuments(productId, institutionType, origin)
                 .await().indefinitely();
 

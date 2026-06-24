@@ -7,9 +7,8 @@ import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.service.ProductMsService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
@@ -20,10 +19,10 @@ import java.util.Optional;
 public class WorkflowTypeResolver {
 
     @Inject
-    ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productService;
 
     @Inject
-    ProductMsService productMsService;
+    ProductService productService;
 
     public Uni<WorkflowType> resolve(Onboarding onboarding) {
         return Uni.createFrom().item(() -> productService.getProductIsValid(onboarding.getProductId()))
@@ -64,7 +63,7 @@ public class WorkflowTypeResolver {
                 ? org.openapi.quarkus.product_json.model.Origin.valueOf(origin.name())
                 : null;
 
-        return productMsService.getWorkflowType(apiInstitutionType, apiOrigin, ProductId.fromValue(onboarding.getProductId()))
+        return productService.getWorkflowType(apiInstitutionType, apiOrigin, ProductId.fromValue(onboarding.getProductId()))
                 .onItem().transform(this::mapWorkflowType)
                 .onFailure().transform(ex -> new IllegalStateException(
                         "Failed to resolve workflowType from Product MS for product '%s', institutionType '%s', origin '%s': %s"

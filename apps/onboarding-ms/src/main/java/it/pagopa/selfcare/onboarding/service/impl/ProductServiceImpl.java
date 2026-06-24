@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.ProductId;
-import it.pagopa.selfcare.onboarding.service.ProductMsService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @Slf4j
 @ApplicationScoped
-public class ProductServiceImpl implements ProductMsService {
+public class ProductServiceImpl implements ProductService {
 
     private final ProductApi productController;
 
