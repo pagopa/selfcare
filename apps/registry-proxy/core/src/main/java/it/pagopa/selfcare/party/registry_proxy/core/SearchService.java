@@ -16,7 +16,7 @@ public interface SearchService {
   List<SearchServiceInstitution> searchInstitution(String search, Long top);
 
   boolean indexOnboarding(OnboardingIndex onboardingIndex);
-  OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, OffsetDateTime createdFromDate, OffsetDateTime createdToDate, Long page, Long pageSize, List<String> orderBy);
+  OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, OffsetDateTime createdFromDate, OffsetDateTime createdToDate, Long page, Long pageSize, List<String> orderBy, boolean includeTest);
 
   IpaInstitutionSearchResult searchIpaInstitutions(String searchText, String category, Integer page, Integer pageSize);
 }

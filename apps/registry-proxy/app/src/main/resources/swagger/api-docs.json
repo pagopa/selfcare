@@ -531,6 +531,14 @@
               "type" : "string"
             }
           }
+        }, {
+          "name": "includeTest",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean",
+            "default": false
+          }
         } ],
         "responses" : {
           "200" : {
