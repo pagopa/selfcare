@@ -63,7 +63,9 @@ logging:
     it.pagopa.selfcare.party.registry_proxy: ${MS_PARTY_REGISTRY_PROXY_LOG_LEVEL:DEBUG}
 
   pattern:
+    level: "%5p [${spring.application.name:},%X{trace_id:-},%X{span_id:-}]"
     additional-info: ",%X{X-Client-Ip:-}]"
+    
   appinsights:
     enabled: ${LOGGING_APPINSIGHTS_ENABLED:true}
     batch:
