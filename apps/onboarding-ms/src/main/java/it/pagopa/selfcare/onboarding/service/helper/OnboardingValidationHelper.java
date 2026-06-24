@@ -87,16 +87,14 @@ public class OnboardingValidationHelper {
         if (Objects.nonNull(productParentId)) {
             log.info("Verifying already onboarding for institution: {}, productId: {}, parentId: {}",
                     institution.getDescription(), productId, productParentId);
-            return checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productId)
-                    .onItem().transformToUni(ignored ->
-                            checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productParentId)
-                                    .onItem().transformToUni(result -> Uni.createFrom().failure(
-                                            new InvalidRequestException(
-                                                    String.format(PARENT_PRODUCT_NOT_ONBOARDED.getMessage(),
-                                                            productParentId, institution.getTaxCode()),
-                                                    PARENT_PRODUCT_NOT_ONBOARDED.getCode())))
-                                    .onFailure(ResourceConflictException.class)
-                                    .recoverWithNull().replaceWith(Uni.createFrom().item(true)));
+            return checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productParentId)
+                    .onItem().transformToUni(result -> Uni.createFrom().<Boolean>failure(
+                            new InvalidRequestException(
+                                    String.format(PARENT_PRODUCT_NOT_ONBOARDED.getMessage(),
+                                            productParentId, institution.getTaxCode()),
+                                    PARENT_PRODUCT_NOT_ONBOARDED.getCode())))
+                    .onFailure(ResourceConflictException.class)
+                    .recoverWithUni(ignored -> checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productId));
         } else {
             log.info("Verifying already onboarding for institution: {}, productId: {}",
                     institution.getDescription(), productId);
