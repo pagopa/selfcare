@@ -41,11 +41,11 @@ public class OnboardingMsConfig {
     Optional<String> managedIdentityClientIdProduct;
 
     @Inject
-    ProductService productService;
+    ProductService productAzureService;
 
     void onStart(@Observes StartupEvent ev) {
         log.info(String.format("Database %s is starting...", Onboarding.mongoDatabase().getName()));
-        log.info("ProductService eagerly initialized: {}", productService.getClass().getSimpleName());
+        log.info("ProductService eagerly initialized: {}", productAzureService.getClass().getSimpleName());
     }
 
     @ApplicationScoped

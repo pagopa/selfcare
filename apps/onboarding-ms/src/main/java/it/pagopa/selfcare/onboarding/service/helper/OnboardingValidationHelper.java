@@ -48,7 +48,7 @@ public class OnboardingValidationHelper {
             Pattern.compile("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
 
     @Inject
-    ProductService productService;
+    ProductService productAzureService;
 
     @RestClient
     @Inject
@@ -324,8 +324,8 @@ public class OnboardingValidationHelper {
     }
 
     private boolean validateByProductOrInstitutionTaxCode(String productId, String taxCode) {
-        return productService.isProductEnabled(productId)
-                || productService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
+        return productAzureService.isProductEnabled(productId)
+                || productAzureService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
     }
 
     record QueryParams(String taxCode, String originId) {}
@@ -383,5 +383,4 @@ public class OnboardingValidationHelper {
         return onboarding;
     }
 }
-
 
