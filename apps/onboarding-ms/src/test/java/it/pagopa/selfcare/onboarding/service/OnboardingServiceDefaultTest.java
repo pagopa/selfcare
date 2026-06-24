@@ -257,7 +257,7 @@ class OnboardingServiceDefaultTest {
     void onboardingPa_throwExceptionIfProductThrowException(UniAsserter asserter) {
         Onboarding onboardingRequest = createDummyOnboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
 
         Product productResource = new Product();
         asserter.execute(() -> when(productService.getProductIsValid(onboardingRequest.getProductId()))
@@ -274,7 +274,7 @@ class OnboardingServiceDefaultTest {
     void onboarding_throwExceptionIfProductIsNotValid(UniAsserter asserter) {
         Onboarding onboardingRequest = createDummyOnboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
 
         Product productResource = new Product();
         asserter.execute(() -> when(productService.getProductIsValid(onboardingRequest.getProductId()))
@@ -290,7 +290,7 @@ class OnboardingServiceDefaultTest {
     void onboardingPa_throwExceptionIfProductAlreadyOnboarded(UniAsserter asserter) {
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setInstitutionType(InstitutionType.PA);
         institutionBaseRequest.setTaxCode("taxCode");
@@ -526,7 +526,7 @@ class OnboardingServiceDefaultTest {
     void onboardingPa_throwExceptionIfProductParentRoleIsNotValid(UniAsserter asserter) {
         Onboarding onboardingRequest = createDummyOnboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
 
         Product productResource = new Product();
         Product productParent = new Product();
@@ -1508,7 +1508,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IVASS);
         institutionBaseRequest.setInstitutionType(InstitutionType.SA);
@@ -1606,7 +1606,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingRequest = createDummyOnboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         onboardingRequest.getInstitution().setOrigin(Origin.SELC);
         onboardingRequest.getInstitution().setInstitutionType(PSP);
         onboardingRequest.setUserRequester(userRequester);
@@ -1744,7 +1744,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingDefaultRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingDefaultRequest.setProductId("productId");
+        onboardingDefaultRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.IVASS);
         institution.setDescription(DESCRIPTION_FIELD);
@@ -1972,7 +1972,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding request = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        request.setProductId("productId");
+        request.setProductId(PROD_IO.getValue());
         request.setInstitution(dummyInstitution());
         request.getInstitution().setOrigin(Origin.SELC);
         request.setUserRequester(userRequester);
@@ -5115,7 +5115,7 @@ class OnboardingServiceDefaultTest {
         String individualCF = "RSSMRA80A01H501T";
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.IVASS);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5127,9 +5127,9 @@ class OnboardingServiceDefaultTest {
         mockPersistOnboarding(asserter);
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = createDummyProduct("productId", false, true, true);
+        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
         asserter.execute(() -> {
-            when(productService.getProductIsValid("productId"))
+            when(productService.getProductIsValid(PROD_IO.getValue()))
                     .thenReturn(product);
             when(userRegistryApi.updateUsingPATCH(any(), any()))
                     .thenReturn(Uni.createFrom().item(Response.noContent().build()));
@@ -5160,7 +5160,7 @@ class OnboardingServiceDefaultTest {
         String individualCF = "RSSMRA80A01H501T";
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.IVASS);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5172,8 +5172,8 @@ class OnboardingServiceDefaultTest {
         mockVerifyOnboardingNotFound();
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = createDummyProduct("productId", false, false, true);
-        asserter.execute(() -> when(productService.getProductIsValid("productId"))
+        Product product = createDummyProduct(PROD_IO.getValue(), false, false, true);
+        asserter.execute(() -> when(productService.getProductIsValid(PROD_IO.getValue()))
                 .thenReturn(product));
 
         mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
@@ -5202,7 +5202,7 @@ class OnboardingServiceDefaultTest {
         String companyTaxCode = "12345678901";
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.IVASS);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5215,8 +5215,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create product that allows company onboarding
-        Product product = createDummyProduct("productId", false, true, true);
-        asserter.execute(() -> when(productService.getProductIsValid("productId"))
+        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        asserter.execute(() -> when(productService.getProductIsValid(PROD_IO.getValue()))
                 .thenReturn(product));
 
         mockVerifyOnboardingNotFound();
@@ -5244,7 +5244,7 @@ class OnboardingServiceDefaultTest {
         String companyTaxCode = "12345678901";
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.IVASS);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5256,8 +5256,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create product that disallows company onboarding
-        Product product = createDummyProduct("productId", false, true, false);
-        asserter.execute(() -> when(productService.getProductIsValid("productId"))
+        Product product = createDummyProduct(PROD_IO.getValue(), false, true, false);
+        asserter.execute(() -> when(productService.getProductIsValid(PROD_IO.getValue()))
                 .thenReturn(product));
 
         mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
@@ -5294,7 +5294,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager, delegate);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.SELC);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5307,8 +5307,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create a product that allows company onboarding
-        Product product = createDummyProduct("productId", false, true, true);
-        asserter.execute(() -> when(productService.getProductIsValid("productId"))
+        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        asserter.execute(() -> when(productService.getProductIsValid(PROD_IO.getValue()))
                 .thenReturn(product));
 
         mockVerifyOnboardingNotFound();
@@ -5343,7 +5343,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager, delegate);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
         institution.setOrigin(Origin.SELC);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5355,8 +5355,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create a product that allows company onboarding
-        Product product = createDummyProduct("productId", false, true, true);
-        asserter.execute(() -> when(productService.getProductIsValid("productId"))
+        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        asserter.execute(() -> when(productService.getProductIsValid(PROD_IO.getValue()))
                 .thenReturn(product));
 
         mockVerifyOnboardingNotFound();
