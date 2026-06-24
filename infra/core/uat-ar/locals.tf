@@ -163,16 +163,28 @@ locals {
   eventhub_alerts_enabled           = false
 
   eventhub_ip_rules = [
-    { // DATALAKE
+    { // DATALAKE legacy
       ip_mask = "18.192.147.151",
       action  = "Allow"
     },
-    { // DATALAKE
+    { // DATALAKE legacy
       ip_mask = "18.159.227.69",
       action  = "Allow"
     },
-    { // DATALAKE
+    { // DATALAKE legacy
       ip_mask = "3.126.198.129",
+      action  = "Allow"
+    },
+    { // DATALAKE
+      ip_mask = "52.29.215.8",
+      action  = "Allow"
+    },
+    { // DATALAKE
+      ip_mask = "63.181.230.22",
+      action  = "Allow"
+    },
+    { // DATALAKE
+      ip_mask = "52.29.74.207",
       action  = "Allow"
     },
     { // PN - DEV
