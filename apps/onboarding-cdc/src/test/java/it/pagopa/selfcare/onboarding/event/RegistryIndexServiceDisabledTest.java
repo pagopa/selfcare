@@ -5,7 +5,6 @@ import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.mongodb.MongoTestResource;
-import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
@@ -16,19 +15,19 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
 import org.openapi.quarkus.party_registry_proxy_json.api.OnboardingApi;
 
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
-class RegistryIndexServiceTest {
+@TestProfile(NotificationTestProfile.class)
+class RegistryIndexServiceDisabledTest {
 
     @InjectMock
     @RestClient
@@ -38,45 +37,18 @@ class RegistryIndexServiceTest {
     private RegistryIndexService registryIndexService;
 
     @Test
-    @DisplayName("Should call updateOnboardingIndex for COMPLETED status")
-    void shouldCallUpdateIndexForCompletedStatus() {
+    @DisplayName("Should not call updateOnboardingIndex when watcher is disabled")
+    void shouldNotCallUpdateIndexWhenWatcherIsDisabled() {
+        // given
         Onboarding onboarding = buildOnboarding(OnboardingStatus.COMPLETED);
 
-        when(onboardingApi.updateOnboardingIndex(any())).thenReturn(Uni.createFrom().item(Response.noContent().build()));
-
+        // when
         UniAssertSubscriber<Response> subscriber = registryIndexService.updateIndex(onboarding)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
+        // then
         subscriber.assertCompleted().awaitItem();
-        verify(onboardingApi, times(1)).updateOnboardingIndex(any());
-    }
-
-    @Test
-    @DisplayName("Should call updateOnboardingIndex for PENDING status")
-    void shouldCallUpdateIndexForPendingStatus() {
-        Onboarding onboarding = buildOnboarding(OnboardingStatus.PENDING);
-
-        when(onboardingApi.updateOnboardingIndex(any())).thenReturn(Uni.createFrom().item(Response.noContent().build()));
-
-        UniAssertSubscriber<Response> subscriber = registryIndexService.updateIndex(onboarding)
-                .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-        subscriber.assertCompleted().awaitItem();
-        verify(onboardingApi, times(1)).updateOnboardingIndex(any());
-    }
-
-    @Test
-    @DisplayName("Should call updateOnboardingIndex for DELETED status")
-    void shouldCallUpdateIndexForDeletedStatus() {
-        Onboarding onboarding = buildOnboarding(OnboardingStatus.DELETED);
-
-        when(onboardingApi.updateOnboardingIndex(any())).thenReturn(Uni.createFrom().item(Response.noContent().build()));
-
-        UniAssertSubscriber<Response> subscriber = registryIndexService.updateIndex(onboarding)
-                .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-        subscriber.assertCompleted().awaitItem();
-        verify(onboardingApi, times(1)).updateOnboardingIndex(any());
+        verify(onboardingApi, times(0)).updateOnboardingIndex(any());
     }
 
     private Onboarding buildOnboarding(OnboardingStatus status) {
@@ -96,5 +68,4 @@ class RegistryIndexServiceTest {
         onboarding.setInstitution(institution);
         return onboarding;
     }
-
 }
