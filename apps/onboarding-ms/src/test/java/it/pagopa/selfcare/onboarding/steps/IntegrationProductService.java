@@ -21,9 +21,11 @@ import java.util.Map;
 public class IntegrationProductService implements ProductService {
 
     private final Map<String, List<WorkflowRuleEntry>> workflowRulesMap;
+    private final Map<String, List<RequiredDocumentsRuleEntry>> requiredDocumentsRulesMap;
 
     public IntegrationProductService() {
         this.workflowRulesMap = loadWorkflowRules();
+        this.requiredDocumentsRulesMap = loadRequiredDocumentsRules();
     }
 
     @Override
@@ -56,7 +58,17 @@ public class IntegrationProductService implements ProductService {
 
   @Override
   public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin) {
-    return Uni.createFrom().item(false);
+    List<RequiredDocumentsRuleEntry> rules = requiredDocumentsRulesMap.get(productId.getValue());
+    if (rules == null || rules.isEmpty()) {
+      return Uni.createFrom().item(false);
+    }
+    boolean enabled = rules.stream()
+            .filter(rule -> matches(rule.institutionType, institutionType))
+            .filter(rule -> matches(rule.origin, origin))
+            .findFirst()
+            .map(rule -> rule.enabled)
+            .orElse(false);
+    return Uni.createFrom().item(enabled);
   }
 
   private boolean matches(String ruleValue, Enum<?> requestValue) {
@@ -78,5 +90,20 @@ public class IntegrationProductService implements ProductService {
         }
     }
 
+    private Map<String, List<RequiredDocumentsRuleEntry>> loadRequiredDocumentsRules() {
+        try (InputStream is = getClass().getClassLoader()
+                .getResourceAsStream("integration-data/required-documents-rules.json")) {
+            if (is == null) {
+                return Map.of();
+            }
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(is, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load required-documents-rules.json", e);
+        }
+    }
+
     private record WorkflowRuleEntry(String institutionType, String origin, String workflowType) {}
+
+    private record RequiredDocumentsRuleEntry(String institutionType, String origin, boolean enabled) {}
 }

@@ -1290,6 +1290,64 @@
           "SecurityScheme" : [ ]
         } ]
       },
+      "put" : {
+        "tags" : [ "internal-v1", "Onboarding Controller" ],
+        "summary" : "Idempotent trigger to verify mandatory documents and advance onboarding.",
+        "description" : "Idempotent trigger invoked after each document upload. Recalculates required documents for the onboarding context (productId, institutionType, origin) and verifies presence of all mandatory attachments. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING. If documents are incomplete or onboarding is already past REQUEST status, no action is taken (idempotent).",
+        "operationId" : "triggerDocumentGate",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Gate evaluated — orchestration triggered if documents complete, no action otherwise"
+          },
+          "400" : {
+            "description" : "Bad Request — no mandatory documents configured for this onboarding context",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Onboarding not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "delete" : {
         "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Perform delete operation of an onboarding request",
@@ -2965,7 +3023,7 @@
         }
       },
       "OnboardingStatus" : {
-        "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "PENDING_IN_REVIEW", "COMPLETED", "FAILED", "REJECTED", "DELETED" ],
+        "enum" : [ "REQUESTING", "REQUEST", "TOBEVALIDATED", "PENDING", "PENDING_IN_REVIEW", "COMPLETED", "FAILED", "REJECTED", "DELETED" ],
         "type" : "string"
       },
       "OnboardingUserPgRequest" : {
