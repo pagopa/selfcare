@@ -3324,89 +3324,6 @@
         } ]
       }
     },
-    "/v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info" : {
-      "get" : {
-        "tags" : [ "institution-controller" ],
-        "summary" : "The service retrieves the institutions Manager and institution informations",
-        "description" : "The service retrieves the institutions Manager and institution informations",
-        "operationId" : "getInstitutionOnboardingInfoUsingGET_1",
-        "parameters" : [ {
-          "name" : "externalInstitutionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/InstitutionOnboardingInfoResource"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "type" : "object",
-                  "description" : "Generic problem response"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "type" : "object",
-                  "description" : "Generic problem response"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "type" : "object",
-                  "description" : "Generic problem response"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "type" : "object",
-                  "description" : "Generic problem response"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true,
-        "security" : [ {
-          "bearerAuth" : [ "global" ]
-        } ]
-      }
-    },
     "/v1/institutions/{externalInstitutionId}/geographic-taxonomy" : {
       "get" : {
         "tags" : [ "institution-controller" ],
@@ -4953,6 +4870,17 @@
           }
         }
       },
+      "GeographicTaxonomyResource" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "desc" : {
+            "type" : "string"
+          }
+        }
+      },
       "AssistanceContactsResource" : {
         "type" : "object",
         "properties" : {
@@ -5020,17 +4948,6 @@
             "type" : "string"
           },
           "pec" : {
-            "type" : "string"
-          }
-        }
-      },
-      "GeographicTaxonomyResource" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "desc" : {
             "type" : "string"
           }
         }
