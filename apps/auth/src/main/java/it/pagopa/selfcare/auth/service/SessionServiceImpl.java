@@ -6,12 +6,11 @@ import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.Pkcs8Utils;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.time.Duration;
+import java.time.Instant;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import java.time.Duration;
-import java.time.Instant;
 
 @Slf4j
 @ApplicationScoped
@@ -60,8 +59,6 @@ public class SessionServiceImpl implements SessionService {
                 Jwt.claims()
                     .claim("uid", userClaims.getUid())
                     .claim("email", userClaims.getEmail())
-                    .claim("name", userClaims.getName())
-                    .claim("family_name", userClaims.getFamilyName())
                     .issuer("PAGOPA")
                     .audience(audience)
                     .issuedAt(Instant.now())
