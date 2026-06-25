@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 public class ManagingInstitutionSendEmail {
     private String managingInstitutionId;
     private String productId;
-    private String managingInstitutionDescription;
+    private String onboardingInstitutionDescription;
     private String userMailUuid;
     private String userId;
 }

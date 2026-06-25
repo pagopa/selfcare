@@ -86,7 +86,7 @@ locals {
   app_settings_user_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -123,6 +123,10 @@ locals {
     {
       name  = "SELFCARE_URL"
       value = "https://pnpg.dev.selfcare.pagopa.it"
+    },
+    {
+      name  = "ONBOARDING_URL"
+      value = "http://selc-d-pnpg-onboarding-ms-ca"
     }
   ]
 

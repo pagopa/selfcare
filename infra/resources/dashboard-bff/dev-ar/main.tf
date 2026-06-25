@@ -17,6 +17,29 @@ module "local" {
 }
 
 ###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_storage_account" "web_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "web_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-web-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
 # Dashboard BFF
 ###############################################################################
 locals {
@@ -128,12 +151,27 @@ locals {
     {
       name  = "DOCUMENT_URL"
       value = "http://selc-d-document-ms-ca"
+    },
+    {
+      name  = "PRODUCT_AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "PRODUCT_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "WEB_AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.web_storage.name
+    },
+    {
+      name  = "WEB_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.web_storage_blob_identity.client_id
     }
   ]
 
   secrets_names_dashboard_bff = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "BLOB_STORAGE_CONN_STRING"               = "web-storage-connection-string"
     "USER_REGISTRY_API_KEY"                  = "user-registry-api-key"
     "BACKOFFICE_PAGO_PA_API_KEY"             = "pagopa-backoffice-api-key"
     "SUPPORT_API_KEY"                        = "zendesk-support-api-key"
@@ -141,7 +179,6 @@ locals {
     "JWT_TOKEN_EXCHANGE_KID"                 = "jwt-exchange-kid"
     "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
     "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
   }
 }
 
@@ -160,6 +197,10 @@ module "container_app_dashboard_bff" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.web_storage_blob_identity.id
+  ]
 }
 
 ###############################################################################

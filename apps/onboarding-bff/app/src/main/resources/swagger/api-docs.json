@@ -192,7 +192,7 @@
         } ],
         "requestBody" : {
           "content" : {
-            "application/json" : {
+            "multipart/form-data" : {
               "schema" : {
                 "required" : [ "contract" ],
                 "type" : "object",
@@ -342,7 +342,7 @@
         } ],
         "requestBody" : {
           "content" : {
-            "application/json" : {
+            "multipart/form-data" : {
               "schema" : {
                 "required" : [ "contract" ],
                 "type" : "object",
@@ -517,7 +517,7 @@
         } ],
         "requestBody" : {
           "content" : {
-            "application/json" : {
+            "multipart/form-data" : {
               "schema" : {
                 "required" : [ "attachment" ],
                 "type" : "object",
@@ -670,6 +670,16 @@
           "required" : true
         },
         "responses" : {
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
           "403" : {
             "description" : "Forbidden",
             "content" : {
@@ -825,7 +835,7 @@
         } ],
         "requestBody" : {
           "content" : {
-            "application/json" : {
+            "multipart/form-data" : {
               "schema" : {
                 "required" : [ "aggregates" ],
                 "type" : "object",
@@ -3314,21 +3324,14 @@
         } ]
       }
     },
-    "/v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info" : {
+    "/v1/institutions/{externalInstitutionId}/geographic-taxonomy" : {
       "get" : {
         "tags" : [ "institution-controller" ],
-        "summary" : "The service retrieves the institutions Manager and institution informations",
-        "description" : "The service retrieves the institutions Manager and institution informations",
-        "operationId" : "getInstitutionOnboardingInfoUsingGET_1",
+        "summary" : "The service retrieve the institution's geographic taxonomy",
+        "description" : "The service retrieve the institution's geographic taxonomy",
+        "operationId" : "getInstitutionGeographicTaxonomyUsingGET",
         "parameters" : [ {
           "name" : "externalInstitutionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "productId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -3341,7 +3344,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/InstitutionOnboardingInfoResource"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GeographicTaxonomyResource"
+                  }
                 }
               }
             }
@@ -3391,39 +3397,88 @@
             }
           }
         },
-        "deprecated" : true,
         "security" : [ {
           "bearerAuth" : [ "global" ]
         } ]
       }
     },
-    "/v1/institutions/{externalInstitutionId}/geographic-taxonomy" : {
+    "/v1/institutions/onboarding/verify" : {
       "get" : {
         "tags" : [ "institution-controller" ],
-        "summary" : "The service retrieve the institution's geographic taxonomy",
-        "description" : "The service retrieve the institution's geographic taxonomy",
-        "operationId" : "getInstitutionGeographicTaxonomyUsingGET",
+        "summary" : "Checks if the specified institution has been onboarded on the specified product.",
+        "description" : "Checks if the specified institution has been onboarded on the specified product.",
+        "operationId" : "verifyOnboardingUsingGET",
         "parameters" : [ {
-          "name" : "externalInstitutionId",
-          "in" : "path",
+          "name" : "taxCode",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "subunitCode",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "query",
           "required" : true,
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "origin",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "originId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "vatNumber",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionType",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "verifyType",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "INTERNAL", "EXTERNAL" ]
+          }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK",
+          "403" : {
+            "description" : "Forbidden",
             "content" : {
-              "application/json" : {
+              "application/problem+json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/GeographicTaxonomyResource"
-                  }
+                  "$ref" : "#/components/schemas/Problem"
                 }
               }
             }
+          },
+          "200" : {
+            "description" : "OK"
           },
           "400" : {
             "description" : "Bad Request",
@@ -4815,6 +4870,17 @@
           }
         }
       },
+      "GeographicTaxonomyResource" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "desc" : {
+            "type" : "string"
+          }
+        }
+      },
       "AssistanceContactsResource" : {
         "type" : "object",
         "properties" : {
@@ -4882,17 +4948,6 @@
             "type" : "string"
           },
           "pec" : {
-            "type" : "string"
-          }
-        }
-      },
-      "GeographicTaxonomyResource" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "desc" : {
             "type" : "string"
           }
         }

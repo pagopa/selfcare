@@ -98,7 +98,8 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -110,7 +111,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -127,14 +129,11 @@ data "azurerm_user_assigned_identity" "cae_identity" {
   resource_group_name = module.local.config.ca_resource_group_name
 }
 
-###############################################################################
-# RBAC
-###############################################################################
-resource "azurerm_role_assignment" "onboarding_ms_product_blob_contributor" {
-  scope                = data.azurerm_storage_account.product_storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.cae_identity.principal_id
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
+
 
 ###############################################################################
 # LOCAL VARIABLES
@@ -203,7 +202,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cae_identity.client_id
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
@@ -238,4 +237,5 @@ module "container_app_onboarding_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_blob_identity.id]
 }

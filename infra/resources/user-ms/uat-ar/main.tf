@@ -139,6 +139,10 @@ locals {
     {
       name  = "SELFCARE_URL"
       value = "https://uat.selfcare.pagopa.it"
+    },
+    {
+      name  = "ONBOARDING_URL"
+      value = "http://selc-u-onboarding-ms-ca"
     }
   ]
 

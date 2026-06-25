@@ -7,6 +7,7 @@ import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
+import it.pagopa.selfcare.user.model.OnboardingUserDeleteInfo;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 
 import java.time.OffsetDateTime;
@@ -54,5 +55,9 @@ public interface UserInstitutionService {
     Uni<Long> countUsers(String institutionId, String productId, List<PartyRole> roles, List<OnboardedProductState> status);
 
     Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId);
+
+    Uni<Void> callOnboardingDelete(String tokenId, String userId, boolean isBlocking);
+
+    Uni<List<OnboardingUserDeleteInfo>> findTokenIdUserIdList(String userId, String institutionId, String productId, PartyRole roles, String productRole);
 
 }

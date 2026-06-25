@@ -19,7 +19,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - 'apps/iam/**'
+      - 'apps/registry-proxy-runner/**'
       - '.github/workflows/pr_registry_proxy_runner.yml'
       - '.github/workflows/call_code_review.yml'
 

@@ -96,7 +96,8 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -108,7 +109,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -116,8 +118,8 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
 # DATA SOURCES
 ###############################################################################
 data "azurerm_storage_account" "product_storage" {
-  name                =  "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
-  resource_group_name =  "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "cae_identity" {
@@ -125,14 +127,11 @@ data "azurerm_user_assigned_identity" "cae_identity" {
   resource_group_name = module.local.config.ca_resource_group_name
 }
 
-###############################################################################
-# RBAC
-###############################################################################
-resource "azurerm_role_assignment" "onboarding_ms_product_blob_contributor" {
-  scope                = data.azurerm_storage_account.product_storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azurerm_user_assigned_identity.cae_identity.principal_id
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
+
 
 ###############################################################################
 # LOCAL VARIABLES
@@ -141,7 +140,7 @@ locals {
   onboarding_ms_app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -193,7 +192,7 @@ locals {
     },
     {
       name  = "AZURE_CLIENT_ID"
-      value = data.azurerm_user_assigned_identity.cae_identity.client_id
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
@@ -210,17 +209,18 @@ locals {
 module "container_app_onboarding_ms" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = module.local.config.env_short
-  resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-pnpg-onboarding-ms"
-  container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-onboarding-ms"
-  image_tag                      = var.image_tag
-  app_settings                   = local.onboarding_ms_app_settings
-  secrets_names                  = local.onboarding_ms_secrets_names
-  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
-  key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  env_short                             = module.local.config.env_short
+  resource_group_name                   = module.local.config.ca_resource_group_name
+  container_app                         = module.local.config.container_app
+  container_app_name                    = "selc-${module.local.config.env_short}-pnpg-onboarding-ms"
+  container_app_environment_name        = module.local.config.container_app_environment_name
+  image_name                            = "selfcare-onboarding-ms"
+  image_tag                             = var.image_tag
+  app_settings                          = local.onboarding_ms_app_settings
+  secrets_names                         = local.onboarding_ms_secrets_names
+  key_vault_resource_group_name         = module.local.config.key_vault_resource_group_name
+  key_vault_name                        = module.local.config.key_vault_name
+  probes                                = module.local.config.quarkus_health_probes
+  tags                                  = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_blob_identity.id]
 }
