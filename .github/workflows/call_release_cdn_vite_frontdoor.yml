@@ -156,6 +156,9 @@ jobs:
           BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
           BASE_PATH: ${{ inputs.base_path }}
 
+      - name: Install CDN extension
+        run: az extension add --name cdn --upgrade
+
       - name: Purge CDN
         run: |
           az afd endpoint purge \
