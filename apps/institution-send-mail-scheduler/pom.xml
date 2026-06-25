@@ -24,7 +24,7 @@
         <quarkus.platform.version>3.11.3</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
-        <onboarding-sdk.version>0.17.0</onboarding-sdk.version>
+        <onboarding-sdk.version>0.17.1</onboarding-sdk.version>
         <quarkus-openapi-generator.version>2.4.2</quarkus-openapi-generator.version>
     </properties>
     <dependencyManagement>

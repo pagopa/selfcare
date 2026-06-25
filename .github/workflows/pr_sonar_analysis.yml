@@ -109,10 +109,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
-            mvn -T 1C -B -ntp clean test --projects "${{ steps.scope.outputs.projects }}" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+          MODE="${{ steps.scope.outputs.mode }}"
+          PROJECTS="${{ steps.scope.outputs.projects }}"
+          THREADS="1C"
+
+          if [[ "$MODE" != "partial" || ",$PROJECTS," == *",apps/onboarding-functions,"* ]]; then
+            THREADS="1"
+          fi
+
+          if [[ "$MODE" == "partial" ]]; then
+            mvn -T "$THREADS" -B -ntp clean test --projects "$PROJECTS" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
           else
-            mvn -T 1C -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+            mvn -T "$THREADS" -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
           fi
 
       - name: Analyze with SonarCloud

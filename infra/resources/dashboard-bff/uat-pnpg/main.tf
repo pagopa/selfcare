@@ -47,7 +47,7 @@ locals {
     },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -160,13 +160,13 @@ locals {
   ]
 
   secrets_names_dashboard_bff = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "USER_REGISTRY_API_KEY"                  = "user-registry-api-key"
-    "SUPPORT_API_KEY"                        = "zendesk-support-api-key"
-    "JWT_TOKEN_EXCHANGE_PRIVATE_KEY"         = "jwt-exchange-private-key"
-    "JWT_TOKEN_EXCHANGE_KID"                 = "jwt-exchange-kid"
-    "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
-    "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "SUPPORT_API_KEY"                       = "zendesk-support-api-key"
+    "JWT_TOKEN_EXCHANGE_PRIVATE_KEY"        = "jwt-exchange-private-key"
+    "JWT_TOKEN_EXCHANGE_KID"                = "jwt-exchange-kid"
+    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "USERVICE_USER_REGISTRY_API_KEY"        = "user-registry-api-key"
   }
 }
 

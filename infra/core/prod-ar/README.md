@@ -43,6 +43,7 @@
 | <a name="module_networking"></a> [networking](#module\_networking) | ../_modules/networking | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ../_modules/redis | n/a |
 | <a name="module_storage"></a> [storage](#module\_storage) | ../_modules/storage | n/a |
+| <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 | <a name="module_vpn"></a> [vpn](#module\_vpn) | ../_modules/vpn | n/a |
 
 ## Resources
