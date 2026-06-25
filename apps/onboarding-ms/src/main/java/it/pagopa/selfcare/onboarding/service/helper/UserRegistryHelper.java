@@ -265,6 +265,42 @@ public class UserRegistryHelper {
                 .value(value)
                 .certification(CertifiableFieldResourceOfstring.CertificationEnum.NONE);
     }
+
+    /**
+     * Cerca un utente nella User Registry tramite codice fiscale e restituisce l'UUID (token) associato.
+     * Restituisce null se l'utente non viene trovato (404).
+     */
+    public Uni<String> searchUserIdByFiscalCode(String fiscalCode) {
+        return userRegistryApi.searchUsingPOST(USERS_FIELD_LIST, new UserSearchDto().fiscalCode(fiscalCode))
+                .onItem().transform(u -> u.getId().toString())
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> {
+                    if (((WebApplicationException) ex).getResponse().getStatus() == 404) {
+                        return Uni.createFrom().nullItem();
+                    }
+                    return Uni.createFrom().failure(ex);
+                });
+    }
+
+    /**
+     * Se il taxCode è un codice fiscale di persona fisica, lo risolve in UUID tramite PDV.
+     * Se è un codice fiscale di persona giuridica (numerico), restituisce direttamente il taxCode originale.
+     * Restituisce null se la persona fisica non viene trovata su PDV.
+     */
+    public Uni<String> resolveTaxCodeForQuery(String taxCode) {
+        if (isPersonalFiscalCode(taxCode)) {
+            return searchUserIdByFiscalCode(taxCode);
+        }
+        return Uni.createFrom().item(taxCode);
+    }
+
+    /**
+     * Verifica se la stringa è un codice fiscale di persona fisica italiana.
+     */
+    public static boolean isPersonalFiscalCode(String taxCode) {
+        if (taxCode == null || taxCode.length() != 16) {
+            return false;
+        }
+        return taxCode.toUpperCase().matches("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
+    }
 }
-
-

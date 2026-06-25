@@ -15,6 +15,7 @@ az storage blob upload-batch --destination contracts-blob/contracts/template --s
 az storage blob list --container-name contracts-blob --account-name devstoreaccount1 --account-key Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg== --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
 
 az storage blob upload --container-name contracts-blob --file /workspace/dummy-accordo_di_adesione.html --name contracts/dummy-accordo_di_adesione.html --account-name devstoreaccount1 --account-key "Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==" --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+az storage blob upload --container-name contracts-blob --file /workspace/contracts-blob/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html --name contract-templates/prod-io/c26ed929-7fea-4abc-9212-142d7faf01ac.html --account-name devstoreaccount1 --account-key "Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==" --connection-string "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;" --overwrite
 
 echo "BLOBSTORAGE INITIALIZED"
 

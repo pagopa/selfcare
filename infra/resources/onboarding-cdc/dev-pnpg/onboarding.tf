@@ -15,64 +15,21 @@ module "local" {
   ca_resource_group_name         = "selc-d-container-app-rg"
   container_app_min_replicas     = 0
 }
+
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-table-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 locals {
-  onboarding_ms_app_settings = [
-    {
-      name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
-    },
-    {
-      name  = "APPLICATIONINSIGHTS_ROLE_NAME"
-      value = "onboarding-ms"
-    },
-    {
-      name  = "USER_REGISTRY_URL"
-      value = "https://api.uat.pdv.pagopa.it/user-registry/v1"
-    },
-    {
-      name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-pnpg-onboarding-fn.azurewebsites.net"
-    },
-    {
-      name  = "STORAGE_CONTAINER_PRODUCT"
-      value = "selc-d-product"
-    },
-    {
-      name  = "MS_CORE_URL"
-      value = "http://selc-d-pnpg-ms-core-ca"
-    },
-    {
-      name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-d-pnpg-party-reg-proxy-ca"
-    },
-    {
-      name  = "SIGNATURE_VALIDATION_ENABLED"
-      value = "false"
-    },
-    {
-      name  = "MS_USER_URL"
-      value = "http://selc-d-pnpg-user-ms-ca"
-    },
-    {
-      name  = "JWT_BEARER_TOKEN"
-      value = "@Microsoft.KeyVault(SecretUri=https://${module.local.config.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
-    },
-    {
-      name  = "ONBOARDING-UPDATE-USER-REQUESTER"
-      value = "true"
-    }
-  ]
-
-  onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-  }
-
   onboarding_cdc_container_app = {
     min_replicas = 0
     max_replicas = 1
@@ -97,7 +54,7 @@ locals {
   onboarding_cdc_app_settings = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -109,14 +66,26 @@ locals {
     },
     {
       name  = "ONBOARDING_FUNCTIONS_URL"
-      value = "https://selc-d-pnpg-onboarding-fn.azurewebsites.net"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
     }
   ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
   }
 
@@ -136,6 +105,7 @@ module "container_app_onboarding_cdc" {
   secrets_names                  = local.onboarding_cdc_secrets_names
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  probes                                = module.local.config.quarkus_health_probes
+  tags                                  = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_table_identity.id]
 }

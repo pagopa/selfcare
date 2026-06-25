@@ -1,0 +1,68 @@
+{
+  "institutions": [
+    {
+  "address": "123 Main St",
+  "aooParentCode": "AOO001",
+  "attributes": [
+    {
+      "code": "ATTR001",
+      "description": "Attribute Description",
+      "origin": "Origin"
+    }
+  ],
+  "businessRegisterPlace": "Rome",
+  "city": "Rome",
+  "country": "Italy",
+  "county": "Lazio",
+  "createdAt": "2024-11-29T16:23:10.289966300+01:00",
+  "dataProtectionOfficer": {
+    "address": "DPO Address",
+    "email": "dpo@example.com",
+    "pec": "dpo@pec.example.com"
+  },
+  "delegation": true,
+  "description": "Institution Description",
+  "digitalAddress": "institution@example.com",
+  "externalId": "EXT001",
+  "geographicTaxonomies": [
+    {
+      "code": "GEO001",
+      "desc": "Geographic Taxonomy Description"
+    }
+  ],
+  "id": "12345",
+  "imported": true,
+  "institutionType": "PT",
+  "istatCode": "ISTAT001",
+  "logo": "http://example.com/logo.png",
+  "onboarding": [
+    {
+      "productId": "PROD001",
+      "status": "ACTIVE"
+    }
+  ],
+  "origin": "Origin",
+  "originId": "origin-001",
+  "paymentServiceProvider": {
+    "abiCode": "ABI001",
+    "businessRegisterNumber": "BRN001",
+    "legalRegisterName": "Legal Name",
+    "legalRegisterNumber": "LRN001",
+    "vatNumberGroup": true
+  },
+  "rea": "REA12345",
+  "rootParent": {
+    "description": "Root Parent Description",
+    "id": "root-001"
+  },
+  "shareCapital": "1000000",
+  "subunitCode": "001",
+  "subunitType": "AOO",
+  "supportEmail": "support@example.com",
+  "supportPhone": "+390612345678",
+  "taxCode": "ABC123XYZ",
+  "updatedAt": "2024-11-29T16:23:10.289966300+01:00",
+  "zipCode": "00100"
+}
+  ]
+}

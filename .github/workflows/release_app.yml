@@ -1,5 +1,5 @@
 name: Release App
-run-name: Release ${{ inputs.app }} (${{ inputs.target }})
+run-name: Release ${{ inputs.app }} (${{ inputs.env }} - ${{ inputs.target }})
 
 on:
   workflow_dispatch:
@@ -26,14 +26,24 @@ on:
         options:
           - auth
           - iam
+          - dashboard-bff
+          - delegation-cdc
+          - document-ms
+          - external-api
+          - institution-ms
+          - institution-send-mail-scheduler
+          - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
-          - webhook
-          - onboarding-ms
-          - onboarding-cdc
           - registry-proxy
-          - onboarding-bff
-          - document-ms
+          - registry-proxy-runner
+          - user-cdc
+          - user-group-cdc
+          - user-group-ms
+          - user-ms
+          - webhook
         required: true
         default: auth
 

@@ -202,7 +202,7 @@ resource "azurerm_public_ip" "functions_pip_outbound" {
 }
 
 resource "azurerm_nat_gateway" "nat_gateway" {
-  name                    = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-nat-gw"
+  name                    = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-nat_gw"
   resource_group_name     = azurerm_resource_group.nat_rg.name
   location                = azurerm_resource_group.nat_rg.location
   sku_name                = "Standard"
@@ -220,20 +220,6 @@ resource "azurerm_nat_gateway" "nat_gateway" {
 #   env        = local.env
 #   app_domain = local.app_domain
 #   # CDN
-#   checkout_cdn_name                       = module.cdn.storage_name
-#   checkout_endpoint_name                  = module.cdn.name
-#   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key
-#   checkout_fe_rg_name                     = module.cdn.checkout_fe_rg_name
-# }
-
-###############################################################################
-# one trust
-###############################################################################
-
-# module "one_trust" {
-#   source = "../_modules/one_trust"
-
-#   env                                     = local.env
 #   checkout_cdn_name                       = module.cdn.storage_name
 #   checkout_endpoint_name                  = module.cdn.name
 #   checkout_cdn_storage_primary_access_key = module.cdn.storage_primary_access_key

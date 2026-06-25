@@ -30,6 +30,7 @@ services:
     volumes:
       - "./blobStorageInit/init_azurite.sh:/init_azurite.sh"
       - "./blobStorageInit/products.json:/workspace/products.json"
+      - "./blobStorageInit/dummy-accordo_di_adesione.html:/workspace/dummy-accordo_di_adesione.html"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:
@@ -60,6 +61,18 @@ services:
       - develop-network
      env_file:
       - test-integration-document.env
+
+  product-ms:
+     platform: linux/amd64
+     image: ghcr.io/pagopa/selfcare-product-ms:latest
+     ports:
+       - "9090:8080"
+     networks:
+       - develop-network
+     env_file:
+       - test-product-ms.env
+     depends_on:
+       - mongo-db
 
 networks:
   develop-network:

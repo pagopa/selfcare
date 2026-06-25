@@ -151,3 +151,23 @@ variable "key_vault_resource_group_name" {
   type        = string
   description = "Key Vault resource group name (for custom domain certificate)"
 }
+
+variable "restart_alert" {
+  description = "Container restart alert configuration"
+  type = object({
+    enabled              = optional(bool, true)
+    action_group_name    = optional(string, "SlackPagoPA")
+    action_group_rg_name = optional(string)
+    frequency            = optional(string, "PT1M")
+    window_size          = optional(string, "PT5M")
+    severity             = optional(number, 2)
+    threshold            = optional(number, 0)
+  })
+  default = {}
+}
+
+variable "additional_user_assigned_identity_ids" {
+  description = "Additional user-assigned identity IDs to attach to the container app"
+  type        = list(string)
+  default     = []
+}

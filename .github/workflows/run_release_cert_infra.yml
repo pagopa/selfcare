@@ -1,4 +1,9 @@
-name: Run release Cert Infra
+name: Publish Cert Infra
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
 
 on:
   push:
@@ -6,46 +11,65 @@ on:
       - main
       - releases/*
     paths:
-      - './infra/cert/**'
+      - 'infra/cert/**'
 
   workflow_dispatch:
     inputs:
       env:
+        required: true
         type: choice
-        description: Environment
+        description: 'Select the Environment'
+        default: dev
         options:
           - dev
           - uat
           - prod
-      th_env:
+      domain:
+        required: true
         type: choice
-        description: Terraform Environment
+        description: 'Select the Domain'
+        default: ar
         options:
-          - dev
-          - dev-pnpg
-          - uat
-          - uat-pnpg
-          - prod
-          - prod-pnpg
+          - ar
+          - pnpg
 
 jobs:
 
   release_dev:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: '[Dev] Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || startsWith(inputs.env, 'dev') }}
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "DEV ${{ inputs.domain || 'ar' }} Cert Infra Release"
+    if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
     with:
-      environment: dev
-      tf_environment: ${{ inputs.th_env }}
-      dir: ./infra/cert
+      environment: dev-${{ inputs.domain || 'ar' }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
 
-  release_uat_prod:
-    uses: ./.github/workflows/call_release_infra.yml
-    name: 'Run Cert Infra Release'
-    if: ${{ (startsWith(github.ref_name, 'releases/') == true && startsWith(inputs.env, 'uat')) || (startsWith(github.ref_name, 'releases/') == true && startsWith(inputs.env, 'prod')) || startsWith(inputs.env, 'uat') || startsWith(inputs.env, 'prod') }}
+  release_uat:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "UAT ${{ inputs.domain }} Cert Infra Release"
+    if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
     with:
-      environment: ${{ inputs.env }}
-      tf_environment: ${{ inputs.th_env }}
-      dir: ./infra/cert
+      environment: uat-${{ inputs.domain || 'ar' }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}
+
+  release_prod:
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    name: "PROD ${{ inputs.domain }} Cert Infra Release"
+    if: ${{ inputs.env == 'prod' }}
+    secrets: inherit
+    with:
+      environment: prod-${{ inputs.domain || 'ar' }}
+      base_path: infra/cert
+      use_private_agent: true
+      override_github_environment: ${{ inputs.env }}
+      use_labels: true
+      override_labels: ${{ inputs.env }}

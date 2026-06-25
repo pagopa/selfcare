@@ -1,0 +1,83 @@
+{
+  "inputs": [
+    {
+      "description": {
+        "append": true
+      },
+      "inputFile": "./openapi_template.json"
+    },
+    {
+      "inputFile": "../../../../../../../../apps/external-api/src/main/resources/swagger/api-docs.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-institution-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-user-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-user-group-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-functions/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-onboarding-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-registry-proxy-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-openapi/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-product-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-webhook-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-iam-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    },
+    {
+      "inputFile": "../../../../../../../../../docs/pagopa/selfcare-document-ms/openapi.json",
+      "operationSelection": {
+        "includeTags": ["external-v2"]
+      }
+    }
+  ],
+  "output": "../openapi.json"
+}

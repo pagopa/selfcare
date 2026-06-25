@@ -98,7 +98,8 @@ resource "azurerm_key_vault_secret" "encryption_iv_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -110,10 +111,33 @@ resource "azurerm_key_vault_secret" "encryption_key_secret" {
   key_vault_id = module.local.key_vault_id
 
   lifecycle {
-    ignore_changes = all
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+
+###############################################################################
+# LOCAL VARIABLES
+###############################################################################
 locals {
   app_settings_onboarding_ms = [
     {
@@ -138,19 +162,15 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-ms-core-ca"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_PARTY_REGISTRY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
-    },
-    {
-      name  = "STORAGE_CONTAINER_CONTRACT"
-      value = "sc-${module.local.config.env_short}-documents-blob"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_USER_URL"
-      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "ALLOWED_ATECO_CODES"
@@ -170,7 +190,19 @@ locals {
     },
     {
       name  = "MS_DOCUMENT_URL"
-      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
@@ -180,22 +212,11 @@ locals {
     "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
     "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "ONBOARDING_DATA_ENCRIPTION_KEY"          = "onboarding-data-encryption-key"
     "ONBOARDING_DATA_ENCRIPTION_IV"           = "onboarding-data-encryption-iv"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
-  }
-
-
-
-  onboarding_cdc_secrets_names = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
-    "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
   }
 
 }
@@ -216,5 +237,5 @@ module "container_app_onboarding_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_blob_identity.id]
 }
-

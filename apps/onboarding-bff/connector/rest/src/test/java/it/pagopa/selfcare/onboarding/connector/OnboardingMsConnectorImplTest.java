@@ -316,12 +316,15 @@ class OnboardingMsConnectorImplTest {
     void approveOnboarding() {
         // given
         final String onboardingId = "onboardingId";
+        final String userUid = "userUid";
+        final ApproveRequest approveRequest = new ApproveRequest();
+        approveRequest.setUserUid(userUid);
         // when
-        final Executable executable = () -> onboardingMsConnector.approveOnboarding(onboardingId);
+        final Executable executable = () -> onboardingMsConnector.approveOnboarding(onboardingId, userUid);
         // then
         assertDoesNotThrow(executable);
         verify(msOnboardingApiClient, times(1))
-                ._approve(onboardingId);
+                ._approve(onboardingId, approveRequest);
         verifyNoMoreInteractions(msOnboardingApiClient);
     }
 
@@ -330,14 +333,16 @@ class OnboardingMsConnectorImplTest {
         // given
         final String reason = "reason";
         final String onboardingId = "onboardingId";
+        final String userUid = "userUid";
         ReasonRequest reasonDto = new ReasonRequest();
         reasonDto.setReasonForReject(reason);
+        reasonDto.setUserUid(userUid);
         // when
-        final Executable executable = () -> onboardingMsConnector.rejectOnboarding(onboardingId, reason);
+        final Executable executable = () -> onboardingMsConnector.rejectOnboarding(onboardingId, reason, userUid);
         // then
         assertDoesNotThrow(executable);
         verify(msOnboardingApiClient, times(1))
-                ._delete(onboardingId, reasonDto);
+                ._rejectOnboardingUsingPUT(onboardingId, reasonDto);
         verifyNoMoreInteractions(msOnboardingApiClient);
     }
 
@@ -345,13 +350,15 @@ class OnboardingMsConnectorImplTest {
     void rejectOnboardingWithNoReason() {
         // given
         final String onboardingId = "onboardingId";
+        final String userUid = "userUid";
         ReasonRequest reasonDto = new ReasonRequest();
+        reasonDto.setUserUid(userUid);
         // when
-        final Executable executable = () -> onboardingMsConnector.rejectOnboarding(onboardingId, "");
+        final Executable executable = () -> onboardingMsConnector.rejectOnboarding(onboardingId, "", userUid);
         // then
         assertDoesNotThrow(executable);
         verify(msOnboardingApiClient, times(1))
-                ._delete(onboardingId, reasonDto);
+                ._rejectOnboardingUsingPUT(onboardingId, reasonDto);
         verifyNoMoreInteractions(msOnboardingApiClient);
     }
 
@@ -649,7 +656,7 @@ class OnboardingMsConnectorImplTest {
     void onboardingWithFilterTest() {
         // Given
         final String taxCode = "taxCode";
-        final String status = "status";
+        final String status = "COMPLETED";
 
         OnboardingGet onboardingGet = new OnboardingGet();
         onboardingGet.setProductId("prod-test");

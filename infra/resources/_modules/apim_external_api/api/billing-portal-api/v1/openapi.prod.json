@@ -1,0 +1,147 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Billing Portal API service",
+    "description": "This service is the proxy for the billing portal",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://${host}/${basePath}"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Onboarding"
+    },
+    {
+      "name": "Onboarding Controller"
+    },
+    {
+      "name": "billing-portal"
+    }
+  ],
+  "paths": {
+    "/onboarding/checkRecipientCode": {
+      "get": {
+        "tags": [
+          "billing-portal",
+          "Onboarding Controller"
+        ],
+        "summary": "Validate recipientCode.",
+        "description": "check if recipientCode is valid or not",
+        "operationId": "checkRecipientCode",
+        "parameters": [
+          {
+            "name": "originId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recipientCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecipientCodeStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ],
+        "x-legacy-api": "true"
+      }
+    },
+    "/onboarding/{onboardingId}/recipient-code": {
+      "put": {
+        "tags": [
+          "billing-portal",
+          "Onboarding"
+        ],
+        "summary": "Update recipient code",
+        "description": "Update recipient code receiving onboarding id.",
+        "operationId": "updateOnboardingRecipientIdUsingPUT",
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recipientCode",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {}
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "RecipientCodeStatus": {
+        "enum": [
+          "DENIED_NO_BILLING",
+          "DENIED_NO_ASSOCIATION",
+          "ACCEPTED"
+        ],
+        "type": "string"
+      }
+    },
+    "securitySchemes": {
+      "apiKeyHeader": {
+        "type": "apiKey",
+        "name": "Ocp-Apim-Subscription-Key",
+        "in": "header"
+      }
+    }
+  }
+}

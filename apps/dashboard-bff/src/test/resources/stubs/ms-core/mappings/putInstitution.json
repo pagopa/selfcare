@@ -1,0 +1,49 @@
+{
+  "request": {
+    "method": "PUT",
+    "urlPathPattern": "/ms-core/v1/institutions/institutionId"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "id": "97c0f418-bcb3-48d4-825a-fe8b29ae68e5",
+      "externalId": "c_f205",
+      "originId": "c_f205",
+      "description": "AGENCY X",
+      "digitalAddress": "email@pec.mail.org",
+      "address": "via del campo",
+      "zipCode": "20100",
+      "taxCode": "string",
+      "origin": "IPA",
+      "institutionType": "PA",
+      "attributes": [
+        {
+          "origin": "string",
+          "code": "string",
+          "description": "string"
+        }
+      ],
+      "paymentServiceProvider": {
+        "abiCode": "string",
+        "businessRegisterNumber": "string",
+        "legalRegisterName": "string",
+        "legalRegisterNumber": "string",
+        "vatNumberGroup": true
+      },
+      "dataProtectionOfficer": {
+        "address": "string",
+        "email": "string",
+        "pec": "string"
+      },
+      "geographicTaxonomies": [
+        {
+          "code": "string",
+          "desc": "string"
+        }
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

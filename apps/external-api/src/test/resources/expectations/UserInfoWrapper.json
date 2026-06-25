@@ -1,0 +1,91 @@
+{
+  "user": {
+    "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273a",
+    "fiscalCode": "NLLGPJ67L30L783W",
+    "name": {
+      "value": "string"
+    },
+    "familyName": {
+      "value": "string"
+    },
+    "email": {
+      "value": "email@istituzionale.it"
+    },
+    "workContacts": {
+      "contact1": {
+        "email": {
+          "value": "contact1@work.it"
+        }
+      },
+      "contact2": {
+        "email": {
+          "value": "contact2@work.it"
+        }
+      }
+    }
+  },
+  "onboardedInstitutions": [
+    {
+      "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273a",
+      "externalId": "externalIdValue",
+      "originId": "originIdValue",
+      "description": "Descrizione",
+      "origin": "originValue",
+      "institutionType": "PA",
+      "digitalAddress": "indirizzo@digitale.it",
+      "address": "Via",
+      "zipCode": "00100",
+      "taxCode": "NLLGPJ67L30L783W",
+      "pricingPlan": "pricingPlanValue",
+      "billing": {
+        "vatNumber": "IT12345678901",
+        "recipientCode": "recipientCodeValue",
+        "publicServices": true
+      },
+      "state": "ACTIVE",
+      "role": "DELEGATE",
+      "productInfo": {
+        "id": "string",
+        "role": "DELEGATE",
+        "createdAt": "2007-12-03T10:15:30+01:00",
+        "status": "ACTIVE"
+      },
+      "subunitCode": "subunitCodeValue",
+      "subunitType": "subunitTypeValue",
+      "aooParentCode": "aooParentCodeValue",
+      "userEmail": "utente@email.it"
+    },
+    {
+      "id": "07532a3f-1cf9-4d60-8b15-e2c146b7273b",
+      "externalId": "externalIdValue",
+      "originId": "originIdValue",
+      "description": "Descrizione",
+      "origin": "originValue",
+      "institutionType": "PA",
+      "digitalAddress": "indirizzo@digitale.it",
+      "address": "Via",
+      "zipCode": "00100",
+      "taxCode": "NLLGPJ67L30L783W",
+      "pricingPlan": "pricingPlanValue",
+      "billing": {
+        "vatNumber": "IT12345678901",
+        "recipientCode": "recipientCodeValue",
+        "publicServices": true
+      },
+      "state": "ACTIVE",
+      "role": "DELEGATE",
+      "productInfo": {
+        "id": "string",
+        "role": "DELEGATE",
+        "createdAt": "2007-12-03T10:15:30+01:00",
+        "status": "ACTIVE"
+      },
+      "subunitCode": "subunitCodeValue",
+      "subunitType": "subunitTypeValue",
+      "aooParentCode": "aooParentCodeValue",
+      "userEmail": "utente@email.it",
+      "userMobilePhone": "1234567890",
+      "userTelephone": "0987654321"
+    }
+  ]
+}

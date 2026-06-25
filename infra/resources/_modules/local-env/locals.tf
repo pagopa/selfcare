@@ -129,4 +129,7 @@ locals {
   # Networking — constant across all environments
   # ============================================================
   cidr_subnet_document_storage = ["10.1.136.0/24"]
+  nat_rg_name                  = coalesce(var.nat_rg_name, "${local.project}-nat-rg")
+  nat_gw_name                  = coalesce(var.nat_gw_name, "${local.project}-nat_gw")
+  nat_pip_outbound_name        = coalesce(var.nat_pip_outbound_name, "${local.project}-aksoutbound-pip-01")
 }

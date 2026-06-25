@@ -1,0 +1,19 @@
+[
+  {
+    "partyRole": "MANAGER",
+    "selcRole": "ADMIN",
+    "phasesAdditionAllowed": ["onboarding","dashboard"],
+    "productRoles": [
+      {
+        "code": "code1",
+        "label": "label1",
+        "description": "description1"
+      },
+      {
+        "code": "code2",
+        "label": "label2",
+        "description": "description2"
+      }
+    ]
+  }
+]

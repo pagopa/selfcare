@@ -55,16 +55,6 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId) {
-        return documentRepository.findAllByOnboardingId(onboardingId);
-    }
-
-    @Override
-    public Uni<Document> getDocumentInstitutionByOnboardingId(String onboardingId) {
-        return documentRepository.findDocumentInstitutionByOnboardingId(onboardingId);
-    }
-
-    @Override
     public Uni<Document> getDocumentById(String documentId) {
         return documentRepository.findById(documentId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
@@ -72,7 +62,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Uni<Document> getDocumentByOnboardingId(String onboardingId) {
-        return documentRepository.findByOnboardingId(onboardingId);
+        return documentRepository.findByOnboardingId(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with onboardingId %s not found", onboardingId)));
     }
 
     @Override
@@ -127,6 +118,16 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Uni<Long> updateDocumentContractFilesById(Document document) {
+        return documentRepository.updateContractFilesById(
+                document.getId(),
+                document.getContractSigned(),
+                document.getContractFilename(),
+                document.getSigningStep()
+        );
+    }
+
+    @Override
     public Uni<Document> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
                 sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
@@ -138,18 +139,54 @@ public class DocumentServiceImpl implements DocumentService {
         return handleContractDocument(request);
     }
 
+    @Override
     public Uni<Document> handleContractDocument(DocumentBuilderRequest request) {
+        return documentRepository.findByOnboardingId(request.getOnboardingId())
+                .chain(existing -> handleContractDocument(request, existing));
+    }
+
+
+    @Override
+    public Uni<Document> handleContractDocument(DocumentBuilderRequest request, Document existingDocument) {
+        if (existingDocument == null) {
+            log.info("No document found for onboardingId={}. Creating new document record.",
+                    sanitize(request.getOnboardingId()));
+            return createNewContractDocument(request);
+        }
+
+        if (existingDocument.getSigningStep() != null) {
+            log.info("Document found for onboardingId={} with signingStep={}. " +
+                            "Document already signed, creating NEW document record for next signing step.",
+                    sanitize(request.getOnboardingId()), existingDocument.getSigningStep());
+            return createNewContractDocument(request);
+        }
+
+        log.info("Document found for onboardingId={} with signingStep=null (not yet signed). " +
+                        "Reusing existing document id={}.",
+                sanitize(request.getOnboardingId()), sanitize(existingDocument.getId()));
+        return Uni.createFrom().item(existingDocument);
+    }
+
+    private Uni<Document> createNewContractDocument(DocumentBuilderRequest request) {
         String onboardingId = request.getOnboardingId();
+        Document document = new Document();
+        setContractFileName(request, document);
+        String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
+                onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
 
-        return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().ifNull().switchTo(() -> {
-                    Document document = new Document();
-                    setContractFileName(request, document);
-                    String contractNotSignedPath = DocumentFileUtils.getContractNotSigned(
-                            onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
-
-                    return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
-                            .chain(digest -> persistDocument(request, digest));
+        return calculateDigestFromAzureFile(contractNotSignedPath, onboardingId, "Contract")
+                .chain(digest -> {
+                    Document doc = buildDocument(request, digest);
+                    return documentRepository.persist(doc)
+                            .replaceWith(doc)
+                            .onItem().invoke(() -> {
+                                log.info("Contract document persisted for onboardingId={}, documentId={}",
+                                        sanitize(request.getOnboardingId()), doc.getId());
+                                telemetryService.trackDocumentSaved(
+                                        request.getOnboardingId(),
+                                        String.valueOf(request.getDocumentType()),
+                                        request.getProductId());
+                            });
                 });
     }
 
@@ -205,6 +242,19 @@ public class DocumentServiceImpl implements DocumentService {
                 .onItem().invoke(() -> {
                     log.info("Document persisted for onboardingId: {}", sanitize(request.getOnboardingId()));
                     telemetryService.trackDocumentImported(request.getOnboardingId(), request.getProductId());
+                });
+    }
+
+    @Override
+    public Uni<Boolean> deleteDocumentById(String documentId) {
+        return documentRepository.deleteDocument(documentId)
+                .onItem().transform(deleted -> {
+                    if (deleted) {
+                        log.info("Document with id {} deleted successfully", sanitize(documentId));
+                    } else {
+                        log.info("Document with id {} not found for deletion", sanitize(documentId));
+                    }
+                    return deleted;
                 });
     }
 

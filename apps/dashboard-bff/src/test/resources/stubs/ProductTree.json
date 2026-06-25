@@ -1,0 +1,134 @@
+[
+  {
+    "node": {
+      "id": "product_id",
+      "logo": "product_logo",
+      "depictImageUrl": "product_image_url",
+      "title": "product_title",
+      "logoBgColor": "logo_background_color",
+      "description": "product_description",
+      "urlPublic": "public_url",
+      "urlBO": "back_office_url",
+      "createdAt": "2022-01-01T00:00:00Z",
+      "createdBy": "string",
+      "modifiedAt": "2022-01-01T00:00:00Z",
+      "modifiedBy": "modifier",
+      "roleMappings": {
+        "MANAGER": {
+          "roles": [
+            {
+              "code": "code1",
+              "label": "label1",
+              "description": "description1"
+            },
+            {
+              "code": "code2",
+              "label": "label2",
+              "description": "description2"
+            }
+          ]
+        }
+      },
+      "roleManagementURL": "role_management_url",
+      "institutionContractMappings": {
+        "default": {
+          "contractTemplatePath": "contract_template_path",
+          "contractTemplateVersion": "contract_template_version",
+          "attachments": []
+        },
+        "PSP": {
+          "contractTemplatePath": "value",
+          "contractTemplateVersion": "value1",
+          "attachments": []
+        }
+      },
+      "enabled": true,
+      "delegable": true,
+      "invoiceable": true,
+      "status": "ACTIVE",
+      "parentId": "parent_product_id",
+      "testEnvProductIds": [
+        "test_env_product_id1",
+        "test_env_product_id2"
+      ],
+      "identityTokenAudience": "identity_token_audience",
+      "backOfficeEnvironmentConfigurations": {
+        "configuration1": {
+          "url": "value1",
+          "identityTokenAudience": "value2"
+        }
+      },
+      "parent": null,
+      "consumers": [
+        "consumer1",
+        "consumer2"
+      ]
+    },
+    "children": [
+      {
+        "id": "product_id",
+        "logo": "product_logo",
+        "depictImageUrl": "product_image_url",
+        "title": "product_title",
+        "logoBgColor": "logo_background_color",
+        "description": "product_description",
+        "urlPublic": "public_url",
+        "urlBO": "back_office_url",
+        "createdAt": "2022-01-01T00:00:00Z",
+        "createdBy": "string",
+        "modifiedAt": "2022-01-01T00:00:00Z",
+        "modifiedBy": "modifier",
+        "roleMappings": {
+          "MANAGER": {
+            "roles": [
+              {
+                "code": "code1",
+                "label": "label1",
+                "description": "description1"
+              },
+              {
+                "code": "code2",
+                "label": "label2",
+                "description": "description2"
+              }
+            ]
+          }
+        },
+        "roleManagementURL": "role_management_url",
+        "institutionContractMappings": {
+          "default": {
+            "contractTemplatePath": "contract_template_path",
+            "contractTemplateVersion": "contract_template_version",
+            "attachments": []
+          },
+          "PSP": {
+            "contractTemplatePath": "value",
+            "contractTemplateVersion": "value1",
+            "attachments": []
+          }
+        },
+        "enabled": true,
+        "delegable": true,
+        "invoiceable": true,
+        "status": "ACTIVE",
+        "parentId": "parent_product_id",
+        "testEnvProductIds": [
+          "test_env_product_id1",
+          "test_env_product_id2"
+        ],
+        "identityTokenAudience": "identity_token_audience",
+        "backOfficeEnvironmentConfigurations": {
+          "configuration1": {
+            "url": "value1",
+            "identityTokenAudience": "value2"
+          }
+        },
+        "parent": null,
+        "consumers": [
+          "consumer1",
+          "consumer2"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,18 @@
+package it.pagopa.selfcare.onboarding.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class ManagingInstitutionSendEmail {
+    private String managingInstitutionId;
+    private String productId;
+    private String onboardingInstitutionDescription;
+    private String userMailUuid;
+    private String userId;
+}

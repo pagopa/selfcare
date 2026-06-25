@@ -53,7 +53,7 @@ public interface OnboardingService {
 
     Uni<OnboardingResponse> onboardingUserPg(Onboarding onboarding, List<UserRequest> userRequests);
 
-    Uni<OnboardingGet> approve(String onboardingId);
+    Uni<OnboardingGet> approve(String onboardingId, ApproveRequest approveRequest);
 
     Uni<Onboarding> complete(String tokenId, FormItem formItem);
 
@@ -65,9 +65,11 @@ public interface OnboardingService {
 
     Uni<OnboardingGetResponse> onboardingGet(OnboardingGetFilters filters);
 
-    Uni<Long> rejectOnboarding(String onboardingId, String reasonForReject);
+    Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reasonRequest);
 
     Uni<Long> deleteOnboarding(String onboardingId);
+
+    Uni<Long> deleteOnboardingUser(String onboardingId, String userId);
 
     Uni<OnboardingGet> onboardingPending(String onboardingId);
 
@@ -100,4 +102,6 @@ public interface OnboardingService {
             UserRequesterDto userRequester);
 
     Uni<OnboardingGet> retrieveOnboardingByInstitutionId(String institutionId, String productId);
+
+    Uni<Void> triggerDocumentGate(String onboardingId);
 }

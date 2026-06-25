@@ -13,6 +13,8 @@ import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.service.impl.NotificationServiceImpl;
+
 import it.pagopa.selfcare.product.entity.EmailTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -47,14 +49,14 @@ class NotificationServiceDefaultTest {
     @Inject
     ObjectMapper objectMapper;
     Mailer mailer;
-    NotificationServiceDefault notificationService;
+    NotificationServiceImpl notificationService;
 
     final String notificationAdminMail = "adminAddress";
 
     @BeforeEach
     void startup() {
         mailer = mock(Mailer.class);
-        this.notificationService = new NotificationServiceDefault(templatePlaceholdersConfig, templatePathConfig,
+        this.notificationService = new NotificationServiceImpl(templatePlaceholdersConfig, templatePathConfig,
                 azureBlobClient, objectMapper, mailer, contractService, notificationAdminMail, "senderMail", false, "destinationMailTestAddress", true);
     }
 
@@ -67,11 +69,21 @@ class NotificationServiceDefaultTest {
         final String destination = "test@test.it";
         final String productName = "productName";
 
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId(onboardingId);
+        onboarding.setProductId("prod-id");
+        Institution institution = new Institution();
+        institution.setInstitutionType(InstitutionType.PA);
+        onboarding.setInstitution(institution);
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, OnboardingWorkflowType.INSTITUTION.name());
+
         when(azureBlobClient.getFileAsText(templatePathConfig.registrationPath()))
                 .thenReturn(mailTemplate);
         Mockito.doNothing().when(mailer).send(any());
 
-        notificationService.sendMailRegistrationForContract(onboardingId, destination,"","", productName, "description", "contracts/template/mail/onboarding-request/1.0.1.json", "default", "30");
+        notificationService.sendMailRegistrationForContract(onboardingId, destination,"","", productName, "description", "30", onboardingWorkflow);
 
         Mockito.verify(azureBlobClient, Mockito.times(1))
                 .getFileAsText(any());
@@ -109,7 +121,7 @@ class NotificationServiceDefaultTest {
     @Test
     void sendMailRegistrationWithContract_shouldThrowException() {
         final String onboardingId = "onboardingId";
-        assertThrows(RuntimeException.class, () -> notificationService.sendMailRegistrationForContract(onboardingId,  "example@pagopa.it","mario","rossi","prod-example", "", "", "", "30"));
+        assertThrows(RuntimeException.class, () -> notificationService.sendMailRegistrationForContract(onboardingId,  "example@pagopa.it","mario","rossi","prod-example", "", "30", null));
     }
 
     @Test
@@ -146,7 +158,6 @@ class NotificationServiceDefaultTest {
     void sendCompletedEmail() {
 
         final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
-        final String institutionName = "institutionName";
         final String destination = "test@test.it";
         Product product = new Product();
         product.setTitle("productName");
@@ -163,12 +174,13 @@ class NotificationServiceDefaultTest {
         Institution institution = new Institution();
         institution.setInstitutionType(InstitutionType.PT);
         Onboarding onboarding = new Onboarding();
+        onboarding.setProductId("prod-id");
         onboarding.setInstitution(institution);
         onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
         onboarding.setStatus(OnboardingStatus.PENDING);
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, OnboardingWorkflowType.INSTITUTION.name());
 
-        notificationService.sendCompletedEmail(institutionName, List.of(destination), product, InstitutionType.PA, onboardingWorkflow);
+        notificationService.sendCompletedEmail(List.of(destination), product, onboardingWorkflow);
 
         Mockito.verify(azureBlobClient, Mockito.times(1))
                 .getFileAsText(any());
@@ -183,7 +195,6 @@ class NotificationServiceDefaultTest {
     void sendCompletedEmailRecoveringTemplateFromProduct() {
         // Arrange
         final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
-        final String institutionName = "institutionName";
         final String destination = "test@test.it";
 
         // Mock EmailTemplate
@@ -196,7 +207,7 @@ class NotificationServiceDefaultTest {
         when(product.getEmailTemplate(
                 eq(InstitutionType.PA.name()),
                 eq(WorkflowType.IMPORT.name()),
-                eq(OnboardingStatus.PENDING.name()))
+                eq(OnboardingStatus.COMPLETED.name()))
         ).thenReturn(Optional.of(emailTemplate));
 
         // Mock file
@@ -211,13 +222,14 @@ class NotificationServiceDefaultTest {
         Institution institution = new Institution();
         institution.setInstitutionType(InstitutionType.PA);
         Onboarding onboarding = new Onboarding();
+        onboarding.setProductId("prod-id");
         onboarding.setInstitution(institution);
         onboarding.setWorkflowType(WorkflowType.IMPORT);
         onboarding.setStatus(OnboardingStatus.PENDING);
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, OnboardingWorkflowType.INSTITUTION.name());
 
         // Act
-        notificationService.sendCompletedEmail(institutionName, List.of(destination), product, InstitutionType.PA, onboardingWorkflow);
+        notificationService.sendCompletedEmail(List.of(destination), product, onboardingWorkflow);
 
         // Assert
         Mockito.verify(azureBlobClient, Mockito.times(1)).getFileAsText(any());
@@ -231,13 +243,19 @@ class NotificationServiceDefaultTest {
 
     @Test
     void sendMailRejection() {
-        String reasonForReject = "string";
         final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
 
         final String destination = "test@test.it";
         Product product = new Product();
         product.setTitle("productName");
         product.setId("prod-id");
+        Institution institution = new Institution();
+        institution.setInstitutionType(InstitutionType.PA);
+        Onboarding onboarding = new Onboarding();
+        onboarding.setInstitution(institution);
+        onboarding.setWorkflowType(WorkflowType.IMPORT);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        onboarding.setReasonForReject("string");
 
         final File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("application.properties")).getFile());
 
@@ -247,7 +265,7 @@ class NotificationServiceDefaultTest {
                 .thenReturn(mailTemplate);
         Mockito.doNothing().when(mailer).send(any());
 
-        notificationService.sendMailRejection(List.of(destination), product, reasonForReject);
+        notificationService.sendMailRejection(List.of(destination), product, onboarding);
 
         Mockito.verify(azureBlobClient, Mockito.times(1))
                 .getFileAsText(any());
@@ -335,16 +353,22 @@ class NotificationServiceDefaultTest {
 
         final String onboardingId = "onboardingId";
         final String destination = "test@test.it";
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId(onboardingId);
+        onboarding.setProductId("prod-id");
+        Institution institution = new Institution();
+        institution.setInstitutionType(InstitutionType.PA);
+        onboarding.setInstitution(institution);
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, OnboardingWorkflowType.INSTITUTION.name());
 
         when(azureBlobClient.getFileAsText(any()))
                 .thenReturn(mailTemplate);
 
         Mockito.doNothing().when(mailer).send(any());
-        SendMailInput sendMailInput = new SendMailInput();
-        sendMailInput.setProduct(new Product());
-
         // when
-        notificationService.sendMailRegistrationForContract(onboardingId, destination, sendMailInput, "test-path", "test-confirmUrl", "30");
+        notificationService.sendMailRegistrationForContract(onboardingId, destination, "name", "surname", "prod", "desc", "30", onboardingWorkflow);
 
         // then
         Mockito.verify(azureBlobClient, Mockito.times(1))
@@ -354,6 +378,58 @@ class NotificationServiceDefaultTest {
         Mockito.verify(mailer, Mockito.times(1))
                 .send(mailArgumentCaptor.capture());
         assertEquals(destination, mailArgumentCaptor.getValue().getTo().get(0));
+    }
+
+    @Test
+    void sendMailRegistrationForContractWithSendMailInput() {
+        // given
+        final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
+        final String destination = "test@test.it";
+
+        Product product = new Product();
+        product.setTitle("prod");
+        product.setId("prod-id");
+
+        SendMailInput sendMailInput = new SendMailInput();
+        sendMailInput.setProduct(product);
+        sendMailInput.setUserRequestName("name");
+        sendMailInput.setUserRequestSurname("surname");
+        sendMailInput.setInstitutionName("desc");
+
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId("onboardingId");
+        onboarding.setProductId("prod-id");
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        Institution institution = new Institution();
+        institution.setInstitutionType(InstitutionType.PA);
+        institution.setDigitalAddress(destination);
+        onboarding.setInstitution(institution);
+        OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, OnboardingWorkflowType.INSTITUTION.name());
+
+        when(azureBlobClient.getFileAsText(any())).thenReturn(mailTemplate);
+        Mockito.doNothing().when(mailer).send(any());
+
+        // when
+        notificationService.sendMailRegistrationForContract(sendMailInput, "30", onboardingWorkflow);
+
+        // then
+        Mockito.verify(azureBlobClient, Mockito.times(1)).getFileAsText(any());
+        ArgumentCaptor<Mail> mailArgumentCaptor = ArgumentCaptor.forClass(Mail.class);
+        Mockito.verify(mailer, Mockito.times(1)).send(mailArgumentCaptor.capture());
+        assertEquals(destination, mailArgumentCaptor.getValue().getTo().get(0));
+    }
+
+    @Test
+    void rejectOnboardingUrlShouldReturnConfiguredValue() {
+        // given
+        String expectedRejectUrl = templatePlaceholdersConfig.rejectOnboardingUrlValue();
+
+        // when
+        String actualRejectUrl = notificationService.rejectOnboardingUrl();
+
+        // then
+        assertEquals(expectedRejectUrl, actualRejectUrl);
     }
 
 }

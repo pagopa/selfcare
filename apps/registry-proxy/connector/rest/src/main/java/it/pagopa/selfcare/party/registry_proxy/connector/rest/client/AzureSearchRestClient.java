@@ -2,8 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest.client;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.AzureSearchRestClientConfig;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceRequest;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.SearchServiceResponse;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.IpaInstitutionIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
@@ -14,19 +13,6 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @FeignClient(name = "${rest-client.ai-search.serviceCode}", url = "${rest-client.ai-search.base-url}", configuration = AzureSearchRestClientConfig.class)
 public interface AzureSearchRestClient {
-  @PostMapping(value = "${rest-client.ai-search.institution.add.path}", consumes = APPLICATION_JSON_VALUE)
-  @ResponseBody
-  SearchServiceStatus indexInstitution(@RequestBody SearchServiceRequest searchServiceRequest);
-
-  @GetMapping("${rest-client.ai-search.institution.search.path}")
-  SearchServiceResponse searchInstitution(
-    @RequestParam("search") String search,
-    @RequestParam(value = "$filter", required = false) String filter,
-    @RequestParam(value = "$top", required = false) Integer top,
-    @RequestParam(value = "$skip", required = false) Integer skip,
-    @RequestParam(value = "$select", required = false) String select,
-    @RequestParam(value = "$orderby", required = false) String orderby
-  );
 
   @PostMapping(value = "${rest-client.ai-search.onboarding.add.path}", consumes = APPLICATION_JSON_VALUE)
   @ResponseBody
@@ -34,11 +20,24 @@ public interface AzureSearchRestClient {
 
   @GetMapping("${rest-client.ai-search.onboarding.search.path}")
   SearchServiceIndexResponse<SearchServiceOnboardingIndex> searchOnboarding(@RequestParam(value = "search", required = false) String search,
+                                                                            @RequestParam(value = "searchMode", required = false) String searchMode,
                                                                             @RequestParam(value = "$filter", required = false) String filter,
                                                                             @RequestParam(value = "$count", required = false) Boolean count,
                                                                             @RequestParam(value = "$top", required = false) Long top,
                                                                             @RequestParam(value = "$skip", required = false) Long skip,
                                                                             @RequestParam(value = "$select", required = false) String select,
                                                                             @RequestParam(value = "$orderby", required = false) String orderby);
+
+  @PostMapping(value = "${rest-client.ai-search.ipa.institution.add.path}", consumes = APPLICATION_JSON_VALUE)
+  @ResponseBody
+  SearchServiceStatus indexIpaInstitutions(@RequestBody SearchServiceIndexRequest<IpaInstitutionIndex> request);
+
+  @GetMapping("${rest-client.ai-search.ipa.institution.search.path}")
+  SearchServiceIndexResponse<IpaInstitutionIndex> searchIpaInstitutions(@RequestParam(value = "search", required = false) String search,
+                                                                        @RequestParam(value = "$select", required = false) String select,
+                                                                        @RequestParam(value = "$count", required = false) Boolean count,
+                                                                        @RequestParam(value = "$top", required = false) Integer top,
+                                                                        @RequestParam(value = "$skip", required = false) Integer skip,
+                                                                        @RequestParam(value = "$filter", required = false) String filter);
 
 }

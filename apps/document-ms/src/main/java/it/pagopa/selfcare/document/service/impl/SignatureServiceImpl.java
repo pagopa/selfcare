@@ -145,9 +145,24 @@ public class SignatureServiceImpl implements SignatureService {
     if (reports.getEtsiValidationReportJaxb() != null) {
       signatureValidationReportTypes = reports.getEtsiValidationReportJaxb().getSignatureValidationReport();
     }
-    if (signatureValidationReportTypes.isEmpty()
-      || (!signatureValidationReportTypes.stream().allMatch(s -> s.getSignatureValidationStatus() != null
-      && Indication.TOTAL_PASSED == s.getSignatureValidationStatus().getMainIndication()))) {
+    if (signatureValidationReportTypes.isEmpty()) {
+      log.warn("No signature validation reports found in ETSI validation report");
+      throw new InvalidRequestException(INVALID_DOCUMENT_SIGNATURE.getMessage(), INVALID_DOCUMENT_SIGNATURE.getCode());
+    }
+
+    List<SignatureValidationReportType> failedSignatures = signatureValidationReportTypes.stream()
+      .filter(s -> s.getSignatureValidationStatus() == null
+        || Indication.TOTAL_PASSED != s.getSignatureValidationStatus().getMainIndication())
+      .toList();
+
+    if (!failedSignatures.isEmpty()) {
+      failedSignatures.forEach(s -> {
+        Indication indication = s.getSignatureValidationStatus() != null
+          ? s.getSignatureValidationStatus().getMainIndication() : null;
+        var subIndication = s.getSignatureValidationStatus() != null
+          ? s.getSignatureValidationStatus().getSubIndication() : null;
+        log.warn("Signature validation failed - indication: {}, subIndication: {}", indication, subIndication);
+      });
       throw new InvalidRequestException(INVALID_DOCUMENT_SIGNATURE.getMessage(), INVALID_DOCUMENT_SIGNATURE.getCode());
     }
   }
@@ -181,7 +196,7 @@ public class SignatureServiceImpl implements SignatureService {
   }
 
   @Override
-  public void verifySignature(File file, String checksum, List<String> usersTaxCode) {
+  public void verifySignature(File file, String checksum, List<String> usersTaxCode, boolean skipSignerIdentityCheck) {
     try {
       Path safePath = validateUploadedFile(file);
       byte[] byteData = Files.readAllBytes(safePath);
@@ -194,7 +209,11 @@ public class SignatureServiceImpl implements SignatureService {
       verifySignatureForm(validator);
       verifySignature(reports);
       verifyDigest(validator, checksum);
-      verifyManagerTaxCode(reports, usersTaxCode);
+      if (!skipSignerIdentityCheck) {
+        verifyManagerTaxCode(reports, usersTaxCode);
+      } else {
+        log.info("Skipping signer identity check for uploaded file: {}", sanitize(file.getName()));
+      }
 
     } catch (InvalidRequestException e) {
       throw e;
@@ -211,7 +230,8 @@ public class SignatureServiceImpl implements SignatureService {
             String onboardingId,
             File file,
             List<String> fiscalCodes,
-            boolean skipSignatureVerification) {
+            boolean skipSignatureVerification,
+            boolean skipSignerIdentityCheck) {
 
         log.info("Verifying contract signature for onboardingId: {}", sanitize(onboardingId));
 
@@ -226,7 +246,7 @@ public class SignatureServiceImpl implements SignatureService {
                 .transformToUni(digest ->
                         Uni.createFrom()
                                 .voidItem()
-                                .invoke(() -> verifySignature(file, digest, fiscalCodes))
+                                .invoke(() -> verifySignature(file, digest, fiscalCodes, skipSignerIdentityCheck))
                                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 )
                 .invoke(() -> telemetryService.trackSignatureVerification(

@@ -10,27 +10,8 @@ module "identity_ci" {
   github_federations = var.ci_github_federations
 
   ci_rbac_roles = {
-    subscription_roles = var.environment_ci_roles.subscription
-    resource_groups    = var.environment_ci_roles.resource_groups
-  }
-
-  tags = var.tags
-}
-
-module "identity_ci_ms" {
-  source = "github.com/pagopa/terraform-azurerm-v4//github_federated_identity?ref=v9.6.1"
-
-  prefix    = var.prefix
-  env_short = var.env_short
-  domain    = "ms"
-
-  identity_role = "ci"
-
-  github_federations = var.ci_github_federations_ms
-
-  ci_rbac_roles = {
-    subscription_roles = concat(var.environment_ci_roles_ms.subscription, ["${var.app} ${var.env} ContainerApp Jobs Reader", "${var.app} ${var.env} APIM Integration Reader"])
-    resource_groups = merge(var.environment_ci_roles_ms.resource_groups,
+    subscription_roles = concat(var.environment_ci_roles.subscription, ["${var.app} ${var.env} ContainerApp Jobs Reader", "${var.app} ${var.env} APIM Integration Reader"])
+    resource_groups = merge(var.environment_ci_roles.resource_groups,
       {
         "selc-${var.env_short}-checkout-fe-rg"               = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"],
         "selc-${var.env_short}-weu-pnpg-checkout-fe-rg"      = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"],
@@ -39,6 +20,10 @@ module "identity_ci_ms" {
         "selc-${var.env_short}-weu-pnpg-cosmosdb-mongodb-rg" = ["DocumentDB Account Contributor"],
         "selc-${var.env_short}-pnpg-spid-testenv-rg"         = ["Storage Account Key Operator Service Role"],
         "selc-${var.env_short}-weu-pnpg-logs-storage-rg"     = ["Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-container-app-002-rg"         = ["${var.app} ${var.env} ContainerApp Jobs Reader"],
+        "selc-${var.env_short}-logs-storage-rg"              = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-onboarding-fn-rg"             = ["Storage Account Key Operator Service Role"],
+        "selc-${var.env_short}-pnpg-onboarding-fn-rg"        = ["Storage Account Key Operator Service Role"],
     })
   }
 
@@ -50,7 +35,7 @@ module "identity_ci_ms" {
   ]
 }
 
-resource "azurerm_key_vault_access_policy" "key_vault_access_policy_selfcare_identity_ci" {
+resource "azurerm_key_vault_access_policy" "key_vault_access_policy_identity_ci" {
   key_vault_id = var.key_vault_id
   tenant_id    = var.tenant_id
   object_id    = module.identity_ci.identity_principal_id
@@ -66,26 +51,10 @@ resource "azurerm_key_vault_access_policy" "key_vault_access_policy_selfcare_ide
   ]
 }
 
-resource "azurerm_key_vault_access_policy" "key_vault_access_policy_identity_ci" {
-  key_vault_id = var.key_vault_id
-  tenant_id    = var.tenant_id
-  object_id    = module.identity_ci_ms.identity_principal_id
-
-  secret_permissions = [
-    "Get",
-    "List",
-  ]
-
-  certificate_permissions = [
-    "Get",
-    "List",
-  ]
-}
-
 resource "azurerm_key_vault_access_policy" "key_vault_access_policy_pnpg_identity_ci" {
   key_vault_id = var.key_vault_pnpg_id
   tenant_id    = var.tenant_id
-  object_id    = module.identity_ci_ms.identity_principal_id
+  object_id    = module.identity_ci.identity_principal_id
 
   secret_permissions = [
     "Get",
@@ -108,7 +77,8 @@ module "identity_ci_fe" {
     subscription_roles = concat(var.environment_ci_roles_ms.subscription, ["${var.app} ${var.env} ContainerApp Jobs Reader", "${var.app} ${var.env} APIM Integration Reader"])
     resource_groups = merge(var.environment_ci_roles_ms.resource_groups,
       {
-        "selc-${var.env_short}-checkout-fe-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+        "selc-${var.env_short}-checkout-fe-rg"  = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+        "selc-${var.env_short}-logs-storage-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role"],
     })
   }
 
@@ -160,7 +130,9 @@ resource "azurerm_role_definition" "container_apps_jobs_reader" {
       "microsoft.app/jobs/execution/read",
       "microsoft.app/jobs/executions/read",
       "microsoft.app/containerApps/read",
-      "microsoft.app/containerApps/listSecrets/action"
+      "microsoft.app/containerApps/listSecrets/action",
+      "microsoft.app/managedEnvironments/daprComponents/read",
+      "microsoft.app/managedEnvironments/daprComponents/listSecrets/action"
     ]
   }
 

@@ -16,6 +16,7 @@ public class Features {
   private List<String> allowedInstitutionTaxCode;
   private boolean delegable;
   private boolean invoiceable;
+  private boolean requiresParentOnboarding;
 
   @Builder.Default private int expirationDays = 30;
 

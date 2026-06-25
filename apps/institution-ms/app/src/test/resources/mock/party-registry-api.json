@@ -1,0 +1,203 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/stations/{taxId}",
+      "pathParameters": {
+        "taxId": [
+          "06068501219"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n      \"id\": \"06068501219\",\n      \"taxCode\": \"06068501219\",\n      \"description\": \"Trecento Software s.r.l.\",\n      \"digitalAddress\": \"trecentosoftware@pec.it\",\n      \"anacEngaged\": false,\n      \"anacEnabled\": false,\n      \"origin\": \"ANAC\"\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/insurance-companies/{id}",
+      "pathParameters": {
+        "id": [
+          "A044S"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\"id\": \"A044S\", \"originId\": \"A044S\", \"taxCode\": \"00409920584\", \"description\": \"GENERALI ITALIA S.P.A.\", \"digitalAddress\": \"GENERALIITALIA@PEC.GENERALIGROUP.COM\", \"registerType\": \"Sezione I - imprese di assicurazione con sede legale in Italia\", \"address\": \"VIA MAROCCHESA, 14  31021 MOGLIANO VENETO\", \"origin\": \"IVASS\"}",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/national-registries/legal-address",
+      "queryStringParameters": {
+        "taxId": [
+          "01501320442"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\"address\": \"Roma Via del Campo 101, Roma (RM)\", \"zipCode\": \"00121\"}",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/geotaxonomies/{geotax_id}",
+      "pathParameters": {
+        "geotax_id": [
+          "058091"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\"country\": \"100\", \"enabled\": true, \"code\": \"058091\", \"desc\": \"ROMA - COMUNE\", \"istat_code\": \"058091\", \"province_id\": \"058\", \"province_abbreviation\": \"RM\", \"region_id\": \"12\", \"country_abbreviation\": \"IT\"}",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/geotaxonomies/{geotax_id}",
+      "pathParameters": {
+        "geotax_id": [
+          "038008"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body":"{\"country\":\"100\",\"enabled\":true,\"code\":\"038008\",\"desc\":\"FERRARA - COMUNE\",\"istat_code\":\"038008\",\"province_id\":\"038\",\"province_abbreviation\":\"FE\",\"region_id\":\"08\",\"country_abbreviation\":\"IT\"}",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/party-registry-mock/info-camere/institutions",
+      "body": {
+        "filter": {
+          "legalTaxId": "PRVTNT80A41H401T"
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n      \"requestDateTime\": \"2025-02-26T13:56:49.844205884Z\",\n      \"legalTaxId\": \"PRVTNT80A41H401T\",\n      \"businesses\": [\n        {\"businessName\": \"test0\", \"businessTaxId\": \"01501320442\"},\n        {\"businessName\": \"test1\", \"businessTaxId\": \"01501320442\"}\n      ]\n    }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/institutions/{taxCode}",
+      "pathParameters": {
+        "taxCode": [
+          "00297110389"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n        \"id\": \"00297110389\",\n        \"originId\": \"c_d548\",\n        \"taxCode\": \"00297110389\",\n        \"category\": \"L6\",\n        \"description\": \"Comune di Ferrara\",\n        \"digitalAddress\": \"comune.ferrara@cert.comune.fe.it\",\n        \"address\": \"p. Municipale, 2\",\n        \"zipCode\": \"44121\",\n        \"origin\": \"IPA\",\n        \"istatCode\": \"038008\"\n      }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/institutions/{taxCode}",
+      "pathParameters": {
+        "taxCode": [
+          "123456789"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n        \"id\": \"123456789\",\n        \"originId\": \"c_d548\",\n        \"taxCode\": \"123456789\",\n        \"category\": \"L6\",\n        \"description\": \"Comune di Test\",\n        \"digitalAddress\": \"comune.test@cert.comune.test.it\",\n        \"address\": \"p. Municipale, 2\",\n        \"zipCode\": \"00000\",\n        \"origin\": \"IPA\",\n        \"istatCode\": \"000000\"\n      }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/origins/{origin}/categories/{code}",
+      "pathParameters": {
+        "origin": [
+          "IPA"
+        ],
+        "code": [
+          "L6"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n        \"code\": \"L6\",\n        \"name\": \"Comuni e loro Consorzi e Associazioni\",\n        \"kind\": \"Pubbliche Amministrazioni\",\n        \"origin\": \"IPA\"\n      }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/uo/{code}",
+      "pathParameters": {
+        "code": [
+          "3QOOYF"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n        \"id\": \"3QOOYF\",\n        \"codiceIpa\": \"c_d548\",\n        \"denominazioneEnte\": \"Comune di Ferrara\",\n        \"codiceFiscaleEnte\": \"00297110389\",\n        \"codiceFiscaleSfe\": \"00297110389\",\n        \"codiceUniUo\": \"3QOOYF\",\n        \"codiceUniAoo\": \"A46A529\",\n        \"descrizioneUo\": \"SERVIZIO BILANCIO CONTABILITA' E PERSONALE\",\n        \"mail1\": \"personale@cert.comune.fe.it\",\n        \"origin\": \"IPA\",\n        \"dataIstituzione\": \"2016-07-19\",\n        \"nomeResponsabile\": \"Mario\",\n        \"cognomeResponsabile\": \"Rossi\",\n        \"mailResponsabile\": \"mario.rossi@test.com\",\n        \"codiceComuneISTAT\": \"038008\",\n        \"codiceCatastaleComune\": \"D548\",\n        \"CAP\": \"44121\",\n        \"indirizzo\": \"Via del Podesta 2\",\n        \"tipoMail1\": \"Pec\",\n        \"dataAggiornamento\": \"2024-10-29\"\n      }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/aoo/{code}",
+      "pathParameters": {
+        "code": [
+          "A46A529"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "body": "{\n        \"id\": \"A46A529\",\n        \"codiceIpa\": \"c_d548\",\n        \"denominazioneEnte\": \"Comune di Ferrara\",\n        \"codiceFiscaleEnte\": \"00297110389\",\n        \"codiceUniAoo\": \"A46A529\",\n        \"denominazioneAoo\": \"PROTOCOLLO GENERALE\",\n        \"dataIstituzione\": \"2012-06-13\",\n        \"nomeResponsabile\": \"Mario\",\n        \"cognomeResponsabile\": \"Rossi\",\n        \"mailResponsabile\": \"mario.rossi@test.com\",\n        \"telefonoResponsabile\": \"123456789\",\n        \"codiceComuneISTAT\": \"038008\",\n        \"codiceCatastaleComune\": \"D548\",\n        \"CAP\": \"44121\",\n        \"indirizzo\": \"Piazza Del Municipio, 2\",\n        \"telefono\": \"123456789\",\n        \"dataAggiornamento\": \"2024-10-29\",\n        \"codAoo\": \"PG\",\n        \"origin\": \"IPA\",\n        \"tipoMail1\": \"Pec\",\n        \"mail1\": \"comune.ferrara@cert.comune.fe.it\"\n      }",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  }
+]

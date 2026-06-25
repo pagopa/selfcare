@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAggregationImportRequest;
 import it.pagopa.selfcare.onboarding.entity.UserRequester;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.exception.model.Problem;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
@@ -36,6 +37,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.extensions.Extension;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.server.core.ResteasyReactiveRequestContext;
@@ -323,16 +328,45 @@ public class OnboardingController {
     }
 
     @Operation(
-            summary = "Complete onboarding by verifying and uploading contract, then trigger async activities.",
-            description = "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution." +
-                    "It checks the contract's signature and upload the contract on an azure storage" +
-                    "At the end, function triggers async activities related to complete onboarding " +
-                    "that consist of create the institution, activate the onboarding and sending data to notification queue.",
-            operationId = "completeOnboardingUsingPUT"
-    )
+      summary =
+          "Complete onboarding by verifying and uploading contract, then trigger async activities.",
+      description =
+          "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution."
+              + "It checks the contract's signature and upload the contract on an azure storage"
+              + "At the end, function triggers async activities related to complete onboarding "
+              + "that consist of create the institution, activate the onboarding and sending data to notification queue.",
+      operationId = "completeOnboardingUsingPUT")
+    @APIResponses(
+      value = {
+        @APIResponse(responseCode = "200", description = "OK"),
+        @APIResponse(responseCode = "204", description = "No Content"),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "409",
+            description = "Conflict",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json")),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    schema = @Schema(implementation = Problem.class),
+                    mediaType = "application/problem+json"))
+      })
     @PUT
     @Path("/{onboardingId}/complete")
     @Tag(name = "internal-v1")
+    @Tag(name = "external-v2")
+    @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> complete(@PathParam(value = "onboardingId") String onboardingId, @NotNull @RestForm("contract") File file, @Context ResteasyReactiveRequestContext ctx) {
         return onboardingService.complete(onboardingId, retrieveContractFromFormData(ctx.getFormData(), file))
@@ -384,9 +418,9 @@ public class OnboardingController {
     )
     @PUT
     @Path("/{onboardingId}/approve")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Uni<Response> approve(@PathParam(value = "onboardingId") String onboardingId) {
-        return onboardingService.approve(onboardingId)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Uni<Response> approve(@PathParam(value = "onboardingId") String onboardingId, ApproveRequest approveRequest) {
+        return onboardingService.approve(onboardingId, approveRequest)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_OK)
                         .build());
@@ -398,6 +432,8 @@ public class OnboardingController {
     )
     @GET
     @Produces(MediaType.APPLICATION_JSON)
+    @Tag(name = "Onboarding Controller")
+    @Tag(name = "external-v2")
     public Uni<OnboardingGetResponse> getOnboardingWithFilter(@QueryParam(value = "productId") String productId,
                                                               @QueryParam(value = "taxCode") String taxCode,
                                                               @QueryParam(value = "institutionId") String institutionId,
@@ -405,7 +441,7 @@ public class OnboardingController {
                                                               @QueryParam(value = "subunitCode") String subunitCode,
                                                               @QueryParam(value = "from") String from,
                                                               @QueryParam(value = "to") String to,
-                                                              @QueryParam(value = "status") String status,
+                                                              @QueryParam(value = "status") OnboardingStatus status,
                                                               @QueryParam(value = "userId") String userId,
                                                               @QueryParam(value = "productIds") List<String> productIds,
                                                               @QueryParam(value = "page") @DefaultValue("0") Integer page,
@@ -431,13 +467,15 @@ public class OnboardingController {
 
     @Operation(summary = "Perform reject operation of an onboarding request",
             description = "Perform reject operation of an onboarding request receiving onboarding id." +
-                    "Function change status to REJECT for an onboarding request that is not COMPLETED. ")
+                    "Function change status to REJECT for an onboarding request that is not COMPLETED. ",
+            operationId = "rejectOnboardingUsingPUT")
     @PUT
+    @Tag(name = "external-v2")
+    @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{onboardingId}/reject")
     public Uni<Response> delete(@PathParam(value = "onboardingId") String onboardingId, @Valid ReasonRequest reason) {
-        String reasonForReject = reason.getReasonForReject();
-        return onboardingService.rejectOnboarding(onboardingId, reasonForReject)
+        return onboardingService.rejectOnboarding(onboardingId, reason)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
@@ -488,7 +526,7 @@ public class OnboardingController {
     @Tag(name = "Onboarding")
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/institutionOnboardings")
-    public Uni<List<OnboardingResponse>> getOnboardingPending(@QueryParam(value = "taxCode") String taxCode,
+    public Uni<List<OnboardingResponse>> getOnboardings(@QueryParam(value = "taxCode") String taxCode,
                                                               @QueryParam(value = "subunitCode") String subunitCode,
                                                               @QueryParam(value = "origin") String origin,
                                                               @QueryParam(value = "originId") String originId,
@@ -664,10 +702,31 @@ public class OnboardingController {
                     "then invokes async process to set DELETED as status for institution and user onboardings.")
     @DELETE
     @Tag(name = "internal-v1")
+    @Tag(name = "external-v2")
+    @Tag(name = "Onboarding Controller")
     @Consumes(MediaType.APPLICATION_JSON)
     @Path("/{onboardingId}")
     public Uni<Response> deleteOnboarding(@PathParam(value = "onboardingId") String onboardingId) {
         return onboardingService.deleteOnboarding(onboardingId)
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
+    }
+
+    @Operation(summary = "Perform delete operation of a USER type onboarding request",
+            description = "Perform delete operation of a USER type onboarding request receiving onboarding id and userId. " +
+                    "It verifies that the userId corresponds to a DELEGATE role in the onboarding users list. " +
+                    "If the user is a MANAGER (and not also a DELEGATE), a 400 error is returned. " +
+                    "If the user is a DELEGATE, it deletes the associated document from document-ms, " +
+                    "then sets DELETED as status and updates date fields.")
+    @DELETE
+    @Tag(name = "internal-v1")
+    @Tag(name = "Onboarding Controller")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Path("/{onboardingId}/user/{userId}")
+    public Uni<Response> deleteOnboardingUser(@PathParam(value = "onboardingId") String onboardingId,
+                                             @PathParam(value = "userId") String userId) {
+        return onboardingService.deleteOnboardingUser(onboardingId, userId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
@@ -698,6 +757,48 @@ public class OnboardingController {
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     public Uni<Response> uploadContractSigned(@PathParam(value = "onboardingId") String onboardingId, @NotNull @RestForm("contract") File file, @Context ResteasyReactiveRequestContext ctx) {
         return onboardingService.uploadContractSigned(onboardingId, retrieveContractFromFormData(ctx.getFormData(), file))
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
+    }
+
+    @Operation(
+            summary = "Idempotent trigger to verify mandatory documents and advance onboarding.",
+            description = "Idempotent trigger invoked after each document upload. " +
+                    "Recalculates required documents for the onboarding context (productId, institutionType, origin) " +
+                    "and verifies presence of all mandatory attachments. " +
+                    "If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING. " +
+                    "If documents are incomplete or onboarding is already past REQUEST status, no action is taken (idempotent).",
+            operationId = "triggerDocumentGate"
+    )
+    @APIResponses(
+            value = {
+                    @APIResponse(responseCode = "204", description = "Gate evaluated — orchestration triggered if documents complete, no action otherwise"),
+                    @APIResponse(
+                            responseCode = "400",
+                            description = "Bad Request — no mandatory documents configured for this onboarding context",
+                            content = @Content(
+                                    schema = @Schema(implementation = Problem.class),
+                                    mediaType = "application/problem+json")),
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "Onboarding not found",
+                            content = @Content(
+                                    schema = @Schema(implementation = Problem.class),
+                                    mediaType = "application/problem+json")),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Internal Server Error",
+                            content = @Content(
+                                    schema = @Schema(implementation = Problem.class),
+                                    mediaType = "application/problem+json"))
+            })
+    @PUT
+    @Path("/{onboardingId}")
+    @Tag(name = "internal-v1")
+    @Tag(name = "Onboarding Controller")
+    public Uni<Response> triggerDocumentGate(@PathParam(value = "onboardingId") String onboardingId) {
+        return onboardingService.triggerDocumentGate(onboardingId)
                 .map(ignore -> Response
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());

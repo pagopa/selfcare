@@ -25,9 +25,12 @@ import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
+import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
+import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -267,7 +270,7 @@ class ProductControllerTest {
         .statusCode(404)
         .contentType(ContentType.JSON)
         .body("title", equalTo("Product not found"))
-        .body("detail", equalTo("No product found with productId=" + productId))
+        .body("detail", equalTo("No product found with productId: " + productId))
         .body("status", equalTo(404))
         .body("instance", equalTo("/products/" + productId));
 
@@ -364,7 +367,7 @@ class ProductControllerTest {
         .statusCode(404)
         .contentType(ContentType.JSON)
         .body("title", equalTo("Product not found"))
-        .body("detail", equalTo("No product found with productId=" + productId))
+        .body("detail", equalTo("No product found with productId: " + productId))
         .body("status", equalTo(404))
         .body("instance", equalTo("/products/" + productId));
 
@@ -507,6 +510,396 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1)).getProductOriginsById(productId);
+  }
+
+  // -------------------------------------------------------------------------
+  // GET /workflow-type
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getWorkflowType_shouldReturn200_whenRuleFound() {
+    // given
+    String productId = "prod-test";
+    WorkflowTypeResponse response =
+        WorkflowTypeResponse.builder().workflowType(WorkflowType.CONTRACT_REGISTRATION).build();
+
+    when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().item(response));
+
+    // when
+    given()
+        .queryParam("productId", productId)
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .accept(ContentType.JSON)
+        .when()
+        .get("/workflow-type")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("workflowType", equalTo(WorkflowType.CONTRACT_REGISTRATION.name()));
+
+    // then
+    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getWorkflowType_shouldReturn200() {
+    // given
+    String productId = "prod-test";
+    WorkflowTypeResponse response =
+        WorkflowTypeResponse.builder().workflowType(WorkflowType.FOR_APPROVE).build();
+
+    when(productService.getWorkflowType(productId, InstitutionType.GSP, Origin.SELC))
+        .thenReturn(Uni.createFrom().item(response));
+
+    // when
+    given()
+        .queryParam("productId", productId)
+        .queryParam("institutionType", "GSP")
+        .queryParam("origin", "SELC")
+        .accept(ContentType.JSON)
+        .when()
+        .get("/workflow-type")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("workflowType", equalTo(WorkflowType.FOR_APPROVE.name()));
+
+    // then
+    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.GSP, Origin.SELC);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getWorkflowType_shouldReturn404_whenProductNotFound() {
+    // given
+    String productId = "prod-missing";
+
+    when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new NotFoundException("Product prod-missing not found")));
+
+    // when
+    given()
+        .queryParam("productId", productId)
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .accept(ContentType.JSON)
+        .when()
+        .get("/workflow-type")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Not Found"))
+        .body("status", equalTo(404))
+        .body("detail", containsString(productId));
+
+    // then
+    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getWorkflowType_shouldReturn404_whenNoRuleMatches() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.getWorkflowType(productId, InstitutionType.GSP, Origin.SELC))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(
+                    new NotFoundException(
+                        "No workflowRule found for product prod-test, institutionType GSP, origin SELC")));
+
+    // when
+    given()
+        .queryParam("productId", productId)
+        .queryParam("institutionType", "GSP")
+        .queryParam("origin", "SELC")
+        .accept(ContentType.JSON)
+        .when()
+        .get("/workflow-type")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Not Found"))
+        .body("status", equalTo(404))
+        .body("detail", containsString("GSP"));
+
+    // then
+    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.GSP, Origin.SELC);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getWorkflowType_shouldReturn400_whenServiceThrowsBadRequest() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new IllegalArgumentException("Missing origin")));
+
+    // when
+    given()
+        .queryParam("productId", productId)
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .accept(ContentType.JSON)
+        .when()
+        .get("/workflow-type")
+        .then()
+        .statusCode(400)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Bad Request"))
+        .body("status", equalTo(400));
+
+    // then
+    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  // -------------------------------------------------------------------------
+  // HEAD /{productId}/required-documents/enabled
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn200_withHeaderTrue() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.GSP, Origin.SELC))
+        .thenReturn(Uni.createFrom().item(true));
+
+    // when
+    given()
+        .queryParam("institutionType", "GSP")
+        .queryParam("origin", "SELC")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(200)
+        .header("X-Required-Documents-Enabled", "true");
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.GSP, Origin.SELC);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn200_withHeaderFalse() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().item(false));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(200)
+        .header("X-Required-Documents-Enabled", "false");
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn404_whenProductNotFound() {
+    // given
+    String productId = "prod-missing";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new NotFoundException("Product prod-missing not found")));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(404);
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void isRequiredDocumentsEnabled_shouldReturn400_whenServiceThrowsIllegalArgument() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new IllegalArgumentException("Missing productId")));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .when()
+        .head(productId + "/required-documents/enabled")
+        .then()
+        .statusCode(400);
+
+    // then
+    verify(productService, times(1))
+        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  // -------------------------------------------------------------------------
+  // GET /{productId}/required-documents
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getRequiredDocuments_shouldReturn200_withList() {
+    // given
+    String productId = "prod-test";
+    List<RequiredDocumentResponse> documents =
+        List.of(
+            RequiredDocumentResponse.builder()
+                .id("statuto")
+                .name("Statuto Ente")
+                .labelKey("statuto")
+                .required(true)
+                .mimeType("application/pdf")
+                .maxDocumentsRequired(1)
+                .build(),
+            RequiredDocumentResponse.builder()
+                .id("attestazione-gsp")
+                .name("Attestazione")
+                .labelKey("attestazione-gsp")
+                .required(true)
+                .mimeType("application/pdf")
+                .maxDocumentsRequired(3)
+                .build());
+
+    when(productService.getRequiredDocuments(productId, InstitutionType.GSP, Origin.SELC))
+        .thenReturn(Uni.createFrom().item(documents));
+
+    // when
+    given()
+        .queryParam("institutionType", "GSP")
+        .queryParam("origin", "SELC")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/required-documents")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("size()", equalTo(2))
+        .body("[0].id", equalTo("statuto"))
+        .body("[0].name", equalTo("Statuto Ente"))
+        .body("[0].maxDocumentsRequired", equalTo(1))
+        .body("[1].id", equalTo("attestazione-gsp"))
+        .body("[1].maxDocumentsRequired", equalTo(3));
+
+    // then
+    verify(productService, times(1))
+        .getRequiredDocuments(productId, InstitutionType.GSP, Origin.SELC);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getRequiredDocuments_shouldReturn200_withEmptyList() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().item(List.of()));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/required-documents")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("size()", equalTo(0));
+
+    // then
+    verify(productService, times(1))
+        .getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getRequiredDocuments_shouldReturn404_whenProductNotFound() {
+    // given
+    String productId = "prod-missing";
+
+    when(productService.getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(
+            Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/required-documents")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Product not found"))
+        .body("status", equalTo(404))
+        .body("detail", containsString(productId))
+        .body("instance", equalTo("/product/" + productId + "/required-documents"));
+
+    // then
+    verify(productService, times(1))
+        .getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getRequiredDocuments_shouldReturn400_whenServiceThrowsIllegalArgument() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Missing origin")));
+
+    // when
+    given()
+        .queryParam("institutionType", "PA")
+        .queryParam("origin", "IPA")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/required-documents")
+        .then()
+        .statusCode(400)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Bad Request"))
+        .body("status", equalTo(400))
+        .body("detail", equalTo("Missing origin"));
+
+    // then
+    verify(productService, times(1))
+        .getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
   }
 
   // UTILS

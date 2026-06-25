@@ -1,0 +1,705 @@
+{
+	"info": {
+		"_postman_id": "645caa85-af26-4451-a0a4-cee6dfa27cc8",
+		"name": "Selfcare-External-Integration",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26036736"
+	},
+	"item": [
+		{
+			"name": "External",
+			"item": [
+				{
+					"name": "getContract",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getContract ok\", function () {",
+									"pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/contract?productId={{productId}}",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"contract"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "{{productId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getInstitutionProducts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getInstitutionProducts ok\", function () {",
+									"pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/products?userId={{userId}}",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"products"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getInstitutionUsersByProduct",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getInstitutionUsersByProduct ok\", function () {",
+									"pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/users",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "UserV2",
+			"item": [
+				{
+					"name": "getUserInfo",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;",
+									"const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;",
+									"const isoDateRegex = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z$/;",
+									"",
+									"pm.test(\"getUserInfo ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    const jsonData = pm.response.json();",
+									"",
+									"    // user",
+									"    pm.expect(jsonData).to.have.property(\"user\");",
+									"    pm.expect(jsonData.user).to.have.property(\"id\").to.match(uuidRegex);",
+									"    pm.expect(jsonData.user).to.have.property(\"name\", \"Anselmo\");",
+									"    pm.expect(jsonData.user).to.have.property(\"surname\", \"Sartori\");",
+									"    pm.expect(jsonData.user).to.have.property(\"lastActiveOnboardingUserEmail\").to.match(emailRegex);",
+									"",
+									"    // onboardedInstitutions",
+									"    pm.expect(jsonData).to.have.property(\"onboardedInstitutions\").that.is.an(\"array\").that.is.not.empty;",
+									"    jsonData.onboardedInstitutions.forEach(inst => {",
+									"        pm.expect(inst).to.have.property(\"id\").to.match(uuidRegex);",
+									"        pm.expect(inst).to.have.property(\"description\").that.is.a(\"string\");",
+									"        pm.expect(inst).to.have.property(\"institutionType\").that.is.a(\"string\");",
+									"        pm.expect(inst).to.have.property(\"digitalAddress\").to.match(emailRegex);",
+									"        pm.expect(inst).to.have.property(\"address\").that.is.a(\"string\");",
+									"        pm.expect(inst).to.have.property(\"state\").that.is.a(\"string\");",
+									"        pm.expect(inst).to.have.property(\"zipCode\").that.is.a(\"string\");",
+									"        pm.expect(inst).to.have.property(\"taxCode\").that.is.a(\"string\");",
+									"        pm.expect(inst).to.have.property(\"productInfo\").that.is.an(\"object\");",
+									"        pm.expect(inst.productInfo).to.have.property(\"id\").that.is.a(\"string\");",
+									"        pm.expect(inst.productInfo).to.have.property(\"role\").that.is.a(\"string\");",
+									"        pm.expect(inst.productInfo).to.have.property(\"productRole\").that.is.a(\"string\");",
+									"        pm.expect(inst.productInfo).to.have.property(\"status\").that.is.a(\"string\");",
+									"        pm.expect(inst.productInfo).to.have.property(\"createdAt\").to.match(isoDateRegex);",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fiscalCode\": \"SRTNLM09T06G635S\",\n    \"statuses\": [\"ACTIVE\", \"SUSPENDED\"]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/users?productId=prod-io",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"users"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "prod-io"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getUserInstitution",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;",
+									"const objectIdRegex = /^[0-9a-f]{24}$/;",
+									"const isoDateRegex = /^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})?$/; ",
+									"",
+									"pm.test(\"getUserInstitution ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    const jsonData = pm.response.json();",
+									"",
+									"    pm.expect(jsonData).to.be.an(\"array\");",
+									"",
+									"    jsonData.forEach(userInstitution => {",
+									"        pm.expect(userInstitution).to.have.property(\"id\").to.match(objectIdRegex);",
+									"        pm.expect(userInstitution).to.have.property(\"userId\").to.match(uuidRegex);",
+									"        pm.expect(userInstitution).to.have.property(\"institutionId\").to.match(uuidRegex);",
+									"        pm.expect(userInstitution).to.have.property(\"institutionDescription\").that.is.a(\"string\").and.is.not.empty;",
+									"        pm.expect(userInstitution).to.have.property(\"institutionRootName\").that.is.a(\"string\").and.is.not.empty;         ",
+									"        // Products array validation",
+									"        pm.expect(userInstitution).to.have.property(\"products\").that.is.an(\"array\");",
+									"        ",
+									"        userInstitution.products.forEach(product => {               ",
+									"            pm.expect(product).to.have.property(\"productId\").that.is.a(\"string\").and.is.not.empty;",
+									"            pm.expect(product).to.have.property(\"productRole\").that.is.a(\"string\");",
+									"            pm.expect(product.productRoleLabel).to.be.a(\"string\");",
+									"            pm.expect(product).to.have.property(\"status\").that.is.a(\"string\"); ",
+									"            pm.expect(product).to.have.property(\"role\").that.is.a(\"string\");                     ",
+									"            pm.expect(product.createdAt).to.match(isoDateRegex);                ",
+									"        });",
+									"    });",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/users?institutionId={{institutionId}}&userId={{userId}}&roles=DELEGATE&states=ACTIVE&products=prod-pn&productRoles=admin&page=0&size=100",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"users"
+							],
+							"query": [
+								{
+									"key": "institutionId",
+									"value": "{{institutionId}}"
+								},
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								},
+								{
+									"key": "roles",
+									"value": "DELEGATE"
+								},
+								{
+									"key": "states",
+									"value": "ACTIVE"
+								},
+								{
+									"key": "products",
+									"value": "prod-pn"
+								},
+								{
+									"key": "productRoles",
+									"value": "admin"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "InstitutionV2",
+			"item": [
+				{
+					"name": "getContract",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getContract ok\", function() {",
+									"    // Check http status",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    const responseBuffer = pm.response.stream;",
+									"",
+									"    // Check buffer is not empty",
+									"    pm.expect(responseBuffer.length).to.be.greaterThan(0);",
+									"",
+									"    // Read first 5 bytes, convert to ASCII and check if it starts with \"%PDF-\" (PDF file signature)",
+									"    const firstFiveBytes = responseBuffer.slice(0, 5).toString(\"ascii\");",
+									"    pm.expect(firstFiveBytes).to.eql(\"%PDF-\");",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/contract?productId={{productId}}",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"contract"
+							],
+							"query": [
+								{
+									"key": "productId",
+									"value": "{{productId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getInstitutionProducts",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getInstitutionProducts ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    ",
+									"    const jsonData = pm.response.json();",
+									"    ",
+									"    // Check it's not empty",
+									"    pm.expect(jsonData).to.be.an('array').that.is.not.empty;",
+									"",
+									"    const contract = jsonData[0];",
+									"",
+									"    // Check required fields",
+									"    pm.expect(contract).to.have.all.keys(",
+									"        \"id\", ",
+									"        \"title\", ",
+									"        \"contractTemplatePath\", ",
+									"        \"contractTemplateVersion\", ",
+									"        \"createdAt\", ",
+									"        \"description\", ",
+									"        \"urlPublic\", ",
+									"        \"urlBO\", ",
+									"        \"depictImageUrl\", ",
+									"        \"identityTokenAudience\", ",
+									"        \"logo\", ",
+									"        \"logoBgColor\", ",
+									"        \"roleMappings\"",
+									"    );",
+									"",
+									"    // Check roleMappings",
+									"    pm.expect(contract.roleMappings).to.have.all.keys(\"MANAGER\", \"DELEGATE\", \"SUB_DELEGATE\", \"OPERATOR\");",
+									"",
+									"    // function to check each role",
+									"    function checkRole(role) {",
+									"        pm.expect(role).to.have.keys(\"multiroleAllowed\", \"skipUserCreation\", \"roles\");",
+									"        pm.expect(role.multiroleAllowed).to.be.a('boolean');",
+									"        pm.expect(role.skipUserCreation).to.be.a('boolean');",
+									"        pm.expect(role.roles).to.be.an('array').that.is.not.empty;",
+									"",
+									"        const firstRole = role.roles[0];",
+									"        pm.expect(firstRole).to.have.all.keys(\"code\", \"label\", \"description\");",
+									"        pm.expect(firstRole.code).to.be.a('string');",
+									"        pm.expect(firstRole.label).to.be.a('string');",
+									"        pm.expect(firstRole.description).to.be.a('string');",
+									"    }",
+									"",
+									"    // Check all roles",
+									"    checkRole(contract.roleMappings.MANAGER);",
+									"    checkRole(contract.roleMappings.DELEGATE);",
+									"    checkRole(contract.roleMappings.SUB_DELEGATE);",
+									"    checkRole(contract.roleMappings.OPERATOR);",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/products?userId={{userId}}",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"products"
+							],
+							"query": [
+								{
+									"key": "userId",
+									"value": "{{userId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "getInstitutionUsersByProduct",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"getInstitutionUserByProduct ok\", function () {",
+									"    pm.response.to.have.status(200);",
+									"",
+									"    const jsonData = pm.response.json();",
+									"",
+									"    // Check it's not empty",
+									"    pm.expect(jsonData).to.be.an('array').that.is.not.empty;",
+									"",
+									"    // fuction to check each user",
+									"    function checkUserFields(user) {",
+									"        pm.expect(user).to.have.all.keys(\"id\", \"name\", \"surname\", \"email\", \"roles\", \"role\");",
+									"        pm.expect(user.id).to.be.a('string');",
+									"        pm.expect(user.name).to.be.a('string');",
+									"        pm.expect(user.surname).to.be.a('string');",
+									"        pm.expect(user.email).to.be.a('string');",
+									"        pm.expect(user.roles).to.be.an('array');",
+									"        pm.expect(user.role).to.be.a('string');",
+									"    }",
+									"",
+									"    // Check for each user in the array if they have the correct fields and types.",
+									"    jsonData.forEach(user => checkUserFields(user));",
+									"",
+									"});",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyPN}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/v2/institutions/{{institutionId}}/users",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"v2",
+								"institutions",
+								"{{institutionId}}",
+								"users"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pnpg",
+			"item": [
+				{
+					"name": "addInstitution",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"addInstitution ok\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"\r",
+									"    const jsonData = pm.response.json();\r",
+									"\r",
+									"    pm.expect(jsonData).to.have.property(\"id\");\r",
+									"    pm.expect(jsonData.id).to.be.a(\"string\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Ocp-Apim-Subscription-Key",
+								"value": "{{apimKeyDataVaultPNPG}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"externalId\":\"1234\"}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{apiBaseUrl}}/external/data-vault/v1/pn-pg/institutions/add",
+							"host": [
+								"{{apiBaseUrl}}"
+							],
+							"path": [
+								"external",
+								"data-vault",
+								"v1",
+								"pn-pg",
+								"institutions",
+								"add"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

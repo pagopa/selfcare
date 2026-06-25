@@ -5,6 +5,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.service.impl.ContractServiceImpl;
+
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
@@ -43,7 +45,7 @@ class ContractServiceDefaultTest {
 
   @BeforeEach
   void setup() {
-    contractService = new ContractServiceDefault(azureBlobClient, LOGO_PATH, true, userRegistryApi);
+    contractService = new ContractServiceImpl(azureBlobClient, LOGO_PATH, true, userRegistryApi);
   }
 
   private Onboarding createOnboarding() {
@@ -334,7 +336,7 @@ class ContractServiceDefaultTest {
     String prefix = "testPrefix";
     String suffix = ".txt";
 
-    ContractServiceDefault serviceSpy = spy((ContractServiceDefault) contractService);
+    ContractServiceImpl serviceSpy = spy((ContractServiceImpl) contractService);
     doThrow(new UnsupportedOperationException("forced"))
         .when(serviceSpy)
         .createTempFileWithPosix(anyString(), anyString());

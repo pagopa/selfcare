@@ -1,0 +1,51 @@
+server:
+  port: ${B4F_DASHBOARD_SERVER_PORT:8080}
+  shutdown: graceful
+
+spring:
+  application:
+    name: "@project.artifactId@"
+    version: "@project.version@"
+  profiles:
+    include:
+      - swaggerEN
+      - AzureStorage
+  zipkin:
+    enabled: false
+  sleuth:
+    baggage:
+      remote-fields: X-Client-Ip
+      correlation-fields: X-Client-Ip
+
+info:
+  build:
+    artifact: "@project.artifactId@"
+    name: "@project.artifactId@"
+    description: "@project.description@"
+    version: "@project.version@"
+
+
+logging:
+  level:
+    it.pagopa.selfcare: ${B4F_DASHBOARD_LOG_LEVEL:DEBUG}
+  pattern:
+    level: "%5p [${spring.application.name:},%X{trace_id:-},%X{span_id:-}]"
+    additional-info: ",%X{X-Client-Ip:-}]"
+
+dashboard:
+  security:
+    connector: ${B4F_DASHBOARD_SECURITY_CONNECTOR:v2}
+
+resilience4j:
+  retry:
+    retry-aspect-order: 1
+    instances:
+      retryTimeout:
+        max-attempts: 3
+        wait-duration: 5s
+        retry-exceptions:
+          - feign.RetryableException
+
+feature:
+  viewcontract:
+    enabled: ${FEATURE_VIEWCONTRACT_ENABLED:false}

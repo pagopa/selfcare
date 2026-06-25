@@ -17,6 +17,10 @@ public class OnboardingIndex {
     private String productId;
     private String institutionType;
     private String status;
+    private Boolean isTest;
+    private String city;
+    private String county;
+    private String country;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
     private OffsetDateTime activatedAt;

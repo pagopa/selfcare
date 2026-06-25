@@ -3,7 +3,7 @@
   "createdAt": "2024-06-17T12:53:01.019Z",
   "expiringDate": "2024-10-16T12:53:01.019Z",
   "institution": {
-    "id": "89awdwdwd-3edsdsdfg-9c92311372220",
+    "id": "c2808e95-59a7-44fb-a6df-64faf4ff3ed2",
     "address": "Via G Verdi 17",
     "city": "Roma",
     "country": "IT",
@@ -33,7 +33,7 @@
       "id": "ec7ca4d5-c537-462a-8c06-e102e0c21c44",
       "role": "MANAGER",
       "userMailUuid": "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e21",
-      "productRole": "admin"
+      "productRole": "referente amministrativo"
     }
   ],
   "workflowType": "USERS_EA",

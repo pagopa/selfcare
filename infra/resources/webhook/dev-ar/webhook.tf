@@ -88,6 +88,7 @@ locals {
   secrets_names_webhook_ms = {
     "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
     "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+    "WEBHOOK_JWT_PRIVATE_KEY"               = "jwt-private-key-pkcs8"
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
     "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"

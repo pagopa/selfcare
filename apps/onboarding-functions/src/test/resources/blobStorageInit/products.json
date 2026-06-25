@@ -117,6 +117,10 @@
       }
     },
     "userAggregatorContractMappings": {
+      "PA": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      },
       "default": {
         "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
         "contractTemplateVersion": "1.0.0"

@@ -1,4 +1,4 @@
-name: Code Review - Auth Infra
+name: Code Review - App Infra
 
 permissions:
   contents: read
@@ -31,14 +31,23 @@ on:
         options:
           - auth
           - iam
+          - delegation-cdc
+          - document-ms
+          - institution-ms
+          - institution-send-mail-scheduler
+          - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
-          - webhook
-          - onboarding-ms
-          - onboarding-cdc
           - registry-proxy
-          - onboarding-bff
-          - document-ms
+          - registry-proxy-runner
+          - user-cdc
+          - user-group-cdc
+          - user-group-ms
+          - user-ms
+          - webhook
+          - dashboard-bff
         required: true
 
   pull_request:

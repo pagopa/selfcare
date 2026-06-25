@@ -24,10 +24,12 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <commons-sdk-version>0.15.6</commons-sdk-version>
+        <commons-sdk-version>0.17.2</commons-sdk-version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <lombok.version>1.18.36</lombok.version>
         <quarkus-openapi-generator.version>2.2.10</quarkus-openapi-generator.version>
+        <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
+        <okhttp.version>4.12.0</okhttp.version>
     </properties>
 
     <dependencyManagement>
@@ -46,6 +48,11 @@
                 <type>pom</type>
                 <scope>import</scope>
 			</dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -223,11 +230,28 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
             <version>${commons-sdk-version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>com.azure</groupId>
+              <artifactId>azure-core-http-netty</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core-http-okhttp</artifactId>
+            <version>${azure-core-http-okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
             <version>${commons-sdk-version}</version>
+          <exclusions>
+            <exclusion>
+              <groupId>com.azure</groupId>
+              <artifactId>azure-core-http-netty</artifactId>
+            </exclusion>
+          </exclusions>
         </dependency>
         <dependency>
             <groupId>eu.europa.ec.joinup.sd-dss</groupId>

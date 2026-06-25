@@ -29,6 +29,7 @@ public class Product {
     private boolean enabled = false;
     private boolean delegable;
     private boolean invoiceable;
+    private boolean requiresParentOnboarding;
     private ProductStatus status;
     private String parentId;
     private List<String> testEnvProductIds;
@@ -47,6 +48,19 @@ public class Product {
     private List<OriginEntry> institutionOrigins;
     private boolean allowIndividualOnboarding;
     private boolean allowCompanyOnboarding;
+
+    /**
+     * Configuration of the multistep signing flow.
+     * If null, the product follows the standard flow (single signature → COMPLETED).
+     */
+    private SigningConfiguration signingConfiguration;
+
+    /**
+     * List of institutions that manage this product.
+     * Each institution is associated with a signing step.
+     * If null or empty, the product has no managing institutions (standard flow).
+     */
+    private List<ManagingInstitution> managingInstitutions;
 
     public String getId() {
         return id;
@@ -233,6 +247,14 @@ public class Product {
 
     public void setInvoiceable(boolean invoiceable) {
         this.invoiceable = invoiceable;
+    }
+
+    public boolean isRequiresParentOnboarding() {
+        return requiresParentOnboarding;
+    }
+
+    public void setRequiresParentOnboarding(boolean requiresParentOnboarding) {
+        this.requiresParentOnboarding = requiresParentOnboarding;
     }
 
     public ProductStatus getStatus() {
@@ -507,5 +529,21 @@ public class Product {
 
     public void setInstitutionOrigins(List<OriginEntry> institutionOrigins) {
         this.institutionOrigins = institutionOrigins;
+    }
+
+    public SigningConfiguration getSigningConfiguration() {
+        return signingConfiguration;
+    }
+
+    public void setSigningConfiguration(SigningConfiguration signingConfiguration) {
+        this.signingConfiguration = signingConfiguration;
+    }
+
+    public List<ManagingInstitution> getManagingInstitutions() {
+        return managingInstitutions;
+    }
+
+    public void setManagingInstitutions(List<ManagingInstitution> managingInstitutions) {
+        this.managingInstitutions = managingInstitutions;
     }
 }

@@ -15,6 +15,8 @@ import it.pagopa.selfcare.onboarding.dto.webhook.NotificationRequest;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.utils.*;
+import it.pagopa.selfcare.onboarding.service.impl.NotificationEventServiceImpl;
+
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
@@ -22,7 +24,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.user_json.model.*;
 
@@ -35,7 +36,7 @@ import static org.mockito.Mockito.*;
 @QuarkusTest
 public class NotificationEventServiceDefaultTest {
 
-  @Inject NotificationEventServiceDefault notificationServiceDefault;
+  @Inject NotificationEventServiceImpl notificationServiceDefault;
 
   @InjectMock ProductService productService;
 
@@ -53,7 +54,7 @@ public class NotificationEventServiceDefaultTest {
 
   @RestClient @InjectMock WebhookRestClient webhookRestClient;
 
-  @RestClient @InjectMock DocumentControllerApi documentControllerApi;
+  @InjectMock DocumentService documentService;
 
   @Test
   void sendMessage() {
@@ -63,7 +64,7 @@ public class NotificationEventServiceDefaultTest {
 
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     List<UserDataResponse> users = new ArrayList<>();
     when(userApi.retrieveUsers(any(), any(), any(), any(), any(), any(), any()))
@@ -90,7 +91,7 @@ public class NotificationEventServiceDefaultTest {
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     ExecutionContext context = mock(ExecutionContext.class);
     doReturn(Logger.getGlobal()).when(context).getLogger();
@@ -114,7 +115,7 @@ public class NotificationEventServiceDefaultTest {
     onboarding.setId("123");
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     mockNotificationMapper(true);
     ExecutionContext context = mock(ExecutionContext.class);
@@ -130,7 +131,7 @@ public class NotificationEventServiceDefaultTest {
     final Onboarding onboarding = createOnboarding();
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     mockNotificationMapper(false);
     ExecutionContext context = mock(ExecutionContext.class);
@@ -147,7 +148,7 @@ public class NotificationEventServiceDefaultTest {
     product.setTestEnvProductIds(List.of("prod-interop-coll", "prod-interop-atst"));
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     ExecutionContext context = mock(ExecutionContext.class);
     doReturn(Logger.getGlobal()).when(context).getLogger();
@@ -162,7 +163,7 @@ public class NotificationEventServiceDefaultTest {
     final Onboarding onboarding = createOnboarding();
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
     mockNotificationMapper(true);
     doThrow(new NotificationException("Impossible to send notification for object" + onboarding))
@@ -196,7 +197,7 @@ public class NotificationEventServiceDefaultTest {
 
     notificationServiceDefault.send(context, onboarding, QueueEvent.ADD);
     verifyNoInteractions(productService);
-    verifyNoInteractions(documentControllerApi);
+    verifyNoInteractions(documentService);
     verifyNoInteractions(institutionApi);
     verifyNoInteractions(eventHubRestClient);
   }
@@ -205,7 +206,7 @@ public class NotificationEventServiceDefaultTest {
   void onboardingEventMapTest() {
     final Onboarding onboarding = createOnboarding();
     onboarding.setId("ID");
-    Map<String, String> properties = NotificationEventServiceDefault.onboardingEventMap(onboarding);
+    Map<String, String> properties = NotificationEventServiceImpl.onboardingEventMap(onboarding);
     assertNotNull(properties);
     assertEquals("ID", properties.get("id"));
   }
@@ -213,7 +214,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void onboardingEventFailureMapTest() {
     final Onboarding onboarding = createOnboarding();
-    Map<String, String> properties = NotificationEventServiceDefault.onboardingEventFailureMap(onboarding, new Exception());
+    Map<String, String> properties = NotificationEventServiceImpl.onboardingEventFailureMap(onboarding, new Exception());
     assertNotNull(properties);
   }
 
@@ -229,7 +230,7 @@ public class NotificationEventServiceDefaultTest {
     billing.setPublicService(false);
     notificationToSend.setBilling(billing);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationEventMap(notificationToSend, "topic", "traceId");
+    Map<String, String> properties = NotificationEventServiceImpl.notificationEventMap(notificationToSend, "topic", "traceId");
     assertNotNull(properties);
     assertEquals("traceId", properties.get("notificationEventTraceId"));
     assertEquals("id", properties.get("id"));
@@ -268,7 +269,7 @@ public class NotificationEventServiceDefaultTest {
     billing.setTaxCodeInvoicing("456");
     notificationToSend.setBilling(billing);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationEventMap(notificationToSend, "topic", null);
+    Map<String, String> properties = NotificationEventServiceImpl.notificationEventMap(notificationToSend, "topic", null);
     assertNotNull(properties);
     assertEquals("id", properties.get("id"));
     assertEquals("internal", properties.get("internalIstitutionID"));
@@ -311,7 +312,7 @@ public class NotificationEventServiceDefaultTest {
     billing.setTaxCodeInvoicing("456");
     notificationToSend.setBilling(billing);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationEventMap(notificationToSend, "topic", null);
+    Map<String, String> properties = NotificationEventServiceImpl.notificationEventMap(notificationToSend, "topic", null);
     assertNotNull(properties);
     assertEquals("id", properties.get("id"));
     assertEquals("internal", properties.get("internalIstitutionID"));
@@ -340,7 +341,7 @@ public class NotificationEventServiceDefaultTest {
     final Product product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
 
-    when(documentControllerApi.getDocumentByOnboardingId(any())).thenReturn(List.of(new DocumentResponse()));
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
 
     BaseNotificationBuilder notificationMapper = mock(BaseNotificationBuilder.class);
@@ -396,7 +397,7 @@ public class NotificationEventServiceDefaultTest {
     user.setRole("OPERATOR");
     notificationUserToSend.setUser(user);
 
-    Map<String, String> properties = NotificationEventServiceDefault.notificationUserEventMap(notificationUserToSend, "topic", "traceId");
+    Map<String, String> properties = NotificationEventServiceImpl.notificationUserEventMap(notificationUserToSend, "topic", "traceId");
     assertNotNull(properties);
     assertEquals("traceId", properties.get("notificationEventTraceId"));
     assertEquals("id", properties.get("id"));
@@ -455,7 +456,7 @@ public class NotificationEventServiceDefaultTest {
     doNothing().when(eventHubRestClient).sendMessage(anyString(), anyString());
 
 
-    NotificationUserToSend notificationUserToSend = NotificationEventServiceDefault.getNotificationUserToSend(notificationsResources, userDataResponse,
+    NotificationUserToSend notificationUserToSend = NotificationEventServiceImpl.getNotificationUserToSend(notificationsResources, userDataResponse,
       onboardedProductResponse, fdNotificationBuilder);
 
     assertNotNull(notificationUserToSend);

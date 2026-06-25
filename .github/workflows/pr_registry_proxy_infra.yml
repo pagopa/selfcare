@@ -1,0 +1,69 @@
+name: Code Review - Registry Proxy Infra
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+      - releases/*
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'infra/resources/registry-proxy/**'
+      - '.github/workflows/pr_registry_proxy_infra.yml'
+      - '.github/workflows/call_code_review_infra.yml'
+
+jobs:
+  code_review_dev_ar:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: '[DEV-AR] Registry Proxy Infra Code Review'
+    secrets: inherit
+    with:
+      environment: dev-ar
+      base_path: infra/resources/registry-proxy
+      override_github_environment: dev
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      use_private_agent: true
+      use_labels: true
+      override_labels: dev
+
+  code_review_uat_ar:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: '[UAT-AR] Registry Proxy Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: uat-ar
+      base_path: infra/resources/registry-proxy
+      override_github_environment: uat
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      use_private_agent: true
+      use_labels: true
+      override_labels: uat
+
+  code_review_prod_ar:
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    name: '[PROD-AR] Registry Proxy Infra Code Review'
+    if: ${{ startsWith(github.ref_name, 'releases/') }}
+    secrets: inherit
+    with:
+      environment: prod-ar
+      base_path: infra/resources/registry-proxy
+      override_github_environment: prod
+      env_vars: |
+        TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
+      use_private_agent: true
+      use_labels: true
+      override_labels: prod

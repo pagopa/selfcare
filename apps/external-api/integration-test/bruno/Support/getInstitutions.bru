@@ -1,0 +1,48 @@
+meta {
+  name: getInstitutions
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{apiBaseUrl}}/external/support/v1/institutions?taxCode={{taxCode}}
+  body: none
+  auth: inherit
+}
+
+params:query {
+  taxCode: {{taxCode}}
+  ~subunitCode:
+  ~origin:
+  ~originId:
+  ~productId: {{productId}}
+}
+
+headers {
+  Ocp-Apim-Subscription-Key: {{apimKeySupport}}
+}
+
+script:post-response {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  test("getInstitutions ok", function() {
+    expect(res.getStatus()).to.equal(200);
+
+    const jsonData = res.getBody();
+
+    expect(jsonData).to.have.property("institutions").that.is.an("array");
+
+    if (jsonData.institutions.length > 0) {
+      jsonData.institutions.forEach(institution => {
+        expect(institution).to.have.property("id").that.is.a("string");
+        expect(institution).to.have.property("externalId").that.is.a("string");
+        expect(institution).to.have.property("origin").that.is.a("string");
+        expect(institution).to.have.property("originId").that.is.a("string");
+      });
+    }
+  });
+}
+
+settings {
+  encodeUrl: true
+}

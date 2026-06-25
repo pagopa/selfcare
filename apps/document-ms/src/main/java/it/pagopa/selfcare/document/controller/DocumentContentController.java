@@ -121,6 +121,8 @@ public class DocumentContentController {
     )
     @GET
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Tag(name = "Document Content Controller")
+    @Tag(name = "external-v2")
     @Path("/{onboardingId}/contract-signed")
     public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "onboardingId") String onboardingId) {
         return documentContentService.retrieveSignedFile(onboardingId);
@@ -257,10 +259,12 @@ public class DocumentContentController {
             @PathParam("onboardingId") String onboardingId,
             @RestForm("request") @PartType(MediaType.APPLICATION_JSON) DocumentBuilderRequest request,
             @RestForm("skipSignatureVerification") @DefaultValue("false") boolean skipSignatureVerification,
+            @RestForm("skipSignerIdentityCheck") @DefaultValue("false") boolean skipSignerIdentityCheck,
+            @RestForm("signingStep") int signingStep,
             @RestForm("file") InputStream file,
             @RestForm("fileName") String fileName) {
         return documentContentService.uploadSignedContract(
-                        onboardingId, request, skipSignatureVerification, file, fileName)
+                        onboardingId, request, skipSignatureVerification, file, fileName, skipSignerIdentityCheck, signingStep)
                 .replaceWith(() -> Response.noContent().build());
     }
 }

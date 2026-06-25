@@ -8,6 +8,10 @@ import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
+import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
+import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -15,6 +19,7 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HEAD;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
@@ -44,6 +49,9 @@ public class ProductController {
 
   // SERVICE
   private final ProductService productService;
+
+  private static final String PRODUCT_NOT_FOUND = "Product not found";
+  private static final String PRODUCT_NOT_FOUND_WITH_PRODUCTID = "No product found with productId: %s";
 
   @Operation(summary = "Ping endpoint", operationId = "ping")
   @APIResponses(
@@ -159,8 +167,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId)
                             .build())
@@ -230,8 +238,8 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId)
                             .build())
@@ -332,8 +340,8 @@ public class ProductController {
                     .type("application/problem+json")
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + sanitizedProductId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(404)
                             .instance("/products/" + sanitizedProductId)
                             .build())
@@ -403,10 +411,214 @@ public class ProductController {
                 Response.status(Response.Status.NOT_FOUND)
                     .entity(
                         Problem.builder()
-                            .title("Product not found")
-                            .detail("No product found with productId=" + productId)
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/products/" + productId + "/origins")
+                            .build())
+                    .build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/workflow-type")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Resolve workflow type for a product",
+      description =
+          "Returns the WorkflowType to use for the given combination of productId, institutionType and origin, "
+              + "based on the workflowRules configured for the product.",
+      operationId = "getWorkflowType")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "WorkflowType resolved",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = WorkflowTypeResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found or no matching workflowRule",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getWorkflowType(
+      @Parameter(name = "productId", required = true) @QueryParam("productId") String productId,
+      @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
+          InstitutionType institutionType,
+      @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+
+    return productService
+        .getWorkflowType(productId, institutionType, origin)
+        .onItem()
+        .transform(response -> Response.ok(response).build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.BAD_REQUEST)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Bad Request")
+                            .detail(t.getMessage())
+                            .status(Response.Status.BAD_REQUEST.getStatusCode())
+                            .instance("/product/workflow-type")
+                            .build())
+                    .build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Not Found")
+                            .detail(t.getMessage())
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance("/product/workflow-type")
+                            .build())
+                    .build());
+  }
+
+  @HEAD
+  @Tag(name = "Product")
+  @Path("/{productId}/required-documents/enabled")
+  @Operation(
+      summary = "Check if required documents are enabled",
+      description =
+          "Returns HTTP 200 with header X-Required-Documents-Enabled set to true if required documents "
+              + "are configured for the given product, institutionType and origin combination; false otherwise.",
+      operationId = "isRequiredDocumentsEnabled")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Check completed",
+            headers = {
+              @org.eclipse.microprofile.openapi.annotations.headers.Header(
+                  name = "X-Required-Documents-Enabled",
+                  description = "Whether required documents are enabled (true/false)")
+            }),
+        @APIResponse(responseCode = "400", description = "Bad Request"),
+        @APIResponse(responseCode = "404", description = "Product not found"),
+        @APIResponse(responseCode = "500", description = "Internal Server Error")
+      })
+  public Uni<Response> isRequiredDocumentsEnabled(
+      @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
+      @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
+          InstitutionType institutionType,
+      @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+
+    return productService
+        .isRequiredDocumentsEnabled(productId, institutionType, origin)
+        .onItem()
+        .transform(
+            enabled ->
+                Response.ok()
+                    .header("X-Required-Documents-Enabled", enabled)
+                    .build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t -> Response.status(Response.Status.BAD_REQUEST).build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t -> Response.status(Response.Status.NOT_FOUND).build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/{productId}/required-documents")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Get required documents for a product",
+      description =
+          "Returns the list of required documents for the given combination of productId, institutionType and origin.",
+      operationId = "getRequiredDocuments")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Required documents retrieved",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = RequiredDocumentResponse.class, type = org.eclipse.microprofile.openapi.annotations.enums.SchemaType.ARRAY))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getRequiredDocuments(
+      @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
+      @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
+          InstitutionType institutionType,
+      @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+
+    String sanitizedProductId = Encode.forJava(productId);
+
+    return productService
+        .getRequiredDocuments(productId, institutionType, origin)
+        .onItem()
+        .transform(documents -> Response.ok(documents).build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.BAD_REQUEST)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Bad Request")
+                            .detail(t.getMessage())
+                            .status(Response.Status.BAD_REQUEST.getStatusCode())
+                            .instance("/product/" + sanitizedProductId + "/required-documents")
+                            .build())
+                    .build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance("/product/" + sanitizedProductId + "/required-documents")
                             .build())
                     .build());
   }

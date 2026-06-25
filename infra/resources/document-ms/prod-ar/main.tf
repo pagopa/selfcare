@@ -13,7 +13,10 @@ module "local" {
   private_dns_name_domain        = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-p-cae-002"
   ca_resource_group_name         = "selc-p-container-app-002-rg"
-  container_app_min_replicas     = 0
+  container_app_max_replicas     = 5
+  container_app_desired_replicas = "3"
+  container_app_cpu              = 2.0
+  container_app_memory           = "4.0Gi"
 }
 
 ###############################################################################
@@ -78,6 +81,10 @@ locals {
     {
       name  = "NAMIRIAL_BASE_URL"
       value = "https://selc-p-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "DOCUMENT_MS_UPLOAD_MAX_BODY_SIZE"
+      value = "10M"
     }
   ]
 

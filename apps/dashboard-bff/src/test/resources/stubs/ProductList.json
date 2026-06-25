@@ -1,0 +1,78 @@
+[
+  {
+    "id": "123",
+    "logo": "logoUrl",
+    "logoBgColor": "#FFFFFF",
+    "depictImageUrl": "depictImageUrl",
+    "title": "Title",
+    "description": "ProductDescription",
+    "urlPublic": "urlPublic",
+    "urlBO": "backOfficeUrl",
+    "status": "ACTIVE",
+    "identityTokenAudience": "audience",
+    "roleMappings": {
+      "MANAGER": {
+        "roles": [
+          {
+            "code": "code1",
+            "label": "label1",
+            "description": "description1"
+          },
+          {
+            "code": "code2",
+            "label": "label2",
+            "description": "description2"
+          }
+        ]
+      }
+    },
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contract_template_path",
+        "contractTemplateVersion": "contract_template_version",
+        "attachments": []
+      }
+    },
+    "parentId": "parentProduct",
+    "createdAt": "2024-04-17T01:00:00Z",
+    "roleManagementURL": "roleManagementUrl"
+  },
+  {
+    "id": "123",
+    "logo": "logoUrl",
+    "logoBgColor": "#FFFFFF",
+    "depictImageUrl": "depictImageUrl",
+    "title": "Title",
+    "description": "ProductDescription",
+    "urlPublic": "urlPublic",
+    "urlBO": "backOfficeUrl",
+    "status": "ACTIVE",
+    "identityTokenAudience": "audience",
+    "roleMappings": {
+      "MANAGER": {
+        "roles": [
+          {
+            "code": "code1",
+            "label": "label1",
+            "description": "description1"
+          },
+          {
+            "code": "code2",
+            "label": "label2",
+            "description": "description2"
+          }
+        ]
+      }
+    },
+    "parentId": "parentProduct",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contract_template_path",
+        "contractTemplateVersion": "contract_template_version",
+        "attachments": []
+      }
+    },
+    "createdAt": "2024-04-17T01:00:00Z",
+    "roleManagementURL": "roleManagementUrl"
+  }
+]

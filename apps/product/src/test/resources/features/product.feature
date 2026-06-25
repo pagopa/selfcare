@@ -94,7 +94,35 @@ Feature: Product API end-to-end onboarding and lifecycle
       ],
       "metadata": {
         "createdBy": "user-apim-name"
-      }
+      },
+      "signingConfiguration": {
+        "requiredSignatures": 2,
+        "skipSignerIdentityCheck": true,
+        "steps": [
+          {
+            "order": 1,
+            "label": "step-1",
+            "final": false
+          },
+          {
+            "order": 2,
+            "label": "step-2",
+            "final": true
+          }
+        ]
+      },
+      "managingInstitutions": [
+        {
+          "institutionId": "inst-1",
+          "description": "Institution One",
+          "signingStep": 1
+        },
+        {
+          "institutionId": "inst-2",
+          "description": "Institution Two",
+          "signingStep": 2
+        }
+      ]
     }
     """
     And The following query params:
@@ -219,7 +247,60 @@ Feature: Product API end-to-end onboarding and lifecycle
       ],
       "metadata": {
         "createdBy": "user-apim-name"
-      }
+      },
+      "signingConfiguration": {
+        "requiredSignatures": 2,
+        "skipSignerIdentityCheck": true,
+        "steps": [
+          {
+            "order": 1,
+            "label": "step-1",
+            "final": false
+          },
+          {
+            "order": 2,
+            "label": "step-2",
+            "final": true
+          }
+        ]
+      },
+      "managingInstitutions": [
+        {
+          "institutionId": "inst-1",
+          "description": "Institution One",
+          "signingStep": 1
+        },
+        {
+          "institutionId": "inst-2",
+          "description": "Institution Two",
+          "signingStep": 2
+        }
+      ],
+      "requiredDocuments": [
+        {
+          "id": "doc-statuto",
+          "name": "Statuto Ente",
+          "labelKey": "statuto",
+          "required": true,
+          "mimeType": "application/pdf",
+          "filter": {
+            "institutionType": ["GSP"],
+            "origin": ["IPA"]
+          }
+        },
+        {
+          "id": "doc-visura",
+          "name": "Visura Camerale",
+          "labelKey": "visura",
+          "required": true,
+          "mimeType": "application/pdf",
+          "maxDocumentsRequired": 3,
+          "filter": {
+            "institutionType": ["GSP"],
+            "origin": ["IPA"]
+          }
+        }
+      ]
     }
     """
     And The following query params:
@@ -270,6 +351,74 @@ Feature: Product API end-to-end onboarding and lifecycle
       | productId        | prod-test                     |
       | description      | Description updated via PATCH |
       | features.enabled | false                         |
+
+  Scenario: HEAD /product/{productId}/required-documents/enabled - returns true when documents match context
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | institutionType | GSP |
+      | origin          | IPA |
+    When I send a HEAD request to "/product/prod-test/required-documents/enabled"
+    Then The status code is 200
+    And The response header contains:
+      | X-Required-Documents-Enabled | true |
+
+  Scenario: HEAD /product/{productId}/required-documents/enabled - returns false when no document matches context
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | institutionType | PA  |
+      | origin          | IPA |
+    When I send a HEAD request to "/product/prod-test/required-documents/enabled"
+    Then The status code is 200
+    And The response header contains:
+      | X-Required-Documents-Enabled | false |
+
+  Scenario: HEAD /product/{productId}/required-documents/enabled - returns 404 when product not found
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | institutionType | GSP |
+      | origin          | IPA |
+    When I send a HEAD request to "/product/prod-unknown/required-documents/enabled"
+    Then The status code is 404
+
+  Scenario: GET /product/{productId}/required-documents - returns list of required documents
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | institutionType | GSP |
+      | origin          | IPA |
+    When I send a GET request to "/product/prod-test/required-documents"
+    Then The status code is 200
+    And The response body contains:
+      | [0].id                   | doc-statuto       |
+      | [0].name                 | Statuto Ente      |
+      | [0].labelKey             | statuto           |
+      | [0].required             | true              |
+      | [0].mimeType             | application/pdf   |
+      | [0].maxDocumentsRequired | 1                 |
+      | [1].id                   | doc-visura        |
+      | [1].name                 | Visura Camerale   |
+      | [1].labelKey             | visura            |
+      | [1].required             | true              |
+      | [1].mimeType             | application/pdf   |
+      | [1].maxDocumentsRequired | 3                 |
+
+  Scenario: GET /product/{productId}/required-documents - returns empty list when no document matches context
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | institutionType | PA  |
+      | origin          | IPA |
+    When I send a GET request to "/product/prod-test/required-documents"
+    Then The status code is 200
+
+  Scenario: GET /product/{productId}/required-documents - returns 404 when product not found
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | institutionType | GSP |
+      | origin          | IPA |
+    When I send a GET request to "/product/prod-unknown/required-documents"
+    Then The status code is 404
+    And The response body contains:
+      | title  | Product not found |
+      | status | 404               |
 
   Scenario: DELETE /product - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"

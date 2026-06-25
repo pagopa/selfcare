@@ -1,0 +1,18 @@
+{
+  "httpRequest": {
+    "method": "GET",
+    "path": "/party-registry-mock/geotaxonomies/{geotax_id}",
+    "pathParameters": {
+      "geotax_id": [
+        "058091"
+      ]
+    }
+  },
+  "httpResponse": {
+    "statusCode": 200,
+    "body": "{\"country\": \"100\", \"enabled\": true, \"code\": \"058091\", \"desc\": \"ROMA - COMUNE\", \"istat_code\": \"058091\", \"province_id\": \"058\", \"province_abbreviation\": \"RM\", \"region_id\": \"12\", \"country_abbreviation\": \"IT\"}",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

@@ -10,10 +10,6 @@ import java.util.List;
 
 public interface DocumentService {
 
-    Uni<List<Document>> getDocumentsByOnboardingId(String onboardingId);
-
-    Uni<Document> getDocumentInstitutionByOnboardingId(String onboardingId);
-
     Uni<Document> getDocumentById(String id);
 
     Uni<Document> getDocumentByOnboardingId(String onboardingId);
@@ -37,6 +33,12 @@ public interface DocumentService {
     Uni<Long> updateDocumentContractFiles(Document document);
 
     /**
+     * Updates contract files and signingStep for a specific document by its ID.
+     * Used during uploadSignedContract to avoid updating all documents with the same onboardingId.
+     */
+    Uni<Long> updateDocumentContractFilesById(Document document);
+
+    /**
      * Saves a document (contract or attachment) based on the DocumentType in the request.
      * For INSTITUTION/USER types, saves a contract document.
      * For ATTACHMENT type, saves an attachment document.
@@ -48,6 +50,28 @@ public interface DocumentService {
 
     Uni<Document> persistDocumentForImport(OnboardingDocumentRequest request);
 
+    /**
+     * Handles a contract document, reusing the existing record if unsigned,
+     * or creating a new one for subsequent signing steps.
+     *
+     * @param request the document builder request
+     * @return the document (existing or newly created)
+     */
     Uni<Document> handleContractDocument(DocumentBuilderRequest request);
+
+    /**
+     * Variant of handleContractDocument that accepts a previously-loaded Document.
+     * This avoids an extra repository lookup when the caller already fetched the
+     * most-recent document (useful for upload flows that already called findByOnboardingId).
+     *
+     * Implementations should prefer the provided existingDocument when non-null.
+     *
+     * @param request the document builder request
+     * @param existingDocument the previously loaded document (may be null)
+     * @return the document (existing or newly created)
+     */
+    Uni<Document> handleContractDocument(DocumentBuilderRequest request, Document existingDocument);
+
+    Uni<Boolean> deleteDocumentById(String documentId);
 
 }

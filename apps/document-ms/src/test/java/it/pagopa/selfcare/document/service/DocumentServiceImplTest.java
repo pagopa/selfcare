@@ -57,35 +57,6 @@ class DocumentServiceImplTest {
     @InjectMock
     DocumentMsTelemetryService telemetryService;
 
-    // ---- getDocumentsByOnboardingId ----
-
-    @Test
-    void getDocumentsByOnboardingId_shouldReturnDocumentList() {
-        Document doc = buildDocument();
-        when(documentRepository.findAllByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of(doc)));
-
-        List<Document> result = documentService.getDocumentsByOnboardingId(ONBOARDING_ID)
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(ONBOARDING_ID, result.get(0).getOnboardingId());
-        verify(documentRepository).findAllByOnboardingId(ONBOARDING_ID);
-    }
-
-    @Test
-    void getDocumentsByOnboardingId_shouldReturnEmptyList() {
-        when(documentRepository.findAllByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of()));
-
-        List<Document> result = documentService.getDocumentsByOnboardingId(ONBOARDING_ID)
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-    }
-
     // ---- getDocumentById ----
 
     @Test
@@ -107,6 +78,31 @@ class DocumentServiceImplTest {
                 .thenReturn(Uni.createFrom().nullItem());
 
         var awaiter = documentService.getDocumentById(DOCUMENT_ID).await();
+
+        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
+    }
+
+    // ---- getDocumentByOnboardingId ----
+
+    @Test
+    void getDocumentByOnboardingId_shouldReturnDocument() {
+        Document doc = buildDocument();
+        when(documentRepository.findByOnboardingId(anyString()))
+                .thenReturn(Uni.createFrom().item(doc));
+
+        Document result = documentService.getDocumentByOnboardingId(DOCUMENT_ID)
+                .await().indefinitely();
+
+        assertNotNull(result);
+        assertEquals(ONBOARDING_ID, result.getOnboardingId());
+    }
+
+    @Test
+    void getDocumentByOnboarding_shouldThrowResourceNotFoundWhenDocumentIsNull() {
+        when(documentRepository.findByOnboardingId(anyString()))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        var awaiter = documentService.getDocumentByOnboardingId(DOCUMENT_ID).await();
 
         assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
     }
@@ -376,6 +372,67 @@ class DocumentServiceImplTest {
         assertNotNull(response);
     }
 
+    @Test
+    void handleContractDocument_shouldReturnExistingDocument_whenPreviousDocumentHasNoSigningStep() {
+        // Arrange
+        Document existingDoc = buildDocument();
+        existingDoc.setId(DOCUMENT_ID);
+        existingDoc.setSigningStep(null);
+
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(DocumentType.INSTITUTION)
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .productTitle("Product IO")
+                .build();
+
+        // Act
+        Document result = documentService.handleContractDocument(request, existingDoc)
+                .await().indefinitely();
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(existingDoc.getId(), result.getId());
+        // Persist should not be called when reusing existing document
+        verify(documentRepository, never()).persist(any(Document.class));
+    }
+
+    @Test
+    void handleContractDocument_shouldCreateNewDocument_whenPreviousDocumentHasSigningStep() throws IOException {
+        // Arrange
+        Document previousDoc = buildDocument();
+        previousDoc.setId("prev-id");
+        previousDoc.setSigningStep(1);
+
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .documentType(DocumentType.INSTITUTION)
+                .templatePath("/templates/template.pdf")
+                .templateVersion("1.0")
+                .productTitle("Product IO")
+                .build();
+
+        File tempPdf = createTempPdf();
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(tempPdf);
+
+        // Simulate persist returning the same instance passed to it (common Panache behaviour)
+        when(documentRepository.persist(any(Document.class)))
+                .thenAnswer(inv -> Uni.createFrom().item(inv.getArgument(0, Document.class)));
+
+        // Act
+        Document result = documentService.handleContractDocument(request, previousDoc)
+                .await().indefinitely();
+
+        // Assert
+        assertNotNull(result);
+        // The result must be a different document than the previous one (new record created)
+        assertNotEquals(previousDoc.getId(), result.getId());
+        verify(documentRepository).persist(any(Document.class));
+    }
+
     // ---- persistDocumentForImport ----
 
     @Test
@@ -602,5 +659,30 @@ class DocumentServiceImplTest {
                 .await().indefinitely();
 
         assertEquals(0L, result);
+    }
+
+
+    @Test
+    void deleteDocumentById_shouldReturnTrue_whenDocumentIsDeleted() {
+        when(documentRepository.deleteDocument(DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().item(true));
+
+        Boolean result = documentService.deleteDocumentById(DOCUMENT_ID)
+                .await().indefinitely();
+
+        assertTrue(result);
+        verify(documentRepository).deleteDocument(DOCUMENT_ID);
+    }
+
+    @Test
+    void deleteDocumentById_shouldReturnFalse_whenDocumentNotFound() {
+        when(documentRepository.deleteDocument(DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().item(false));
+
+        Boolean result = documentService.deleteDocumentById(DOCUMENT_ID)
+                .await().indefinitely();
+
+        assertFalse(result);
+        verify(documentRepository).deleteDocument(DOCUMENT_ID);
     }
 }

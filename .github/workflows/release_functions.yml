@@ -1,5 +1,5 @@
 name: Release Functions
-run-name: Release ${{ inputs.app }} (${{ inputs.target }})
+run-name: Release ${{ inputs.app }} (${{ inputs.env }} - ${{ inputs.target }})
 
 on:
   workflow_dispatch:
@@ -16,10 +16,10 @@ on:
         type: choice
         description: Target type
         options:
-          - selc
+          - ar
           - pnpg
         required: true
-        default: selc
+        default: ar
       app:
         type: choice
         description: Function name

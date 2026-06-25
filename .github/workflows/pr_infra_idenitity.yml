@@ -1,4 +1,4 @@
-name: Code Review - Infra Identity
+name: Code Review - Infra Bootstrap - Identity
 
 permissions:
   contents: read

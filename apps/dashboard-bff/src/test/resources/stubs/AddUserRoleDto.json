@@ -1,0 +1,13 @@
+{
+  "institutionId": "123e4567-e89b-12d3-a456-426614174000",
+  "product": {
+    "productId": "productId",
+    "role": "MANAGER",
+    "tokenId": null,
+    "productRoles": ["admin"]
+  },
+  "institutionDescription": "description",
+  "institutionRootName": "rootDescription",
+  "userMailUuid": null,
+  "hasToSendEmail": null
+}

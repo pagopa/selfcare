@@ -647,3 +647,43 @@ module "ai_search" {
   adgroup_admin_object_id      = module.key_vault.adgroup_admin_id
   adgroup_developers_object_id = module.key_vault.adgroup_developers_id
 }
+
+
+
+###############################################################################
+# API Management Service
+###############################################################################
+module "apim" {
+  source = "../_modules/apim"
+
+  prefix                           = local.prefix
+  env_short                        = local.env_short
+  location                         = local.location
+  tags                             = local.tags
+  dns_zone_prefix                  = local.dns_zone_prefix
+  external_domain                  = local.external_domain
+  cidr_subnet_apim                 = local.cidr_subnet_apim
+  apim_publisher_name              = "pagoPA SelfCare ${upper(local.env)}"
+  apim_sku                         = "Premium_1"
+  app_gateway_api_certificate_name = local.app_gateway_api_certificate_name
+  application_insight_enabled      = true
+}
+
+###############################################################################
+# User Managed Identity
+###############################################################################
+
+module "user_managed_identity" {
+  source = "../_modules/user_managed_identity"
+
+  location               = local.location
+  env_short              = local.env_short
+  domain                 = local.app_domain
+  tags                   = local.tags
+  product_storage_name   = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg     = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  documents_storage_name = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
+  documents_storage_rg   = "${local.prefix}-${local.env_short}-documents-storage-rg"
+  web_storage_name       = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  web_storage_rg         = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+}

@@ -209,7 +209,7 @@
     },
     "/v1/onboarding" : {
       "get" : {
-        "tags" : [ "Onboarding Controller" ],
+        "tags" : [ "Onboarding Controller", "external-v2" ],
         "summary" : "Retrieve paged onboardings with optional filters and sorting.",
         "description" : "The API retrieves paged onboarding using optional filter, order by descending creation date",
         "operationId" : "getOnboardingWithFilter",
@@ -272,7 +272,7 @@
           "name" : "status",
           "in" : "query",
           "schema" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/OnboardingStatus"
           }
         }, {
           "name" : "subunitCode",
@@ -1291,7 +1291,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "internal-v1" ],
+        "tags" : [ "internal-v1", "external-v2" ],
         "summary" : "Perform delete operation of an onboarding request",
         "description" : "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId" : "deleteOnboarding",
@@ -1336,6 +1336,15 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveRequest"
+              }
+            }
+          }
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1357,7 +1366,7 @@
     },
     "/v1/onboarding/{onboardingId}/complete" : {
       "put" : {
-        "tags" : [ "internal-v1" ],
+        "tags" : [ "internal-v1", "external-v2" ],
         "summary" : "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description" : "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId" : "completeOnboardingUsingPUT",
@@ -1581,10 +1590,10 @@
     },
     "/v1/onboarding/{onboardingId}/reject" : {
       "put" : {
-        "tags" : [ "Onboarding Controller" ],
+        "tags" : [ "Onboarding Controller", "external-v2" ],
         "summary" : "Perform reject operation of an onboarding request",
         "description" : "Perform reject operation of an onboarding request receiving onboarding id.Function change status to REJECT for an onboarding request that is not COMPLETED. ",
-        "operationId" : "delete",
+        "operationId" : "rejectOnboardingUsingPUT",
         "parameters" : [ {
           "name" : "onboardingId",
           "in" : "path",
@@ -1699,6 +1708,39 @@
             }
           }
         },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/onboarding/{onboardingId}/user" : {
+      "delete" : {
+        "tags" : [ "internal-v1", "Onboarding Controller" ],
+        "summary" : "Perform delete operation of a USER type onboarding request",
+        "description" : "Perform delete operation of a USER type onboarding request receiving onboarding id. It first deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
+        "operationId" : "deleteOnboardingUser",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1914,6 +1956,9 @@
           },
           "iban" : {
             "type" : "string"
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
@@ -1933,6 +1978,14 @@
             "type" : "string"
           },
           "role" : {
+            "type" : "string"
+          }
+        }
+      },
+      "ApproveRequest" : {
+        "type" : "object",
+        "properties" : {
+          "userUid" : {
             "type" : "string"
           }
         }
@@ -2183,6 +2236,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "isTest" : {
+            "type" : "boolean"
           }
         }
       },
@@ -2337,6 +2393,9 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "isTest" : {
+            "type" : "boolean"
           },
           "paymentServiceProvider" : {
             "$ref" : "#/components/schemas/PaymentServiceProviderRequest"
@@ -3002,6 +3061,9 @@
         "type" : "object",
         "properties" : {
           "reasonForReject" : {
+            "type" : "string"
+          },
+          "userUid" : {
             "type" : "string"
           }
         }

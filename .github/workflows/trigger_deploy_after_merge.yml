@@ -1,0 +1,150 @@
+name: Trigger Deploy After Merge
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  detect_changes:
+    permissions:
+      contents: read
+    runs-on: ubuntu-24.04
+    outputs:
+      onboarding: ${{ steps.filter.outputs.onboarding }}
+      onboarding_bff: ${{ steps.filter.outputs.onboarding_bff }}
+      auth: ${{ steps.filter.outputs.auth }}
+      iam: ${{ steps.filter.outputs.iam }}
+      product: ${{ steps.filter.outputs.product }}
+      product_cdc: ${{ steps.filter.outputs.product_cdc }}
+      webhook: ${{ steps.filter.outputs.webhook }}
+      registry_proxy: ${{ steps.filter.outputs.registry_proxy }}
+      document_ms: ${{ steps.filter.outputs.document_ms }}
+      dashboard_bff: ${{ steps.filter.outputs.dashboard_bff }}
+      institution_ms: ${{ steps.filter.outputs.institution_ms }}
+      institution_send_mail_scheduler: ${{ steps.filter.outputs.institution_send_mail_scheduler }}
+      delegation_cdc: ${{ steps.filter.outputs.delegation_cdc }}
+      user_ms: ${{ steps.filter.outputs.user_ms }}
+      user_group_ms: ${{ steps.filter.outputs.user_group_ms }}
+      user_cdc: ${{ steps.filter.outputs.user_cdc }}
+      user_group_cdc: ${{ steps.filter.outputs.user_group_cdc }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            onboarding:
+              - 'apps/onboarding-ms/**'
+              - 'apps/onboarding-cdc/**'
+              - 'apps/onboarding-functions/**'
+            onboarding_bff:
+              - 'apps/onboarding-bff/**'
+            auth:
+              - 'apps/auth/**'
+            iam:
+              - 'apps/iam/**'
+            product:
+              - 'apps/product/**'
+            product_cdc:
+              - 'apps/product-cdc/**'
+            webhook:
+              - 'apps/webhook/**'
+            registry_proxy:
+              - 'apps/registry-proxy/**'
+            document_ms:
+              - 'apps/document-ms/**'
+            dashboard_bff:
+              - 'apps/dashboard-bff/**'
+            institution_ms:
+              - 'apps/institution-ms/**'
+            institution_send_mail_scheduler:
+              - 'apps/institution-send-mail-scheduler/**'
+            delegation_cdc:
+              - 'apps/delegation-cdc/**'
+            user_ms:
+              - 'apps/user-ms/**'
+            user_group_ms:
+              - 'apps/user-group-ms/**'
+            user_cdc:
+              - 'apps/user-cdc/**'
+            user_group_cdc:
+              - 'apps/user-group-cdc/**'
+
+  trigger_release_push:
+    name: Trigger DEV Release
+    needs: detect_changes
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Trigger onboarding release
+        if: needs.detect_changes.outputs.onboarding == 'true'
+        run: gh workflow run "trigger_release_onboarding.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger onboarding-bff release
+        if: needs.detect_changes.outputs.onboarding_bff == 'true'
+        run: gh workflow run "trigger_release_onboarding_bff.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger auth release
+        if: needs.detect_changes.outputs.auth == 'true'
+        run: gh workflow run "trigger_release_auth.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger iam release
+        if: needs.detect_changes.outputs.iam == 'true'
+        run: gh workflow run "trigger_release_iam.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger product release
+        if: needs.detect_changes.outputs.product == 'true'
+        run: gh workflow run "trigger_release_product.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger product-cdc release
+        if: needs.detect_changes.outputs.product_cdc == 'true'
+        run: gh workflow run "trigger_release_product_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger webhook release
+        if: needs.detect_changes.outputs.webhook == 'true'
+        run: gh workflow run "trigger_release_webhook.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger registry-proxy release
+        if: needs.detect_changes.outputs.registry_proxy == 'true'
+        run: gh workflow run "trigger_release_registry_proxy.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger document-ms release
+        if: needs.detect_changes.outputs.document_ms == 'true'
+        run: gh workflow run "trigger_release_document_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger dashboard-bff release
+        if: needs.detect_changes.outputs.dashboard_bff == 'true'
+        run: gh workflow run "trigger_release_dashboard_bff.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger institution-ms release
+        if: needs.detect_changes.outputs.institution_ms == 'true'
+        run: gh workflow run "trigger_release_institution_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger institution-send-mail-scheduler release
+        if: needs.detect_changes.outputs.institution_send_mail_scheduler == 'true'
+        run: gh workflow run "trigger_release_institution_send_mail_scheduler.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger delegation-cdc release
+        if: needs.detect_changes.outputs.delegation_cdc == 'true'
+        run: gh workflow run "trigger_release_delegation_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-ms release
+        if: needs.detect_changes.outputs.user_ms == 'true'
+        run: gh workflow run "trigger_release_user_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-group-ms release
+        if: needs.detect_changes.outputs.user_group_ms == 'true'
+        run: gh workflow run "trigger_release_user_group_ms.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-cdc release
+        if: needs.detect_changes.outputs.user_cdc == 'true'
+        run: gh workflow run "trigger_release_user_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger user-group-cdc release
+        if: needs.detect_changes.outputs.user_group_cdc == 'true'
+        run: gh workflow run "trigger_release_user_group_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main

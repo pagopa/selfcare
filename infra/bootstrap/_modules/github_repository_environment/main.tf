@@ -1,4 +1,10 @@
+locals {
+  reviewers_teams = var.repository_environment.reviewers_teams != null ? var.repository_environment.reviewers_teams : []
+}
+
 data "github_organization_teams" "all" {
+  count = length(local.reviewers_teams) > 0 ? 1 : 0
+
   root_teams_only = true
   summary_only    = true
 }
@@ -8,13 +14,13 @@ resource "github_repository_environment" "this" {
   repository  = var.repository
 
   dynamic "reviewers" {
-    for_each = (var.repository_environment.reviewers_teams == null ? [] : [1])
+    for_each = var.repository_environment.reviewers_teams == null ? [] : [1]
     content {
-      teams = matchkeys(
-        data.github_organization_teams.all.teams[*].id,
-        data.github_organization_teams.all.teams[*].slug,
-        var.repository_environment.reviewers_teams
-      )
+      teams = length(local.reviewers_teams) > 0 ? matchkeys(
+        data.github_organization_teams.all[0].teams[*].id,
+        data.github_organization_teams.all[0].teams[*].slug,
+        local.reviewers_teams
+      ) : []
     }
   }
 
@@ -37,11 +43,11 @@ resource "github_repository_environment_deployment_policy" "this" {
 }
 
 resource "github_actions_environment_secret" "env_secrets" {
-  for_each        = var.env_secrets
-  repository      = var.repository
-  environment     = github_repository_environment.this.environment
-  secret_name     = each.key
-  plaintext_value = each.value
+  for_each    = var.env_secrets
+  repository  = var.repository
+  environment = github_repository_environment.this.environment
+  secret_name = each.key
+  value       = each.value
 }
 
 data "azurerm_key_vault_secret" "kv_secrets" {
@@ -51,9 +57,9 @@ data "azurerm_key_vault_secret" "kv_secrets" {
 }
 
 resource "github_actions_environment_secret" "kv_secrets" {
-  for_each        = var.kv_secrets
-  repository      = var.repository
-  environment     = github_repository_environment.this.environment
-  secret_name     = each.key
-  plaintext_value = data.azurerm_key_vault_secret.kv_secrets[each.key].value
+  for_each    = var.kv_secrets
+  repository  = var.repository
+  environment = github_repository_environment.this.environment
+  secret_name = each.key
+  value       = data.azurerm_key_vault_secret.kv_secrets[each.key].value
 }

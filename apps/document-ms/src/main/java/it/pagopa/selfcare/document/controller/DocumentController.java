@@ -49,17 +49,15 @@ public class DocumentController {
      */
 
     @Operation(
-            summary = "Retrieves the documents for a given onboarding",
-            description = "Fetches a list of documents associated with the specified onboarding ID."
+            summary = "Retrieves the latest document for a given onboarding",
+            description = "Fetches the most recent document associated with the specified onboarding ID by filtering for type Institution and User"
     )
     @GET
     @Path("/onboarding/{onboardingId}")
-    public Uni<List<DocumentResponse>> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
-        log.info("Getting documents for onboardingId: {}", sanitize(onboardingId));
-        return documentService.getDocumentsByOnboardingId(onboardingId)
-                .map(documents -> documents.stream()
-                        .map(documentMapper::toResponse)
-                        .toList());
+    public Uni<DocumentResponse> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
+        log.info("Getting document for onboardingId: {}", sanitize(onboardingId));
+        return documentService.getDocumentByOnboardingId(onboardingId)
+                .map(documentMapper::toResponse);
     }
 
     @Operation(

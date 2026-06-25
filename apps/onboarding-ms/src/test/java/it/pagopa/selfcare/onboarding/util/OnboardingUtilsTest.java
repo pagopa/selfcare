@@ -3,8 +3,8 @@ package it.pagopa.selfcare.onboarding.util;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.test.InjectMock;
@@ -12,13 +12,18 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.constants.CustomError;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.PayloadTooLargeException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
+import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -27,10 +32,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 
 @QuarkusTest
@@ -40,8 +43,7 @@ class OnboardingUtilsTest {
     OnboardingUtils onboardingUtils;
 
     @InjectMock
-    @RestClient
-    UoApi uoApi;
+    RegistryProxyService registryProxyService;
 
     @Test
     void getUoFromRecipientCode_shouldGetData() {
@@ -49,7 +51,7 @@ class OnboardingUtilsTest {
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIpa");
 
-        when(uoApi.findByUnicodeUsingGET1(anyString(), any()))
+        when(registryProxyService.findUoByRecipientCode(anyString(), isNull()))
                 .thenReturn(Uni.createFrom().item(uoResource));
 
         UniAssertSubscriber<UOResource> subscriber = onboardingUtils.getUoFromRecipientCode(recipientCode)
@@ -62,7 +64,7 @@ class OnboardingUtilsTest {
     void getUoFromRecipientCode_shouldThrowResourceNotFound() {
         final String recipientCode = "recipientCode";
 
-        when(uoApi.findByUnicodeUsingGET1(anyString(), any()))
+        when(registryProxyService.findUoByRecipientCode(anyString(), isNull()))
                 .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.Status.NOT_FOUND)));
 
         UniAssertSubscriber<UOResource> subscriber = onboardingUtils.getUoFromRecipientCode(recipientCode)
@@ -112,6 +114,7 @@ class OnboardingUtilsTest {
         onboarding.setId(UUID.randomUUID().toString());
         onboarding.setInstitution(new it.pagopa.selfcare.onboarding.entity.Institution());
         onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        onboarding.setStatus(OnboardingStatus.PENDING_IN_REVIEW);
 
         Product product = new Product();
         product.setId("productId");
@@ -122,7 +125,9 @@ class OnboardingUtilsTest {
         Map<String, ContractTemplate> contractMappings = new HashMap<>();
         contractMappings.put("PA", contractTemplate);
         product.setInstitutionContractMappings(contractMappings);
-
+        SigningConfiguration signingConfiguration = new SigningConfiguration();
+        signingConfiguration.setSkipSignerIdentityCheck(true);
+        product.setSigningConfiguration(signingConfiguration);
 
 
         File file = new File("file");
@@ -132,7 +137,7 @@ class OnboardingUtilsTest {
                 .build();
 
         Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> result = onboardingUtils.buildUploadSignedContractRequest(
-                onboarding, false, formItem, product, DocumentType.INSTITUTION, Collections.emptyList());
+                onboarding, false, formItem, product, DocumentType.INSTITUTION, Collections.emptyList(), 1);
 
         UniAssertSubscriber<DocumentContentControllerApi.UploadSignedContractMultipartForm> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
         DocumentContentControllerApi.UploadSignedContractMultipartForm form = subscriber.getItem();
@@ -140,7 +145,58 @@ class OnboardingUtilsTest {
         assertNotNull(form);
         assertFalse(form.skipSignatureVerification);
         assertEquals(formItem.getFile(), form._file);
+        assertEquals(1, form.signingStep);
         assertNotNull(form.request);
         assertEquals(onboarding.getId(), form.request.getOnboardingId());
+    }
+
+    @Test
+    void ensureSuccessfulDocumentResponse_shouldCompleteWhenResponseIs2xx() {
+        //given
+        Response response = Response.status(Response.Status.OK).build();
+
+        //when
+        UniAssertSubscriber<Void> subscriber = onboardingUtils
+                .ensureSuccessfulDocumentResponse(Uni.createFrom().item(response), "upload signed contract", "onb-123")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    void ensureSuccessfulDocumentResponse_shouldThrowInvalidRequestExceptionWhenProblemJsonReturned() {
+        //given
+        Response response = Response.status(Response.Status.BAD_REQUEST)
+                .entity("{\"title\":\"002-1003\",\"detail\":\"Only CAdES allowed\"}")
+                .build();
+
+        //when
+        UniAssertSubscriber<Void> subscriber = onboardingUtils
+                .ensureSuccessfulDocumentResponse(Uni.createFrom().item(response), "upload signed contract", "onb-123")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.assertFailedWith(InvalidRequestException.class);
+        Throwable failure = subscriber.getFailure();
+        assertEquals("Only CAdES allowed", failure.getMessage());
+        assertEquals("002-1003", ((InvalidRequestException) failure).getCode());
+    }
+
+    @Test
+    void givenResponseWith413_whenEnsureSuccessfulDocumentResponse_thenThrowPayloadTooLargeException() {
+        // given
+        Response response = Response.status(Response.Status.REQUEST_ENTITY_TOO_LARGE).build();
+
+        // when
+        UniAssertSubscriber<Void> subscriber = onboardingUtils
+                .ensureSuccessfulDocumentResponse(Uni.createFrom().item(response), "upload signed contract", "onb-123")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        subscriber.assertFailedWith(PayloadTooLargeException.class);
+        Throwable failure = subscriber.getFailure();
+        assertEquals("Uploaded file exceeds allowed size", failure.getMessage());
+        assertEquals("0140", ((PayloadTooLargeException) failure).getCode());
     }
 }

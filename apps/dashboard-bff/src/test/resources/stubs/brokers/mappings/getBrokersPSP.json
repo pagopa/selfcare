@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/brokerspsp?limit=10&page=1"
+  },
+  "response": {
+    "status": "200",
+    "jsonBody": {
+      "brokers_psp": [
+        {
+          "broker_psp_code": "code",
+          "description": "description",
+          "enabled": true
+        }
+      ]
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

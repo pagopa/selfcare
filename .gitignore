@@ -8,6 +8,8 @@ target/
 ### FILES ###
 **/*.env
 !test**.env
+!/.github/workflows/env/
+!/.github/workflows/env/**
 
 ### STS ###
 .apt_generated
@@ -25,6 +27,32 @@ target/
 **/*.iml
 *.ipr
 .claude
+
+# User-specific stuff
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+# AWS User-specific
+.idea/**/aws.xml
+
+# Generated files
+.idea/**/contentModel.xml
+
+# Sensitive or high-churn files
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+# Gradle
+.idea/**/gradle.xml
+.idea/**/libraries
 
 ### NetBeans ###
 /nbproject/private/
@@ -54,6 +82,9 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
+# Ignore CLI configuration files
+.terraformrc
+terraform.rc
 
 infra/cert/env/bin
 infra/cert/env/lib
@@ -115,6 +146,14 @@ bin/
 lib/
 include/
 
+# dotenv environment variable files
+.env
+.env.dev.local
+.env.uat.local
+.env.prod.local
+.env.local
+
+
 ### Log & Temp Files ###
 *.log
 *.tmp
@@ -135,3 +174,10 @@ crash.log
 **/*.p12
 **/*.pfx
 **/secrets.json
+
+### OPEX ###
+!.opex/**
+
+.nx/cache
+.nx/workspace-data
+.nx/polygraph

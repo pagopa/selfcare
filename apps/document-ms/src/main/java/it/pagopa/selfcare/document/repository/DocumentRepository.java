@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.repository;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.entity.Document;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -15,12 +16,17 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     private static final List<String> CONTRACT_TYPES = List.of(INSTITUTION.name(), USER.name());
     private static final String ONBOARDING_AND_TYPES_FILTER = "onboardingId = ?1 and type in ?2";
-    private static final String ONBOARDING_ID = "onboardingId";
 
     public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
                 contractSigned, contractFilename, LocalDateTime.now())
                 .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
+    }
+
+    public Uni<Long> updateContractFilesById(String documentId, String contractSigned, String contractFilename, Integer signingStep) {
+        return update("contractSigned = ?1 and contractFilename = ?2 and signingStep = ?3 and updatedAt = ?4",
+                contractSigned, contractFilename, signingStep, LocalDateTime.now())
+                .where("_id = ?1", documentId);
     }
 
     public Uni<Document> findAttachment(String onboardingId, String type, String name) {
@@ -33,17 +39,12 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
     }
 
     public Uni<Document> findByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES)
-                .firstResult();
-    }
-
-    public Uni<Document> findDocumentInstitutionByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_AND_TYPES_FILTER, onboardingId, List.of(INSTITUTION.name()))
-                .firstResult();
-    }
-
-    public Uni<List<Document>> findAllByOnboardingId(String onboardingId) {
-        return find(ONBOARDING_ID, onboardingId).list();
+    return find(
+            ONBOARDING_AND_TYPES_FILTER,
+            Sort.by("createdAt").descending(),
+            onboardingId,
+            CONTRACT_TYPES)
+        .firstResult();
     }
 
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
@@ -54,6 +55,10 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
     public Uni<Long> updateUpdatedAt(String onboardingId, LocalDateTime updatedAt) {
         return update("updatedAt = ?1", updatedAt)
                 .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);
+    }
+
+    public Uni<Boolean> deleteDocument(String documentId) {
+        return deleteById(documentId);
     }
 
 }

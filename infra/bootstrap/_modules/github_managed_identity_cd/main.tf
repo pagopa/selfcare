@@ -10,27 +10,11 @@ module "identity_cd" {
   github_federations = var.cd_github_federations
 
   cd_rbac_roles = {
-    subscription_roles = var.environment_cd_roles.subscription
-    resource_groups    = var.environment_cd_roles.resource_groups
-  }
-
-  tags = var.tags
-}
-
-module "identity_cd_ms" {
-  source = "github.com/pagopa/terraform-azurerm-v4//github_federated_identity?ref=v9.6.1"
-
-  prefix    = var.prefix
-  env_short = var.env_short
-  domain    = "ms"
-
-  identity_role = "cd"
-
-  github_federations = var.cd_github_federations_ms
-
-  cd_rbac_roles = {
-    subscription_roles = concat(var.environment_cd_roles_ms.subscription, ["${var.app} ${var.env} ContainerApp Jobs Writer"])
-    resource_groups    = var.environment_cd_roles_ms.resource_groups
+    subscription_roles = concat(var.environment_cd_roles.subscription, ["${var.app} ${var.env} ContainerApp Jobs Writer"])
+    resource_groups = merge(var.environment_cd_roles.resource_groups,
+      {
+        "selc-${var.env_short}-checkout-fe-rg" = ["Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"]
+    })
   }
 
   tags = var.tags
@@ -40,10 +24,11 @@ module "identity_cd_ms" {
   ]
 }
 
+
 resource "azurerm_key_vault_access_policy" "key_vault_access_policy_identity_cd" {
   key_vault_id = var.key_vault_id
   tenant_id    = var.tenant_id
-  object_id    = module.identity_cd_ms.identity_principal_id
+  object_id    = module.identity_cd.identity_principal_id
 
   secret_permissions = [
     "Get",
@@ -61,7 +46,7 @@ resource "azurerm_key_vault_access_policy" "key_vault_access_policy_identity_cd"
 resource "azurerm_key_vault_access_policy" "key_vault_access_policy_pnpg_identity_cd" {
   key_vault_id = var.key_vault_pnpg_id
   tenant_id    = var.tenant_id
-  object_id    = module.identity_cd_ms.identity_principal_id
+  object_id    = module.identity_cd.identity_principal_id
 
   secret_permissions = [
     "Get",
@@ -123,7 +108,11 @@ resource "azurerm_role_definition" "container_apps_jobs_writer" {
 
   permissions {
     actions = [
-      "Microsoft.Authorization/roleDefinitions/write"
+      "Microsoft.Authorization/roleDefinitions/write",
+      "microsoft.app/managedEnvironments/daprComponents/read",
+      "microsoft.app/managedEnvironments/daprComponents/write",
+      "microsoft.app/managedEnvironments/daprComponents/delete",
+      "microsoft.app/managedEnvironments/daprComponents/listSecrets/action"
     ]
   }
 

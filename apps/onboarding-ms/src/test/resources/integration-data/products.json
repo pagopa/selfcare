@@ -42,7 +42,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -55,7 +54,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -68,7 +66,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -81,7 +78,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard-async",
           "dashboard-aggregator"
@@ -95,7 +91,6 @@
         ]
       },
       "ADMIN_EA": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -170,7 +165,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -183,7 +177,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -196,7 +189,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -209,7 +201,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -308,7 +299,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "ADMIN_EA": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -322,7 +312,6 @@
         ]
       },
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -336,7 +325,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -350,7 +338,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -364,7 +351,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -381,7 +367,6 @@
     "roleMappingsByInstitutionType": {
       "PSP": {
         "DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -394,7 +379,6 @@
           ]
         },
         "MANAGER": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -407,7 +391,6 @@
           ]
         },
         "OPERATOR": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard"
           ],
@@ -421,7 +404,6 @@
           ]
         },
         "SUB_DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard-async"
           ],
@@ -434,7 +416,6 @@
           ]
         },
         "ADMIN_EA": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -449,7 +430,6 @@
       },
       "PA": {
         "ADMIN_EA": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -462,7 +442,6 @@
           ]
         },
         "DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -475,7 +454,6 @@
           ]
         },
         "MANAGER": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -488,7 +466,6 @@
           ]
         },
         "OPERATOR": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard"
           ],
@@ -502,7 +479,6 @@
           ]
         },
         "SUB_DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard-async"
           ],
@@ -517,7 +493,6 @@
       },
       "GSP": {
         "ADMIN_EA": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -530,7 +505,6 @@
           ]
         },
         "DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -543,7 +517,6 @@
           ]
         },
         "MANAGER": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -556,7 +529,6 @@
           ]
         },
         "OPERATOR": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard"
           ],
@@ -570,7 +542,6 @@
           ]
         },
         "SUB_DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard-async"
           ],
@@ -585,7 +556,6 @@
       },
       "GPU": {
         "ADMIN_EA": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -598,7 +568,6 @@
           ]
         },
         "DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -611,7 +580,6 @@
           ]
         },
         "MANAGER": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -624,7 +592,6 @@
           ]
         },
         "OPERATOR": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard"
           ],
@@ -638,7 +605,6 @@
           ]
         },
         "SUB_DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard-async"
           ],
@@ -653,7 +619,6 @@
       },
       "PRV": {
         "ADMIN_EA": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -666,7 +631,6 @@
           ]
         },
         "DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -679,7 +643,6 @@
           ]
         },
         "MANAGER": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "onboarding"
           ],
@@ -692,7 +655,6 @@
           ]
         },
         "OPERATOR": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard"
           ],
@@ -706,7 +668,6 @@
           ]
         },
         "SUB_DELEGATE": {
-          "multiroleAllowed": false,
           "phasesAdditionAllowed": [
             "dashboard-async",
             "dashboard-aggregator"
@@ -778,7 +739,6 @@
     "modifiedBy": "0cda0324-056c-4651-8815-2ee3f17712f1",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -792,7 +752,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "skipUserCreation": true,
         "phasesAdditionAllowed": [
           "onboarding"
@@ -807,7 +766,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -821,7 +779,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -872,7 +829,6 @@
     "roleManagementURL": "string",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -885,7 +841,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -898,7 +853,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -911,7 +865,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -954,7 +907,6 @@
     "roleManagementURL": "string",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -967,7 +919,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -980,7 +931,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -993,7 +943,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1054,7 +1003,6 @@
     "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1067,7 +1015,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1080,7 +1027,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1098,7 +1044,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard-async"
         ],
@@ -1154,7 +1099,6 @@
     "parentId": "prod-io",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1167,7 +1111,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1180,7 +1123,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1251,7 +1193,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1264,7 +1205,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1277,7 +1217,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1290,7 +1229,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1334,7 +1272,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1378,7 +1315,6 @@
     "roleManagementURL": "string",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1425,7 +1361,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1491,7 +1426,6 @@
     "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1504,7 +1438,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1517,7 +1450,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1530,7 +1462,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1579,7 +1510,6 @@
     "logoBgColor": "#0066CC",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1592,7 +1522,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1605,7 +1534,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1618,7 +1546,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1683,7 +1610,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1696,7 +1622,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1709,7 +1634,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1722,7 +1646,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1767,7 +1690,6 @@
     "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1780,7 +1702,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1793,7 +1714,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1806,7 +1726,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1850,7 +1769,6 @@
     "logoBgColor": "#0B3EE3",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1863,7 +1781,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1876,7 +1793,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1937,7 +1853,6 @@
     "modifiedBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1950,7 +1865,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -1963,7 +1877,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -1981,7 +1894,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2035,7 +1947,6 @@
     "logoBgColor": "#0066CC",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2048,7 +1959,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2061,7 +1971,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2079,7 +1988,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2122,7 +2030,6 @@
     "logoBgColor": "#0066CC",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2135,7 +2042,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2148,7 +2054,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2161,7 +2066,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2204,7 +2108,6 @@
     "logoBgColor": "#000000",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2217,7 +2120,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2266,7 +2168,6 @@
     "logoBgColor": "#000000",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2279,7 +2180,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2292,7 +2192,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2315,7 +2214,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2363,7 +2261,6 @@
     "logoBgColor": "test",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2376,7 +2273,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2389,7 +2285,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2412,7 +2307,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2461,7 +2355,6 @@
     "logoBgColor": "#000000",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2474,7 +2367,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2487,7 +2379,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2510,7 +2401,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2565,7 +2455,6 @@
     "logoBgColor": "#0066CC",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2578,7 +2467,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2591,7 +2479,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2604,7 +2491,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2649,7 +2535,6 @@
     "logoBgColor": "#0073E6",
     "roleMappings": {
       "DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2662,7 +2547,6 @@
         ]
       },
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2675,7 +2559,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2688,7 +2571,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2727,7 +2609,6 @@
     "logoBgColor": "#0B3EE3",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2740,7 +2621,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2753,7 +2633,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "dashboard"
         ],
@@ -2798,7 +2677,6 @@
     "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
     "roleMappings": {
       "OPERATOR": {
-        "multiroleAllowed": false,
         "phasesAdditionAllowed": [
           "onboarding"
         ],
@@ -2815,5 +2693,129 @@
     "title": "Registro dei beni",
     "urlBO": "https://registrodeibeni.dev.cstar.pagopa.it/registro-dei-beni/auth#token=<IdentityToken>",
     "urlPublic": "https://www.pagopa.it/it/prodotti-e-servizi/centro-stella-pagamenti-elettronici"
+  },
+  {
+    "alias": "prod-ced",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
+    "backOfficeEnvironmentConfigurations": {
+      "Locale": {
+        "identityTokenAudience": "locale",
+        "url": "http://localhost:3999/idp/selfcare/resolve-identity?id=<IdentityToken>;env=locale"
+      }
+    },
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2021-12-15T15:54:55.190Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "delegable": false,
+    "depictImageUrl": "https://selcdcheckoutsa.z6.web.core.windows.net/resources/products/default/depict-image.jpeg",
+    "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
+    "enabled": true,
+    "id": "prod-ced",
+    "identityTokenAudience": "api.io.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        "contractTemplateVersion": "2.4.5",
+        "attachments": []
+      }
+    },
+    "institutionAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        "contractTemplateVersion": "2.4.5",
+        "attachments": []
+      }
+    },
+    "invoiceable": true,
+    "logo": "https://selcdcheckoutsa.z6.web.core.windows.net/resources/products/prod-io/logo.svg",
+    "logoBgColor": "#0B3EE3",
+    "modifiedAt": "2022-11-18T17:59:27.744Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "DELEGATE": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Operatore",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "phasesAdditionAllowed": [
+          "dashboard-async",
+          "dashboard-aggregator"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "ADMIN_EA": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "IO",
+    "urlBO": "https://api.io.selfcare.pagopa.it/idp/selfcare/resolve-identity?id=<IdentityToken>",
+    "urlPublic": "https://io.italia.it/",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "userAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "signingConfiguration": {
+      "requiredSignatures": 2
+    }
   }
 ]

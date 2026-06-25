@@ -43,6 +43,23 @@ jobs:
           calculatedSha=$(git rev-parse --short ${{ github.sha }})
           echo "short_sha=sha-$calculatedSha" >> $GITHUB_OUTPUT
 
+      - name: Wait for Docker image to be available
+        env:
+          IMAGE_TAG: ${{ steps.setsha.outputs.short_sha }}
+        run: |
+          IMAGE="ghcr.io/pagopa/selfcare-registry-proxy-ms:${IMAGE_TAG}"
+          echo "Waiting for image: ${IMAGE}"
+          for i in $(seq 1 30); do
+            if docker manifest inspect "${IMAGE}" > /dev/null 2>&1; then
+              echo "Image found!"
+              exit 0
+            fi
+            echo "Attempt ${i}/30 - Image not found yet, waiting 60s..."
+            sleep 60
+          done
+          echo "::error::Image ${IMAGE} not found after 30 minutes"
+          exit 1
+
   release_dev_ar:
     uses: ./.github/workflows/call_release_infra.yml
     name: '[Dev] Resources Infra Release (AR)'

@@ -48,7 +48,7 @@ public class OnboardingValidationHelper {
             Pattern.compile("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
 
     @Inject
-    ProductService productService;
+    ProductService productAzureService;
 
     @RestClient
     @Inject
@@ -87,16 +87,14 @@ public class OnboardingValidationHelper {
         if (Objects.nonNull(productParentId)) {
             log.info("Verifying already onboarding for institution: {}, productId: {}, parentId: {}",
                     institution.getDescription(), productId, productParentId);
-            return checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productId)
-                    .onItem().transformToUni(ignored ->
-                            checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productParentId)
-                                    .onItem().transformToUni(result -> Uni.createFrom().failure(
-                                            new InvalidRequestException(
-                                                    String.format(PARENT_PRODUCT_NOT_ONBOARDED.getMessage(),
-                                                            productParentId, institution.getTaxCode()),
-                                                    PARENT_PRODUCT_NOT_ONBOARDED.getCode())))
-                                    .onFailure(ResourceConflictException.class)
-                                    .recoverWithNull().replaceWith(Uni.createFrom().item(true)));
+            return checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productParentId)
+                    .onItem().transformToUni(result -> Uni.createFrom().<Boolean>failure(
+                            new InvalidRequestException(
+                                    String.format(PARENT_PRODUCT_NOT_ONBOARDED.getMessage(),
+                                            productParentId, institution.getTaxCode()),
+                                    PARENT_PRODUCT_NOT_ONBOARDED.getCode())))
+                    .onFailure(ResourceConflictException.class)
+                    .recoverWithUni(ignored -> checkIfAlreadyOnboardingAndValidateAllowedProductList(institution, productId));
         } else {
             log.info("Verifying already onboarding for institution: {}, productId: {}",
                     institution.getDescription(), productId);
@@ -324,8 +322,8 @@ public class OnboardingValidationHelper {
     }
 
     private boolean validateByProductOrInstitutionTaxCode(String productId, String taxCode) {
-        return productService.isProductEnabled(productId)
-                || productService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
+        return productAzureService.isProductEnabled(productId)
+                || productAzureService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
     }
 
     record QueryParams(String taxCode, String originId) {}
@@ -383,5 +381,4 @@ public class OnboardingValidationHelper {
         return onboarding;
     }
 }
-
 

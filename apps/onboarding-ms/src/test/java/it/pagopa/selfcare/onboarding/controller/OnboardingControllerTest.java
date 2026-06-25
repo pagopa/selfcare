@@ -461,8 +461,9 @@ class OnboardingControllerTest {
         String onboardingId = "actual-onboarding-id";
         ReasonRequest reasonRequest = new ReasonRequest();
         reasonRequest.setReasonForReject("string");
+        reasonRequest.setUserUid("uuid");
 
-        when(onboardingService.rejectOnboarding(onboardingId, "string"))
+        when(onboardingService.rejectOnboarding(onboardingId, reasonRequest))
                 .thenReturn(Uni.createFrom().item(1L));
 
         given()
@@ -476,7 +477,7 @@ class OnboardingControllerTest {
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .rejectOnboarding(expectedId.capture(), eq("string"));
+                .rejectOnboarding(expectedId.capture(), eq(reasonRequest));
         assertEquals(expectedId.getValue(), onboardingId);
     }
 
@@ -486,8 +487,9 @@ class OnboardingControllerTest {
         String onboardingId = "actual-onboarding-id";
         ReasonRequest reasonRequest = new ReasonRequest();
         reasonRequest.setReasonForReject("string");
+        reasonRequest.setUserUid("uuid");
 
-        when(onboardingService.rejectOnboarding(onboardingId, "string"))
+        when(onboardingService.rejectOnboarding(onboardingId, reasonRequest))
                 .thenThrow(InvalidRequestException.class);
 
         given()
@@ -501,7 +503,7 @@ class OnboardingControllerTest {
 
         ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
         verify(onboardingService, times(1))
-                .rejectOnboarding(expectedId.capture(), eq("string"));
+                .rejectOnboarding(expectedId.capture(), eq(reasonRequest));
         assertEquals(expectedId.getValue(), onboardingId);
     }
 
@@ -515,7 +517,7 @@ class OnboardingControllerTest {
                 .subunitCode("subunitCode")
                 .from("2023-12-01")
                 .to("2023-12-31")
-                .status("ACTIVE")
+                .status(OnboardingStatus.COMPLETED)
                 .build();
         when(onboardingService.onboardingGet(filters))
                 .thenReturn(Uni.createFrom().item(response));
@@ -588,17 +590,22 @@ class OnboardingControllerTest {
     @TestSecurity(user = "userJwt")
     void approve() {
         OnboardingGet onboardingGet = dummyOnboardingGet();
-        when(onboardingService.approve(onboardingGet.getId()))
+        ApproveRequest approveRequest = new ApproveRequest();
+        approveRequest.setUserUid("user-uid-test");
+
+        when(onboardingService.approve(onboardingGet.getId(), approveRequest))
                 .thenReturn(Uni.createFrom().item(onboardingGet));
 
         given()
                 .when()
+                .body(approveRequest)
+                .contentType(ContentType.JSON)
                 .put("/{onboardingId}/approve", onboardingGet.getId())
                 .then()
                 .statusCode(200);
 
         verify(onboardingService, times(1))
-                .approve(onboardingGet.getId());
+                .approve(onboardingGet.getId(), approveRequest);
     }
 
     @Test
@@ -1108,7 +1115,7 @@ class OnboardingControllerTest {
         queryParameterMap.put("taxCode", "taxCode");
         queryParameterMap.put("from", "2023-12-01");
         queryParameterMap.put("to", "2023-12-31");
-        queryParameterMap.put("status", "ACTIVE");
+        queryParameterMap.put("status", "COMPLETED");
         return queryParameterMap;
     }
 
@@ -1134,7 +1141,7 @@ class OnboardingControllerTest {
     private static OnboardingGet dummyOnboardingGet() {
         OnboardingGet onboarding = new OnboardingGet();
         onboarding.setId("id");
-        onboarding.setStatus("ACTIVE");
+        onboarding.setStatus("COMPLETED");
         onboarding.setProductId("prod-io");
         InstitutionResponse institutionResponse = new InstitutionResponse();
         institutionResponse.setTaxCode("taxCode");
@@ -1704,6 +1711,189 @@ class OnboardingControllerTest {
                 .uploadContractSigned(idCaptor.capture(), formItemCaptor.capture());
         assertEquals(idCaptor.getValue(), onboardingId);
         assertNotNull(formItemCaptor.getValue());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void complete_whenOnboardingStatusFailed_shouldReturnBadRequest() {
+        File testFile = new File("src/test/resources/application.properties");
+        String onboardingId = "actual-onboarding-id";
+
+        when(onboardingService.complete(any(), any()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Onboarding in FAILED status")));
+
+        given()
+                .when()
+                .pathParam("onboardingId", onboardingId)
+                .contentType(ContentType.MULTIPART)
+                .multiPart("contract", testFile)
+                .put("/{onboardingId}/complete")
+                .then()
+                .statusCode(400);
+
+        verify(onboardingService, times(1))
+                .complete(eq(onboardingId), any());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteOnboardingUserOK() {
+        final String onboardingId = "actual-onboarding-id";
+        final String userId = "actual-user-id";
+        when(onboardingService.deleteOnboardingUser(onboardingId, userId))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("onboardingId", onboardingId)
+                .pathParam("userId", userId)
+                .delete("/{onboardingId}/user/{userId}")
+                .then()
+                .statusCode(204);
+
+        ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> expectedUserId = ArgumentCaptor.forClass(String.class);
+        verify(onboardingService, times(1))
+                .deleteOnboardingUser(expectedId.capture(), expectedUserId.capture());
+        assertEquals(onboardingId, expectedId.getValue());
+        assertEquals(userId, expectedUserId.getValue());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteOnboardingUserNotFound() {
+        final String onboardingId = "actual-onboarding-id";
+        final String userId = "actual-user-id";
+        when(onboardingService.deleteOnboardingUser(onboardingId, userId))
+                .thenThrow(ResourceNotFoundException.class);
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("onboardingId", onboardingId)
+                .pathParam("userId", userId)
+                .delete("/{onboardingId}/user/{userId}")
+                .then()
+                .statusCode(404);
+
+        ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> expectedUserId = ArgumentCaptor.forClass(String.class);
+        verify(onboardingService, times(1))
+                .deleteOnboardingUser(expectedId.capture(), expectedUserId.capture());
+        assertEquals(onboardingId, expectedId.getValue());
+        assertEquals(userId, expectedUserId.getValue());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void deleteOnboardingUserInvalidRequest() {
+        final String onboardingId = "actual-onboarding-id";
+        final String userId = "actual-user-id";
+        when(onboardingService.deleteOnboardingUser(onboardingId, userId))
+                .thenThrow(InvalidRequestException.class);
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .pathParam("onboardingId", onboardingId)
+                .pathParam("userId", userId)
+                .delete("/{onboardingId}/user/{userId}")
+                .then()
+                .statusCode(400);
+
+        ArgumentCaptor<String> expectedId = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> expectedUserId = ArgumentCaptor.forClass(String.class);
+        verify(onboardingService, times(1))
+                .deleteOnboardingUser(expectedId.capture(), expectedUserId.capture());
+        assertEquals(onboardingId, expectedId.getValue());
+        assertEquals(userId, expectedUserId.getValue());
+    }
+
+    // -------------------------------------------------------------------------
+    // triggerDocumentGate (PUT /{onboardingId})
+    // -------------------------------------------------------------------------
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn204WhenSuccess() {
+        final String onboardingId = "test-onboarding-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(204);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn404WhenOnboardingNotFound() {
+        final String onboardingId = "non-existing-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().failure(
+                        new ResourceNotFoundException("Onboarding with id non-existing-id not found", "0000")));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(404);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn400WhenInvalidRequest() {
+        final String onboardingId = "test-onboarding-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().failure(
+                        new InvalidRequestException("Missing mandatory documents for onboarding")));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(400);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn204WhenIdempotent() {
+        final String onboardingId = "already-advanced-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(204);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldReturn401WhenNotAuthenticated() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", "some-id")
+                .then()
+                .statusCode(401);
+
+        verifyNoInteractions(onboardingService);
     }
 
 }

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "12345",
+    "institutionId": "instutionId",
+    "brokerId": "brokerId",
+    "productId": "productId",
+    "institutionName": "InstitutionName",
+    "institutionRootName": "InstitutionRoot",
+    "brokerName": "Broker",
+    "type": "AOO"
+  }
+]

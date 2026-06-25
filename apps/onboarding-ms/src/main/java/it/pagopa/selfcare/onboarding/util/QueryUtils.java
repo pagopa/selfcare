@@ -7,6 +7,8 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.controller.request.ApproveRequest;
+import it.pagopa.selfcare.onboarding.controller.request.ReasonRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import java.time.LocalDate;
@@ -85,7 +87,7 @@ public class QueryUtils {
     Optional.ofNullable(filters.getProductId()).ifPresent(value -> queryParameterMap.put(PRODUCT, value));
     Optional.ofNullable(filters.getTaxCode()).ifPresent(value -> queryParameterMap.put(INSTITUTION_TAX_CODE, value));
     Optional.ofNullable(filters.getSubunitCode()).ifPresent(value -> queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, value));
-    Optional.ofNullable(filters.getStatus()).ifPresent(value -> queryParameterMap.put(STATUS, value));
+    Optional.ofNullable(filters.getStatus()).ifPresent(value -> queryParameterMap.put(STATUS, value.name()));
     Optional.ofNullable(filters.getFrom()).ifPresent(value -> queryParameterMap.put(FROM, value));
     Optional.ofNullable(filters.getTo()).ifPresent(value -> queryParameterMap.put(TO, value));
     Optional.ofNullable(filters.getInstitutionId()).ifPresent(value -> queryParameterMap.put(INSTITUTION_ID, value));
@@ -99,7 +101,7 @@ public class QueryUtils {
   public static Map<String, Object> createMapForInstitutionOnboardingsQueryParameter(String taxCode, String subunitCode, String origin, String originId, OnboardingStatus status, String productId) {
     Map<String, Object> queryParameterMap = new HashMap<>();
     getOptionalForNullableAndEmpty(taxCode).ifPresent(value -> queryParameterMap.put(INSTITUTION_TAX_CODE, value));
-    queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, subunitCode);
+    getOptionalForNullableAndEmpty(subunitCode).ifPresent(value -> queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, subunitCode));
     getOptionalForNullableAndEmpty(origin).ifPresent(value -> queryParameterMap.put(INSTITUTION_ORIGIN, value));
     getOptionalForNullableAndEmpty(originId).ifPresent(value -> queryParameterMap.put(INSTITUTION_ORIGIN_ID, value));
     Optional.ofNullable(status).ifPresent(value -> queryParameterMap.put(STATUS, value.name()));
@@ -116,11 +118,18 @@ public class QueryUtils {
     return Optional.ofNullable(value).filter(v -> !v.isBlank());
   }
 
-  public static Map<String, Object> createMapForOnboardingReject(String reasonForReject, String onboardingStatus) {
+  public static Map<String, Object> createMapForOnboardingReject(ReasonRequest reasonForReject, String onboardingStatus) {
     Map<String, Object> queryParameterMap = new HashMap<>();
-    Optional.ofNullable(reasonForReject).ifPresent(value -> queryParameterMap.put("reasonForReject", value));
+    Optional.ofNullable(reasonForReject.getReasonForReject()).ifPresent(value -> queryParameterMap.put("reasonForReject", value));
+    Optional.ofNullable(reasonForReject.getUserUid()).ifPresent(value -> queryParameterMap.put("processedByUserUid", value));
     Optional.ofNullable(onboardingStatus).ifPresent(value -> queryParameterMap.put(STATUS, value));
     queryParameterMap.put("updatedAt", LocalDateTime.now());
+    return queryParameterMap;
+  }
+
+  public static Map<String, Object> createMapForOnboardingApprove(ApproveRequest approveRequest) {
+    Map<String, Object> queryParameterMap = new HashMap<>();
+    Optional.ofNullable(approveRequest.getUserUid()).ifPresent(value -> queryParameterMap.put("processedByUserUid", value));
     return queryParameterMap;
   }
 

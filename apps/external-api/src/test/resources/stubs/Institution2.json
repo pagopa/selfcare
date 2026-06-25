@@ -1,0 +1,77 @@
+[
+  {
+    "id": "id",
+    "externalId": "externalId",
+    "origin": "origin",
+    "originId": "originId",
+    "description": "description",
+    "institutionType": "AS",
+    "digitalAddress": "digitalAddress",
+    "address": "address",
+    "zipCode": "zipCode",
+    "taxCode": "taxCode",
+    "city": "city",
+    "county": "county",
+    "country": "country",
+    "istatCode": null,
+    "onboarding": [
+      {
+        "productId": "productId",
+        "tokenId": null,
+        "status": null,
+        "contract": null,
+        "pricingPlan": null,
+        "billing": {
+          "vatNumber": "vatNumber",
+          "recipientCode": "recipientCode",
+          "publicServices": true
+        },
+        "createdAt": null,
+        "updatedAt": null,
+        "closedAt": null
+      }
+    ],
+    "geographicTaxonomies": [
+      {
+        "code": "code",
+        "desc": "desc"
+      }
+    ],
+    "attributes": [
+      {
+        "origin": "origin",
+        "code": "code",
+        "description": "description"
+      }
+    ],
+    "paymentServiceProvider": {
+      "abiCode": "abiCode",
+      "businessRegisterNumber": "businessRegisterNumber",
+      "legalRegisterName": null,
+      "legalRegisterNumber": "legalRegisterNumber",
+      "vatNumberGroup": true
+    },
+    "dataProtectionOfficer": {
+      "address": "address",
+      "email": "email",
+      "pec": "pec"
+    },
+    "rea": "rea",
+    "shareCapital": "shareCapital",
+    "businessRegisterPlace": "businessRegisterPlace",
+    "supportEmail": "supportEmail",
+    "supportPhone": "supportPhone",
+    "imported": true,
+    "createdAt": "2022-12-31T23:59:59Z",
+    "updatedAt": "2022-12-31T23:59:59Z",
+    "subunitCode": "subunitCode",
+    "subunitType": "subunitType",
+    "rootParentId": null,
+    "parentDescription": null,
+    "paAttributes": null,
+    "delegation": true,
+    "aooParentCode": "aooParentCode",
+    "companyInformations": null,
+    "assistanceContacts": null
+  }
+]

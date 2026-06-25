@@ -1,0 +1,23 @@
+[
+  {
+  "institutionId": "id",
+  "userId": "123e4567-e89b-12d3-a456-426614174000",
+  "userMailUuid": "id",
+  "products": [
+      {
+        "productId": "productId",
+        "status": "ACTIVE",
+        "role": "DELEGATE",
+        "productRole": "admin",
+        "createdAt": "2022-08-08T09:13:00.837Z"
+      },
+    {
+      "productId": "productId",
+      "status": "ACTIVE",
+      "role": "DELEGATE",
+      "productRole": "operator",
+      "createdAt": "2022-08-08T09:13:00.837Z"
+    }
+    ]
+  }
+]

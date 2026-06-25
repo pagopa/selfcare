@@ -1,0 +1,77 @@
+{
+  "prod-io": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "GSP", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "SCP", "origin": "PDND_INFOCAMERE", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "SCP", "origin": "SELC", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-pn": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "GSP", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "prod-pagopa": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "GSP", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "GSP", "origin": "SELC", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "GPU", "origin": "SELC", "workflowType": "FOR_APPROVE_GPU" },
+    { "institutionType": "PRV", "origin": "SELC", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "PSP", "origin": "SELC", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "CON", "origin": "SELC", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "REC", "origin": "SELC", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "SCP", "origin": "SELC", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-dashboard-psp": [
+    { "institutionType": "PSP", "origin": "SELC", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-interop": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "PA", "origin": "SELC", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "GSP", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "SA", "origin": "ANAC", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "PRV", "origin": "PDND_INFOCAMERE", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "SCEC", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "AS", "origin": "IVASS", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "SCP", "origin": "PDND_INFOCAMERE", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-io-premium": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "prod-io-sign": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "GSP", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "SCP", "origin": "PDND_INFOCAMERE", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-idpay-merchant": [
+    { "institutionType": "PRV", "origin": "PDND_INFOCAMERE", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "PRV_PF", "origin": "PDND_INFOCAMERE", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "prod-registro-beni": [
+    { "institutionType": "PRV", "origin": "PDND_INFOCAMERE", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "prod-ced": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_WITH_COUNTERSIGNATURE" },
+    { "institutionType": "PRV", "origin": "SELC", "workflowType": "CONTRACT_WITH_COUNTERSIGNATURE" }
+  ],
+  "prod-mdc": [
+    { "institutionType": "PSP", "origin": "SELC", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-pn-pg": [
+    { "institutionType": "PG", "origin": "INFOCAMERE", "workflowType": "FOR_APPROVE" }
+  ],
+  "prod-interop-coll": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" },
+    { "institutionType": "SCP", "origin": "PDND_INFOCAMERE", "workflowType": "FOR_APPROVE" }
+  ],
+  "test-product": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "test-test": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "test-product2": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "test-product-sub": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ]
+}

@@ -1,4 +1,4 @@
-name: Code Review - Auth
+name: Code Review - App
 
 permissions:
   contents: read
@@ -31,30 +31,24 @@ on:
         options:
           - auth
           - iam
+          - delegation-cdc
+          - document-ms
+          - institution-ms
+          - institution-send-mail-scheduler
+          - onboarding-bff
+          - onboarding-cdc
+          - onboarding-ms
           - product
           - product-cdc
-          - webhook
-          - onboarding-ms
-          - onboarding-cdc
           - registry-proxy
-          - onboarding-bff
-          - document-ms
+          - registry-proxy-runner
+          - user-cdc
+          - user-group-cdc
+          - user-group-ms
+          - user-ms
+          - webhook
+          - dashboard-bff
         required: true
-
-  pull_request:
-    branches:
-      - main
-      - releases/**
-    types:
-      - opened
-      - edited
-      - synchronize
-      - reopened
-      - ready_for_review
-    paths:
-      - 'apps/**'
-      - '.github/workflows/pr_app.yml'
-      - '.github/workflows/call_code_review.yml'
 
 jobs:
   code_review:

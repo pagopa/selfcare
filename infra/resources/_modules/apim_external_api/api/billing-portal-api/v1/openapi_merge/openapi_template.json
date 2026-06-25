@@ -1,0 +1,13 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Billing Portal API service",
+    "description": "This service is the proxy for the billing portal",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://${host}/${basePath}"
+    }
+  ]
+}

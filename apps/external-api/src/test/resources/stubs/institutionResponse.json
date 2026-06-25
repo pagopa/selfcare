@@ -1,0 +1,67 @@
+{
+  "address": "address",
+  "aooParentCode": "aooParentCode",
+  "attributes": [
+    {
+      "code": "code",
+      "description": "description",
+      "origin": "origin"
+    }
+  ],
+  "businessRegisterPlace": "businessRegisterPlace",
+  "city": "city",
+  "country": "country",
+  "county": "county",
+  "createdAt": "2022-12-31T23:59:59",
+  "dataProtectionOfficer": {
+    "address": "address",
+    "email": "email",
+    "pec": "pec"
+  },
+  "delegation": true,
+  "description": "description",
+  "digitalAddress": "digitalAddress",
+  "externalId": "externalId",
+  "geographicTaxonomies": [
+    {
+      "code": "code",
+      "desc": "desc"
+    }
+  ],
+  "id": "id",
+  "imported": true,
+  "institutionType": "AS",
+  "onboarding": [
+    {
+      "billing": {
+        "publicServices": true,
+        "recipientCode": "recipientCode",
+        "vatNumber": "vatNumber"
+      },
+      "productId": "productId",
+      "status": "ACTIVE",
+      "updatedAt": "2022-12-31T23:59:59"
+    }
+  ],
+  "origin": "origin",
+  "originId": "originId",
+  "paymentServiceProvider": {
+    "abiCode": "abiCode",
+    "businessRegisterNumber": "businessRegisterNumber",
+    "legalRegisterNumber": "legalRegisterNumber",
+    "vatNumberGroup": true
+  },
+  "rea": "rea",
+  "rootParent": {
+    "description": "description",
+    "id": "id"
+  },
+  "shareCapital": "shareCapital",
+  "subunitCode": "subunitCode",
+  "subunitType": "subunitType",
+  "supportEmail": "supportEmail",
+  "supportPhone": "supportPhone",
+  "taxCode": "taxCode",
+  "updatedAt": "2022-12-31T23:59:59",
+  "zipCode": "zipCode"
+}

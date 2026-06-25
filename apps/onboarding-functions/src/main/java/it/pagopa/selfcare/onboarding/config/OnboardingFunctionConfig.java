@@ -32,6 +32,7 @@ public class OnboardingFunctionConfig {
 
     void onStart(@Observes StartupEvent ev, OnboardingRepository repository) {
         log.info(String.format("Database %s is starting...", repository.mongoDatabase().getName()));
+        log.info("Onboarding Functions application startup");
     }
 
     @Produces

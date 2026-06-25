@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingDocumentMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
 import it.pagopa.selfcare.onboarding.service.helper.*;
@@ -28,21 +29,18 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
-import org.openapi.quarkus.document_json.api.DocumentControllerApi;
+import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
@@ -63,16 +61,15 @@ public class OnboardingServiceDefault implements OnboardingService {
     // -------------------------------------------------------------------------
 
     @RestClient @Inject OnboardingApi onboardingApi;
-    @RestClient @Inject DocumentControllerApi documentControllerApi;
-    @RestClient @Inject DocumentContentControllerApi documentContentControllerApi;
 
     @Inject OnboardingMapper onboardingMapper;
     @Inject OnboardingResponseFactory onboardingResponseFactory;
     @Inject InstitutionMapper institutionMapper;
-    @Inject ProductService productService;
+    @Inject ProductService productAzureService;
     @Inject OnboardingDocumentMapper onboardingDocumentMapper;
     @Inject RegistryResourceFactory registryResourceFactory;
     @Inject OrchestrationService orchestrationService;
+    @Inject DocumentService documentService;
 
     // Helpers
     @Inject
@@ -87,6 +84,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
+    @Inject it.pagopa.selfcare.onboarding.service.ProductService productService;
 
     @ConfigProperty(name = "onboarding.orchestration.enabled")
     Boolean onboardingOrchestrationEnabled;
@@ -139,7 +137,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Starting onboardingUsers: origin={}, institutionType={}, workflowType={}",
                 request.getOrigin(), request.getInstitutionType(), workflowType);
         return Uni.createFrom()
-                .item(() -> productService.getProductExpirationDate(request.getProductId()))
+                .item(() -> productAzureService.getProductExpirationDate(request.getProductId()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transformToUni(expirationDays ->
                         queryHelper.getInstitutionFromUserRequest(request)
@@ -148,6 +146,10 @@ public class OnboardingServiceDefault implements OnboardingService {
                                     it.pagopa.selfcare.onboarding.entity.Institution institution = institutionMapper.toEntity(response);
                                     institution.setInstitutionType(request.getInstitutionType());
                                     onboarding.setInstitution(institution);
+                                    if(Objects.nonNull(request.getOrigin()) && Objects.nonNull(request.getOriginId())) {
+                                        onboarding.getInstitution().setOrigin(Origin.valueOf(request.getOrigin()));
+                                        onboarding.getInstitution().setOriginId(request.getOriginId());
+                                    }
                                     onboarding.setExpiringDate(OffsetDateTime.now().plusDays(expirationDays).toLocalDateTime());
                                     return onboarding;
                                 })
@@ -209,7 +211,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     // -------------------------------------------------------------------------
 
     @Override
-    public Uni<OnboardingGet> approve(String onboardingId) {
+    public Uni<OnboardingGet> approve(String onboardingId, ApproveRequest approveRequest) {
         return queryHelper.retrieveOnboardingAndCheckIfExpired(onboardingId)
                 .onItem().transformToUni(queryHelper::checkIfToBeValidated)
                 .onItem().transformToUni(onboarding ->
@@ -218,9 +220,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
                                                 onboarding.getInstitution(), product.getId(), product.getParentId()))
                                 .replaceWith(onboarding))
-                .onItem().transformToUni(onboarding ->
+            .onItem().call(onboarding ->
+                    OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
+            .onItem().transformToUni(onboarding ->
                         onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboarding.getId(), null).map(ignore -> onboarding)
+                                ? orchestrationService.triggerOrchestration(onboardingId, null).map(ignore -> onboarding)
                                 : Uni.createFrom().item(onboarding))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
@@ -240,7 +244,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                         updateOnboarding(onboardingId, onboarding)
                                 .onItem().transformToUni(ignore ->
                                         onboardingUtils.ensureSuccessfulDocumentResponse(
-                                                documentControllerApi.updateDocumentUpdatedAt(onboardingId),
+                                                documentService.updateDocumentUpdatedAt(onboardingId),
                                                 "updateDocumentUpdatedAt", onboardingId))
                                 .replaceWith(onboarding));
     }
@@ -261,7 +265,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     @Override
-    public Uni<Long> rejectOnboarding(String onboardingId, String reasonForReject) {
+    public Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reason) {
         return Onboarding.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
@@ -270,7 +274,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         String.format("Onboarding with id %s is COMPLETED!", onboardingId)))
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
-                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reasonForReject))
+                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
                 .onItem().transformToUni(onboarding ->
                         onboardingOrchestrationEnabled
                                 ? orchestrationService.triggerOrchestration(onboardingId, "60").map(ignore -> onboarding)
@@ -282,8 +286,9 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Deleting onboarding with id {}", onboardingId);
         return Onboarding.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o ->
-                        PENDING.equals(o.getStatus()) || USERS.equals(o.getWorkflowType())
+                        USERS.equals(o.getWorkflowType())
                                 ? Uni.createFrom().failure(new InvalidRequestException(
                                         String.format("Onboarding with id %s can't be deleted", onboardingId)))
                                 : Uni.createFrom().item(o))
@@ -297,6 +302,36 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().transformToUni(onboarding ->
                         orchestrationService.triggerOrchestrationDeleteInstitutionAndUser(onboardingId)
                                 .map(ignore -> onboarding));
+    }
+
+    @Override
+    public Uni<Long> deleteOnboardingUser(String onboardingId, String userId) {
+        log.info("Deleting user onboarding with id {} for userId {}", onboardingId, userId);
+        return Onboarding.findById(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found", onboardingId)))
+                .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
+                .onItem().transformToUni(o -> {
+                    if (!USERS.equals(o.getWorkflowType())) {
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("Onboarding with id %s is not of type USERS", onboardingId)));
+                    }
+                    return Uni.createFrom().item(o);
+                })
+                .onItem().transformToUni(o -> validateUserRoleForDeletion(o, userId))
+                .onItem().transformToUni(o ->
+                        onboardingUtils.ensureSuccessfulDocumentResponse(
+                                documentService.deleteContract(onboardingId),
+                                "deleteContract", onboardingId)
+                                .replaceWith(o))
+                .onItem().transformToUni(o -> {
+                    Map<String, Object> params = Map.of(
+                            "status", OnboardingStatus.DELETED.name(),
+                            "updatedAt", LocalDateTime.now(),
+                            "deletedAt", LocalDateTime.now());
+                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                });
     }
 
     // -------------------------------------------------------------------------
@@ -344,8 +379,8 @@ public class OnboardingServiceDefault implements OnboardingService {
         return Onboarding.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
                         opt.map(Onboarding.class::cast)
-                                .map(o -> Uni.createFrom().item(o))
-                                .orElse(Uni.createFrom().failure(
+                                .map(Uni.createFrom()::item)
+                                .orElseGet(() -> Uni.createFrom().failure(
                                         new ResourceNotFoundException(
                                                 String.format("Onboarding with id %s not found!", onboardingId)))))
                 .flatMap(onboarding ->
@@ -354,7 +389,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         onboardingResponseFactory.toGetResponse(onboarding)
                                                 .invoke(og -> og.setUsers(userResponses))))
                 .flatMap(onboardingGet ->
-                        documentControllerApi.getAttachments(onboardingId)
+                        documentService.getAttachments(onboardingId)
                                 .invoke(onboardingGet::setAttachments)
                                 .replaceWith(onboardingGet));
     }
@@ -363,6 +398,19 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<List<OnboardingResponse>> institutionOnboardings(String taxCode, String subunitCode,
                                                                  String origin, String originId,
                                                                  OnboardingStatus status) {
+        return userRegistryHelper.resolveTaxCodeForQuery(taxCode)
+                .onItem().transformToUni(resolvedTaxCode -> {
+                    if (Objects.isNull(resolvedTaxCode)) {
+                        return Uni.createFrom().item(List.of());
+                    }
+                    String resolvedOriginId = UserRegistryHelper.isPersonalFiscalCode(taxCode) ? resolvedTaxCode : originId;
+                    return findInstitutionOnboardings(resolvedTaxCode, subunitCode, origin, resolvedOriginId, status);
+                });
+    }
+
+    private Uni<List<OnboardingResponse>> findInstitutionOnboardings(String taxCode, String subunitCode,
+                                                                      String origin, String originId,
+                                                                      OnboardingStatus status) {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, null);
         Document query = QueryUtils.buildQuery(params);
@@ -371,6 +419,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .map(onboardingMapper::toResponse)
                 .collect().asList();
     }
+
 
     @Override
     public Uni<List<OnboardingResponse>> verifyOnboarding(String taxCode, String subunitCode, String origin,
@@ -540,7 +589,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                         persistenceHelper.persistOnboarding(onboarding, userRequests, product, aggregates))
                 .onItem().call(persisted ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
-                                documentControllerApi.persistDocumentForImport(
+                                documentService.persistDocumentForImport(
                                         onboardingDocumentMapper.toRequest(persisted, product, contract)),
                                 "persistDocumentForImport", persisted.getId()))
                 .onItem().transformToUni(persisted ->
@@ -567,6 +616,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     private Uni<Onboarding> completeInternal(String onboardingId, FormItem formItem,
                                               boolean skipSignatureVerification, boolean isUsersFlow) {
         return queryHelper.retrieveOnboardingAndCheckIfExpired(onboardingId)
+                .onItem().call(this::abortIfOnboardingIsFailed)
                 .onItem().transformToUni(onboarding ->
                         verifyCompletionPreconditions(onboarding, isUsersFlow).replaceWith(onboarding))
                 .onItem().transformToUni(onboarding ->
@@ -578,6 +628,16 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                 fiscalCodes)
                                                 .replaceWith(onboarding)))
                 .onItem().transformToUni(this::triggerOrchestrationIfEnabled);
+    }
+
+    private Uni<Void> abortIfOnboardingIsFailed(Onboarding onboarding) {
+        if (OnboardingStatus.FAILED.equals(onboarding.getStatus())) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Onboarding with id %s is in status %s and can't be completed!",
+                            onboarding.getId(),
+                            OnboardingStatus.FAILED)));
+        }
+        return Uni.createFrom().voidItem();
     }
 
     private Uni<Boolean> verifyCompletionPreconditions(Onboarding onboarding, boolean isUsersFlow) {
@@ -600,17 +660,60 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                              boolean skipSignatureVerification,
                                                              DocumentType documentType, List<String> fiscalCodes) {
         return getProductByOnboarding(onboarding)
-                .flatMap(product -> onboardingUtils.buildUploadSignedContractRequest(
-                        onboarding, skipSignatureVerification, formItem, product, documentType, fiscalCodes))
+                .flatMap(product -> resolveNextSigningStep(onboarding.getId(), product)
+                        .flatMap(nextStep -> onboardingUtils.buildUploadSignedContractRequest(
+                                onboarding, skipSignatureVerification, formItem, product, documentType, fiscalCodes, nextStep)))
                 .flatMap(request ->
                         onboardingUtils.ensureSuccessfulDocumentResponse(
-                                documentContentControllerApi.uploadSignedContract(request, onboarding.getId()),
+                                documentService.uploadSignedContract(request, onboarding.getId()),
                                 "uploadSignedContract", onboarding.getId()));
+    }
+
+    /**
+     * Calculates the next signing step for the given onboarding by querying document-ms
+     * for the latest document. Validates that the next step does not exceed the required
+     * number of signatures defined in the product's signing configuration.
+     *
+     * @param onboardingId the onboarding ID
+     * @param product      the product with signing configuration
+     * @return the next signing step (1-based)
+     * @throws InvalidRequestException if all required signatures have already been collected
+     */
+    private Uni<Integer> resolveNextSigningStep(String onboardingId, Product product) {
+        return documentService.getDocumentByOnboardingId(onboardingId)
+                .onItem().transform(doc -> {
+                    if (doc == null || doc.getSigningStep() == null) {
+                        return 1;
+                    }
+                    return doc.getSigningStep() + 1;
+                })
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> ((WebApplicationException) ex).getResponse().getStatus() == 404
+                        ? Uni.createFrom().item(1)
+                        : Uni.createFrom().failure(ex))
+                .onItem().transformToUni(nextStep -> {
+                    int requiredSignatures = resolveRequiredSignatures(product);
+                    if (nextStep > requiredSignatures) {
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("All required signatures already collected for onboarding %s " +
+                                        "(nextStep=%d, requiredSignatures=%d)", onboardingId, nextStep, requiredSignatures)));
+                    }
+                    log.info("resolveNextSigningStep for onboardingId={}: nextStep={}, requiredSignatures={}",
+                            onboardingId, nextStep, requiredSignatures);
+                    return Uni.createFrom().item(nextStep);
+                });
+    }
+
+    private int resolveRequiredSignatures(Product product) {
+        if (product.getSigningConfiguration() != null) {
+            return product.getSigningConfiguration().getRequiredSignatures();
+        }
+        return 1;
     }
 
     private Uni<Product> product(String productId) {
         return Uni.createFrom()
-                .item(() -> productService.getProductIsValid(productId))
+                .item(() -> productAzureService.getProductIsValid(productId))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
@@ -630,11 +733,157 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .findFirst().orElse(null);
     }
 
+    private Uni<Onboarding> validateOnboardingForDeletion(Onboarding onboarding, String onboardingId) {
+        if (!COMPLETED.equals(onboarding.getStatus())) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Onboarding with id %s can only be deleted if status is COMPLETED, current status: %s",
+                            onboardingId, onboarding.getStatus())));
+        }
+        return Uni.createFrom().item(onboarding);
+    }
+
+    private Uni<Onboarding> validateUserRoleForDeletion(Onboarding onboarding, String userId) {
+        boolean hasDelegate = onboarding.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId) && PartyRole.DELEGATE.equals(u.getRole()));
+        boolean hasManager = onboarding.getUsers().stream()
+                .anyMatch(u -> u.getId().equals(userId) && PartyRole.MANAGER.equals(u.getRole()));
+
+        if (hasDelegate) {
+            return Uni.createFrom().item(onboarding);
+        } else if (hasManager) {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("User with id %s has role MANAGER and cannot be deleted. Only DELEGATE role is allowed for deletion.", userId)));
+        } else {
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("User with id %s not found in onboarding with id %s", userId, onboarding.getId())));
+        }
+    }
+
     private Uni<LocalDateTime> computeExpiry(String productId) {
         return Uni.createFrom()
                 .item(() -> OffsetDateTime.now()
-                        .plusDays(productService.getProductExpirationDate(productId))
+                        .plusDays(productAzureService.getProductExpirationDate(productId))
                         .toLocalDateTime())
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
+
+    // -------------------------------------------------------------------------
+    // Document gate — idempotent trigger for FOR_APPROVE flow
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Uni<Void> triggerDocumentGate(String onboardingId) {
+        log.info("triggerDocumentGate called for onboardingId={}", onboardingId);
+        return Onboarding.findById(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found", onboardingId)))
+                .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(onboarding -> {
+                    // Idempotent: if already past REQUEST status, do nothing
+                    if (!OnboardingStatus.REQUEST.equals(onboarding.getStatus())) {
+                        log.info("triggerDocumentGate: onboarding {} is in status {}, skipping (idempotent)",
+                                onboardingId, onboarding.getStatus());
+                        return Uni.createFrom().voidItem();
+                    }
+                    return verifyMandatoryDocumentsAndAdvance(onboarding);
+                });
+    }
+
+    private Uni<Void> verifyMandatoryDocumentsAndAdvance(Onboarding onboarding) {
+        if (!hasRequiredContext(onboarding)) {
+            log.warn("triggerDocumentGate: missing institutionType or origin for onboarding {}", onboarding.getId());
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Missing institutionType or origin for onboarding %s: cannot evaluate document gate",
+                            onboarding.getId())));
+        }
+
+        return fetchMandatoryDocIds(onboarding)
+                .onItem().transformToUni(mandatoryDocIds -> {
+                    if (mandatoryDocIds.isEmpty()) {
+                        log.warn("triggerDocumentGate: no mandatory documents configured for onboarding {}", onboarding.getId());
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("No mandatory documents configured for onboarding %s: document gate is not applicable for this context",
+                                        onboarding.getId())));
+                    }
+                    return fetchPresentAttachments(onboarding)
+                            .onItem().transformToUni(presentAttachments ->
+                                    evaluateAndAdvance(onboarding, mandatoryDocIds, presentAttachments));
+                })
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> {
+                    int status = ((WebApplicationException) ex).getResponse().getStatus();
+                    if (status == 404) {
+                        log.warn("triggerDocumentGate: product-ms returned 404 for onboarding {}, no required documents configured",
+                                onboarding.getId());
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("No required documents configuration found on product-ms for onboarding %s",
+                                        onboarding.getId())));
+                    }
+                    return Uni.createFrom().failure(ex);
+                });
+    }
+
+    private Uni<List<String>> fetchPresentAttachments(Onboarding onboarding) {
+        return documentService.getAttachments(onboarding.getId())
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> {
+                    int status = ((WebApplicationException) ex).getResponse().getStatus();
+                    if (status == 404) {
+                        log.warn("triggerDocumentGate: no attachments found for onboarding {}", onboarding.getId());
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("No documents have been uploaded yet for onboarding %s",
+                                        onboarding.getId())));
+                    }
+                    return Uni.createFrom().failure(ex);
+                });
+    }
+
+    private Uni<Void> evaluateAndAdvance(Onboarding onboarding, List<String> mandatoryDocIds,
+                                          List<String> presentAttachments) {
+        Set<String> presentSet = presentAttachments != null ? new HashSet<>(presentAttachments) : Set.of();
+        List<String> missingDocs = mandatoryDocIds.stream()
+                .filter(docId -> !presentSet.contains(docId))
+                .toList();
+
+        if (missingDocs.isEmpty()) {
+            log.info("triggerDocumentGate: all {} mandatory documents present for onboarding {}, triggering orchestration",
+                    mandatoryDocIds.size(), onboarding.getId());
+            return triggerOrchestrationIfEnabled(onboarding).replaceWithVoid();
+        }
+
+        log.warn("triggerDocumentGate: mandatory documents incomplete for onboarding {} (missing={})",
+                onboarding.getId(), missingDocs);
+        return Uni.createFrom().failure(new InvalidRequestException(
+                String.format("Missing mandatory documents for onboarding %s: %s",
+                        onboarding.getId(), missingDocs)));
+    }
+
+    private boolean hasRequiredContext(Onboarding onboarding) {
+        return onboarding.getInstitution().getInstitutionType() != null
+                && onboarding.getInstitution().getOrigin() != null;
+    }
+
+    private Uni<List<String>> fetchMandatoryDocIds(Onboarding onboarding) {
+        ProductId productId;
+        try {
+            productId = ProductId.fromValue(onboarding.getProductId());
+        } catch (IllegalArgumentException e) {
+            log.info("triggerDocumentGate: unknown productId {} for onboarding {}, skipping gate",
+                    onboarding.getProductId(), onboarding.getId());
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Unknown productId %s for onboarding %s", onboarding.getProductId(), onboarding.getId())));
+        }
+
+        var instType = org.openapi.quarkus.product_json.model.InstitutionType
+                .valueOf(onboarding.getInstitution().getInstitutionType().name());
+        var originEnum = org.openapi.quarkus.product_json.model.Origin
+                .valueOf(onboarding.getInstitution().getOrigin().name());
+
+        return productService.getRequiredDocuments(productId, instType, originEnum)
+                .onItem().transform(docs -> docs.stream()
+                        .filter(doc -> Boolean.TRUE.equals(doc.getRequired()))
+                        .map(RequiredDocumentResponse::getId)
+                        .toList());
+    }
+
 }

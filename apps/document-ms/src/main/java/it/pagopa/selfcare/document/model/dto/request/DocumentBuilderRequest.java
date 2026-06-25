@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.document.model.dto.request;
 
 import it.pagopa.selfcare.onboarding.common.DocumentType;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

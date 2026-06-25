@@ -37,5 +37,14 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private LocalDateTime deletedAt;
     private LocalDateTime activatedAt;
 
+    /**
+     * Step di firma a cui questo documento corrisponde.
+     * Calcolato da onboarding-ms e fornito come parametro obbligatorio
+     * nell'endpoint di upload del contratto firmato.
+     * Usato per comporre il filename su Blob Storage (es. signed_step2_contract.pdf).
+     * NON usato per la logica di recupero (che si basa su createdAt DESC).
+     */
+    private Integer signingStep;
+
 }
 

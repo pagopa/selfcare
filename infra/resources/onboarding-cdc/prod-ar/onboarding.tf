@@ -1,4 +1,17 @@
 ###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-table-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
 # GLOBAL VARIABLES
 ###############################################################################
 module "local" {
@@ -44,13 +57,25 @@ locals {
     {
       name  = "ONBOARDING-CDC-MINUTES-THRESHOLD-FOR-UPDATE-NOTIFICATION"
       value = "5"
+    },
+    {
+      name  = "PARTY_REGISTRY_PROXY_URL"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
     }
   ]
 
   onboarding_cdc_secrets_names = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "NOTIFICATION-FUNCTIONS-API-KEY"        = "fn-onboarding-primary-key"
   }
 
@@ -85,12 +110,12 @@ module "container_app_onboarding_cdc" {
   container_app_name             = "selc-${module.local.config.env_short}-onboarding-cdc"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = "sha-9a48881" # var.image_tag
+  image_tag                      = var.image_tag
   app_settings                   = local.onboarding_cdc_app_settings
   secrets_names                  = local.onboarding_cdc_secrets_names
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  probes                                = module.local.config.quarkus_health_probes
+  tags                                  = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_table_identity.id]
 }
-

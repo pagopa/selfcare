@@ -95,7 +95,7 @@ locals {
   app_settings_iam_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -119,7 +119,7 @@ locals {
     },
     {
       name  = "INSTITUTION_API_URL"
-      value = "https://selc-${module.local.config.env_short}-ms-core-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     }
   ]
 

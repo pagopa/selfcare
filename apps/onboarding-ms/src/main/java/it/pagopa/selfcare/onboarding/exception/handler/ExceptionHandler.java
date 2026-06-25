@@ -50,9 +50,13 @@ public class ExceptionHandler {
         return RestResponse.status(Response.Status.NOT_FOUND, exception.getMessage());
     }
     @ServerExceptionMapper
-    public RestResponse<String> toResponse(ResourceConflictException exception) {
+    public Response toResponse(ResourceConflictException exception) {
         log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-        return RestResponse.status(Response.Status.CONFLICT, exception.getMessage());
+        Problem problem = problem(exception.getMessage(), Response.Status.CONFLICT.getStatusCode(), exception.getCode());
+        return Response
+                .status(Response.Status.CONFLICT)
+                .entity(problem)
+                .build();
     }
     @ServerExceptionMapper
     public Response toResponse(UpdateNotAllowedException exception) {
@@ -60,6 +64,16 @@ public class ExceptionHandler {
         Problem problem = problem(exception.getMessage(), Response.Status.CONFLICT.getStatusCode(), exception.getCode());
         return Response
                 .status(Response.Status.CONFLICT)
+                .entity(problem)
+                .build();
+    }
+
+    @ServerExceptionMapper
+    public Response toResponse(PayloadTooLargeException exception) {
+        log.error(LOG_ERROR_SYNTAX, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
+        Problem problem = problem(exception.getMessage(), Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode(), exception.getCode());
+        return Response
+                .status(Response.Status.REQUEST_ENTITY_TOO_LARGE)
                 .entity(problem)
                 .build();
     }

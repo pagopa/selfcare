@@ -649,7 +649,7 @@ class SignatureServiceImplTest {
         setField(service, "isVerifyEnabled", Boolean.FALSE);
         File file = createTempFile("test");
 
-        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false);
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false, false);
 
         assertThatCode(() -> result.await().indefinitely()).doesNotThrowAnyException();
         verifyNoInteractions(documentService);
@@ -660,7 +660,7 @@ class SignatureServiceImplTest {
         setField(service, "isVerifyEnabled", Boolean.TRUE);
         File file = createTempFile("test");
 
-        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), true);
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), true, false);
 
         assertThatCode(() -> result.await().indefinitely()).doesNotThrowAnyException();
         verifyNoInteractions(documentService);
@@ -674,7 +674,7 @@ class SignatureServiceImplTest {
         when(documentService.getDocumentByOnboardingId("onboarding-id")).thenReturn(Uni.createFrom().item(document));
 
         File file = createTempFile("test");
-        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false);
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false, false);
 
         assertThatThrownBy(() -> result.await().indefinitely()).isInstanceOf(Exception.class);
         verify(documentService).getDocumentByOnboardingId("onboarding-id");
@@ -687,7 +687,7 @@ class SignatureServiceImplTest {
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("DB error")));
 
         File file = createTempFile("test");
-        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false);
+        Uni<Void> result = service.verifyContractSignature("onboarding-id", file, List.of("CF1"), false, false);
 
         assertThatThrownBy(() -> result.await().indefinitely())
                 .hasMessageContaining("DB error");
@@ -1170,7 +1170,7 @@ class SignatureServiceImplTest {
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenInvalidData() throws IOException {
         File invalidFile = createTempFile("garbage");
 
-        assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1")))
+        assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1"), false))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -1178,7 +1178,7 @@ class SignatureServiceImplTest {
     void verifySignatureFileChecksumTaxCode_shouldRethrowInvalidRequestExceptionDirectly() throws IOException {
         File invalidFile = createTempFile("garbage-data");
 
-        assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1")))
+        assertThatThrownBy(() -> service.verifySignature(invalidFile, "checksum", List.of("CF1"), false))
                 .isExactlyInstanceOf(InvalidRequestException.class);
     }
 
@@ -1186,7 +1186,7 @@ class SignatureServiceImplTest {
     void verifySignatureFileChecksumTaxCode_shouldThrowWhenFileDoesNotExist() {
         File missingFile = tempDir.resolve("missing.p7m").toFile();
 
-        assertThatThrownBy(() -> service.verifySignature(missingFile, "checksum", List.of("CF1")))
+        assertThatThrownBy(() -> service.verifySignature(missingFile, "checksum", List.of("CF1"), false))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -1232,7 +1232,7 @@ class SignatureServiceImplTest {
         doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
 
         // Act & Assert: should complete without exception
-        assertThatCode(() -> spyService.verifySignature(testFile, checksum, usersTaxCode))
+        assertThatCode(() -> spyService.verifySignature(testFile, checksum, usersTaxCode, false))
                 .doesNotThrowAnyException();
     }
 
@@ -1262,7 +1262,7 @@ class SignatureServiceImplTest {
         doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
 
         // Act & Assert: should throw for invalid signature form
-        assertThatThrownBy(() -> spyService.verifySignature(testFile, checksum, usersTaxCode))
+        assertThatThrownBy(() -> spyService.verifySignature(testFile, checksum, usersTaxCode, false))
                 .isInstanceOf(InvalidRequestException.class)
                 .hasMessageContaining("PAdES");
     }
@@ -1300,7 +1300,7 @@ class SignatureServiceImplTest {
         doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
 
         // Act & Assert: should throw for digest mismatch
-        assertThatThrownBy(() -> spyService.verifySignature(testFile, expectedChecksum, usersTaxCode))
+        assertThatThrownBy(() -> spyService.verifySignature(testFile, expectedChecksum, usersTaxCode, false))
                 .isInstanceOf(InvalidRequestException.class);
     }
 
@@ -1345,7 +1345,7 @@ class SignatureServiceImplTest {
         doReturn(mockValidator).when(spyService).createDocumentValidator(any(byte[].class));
 
         // Act & Assert: should throw for tax code mismatch
-        assertThatThrownBy(() -> spyService.verifySignature(testFile, checksum, usersTaxCode))
+        assertThatThrownBy(() -> spyService.verifySignature(testFile, checksum, usersTaxCode, false))
                 .isInstanceOf(InvalidRequestException.class);
     }
 

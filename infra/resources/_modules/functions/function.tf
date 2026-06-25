@@ -1,145 +1,65 @@
-
 resource "azurerm_resource_group" "fn_rg" {
   name     = "${var.functions_name}-rg"
   location = var.location
   tags     = var.tags
 }
 
-resource "azurerm_subnet" "fn_snet" {
-  name                 = "${var.functions_name}-snet"
+module "onboarding_fn_snet" {
+  count  = var.subnet_cidr != null && length(var.subnet_cidr) > 0 ? 1 : 0
+  source = "github.com/pagopa/terraform-azurerm-v3.git//subnet?ref=v8.53.0"
+
+  name                 = format("%s-snet", var.functions_name)
   resource_group_name  = var.vnet_resource_group_name
   virtual_network_name = var.vnet_name
   address_prefixes     = var.subnet_cidr
 
-  delegation {
+  delegation = {
     name = "default"
-
-    service_delegation {
+    service_delegation = {
       name    = "Microsoft.Web/serverFarms"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
 }
 
-resource "azurerm_service_plan" "fn_plan" {
-  name                = "${var.functions_name}-plan"
-  location            = azurerm_resource_group.fn_rg.location
-  resource_group_name = azurerm_resource_group.fn_rg.name
+module "selc_onboarding_fn" {
+  source = "github.com/pagopa/terraform-azurerm-v3.git//function_app?ref=v8.53.0"
 
-  os_type      = "Linux"
-  sku_name     = var.service_plan_sku
-  worker_count = var.service_plan_worker_count
-
-  tags = var.tags
-}
-
-resource "azurerm_storage_account" "fn_storage" {
-  name                = replace("${var.functions_name}-sa", "-", "")
-  location            = azurerm_resource_group.fn_rg.location
-  resource_group_name = azurerm_resource_group.fn_rg.name
-
-  account_kind             = "StorageV2"
-  account_tier             = "Standard"
-  account_replication_type = var.replication_type
-  access_tier              = "Hot"
-
-  public_network_access_enabled = true
-
-  tags = var.tags
-
-  lifecycle {
-    ignore_changes = [
-      public_network_access_enabled,
-    ]
-  }
-}
-
-resource "azurerm_linux_function_app" "fn" {
   name                = var.functions_name
   location            = azurerm_resource_group.fn_rg.location
   resource_group_name = azurerm_resource_group.fn_rg.name
 
-  service_plan_id               = azurerm_service_plan.fn_plan.id
-  storage_account_name          = azurerm_storage_account.fn_storage.name
-  storage_uses_managed_identity = true
+  enable_healthcheck                       = false
+  always_on                                = var.always_on
+  subnet_id                                = module.onboarding_fn_snet[0].id
+  application_insights_instrumentation_key = local.resolved_appinsights_key
+  java_version                             = "17"
+  runtime_version                          = "~4"
 
-  functions_extension_version = "~4"
-  virtual_network_subnet_id   = azurerm_subnet.fn_snet.id
-  https_only                  = true
+  system_identity_enabled = true
+  storage_account_name    = replace(format("%s-sa", var.functions_name), "-", "")
+  export_keys             = true
+  app_service_plan_info   = local.app_service_plan_info
+  storage_account_info    = local.storage_account_info
 
-  identity {
-    type = "SystemAssigned"
-  }
-
-  site_config {
-    always_on                              = var.always_on
-    vnet_route_all_enabled                 = true
-    http2_enabled                          = true
-    application_insights_connection_string = var.application_insights_connection_string
-    application_insights_key               = var.application_insights_key
-
-    application_stack {
-      java_version = "17"
-    }
-  }
-
-  app_settings = merge(
-    var.app_settings,
-    {
-      AzureWebJobsStorage__accountName     = azurerm_storage_account.fn_storage.name
-      AzureWebJobsStorage__blobServiceUri  = azurerm_storage_account.fn_storage.primary_blob_endpoint
-      AzureWebJobsStorage__queueServiceUri = azurerm_storage_account.fn_storage.primary_queue_endpoint
-      AzureWebJobsStorage__tableServiceUri = azurerm_storage_account.fn_storage.primary_table_endpoint
-      AzureWebJobsSecretStorageType        = "blob"
-    }
-  )
+  app_settings = var.app_settings
 
   tags = var.tags
-}
-
-resource "azurerm_role_assignment" "fn_storage_blob_data_contributor" {
-  scope                = azurerm_storage_account.fn_storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "fn_storage_queue_data_contributor" {
-  scope                = azurerm_storage_account.fn_storage.id
-  role_definition_name = "Storage Queue Data Contributor"
-  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
-}
-
-resource "azurerm_role_assignment" "fn_storage_table_data_contributor" {
-  scope                = azurerm_storage_account.fn_storage.id
-  role_definition_name = "Storage Table Data Contributor"
-  principal_id         = azurerm_linux_function_app.fn.identity[0].principal_id
 }
 
 resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
   key_vault_id = var.key_vault_id
   tenant_id    = var.tenant_id
-  object_id    = azurerm_linux_function_app.fn.identity[0].principal_id
+  object_id    = module.selc_onboarding_fn.system_identity_principal
 
   secret_permissions = [
     "Get",
   ]
 }
 
-data "azurerm_function_app_host_keys" "fn" {
-  name                = azurerm_linux_function_app.fn.name
-  resource_group_name = azurerm_resource_group.fn_rg.name
-
-  depends_on = [
-    azurerm_linux_function_app.fn,
-    azurerm_role_assignment.fn_storage_blob_data_contributor,
-    azurerm_role_assignment.fn_storage_queue_data_contributor,
-    azurerm_role_assignment.fn_storage_table_data_contributor,
-  ]
-}
-
 resource "azurerm_key_vault_secret" "fn_primary_key" {
   name         = "fn-onboarding-primary-key"
-  value        = data.azurerm_function_app_host_keys.fn.default_function_key
+  value        = module.selc_onboarding_fn.primary_key
   content_type = "text/plain"
   key_vault_id = var.key_vault_id
 }
@@ -154,6 +74,39 @@ data "azurerm_nat_gateway" "fn_nat_gateway" {
 }
 
 resource "azurerm_subnet_nat_gateway_association" "fn_subnet_nat_gateway" {
-  subnet_id      = azurerm_subnet.fn_snet.id
+  subnet_id      = module.onboarding_fn_snet[0].id
   nat_gateway_id = data.azurerm_nat_gateway.fn_nat_gateway.id
+}
+
+data "azurerm_key_vault_secret" "appinsights_connection_string" {
+  count = var.application_insights_connection_string == null ? 1 : 0
+
+  name         = var.application_insights_connection_string_secret_name
+  key_vault_id = var.key_vault_id
+}
+
+locals {
+  resolved_appinsights_connection_string = var.application_insights_connection_string != null ? var.application_insights_connection_string : data.azurerm_key_vault_secret.appinsights_connection_string[0].value
+  resolved_appinsights_key = var.application_insights_key != null ? var.application_insights_key : element([
+    for part in split(";", local.resolved_appinsights_connection_string) : trimprefix(part, "InstrumentationKey=")
+    if startswith(part, "InstrumentationKey=")
+  ], 0)
+
+  app_service_plan_info = {
+    kind                         = "Linux"
+    sku_size                     = var.service_plan_sku
+    maximum_elastic_worker_count = 0
+    worker_count                 = var.service_plan_worker_count
+    zone_balancing_enabled       = false
+  }
+
+  storage_account_info = {
+    account_kind                      = "StorageV2"
+    account_tier                      = "Standard"
+    account_replication_type          = var.replication_type
+    access_tier                       = "Hot"
+    advanced_threat_protection_enable = true
+    use_legacy_defender_version       = false
+    public_network_access_enabled     = false
+  }
 }
