@@ -85,7 +85,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
-    @Inject it.pagopa.selfcare.onboarding.service.ProductService productService;
 
     @ConfigProperty(name = "onboarding.orchestration.enabled")
     Boolean onboardingOrchestrationEnabled;
