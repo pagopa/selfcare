@@ -848,7 +848,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         if (missingDocs.isEmpty()) {
             log.info("triggerDocumentGate: all {} mandatory documents present for onboarding {}, triggering orchestration",
                     mandatoryDocIds.size(), onboarding.getId());
-            return advanceOnboardingFromRequest(onboarding);
+            return triggerOrchestrationIfEnabled(onboarding).replaceWithVoid();
         }
 
         log.warn("triggerDocumentGate: mandatory documents incomplete for onboarding {} (missing={})",
@@ -886,11 +886,4 @@ public class OnboardingServiceDefault implements OnboardingService {
                         .toList());
     }
 
-
-    private Uni<Void> advanceOnboardingFromRequest(Onboarding onboarding) {
-        return onboardingOrchestrationEnabled
-                ? orchestrationService.triggerOrchestration(onboarding.getId(), null)
-                        .replaceWithVoid()
-                : Uni.createFrom().voidItem();
-    }
 }
