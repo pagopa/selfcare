@@ -2210,6 +2210,7 @@ components:
           $ref: "#/components/schemas/UserRequesterResponse"
     OnboardingStatus:
       enum:
+      - REQUESTING
       - REQUEST
       - TOBEVALIDATED
       - PENDING
