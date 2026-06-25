@@ -25,6 +25,7 @@
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <onboarding-sdk.version>0.17.1</onboarding-sdk.version>
+        <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
         <quarkus-openapi-generator.version>2.4.2</quarkus-openapi-generator.version>
     </properties>
     <dependencyManagement>
@@ -124,6 +125,11 @@
                     <artifactId>azure-core-http-netty</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-core-http-okhttp</artifactId>
+            <version>${azure-core-http-okhttp.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
