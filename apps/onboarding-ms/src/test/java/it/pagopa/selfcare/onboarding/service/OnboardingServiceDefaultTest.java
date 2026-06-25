@@ -59,6 +59,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
@@ -483,7 +484,7 @@ class OnboardingServiceDefaultTest {
     void onboarding_throwExceptionIfProductIsNotDelegable(UniAsserter asserter) {
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId("prod-pagopa");
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setInstitutionType(InstitutionType.PT);
         onboardingRequest.setInstitution(institutionBaseRequest);
@@ -1643,7 +1644,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId("prod-pagopa");
         Institution institutionPspRequest = new Institution();
         institutionPspRequest.setOrigin(Origin.SELC);
         institutionPspRequest.setInstitutionType(PSP);
@@ -1666,8 +1667,8 @@ class OnboardingServiceDefaultTest {
         Onboarding onboarding2 = new Onboarding();
         onboarding2.setInstitution(institutionPspRequest);
 
-        Mockito.doAnswer(invocation -> Multi.createFrom().empty())
-                .doAnswer(invocation -> Multi.createFrom().items(onboarding1))
+        Mockito.doAnswer(invocation -> Multi.createFrom().items(onboarding1))
+                .doAnswer(invocation -> Multi.createFrom().empty())
                 .doAnswer(invocation -> Multi.createFrom().items(onboarding2))
                 .when(query)
                 .stream();
@@ -1701,7 +1702,7 @@ class OnboardingServiceDefaultTest {
     void onboardingPsp_ProductHasParentNotOnboarded(UniAsserter asserter) {
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId("prod-pagopa");
         Institution institutionPspRequest = new Institution();
         institutionPspRequest.setOrigin(Origin.SELC);
         institutionPspRequest.setInstitutionType(PSP);
@@ -5569,6 +5570,414 @@ class OnboardingServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    // -------------------------------------------------------------------------
+    // triggerDocumentGate tests
+    // -------------------------------------------------------------------------
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenOnboardingNotFound() {
+        String onboardingId = "non-existing-id";
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboardingId))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboardingId)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(ResourceNotFoundException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldReturnVoidWhenStatusIsNotRequest() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenInstitutionTypeIsNull() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.getInstitution().setInstitutionType(null);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenOriginIsNull() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(null);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenProductIdIsUnknown() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId("unknown-product");
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenProductMsReturns404() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(404)));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenProductMsReturns500() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(500)));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(WebApplicationException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenNoMandatoryDocumentsConfigured() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        // All documents have required = false
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse doc =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        doc.setId("doc_optional");
+        doc.setRequired(false);
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(List.of(doc)));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenNoDocumentsUploaded() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse doc =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        doc.setId("doc_A");
+        doc.setRequired(true);
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(List.of(doc)));
+        when(documentControllerApi.getAttachments(onboarding.getId()))
+                .thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(404)));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldFailWhenMandatoryDocumentsIncomplete() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse docA =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        docA.setId("doc_A");
+        docA.setRequired(true);
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse docB =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        docB.setId("doc_B");
+        docB.setRequired(true);
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(List.of(docA, docB)));
+        when(documentControllerApi.getAttachments(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(List.of("doc_A")));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldTriggerOrchestrationWhenAllMandatoryPresent() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse docA =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        docA.setId("doc_A");
+        docA.setRequired(true);
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse docB =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        docB.setId("doc_B");
+        docB.setRequired(true);
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(List.of(docA, docB)));
+        when(documentControllerApi.getAttachments(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(List.of("doc_A", "doc_B")));
+        when(orchestrationService.triggerOrchestration(any(), any()))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+        verify(orchestrationService).triggerOrchestration(onboarding.getId(), null);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldTriggerOrchestrationWhenSupersetPresent() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setProductId(PROD_IO.getValue());
+        onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
+        onboarding.getInstitution().setOrigin(Origin.ANAC);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        org.openapi.quarkus.product_json.model.RequiredDocumentResponse docA =
+                new org.openapi.quarkus.product_json.model.RequiredDocumentResponse();
+        docA.setId("doc_A");
+        docA.setRequired(true);
+        when(productService.getRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(List.of(docA)));
+        // Present attachments contain the mandatory doc PLUS extra ones
+        when(documentControllerApi.getAttachments(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(List.of("doc_A", "doc_extra_1", "doc_extra_2")));
+        when(orchestrationService.triggerOrchestration(any(), any()))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+        verify(orchestrationService).triggerOrchestration(onboarding.getId(), null);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldBeIdempotentOnSecondCall() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Void> subscriber = onboardingService
+                .triggerDocumentGate(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertCompleted();
+        verifyNoInteractions(productService);
+        verifyNoInteractions(orchestrationService);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_setsStatusRequestingAndSkipsOrchestration_whenRequiredDocumentsEnabled(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.TRUE)));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> {
+            verify(productService).isRequiredDocuments(
+                    eq(PROD_PAGOPA),
+                    eq(org.openapi.quarkus.product_json.model.InstitutionType.PRV),
+                    eq(org.openapi.quarkus.product_json.model.Origin.PDND_INFOCAMERE));
+            assertOnboardingBranching(OnboardingStatus.REQUESTING, 0);
+            PanacheMock.verify(Onboarding.class, never()).persistOrUpdate(any(List.class));
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_setsStatusRequestAndTriggersOrchestration_whenRequiredDocumentsDisabled(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> assertOnboardingBranching(OnboardingStatus.REQUEST, 1));
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_fallsBackToLegacyRequestFlow_whenIsRequiredDocumentsFails(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException("product-ms down"))));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> assertOnboardingBranching(OnboardingStatus.REQUEST, 1));
+    }
+
+    private void assertOnboardingBranching(OnboardingStatus expectedStatus, int expectedOrchestrationInvocations) {
+        ArgumentCaptor<Onboarding> captor = ArgumentCaptor.forClass(Onboarding.class);
+        PanacheMock.verify(Onboarding.class).persist(captor.capture(), any());
+        assertEquals(expectedStatus, captor.getValue().getStatus(),
+                "Unexpected status on the persisted onboarding for the feature-flag branching");
+        verify(orchestrationService, times(expectedOrchestrationInvocations)).triggerOrchestration(any(), any());
+    }
+
+    private Onboarding buildPrvOnboardingRequest() {
+        Onboarding request = createDummyOnboarding();
+        request.setProductId(PROD_PAGOPA.getValue());
+
+        Institution institution = request.getInstitution();
+        institution.setOrigin(Origin.PDND_INFOCAMERE);
+        institution.setInstitutionType(InstitutionType.PRV);
+        institution.setDescription("name");
+        institution.setDigitalAddress("pec");
+        institution.setAtecoCodes(List.of("01.11.00"));
+        return request;
+    }
+
+    private UserRequesterDto newUserRequesterDto() {
+        UserRequesterDto dto = new UserRequesterDto();
+        dto.setName("name");
+        dto.setSurname("surname");
+        dto.setEmail("test@test.com");
+        return dto;
+    }
+
+    private void setupPrvHappyPathMocks(Onboarding request, UniAsserter asserter) {
+        mockPersistOnboarding(asserter);
+        mockSimpleSearchPOSTAndPersist(asserter);
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
+
+        PDNDBusinessResource pdndBusinessResource = new PDNDBusinessResource();
+        pdndBusinessResource.setBusinessName("name");
+        pdndBusinessResource.setDigitalAddress("pec");
+        pdndBusinessResource.setAtecoCodes(List.of("01.11.00"));
+
+        when(infocamerePdndApi.institutionPdndByTaxCodeUsingGET(any()))
+                .thenReturn(Uni.createFrom().item(pdndBusinessResource));
+        when(pdndVisuraInfoCamereControllerApi.institutionVisuraPdndByTaxCodeUsingGET(any()))
+                .thenReturn(Uni.createFrom().item(pdndBusinessResource));
+
+        asserter.execute(() -> {
+            when(userRegistryApi.updateUsingPATCH(any(), any()))
+                    .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+            when(userRegistryApi.findByIdUsingGET(any(), any()))
+                    .thenReturn(Uni.createFrom().item(managerResourceWk));
+        });
     }
 
 }

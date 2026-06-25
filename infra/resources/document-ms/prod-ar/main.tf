@@ -15,8 +15,8 @@ module "local" {
   ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
-  container_app_cpu              = 1.25
-  container_app_memory           = "2.5Gi"
+  container_app_cpu              = 2.0
+  container_app_memory           = "4.0Gi"
 }
 
 ###############################################################################
