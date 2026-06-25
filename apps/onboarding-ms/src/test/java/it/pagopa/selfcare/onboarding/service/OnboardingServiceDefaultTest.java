@@ -59,6 +59,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
@@ -483,7 +484,7 @@ class OnboardingServiceDefaultTest {
     void onboarding_throwExceptionIfProductIsNotDelegable(UniAsserter asserter) {
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId("prod-pagopa");
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setInstitutionType(InstitutionType.PT);
         onboardingRequest.setInstitution(institutionBaseRequest);
@@ -1643,7 +1644,7 @@ class OnboardingServiceDefaultTest {
 
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId("prod-pagopa");
         Institution institutionPspRequest = new Institution();
         institutionPspRequest.setOrigin(Origin.SELC);
         institutionPspRequest.setInstitutionType(PSP);
@@ -1701,7 +1702,7 @@ class OnboardingServiceDefaultTest {
     void onboardingPsp_ProductHasParentNotOnboarded(UniAsserter asserter) {
         Onboarding onboardingRequest = new Onboarding();
         List<UserRequest> users = List.of(manager);
-        onboardingRequest.setProductId("productId");
+        onboardingRequest.setProductId("prod-pagopa");
         Institution institutionPspRequest = new Institution();
         institutionPspRequest.setOrigin(Origin.SELC);
         institutionPspRequest.setInstitutionType(PSP);
@@ -5872,6 +5873,111 @@ class OnboardingServiceDefaultTest {
         subscriber.assertCompleted();
         verifyNoInteractions(productService);
         verifyNoInteractions(orchestrationService);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_setsStatusRequestingAndSkipsOrchestration_whenRequiredDocumentsEnabled(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.TRUE)));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> {
+            verify(productService).isRequiredDocuments(
+                    eq(PROD_PAGOPA),
+                    eq(org.openapi.quarkus.product_json.model.InstitutionType.PRV),
+                    eq(org.openapi.quarkus.product_json.model.Origin.PDND_INFOCAMERE));
+            assertOnboardingBranching(OnboardingStatus.REQUESTING, 0);
+            PanacheMock.verify(Onboarding.class, never()).persistOrUpdate(any(List.class));
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_setsStatusRequestAndTriggersOrchestration_whenRequiredDocumentsDisabled(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> assertOnboardingBranching(OnboardingStatus.REQUEST, 1));
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_fallsBackToLegacyRequestFlow_whenIsRequiredDocumentsFails(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        setupPrvHappyPathMocks(request, asserter);
+
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException("product-ms down"))));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+
+        asserter.execute(() -> assertOnboardingBranching(OnboardingStatus.REQUEST, 1));
+    }
+
+    private void assertOnboardingBranching(OnboardingStatus expectedStatus, int expectedOrchestrationInvocations) {
+        ArgumentCaptor<Onboarding> captor = ArgumentCaptor.forClass(Onboarding.class);
+        PanacheMock.verify(Onboarding.class).persist(captor.capture(), any());
+        assertEquals(expectedStatus, captor.getValue().getStatus(),
+                "Unexpected status on the persisted onboarding for the feature-flag branching");
+        verify(orchestrationService, times(expectedOrchestrationInvocations)).triggerOrchestration(any(), any());
+    }
+
+    private Onboarding buildPrvOnboardingRequest() {
+        Onboarding request = createDummyOnboarding();
+        request.setProductId(PROD_PAGOPA.getValue());
+
+        Institution institution = request.getInstitution();
+        institution.setOrigin(Origin.PDND_INFOCAMERE);
+        institution.setInstitutionType(InstitutionType.PRV);
+        institution.setDescription("name");
+        institution.setDigitalAddress("pec");
+        institution.setAtecoCodes(List.of("01.11.00"));
+        return request;
+    }
+
+    private UserRequesterDto newUserRequesterDto() {
+        UserRequesterDto dto = new UserRequesterDto();
+        dto.setName("name");
+        dto.setSurname("surname");
+        dto.setEmail("test@test.com");
+        return dto;
+    }
+
+    private void setupPrvHappyPathMocks(Onboarding request, UniAsserter asserter) {
+        mockPersistOnboarding(asserter);
+        mockSimpleSearchPOSTAndPersist(asserter);
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
+
+        PDNDBusinessResource pdndBusinessResource = new PDNDBusinessResource();
+        pdndBusinessResource.setBusinessName("name");
+        pdndBusinessResource.setDigitalAddress("pec");
+        pdndBusinessResource.setAtecoCodes(List.of("01.11.00"));
+
+        when(infocamerePdndApi.institutionPdndByTaxCodeUsingGET(any()))
+                .thenReturn(Uni.createFrom().item(pdndBusinessResource));
+        when(pdndVisuraInfoCamereControllerApi.institutionVisuraPdndByTaxCodeUsingGET(any()))
+                .thenReturn(Uni.createFrom().item(pdndBusinessResource));
+
+        asserter.execute(() -> {
+            when(userRegistryApi.updateUsingPATCH(any(), any()))
+                    .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+            when(userRegistryApi.findByIdUsingGET(any(), any()))
+                    .thenReturn(Uni.createFrom().item(managerResourceWk));
+        });
     }
 
 }
