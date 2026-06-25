@@ -26,6 +26,8 @@
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <quarkus-openapi-generator.version>2.4.1</quarkus-openapi-generator.version>
         <commons-sdk-version>0.17.1</commons-sdk-version>
+        <azure-data-tables.version>12.5.8</azure-data-tables.version>
+        <azure-identity.version>1.18.4</azure-identity.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -60,7 +62,12 @@
         <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-data-tables</artifactId>
-            <version>12.1.1</version>
+            <version>${azure-data-tables.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>${azure-identity.version}</version>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
