@@ -2164,6 +2164,7 @@ components:
     OnboardingStatus:
       enum:
       - REQUEST
+      - REQUESTING
       - TOBEVALIDATED
       - PENDING
       - PENDING_IN_REVIEW

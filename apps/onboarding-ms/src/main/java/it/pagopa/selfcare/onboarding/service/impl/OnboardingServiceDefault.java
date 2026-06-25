@@ -69,6 +69,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject RegistryResourceFactory registryResourceFactory;
     @Inject OrchestrationService orchestrationService;
     @Inject DocumentService documentService;
+    @Inject it.pagopa.selfcare.onboarding.service.ProductService productService;
 
     // Helpers
     @Inject
@@ -95,7 +96,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingResponse> onboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                                List<AggregateInstitutionRequest> aggregates,
                                                UserRequesterDto userRequester) {
-        onboarding.setStatus(OnboardingStatus.REQUEST);
         log.info("Starting onboarding: description={}, origin={}, institutionType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
                 onboarding.getInstitution().getInstitutionType());
@@ -105,11 +105,40 @@ public class OnboardingServiceDefault implements OnboardingService {
                     log.info("Resolved workflowType={} for institution: {}",
                             workflowType, onboarding.getInstitution().getDescription());
                 })
-                .onItem().transformToUni(workflowType -> computeExpiry(onboarding.getProductId()))
+                .onItem().transformToUni(workflowType -> resolveRequiredDocumentsEnabled(onboarding))
+                .onItem().invoke(requiredDocumentsEnabled -> {
+                    OnboardingStatus initialStatus = Boolean.TRUE.equals(requiredDocumentsEnabled)
+                            ? OnboardingStatus.REQUESTING
+                            : OnboardingStatus.REQUEST;
+                    onboarding.setStatus(initialStatus);
+                    log.info("Resolved required-documents flag={} for institution {}: initial onboarding status set to {}",
+                            requiredDocumentsEnabled, onboarding.getInstitution().getDescription(), initialStatus);
+                })
+                .onItem().transformToUni(ignored -> computeExpiry(onboarding.getProductId()))
                 .onItem().transformToUni(expiry -> {
                     onboarding.setExpiringDate(expiry);
                     return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester);
                 });
+    }
+
+    private Uni<Boolean> resolveRequiredDocumentsEnabled(Onboarding onboarding) {
+        InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
+        Origin origin = onboarding.getInstitution().getOrigin();
+        var productInstitutionType = institutionType != null
+                ? org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType.name())
+                : null;
+        var productOrigin = origin != null
+                ? org.openapi.quarkus.product_json.model.Origin.valueOf(origin.name())
+                : null;
+        ProductId productId =  ProductId.fromValue(onboarding.getProductId());
+
+        return productService.isRequiredDocuments(productId, productInstitutionType, productOrigin)
+                .onFailure().recoverWithItem(throwable -> {
+                    log.warn("Falling back to legacy flow: isRequiredDocumentsEnabled failed for productId={}, institutionType={}, origin={}: {}",
+                            onboarding.getProductId(), institutionType, origin, throwable.getMessage());
+                    return Boolean.FALSE;
+                });
+
     }
 
     @Override
@@ -529,8 +558,10 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().transformToUni(ignored -> validationHelper.validateAggregates(aggregates, getManagerTaxCode(userRequests)))
                 .onItem().transformToUni(current -> persistenceHelper.persistOnboarding(onboarding, userRequests, product, aggregates))
                 .onItem().transformToUni(persisted ->
-                        persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                orchestrationService.triggerOrchestration(persisted.getId(), null)))
+                        OnboardingStatus.REQUESTING.equals(persisted.getStatus())
+                                ? Uni.createFrom().item(persisted)
+                                : persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
+                                        orchestrationService.triggerOrchestration(persisted.getId(), null)))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
