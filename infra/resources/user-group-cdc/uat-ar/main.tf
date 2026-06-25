@@ -20,6 +20,19 @@ module "local" {
 }
 
 ###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-table-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
 # Container App
 ###############################################################################
 
@@ -48,13 +61,20 @@ locals {
     {
       name  = "USER_GROUP_CDC_SEND_EVENTS_WATCH_ENABLED"
       value = "true"
+    },
+    {
+      name  = "STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "STORAGE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
     }
   ]
 
   secrets_names_user_group_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"      = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"                  = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"                  = "blob-storage-product-connection-string"
     "EVENTHUB-SC-USER-GROUPS-SELFCARE-WO-KEY-LC" = "eventhub-sc-usergroups-selfcare-wo-key-lc"
   }
 }
@@ -62,17 +82,18 @@ locals {
 module "container_app_user_group_cdc" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = module.local.config.env_short
-  resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app
-  container_app_name             = "${module.local.config.project}-user-group-cdc"
-  container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-user-group-cdc"
-  image_tag                      = var.image_tag
-  app_settings                   = local.app_settings_user_group_cdc
-  secrets_names                  = local.secrets_names_user_group_cdc
-  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
-  key_vault_name                 = module.local.config.key_vault_name
-  probes                         = module.local.config.quarkus_health_probes
-  tags                           = module.local.config.tags
+  env_short                             = module.local.config.env_short
+  resource_group_name                   = module.local.config.ca_resource_group_name
+  container_app                         = module.local.config.container_app
+  container_app_name                    = "${module.local.config.project}-user-group-cdc"
+  container_app_environment_name        = module.local.config.container_app_environment_name
+  image_name                            = "selfcare-user-group-cdc"
+  image_tag                             = var.image_tag
+  app_settings                          = local.app_settings_user_group_cdc
+  secrets_names                         = local.secrets_names_user_group_cdc
+  key_vault_resource_group_name         = module.local.config.key_vault_resource_group_name
+  key_vault_name                        = module.local.config.key_vault_name
+  probes                                = module.local.config.quarkus_health_probes
+  tags                                  = module.local.config.tags
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_table_identity.id]
 }
