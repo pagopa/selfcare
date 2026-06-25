@@ -3,7 +3,7 @@
 ###############################################################################
 data "azurerm_storage_account" "product_storage" {
   name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
-  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "product_storage_table_identity" {
