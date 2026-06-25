@@ -36,6 +36,7 @@ import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
+import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -83,6 +84,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
+    @Inject it.pagopa.selfcare.onboarding.service.ProductService productService;
 
     @ConfigProperty(name = "onboarding.orchestration.enabled")
     Boolean onboardingOrchestrationEnabled;
@@ -764,4 +766,124 @@ public class OnboardingServiceDefault implements OnboardingService {
                         .toLocalDateTime())
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
+
+    // -------------------------------------------------------------------------
+    // Document gate — idempotent trigger for FOR_APPROVE flow
+    // -------------------------------------------------------------------------
+
+    @Override
+    public Uni<Void> triggerDocumentGate(String onboardingId) {
+        log.info("triggerDocumentGate called for onboardingId={}", onboardingId);
+        return Onboarding.findById(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found", onboardingId)))
+                .onItem().transform(Onboarding.class::cast)
+                .onItem().transformToUni(onboarding -> {
+                    // Idempotent: if already past REQUEST status, do nothing
+                    if (!OnboardingStatus.REQUEST.equals(onboarding.getStatus())) {
+                        log.info("triggerDocumentGate: onboarding {} is in status {}, skipping (idempotent)",
+                                onboardingId, onboarding.getStatus());
+                        return Uni.createFrom().voidItem();
+                    }
+                    return verifyMandatoryDocumentsAndAdvance(onboarding);
+                });
+    }
+
+    private Uni<Void> verifyMandatoryDocumentsAndAdvance(Onboarding onboarding) {
+        if (!hasRequiredContext(onboarding)) {
+            log.warn("triggerDocumentGate: missing institutionType or origin for onboarding {}", onboarding.getId());
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Missing institutionType or origin for onboarding %s: cannot evaluate document gate",
+                            onboarding.getId())));
+        }
+
+        return fetchMandatoryDocIds(onboarding)
+                .onItem().transformToUni(mandatoryDocIds -> {
+                    if (mandatoryDocIds.isEmpty()) {
+                        log.warn("triggerDocumentGate: no mandatory documents configured for onboarding {}", onboarding.getId());
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("No mandatory documents configured for onboarding %s: document gate is not applicable for this context",
+                                        onboarding.getId())));
+                    }
+                    return fetchPresentAttachments(onboarding)
+                            .onItem().transformToUni(presentAttachments ->
+                                    evaluateAndAdvance(onboarding, mandatoryDocIds, presentAttachments));
+                })
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> {
+                    int status = ((WebApplicationException) ex).getResponse().getStatus();
+                    if (status == 404) {
+                        log.warn("triggerDocumentGate: product-ms returned 404 for onboarding {}, no required documents configured",
+                                onboarding.getId());
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("No required documents configuration found on product-ms for onboarding %s",
+                                        onboarding.getId())));
+                    }
+                    return Uni.createFrom().failure(ex);
+                });
+    }
+
+    private Uni<List<String>> fetchPresentAttachments(Onboarding onboarding) {
+        return documentService.getAttachments(onboarding.getId())
+                .onFailure(WebApplicationException.class)
+                .recoverWithUni(ex -> {
+                    int status = ((WebApplicationException) ex).getResponse().getStatus();
+                    if (status == 404) {
+                        log.warn("triggerDocumentGate: no attachments found for onboarding {}", onboarding.getId());
+                        return Uni.createFrom().failure(new InvalidRequestException(
+                                String.format("No documents have been uploaded yet for onboarding %s",
+                                        onboarding.getId())));
+                    }
+                    return Uni.createFrom().failure(ex);
+                });
+    }
+
+    private Uni<Void> evaluateAndAdvance(Onboarding onboarding, List<String> mandatoryDocIds,
+                                          List<String> presentAttachments) {
+        Set<String> presentSet = presentAttachments != null ? new HashSet<>(presentAttachments) : Set.of();
+        List<String> missingDocs = mandatoryDocIds.stream()
+                .filter(docId -> !presentSet.contains(docId))
+                .toList();
+
+        if (missingDocs.isEmpty()) {
+            log.info("triggerDocumentGate: all {} mandatory documents present for onboarding {}, triggering orchestration",
+                    mandatoryDocIds.size(), onboarding.getId());
+            return triggerOrchestrationIfEnabled(onboarding).replaceWithVoid();
+        }
+
+        log.warn("triggerDocumentGate: mandatory documents incomplete for onboarding {} (missing={})",
+                onboarding.getId(), missingDocs);
+        return Uni.createFrom().failure(new InvalidRequestException(
+                String.format("Missing mandatory documents for onboarding %s: %s",
+                        onboarding.getId(), missingDocs)));
+    }
+
+    private boolean hasRequiredContext(Onboarding onboarding) {
+        return onboarding.getInstitution().getInstitutionType() != null
+                && onboarding.getInstitution().getOrigin() != null;
+    }
+
+    private Uni<List<String>> fetchMandatoryDocIds(Onboarding onboarding) {
+        ProductId productId;
+        try {
+            productId = ProductId.fromValue(onboarding.getProductId());
+        } catch (IllegalArgumentException e) {
+            log.info("triggerDocumentGate: unknown productId {} for onboarding {}, skipping gate",
+                    onboarding.getProductId(), onboarding.getId());
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format("Unknown productId %s for onboarding %s", onboarding.getProductId(), onboarding.getId())));
+        }
+
+        var instType = org.openapi.quarkus.product_json.model.InstitutionType
+                .valueOf(onboarding.getInstitution().getInstitutionType().name());
+        var originEnum = org.openapi.quarkus.product_json.model.Origin
+                .valueOf(onboarding.getInstitution().getOrigin().name());
+
+        return productService.getRequiredDocuments(productId, instType, originEnum)
+                .onItem().transform(docs -> docs.stream()
+                        .filter(doc -> Boolean.TRUE.equals(doc.getRequired()))
+                        .map(RequiredDocumentResponse::getId)
+                        .toList());
+    }
+
 }

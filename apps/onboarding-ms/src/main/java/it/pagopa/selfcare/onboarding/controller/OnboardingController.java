@@ -761,4 +761,46 @@ public class OnboardingController {
                         .status(HttpStatus.SC_NO_CONTENT)
                         .build());
     }
+
+    @Operation(
+            summary = "Idempotent trigger to verify mandatory documents and advance onboarding.",
+            description = "Idempotent trigger invoked after each document upload. " +
+                    "Recalculates required documents for the onboarding context (productId, institutionType, origin) " +
+                    "and verifies presence of all mandatory attachments. " +
+                    "If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING. " +
+                    "If documents are incomplete or onboarding is already past REQUEST status, no action is taken (idempotent).",
+            operationId = "triggerDocumentGate"
+    )
+    @APIResponses(
+            value = {
+                    @APIResponse(responseCode = "204", description = "Gate evaluated — orchestration triggered if documents complete, no action otherwise"),
+                    @APIResponse(
+                            responseCode = "400",
+                            description = "Bad Request — no mandatory documents configured for this onboarding context",
+                            content = @Content(
+                                    schema = @Schema(implementation = Problem.class),
+                                    mediaType = "application/problem+json")),
+                    @APIResponse(
+                            responseCode = "404",
+                            description = "Onboarding not found",
+                            content = @Content(
+                                    schema = @Schema(implementation = Problem.class),
+                                    mediaType = "application/problem+json")),
+                    @APIResponse(
+                            responseCode = "500",
+                            description = "Internal Server Error",
+                            content = @Content(
+                                    schema = @Schema(implementation = Problem.class),
+                                    mediaType = "application/problem+json"))
+            })
+    @PUT
+    @Path("/{onboardingId}")
+    @Tag(name = "internal-v1")
+    @Tag(name = "Onboarding Controller")
+    public Uni<Response> triggerDocumentGate(@PathParam(value = "onboardingId") String onboardingId) {
+        return onboardingService.triggerDocumentGate(onboardingId)
+                .map(ignore -> Response
+                        .status(HttpStatus.SC_NO_CONTENT)
+                        .build());
+    }
 }
