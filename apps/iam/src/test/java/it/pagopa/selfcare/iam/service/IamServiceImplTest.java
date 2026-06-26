@@ -1,11 +1,8 @@
 package it.pagopa.selfcare.iam.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.common.QuarkusTestResource;
+import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
@@ -14,21 +11,21 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.iam.model.ProductRole;
-import it.pagopa.selfcare.iam.model.ProductRolePermissions;
-import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
-import it.pagopa.selfcare.iam.model.ProductRoles;
-import it.pagopa.selfcare.iam.model.Role;
-import it.pagopa.selfcare.iam.model.UserPermissions;
+import it.pagopa.selfcare.iam.model.*;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import jakarta.inject.Inject;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
@@ -548,8 +545,7 @@ class IamServiceImplTest {
 
     List<ProductRolePermissions> productRolePermissions = List.of(prp1);
 
-    ProductRolePermissionsList productRolePermissionsList =
-        new ProductRolePermissionsList(productRolePermissions);
+    ProductRolePermissionsList productRolePermissionsList = ProductRolePermissionsList.builder().items(productRolePermissions).build();
 
     when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
         .thenReturn(Uni.createFrom().item(productRolePermissions));
