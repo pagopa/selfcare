@@ -4,9 +4,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
+import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.core.ProductService;
 import it.pagopa.selfcare.onboarding.web.model.OriginResponse;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,40 @@ public class ProductV2Controller {
         OriginResponse response = productMapper.toOriginResponse(originEntries);
         log.trace("getOrigins end");
         return response;
+    }
+
+    @GetMapping(value = "/{productId}/required-documents")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Get required documents for a product",
+            description = "Returns the list of required documents for the given product, institutionType and origin.",
+            operationId = "getRequiredDocuments")
+    public List<RequiredDocumentModel> getRequiredDocuments(
+            @ApiParam("The product id") @PathVariable("productId") String productId,
+            @RequestParam("institutionType") String institutionType,
+            @RequestParam("origin") String origin) {
+        log.trace("getRequiredDocuments start");
+        log.debug("getRequiredDocuments productId = {}, institutionType = {}, origin = {}", productId, institutionType, origin);
+        List<RequiredDocumentModel> result = productService.getRequiredDocuments(productId, institutionType, origin);
+        log.debug("getRequiredDocuments size = {}", result.size());
+        log.trace("getRequiredDocuments end");
+        return result;
+    }
+
+    @GetMapping(value = "/{productId}/required-documents/enabled")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "Check if required documents are enabled for a product",
+            description = "Returns true if required documents are configured for the given product, institutionType and origin.",
+            operationId = "isRequiredDocumentsEnabled")
+    public boolean isRequiredDocumentsEnabled(
+            @ApiParam("The product id") @PathVariable("productId") String productId,
+            @RequestParam("institutionType") String institutionType,
+            @RequestParam("origin") String origin) {
+        log.trace("isRequiredDocumentsEnabled start");
+        log.debug("isRequiredDocumentsEnabled productId = {}, institutionType = {}, origin = {}", productId, institutionType, origin);
+        boolean result = productService.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        log.debug("isRequiredDocumentsEnabled result = {}", result);
+        log.trace("isRequiredDocumentsEnabled end");
+        return result;
     }
 
 }

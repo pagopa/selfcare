@@ -337,4 +337,37 @@ class InstitutionV2ControllerTest {
         verifyNoMoreInteractions(institutionServiceMock);
     }
 
+    @Test
+    void triggerOnboardingRequest_success() throws Exception {
+        // given
+        String onboardingId = "onboarding-123";
+        doNothing().when(institutionServiceMock).triggerOnboardingRequest(onboardingId);
+
+        // when
+        mvc.perform(MockMvcRequestBuilders
+                        .put(BASE_URL + "/{onboardingId}", onboardingId)
+                        .contentType(APPLICATION_JSON_VALUE))
+                // then
+                .andExpect(status().isNoContent());
+
+        verify(institutionServiceMock, times(1)).triggerOnboardingRequest(onboardingId);
+        verifyNoMoreInteractions(institutionServiceMock);
+    }
+
+    @Test
+    void triggerOnboardingRequest_serviceThrows_returns500() throws Exception {
+        // given
+        String onboardingId = "onboarding-error";
+        doThrow(new RuntimeException("Internal error")).when(institutionServiceMock).triggerOnboardingRequest(onboardingId);
+
+        // when
+        mvc.perform(MockMvcRequestBuilders
+                        .put(BASE_URL + "/{onboardingId}", onboardingId)
+                        .contentType(APPLICATION_JSON_VALUE))
+                // then
+                .andExpect(status().isInternalServerError());
+
+        verify(institutionServiceMock, times(1)).triggerOnboardingRequest(onboardingId);
+    }
+
 }

@@ -1,11 +1,15 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
+import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.core.ProductService;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
 import it.pagopa.selfcare.onboarding.web.model.OriginResponse;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
+import java.util.List;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.owasp.encoder.Encode;
@@ -118,4 +122,109 @@ class ProductV2ControllerTest {
         // then
         verifyNoInteractions(productServiceMock, productMapperMock);
     }
+
+    @Test
+    void getRequiredDocuments_success() throws Exception {
+        // given
+        String productId = "prod-test";
+        String institutionType = "PA";
+        String origin = "IPA";
+
+        RequiredDocumentModel doc = new RequiredDocumentModel();
+        doc.setId("doc-1");
+        doc.setName("Statuto");
+        doc.setRequired(true);
+
+        when(productServiceMock.getRequiredDocuments(productId, institutionType, origin)).thenReturn(List.of(doc));
+
+        // when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/{productId}/required-documents", productId)
+                        .param("institutionType", institutionType)
+                        .param("origin", origin)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        List<RequiredDocumentModel> response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), new TypeReference<>() {});
+        Assertions.assertNotNull(response);
+        Assertions.assertEquals(1, response.size());
+        Assertions.assertEquals("doc-1", response.get(0).getId());
+        verify(productServiceMock, times(1)).getRequiredDocuments(productId, institutionType, origin);
+        verifyNoMoreInteractions(productServiceMock);
+    }
+
+    @Test
+    void getRequiredDocuments_emptyList() throws Exception {
+        // given
+        String productId = "prod-test";
+        String institutionType = "PA";
+        String origin = "IPA";
+
+        when(productServiceMock.getRequiredDocuments(productId, institutionType, origin)).thenReturn(List.of());
+
+        // when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/{productId}/required-documents", productId)
+                        .param("institutionType", institutionType)
+                        .param("origin", origin)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        List<RequiredDocumentModel> response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), new TypeReference<>() {});
+        Assertions.assertNotNull(response);
+        Assertions.assertTrue(response.isEmpty());
+    }
+
+    @Test
+    void isRequiredDocumentsEnabled_returnsTrue() throws Exception {
+        // given
+        String productId = "prod-test";
+        String institutionType = "PA";
+        String origin = "IPA";
+
+        when(productServiceMock.isRequiredDocumentsEnabled(productId, institutionType, origin)).thenReturn(true);
+
+        // when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/{productId}/required-documents/enabled", productId)
+                        .param("institutionType", institutionType)
+                        .param("origin", origin)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        Assertions.assertTrue(Boolean.parseBoolean(result.getResponse().getContentAsString()));
+        verify(productServiceMock, times(1)).isRequiredDocumentsEnabled(productId, institutionType, origin);
+        verifyNoMoreInteractions(productServiceMock);
+    }
+
+    @Test
+    void isRequiredDocumentsEnabled_returnsFalse() throws Exception {
+        // given
+        String productId = "prod-test";
+        String institutionType = "PA";
+        String origin = "IPA";
+
+        when(productServiceMock.isRequiredDocumentsEnabled(productId, institutionType, origin)).thenReturn(false);
+
+        // when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/{productId}/required-documents/enabled", productId)
+                        .param("institutionType", institutionType)
+                        .param("origin", origin)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        Assertions.assertFalse(Boolean.parseBoolean(result.getResponse().getContentAsString()));
+    }
+
 }

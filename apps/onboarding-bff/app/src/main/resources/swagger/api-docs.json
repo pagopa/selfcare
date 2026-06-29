@@ -23,6 +23,74 @@
     "name" : "user"
   } ],
   "paths" : {
+    "/v2/institutions/{onboardingId}" : {
+      "put" : {
+        "tags" : [ "institution-v-2-controller" ],
+        "summary" : "Trigger onboarding request",
+        "description" : "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
+        "operationId" : "triggerOnboardingRequest",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/v2/tokens/{onboardingId}/verify" : {
       "post" : {
         "tags" : [ "token-v-2-controller" ],
@@ -670,8 +738,8 @@
           "required" : true
         },
         "responses" : {
-          "409" : {
-            "description" : "Conflict",
+          "403" : {
+            "description" : "Forbidden",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -680,8 +748,8 @@
               }
             }
           },
-          "403" : {
-            "description" : "Forbidden",
+          "409" : {
+            "description" : "Conflict",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -2562,6 +2630,187 @@
         } ]
       }
     },
+    "/v2/product/{productId}/required-documents" : {
+      "get" : {
+        "tags" : [ "product-v-2-controller" ],
+        "summary" : "Get required documents for a product",
+        "description" : "Returns the list of required documents for the given product, institutionType and origin.",
+        "operationId" : "getRequiredDocuments",
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionType",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "origin",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RequiredDocumentModel"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/product/{productId}/required-documents/enabled" : {
+      "get" : {
+        "tags" : [ "product-v-2-controller" ],
+        "summary" : "Check if required documents are enabled for a product",
+        "description" : "Returns true if required documents are configured for the given product, institutionType and origin.",
+        "operationId" : "isRequiredDocumentsEnabled",
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "institutionType",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "origin",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/v2/institutions" : {
       "get" : {
         "tags" : [ "institution-v-2-controller" ],
@@ -3025,7 +3274,7 @@
     },
     "/v1/products" : {
       "get" : {
-        "tags" : [ "product-controller" ],
+        "tags" : [ "product-v-1-controller" ],
         "summary" : "The service retrieves all products",
         "description" : "The service retrieves all products",
         "operationId" : "getProducts",
@@ -3095,7 +3344,7 @@
     },
     "/v1/products/admin" : {
       "get" : {
-        "tags" : [ "product-controller" ],
+        "tags" : [ "product-v-1-controller" ],
         "summary" : "The service retrieves all products for the addition administration functionality",
         "description" : "The service retrieves all products for the addition administration functionality",
         "operationId" : "getProductsAdmin",
@@ -3165,7 +3414,7 @@
     },
     "/v1/product/{id}" : {
       "get" : {
-        "tags" : [ "product-controller" ],
+        "tags" : [ "product-v-1-controller" ],
         "summary" : "The service retrieves the product given its internal id",
         "description" : "The service retrieves the product given its internal id",
         "operationId" : "getProductUsingGET",
@@ -4697,6 +4946,30 @@
             "items" : {
               "$ref" : "#/components/schemas/OriginEntry"
             }
+          }
+        }
+      },
+      "RequiredDocumentModel" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "labelKey" : {
+            "type" : "string"
+          },
+          "required" : {
+            "type" : "boolean"
+          },
+          "mimeType" : {
+            "type" : "string"
+          },
+          "maxDocumentsRequired" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },

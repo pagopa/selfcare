@@ -48,4 +48,6 @@ public interface OnboardingMsConnector {
     void onboardingUsersPgFromIcAndAde(OnboardingData onboardingUserPgRequest);
 
     List<OnboardingResult> onboardingWithFilter(String taxCode, String status);
+
+    void triggerOnboardingRequest(String onboardingId);
 }

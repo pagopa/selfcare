@@ -2083,4 +2083,18 @@ class InstitutionServiceImplTest {
     private static InstitutionInfo createInstitutionInfoMock() {
         return false ? mockInstance(new InstitutionInfo()) : mockInstance(new InstitutionInfo(), "setInstitutionLocation");
     }
+
+    @Test
+    void triggerOnboardingRequest_success() {
+        // given
+        String onboardingId = "onboarding-123";
+
+        doNothing().when(onboardingMsConnector).triggerOnboardingRequest(onboardingId);
+
+        // when
+        institutionService.triggerOnboardingRequest(onboardingId);
+
+        // then
+        verify(onboardingMsConnector, times(1)).triggerOnboardingRequest(onboardingId);
+    }
 }

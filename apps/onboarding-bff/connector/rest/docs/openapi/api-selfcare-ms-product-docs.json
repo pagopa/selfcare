@@ -562,6 +562,30 @@
           "USERS_PG",
           "USERS_EA"
         ]
+      },
+      "RequiredDocumentResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "labelKey": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "maxDocumentsRequired": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       }
     },
     "securitySchemes": {
@@ -975,6 +999,145 @@
           },
           "403": {
             "description": "Not Allowed"
+          }
+        },
+        "security": [
+          {
+            "SecurityScheme": []
+          }
+        ]
+      }
+    },
+    "/product/{productId}/required-documents": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Get required documents for a product",
+        "description": "Returns the list of required documents for the given combination of productId, institutionType and origin.",
+        "operationId": "getRequiredDocuments",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "institutionType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InstitutionType"
+            }
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Origin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Required documents retrieved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RequiredDocumentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "SecurityScheme": []
+          }
+        ]
+      }
+    },
+    "/product/{productId}/required-documents/enabled": {
+      "get": {
+        "tags": [
+          "Product"
+        ],
+        "summary": "Check if required documents are enabled for a product",
+        "description": "Returns true if required documents are configured for the given product, institutionType and origin combination; false otherwise.",
+        "operationId": "isRequiredDocumentsEnabled",
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "institutionType",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/InstitutionType"
+            }
+          },
+          {
+            "name": "origin",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Origin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Check completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          },
+          "404": {
+            "description": "Product not found"
+          },
+          "500": {
+            "description": "Internal Server Error"
           }
         },
         "security": [
