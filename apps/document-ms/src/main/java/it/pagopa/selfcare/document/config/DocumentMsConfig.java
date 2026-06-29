@@ -38,11 +38,11 @@ public class DocumentMsConfig {
     }
 
     @ApplicationScoped
-    public AzureBlobClient azureBobClientContract(@ConfigProperty(name = "document-ms.blob-storage.connection-string-contracts")
-                                                      String connectionStringContracts,
-                                                  @ConfigProperty(name = "document-ms.blob-storage.container-contracts")
-                                                      String containerContracts){
-        return new AzureBlobClientDefault(connectionStringContracts, containerContracts);
+    public AzureBlobClient systemBlobClient(@ConfigProperty(name = "document-ms.blob-storage.connection-string-contracts")
+                                                String connectionString,
+                                            @ConfigProperty(name = "document-ms.blob-storage.container-contracts")
+                                                String container) {
+        return new AzureBlobClientDefault(connectionString, container);
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){

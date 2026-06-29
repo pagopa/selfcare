@@ -157,6 +157,8 @@ components:
           $ref: "#/components/schemas/LocalDateTime"
         activatedAt:
           $ref: "#/components/schemas/LocalDateTime"
+        storageOrigin:
+          $ref: "#/components/schemas/StorageOrigin"
         signingStep:
           format: int32
           type: integer
@@ -187,6 +189,8 @@ components:
             type: string
         productTitle:
           type: string
+        storageOrigin:
+          $ref: "#/components/schemas/StorageOrigin"
         attachment:
           type: boolean
     DocumentResponse:
@@ -225,6 +229,8 @@ components:
         signingStep:
           format: int32
           type: integer
+        storageOrigin:
+          $ref: "#/components/schemas/StorageOrigin"
     DocumentType:
       enum:
       - INSTITUTION
@@ -434,6 +440,11 @@ components:
             type: string
         skipSignatureVerification:
           type: boolean
+    StorageOrigin:
+      enum:
+      - SYSTEM
+      - USER
+      type: string
     UploadAggregateCsvRequest:
       required:
       - onboardingId

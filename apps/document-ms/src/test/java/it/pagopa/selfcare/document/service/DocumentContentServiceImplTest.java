@@ -10,6 +10,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
+import it.pagopa.selfcare.document.config.StorageRegistry;
 import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
@@ -30,6 +31,7 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.bson.types.ObjectId;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -66,7 +68,13 @@ class DocumentContentServiceImplTest {
     @InjectMock DocumentService documentService;
     @InjectMock DocumentMsConfig documentMsConfig;
     @InjectMock DocumentMsTelemetryService telemetryService;
+    @InjectMock StorageRegistry storageRegistry;
     @Inject DocumentContentService documentContentService;
+
+    @BeforeEach
+    void setupStorageRegistry() {
+        when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
+    }
 
     // ---- retrieveContract ----
 
