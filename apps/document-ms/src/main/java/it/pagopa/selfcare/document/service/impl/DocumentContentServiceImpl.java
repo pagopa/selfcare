@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
+import it.pagopa.selfcare.document.config.StorageRegistry;
 import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
@@ -14,6 +15,7 @@ import it.pagopa.selfcare.document.model.FormItem;
 import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentContentService;
 import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
@@ -67,6 +69,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private final DocumentService documentService;
     private final PdfGenerationService pdfGenerationService;
     private final DocumentMsTelemetryService telemetryService;
+    private final StorageRegistry storageRegistry;
 
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
@@ -88,7 +91,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             DocumentRepository documentRepository,
             DocumentService documentService,
             PdfGenerationService pdfGenerationService,
-            DocumentMsTelemetryService telemetryService) {
+            DocumentMsTelemetryService telemetryService,
+            StorageRegistry storageRegistry) {
         this.azureBlobClient = azureBlobClient;
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
@@ -96,6 +100,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         this.documentService = documentService;
         this.pdfGenerationService = pdfGenerationService;
         this.telemetryService = telemetryService;
+        this.storageRegistry = storageRegistry;
     }
 
     @Override
@@ -132,7 +137,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentRepository.findByOnboardingId(onboardingId)
                 .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
                 .onItem().transformToUni(document ->
-                        fetchFileFromAzureAsync(document.getContractSigned())
+                        fetchFileFromAzureAsync(document.getContractSigned(), document.getStorageOrigin())
                                 .emitOn(Infrastructure.getDefaultWorkerPool())
                                 .onItem().transform(contract -> validateAndExtractSignedFile(contract, document.getContractSigned()))
                                 .onItem().transform(processedFile -> buildDownloadResponse(processedFile, document, true))
@@ -184,7 +189,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Attachment with id %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
                         Uni.createFrom()
-                                .item(() -> azureBlobClient.getFileAsPdf(DocumentFileUtils.buildAttachmentPath(document, documentMsConfig.getContractPath())))
+                                .item(() -> storageRegistry.clientFor(document.getStorageOrigin())
+                                        .getFileAsPdf(DocumentFileUtils.buildAttachmentPath(document, documentMsConfig.getContractPath())))
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                                 .onItem().transform(contract -> RestResponse.ResponseBuilder
                                         .ok(contract, MediaType.APPLICATION_OCTET_STREAM)
@@ -483,14 +489,15 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     // ==================== Private Reactive I/O isolation methods ====================
 
-  private Uni<File> fetchPdfFromAzureAsync(
-      Document document, String onboardingId, boolean isSigned) {
+    private Uni<File> fetchPdfFromAzureAsync(
+        Document document, String onboardingId, boolean isSigned) {
+        AzureBlobClient client = storageRegistry.clientFor(document.getStorageOrigin());
         return Uni.createFrom().item(() -> {
                     String filePath = isSigned
                             ? document.getContractSigned()
                             : DocumentFileUtils.getContractNotSigned(onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
 
-                    return azureBlobClient.getFileAsPdf(filePath);
+                    return client.getFileAsPdf(filePath);
                 })
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
@@ -682,8 +689,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         }
     }
 
-    private Uni<File> fetchFileFromAzureAsync(String filePath) {
-        return Uni.createFrom().item(() -> azureBlobClient.retrieveFile(filePath))
+    private Uni<File> fetchFileFromAzureAsync(String filePath, StorageOrigin origin) {
+        AzureBlobClient client = storageRegistry.clientFor(origin);
+        return Uni.createFrom().item(() -> client.retrieveFile(filePath))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
 
