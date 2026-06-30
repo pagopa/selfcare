@@ -3,55 +3,60 @@ package it.pagopa.selfcare.document.config;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.document.model.StorageOrigin;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.EnumMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 @ApplicationScoped
 @Slf4j
 public class StorageRegistry {
 
-    private final Map<StorageOrigin, AzureBlobClient> clientsByOrigin;
+    @ConfigProperty(name = "document-ms.blob-storage.connection-string-contracts")
+    Optional<String> systemConnectionString;
 
-    public StorageRegistry(
-            AzureBlobClient systemBlobClient,
-            @ConfigProperty(name = "document-ms.blob-storage.connection-string-user") Optional<String> userConnectionString,
-            @ConfigProperty(name = "document-ms.blob-storage.container-user") Optional<String> userContainer) {
+    @ConfigProperty(name = "document-ms.blob-storage.container-contracts")
+    Optional<String> systemContainer;
+
+    @ConfigProperty(name = "document-ms.blob-storage.connection-string-user")
+    Optional<String> userConnectionString;
+
+    @ConfigProperty(name = "document-ms.blob-storage.container-user")
+    Optional<String> userContainer;
+
+    private Map<StorageOrigin, AzureBlobClient> clientsByOrigin;
+
+    @PostConstruct
+    void init() {
+        AzureBlobClient system = buildBlobClient(systemConnectionString, systemContainer, StorageOrigin.SYSTEM)
+                .orElseThrow(() -> new IllegalStateException("Missing required blob storage configuration for SYSTEM"));
 
         Map<StorageOrigin, AzureBlobClient> clients = new EnumMap<>(StorageOrigin.class);
-        clients.put(StorageOrigin.SYSTEM, systemBlobClient);
-        clients.put(StorageOrigin.USER, buildUserBlobClient(systemBlobClient, userConnectionString, userContainer));
+        clients.put(StorageOrigin.SYSTEM, system);
+        buildBlobClient(userConnectionString, userContainer, StorageOrigin.USER)
+                .ifPresent(user -> clients.put(StorageOrigin.USER, user));
 
         this.clientsByOrigin = Map.copyOf(clients);
+        log.info("StorageRegistry: initialized with {} configured client(s): {}", clientsByOrigin.size(), clientsByOrigin.keySet());
     }
 
     public AzureBlobClient clientFor(StorageOrigin origin) {
-        if (Objects.isNull(origin)) {
-            log.debug("StorageRegistry: storageOrigin is null (legacy document), routing to SYSTEM");
-            return clientsByOrigin.get(StorageOrigin.SYSTEM);
-        }
-        AzureBlobClient client = clientsByOrigin.getOrDefault(origin, clientsByOrigin.get(StorageOrigin.SYSTEM));
-        log.debug("StorageRegistry: routing storageOrigin={} to client={}", origin, client.getClass().getSimpleName());
-        return client;
+        StorageOrigin resolved = Objects.isNull(origin) ? StorageOrigin.SYSTEM : origin;
+        log.debug("StorageRegistry: routing storageOrigin={}", resolved);
+        return clientsByOrigin.getOrDefault(resolved, clientsByOrigin.get(StorageOrigin.SYSTEM));
     }
 
-    private AzureBlobClient buildUserBlobClient(AzureBlobClient systemBlobClient,
-                                                Optional<String> connectionString,
-                                                Optional<String> container) {
-        boolean isConfigured = connectionString.isPresent() && container.isPresent()
-                && !connectionString.get().isBlank() && !container.get().isBlank();
-
-        if (isConfigured) {
-            log.info("StorageRegistry: USER blob client configured with container={}", container.get());
-            return new AzureBlobClientDefault(connectionString.get(), container.get());
+    private Optional<AzureBlobClient> buildBlobClient(Optional<String> connectionString, Optional<String> container, StorageOrigin origin) {
+        if (connectionString.filter(s -> !s.isBlank()).isPresent()
+                && container.filter(s -> !s.isBlank()).isPresent()) {
+            log.info("StorageRegistry: {} blob client configured with container={}", origin, container.get());
+            return Optional.of(new AzureBlobClientDefault(connectionString.get(), container.get()));
         }
-
-        log.info("StorageRegistry: USER blob client not configured, falling back to SYSTEM");
-        return systemBlobClient;
+        return Optional.empty();
     }
 }

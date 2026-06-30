@@ -62,8 +62,9 @@ class DocumentContentServiceImplTest {
     private static final String PRODUCT_NAME = "PagoPA";
     private static final String ATTACHMENT_NAME = "allegato-1";
 
+    private static final AzureBlobClient azureBlobClient = mock(AzureBlobClient.class);
+
     @InjectMock DocumentRepository documentRepository;
-    @InjectMock AzureBlobClient azureBlobClient;
     @InjectMock SignatureService signatureService;
     @InjectMock DocumentService documentService;
     @InjectMock DocumentMsConfig documentMsConfig;
@@ -73,6 +74,7 @@ class DocumentContentServiceImplTest {
 
     @BeforeEach
     void setupStorageRegistry() {
+        reset(azureBlobClient);
         when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
     }
 

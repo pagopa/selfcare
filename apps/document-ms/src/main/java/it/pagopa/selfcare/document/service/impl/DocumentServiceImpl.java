@@ -50,11 +50,11 @@ public class DocumentServiceImpl implements DocumentService {
     SignatureService signatureService;
 
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
-                               AzureBlobClient azureBlobClient, DocumentMsTelemetryService telemetryService,
+                               DocumentMsTelemetryService telemetryService,
                                StorageRegistry storageRegistry) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
-        this.azureBlobClient = azureBlobClient;
+        this.azureBlobClient = storageRegistry.clientFor(StorageOrigin.SYSTEM);
         this.telemetryService = telemetryService;
         this.storageRegistry = storageRegistry;
     }

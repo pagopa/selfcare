@@ -85,7 +85,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     @Inject
     public DocumentContentServiceImpl(
-            AzureBlobClient azureBlobClient,
             DocumentMsConfig documentMsConfig,
             SignatureService signatureService,
             DocumentRepository documentRepository,
@@ -93,7 +92,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             PdfGenerationService pdfGenerationService,
             DocumentMsTelemetryService telemetryService,
             StorageRegistry storageRegistry) {
-        this.azureBlobClient = azureBlobClient;
+        this.azureBlobClient = storageRegistry.clientFor(StorageOrigin.SYSTEM);
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
         this.documentRepository = documentRepository;

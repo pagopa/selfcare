@@ -1,8 +1,6 @@
 package it.pagopa.selfcare.document.config;
 
 import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -35,14 +33,6 @@ public class DocumentMsConfig {
 
     void onStart(@Observes StartupEvent ev) {
         log.info("Database {} is starting...", Document.mongoDatabase().getName());
-    }
-
-    @ApplicationScoped
-    public AzureBlobClient systemBlobClient(@ConfigProperty(name = "document-ms.blob-storage.connection-string-contracts")
-                                                String connectionString,
-                                            @ConfigProperty(name = "document-ms.blob-storage.container-contracts")
-                                                String container) {
-        return new AzureBlobClientDefault(connectionString, container);
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){

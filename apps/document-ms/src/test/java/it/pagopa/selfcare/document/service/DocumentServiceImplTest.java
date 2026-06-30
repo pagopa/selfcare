@@ -40,12 +40,10 @@ class DocumentServiceImplTest {
 
     private static final String ONBOARDING_ID = "onboardingId";
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
+    private static final AzureBlobClient azureBlobClient = mock(AzureBlobClient.class);
 
     @Inject
     DocumentService documentService;
-
-    @InjectMock
-    AzureBlobClient azureBlobClient;
 
     @InjectMock
     DocumentMsConfig documentMsConfig;
@@ -64,6 +62,7 @@ class DocumentServiceImplTest {
 
     @BeforeEach
     void setupStorageRegistry() {
+        reset(azureBlobClient);
         when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
     }
 
