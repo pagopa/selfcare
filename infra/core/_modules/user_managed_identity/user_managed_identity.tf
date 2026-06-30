@@ -1,6 +1,6 @@
 
 resource "azurerm_resource_group" "user_managed_identity_rg" {
-  name = "${var.prefix}-${var.env_short}-${var.domain}-user-managed-identity-rg"
+  name     = "${var.prefix}-${var.env_short}-${var.domain}-user-managed-identity-rg"
   location = var.location
 }
 
