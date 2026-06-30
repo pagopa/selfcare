@@ -5,7 +5,6 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.config.StorageRegistry;
@@ -42,7 +41,6 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final DocumentMsConfig documentMsConfig;
-    private final AzureBlobClient azureBlobClient;
     private final DocumentMsTelemetryService telemetryService;
     private final StorageRegistry storageRegistry;
 
@@ -54,7 +52,6 @@ public class DocumentServiceImpl implements DocumentService {
                                StorageRegistry storageRegistry) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
-        this.azureBlobClient = storageRegistry.clientFor(StorageOrigin.SYSTEM);
         this.telemetryService = telemetryService;
         this.storageRegistry = storageRegistry;
     }
@@ -331,7 +328,7 @@ public class DocumentServiceImpl implements DocumentService {
         log.info("{} not found in DB for onboarding {}. Calculating digest from original template: {}",
                 logDocType, sanitize(onboardingId), sanitize(azureFilePath));
 
-        return Uni.createFrom().item(() -> azureBlobClient.getFileAsPdf(azureFilePath))
+        return Uni.createFrom().item(() -> storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(azureFilePath))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transform(file -> {
                     DSSDocument dssDocument = new FileDocument(file);

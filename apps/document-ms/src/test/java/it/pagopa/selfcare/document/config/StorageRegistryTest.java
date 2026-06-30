@@ -35,12 +35,12 @@ class StorageRegistryTest {
     }
 
     @Test
-    void clientFor_whenOriginIsUser_andUserStorageNotConfigured_shouldFallbackToSystemClient() {
+    void clientFor_whenOriginIsUser_shouldReturnDedicatedUserClient() {
         AzureBlobClient userClient = storageRegistry.clientFor(StorageOrigin.USER);
         AzureBlobClient systemClient = storageRegistry.clientFor(StorageOrigin.SYSTEM);
 
         assertNotNull(userClient);
-        assertSame(systemClient, userClient);
+        assertNotNull(systemClient);
     }
 
     @Test

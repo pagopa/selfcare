@@ -62,7 +62,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private static final String FILE_NAME_AGGREGATES_CSV = "aggregates.csv";
     private static final String PATH_SEPARATOR = "/";
 
-    private final AzureBlobClient azureBlobClient;
     private final DocumentMsConfig documentMsConfig;
     private final SignatureService signatureService;
     private final DocumentRepository documentRepository;
@@ -92,7 +91,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             PdfGenerationService pdfGenerationService,
             DocumentMsTelemetryService telemetryService,
             StorageRegistry storageRegistry) {
-        this.azureBlobClient = storageRegistry.clientFor(StorageOrigin.SYSTEM);
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
         this.documentRepository = documentRepository;
@@ -170,7 +168,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                                               String attachmentName, String institutionDescription,
                                                               String productId) {
         return Uni.createFrom()
-                .item(() -> azureBlobClient.getFileAsPdf(templatePath))
+                .item(() -> storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(templatePath))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Template Attachment not found on storage for onboarding: %s", onboardingId)))
                 .chain(file -> signatureService.signDocument(file, institutionDescription, productId))
@@ -250,15 +248,17 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     String deletedSignedContract;
                     String deletedContractFile;
 
+                    AzureBlobClient documentClient = storageRegistry.clientFor(document.getStorageOrigin());
+
                     try {
-                        deletedSignedContract = deleteFileFromAzure(originalSignedPath, basePath);
+                        deletedSignedContract = deleteFileFromAzure(documentClient, originalSignedPath, basePath);
                     } catch (Exception e) {
                         log.error("Error deleting signed contract from Azure for onboardingId {}: {}", sanitize(onboardingId), e.getMessage());
                         return Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure", e));
                     }
 
                     try {
-                        deletedContractFile = deleteFileFromAzure(originalContractPath, basePath);
+                        deletedContractFile = deleteFileFromAzure(documentClient, originalContractPath, basePath);
                     } catch (Exception e) {
                         log.warn("Unsigned contract file not found on Azure for onboardingId {}. Skipping: {}", sanitize(onboardingId), e.getMessage());
                         deletedContractFile = document.getContractFilename();
@@ -274,7 +274,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
-                                return rollbackDeletedAzureFiles(finalDeletedSignedContract, originalSignedPath, finalDeletedContractFile, originalContractPath);
+                                return rollbackDeletedAzureFiles(documentClient, finalDeletedSignedContract, originalSignedPath, finalDeletedContractFile, originalContractPath);
                             })
                             .replaceWith("Contract deleted successfully")
                             .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId));
@@ -298,7 +298,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     final String path = String.format("%s%s/%s",
                             documentMsConfig.getAggregatesPath(), request.getOnboardingId(), request.getProductId());
                     try {
-                        azureBlobClient.uploadFile(path, filename, csvFile.readAllBytes());
+                        storageRegistry.clientFor(StorageOrigin.SYSTEM).uploadFile(path, filename, csvFile.readAllBytes());
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
                         throw new RuntimeException("Error during Azure upload", e);
@@ -323,7 +323,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     return Uni.createFrom()
         .item(
             () ->
-                azureBlobClient.getFileAsPdf(
+                storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(
                     String.format(
                         "%s%s/%s/%s",
                         documentMsConfig.getAggregatesPath(),
@@ -352,7 +352,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .invoke(file -> {
                     try {
-                        azureBlobClient.uploadFile(path, filename, file.readAllBytes());
+                        storageRegistry.clientFor(StorageOrigin.SYSTEM).uploadFile(path, filename, file.readAllBytes());
                     } catch (IOException e) {
                         log.error("Error reading from file {} ", sanitize(path), e);
                         throw new RuntimeException("Error during Azure upload", e);
@@ -529,6 +529,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private Uni<Void> uploadToAzureReactive(Document document, FormItem file) {
         return Uni.createFrom().voidItem()
                 .invoke(() -> uploadFileToAzure(
+                        document.getStorageOrigin(),
                         document.getContractFilename(),
                         document.getOnboardingId(),
                         file.getFile()
@@ -540,7 +541,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         log.info("Retrieving template and computing digest (templatePath={})", sanitize(documentTemplatePath));
         Objects.requireNonNull(documentTemplatePath, "Document template path must not be null");
 
-        File templateFile = azureBlobClient.getFileAsPdf(documentTemplatePath);
+        File templateFile = storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(documentTemplatePath);
         DSSDocument templateDocument = new FileDocument(templateFile);
 
         DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(
@@ -569,6 +570,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         document.setRootOnboardingId(request.getOnboardingId());
+        document.setStorageOrigin(request.getStorageOrigin());
 
         String signedContractFileName = extractFileName(request.getTemplatePath());
         String filename = String.format("signed_%s", signedContractFileName);
@@ -581,12 +583,12 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentRepository.persist(document).replaceWith(document);
     }
 
-    private void uploadFileToAzure(String filename, String onboardingId, File signedFile) throws InternalException {
+    private void uploadFileToAzure(StorageOrigin storageOrigin, String filename, String onboardingId, File signedFile) throws InternalException {
         final String path = String.format("%s%s", pathContracts, onboardingId).concat("/attachments");
 
         try {
             DocumentFileUtils.validateUploadedFile(signedFile);
-            azureBlobClient.uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
+            storageRegistry.clientFor(storageOrigin).uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
         } catch (IOException e) {
             throw new InternalException(GENERIC_ERROR.getCode(),
                     "Error on upload contract for onboarding with id " + onboardingId);
@@ -598,7 +600,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private Uni<CreatePdfResponse> uploadAndBuildResponse(PdfContext ctx, String documentType) {
         return Uni.createFrom().item(() -> {
             try {
-                azureBlobClient.uploadFile(ctx.storagePath, ctx.filename, Files.readAllBytes(ctx.pdfFile.toPath()));
+                storageRegistry.clientFor(StorageOrigin.SYSTEM).uploadFile(ctx.storagePath, ctx.filename, Files.readAllBytes(ctx.pdfFile.toPath()));
                 return CreatePdfResponse.builder()
                         .storagePath(ctx.storagePath + PATH_SEPARATOR + ctx.filename)
                         .filename(ctx.filename)
@@ -617,9 +619,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return Uni.createFrom().item(() -> {
             try {
                 File pdfFile = DocumentFileUtils.isPdfFile(request.getContractTemplatePath())
-                        ? azureBlobClient.getFileAsPdf(request.getContractTemplatePath())
+                        ? storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(request.getContractTemplatePath())
                         : pdfGenerationService.generateContractPdf(
-                        azureBlobClient.getFileAsText(request.getContractTemplatePath()),
+                        storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsText(request.getContractTemplatePath()),
                         request);
 
                 String filename = DocumentFileUtils.buildFilename(PDF_FORMAT_FILENAME, request.getProductName(), null);
@@ -636,9 +638,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             try {
                 String filename = DocumentFileUtils.buildFilename("%s", request.getProductName(), request.getAttachmentName());
                 File pdfFile = DocumentFileUtils.isPdfFile(request.getAttachmentTemplatePath())
-                        ? azureBlobClient.getFileAsPdf(request.getAttachmentTemplatePath())
+                        ? storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(request.getAttachmentTemplatePath())
                         : pdfGenerationService.generateAttachmentPdf(
-                        azureBlobClient.getFileAsText(request.getAttachmentTemplatePath()),
+                        storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsText(request.getAttachmentTemplatePath()),
                         request,
                         filename);
 
@@ -658,13 +660,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         ).map(signedFile -> new PdfContext(signedFile, ctx.filename, ctx.storagePath));
     }
 
-    private String deleteFileFromAzure(String filePath, String basePath) throws IOException {
-        File temporaryFile = azureBlobClient.retrieveFile(filePath);
+    private String deleteFileFromAzure(AzureBlobClient client, String filePath, String basePath) throws IOException {
+        File temporaryFile = client.retrieveFile(filePath);
         String deletedFileName = filePath.replace(basePath, documentMsConfig.getDeletePath());
 
         try {
-            azureBlobClient.uploadFilePath(deletedFileName, Files.readAllBytes(temporaryFile.toPath()));
-            azureBlobClient.removeFile(filePath);
+            client.uploadFilePath(deletedFileName, Files.readAllBytes(temporaryFile.toPath()));
+            client.removeFile(filePath);
             return deletedFileName;
         } finally {
             if (temporaryFile != null && temporaryFile.exists()) {
@@ -708,13 +710,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     // METODI DI UTILITÀ PER IL ROLLBACK
     // ==========================================
 
-    private Uni<Void> rollbackDeletedAzureFiles(String currentSignedPath, String originalSignedPath,
+    private Uni<Void> rollbackDeletedAzureFiles(AzureBlobClient client, String currentSignedPath, String originalSignedPath,
                                                 String currentContractPath, String originalContractPath) {
         return Uni.createFrom().item(() -> {
             try {
                 log.info("Rolling back files to original paths...");
-                restoreFileInAzure(currentSignedPath, originalSignedPath);
-                restoreFileInAzure(currentContractPath, originalContractPath);
+                restoreFileInAzure(client, currentSignedPath, originalSignedPath);
+                restoreFileInAzure(client, currentContractPath, originalContractPath);
                 log.info("Rollback completed successfully.");
             } catch (Exception e) {
                 log.error("CRITICAL ERROR: Rollback failed! Azure is out of sync with MongoDB.", e);
@@ -737,10 +739,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         DocumentFileUtils.validateUploadedFile(physicalFile);
 
         String azurePath = documentMsConfig.getContractPath() + onboardingId;
+        AzureBlobClient uploadClient = storageRegistry.clientFor(document.getStorageOrigin());
 
         return Uni.createFrom().item(() -> {
                     try {
-                        return azureBlobClient.uploadFile(azurePath, signedName, Files.readAllBytes(physicalFile.toPath()));
+                        return uploadClient.uploadFile(azurePath, signedName, Files.readAllBytes(physicalFile.toPath()));
                     } catch (IOException e) {
                         throw new RuntimeException("Error uploading signed contract to Azure", e);
                     }
@@ -757,7 +760,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Rolling back Azure upload: {}",
                                         sanitize(onboardingId), uploadedPath);
-                                return rollbackAzureUpload(uploadedPath);
+                                return rollbackAzureUpload(uploadedPath, uploadClient);
                             })
                             .replaceWith(uploadedPath);
                 });
@@ -767,10 +770,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
      * Transazione di compensazione (Saga Pattern) per l'UPLOAD:
      * elimina il file orfano da Azure se il DB va in errore.
      */
-    private Uni<Void> rollbackAzureUpload(String uploadedPath) {
+    private Uni<Void> rollbackAzureUpload(String uploadedPath, AzureBlobClient client) {
         return Uni.createFrom().item(() -> {
             try {
-                azureBlobClient.removeFile(uploadedPath);
+                client.removeFile(uploadedPath);
                 log.info("Rollback completed successfully: deleted orphan file {}", uploadedPath);
             } catch (Exception e) {
                 log.error("CRITICAL ERROR: Rollback failed! Orphan file left in Azure at path: {}", uploadedPath, e);
@@ -779,13 +782,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();
     }
 
-    private void restoreFileInAzure(String currentPath, String originalPath) throws IOException {
+    private void restoreFileInAzure(AzureBlobClient client, String currentPath, String originalPath) throws IOException {
         if (currentPath == null || originalPath == null) return;
 
-        File temporaryFile = azureBlobClient.retrieveFile(currentPath);
+        File temporaryFile = client.retrieveFile(currentPath);
         try {
-            azureBlobClient.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
-            azureBlobClient.removeFile(currentPath);
+            client.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
+            client.removeFile(currentPath);
         } finally {
             if (temporaryFile != null && temporaryFile.exists() && !temporaryFile.delete()) {
                 log.warn("Unable to delete temporary local file during rollback: {}", sanitize(temporaryFile.getAbsolutePath()));
