@@ -1,8 +1,6 @@
 package it.pagopa.selfcare.document.config;
 
 import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -22,8 +20,7 @@ public class DocumentMsConfig {
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
     public static final String PDF_FORMAT_FILENAME = "%s_accordo_adesione.pdf";
-
-
+    
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String contractPath;
 
@@ -35,14 +32,6 @@ public class DocumentMsConfig {
 
     void onStart(@Observes StartupEvent ev) {
         log.info("Database {} is starting...", Document.mongoDatabase().getName());
-    }
-
-    @ApplicationScoped
-    public AzureBlobClient azureBobClientContract(@ConfigProperty(name = "document-ms.blob-storage.connection-string-contracts")
-                                                      String connectionStringContracts,
-                                                  @ConfigProperty(name = "document-ms.blob-storage.container-contracts")
-                                                      String containerContracts){
-        return new AzureBlobClientDefault(connectionStringContracts, containerContracts);
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){
