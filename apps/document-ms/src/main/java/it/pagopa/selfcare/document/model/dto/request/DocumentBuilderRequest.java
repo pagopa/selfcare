@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.document.model.dto.request;
 
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -42,6 +43,8 @@ public class DocumentBuilderRequest {
      * Product title - used for INSTITUTION and USER token types.
      */
     private String productTitle;
+
+    private StorageOrigin storageOrigin;
 
     /**
      * Checks if this is an attachment request.
