@@ -1283,7 +1283,7 @@ class OnboardingFunctionsTest {
         ManagingInstitutionSendEmail.builder()
             .managingInstitutionId("id")
             .productId("productId")
-            .managingInstitutionDescription("description")
+            .onboardingInstitutionDescription("description")
             .userMailUuid("mailUuid")
             .build();
 

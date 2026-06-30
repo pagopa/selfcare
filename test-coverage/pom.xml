@@ -25,7 +25,7 @@
       src/test/**,**/steps/**,**/cucumber/**,**/*IT.java,**/*Test.java
     </sonar.test.exclusions>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <selfcare-onboarding-sdk.version>0.17.0</selfcare-onboarding-sdk.version>
+    <selfcare-onboarding-sdk.version>0.17.2</selfcare-onboarding-sdk.version>
   </properties>
 
   <build>
@@ -566,7 +566,7 @@
             <artifactId>jacoco-maven-plugin</artifactId>
             <executions>
               <execution>
-                <id>report</id>
+                <id>aggregate</id>
                 <goals>
                   <goal>report-aggregate</goal>
                 </goals>

@@ -16,6 +16,29 @@ module "local" {
 }
 
 ###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_storage_account" "documents_storage" {
+  name                = "sc${module.local.config.env_short}${module.local.config.location_short}ardocumentsst01"
+  resource_group_name = "selc-${module.local.config.env_short}-documents-storage-rg"
+}
+
+data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-documents-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
 # Institution Send Mail Scheduler Container App Job
 ###############################################################################
 locals {
@@ -33,6 +56,14 @@ locals {
     {
       name  = "STORAGE_CONTAINER_CONTRACT"
       value = "sc-u-documents-blob"
+    },
+    {
+      name  = "BLOB-STORAGE-CONTRACT-ACCOUNT-NAME"
+      value = data.azurerm_storage_account.documents_storage.name
+    },
+    {
+      name  = "BLOB-STORAGE-CONTRACT-CLIENT-ID"
+      value = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
     },
     {
       name  = "MAIL_DESTINATION_TEST_ADDRESS"
@@ -59,6 +90,14 @@ locals {
       value = "selc-u-product"
     },
     {
+      name  = "BLOB_STORAGE_PRODUCT_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "BLOB_STORAGE_PRODUCT_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
       name  = "SELFCARE_USER_URL"
       value = "http://selc-u-user-ms-ca"
     },
@@ -69,13 +108,11 @@ locals {
   ]
 
   secrets_names_institution_send_mail_scheduler = {
-    "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "documents-storage-connection-string"
-    "BLOB_STORAGE_CONN_STRING_PRODUCT"        = "blob-storage-product-connection-string"
-    "MAIL_SERVER_USERNAME"                    = "smtp-usr"
-    "MAIL_SENDER_ADDRESS"                     = "smtp-usr"
-    "MAIL_SERVER_PASSWORD"                    = "smtp-psw"
-    "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
+    "MONGODB_CONNECTION_STRING" = "mongodb-connection-string"
+    "MAIL_SERVER_USERNAME"      = "smtp-usr"
+    "MAIL_SENDER_ADDRESS"       = "smtp-usr"
+    "MAIL_SERVER_PASSWORD"      = "smtp-psw"
+    "JWT_BEARER_TOKEN"          = "jwt-bearer-token-functions"
   }
 }
 
@@ -94,6 +131,10 @@ module "container_app_job_institution_send_mail_scheduler" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.documents_storage_blob_identity.id
+  ]
 
   manual_trigger_config = [{
     parallelism              = 1

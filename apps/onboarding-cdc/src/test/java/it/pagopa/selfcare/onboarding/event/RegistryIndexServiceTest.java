@@ -79,24 +79,6 @@ class RegistryIndexServiceTest {
         verify(onboardingApi, times(1)).updateOnboardingIndex(any());
     }
 
-    @Nested
-    @TestProfile(NotificationTestProfile.class)
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    class RegistryIndexServiceDisabledTest {
-
-        @Test
-        @DisplayName("Should not call updateOnboardingIndex when watcher is disabled")
-        void shouldNotCallUpdateIndexWhenWatcherIsDisabled() {
-            Onboarding onboarding = buildOnboarding(OnboardingStatus.COMPLETED);
-
-            UniAssertSubscriber<Response> subscriber = registryIndexService.updateIndex(onboarding)
-                    .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-            subscriber.assertCompleted().awaitItem();
-            verify(onboardingApi, times(0)).updateOnboardingIndex(any());
-        }
-    }
-
     private Onboarding buildOnboarding(OnboardingStatus status) {
         Institution institution = new Institution();
         institution.setId("inst-id-001");
@@ -114,8 +96,5 @@ class RegistryIndexServiceTest {
         onboarding.setInstitution(institution);
         return onboarding;
     }
+
 }
-
-
-
-

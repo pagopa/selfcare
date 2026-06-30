@@ -16,6 +16,19 @@ module "local" {
   ca_resource_group_name         = "selc-u-container-app-001-rg"
 }
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutsa"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
 
@@ -98,7 +111,7 @@ locals {
     },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -147,19 +160,29 @@ locals {
     {
       name  = "PEC_NOTIFICATION_DISABLED"
       value = "true"
+    },
+    {
+      name  = "STORAGE_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
   secrets_names_institution_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"    = "appinsights-connection-string"
     "MONGODB_CONNECTION_URI"                   = "mongodb-connection-string"
-    "BLOB_STORAGE_CONN_STRING"                 = "blob-storage-contract-connection-string"
     "SMTP_USR"                                 = "smtp-usr"
     "SMTP_PSW"                                 = "smtp-psw"
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
     "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
     "JWT_TOKEN_PUBLIC_KEY"                     = "jwt-public-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING"   = "blob-storage-product-connection-string"
     "AWS_SES_ACCESS_KEY_ID"                    = "aws-ses-access-key-id"
     "AWS_SES_SECRET_ACCESS_KEY"                = "aws-ses-secret-access-key"
   }
@@ -181,4 +204,7 @@ module "container_app_institution_ms_pnpg" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id
+  ]
 }

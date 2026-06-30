@@ -59,6 +59,21 @@
       "ProductRolePermissionsList" : {
         "type" : "object",
         "properties" : {
+          "userId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "familyName" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
           "items" : {
             "type" : "array",
             "items" : {

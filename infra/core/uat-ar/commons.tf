@@ -663,10 +663,14 @@ module "apim" {
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location             = local.location
-  env_short            = local.env_short
-  domain               = local.app_domain
-  tags                 = local.tags
-  product_storage_name = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  product_storage_rg   = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  location               = local.location
+  env_short              = local.env_short
+  domain                 = local.app_domain
+  tags                   = local.tags
+  product_storage_name   = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg     = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  documents_storage_name = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
+  documents_storage_rg   = "${local.prefix}-${local.env_short}-documents-storage-rg"
+  web_storage_name       = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  web_storage_rg         = "${local.prefix}-${local.env_short}-checkout-fe-rg"
 }

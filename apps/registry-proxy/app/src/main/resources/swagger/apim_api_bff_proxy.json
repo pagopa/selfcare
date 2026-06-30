@@ -502,7 +502,15 @@
               "type" : "string"
             }
           }
-        } ],
+        }, {
+          "name": "includeTest",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean",
+            "default": false
+            }
+        }],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1473,6 +1481,16 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "taxCodeInvoicing",
+            "in": "query",
+            "description": "UO tax code. Optional filter to retrieve only UOs matching the given invoicing tax code",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2213,6 +2231,10 @@
           "codiceFiscaleEnte": {
             "type": "string",
             "description": "UO fiscal code"
+          },
+          "codiceFiscaleSfe": {
+            "type": "string",
+            "description": "UO tax code for invoicing (SFE)"
           },
           "codiceIpa": {
             "type": "string",

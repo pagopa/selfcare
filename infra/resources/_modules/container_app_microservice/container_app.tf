@@ -197,7 +197,7 @@ resource "azurerm_monitor_metric_alert" "container_restart" {
 
   name                = local.restart_alert_name
   resource_group_name = local.restart_alert_action_group_rg_name
-  scopes              = [azurerm_container_app.container_app.id]
+  scopes              = [startswith(azurerm_container_app.container_app.id, "/") ? azurerm_container_app.container_app.id : "/${azurerm_container_app.container_app.id}"]
   description         = "Action will be triggered when the Container App restart count is greater than the configured threshold."
   severity            = var.restart_alert.severity
   frequency           = var.restart_alert.frequency
