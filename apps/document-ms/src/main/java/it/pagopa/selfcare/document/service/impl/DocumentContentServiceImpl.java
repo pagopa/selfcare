@@ -248,17 +248,17 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                     String deletedSignedContract;
                     String deletedContractFile;
 
-                    AzureBlobClient documentClient = storageRegistry.clientFor(document.getStorageOrigin());
+                    AzureBlobClient azureBlobClient = storageRegistry.clientFor(document.getStorageOrigin());
 
                     try {
-                        deletedSignedContract = deleteFileFromAzure(documentClient, originalSignedPath, basePath);
+                        deletedSignedContract = deleteFileFromAzure(azureBlobClient, originalSignedPath, basePath);
                     } catch (Exception e) {
                         log.error("Error deleting signed contract from Azure for onboardingId {}: {}", sanitize(onboardingId), e.getMessage());
                         return Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure", e));
                     }
 
                     try {
-                        deletedContractFile = deleteFileFromAzure(documentClient, originalContractPath, basePath);
+                        deletedContractFile = deleteFileFromAzure(azureBlobClient, originalContractPath, basePath);
                     } catch (Exception e) {
                         log.warn("Unsigned contract file not found on Azure for onboardingId {}. Skipping: {}", sanitize(onboardingId), e.getMessage());
                         deletedContractFile = document.getContractFilename();
@@ -274,7 +274,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Triggering Azure Rollback...", onboardingId);
-                                return rollbackDeletedAzureFiles(documentClient, finalDeletedSignedContract, originalSignedPath, finalDeletedContractFile, originalContractPath);
+                                return rollbackDeletedAzureFiles(azureBlobClient, finalDeletedSignedContract, originalSignedPath, finalDeletedContractFile, originalContractPath);
                             })
                             .replaceWith("Contract deleted successfully")
                             .invoke(ignored -> telemetryService.trackContractDeleted(onboardingId));
@@ -490,13 +490,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     private Uni<File> fetchPdfFromAzureAsync(
         Document document, String onboardingId, boolean isSigned) {
-        AzureBlobClient client = storageRegistry.clientFor(document.getStorageOrigin());
+        AzureBlobClient azureBlobClient = storageRegistry.clientFor(document.getStorageOrigin());
         return Uni.createFrom().item(() -> {
                     String filePath = isSigned
                             ? document.getContractSigned()
                             : DocumentFileUtils.getContractNotSigned(onboardingId, documentMsConfig.getContractPath(), document.getContractFilename());
 
-                    return client.getFileAsPdf(filePath);
+                    return azureBlobClient.getFileAsPdf(filePath);
                 })
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
@@ -660,13 +660,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         ).map(signedFile -> new PdfContext(signedFile, ctx.filename, ctx.storagePath));
     }
 
-    private String deleteFileFromAzure(AzureBlobClient client, String filePath, String basePath) throws IOException {
-        File temporaryFile = client.retrieveFile(filePath);
+    private String deleteFileFromAzure(AzureBlobClient azureBlobClient, String filePath, String basePath) throws IOException {
+        File temporaryFile = azureBlobClient.retrieveFile(filePath);
         String deletedFileName = filePath.replace(basePath, documentMsConfig.getDeletePath());
 
         try {
-            client.uploadFilePath(deletedFileName, Files.readAllBytes(temporaryFile.toPath()));
-            client.removeFile(filePath);
+            azureBlobClient.uploadFilePath(deletedFileName, Files.readAllBytes(temporaryFile.toPath()));
+            azureBlobClient.removeFile(filePath);
             return deletedFileName;
         } finally {
             if (temporaryFile != null && temporaryFile.exists()) {
@@ -691,8 +691,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private Uni<File> fetchFileFromAzureAsync(String filePath, StorageOrigin origin) {
-        AzureBlobClient client = storageRegistry.clientFor(origin);
-        return Uni.createFrom().item(() -> client.retrieveFile(filePath))
+        AzureBlobClient azureBlobClient = storageRegistry.clientFor(origin);
+        return Uni.createFrom().item(() -> azureBlobClient.retrieveFile(filePath))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
 
@@ -710,13 +710,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     // METODI DI UTILITÀ PER IL ROLLBACK
     // ==========================================
 
-    private Uni<Void> rollbackDeletedAzureFiles(AzureBlobClient client, String currentSignedPath, String originalSignedPath,
+    private Uni<Void> rollbackDeletedAzureFiles(AzureBlobClient azureBlobClient, String currentSignedPath, String originalSignedPath,
                                                 String currentContractPath, String originalContractPath) {
         return Uni.createFrom().item(() -> {
             try {
                 log.info("Rolling back files to original paths...");
-                restoreFileInAzure(client, currentSignedPath, originalSignedPath);
-                restoreFileInAzure(client, currentContractPath, originalContractPath);
+                restoreFileInAzure(azureBlobClient, currentSignedPath, originalSignedPath);
+                restoreFileInAzure(azureBlobClient, currentContractPath, originalContractPath);
                 log.info("Rollback completed successfully.");
             } catch (Exception e) {
                 log.error("CRITICAL ERROR: Rollback failed! Azure is out of sync with MongoDB.", e);
@@ -739,11 +739,11 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         DocumentFileUtils.validateUploadedFile(physicalFile);
 
         String azurePath = documentMsConfig.getContractPath() + onboardingId;
-        AzureBlobClient uploadClient = storageRegistry.clientFor(document.getStorageOrigin());
+        AzureBlobClient azureBlobClient = storageRegistry.clientFor(document.getStorageOrigin());
 
         return Uni.createFrom().item(() -> {
                     try {
-                        return uploadClient.uploadFile(azurePath, signedName, Files.readAllBytes(physicalFile.toPath()));
+                        return azureBlobClient.uploadFile(azurePath, signedName, Files.readAllBytes(physicalFile.toPath()));
                     } catch (IOException e) {
                         throw new RuntimeException("Error uploading signed contract to Azure", e);
                     }
@@ -760,7 +760,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                             .onFailure().call(dbError -> {
                                 log.error("DB update failed for onboardingId {}. Rolling back Azure upload: {}",
                                         sanitize(onboardingId), uploadedPath);
-                                return rollbackAzureUpload(uploadedPath, uploadClient);
+                                return rollbackAzureUpload(uploadedPath, azureBlobClient);
                             })
                             .replaceWith(uploadedPath);
                 });
@@ -770,10 +770,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
      * Transazione di compensazione (Saga Pattern) per l'UPLOAD:
      * elimina il file orfano da Azure se il DB va in errore.
      */
-    private Uni<Void> rollbackAzureUpload(String uploadedPath, AzureBlobClient client) {
+    private Uni<Void> rollbackAzureUpload(String uploadedPath, AzureBlobClient azureBlobClient) {
         return Uni.createFrom().item(() -> {
             try {
-                client.removeFile(uploadedPath);
+                azureBlobClient.removeFile(uploadedPath);
                 log.info("Rollback completed successfully: deleted orphan file {}", uploadedPath);
             } catch (Exception e) {
                 log.error("CRITICAL ERROR: Rollback failed! Orphan file left in Azure at path: {}", uploadedPath, e);
@@ -782,13 +782,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();
     }
 
-    private void restoreFileInAzure(AzureBlobClient client, String currentPath, String originalPath) throws IOException {
+    private void restoreFileInAzure(AzureBlobClient azureBlobClient, String currentPath, String originalPath) throws IOException {
         if (currentPath == null || originalPath == null) return;
 
-        File temporaryFile = client.retrieveFile(currentPath);
+        File temporaryFile = azureBlobClient.retrieveFile(currentPath);
         try {
-            client.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
-            client.removeFile(currentPath);
+            azureBlobClient.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
+            azureBlobClient.removeFile(currentPath);
         } finally {
             if (temporaryFile != null && temporaryFile.exists() && !temporaryFile.delete()) {
                 log.warn("Unable to delete temporary local file during rollback: {}", sanitize(temporaryFile.getAbsolutePath()));
