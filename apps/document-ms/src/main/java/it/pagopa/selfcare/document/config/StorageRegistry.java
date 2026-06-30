@@ -45,16 +45,16 @@ public class StorageRegistry {
         log.info("StorageRegistry: initialized with {} configured client(s): {}", clientsByOrigin.size(), clientsByOrigin.keySet());
     }
 
-    public AzureBlobClient clientFor(StorageOrigin origin) {
-        StorageOrigin resolved = Objects.isNull(origin) ? StorageOrigin.SYSTEM : origin;
+    public AzureBlobClient clientFor(StorageOrigin storageOrigin) {
+        StorageOrigin resolved = Objects.isNull(storageOrigin) ? StorageOrigin.SYSTEM : storageOrigin;
         log.debug("StorageRegistry: routing storageOrigin={}", resolved);
         return clientsByOrigin.getOrDefault(resolved, clientsByOrigin.get(StorageOrigin.SYSTEM));
     }
 
-    private Optional<AzureBlobClient> buildBlobClient(Optional<String> connectionString, Optional<String> container, StorageOrigin origin) {
+    private Optional<AzureBlobClient> buildBlobClient(Optional<String> connectionString, Optional<String> container, StorageOrigin storageOrigin) {
         if (connectionString.filter(s -> !s.isBlank()).isPresent()
                 && container.filter(s -> !s.isBlank()).isPresent()) {
-            log.info("StorageRegistry: {} blob client configured with container={}", origin, container.get());
+            log.info("StorageRegistry: {} blob client configured with container={}", storageOrigin, container.get());
             return Optional.of(new AzureBlobClientDefault(connectionString.get(), container.get()));
         }
         return Optional.empty();

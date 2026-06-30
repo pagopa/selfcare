@@ -690,8 +690,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         }
     }
 
-    private Uni<File> fetchFileFromAzureAsync(String filePath, StorageOrigin origin) {
-        AzureBlobClient azureBlobClient = storageRegistry.clientFor(origin);
+    private Uni<File> fetchFileFromAzureAsync(String filePath, StorageOrigin storageOrigin) {
+        AzureBlobClient azureBlobClient = storageRegistry.clientFor(storageOrigin);
         return Uni.createFrom().item(() -> azureBlobClient.retrieveFile(filePath))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
