@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.connector;
 import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.StorageOrigin;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
@@ -16,6 +17,8 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -67,7 +70,7 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
 
   @Override
   public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName,
-                               String productId, AttachmentTemplate template) {
+                               String productId, AttachmentTemplate template, String storageOrigin) {
     DocumentBuilderRequest request = new DocumentBuilderRequest();
     request.setAttachmentName(attachmentName);
     request.setProductId(productId);
@@ -75,6 +78,7 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
     request.setTemplatePath(template.getTemplatePath());
     request.setTemplateVersion(template.getTemplateVersion());
     request.setDocumentType(DocumentType.ATTACHMENT);
+    request.setStorageOrigin(Objects.nonNull(storageOrigin) ? StorageOrigin.fromValue(storageOrigin) : StorageOrigin.SYSTEM);
     msDocumentContentApiClient._uploadAttachment(attachment, request);
   }
 

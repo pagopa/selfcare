@@ -15,7 +15,7 @@ public interface DocumentMsConnector {
 
     HttpStatusCode headAttachment(String onboardingId, String filename);
 
-    void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName, String id, AttachmentTemplate template);
+    void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName, String id, AttachmentTemplate template, String storageOrigin);
 
     Resource getAggregatesCsv(String onboardingId, String productId);
 

@@ -168,7 +168,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
+    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName, String storageOrigin) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
@@ -177,7 +177,7 @@ public class TokenServiceImpl implements TokenService {
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
         Product product = productAzureService.getProductValid(onboarding.getProductId());
         AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
-        documentMsConnector.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
+        documentMsConnector.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template, storageOrigin);
         log.debug("getAttachment result = success");
         log.trace("getAttachment end");
     }
