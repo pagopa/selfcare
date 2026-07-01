@@ -150,7 +150,7 @@ class ProductMsConnectorImplTest {
         String origin = "IPA";
 
         when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
-                .thenReturn(ResponseEntity.ok(Boolean.TRUE));
+                .thenReturn(responseWithFlag("true"));
 
         // when
         boolean result = productMsConnector.isRequiredDocumentsEnabled(productId, institutionType, origin);
@@ -170,7 +170,7 @@ class ProductMsConnectorImplTest {
         String origin = "IPA";
 
         when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
-                .thenReturn(ResponseEntity.ok(Boolean.FALSE));
+                .thenReturn(responseWithFlag("false"));
 
         // when
         boolean result = productMsConnector.isRequiredDocumentsEnabled(productId, institutionType, origin);
@@ -182,14 +182,14 @@ class ProductMsConnectorImplTest {
     }
 
     @Test
-    void isRequiredDocumentsEnabled_nullBodyReturnsFalse() {
+    void isRequiredDocumentsEnabled_missingHeaderReturnsFalse() {
         // given
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
         when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
-                .thenReturn(ResponseEntity.ok(null));
+                .thenReturn(ResponseEntity.ok().build());
 
         // when
         boolean result = productMsConnector.isRequiredDocumentsEnabled(productId, institutionType, origin);
@@ -198,6 +198,12 @@ class ProductMsConnectorImplTest {
         assertFalse(result);
 
         verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+    }
+
+    private static ResponseEntity<Void> responseWithFlag(String value) {
+        return ResponseEntity.ok()
+                .header(ProductMsConnectorImpl.HEADER_REQUIRED_DOCUMENTS_ENABLED, value)
+                .build();
     }
 
 }

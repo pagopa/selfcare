@@ -23,6 +23,8 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     private final MsProductApiClient msProductApiClient;
     private final ProductMapper productMapper;
 
+    static final String HEADER_REQUIRED_DOCUMENTS_ENABLED = "X-Required-Documents-Enabled";
+
     public ProductMsConnectorImpl(MsProductApiClient msProductApiClient, ProductMapper productMapper) {
         this.msProductApiClient = msProductApiClient;
         this.productMapper = productMapper;
@@ -56,13 +58,18 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     @Override
     public boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin) {
         log.trace("isRequiredDocumentsEnabled start");
-        ResponseEntity<Boolean> response = msProductApiClient._isRequiredDocumentsEnabled(
+        ResponseEntity<Void> response = msProductApiClient._isRequiredDocumentsEnabled(
                 productId,
                 InstitutionType.fromValue(institutionType),
                 Origin.fromValue(origin)
         );
-        boolean result = Boolean.TRUE.equals(response.getBody());
-        log.debug("isRequiredDocumentsEnabled result = {}", result);
+        boolean result = Boolean.parseBoolean(response.getHeaders().getFirst(HEADER_REQUIRED_DOCUMENTS_ENABLED));
+        log.debug(
+            "isRequiredDocumentsEnabled given productId = {}, institutionType = {}, origin = {} result = {}",
+            productId,
+            institutionType,
+            origin,
+            result);
         log.trace("isRequiredDocumentsEnabled end");
         return result;
     }
