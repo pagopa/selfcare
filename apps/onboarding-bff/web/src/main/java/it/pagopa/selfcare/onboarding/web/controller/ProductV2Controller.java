@@ -57,7 +57,11 @@ public class ProductV2Controller {
             @RequestParam("institutionType") String institutionType,
             @RequestParam("origin") String origin) {
         log.trace("getRequiredDocuments start");
-        log.debug("getRequiredDocuments productId = {}, institutionType = {}, origin = {}", productId, institutionType, origin);
+        log.debug(
+            "getRequiredDocuments productId = {}, institutionType = {}, origin = {}",
+            Encode.forJava(productId),
+            Encode.forJava(institutionType),
+            Encode.forJava(origin));
         List<RequiredDocumentModel> result = productService.getRequiredDocuments(productId, institutionType, origin);
         log.debug("getRequiredDocuments size = {}", result.size());
         log.trace("getRequiredDocuments end");
@@ -74,7 +78,11 @@ public class ProductV2Controller {
             @RequestParam("institutionType") String institutionType,
             @RequestParam("origin") String origin) {
         log.trace("isRequiredDocumentsEnabled start");
-        log.debug("isRequiredDocumentsEnabled productId = {}, institutionType = {}, origin = {}", productId, institutionType, origin);
+        log.debug(
+            "isRequiredDocumentsEnabled productId = {}, institutionType = {}, origin = {}",
+            Encode.forJava(productId),
+            Encode.forJava(institutionType),
+            Encode.forJava(origin));
         boolean result = productService.isRequiredDocumentsEnabled(productId, institutionType, origin);
         log.debug("isRequiredDocumentsEnabled result = {}", result);
         log.trace("isRequiredDocumentsEnabled end");
