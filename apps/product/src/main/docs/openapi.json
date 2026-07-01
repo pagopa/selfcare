@@ -651,6 +651,9 @@
           },
           "filter" : {
             "$ref" : "#/components/schemas/RequiredDocumentFilter"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -692,6 +695,9 @@
           "maxDocumentsRequired" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -756,6 +762,10 @@
             "type" : "boolean"
           }
         }
+      },
+      "StorageOrigin" : {
+        "type" : "string",
+        "enum" : [ "SYSTEM", "USER" ]
       },
       "VisualConfiguration" : {
         "type" : "object",
