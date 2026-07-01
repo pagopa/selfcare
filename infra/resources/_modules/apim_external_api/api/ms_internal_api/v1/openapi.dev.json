@@ -1780,6 +1780,72 @@
       }
     },
     "/onboarding/{onboardingId}": {
+      "put": {
+        "tags": [
+          "Onboarding Controller"
+        ],
+        "summary": "Idempotent trigger to verify mandatory documents and advance onboarding.",
+        "description": "Idempotent trigger invoked after each document upload. Recalculates required documents for the onboarding context (productId, institutionType, origin) and verifies presence of all mandatory attachments. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING. If documents are incomplete or onboarding is already past REQUEST status, no action is taken (idempotent).",
+        "operationId": "triggerDocumentGate",
+        "parameters": [
+          {
+            "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Gate evaluated — orchestration triggered if documents complete, no action otherwise"
+          },
+          "400": {
+            "description": "Bad Request — no mandatory documents configured for this onboarding context",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not Authorized"
+          },
+          "403": {
+            "description": "Not Allowed"
+          },
+          "404": {
+            "description": "Onboarding not found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      },
       "delete": {
         "tags": [
           "Onboarding Controller"
@@ -1863,11 +1929,44 @@
               "application/json": {}
             }
           },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          },
           "401": {
             "description": "Not Authorized"
           },
           "403": {
             "description": "Not Allowed"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem3"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1995,17 +2094,25 @@
         ]
       }
     },
-    "/onboarding/{onboardingId}/user": {
+    "/onboarding/{onboardingId}/user/{userId}": {
       "delete": {
         "tags": [
           "Onboarding Controller"
         ],
         "summary": "Perform delete operation of a USER type onboarding request",
-        "description": "Perform delete operation of a USER type onboarding request receiving onboarding id. It first deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
+        "description": "Perform delete operation of a USER type onboarding request receiving onboarding id and userId. It verifies that the userId corresponds to a DELEGATE role in the onboarding users list. If the user is a MANAGER (and not also a DELEGATE), a 400 error is returned. If the user is a DELEGATE, it deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
         "operationId": "deleteOnboardingUser",
         "parameters": [
           {
             "name": "onboardingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
             "in": "path",
             "required": true,
             "schema": {
@@ -5074,6 +5181,7 @@
       },
       "OnboardingStatus": {
         "enum": [
+          "REQUESTING",
           "REQUEST",
           "TOBEVALIDATED",
           "PENDING",
@@ -5454,6 +5562,32 @@
           },
           "dataProtectionOfficer": {
             "$ref": "#/components/schemas/DataProtectionOfficerRequest1"
+          }
+        }
+      },
+      "Problem3": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProblemError"
+            }
+          }
+        }
+      },
+      "ProblemError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
           }
         }
       },

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.document.model.entity;
 
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -36,6 +37,8 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
     private LocalDateTime activatedAt;
+
+    private StorageOrigin storageOrigin;
 
     /**
      * Step di firma a cui questo documento corrisponde.
