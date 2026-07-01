@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
