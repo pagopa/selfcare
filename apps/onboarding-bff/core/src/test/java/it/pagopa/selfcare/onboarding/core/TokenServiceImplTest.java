@@ -254,11 +254,11 @@ public class TokenServiceImplTest {
         mockAttachmentContext(onboardingId, productId, filename, templatePath);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename, null);
+        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename);
         //then
         Mockito.verify(documentMsConnector, Mockito.times(1))
                 .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
-                        argThat(template -> templatePath.equals(template.getTemplatePath())), isNull());
+                        argThat(template -> templatePath.equals(template.getTemplatePath())));
     }
 
 

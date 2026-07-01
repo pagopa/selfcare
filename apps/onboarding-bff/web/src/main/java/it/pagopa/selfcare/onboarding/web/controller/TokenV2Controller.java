@@ -299,14 +299,13 @@ public class TokenV2Controller {
     public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
                                                  @RequestParam("attachmentName") String attachmentName,
-                                                 @RequestParam(value = "storageOrigin", required = false) String storageOrigin,
                                                  @RequestPart MultipartFile attachment) {
         log.trace("uploadAttachment start");
         FileValidationUtils.validatePdfOrP7m(attachment);
         String sanitizedFileName = Encode.forJava(attachment.getOriginalFilename());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, attachment, attachmentName, storageOrigin);
+        tokenService.uploadAttachment(onboardingId, attachment, attachmentName);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

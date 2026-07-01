@@ -405,7 +405,7 @@ class TokenV2ControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         verify(tokenService, times(1))
-                .uploadAttachment(onboardingId, file, filename, null);
+                .uploadAttachment(onboardingId, file, filename);
     }
 
 

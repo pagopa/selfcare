@@ -159,7 +159,7 @@ class DocumentMsConnectorImplTest {
                 .thenReturn(ResponseEntity.ok().build());
 
         // when
-        documentMsConnector.uploadAttachment(onboardingId, file, filename, productId, template, null);
+        documentMsConnector.uploadAttachment(onboardingId, file, filename, productId, template);
 
         // then
         verify(msDocumentContentApiClient, times(1))

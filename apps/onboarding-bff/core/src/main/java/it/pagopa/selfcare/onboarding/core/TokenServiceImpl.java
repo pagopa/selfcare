@@ -114,7 +114,13 @@ public class TokenServiceImpl implements TokenService {
         Assert.notNull(filename, "filename is required");
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
         Product product = productAzureService.getProductValid(onboarding.getProductId());
+
+        // se il nome è dentro required documents allora --->
+
+      // altitment
         String templatePath = getAttachmentTemplate(filename, onboarding, product).getTemplatePath();
+
+        // generica
         Resource resource = documentMsConnector.getTemplateAttachment(onboarding, filename, templatePath);
         log.debug("getTemplateAttachment result = success");
         log.trace("getTemplateAttachment end");
@@ -168,7 +174,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName, String storageOrigin) {
+    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
@@ -177,7 +183,7 @@ public class TokenServiceImpl implements TokenService {
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
         Product product = productAzureService.getProductValid(onboarding.getProductId());
         AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
-        documentMsConnector.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template, storageOrigin);
+        documentMsConnector.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
         log.debug("getAttachment result = success");
         log.trace("getAttachment end");
     }
