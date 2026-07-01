@@ -12,7 +12,7 @@ module "local" {
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
   private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-u-pnpg-cae-001"
+  container_app_environment_name = "selc-u-pnpg-cae-cp"
   ca_resource_group_name         = "selc-u-container-app-001-rg"
 }
 
