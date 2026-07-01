@@ -189,6 +189,11 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-onboarding-sdk-product</artifactId>
+      <version>${selfcare-onboarding-sdk.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-cucumber-sdk</artifactId>
       <version>${selfcare-cucumber-sdk.version}</version>
       <scope>test</scope>
@@ -252,7 +257,6 @@
       <artifactId>quarkus-junit5-mockito</artifactId>
       <scope>test</scope>
     </dependency>
-
   </dependencies>
   <build>
     <resources>

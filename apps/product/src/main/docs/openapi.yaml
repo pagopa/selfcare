@@ -482,6 +482,8 @@ components:
           format: int32
         filter:
           $ref: "#/components/schemas/RequiredDocumentFilter"
+        storageOrigin:
+          $ref: "#/components/schemas/StorageOrigin"
     RequiredDocumentFilter:
       type: object
       properties:
@@ -509,6 +511,8 @@ components:
         maxDocumentsRequired:
           type: integer
           format: int32
+        storageOrigin:
+          $ref: "#/components/schemas/StorageOrigin"
     RoleMapping:
       type: object
       properties:
@@ -550,6 +554,11 @@ components:
           type: boolean
         final:
           type: boolean
+    StorageOrigin:
+      type: string
+      enum:
+      - SYSTEM
+      - USER
     VisualConfiguration:
       type: object
       properties:
