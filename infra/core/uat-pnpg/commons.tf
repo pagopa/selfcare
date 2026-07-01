@@ -237,7 +237,7 @@ module "cdn" {
 ###############################################################################
 
 resource "azurerm_resource_group" "selc_container_app_rg" {
-  name     = "${local.project}-container-app-001-rg" //prod  "${local.project}-container-app-rg" 
+  name     = "${local.project}-container-app-rg"
   location = local.location
 
   tags = local.tags
@@ -255,7 +255,7 @@ module "networking" {
   cidr_subnet_cae  = "10.1.156.0/23"
   cidr_subnet_main = "10.1.148.0/23"
 
-  container_app_name_snet           = "${local.project}-pnpg-cae-001-snet"
+  container_app_name_snet           = "${local.project}-pnpg-cae-cp-snet"
   private_endpoint_network_policies = "Enabled"
 
   delegation = []
@@ -274,7 +274,7 @@ module "container_app_environments" {
 
   enable_log = true
   subnet_id  = module.networking.subnet.id
-  cae_name   = "${local.project}-pnpg-cae-001" //prod  ""${local.project}-pnpg-cae-cp"
+  cae_name   = "${local.project}-pnpg-cae-cp"
 
   workload_profiles = []
 
@@ -411,10 +411,10 @@ module "user_managed_identity" {
   env_short            = local.env_short
   domain               = local.app_domain
   tags                 = local.tags
-  product_storage_name   = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  product_storage_rg     = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
-  documents_storage_name = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  documents_storage_rg   = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
-  web_storage_name       = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  web_storage_rg         = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
+  product_storage_name   = module.cdn.storage_name
+  product_storage_rg     = module.cdn.checkout_fe_rg_name
+  documents_storage_name = module.cdn.storage_name
+  documents_storage_rg   = module.cdn.checkout_fe_rg_name
+  web_storage_name       = module.cdn.storage_name
+  web_storage_rg         = module.cdn.checkout_fe_rg_name
 }

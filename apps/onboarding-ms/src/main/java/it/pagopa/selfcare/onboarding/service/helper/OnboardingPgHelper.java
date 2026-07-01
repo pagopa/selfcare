@@ -212,10 +212,14 @@ public class OnboardingPgHelper {
     private Uni<Product> getProductByOnboarding(Onboarding onboarding) {
         return Uni.createFrom()
                 .item(() -> productAzureService.getProductIsValid(onboarding.getProductId()))
-                .onFailure().transform(ex -> new OnboardingNotAllowedException(
-                        String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
-                                onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
-                        DEFAULT_ERROR.getCode()));
+                .onFailure().transform(ex -> {
+                    log.error("Failed to retrieve product {} for institution {}: {}",
+                            onboarding.getProductId(), onboarding.getInstitution().getTaxCode(), ex.getMessage(), ex);
+                    return new OnboardingNotAllowedException(
+                            String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
+                                    onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
+                            DEFAULT_ERROR.getCode());
+                });
     }
 
     private Supplier<ResourceNotFoundException> resourceNotFoundFor(Onboarding onboarding) {

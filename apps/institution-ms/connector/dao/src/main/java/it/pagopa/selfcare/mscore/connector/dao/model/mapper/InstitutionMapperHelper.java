@@ -46,7 +46,19 @@ public class InstitutionMapperHelper {
                         String identifier = "elem" + index;
 
                         update.filterArray(Criteria.where(identifier + ".productId").is(onboarding.getProductId()));
-                        update.set("onboarding.$[" + identifier + "].billing.vatNumber", onboarding.getBilling().getVatNumber());
+
+                        if (onboarding.getBilling() != null && StringUtils.hasText(onboarding.getBilling().getVatNumber())) {
+                            update.set("onboarding.$[" + identifier + "].billing.vatNumber", onboarding.getBilling().getVatNumber());
+                        }
+
+                        if (StringUtils.hasText(onboarding.getOrigin())) {
+                            update.set("onboarding.$[" + identifier + "].origin", onboarding.getOrigin());
+                        }
+
+                        if (StringUtils.hasText(onboarding.getOriginId())) {
+                            update.set("onboarding.$[" + identifier + "].originId", onboarding.getOriginId());
+                        }
+
                         update.set("onboarding.$[" + identifier + "].updatedAt", OffsetDateTime.now());
                     });
         }

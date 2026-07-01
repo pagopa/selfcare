@@ -20,6 +20,24 @@ module "local" {
   container_app_memory           = "2Gi"
 }
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-table-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 locals {
 
   app_settings_user_cdc = [
@@ -72,6 +90,22 @@ locals {
       value = "selc-d-product"
     },
     {
+      name  = "TABLE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "TABLE_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
+    },
+    {
+      name  = "STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "STORAGE_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
       name  = "INTERNAL_API_URL"
       value = "https://api.dev.selfcare.pagopa.it/external/internal/v1"
     }
@@ -80,7 +114,6 @@ locals {
   secrets_names_user_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"  = "eventhub-sc-users-selfcare-wo-key-lc"
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
     "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"  = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
@@ -105,4 +138,8 @@ module "container_app_user_cdc" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_table_identity.id,
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id
+  ]
 }
