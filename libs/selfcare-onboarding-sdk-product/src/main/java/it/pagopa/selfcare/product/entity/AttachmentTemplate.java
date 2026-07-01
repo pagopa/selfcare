@@ -15,6 +15,15 @@ public class AttachmentTemplate {
   private List<WorkflowType> workflowType;
   private OnboardingStatus workflowState;
   private int order;
+  private StorageOrigin storageOrigin;
+
+  public StorageOrigin getStorageOrigin() {
+    return storageOrigin;
+  }
+
+  public void setStorageOrigin(StorageOrigin storageOrigin) {
+    this.storageOrigin = storageOrigin;
+  }
 
   public OnboardingStatus getWorkflowState() {
     return workflowState;
