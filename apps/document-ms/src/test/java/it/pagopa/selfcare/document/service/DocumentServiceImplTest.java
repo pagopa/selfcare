@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
+import it.pagopa.selfcare.document.config.StorageRegistry;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
@@ -20,6 +21,7 @@ import jakarta.inject.Inject;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -38,12 +40,10 @@ class DocumentServiceImplTest {
 
     private static final String ONBOARDING_ID = "onboardingId";
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
+    private static final AzureBlobClient azureBlobClient = mock(AzureBlobClient.class);
 
     @Inject
     DocumentService documentService;
-
-    @InjectMock
-    AzureBlobClient azureBlobClient;
 
     @InjectMock
     DocumentMsConfig documentMsConfig;
@@ -56,6 +56,15 @@ class DocumentServiceImplTest {
 
     @InjectMock
     DocumentMsTelemetryService telemetryService;
+
+    @InjectMock
+    StorageRegistry storageRegistry;
+
+    @BeforeEach
+    void setupStorageRegistry() {
+        reset(azureBlobClient);
+        when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
+    }
 
     // ---- getDocumentById ----
 

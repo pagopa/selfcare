@@ -28,6 +28,7 @@ public interface OnboardingInstitutionInfoMapper {
     @Mapping(target = "city", source = "model.institutionLocation.city")
     @Mapping(target = "country", source = "model.institutionLocation.country")
     @Mapping(target = "county", source = "model.institutionLocation.county")
+    @Mapping(target = "institutionType", source = "model.institutionType")
     InstitutionData toData(InstitutionInfo model, AssistanceContacts assistanceContacts, CompanyInformations companyInformations);
 
     @Named("toBilling")

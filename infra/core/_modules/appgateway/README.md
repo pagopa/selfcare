@@ -15,7 +15,7 @@ No requirements.
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_app_gw"></a> [app\_gw](#module\_app\_gw) | github.com/pagopa/terraform-azurerm-v4.git//app_gateway | v9.6.1 |
+| <a name="module_app_gw"></a> [app\_gw](#module\_app\_gw) | ./app_gateway | n/a |
 | <a name="module_appgateway_snet"></a> [appgateway\_snet](#module\_appgateway\_snet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v9.6.1 |
 
 ## Resources

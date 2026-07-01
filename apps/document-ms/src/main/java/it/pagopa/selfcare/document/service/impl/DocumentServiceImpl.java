@@ -5,10 +5,11 @@ import eu.europa.esig.dss.model.DSSDocument;
 import eu.europa.esig.dss.model.FileDocument;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
+import it.pagopa.selfcare.document.config.StorageRegistry;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
@@ -40,18 +41,19 @@ public class DocumentServiceImpl implements DocumentService {
 
     private final DocumentRepository documentRepository;
     private final DocumentMsConfig documentMsConfig;
-    private final AzureBlobClient azureBlobClient;
     private final DocumentMsTelemetryService telemetryService;
+    private final StorageRegistry storageRegistry;
 
     @Inject
     SignatureService signatureService;
 
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
-                               AzureBlobClient azureBlobClient, DocumentMsTelemetryService telemetryService) {
+                               DocumentMsTelemetryService telemetryService,
+                               StorageRegistry storageRegistry) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
-        this.azureBlobClient = azureBlobClient;
         this.telemetryService = telemetryService;
+        this.storageRegistry = storageRegistry;
     }
 
     @Override
@@ -84,7 +86,7 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findByOnboardingId(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
-                        Uni.createFrom().item(() -> azureBlobClient.getFileAsPdf(document.getContractSigned()))
+                        Uni.createFrom().item(() -> storageRegistry.clientFor(document.getStorageOrigin()).getFileAsPdf(document.getContractSigned()))
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                                 .onItem().transform(contract -> {
                                     signatureService.verifySignature(contract);
@@ -236,6 +238,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setUpdatedAt(request.getContractCreatedAt());
         document.setRootOnboardingId(request.getOnboardingId());
         document.setType(INSTITUTION);
+        document.setStorageOrigin(StorageOrigin.SYSTEM);
 
         return documentRepository.persist(document)
                 .replaceWith(document)
@@ -274,6 +277,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setAttachmentName(request.getAttachmentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
+        document.setStorageOrigin(Objects.nonNull(request.getStorageOrigin()) ? request.getStorageOrigin() : StorageOrigin.SYSTEM);
         setContractFileName(request, document);
 
         switch (request.getDocumentType()) {
@@ -311,7 +315,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     private boolean verifyAttachmentInStorage(Document document, String onboardingId, String attachmentName) {
         try {
-            azureBlobClient.getProperties(document.getContractSigned());
+            storageRegistry.clientFor(document.getStorageOrigin()).getProperties(document.getContractSigned());
             log.info("Attachment found in storage onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
             return true;
         } catch (SelfcareAzureStorageException e) {
@@ -324,7 +328,7 @@ public class DocumentServiceImpl implements DocumentService {
         log.info("{} not found in DB for onboarding {}. Calculating digest from original template: {}",
                 logDocType, sanitize(onboardingId), sanitize(azureFilePath));
 
-        return Uni.createFrom().item(() -> azureBlobClient.getFileAsPdf(azureFilePath))
+        return Uni.createFrom().item(() -> storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(azureFilePath))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transform(file -> {
                     DSSDocument dssDocument = new FileDocument(file);
