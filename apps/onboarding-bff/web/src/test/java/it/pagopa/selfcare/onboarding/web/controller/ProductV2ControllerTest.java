@@ -190,17 +190,15 @@ class ProductV2ControllerTest {
 
         when(productServiceMock.isRequiredDocumentsEnabled(productId, institutionType, origin)).thenReturn(true);
 
-        // when
-        MvcResult result = mvc.perform(MockMvcRequestBuilders
+        // when / then
+        mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/required-documents/enabled", productId)
                         .param("institutionType", institutionType)
                         .param("origin", origin)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
-                .andReturn();
+                .andExpect(content().json("{\"requiredDocumentsEnabled\":true}"));
 
-        // then
-        Assertions.assertTrue(Boolean.parseBoolean(result.getResponse().getContentAsString()));
         verify(productServiceMock, times(1)).isRequiredDocumentsEnabled(productId, institutionType, origin);
         verifyNoMoreInteractions(productServiceMock);
     }
@@ -214,17 +212,14 @@ class ProductV2ControllerTest {
 
         when(productServiceMock.isRequiredDocumentsEnabled(productId, institutionType, origin)).thenReturn(false);
 
-        // when
-        MvcResult result = mvc.perform(MockMvcRequestBuilders
+        // when / then
+        mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/required-documents/enabled", productId)
                         .param("institutionType", institutionType)
                         .param("origin", origin)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
-                .andReturn();
-
-        // then
-        Assertions.assertFalse(Boolean.parseBoolean(result.getResponse().getContentAsString()));
+                .andExpect(content().json("{\"requiredDocumentsEnabled\":false}"));
     }
 
 }

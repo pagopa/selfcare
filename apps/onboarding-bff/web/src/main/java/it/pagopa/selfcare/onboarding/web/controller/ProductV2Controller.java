@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.core.ProductService;
 import it.pagopa.selfcare.onboarding.web.model.OriginResponse;
+import it.pagopa.selfcare.onboarding.web.model.RequiredDocumentsEnabledResource;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -71,9 +72,10 @@ public class ProductV2Controller {
     @GetMapping(value = "/{productId}/required-documents/enabled")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Check if required documents are enabled for a product",
-            description = "Returns true if required documents are configured for the given product, institutionType and origin.",
+            description = "Returns an object with the boolean flag requiredDocumentsEnabled = true "
+                    + "when required documents are configured for the given product, institutionType and origin.",
             operationId = "isRequiredDocumentsEnabled")
-    public boolean isRequiredDocumentsEnabled(
+    public RequiredDocumentsEnabledResource isRequiredDocumentsEnabled(
             @ApiParam("The product id") @PathVariable("productId") String productId,
             @RequestParam("institutionType") String institutionType,
             @RequestParam("origin") String origin) {
@@ -86,7 +88,7 @@ public class ProductV2Controller {
         boolean result = productService.isRequiredDocumentsEnabled(productId, institutionType, origin);
         log.debug("isRequiredDocumentsEnabled result = {}", result);
         log.trace("isRequiredDocumentsEnabled end");
-        return result;
+        return new RequiredDocumentsEnabledResource(result);
     }
 
 }

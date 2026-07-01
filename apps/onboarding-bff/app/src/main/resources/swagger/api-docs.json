@@ -582,6 +582,15 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "storageOrigin",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "SYSTEM",
+            "enum" : [ "SYSTEM", "USER" ]
+          }
         } ],
         "requestBody" : {
           "content" : {
@@ -2726,7 +2735,7 @@
       "get" : {
         "tags" : [ "product-v-2-controller" ],
         "summary" : "Check if required documents are enabled for a product",
-        "description" : "Returns true if required documents are configured for the given product, institutionType and origin.",
+        "description" : "Returns an object with the boolean flag requiredDocumentsEnabled = true when required documents are configured for the given product, institutionType and origin.",
         "operationId" : "isRequiredDocumentsEnabled",
         "parameters" : [ {
           "name" : "productId",
@@ -2756,7 +2765,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "boolean"
+                  "$ref" : "#/components/schemas/RequiredDocumentsEnabledResource"
                 }
               }
             }
@@ -4970,6 +4979,18 @@
           "maxDocumentsRequired" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "storageOrigin" : {
+            "type" : "string",
+            "enum" : [ "SYSTEM", "USER" ]
+          }
+        }
+      },
+      "RequiredDocumentsEnabledResource" : {
+        "type" : "object",
+        "properties" : {
+          "requiredDocumentsEnabled" : {
+            "type" : "boolean"
           }
         }
       },
