@@ -11,6 +11,11 @@ public class OnboardingPut {
 
     @NotBlank
     private String productId;
-    @NotBlank
+
     private String vatNumber;
+
+    private String origin;
+
+    private String originId;
+
 }
