@@ -51,19 +51,19 @@ locals {
     },
     {
       name  = "MS_ONBOARDING_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -71,7 +71,7 @@ locals {
     },
     {
       name  = "USERVICE_PARTY_MANAGEMENT_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "STORAGE_CONTAINER"
@@ -79,11 +79,11 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_DOCUMENT_URL"
-      value = "http://selc-${module.local.config.env_short}-pnpg-document-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_STORAGE_CONTAINER"
