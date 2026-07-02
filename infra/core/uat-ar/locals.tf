@@ -99,7 +99,7 @@ locals {
   reverse_proxy_ip                = "10.1.1.250"
   private_dns_name                = "selc.internal.uat.selfcare.pagopa.it"
   ca_suffix_dns_private_name      = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
   spid_selc_path_prefix           = "/spid-login/v1"
 
 
