@@ -98,19 +98,19 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-d-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-d-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_USER_GROUP_URL"
-      value = "http://selc-d-user-group-ca"
+      value = "https://selc-${module.local.config.env_short}-user-group-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -130,7 +130,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-d-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "B4F_DASHBOARD_SECURITY_CONNECTOR"
@@ -138,7 +138,7 @@ locals {
     },
     {
       name  = "ONBOARDING_URL"
-      value = "http://selc-d-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "FEATURE_VIEWCONTRACT_ENABLED"
@@ -146,11 +146,11 @@ locals {
     },
     {
       name  = "IAM_URL"
-      value = "http://selc-d-iam-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-iam-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "DOCUMENT_URL"
-      value = "http://selc-d-document-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_AZURE_STORAGE_ACCOUNT_NAME"
@@ -171,14 +171,14 @@ locals {
   ]
 
   secrets_names_dashboard_bff = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "USER_REGISTRY_API_KEY"                  = "user-registry-api-key"
-    "BACKOFFICE_PAGO_PA_API_KEY"             = "pagopa-backoffice-api-key"
-    "SUPPORT_API_KEY"                        = "zendesk-support-api-key"
-    "JWT_TOKEN_EXCHANGE_PRIVATE_KEY"         = "jwt-exchange-private-key"
-    "JWT_TOKEN_EXCHANGE_KID"                 = "jwt-exchange-kid"
-    "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
-    "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "BACKOFFICE_PAGO_PA_API_KEY"            = "pagopa-backoffice-api-key"
+    "SUPPORT_API_KEY"                       = "zendesk-support-api-key"
+    "JWT_TOKEN_EXCHANGE_PRIVATE_KEY"        = "jwt-exchange-private-key"
+    "JWT_TOKEN_EXCHANGE_KID"                = "jwt-exchange-kid"
+    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "USERVICE_USER_REGISTRY_API_KEY"        = "user-registry-api-key"
   }
 }
 

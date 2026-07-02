@@ -30,7 +30,7 @@ locals {
   pnpg_hostname   = var.env == "prod" ? "api-pnpg.selfcare.pagopa.it" : "api-pnpg.${var.env}.selfcare.pagopa.it"
   project_pnpg    = "${var.prefix}-${var.env_short}-${var.location_short}-pnpg"
 
-  cdn_storage_hostname = "${var.prefix}${var.env_short}${var.location_short}${var.domain}checkoutsa"
+  cdn_storage_hostname = "${var.prefix}${var.env_short}${var.location_short}${var.domain}checkoutst01"
 }
 #########
 ## API ##
@@ -515,4 +515,3 @@ module "apim_product_pnpg_hotfix" {
 
   policy_xml = file("${path.module}/api_product_pnpg/pnpg_hotfix/policy.xml")
 }
-

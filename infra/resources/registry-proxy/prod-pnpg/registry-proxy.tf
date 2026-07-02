@@ -86,7 +86,7 @@ locals {
     },
     {
       name  = "MOCK_OPEN_DATA_URL"
-      value = "https://selc${module.local.config.env_short}weupnpgcheckoutsa.z6.web.core.windows.net/resources"
+      value = "https://selc${module.local.config.env_short}weupnpgcheckoutst01.z6.web.core.windows.net/resources"
     },
     {
       name  = "MOCK_OPEN_DATA_INSTITUTION_ENDPOINT"
