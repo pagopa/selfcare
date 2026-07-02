@@ -139,7 +139,7 @@ locals {
     },
     {
       name  = "ONBOARDING_URL"
-      value = "http://selc-u-pnpg-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "BLOB-STORAGE-PRODUCT-ACCOUNT-NAME"
@@ -160,12 +160,12 @@ locals {
   ]
 
   secrets_names_user_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
-    "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
+    "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
   }
 }
 

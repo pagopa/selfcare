@@ -136,11 +136,11 @@ locals {
     },
     {
       name  = "MS_NOTIFICATION_MANAGER_URL"
-      value = "http://selc-p-pnpg-notification-mngr-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-notification-mngr-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-p-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -148,7 +148,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-p-pnpg-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_STORAGE_CONTAINER"
