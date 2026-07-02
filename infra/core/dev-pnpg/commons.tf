@@ -291,13 +291,20 @@ module "container_app_environments" {
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_container_app_rg.name
 
-  # infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
+  infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-cp_selc-d-container-app-rg_westeurope"
 
   enable_log = false
   subnet_id  = module.networking.subnet.id
   cae_name   = "${local.project}-pnpg-cae-cp"
 
-  workload_profiles = []
+  workload_profiles = [
+    {
+      name                  = "Consumption"
+      workload_profile_type = "Consumption"
+      minimum_count         = 0
+      maximum_count         = 0
+    }
+  ]
 
   zone_redundant = false
 
@@ -387,7 +394,7 @@ module "container_app_environments_workload_profiles" {
   location            = local.location
   resource_group_name = azurerm_resource_group.selc_container_app_wp_rg.name
 
-  # infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-wp_selc-d-container-app-wp-rg_westeurope"
+  infrastructure_resource_group_name = "ME_selc-d-pnpg-cae-wp_selc-d-container-app-wp-rg_westeurope"
 
   enable_log = false
   subnet_id  = azurerm_subnet.container_app_environment_workload_profiles.id
@@ -424,10 +431,10 @@ resource "azurerm_key_vault_access_policy" "container_app_environment_workload_p
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location             = local.location
-  env_short            = local.env_short
-  domain               = local.app_domain
-  tags                 = local.tags
+  location               = local.location
+  env_short              = local.env_short
+  domain                 = local.app_domain
+  tags                   = local.tags
   product_storage_name   = module.cdn.storage_name
   product_storage_rg     = module.cdn.checkout_fe_rg_name
   documents_storage_name = module.cdn.storage_name
