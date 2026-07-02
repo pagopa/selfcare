@@ -24,8 +24,8 @@ module "local" {
 # DATA SOURCES
 ###############################################################################
 data "azurerm_storage_account" "product_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutsa"
-  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
@@ -135,7 +135,7 @@ locals {
     },
     {
       name  = "ONBOARDING_URL"
-      value = "http://selc-p-pnpg-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "BLOB-STORAGE-PRODUCT-ACCOUNT-NAME"
@@ -156,12 +156,12 @@ locals {
   ]
 
   secrets_names_user_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
-    "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
+    "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
   }
 }
 

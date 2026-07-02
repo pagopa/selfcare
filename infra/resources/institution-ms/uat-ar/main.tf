@@ -186,11 +186,11 @@ locals {
     },
     {
       name  = "MS_NOTIFICATION_MANAGER_URL"
-      value = "http://selc-u-notification-mngr-ca"
+      value = "https://selc-${module.local.config.env_short}-notification-mngr-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-u-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -198,7 +198,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-u-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_STORAGE_CONTAINER"
@@ -225,15 +225,15 @@ locals {
       value = "selfcare-wo"
     },
     {
-      name = "STORAGE_AZURE_CLIENT_ID"
+      name  = "STORAGE_AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
     },
     {
-      name = "AZURE_STORAGE_ACCOUNT_NAME"
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
       value = data.azurerm_storage_account.product_storage.name
     },
     {
-      name = "AZURE_CLIENT_ID"
+      name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]

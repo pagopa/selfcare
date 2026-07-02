@@ -11,17 +11,17 @@ module "local" {
 
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
-  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-u-pnpg-cae-001"
-  ca_resource_group_name         = "selc-u-container-app-001-rg"
+  private_dns_name_domain        = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-u-container-app-rg"
 }
 
 ###############################################################################
 # DATA SOURCES
 ###############################################################################
 data "azurerm_storage_account" "product_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutsa"
-  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
@@ -30,8 +30,8 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
 }
 
 data "azurerm_storage_account" "web_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutst01"
-  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "web_storage_blob_identity" {
@@ -67,7 +67,7 @@ locals {
     },
     {
       name  = "PUBLIC_FILE_STORAGE_BASE_URL"
-      value = "https://selcuweupnpgcheckoutsa.z6.web.core.windows.net"
+      value = "https://selcuweupnpgcheckoutst01.z6.web.core.windows.net"
     },
     {
       name  = "JWT_ISSUER"
@@ -95,19 +95,19 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-u-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-u-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-u-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_USER_GROUP_URL"
-      value = "http://selc-u-pnpg-user-group-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-group-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -127,7 +127,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-u-pnpg-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "B4F_DASHBOARD_SECURITY_CONNECTOR"
@@ -139,7 +139,11 @@ locals {
     },
     {
       name  = "ONBOARDING_URL"
-      value = "http://selc-u-pnpg-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "IAM_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-iam-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_AZURE_STORAGE_ACCOUNT_NAME"
