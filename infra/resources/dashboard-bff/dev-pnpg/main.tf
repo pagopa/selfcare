@@ -98,19 +98,19 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-pnpg-institution-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-d-pnpg-institution-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-d-pnpg-party-reg-proxy-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_USER_GROUP_URL"
-      value = "http://selc-d-pnpg-user-group-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-user-group-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -130,7 +130,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-d-pnpg-user-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "B4F_DASHBOARD_SECURITY_CONNECTOR"
@@ -138,7 +138,11 @@ locals {
     },
     {
       name  = "ONBOARDING_URL"
-      value = "http://selc-d-pnpg-onboarding-ms-ca"
+      value = "http://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "IAM_URL"
+      value = "http://selc-${module.local.config.env_short}-pnpg-iam-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_AZURE_STORAGE_ACCOUNT_NAME"
