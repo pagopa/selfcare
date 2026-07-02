@@ -25,7 +25,7 @@ locals {
   container_app_environment_name = "${local.prefix}-${local.env_short}-${local.domain}-cae-001"
   ca_resource_group_name         = "${local.prefix}-${local.env_short}-container-app-001-rg"
 
-  private_dns_name_domain = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  private_dns_name_domain = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
 
   container_app = {
     min_replicas = 1

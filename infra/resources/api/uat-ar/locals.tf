@@ -47,7 +47,7 @@ locals {
   private_dns_name            = "selc.internal.uat.selfcare.pagopa.it"
   private_onboarding_dns_name = "selc-u-onboarding-ms-ca.calmsky-143987c1.westeurope.azurecontainerapps.io"
   # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
 
   # app_gateway
   app_gateway_api_certificate_name      = "api-uat-selfcare-pagopa-it"
