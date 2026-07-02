@@ -95,16 +95,16 @@ locals {
 
     {
       name  = "STORAGE_APPLICATION_ID"
-      value = "selcpweupnpgcheckoutsa"
+      value = "selcpweupnpgcheckoutst01"
     },
 
     {
       name  = "STORAGE_CREDENTIAL_ID"
-      value = "selcpweupnpgcheckoutsa"
+      value = "selcpweupnpgcheckoutst01"
     },
     {
       name  = "STORAGE_TEMPLATE_URL"
-      value = "https://selcpweupnpgcheckoutsa.z6.web.core.windows.net"
+      value = "https://selcpweupnpgcheckoutst01.z6.web.core.windows.net"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"

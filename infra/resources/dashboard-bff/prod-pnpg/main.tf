@@ -71,7 +71,7 @@ locals {
     },
     {
       name  = "PUBLIC_FILE_STORAGE_BASE_URL"
-      value = "https://selcpweupnpgcheckoutsa.z6.web.core.windows.net"
+      value = "https://selcpweupnpgcheckoutst01.z6.web.core.windows.net"
     },
     {
       name  = "JWT_ISSUER"
