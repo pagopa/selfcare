@@ -258,8 +258,6 @@ module "networking" {
   container_app_name_snet           = "${local.project}-pnpg-cae-cp-snet"
   private_endpoint_network_policies = "Enabled"
 
-  delegation = []
-
   tags = local.tags
 }
 
