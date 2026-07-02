@@ -40,7 +40,7 @@ locals {
       "BLOB_STORAGE_CONN_STRING_PRODUCT"                   = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
       "STORAGE_CONTAINER_CONTRACT"                         = "sc-u-documents-blob"
       "STORAGE_CONTAINER_PRODUCT"                          = "selc-u-product"
-      "BLOB_STORAGE_CONN_STRING_CONTRACT"                  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/documents-storage-connection-string/)"
+      "BLOB_STORAGE_CONN_STRING_CONTRACT"                  = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/documents-storage-connection-string/)"
       "MAIL_DESTINATION_TEST_ADDRESS"                      = "pectest@pec.pagopa.it"
       "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH"         = "contracts/template/mail/registration-request-pt/1.0.0.json"
       "MAIL_SENDER_ADDRESS"                                = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
