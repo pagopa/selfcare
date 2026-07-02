@@ -728,4 +728,12 @@ class InstitutionServiceImpl implements InstitutionService {
         return result;
     }
 
+    @Override
+    public void triggerOnboardingRequest(String onboardingId) {
+        log.trace("triggerOnboardingRequest start");
+        log.debug("triggerOnboardingRequest onboardingId = {}", onboardingId);
+        onboardingMsConnector.triggerOnboardingRequest(onboardingId);
+        log.trace("triggerOnboardingRequest end");
+    }
+
 }

@@ -60,4 +60,6 @@ public interface InstitutionService {
     List<OnboardingResult> getOnboardingWithFilter(String taxCode, String status);
 
     void validateOnboardingByProductOrInstitutionTaxCode(String taxCode, String productId);
+
+    void triggerOnboardingRequest(String onboardingId);
 }

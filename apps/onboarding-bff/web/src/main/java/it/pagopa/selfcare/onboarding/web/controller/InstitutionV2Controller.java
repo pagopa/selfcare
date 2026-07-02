@@ -213,6 +213,19 @@ public class InstitutionV2Controller {
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
 
+    @PutMapping(value = "/{onboardingId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Trigger onboarding request",
+            description = "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
+            operationId = "triggerOnboardingRequest")
+    public void triggerOnboardingRequest(@ApiParam("The onboarding id")
+                                    @PathVariable("onboardingId") String onboardingId) {
+        log.trace("triggerOnboardingRequest start");
+        log.debug("triggerOnboardingRequest onboardingId = {}", onboardingId);
+        institutionService.triggerOnboardingRequest(onboardingId);
+        log.trace("triggerOnboardingRequest end");
+    }
+
     @GetMapping(value = "/onboardings")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboardingInfo.summary}",
