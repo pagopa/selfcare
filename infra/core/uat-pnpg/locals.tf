@@ -48,8 +48,9 @@ locals {
   cidr_subnet_eventhub_rds          = ["10.1.153.0/26"]
 
 
-  cidr_subnet_selc      = ["10.1.148.0/23"]
-  cidr_subnet_selc_pnpg = ["10.1.150.0/23"]
+  cidr_subnet_selc        = ["10.1.148.0/23"]
+  cidr_subnet_selc_pnpg   = ["10.1.150.0/23"]
+  cidr_subnet_pnpg_cae_wp = ["10.1.158.0/23"]
 
   #
   # Pair VNET
@@ -101,7 +102,7 @@ locals {
   reverse_proxy_ip                = "10.1.1.250"
   private_dns_name                = "selc.internal.dev.selfcare.pagopa.it"
   ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "blackhill-644148c0.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
   spid_selc_path_prefix           = "/spid-login/v1"
 
 

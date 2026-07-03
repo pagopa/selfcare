@@ -25,8 +25,8 @@ module "local" {
 # DATA SOURCES
 ###############################################################################
 data "azurerm_storage_account" "product_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutsa"
-  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
@@ -95,16 +95,16 @@ locals {
 
     {
       name  = "STORAGE_APPLICATION_ID"
-      value = "selcpweupnpgcheckoutsa"
+      value = "selcpweupnpgcheckoutst01"
     },
 
     {
       name  = "STORAGE_CREDENTIAL_ID"
-      value = "selcpweupnpgcheckoutsa"
+      value = "selcpweupnpgcheckoutst01"
     },
     {
       name  = "STORAGE_TEMPLATE_URL"
-      value = "https://selcpweupnpgcheckoutsa.z6.web.core.windows.net"
+      value = "https://selcpweupnpgcheckoutst01.z6.web.core.windows.net"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -136,11 +136,11 @@ locals {
     },
     {
       name  = "MS_NOTIFICATION_MANAGER_URL"
-      value = "http://selc-p-pnpg-notification-mngr-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-notification-mngr-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-p-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -148,7 +148,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-p-pnpg-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_STORAGE_CONTAINER"

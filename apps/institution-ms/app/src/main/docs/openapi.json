@@ -2891,13 +2891,19 @@
       },
       "OnboardingPut" : {
         "title" : "OnboardingPut",
-        "required" : [ "productId", "vatNumber" ],
+        "required" : [ "productId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
             "type" : "string"
           },
           "vatNumber" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "type" : "string"
+          },
+          "originId" : {
             "type" : "string"
           }
         }
