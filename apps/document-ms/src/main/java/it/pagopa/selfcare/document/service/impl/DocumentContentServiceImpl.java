@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 
 import static it.pagopa.selfcare.document.config.DocumentMsConfig.PDF_FORMAT_FILENAME;
@@ -227,6 +228,139 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         request.getAttachmentName(),
                         System.currentTimeMillis() - start))
                 .replaceWithVoid();
+    }
+
+    @Override
+    public Uni<Void> uploadUserAttachment(UserAttachmentRequest request, FormItem file) {
+        log.info("Uploading user attachment for onboardingId={}, productId={}, attachmentName={}, maxDocumentsRequired={}, originalFilename={}",
+                sanitize(request.getOnboardingId()),
+                sanitize(request.getProductId()),
+                sanitize(request.getAttachmentName()),
+                request.getMaxDocumentsRequired(),
+                sanitize(file.getFileName()));
+        long start = System.currentTimeMillis();
+
+        return Uni.createFrom().voidItem()
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> validateUserAttachmentPdf(file))
+                .chain(() -> documentRepository.findAttachment(
+                        request.getOnboardingId(), ATTACHMENT.name(), request.getAttachmentName()))
+                .onItem().transformToUni(existing -> {
+                    if (existing != null) {
+                        log.info("Existing user attachment for onboardingId={}, attachmentName={}: overwriting in place",
+                                sanitize(request.getOnboardingId()), sanitize(request.getAttachmentName()));
+                        return overwriteExistingUserAttachment(existing, file);
+                    }
+                    if (allowsMultipleUploads(request.getMaxDocumentsRequired())) {
+                        return enforceCapAndInsert(request, file);
+                    }
+                    return insertNewUserAttachment(request, file);
+                })
+                .invoke(ignored -> telemetryService.trackAttachmentUploaded(
+                        request.getOnboardingId(),
+                        request.getProductId(),
+                        request.getAttachmentName(),
+                        System.currentTimeMillis() - start))
+                .replaceWithVoid();
+    }
+
+    private Uni<Void> enforceCapAndInsert(UserAttachmentRequest request, FormItem file) {
+        return documentRepository.countUserAttachmentsByDocumentId(
+                        request.getOnboardingId(), request.getAttachmentId())
+                .onItem().transformToUni(existingCount -> {
+                    int max = request.getMaxDocumentsRequired();
+                    if (existingCount >= max) {
+                        log.error("Max documents cap reached for onboardingId={}, attachmentName={}: existing={} max={}",
+                                sanitize(request.getOnboardingId()),
+                                sanitize(request.getAttachmentName()),
+                                existingCount,
+                                max);
+                        return Uni.createFrom().failure(new UpdateNotAllowedException(
+                                ATTACHMENT_UPLOAD_ERROR.getCode(),
+                                String.format("Max documents cap (%d) reached for attachmentName %s",
+                                        max, sanitize(request.getAttachmentName()))));
+                    }
+                    return insertNewUserAttachment(request, file);
+                });
+    }
+
+    private Uni<Void> insertNewUserAttachment(UserAttachmentRequest request, FormItem file) {
+        String attachmentName = request.getAttachmentName();
+        String storageFilename = attachmentName + ".pdf";
+        return persistUserAttachment(request, attachmentName)
+                .call(document -> uploadUserFileToAzureReactive(document, file, storageFilename)
+                        .onFailure().call(azureError -> {
+                            log.error("Upload to USER storage failed for attachmentName {}. Rolling back DB record...",
+                                    sanitize(attachmentName));
+                            return documentRepository.delete(document)
+                                    .onFailure().invoke(e -> log.error(
+                                            "CRITICAL: Rollback failed for DB document {}", document.getId(), e));
+                        }))
+                .replaceWithVoid();
+    }
+
+    private Uni<Void> overwriteExistingUserAttachment(Document existing, FormItem file) {
+        AzureBlobClient azureBlobClient = storageRegistry.clientFor(existing.getStorageOrigin());
+        String fullPath = existing.getAttachmentPath();
+        return Uni.createFrom().item(file::getFile)
+                .map(f -> {
+                    try {
+                        return azureBlobClient.uploadFilePath(fullPath, Files.readAllBytes(f.toPath()));
+                    } catch (IOException e) {
+                        throw new java.io.UncheckedIOException(e);
+                    }
+                })
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .onFailure(java.io.UncheckedIOException.class)
+                .transform(e -> new InternalException(GENERIC_ERROR.getCode(),
+                        "Error overwriting user attachment for onboardingId " + existing.getOnboardingId()))
+                .chain(overwrittenPath -> documentRepository.touchUpdatedAtById(existing.getId()))
+                .replaceWithVoid();
+    }
+
+    private boolean allowsMultipleUploads(Integer maxDocumentsRequired) {
+        return maxDocumentsRequired != null && maxDocumentsRequired > 1;
+    }
+
+
+    private void validateUserAttachmentPdf(FormItem file) {
+        File fileToUpload = file.getFile();
+        DocumentFileUtils.validateUploadedFile(fileToUpload);
+        DocumentFileUtils.isPdfValid(fileToUpload);
+    }
+
+
+    private Uni<Document> persistUserAttachment(UserAttachmentRequest request, String attachmentName) {
+        Document document = new Document();
+        document.setId(UUID.randomUUID().toString());
+        document.setOnboardingId(request.getOnboardingId());
+        document.setProductId(request.getProductId());
+        document.setType(ATTACHMENT);
+        document.setAttachmentName(attachmentName);
+        document.setCreatedAt(LocalDateTime.now());
+        document.setUpdatedAt(LocalDateTime.now());
+        document.setRootOnboardingId(request.getOnboardingId());
+        document.setStorageOrigin(StorageOrigin.USER);
+        Optional.ofNullable(request.getAttachmentDescription())
+          .ifPresent(document::setAttachmentDescription);
+        return documentRepository.persist(document).replaceWith(document);
+    }
+
+    private Uni<Void> uploadUserFileToAzureReactive(Document document, FormItem file, String storageFilename) {
+        return Uni.createFrom().item(() -> uploadFileToAzure(
+                        document.getStorageOrigin(),
+                        storageFilename,
+                        document.getOnboardingId(),
+                        file.getFile()))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .chain(uploadedPath -> documentRepository.updateAttachmentPathById(document.getId(), uploadedPath)
+                        .invoke(() -> document.setAttachmentPath(uploadedPath))
+                        .onFailure().call(dbError -> {
+                            log.error("DB attachmentPath update failed for documentId={}, uploadedPath={}. Rolling back Azure upload...",
+                                    sanitize(document.getId()), sanitize(uploadedPath));
+                            return rollbackAzureUpload(uploadedPath, storageRegistry.clientFor(document.getStorageOrigin()));
+                        })
+                        .replaceWithVoid());
     }
 
     @Override
@@ -570,7 +704,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         document.setRootOnboardingId(request.getOnboardingId());
-        document.setStorageOrigin(request.getStorageOrigin());
+        document.setStorageOrigin(StorageOrigin.SYSTEM);
 
         String signedContractFileName = extractFileName(request.getTemplatePath());
         String filename = String.format("signed_%s", signedContractFileName);
@@ -583,12 +717,12 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentRepository.persist(document).replaceWith(document);
     }
 
-    private void uploadFileToAzure(StorageOrigin storageOrigin, String filename, String onboardingId, File signedFile) throws InternalException {
+    private String uploadFileToAzure(StorageOrigin storageOrigin, String filename, String onboardingId, File signedFile) throws InternalException {
         final String path = String.format("%s%s", pathContracts, onboardingId).concat("/attachments");
 
         try {
             DocumentFileUtils.validateUploadedFile(signedFile);
-            storageRegistry.clientFor(storageOrigin).uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
+            return storageRegistry.clientFor(storageOrigin).uploadFile(path, filename, Files.readAllBytes(signedFile.toPath()));
         } catch (IOException e) {
             throw new InternalException(GENERIC_ERROR.getCode(),
                     "Error on upload contract for onboarding with id " + onboardingId);

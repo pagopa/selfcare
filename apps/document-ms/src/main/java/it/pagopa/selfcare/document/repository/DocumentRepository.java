@@ -29,6 +29,16 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
                 .where("_id = ?1", documentId);
     }
 
+    public Uni<Long> updateAttachmentPathById(String documentId, String attachmentPath) {
+        return update("attachmentPath = ?1 and updatedAt = ?2", attachmentPath, LocalDateTime.now())
+                .where("_id = ?1", documentId);
+    }
+
+    public Uni<Long> touchUpdatedAtById(String documentId) {
+        return update("updatedAt = ?1", LocalDateTime.now())
+                .where("_id = ?1", documentId);
+    }
+
     public Uni<Document> findAttachment(String onboardingId, String type, String name) {
         return find("onboardingId = ?1 and type = ?2 and attachmentName = ?3", onboardingId, type, name)
                 .firstResult();
@@ -36,6 +46,21 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     public Uni<List<Document>> findAttachments(String onboardingId) {
         return find("onboardingId = ?1 and type = ?2", onboardingId, ATTACHMENT.name()).list();
+    }
+
+    /**
+     * Counts USER-storage attachments matching a given {@code documentId} (RequiredDocument.id),
+     * either exactly or with a numeric suffix like {@code documentId_2}, {@code documentId_3}, ...
+     * <p>Used by user attachment upload to decide whether the incoming file must be persisted as
+     * {@code documentId} (first upload) or with a numeric suffix.
+     */
+    public Uni<Long> countUserAttachmentsByDocumentId(String onboardingId, String documentId) {
+      return count(
+        "{ 'onboardingId': ?1, 'type': ?2, 'storageOrigin': ?3, 'attachmentName': { '$regex': ?4 } }",
+        onboardingId,
+        ATTACHMENT.name(),
+        USER.name(),
+        "^" + java.util.regex.Pattern.quote(documentId));
     }
 
     public Uni<Document> findByOnboardingId(String onboardingId) {

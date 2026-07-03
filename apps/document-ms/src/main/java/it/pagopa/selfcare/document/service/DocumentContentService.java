@@ -48,6 +48,8 @@ public interface DocumentContentService {
 
     Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
 
+    Uni<Void> uploadUserAttachment(UserAttachmentRequest request, FormItem file);
+
     Uni<Void> saveVisuraForMerchant(UploadVisuraRequest uploadVisuraRequest);
 
     Uni<String> deleteContract(String onboardingId);
