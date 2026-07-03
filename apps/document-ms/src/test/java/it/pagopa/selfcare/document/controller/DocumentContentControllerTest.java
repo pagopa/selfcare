@@ -1026,6 +1026,105 @@ class DocumentContentControllerTest {
                 .statusCode(500);
     }
 
+    @Test
+    void uploadUserAttachment_shouldReturnNoContent_whenUploadSuccessful() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId(PRODUCT_ID)
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .attachmentDescription("Statuto societario")
+                .build();
+
+        Mockito.when(documentContentService.uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", request, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(204);
+
+        verify(documentContentService).uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class));
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnConflict_whenCapReached() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId(PRODUCT_ID)
+                .attachmentName("attestazione-gsp_4")
+                .attachmentId("attestazione-gsp")
+                .maxDocumentsRequired(3)
+                .build();
+
+        Mockito.when(documentContentService.uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class)))
+                .thenReturn(Uni.createFrom().failure(new UpdateNotAllowedException("Max documents cap (3) reached")));
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", request, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(409);
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnInternalServerError_whenServiceFails() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId(PRODUCT_ID)
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .build();
+
+        Mockito.when(documentContentService.uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Azure error")));
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", request, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        // Missing required fields (onboardingId, productId, attachmentId, maxDocumentsRequired)
+        UserAttachmentRequest invalidRequest = UserAttachmentRequest.builder()
+                .attachmentName("statuto")
+                .build();
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", invalidRequest, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(400);
+
+        verify(documentContentService, never()).uploadUserAttachment(any(), any());
+    }
+
     // ============================================
     // Helper methods
     // ============================================

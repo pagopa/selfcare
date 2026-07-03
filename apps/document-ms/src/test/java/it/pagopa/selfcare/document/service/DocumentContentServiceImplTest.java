@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -625,6 +626,154 @@ class DocumentContentServiceImplTest {
         assertDoesNotThrow(awaiter::indefinitely);
 
         verify(signatureService).verifySignature(tempFile);
+    }
+
+    // ---- uploadUserAttachment ----
+
+    @Test
+    void uploadUserAttachment_shouldPersistAndUpload_whenSingleInstanceAndNoExisting() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder().file(tempFile).fileName("statuto.pdf").build();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .build();
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "statuto"))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentRepository.persist(any(Document.class)))
+                .thenAnswer(inv -> Uni.createFrom().item(inv.getArgument(0, Document.class)));
+        when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
+                .thenReturn("/parties/docs/" + ONBOARDING_ID + "/attachments/statuto.pdf");
+        when(documentRepository.updateAttachmentPathById(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        assertDoesNotThrow(() -> documentContentService.uploadUserAttachment(request, formItem)
+                .await().indefinitely());
+
+        verify(documentRepository).persist(any(Document.class));
+        verify(azureBlobClient).uploadFile(anyString(), eq("statuto.pdf"), any(byte[].class));
+        verify(documentRepository).updateAttachmentPathById(anyString(),
+                eq("/parties/docs/" + ONBOARDING_ID + "/attachments/statuto.pdf"));
+        verify(documentRepository, never()).touchUpdatedAtById(anyString());
+    }
+
+    @Test
+    void uploadUserAttachment_shouldOverwrite_whenSingleInstanceAndAlreadyExists() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder().file(tempFile).fileName("statuto.pdf").build();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .build();
+
+        Document existing = buildDocument();
+        existing.setAttachmentName("statuto");
+        existing.setAttachmentPath("/parties/docs/" + ONBOARDING_ID + "/attachments/statuto.pdf");
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "statuto"))
+                .thenReturn(Uni.createFrom().item(existing));
+        when(azureBlobClient.uploadFilePath(eq(existing.getAttachmentPath()), any(byte[].class)))
+                .thenReturn(existing.getAttachmentPath());
+        when(documentRepository.touchUpdatedAtById(existing.getId()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        assertDoesNotThrow(() -> documentContentService.uploadUserAttachment(request, formItem)
+                .await().indefinitely());
+
+        verify(azureBlobClient).uploadFilePath(eq(existing.getAttachmentPath()), any(byte[].class));
+        verify(documentRepository).touchUpdatedAtById(existing.getId());
+        verify(documentRepository, never()).persist(any(Document.class));
+        verify(documentRepository, never()).updateAttachmentPathById(anyString(), anyString());
+    }
+
+    @Test
+    void uploadUserAttachment_shouldPersistWithSuffix_whenMultiInstanceWithinCap() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder().file(tempFile).fileName("attestazione.pdf").build();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .attachmentName("attestazione-gsp-2")
+                .attachmentId("attestazione-gsp")
+                .maxDocumentsRequired(3)
+                .build();
+
+        when(documentRepository.countUserAttachmentsByDocumentId(ONBOARDING_ID, "attestazione-gsp"))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(documentRepository.persist(any(Document.class)))
+                .thenAnswer(inv -> Uni.createFrom().item(inv.getArgument(0, Document.class)));
+        when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
+                .thenReturn("/parties/docs/" + ONBOARDING_ID + "/attachments/attestazione-gsp-2.pdf");
+        when(documentRepository.updateAttachmentPathById(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        assertDoesNotThrow(() -> documentContentService.uploadUserAttachment(request, formItem)
+                .await().indefinitely());
+
+        verify(azureBlobClient).uploadFile(anyString(), eq("attestazione-gsp-2.pdf"), any(byte[].class));
+        verify(documentRepository).persist(argThat((Document doc) ->
+          "attestazione-gsp-2".equals(doc.getAttachmentName())));
+    }
+
+    @Test
+    void uploadUserAttachment_shouldFail_whenMaxCapReached() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder().file(tempFile).fileName("attestazione.pdf").build();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .attachmentName("attestazione-gsp")
+                .attachmentId("attestazione-gsp")
+                .maxDocumentsRequired(3)
+                .build();
+
+        when(documentRepository.countUserAttachmentsByDocumentId(ONBOARDING_ID, "attestazione-gsp"))
+                .thenReturn(Uni.createFrom().item(3L));
+
+        var awaiter = documentContentService.uploadUserAttachment(request, formItem).await();
+        assertThrows(UpdateNotAllowedException.class, awaiter::indefinitely);
+
+        verify(documentRepository, never()).persist(any(Document.class));
+        verify(azureBlobClient, never()).uploadFile(anyString(), anyString(), any(byte[].class));
+    }
+
+    @Test
+    void uploadUserAttachment_shouldRollbackDbRecord_whenAzureUploadFails() throws IOException {
+        File tempFile = createTempPdf();
+        FormItem formItem = FormItem.builder().file(tempFile).fileName("statuto.pdf").build();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId("prod-io")
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .build();
+
+        when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "statuto"))
+                .thenReturn(Uni.createFrom().nullItem());
+        when(documentRepository.persist(any(Document.class)))
+                .thenAnswer(inv -> Uni.createFrom().item(inv.getArgument(0, Document.class)));
+        when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
+                .thenThrow(new RuntimeException("Azure down"));
+        when(documentRepository.delete(any(Document.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        var awaiter = documentContentService.uploadUserAttachment(request, formItem).await();
+        assertThrows(Exception.class, awaiter::indefinitely);
+
+        verify(documentRepository).delete(any(Document.class));
     }
 
     // ---- getTemplateDigest ----
