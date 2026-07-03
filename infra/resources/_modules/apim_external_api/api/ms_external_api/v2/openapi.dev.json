@@ -964,6 +964,15 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "includeTest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -3199,12 +3208,12 @@
             "style": "form",
             "schema": {
               "type": "string",
+              "default": "NONE",
               "enum": [
                 "NONE",
                 "ASC",
                 "DESC"
-              ],
-              "default": "NONE"
+              ]
             }
           },
           {
@@ -5613,6 +5622,9 @@
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
+          },
+          "storageOrigin": {
+            "$ref": "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -5632,6 +5644,13 @@
             }
           }
         }
+      },
+      "StorageOrigin": {
+        "enum": [
+          "SYSTEM",
+          "USER"
+        ],
+        "type": "string"
       },
       "ProductOriginResponse": {
         "type": "object",
@@ -6014,6 +6033,21 @@
       "ProductRolePermissionsList": {
         "type": "object",
         "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -7259,6 +7293,7 @@
       },
       "OnboardingStatus": {
         "enum": [
+          "REQUESTING",
           "REQUEST",
           "TOBEVALIDATED",
           "PENDING",

@@ -261,8 +261,6 @@ module "networking" {
   container_app_name_snet           = "${local.project}-pnpg-cae-cp-snet"
   private_endpoint_network_policies = "Enabled"
 
-  delegation = []
-
   tags = local.tags
 }
 
@@ -414,14 +412,14 @@ resource "azurerm_key_vault_access_policy" "container_app_environment_workload_p
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location             = local.location
-  env_short            = local.env_short
-  domain               = local.app_domain
-  tags                 = local.tags
-  product_storage_name   = module.cdn.storage_name
-  product_storage_rg     = module.cdn.checkout_fe_rg_name
-  documents_storage_name = module.cdn.storage_name
-  documents_storage_rg   = module.cdn.checkout_fe_rg_name
-  web_storage_name       = module.cdn.storage_name
-  web_storage_rg         = module.cdn.checkout_fe_rg_name
+  location               = local.location
+  env_short              = local.env_short
+  domain                 = local.app_domain
+  tags                   = local.tags
+  product_storage_name   = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg     = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
+  documents_storage_name = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  documents_storage_rg   = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
+  web_storage_name       = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  web_storage_rg         = "${local.prefix}-${local.env_short}-${local.location_short}-${local.app_domain}-checkout-fe-rg"
 }

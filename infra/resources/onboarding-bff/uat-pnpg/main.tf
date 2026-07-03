@@ -11,9 +11,9 @@ module "local" {
 
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
-  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-u-pnpg-cae-001"
-  ca_resource_group_name         = "selc-u-container-app-001-rg"
+  private_dns_name_domain        = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-u-container-app-rg"
 }
 
 locals {
@@ -26,7 +26,7 @@ locals {
     { name = "MS_ONBOARDING_URL", value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "MS_CORE_URL", value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "MS_IAM_URL", value = "https://selc-${module.local.config.env_short}-pnpg-iam-ms-ca.${module.local.config.private_dns_name_domain}" },
-    { name = "USERVICE_PARTY_PROCESS_URL", value = "http://selc-${module.local.config.env_short}-pnpg-institution-ms-ca" },
+    { name = "USERVICE_PARTY_PROCESS_URL", value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_PARTY_REGISTRY_PROXY_URL", value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}" },
     { name = "USERVICE_USER_REGISTRY_URL", value = "https://api.uat.pdv.pagopa.it/user-registry/v1" },
     { name = "REST_CLIENT_CONNECT_TIMEOUT", value = "60000" },

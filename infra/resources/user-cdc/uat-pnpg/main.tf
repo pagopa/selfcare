@@ -11,9 +11,9 @@ module "local" {
 
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
-  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-u-pnpg-cae-001"
-  ca_resource_group_name         = "selc-u-container-app-001-rg"
+  private_dns_name_domain        = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-u-container-app-rg"
   container_app_max_replicas     = 1
   container_app_desired_replicas = "1"
   container_app_cpu              = 1
@@ -25,8 +25,8 @@ module "local" {
 ###############################################################################
 
 data "azurerm_storage_account" "product_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutsa"
-  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-checkout-fe-rg"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
 }
 
 data "azurerm_user_assigned_identity" "product_storage_table_identity" {
