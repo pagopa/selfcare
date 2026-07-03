@@ -17,6 +17,10 @@ public interface DocumentMsConnector {
 
     void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName, String id, AttachmentTemplate template);
 
+    void uploadUserAttachment(String onboardingId, MultipartFile attachment, String productId,
+                              String attachmentId, String attachmentDescription, String attachmentName,
+                              Integer maxDocumentsRequired);
+
     Resource getAggregatesCsv(String onboardingId, String productId);
 
 }

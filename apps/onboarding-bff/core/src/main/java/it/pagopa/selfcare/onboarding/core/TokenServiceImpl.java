@@ -182,7 +182,8 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
+    public void uploadAttachment(String onboardingId, MultipartFile attachment,
+                                 String attachmentName, String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
@@ -190,14 +191,29 @@ public class TokenServiceImpl implements TokenService {
         Assert.notNull(attachment, "file is required");
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
 
-        if (isUserStorageRequired(onboarding, attachmentName)) {
-          // TODO aggiungere chiamata a nuovo controller
-          log.info("Upload attachment {} for onboardingId {} on user storage", attachmentName, onboardingId);
-          //documentMsConnector.uploadUserAttachment(onboardingId, attachment, attachmentName);
+        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(onboarding, attachmentId);
+        boolean userStorage = requiredDocument
+                .map(RequiredDocumentModel::getStorageOrigin)
+                .map(so -> so == StorageOrigin.USER)
+                .orElse(false);
+
+        if (userStorage) {
+          Integer maxDocumentsRequired = requiredDocument
+                  .map(RequiredDocumentModel::getMaxDocumentsRequired)
+                  .orElse(1);
+          log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
+          documentMsConnector.uploadUserAttachment(
+              onboardingId,
+              attachment,
+              onboarding.getProductId(),
+              attachmentId,
+              attachmentDescription,
+              attachmentName,
+              maxDocumentsRequired);
         } else {
           Product product = productAzureService.getProductValid(onboarding.getProductId());
           AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
-          log.info("Upload attachment {} for onboardingId {} on system storage", attachmentName, onboardingId);
+          log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
           documentMsConnector.uploadAttachment(
             onboardingId, attachment, attachmentName, product.getId(), template);
         }
@@ -205,18 +221,15 @@ public class TokenServiceImpl implements TokenService {
         log.trace("getAttachment end");
     }
 
-    private boolean isUserStorageRequired(OnboardingData onboarding, String attachmentName) {
+    private Optional<RequiredDocumentModel> findRequiredDocument(OnboardingData onboarding, String attachmentId) {
       return productMsConnector
           .getRequiredDocuments(
               onboarding.getProductId(),
               onboarding.getInstitutionType().name(),
               onboarding.getInstitutionUpdate().getOrigin())
           .stream()
-          .filter(doc -> doc.getId().equals(attachmentName))
-          .findFirst()
-          .map(RequiredDocumentModel::getStorageOrigin)
-          .map(so -> so == StorageOrigin.USER)
-          .orElse(false);
+          .filter(doc -> doc.getId().equals(attachmentId))
+          .findFirst();
     }
 
     @Override

@@ -221,7 +221,7 @@ public class InstitutionV2Controller {
     public void triggerOnboardingRequest(@ApiParam("The onboarding id")
                                     @PathVariable("onboardingId") String onboardingId) {
         log.trace("triggerOnboardingRequest start");
-        log.debug("triggerOnboardingRequest onboardingId = {}", onboardingId);
+        log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));
         institutionService.triggerOnboardingRequest(onboardingId);
         log.trace("triggerOnboardingRequest end");
     }

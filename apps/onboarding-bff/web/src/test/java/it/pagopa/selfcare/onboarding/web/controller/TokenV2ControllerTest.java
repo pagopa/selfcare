@@ -382,7 +382,7 @@ class TokenV2ControllerTest {
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, MultipartFile)}
+     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, String, String, MultipartFile)}
      */
     @Test
     void uploadAttachment() throws Exception {
@@ -390,7 +390,7 @@ class TokenV2ControllerTest {
         final String filename = "filename";
 
         MockMultipartFile file = new MockMultipartFile(
-                "attachment",         
+                "attachment",
                 "hello.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
                 "Hello, World!".getBytes()
@@ -405,7 +405,7 @@ class TokenV2ControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         verify(tokenService, times(1))
-                .uploadAttachment(onboardingId, file, filename);
+                .uploadAttachment(onboardingId, file, filename, null, null);
     }
 
 

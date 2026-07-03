@@ -582,15 +582,6 @@
           "schema" : {
             "type" : "string"
           }
-        }, {
-          "name" : "storageOrigin",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "SYSTEM",
-            "enum" : [ "SYSTEM", "USER" ]
-          }
         } ],
         "requestBody" : {
           "content" : {
@@ -599,6 +590,12 @@
                 "required" : [ "attachment" ],
                 "type" : "object",
                 "properties" : {
+                  "attachmentId" : {
+                    "type" : "string"
+                  },
+                  "attachmentDescription" : {
+                    "type" : "string"
+                  },
                   "attachment" : {
                     "type" : "string",
                     "format" : "binary"
@@ -747,8 +744,8 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
+          "409" : {
+            "description" : "Conflict",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -757,8 +754,8 @@
               }
             }
           },
-          "409" : {
-            "description" : "Conflict",
+          "403" : {
+            "description" : "Forbidden",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -2079,6 +2076,79 @@
       }
     },
     "/v2/tokens/{onboardingId}/attachment/status" : {
+      "get" : {
+        "tags" : [ "token-v-2-controller" ],
+        "summary" : "Service to check the existence of a specific onboarding attachment",
+        "description" : "Service to check the existence of a specific onboarding attachment",
+        "operationId" : "getAttachmentStatusUsingGET",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      },
       "head" : {
         "tags" : [ "token-v-2-controller" ],
         "summary" : "Service to check the existence of a specific onboarding attachment",
