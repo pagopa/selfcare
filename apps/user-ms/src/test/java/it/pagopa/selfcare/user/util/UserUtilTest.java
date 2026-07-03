@@ -397,6 +397,70 @@ class UserUtilTest {
   }
 
   @Test
+  void validateMultiroleWithUserInstitution_nullUserInstitution() {
+
+    userUtils
+      .validateMultiroleWithUserInstitution(
+        "prod",
+        PartyRole.MANAGER.name(),
+        List.of("admin"),
+        null)
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .assertCompleted();
+
+    Mockito.verifyNoInteractions(productService);
+  }
+
+  @Test
+  void validateMultiroleWithUserInstitution_blankProductId() {
+
+    userUtils
+      .validateMultiroleWithUserInstitution(
+        "",
+        PartyRole.MANAGER.name(),
+        List.of("admin"),
+        new UserInstitution())
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .assertCompleted();
+
+    Mockito.verifyNoInteractions(productService);
+  }
+
+  @Test
+  void validateMultiroleWithUserInstitution_nullProductRoles() {
+
+    userUtils
+      .validateMultiroleWithUserInstitution(
+        "prod",
+        PartyRole.MANAGER.name(),
+        null,
+        new UserInstitution())
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .assertCompleted();
+
+    Mockito.verifyNoInteractions(productService);
+  }
+
+  @Test
+  void validateMultiroleWithUserInstitution_emptyProductRoles() {
+
+    userUtils
+      .validateMultiroleWithUserInstitution(
+        "prod",
+        PartyRole.MANAGER.name(),
+        Collections.emptyList(),
+        new UserInstitution())
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .assertCompleted();
+
+    Mockito.verifyNoInteractions(productService);
+  }
+
+  @Test
   void validateMultiroleWithUserInstitution_noExistingRoles() {
 
     UserInstitution ui = new UserInstitution();
