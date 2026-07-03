@@ -648,7 +648,7 @@ public class UserServiceImpl implements UserService {
      * If the new role is not MANAGER and the user already has any role on the product, the method throws a
      * UserRoleAlreadyPresentException to prevent assigning a conflicting role.
      */
-    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(UserInstitution userInstitution ,AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
+    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(UserInstitution userInstitution, AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
         PartyRole newRole;
         try {
             newRole = PartyRole.valueOf(userDto.getProduct().getRole());
@@ -824,10 +824,11 @@ public class UserServiceImpl implements UserService {
         List<String> finalRoles = new ArrayList<>(productAlreadyOnboarded);
         finalRoles.addAll(productRoleFinal);
 
-        userUtils.checkProductRolesAndValidateMultirole(
+        userUtils.validateMultiroleWithUserInstitution(
                 productId,
-                PartyRole.valueOf(role),
-                finalRoles
+                role,
+                finalRoles,
+                userInstitution
         );
 
 

@@ -5,11 +5,13 @@ import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.mapper.NotificationMapper;
 import it.pagopa.selfcare.user.model.LoggedUser;
+import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,6 +27,7 @@ import org.jboss.resteasy.reactive.ClientWebApplicationException;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.MAIL_ID_PREFIX;
 import static it.pagopa.selfcare.user.model.constants.OnboardedProductState.ACTIVE;
@@ -49,72 +52,196 @@ public class UserUtils {
         return map;
     }
 
-    public Uni<Void> checkProductRolesAndValidateMultirole(String productId, PartyRole role, List<String> productRoles) {
+    public Uni<Void> checkProductRolesAndValidateRequestMultirole(String productId, PartyRole role, List<String> productRoles) {
 
         if (StringUtils.isBlank(productId) || productRoles == null || productRoles.isEmpty()) {
-            return Uni.createFrom().voidItem();
+          return Uni.createFrom().voidItem();
         }
 
         try {
-            List<List<String>> groupsPerRole = new ArrayList<>();
 
-            // validate each requested product role
-            for (String productRole : productRoles) {
+          List<OnboardedProduct> finalState = productRoles.stream()
+            .map(productRole -> {
 
-                // validate role via product sdk
-                ProductRole validatedRole =
-                        productService.validateProductRole(productId, productRole, role);
+              // Validate that the productRole belongs to the requested PartyRole
+              productService.validateProductRole(productId, productRole, role);
 
-                groupsPerRole.add(validatedRole.getMultiroleGroups());
-            }
+              //simulate the addition of new roles
+              OnboardedProduct onboardedProduct = new OnboardedProduct();
+              onboardedProduct.setProductId(productId);
+              onboardedProduct.setRole(role);
+              onboardedProduct.setProductRole(productRole);
+              onboardedProduct.setStatus(ACTIVE);
 
-            validateMultiroleRules(productRoles, groupsPerRole);
+              return onboardedProduct;
+            })
+            .toList();
+
+          Map<PartyRole, ProductRoleInfo> roleMappings =
+            productService.getProduct(productId).getRoleMappings();
+
+          // validate multirole addition
+          validateMultiroleConfiguration(finalState, roleMappings);
 
         } catch (IllegalArgumentException e) {
-            throw new InvalidRequestException(e.getMessage());
+          throw new InvalidRequestException(e.getMessage());
         }
 
         return Uni.createFrom().voidItem();
     }
 
+    public Uni<Void> validateMultiroleWithUserInstitution(String productId, String partyRole, List<String> productRoles, UserInstitution userInstitution) {
 
-
-
-    private void validateMultiroleRules(List<String> productRoles, List<List<String>> groupsPerRole) {
-
-        boolean hasMultipleRoles = productRoles.size() > 1;
-
-        Set<String> intersection = null;
-
-        // Multirole rules apply only when more than one role is requested
-        if (!hasMultipleRoles) {
-            return;
+        if (userInstitution == null || StringUtils.isBlank(productId) || productRoles == null || productRoles.isEmpty()) {
+          return Uni.createFrom().voidItem();
         }
 
-        for (List<String> groups : groupsPerRole) {
+        List<OnboardedProduct> finalState = new ArrayList<>(
+          userInstitution.getProducts().stream()
+            .filter(p -> productId.equals(p.getProductId()))
+            .filter(p -> p.getStatus() == ACTIVE || p.getStatus() == SUSPENDED)
+            .toList());
 
-            // RULE 1: cannot combine single-role with others
-            if (groups == null || groups.isEmpty()) {
-                throw new InvalidRequestException(
-                        "A product role that does not support multirole cannot be combined with others"
-                );
-            }
-
-            // build the intersection of groups between all the roles, if at least one role does not share any group with the others the intersection will be empty and the check will fail
-            Set<String> current = new HashSet<>(groups);
-
-            if (intersection == null) {
-                intersection = current;
-            } else {
-                intersection.retainAll(current);
-            }
+        // no existing role -> no check needed
+        if (finalState.isEmpty()) {
+          return Uni.createFrom().voidItem();
         }
 
-        // RULE 2: must share at least one group
-        if (intersection == null || intersection.isEmpty()) {
-            throw new InvalidRequestException(
-                    "Product roles must share at least one multirole group"
-            );
+        Map<PartyRole, ProductRoleInfo> roleMappings =
+          productService.getProduct(productId).getRoleMappings();
+
+        ProductRoleInfo requestedRoleInfo =
+          roleMappings.get(PartyRole.valueOf(partyRole));
+
+        if (requestedRoleInfo == null) {
+          throw new InvalidRequestException(
+            "No role mapping for partyRole " + partyRole);
+        }
+
+        // simulate the addition of new roles
+        requestedRoleInfo.getRoles().stream()
+          .filter(role -> productRoles.contains(role.getCode()))
+          .forEach(role -> {
+            OnboardedProduct onboardedProduct = new OnboardedProduct();
+            onboardedProduct.setProductId(productId);
+            onboardedProduct.setRole(PartyRole.valueOf(partyRole));
+            onboardedProduct.setProductRole(role.getCode());
+            onboardedProduct.setStatus(ACTIVE);
+
+            finalState.add(onboardedProduct);
+          });
+
+        validateMultiroleConfiguration(finalState, roleMappings);
+
+        return Uni.createFrom().voidItem();
+    }
+
+  public Uni<Void> validateMultiroleAfterStatusUpdate(List<UserInstitution> userInstitutions, String productId, PartyRole targetRole, String targetProductRole, OnboardedProductState newStatus) {
+
+    if(newStatus != ACTIVE && newStatus != SUSPENDED) {
+      return Uni.createFrom().voidItem();
+    }
+
+    Map<String, Map<PartyRole, ProductRoleInfo>> roleMappingsByProduct =
+      new HashMap<>();
+
+
+    for (UserInstitution userInstitution : userInstitutions) {
+
+      List<OnboardedProduct> filteredProducts = userInstitution.getProducts().stream()
+        .filter(p -> productId == null || productId.equals(p.getProductId()))
+        .toList();
+
+      // GROUP ONBOARDEDPRODUCTS BY PRODUCT
+      Map<String, List<OnboardedProduct>> byProduct = filteredProducts.stream()
+        .collect(Collectors.groupingBy(OnboardedProduct::getProductId));
+
+      for (Map.Entry<String, List<OnboardedProduct>> entry : byProduct.entrySet()) {
+
+        String currentProductId = entry.getKey();
+        List<OnboardedProduct> products = entry.getValue();
+
+        Map<PartyRole, ProductRoleInfo> roleMappings =
+          roleMappingsByProduct.computeIfAbsent(
+            currentProductId,
+            pid -> productService.getProduct(pid).getRoleMappings()
+          );
+
+        // SIMULATE FINAL STATE
+        List<OnboardedProduct> finalState = products.stream()
+          .map(p -> simulateUpdate(p, productId, targetRole, targetProductRole, newStatus))
+          .filter(p -> p.getStatus() == ACTIVE || p.getStatus() == SUSPENDED)
+          .toList();
+
+        //VALIDATION
+        validateMultiroleConfiguration(finalState, roleMappings);
+      }
+    }
+    return Uni.createFrom().voidItem();
+  }
+
+
+    private OnboardedProduct simulateUpdate(OnboardedProduct p, String productId, PartyRole targetRole, String targetProductRole, OnboardedProductState newStatus) {
+
+        OnboardedProduct onboardedProductCopy = new OnboardedProduct();
+        onboardedProductCopy.setProductId(p.getProductId());
+        onboardedProductCopy.setRole(p.getRole());
+        onboardedProductCopy.setProductRole(p.getProductRole());
+        onboardedProductCopy.setStatus(p.getStatus());
+
+        boolean matches = true;
+
+        if (productId != null) {
+          matches &= productId.equals(onboardedProductCopy.getProductId());
+        }
+
+        if (targetRole != null) {
+          matches &= targetRole.equals(onboardedProductCopy.getRole());
+        }
+
+        if (targetProductRole != null) {
+          matches &= targetProductRole.equals(onboardedProductCopy.getProductRole());
+        }
+
+        if (matches) {
+          onboardedProductCopy.setStatus(newStatus);
+        }
+
+        return onboardedProductCopy;
+    }
+
+    private void validateMultiroleConfiguration(List<OnboardedProduct> finalState, Map<PartyRole, ProductRoleInfo> roleMappings) {
+
+        //if it has no active or suspended roles or if it has only one role, no need to check multirole rules
+        if (finalState.size() <= 1) {
+          return;
+        }
+
+        // COMMON GROUPS CHECK: if there's an intersection between the multirole groups of all the roles, the configuration is valid
+        Set<String> commonGroups = finalState.stream()
+          .map(p -> {
+            ProductRoleInfo info = roleMappings.get(p.getRole());
+            if (info == null) {
+              throw new InvalidRequestException(
+                "No role mapping for partyRole " + p.getRole());
+            }
+            return info.getRoles().stream()
+            .filter(r -> r.getCode().equals(p.getProductRole()))
+            .findFirst()
+            .map(ProductRole::getMultiroleGroups)
+            .map(groups -> (Set<String>) new HashSet<>(groups))
+            .orElse(Collections.emptySet());
+          })
+          .reduce((g1, g2) -> {
+            Set<String> inter = new HashSet<>(g1);
+            inter.retainAll(g2);
+            return inter;
+          })
+          .orElse(Collections.emptySet());
+
+        if (commonGroups.isEmpty()) {
+          throw new InvalidRequestException(
+            "Not valid multirole configuration");
         }
     }
 

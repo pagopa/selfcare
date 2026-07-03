@@ -1807,20 +1807,24 @@ Feature: User
       | status          | DELETED                                                     |
       | productId       | prod-interop-coll                                           |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   Scenario: Unsuccessfully update user status with wrong userId
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              |  wrongUser                                     |
+      | id              |  wrongUser                                                  |
     And The following query params:
       | status          | DELETED                                                     |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   Scenario: Unsuccessfully update user status with wrong role
     Given User login with username "j.doe" and password "test"
@@ -1828,11 +1832,11 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | role            | wrongRole                                                     |
+      | role            | wrongRole                                                   |
     When I send a PUT request to "users/{id}/status"
     Then The status code is 500
     And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+      | Something has gone wrong in the server |
 
   Scenario: Unsuccessfully update user status with wrong institutionId
     Given User login with username "j.doe" and password "test"
@@ -1840,11 +1844,13 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | institutionId            | wrongInstitution                                                     |
+      | institutionId   | wrongInstitution                                            |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   Scenario: Unsuccessfully update user status with wrong productRole
     Given User login with username "j.doe" and password "test"
@@ -1852,11 +1858,13 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | productRole            | wrongProductRole                                                     |
+      | productRole     | wrongProductRole                                            |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   # Cambio stato senza parametri
   Scenario: Unsuccessfully update user status without status
@@ -2942,9 +2950,11 @@ Feature: User
       | status                     | DELETED                                              |
       | productRole                | referente amministrativo                             |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
@@ -2970,9 +2980,11 @@ Feature: User
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status with wrong institutionId
@@ -2984,9 +2996,11 @@ Feature: User
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status with wrong user
@@ -2998,12 +3012,14 @@ Feature: User
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
-  Scenario: Unsuccessfully update user product status with wrong user
+  Scenario: Unsuccessfully update user product status with wrong status
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | wrongUser                                            |

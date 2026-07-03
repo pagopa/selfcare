@@ -13,7 +13,9 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.AssertSubscriber;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -472,6 +474,14 @@ class UserInstitutionServiceTest {
         ArgumentCaptor<Document> embeddedCaptor = ArgumentCaptor.forClass(Document.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        ProductRole productRoleEntity = new ProductRole();
+        productRoleEntity.setCode(productRole);
+        productRoleEntity.setMultiroleGroups(List.of("GROUP_1"));
+        ProductRoleInfo roleInfo = new ProductRoleInfo();
+        roleInfo.setRoles(List.of(productRoleEntity));
+        Product product = new Product();
+        product.setRoleMappings(Map.of(PartyRole.OPERATOR, roleInfo));
+        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(product);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
@@ -495,7 +505,14 @@ class UserInstitutionServiceTest {
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
-        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(query.list()).thenReturn(Uni.createFrom().item(List.of(userInstitution)));        ProductRole productRoleEntity = new ProductRole();
+        productRoleEntity.setCode(productRole);
+        productRoleEntity.setMultiroleGroups(List.of("GROUP_1"));
+        ProductRoleInfo roleInfo = new ProductRoleInfo();
+        roleInfo.setRoles(List.of(productRoleEntity));
+        Product product = new Product();
+        product.setRoleMappings(Map.of(PartyRole.OPERATOR, roleInfo));
+        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(product);
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, productRole, OnboardedProductState.ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(0L);
@@ -517,6 +534,7 @@ class UserInstitutionServiceTest {
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
+        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(new Product());
         when(update.where(embeddedCaptor.capture())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, productRole, OnboardedProductState.DELETED)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -538,6 +556,18 @@ class UserInstitutionServiceTest {
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+
+        ProductRole productRoleEntity = new ProductRole();
+        productRoleEntity.setCode(productRole);
+        productRoleEntity.setMultiroleGroups(List.of("GROUP_1"));
+
+        ProductRoleInfo roleInfo = new ProductRoleInfo();
+        roleInfo.setRoles(List.of(productRoleEntity));
+
+        Product product = new Product();
+        product.setRoleMappings(Map.of(PartyRole.OPERATOR, roleInfo));
+
+        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(product);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
@@ -554,7 +584,7 @@ class UserInstitutionServiceTest {
         String productId = "productId";
         String productRole = "admin2";
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
-        when(productServiceCacheable.validateProductRole(eq(productId), eq(productRole), any())).thenReturn(new ProductRole());
+        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(new Product());
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
