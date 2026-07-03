@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.connector;
 
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentBuilderRequest;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.UserAttachmentRequest;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -164,6 +166,36 @@ class DocumentMsConnectorImplTest {
         // then
         verify(msDocumentContentApiClient, times(1))
                 ._uploadAttachment(eq(file), any(DocumentBuilderRequest.class));
+        verifyNoMoreInteractions(msDocumentContentApiClient);
+    }
+
+    @Test
+    void uploadUserAttachment() {
+        // given
+        final String onboardingId = "onboardingId";
+        final String productId = "productId";
+        final String attachmentId = "attachmentId";
+        final String attachmentDescription = "attachmentDescription";
+        final String attachmentName = "attachmentName";
+        final Integer maxDocumentsRequired = 3;
+        MockMultipartFile file = new MockMultipartFile("file", "content".getBytes());
+
+        when(msDocumentContentApiClient._uploadUserAttachment(eq(file), any(UserAttachmentRequest.class)))
+                .thenReturn(ResponseEntity.ok().build());
+
+        // when
+        documentMsConnector.uploadUserAttachment(onboardingId, file, productId, attachmentId,
+                attachmentDescription, attachmentName, maxDocumentsRequired);
+
+        // then
+        verify(msDocumentContentApiClient, times(1))
+                ._uploadUserAttachment(eq(file), argThat(req ->
+                        onboardingId.equals(req.getOnboardingId())
+                                && productId.equals(req.getProductId())
+                                && attachmentId.equals(req.getAttachmentId())
+                                && attachmentDescription.equals(req.getAttachmentDescription())
+                                && attachmentName.equals(req.getAttachmentName())
+                                && maxDocumentsRequired.equals(req.getMaxDocumentsRequired())));
         verifyNoMoreInteractions(msDocumentContentApiClient);
     }
 

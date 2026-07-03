@@ -122,13 +122,7 @@ public class TokenServiceImpl implements TokenService {
         Assert.notNull(filename, "filename is required");
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
         Product product = productAzureService.getProductValid(onboarding.getProductId());
-
-        // se il nome è dentro required documents allora --->
-
-      // altitment
         String templatePath = getAttachmentTemplate(filename, onboarding, product).getTemplatePath();
-
-        // generica
         Resource resource = documentMsConnector.getTemplateAttachment(onboarding, filename, templatePath);
         log.debug("getTemplateAttachment result = success");
         log.trace("getTemplateAttachment end");
