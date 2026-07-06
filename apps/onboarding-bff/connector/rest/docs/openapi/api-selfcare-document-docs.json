@@ -10,6 +10,8 @@
     "name" : "Signature Controller",
     "description" : "Endpoints for verifying contract signatures"
   }, {
+    "name" : "external-v2"
+  }, {
     "name" : "internal-v1"
   } ],
   "components" : {
@@ -169,6 +171,12 @@
           "attachmentName" : {
             "type" : "string"
           },
+          "attachmentPath" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
+            "type" : "string"
+          },
           "checksum" : {
             "type" : "string"
           },
@@ -199,6 +207,13 @@
           },
           "activatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
+          },
+          "signingStep" : {
+            "format" : "int32",
+            "type" : "integer"
           }
         }
       },
@@ -250,7 +265,19 @@
           "type" : {
             "$ref" : "#/components/schemas/DocumentType"
           },
+          "onboardingId" : {
+            "type" : "string"
+          },
           "productId" : {
+            "type" : "string"
+          },
+          "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
+            "type" : "string"
+          },
+          "attachmentPath" : {
             "type" : "string"
           },
           "checksum" : {
@@ -265,17 +292,30 @@
           "contractSigned" : {
             "type" : "string"
           },
+          "contractFilename" : {
+            "type" : "string"
+          },
+          "rootOnboardingId" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "updatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
           },
-          "closedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
-          },
           "deletedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "activatedAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "signingStep" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -528,6 +568,10 @@
           }
         }
       },
+      "StorageOrigin" : {
+        "enum" : [ "SYSTEM", "USER" ],
+        "type" : "string"
+      },
       "UploadAggregateCsvRequest" : {
         "required" : [ "onboardingId", "productId", "csv" ],
         "type" : "object",
@@ -560,6 +604,31 @@
           },
           "fileContent" : {
             "format" : "binary",
+            "type" : "string"
+          }
+        }
+      },
+      "UserAttachmentRequest" : {
+        "required" : [ "onboardingId", "productId", "attachmentName", "attachmentId", "maxDocumentsRequired" ],
+        "type" : "object",
+        "properties" : {
+          "onboardingId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentId" : {
+            "type" : "string"
+          },
+          "maxDocumentsRequired" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "attachmentDescription" : {
             "type" : "string"
           }
         }
@@ -856,6 +925,56 @@
         } ]
       }
     },
+    "/v1/document-content/upload-user-attachment" : {
+      "post" : {
+        "summary" : "Upload a user-driven attachment (PDF only) to the USER storage.",
+        "description" : "Persists a user-uploaded attachment. Skips signature verification and template digest checks: the file is only validated to be a well-formed PDF.",
+        "operationId" : "uploadUserAttachment",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "required" : [ "file" ],
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  },
+                  "request" : {
+                    "$ref" : "#/components/schemas/UserAttachmentRequest"
+                  }
+                }
+              },
+              "encoding" : {
+                "request" : {
+                  "contentType" : "application/json"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/document-content/visura" : {
       "post" : {
         "summary" : "Store the Visura in Azure Blob Storage",
@@ -979,7 +1098,7 @@
         "summary" : "Retrieve contract signed for a given onboarding",
         "description" : "Downloads the contract file associated with the specified onboarding ID.",
         "operationId" : "getContractSigned",
-        "tags" : [ "Document Content Controller" ],
+        "tags" : [ "Document Content Controller", "external-v2" ],
         "parameters" : [ {
           "name" : "onboardingId",
           "in" : "path",
@@ -1104,6 +1223,14 @@
                   "skipSignatureVerification" : {
                     "default" : false,
                     "type" : "boolean"
+                  },
+                  "skipSignerIdentityCheck" : {
+                    "default" : false,
+                    "type" : "boolean"
+                  },
+                  "signingStep" : {
+                    "format" : "int32",
+                    "type" : "integer"
                   },
                   "file" : {
                     "format" : "binary",
@@ -1295,8 +1422,8 @@
     },
     "/v1/documents/onboarding/{onboardingId}" : {
       "get" : {
-        "summary" : "Retrieves the documents for a given onboarding",
-        "description" : "Fetches a list of documents associated with the specified onboarding ID.",
+        "summary" : "Retrieves the latest document for a given onboarding",
+        "description" : "Fetches the most recent document associated with the specified onboarding ID by filtering for type Institution and User",
         "operationId" : "getDocumentByOnboardingId",
         "tags" : [ "Document Controller" ],
         "parameters" : [ {
@@ -1313,10 +1440,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/DocumentResponse"
-                  }
+                  "$ref" : "#/components/schemas/DocumentResponse"
                 }
               }
             }
@@ -1560,10 +1684,10 @@
     "version" : "1.0.0"
   },
   "servers" : [ {
-    "url" : "http://localhost:8081",
+    "url" : "http://localhost:8080",
     "description" : "Auto generated value"
   }, {
-    "url" : "http://0.0.0.0:8081",
+    "url" : "http://0.0.0.0:8080",
     "description" : "Auto generated value"
   } ]
 }

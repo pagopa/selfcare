@@ -8,6 +8,10 @@ import it.pagopa.selfcare.onboarding.web.model.ProductResource;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapperImpl;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -22,22 +26,17 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import static org.mockito.ArgumentMatchers.any;
 
-@WebMvcTest(value = {ProductController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
+@WebMvcTest(value = {ProductV1Controller.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 @ContextConfiguration(classes = {
-        ProductController.class,
+        ProductV1Controller.class,
         WebTestConfig.class,
         ProductMapperImpl.class
 })
-class ProductControllerTest {
+class ProductV1ControllerTest {
 
-    private static final String BASE_URL = "/v1/product";
+    private static final String BASE_URL = "/v1";
 
     @Autowired
     protected MockMvc mvc;
@@ -48,23 +47,22 @@ class ProductControllerTest {
     @Autowired
     protected ObjectMapper objectMapper;
 
-    /**
-     * Method under test: {@link ProductController#getProduct(String, Optional)}
-     */
     @Test
     void getProduct() throws Exception {
-        //given
+        // given
         final String productId = "productId";
         Mockito.when(productAzureServiceMock.getProduct(Mockito.any(), any()))
                 .thenReturn(new Product());
-        //when
+
+        // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                        .get(BASE_URL + "/{id}", productId)
+                        .get(BASE_URL + "/product/{id}", productId)
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
-        //then
+
+        // then
         ProductResource response = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
                 ProductResource.class);
@@ -74,37 +72,33 @@ class ProductControllerTest {
         Mockito.verifyNoMoreInteractions(productAzureServiceMock);
     }
 
-    /**
-     * Method under test: {@link ProductController#getProducts()}
-     */
     @Test
     void getProducts() throws Exception {
-        //given
+        // given
         Mockito.when(productAzureServiceMock.getProducts(false))
                 .thenReturn(List.of(new Product()));
-        //when
+
+        // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                        .get("/v1/products")
+                        .get(BASE_URL + "/products")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
-        //then
+
+        // then
         List<ProductResource> response = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                new TypeReference<>(){});
+                new TypeReference<>() {});
         Assertions.assertNotNull(response);
         Mockito.verify(productAzureServiceMock, Mockito.times(1))
                 .getProducts(false);
         Mockito.verifyNoMoreInteractions(productAzureServiceMock);
     }
 
-    /**
-     * Method under test: {@link ProductController#getProductsAdmin()}
-     */
     @Test
     void getProductsAdmin() throws Exception {
-        //given
+        // given
         Product product = new Product();
         Map<String, ContractTemplate> userContractMappings = new HashMap<>();
         ContractTemplate userContract = new ContractTemplate();
@@ -115,17 +109,19 @@ class ProductControllerTest {
 
         Mockito.when(productAzureServiceMock.getProducts(true))
                 .thenReturn(List.of(product));
-        //when
+
+        // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
-                        .get("/v1/products/admin")
+                        .get(BASE_URL + "/products/admin")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .accept(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andReturn();
-        //then
+
+        // then
         List<ProductResource> response = objectMapper.readValue(
                 result.getResponse().getContentAsString(),
-                new TypeReference<>(){});
+                new TypeReference<>() {});
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.size());
         Mockito.verify(productAzureServiceMock, Mockito.times(1))
