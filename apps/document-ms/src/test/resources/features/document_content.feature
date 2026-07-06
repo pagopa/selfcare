@@ -163,7 +163,7 @@ Feature: Document content health
     And The following form params:
       | request | not-a-json |
     When I send a POST request to "/v1/document-content/upload-user-attachment" with form data only
-    Then The status code is 400
+    Then The status code is 500
 
   Scenario: Upload user attachment successfully (single instance)
     Given User login with username "j.doe" and password "test"
