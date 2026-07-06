@@ -5813,6 +5813,9 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(List.of(docA, docB)));
         when(documentControllerApi.getAttachments(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(List.of("doc_A", "doc_B")));
+        ReactivePanacheUpdate updateQuery = mock(ReactivePanacheUpdate.class);
+        when(Onboarding.update(any(Document.class))).thenReturn(updateQuery);
+        when(updateQuery.where("_id", onboarding.getId())).thenReturn(Uni.createFrom().item(1L));
         when(orchestrationService.triggerOrchestration(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
@@ -5846,6 +5849,9 @@ class OnboardingServiceDefaultTest {
         // Present attachments contain the mandatory doc PLUS extra ones
         when(documentControllerApi.getAttachments(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(List.of("doc_A", "doc_extra_1", "doc_extra_2")));
+        ReactivePanacheUpdate updateQuery = mock(ReactivePanacheUpdate.class);
+        when(Onboarding.update(any(Document.class))).thenReturn(updateQuery);
+        when(updateQuery.where("_id", onboarding.getId())).thenReturn(Uni.createFrom().item(1L));
         when(orchestrationService.triggerOrchestration(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
