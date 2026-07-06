@@ -5610,7 +5610,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenInstitutionTypeIsNull() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.getInstitution().setInstitutionType(null);
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.findById(onboarding.getId()))
@@ -5627,7 +5627,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenOriginIsNull() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(null);
         PanacheMock.mock(Onboarding.class);
@@ -5645,7 +5645,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenProductIdIsUnknown() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId("unknown-product");
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5664,7 +5664,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenProductMsReturns404() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5685,7 +5685,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenProductMsReturns500() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5706,7 +5706,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenNoMandatoryDocumentsConfigured() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5733,7 +5733,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenNoDocumentsUploaded() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5761,7 +5761,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldFailWhenMandatoryDocumentsIncomplete() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5793,7 +5793,7 @@ class OnboardingServiceDefaultTest {
     @Test
     void triggerDocumentGate_shouldTriggerOrchestrationWhenAllMandatoryPresent() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5823,12 +5823,13 @@ class OnboardingServiceDefaultTest {
 
         subscriber.assertCompleted();
         verify(orchestrationService).triggerOrchestration(onboarding.getId(), null);
+        assertEquals(OnboardingStatus.REQUEST, onboarding.getStatus());
     }
 
     @Test
     void triggerDocumentGate_shouldTriggerOrchestrationWhenSupersetPresent() {
         Onboarding onboarding = createDummyOnboarding();
-        onboarding.setStatus(OnboardingStatus.REQUEST);
+        onboarding.setStatus(OnboardingStatus.REQUESTING);
         onboarding.setProductId(PROD_IO.getValue());
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         onboarding.getInstitution().setOrigin(Origin.ANAC);
@@ -5855,6 +5856,7 @@ class OnboardingServiceDefaultTest {
 
         subscriber.assertCompleted();
         verify(orchestrationService).triggerOrchestration(onboarding.getId(), null);
+        assertEquals(OnboardingStatus.REQUEST, onboarding.getStatus());
     }
 
     @Test

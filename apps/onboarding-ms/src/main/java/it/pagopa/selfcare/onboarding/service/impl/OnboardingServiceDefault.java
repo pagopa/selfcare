@@ -809,8 +809,8 @@ public class OnboardingServiceDefault implements OnboardingService {
                         String.format("Onboarding with id %s not found", onboardingId)))
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(onboarding -> {
-                    // Idempotent: if already past REQUEST status, do nothing
-                    if (!OnboardingStatus.REQUEST.equals(onboarding.getStatus())) {
+                    // Idempotent: if already past REQUESTING status, do nothing
+                    if (!OnboardingStatus.REQUESTING.equals(onboarding.getStatus())) {
                         log.info("triggerDocumentGate: onboarding {} is in status {}, skipping (idempotent)",
                                 onboardingId, onboarding.getStatus());
                         return Uni.createFrom().voidItem();
@@ -876,8 +876,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .toList();
 
         if (missingDocs.isEmpty()) {
-            log.info("triggerDocumentGate: all {} mandatory documents present for onboarding {}, triggering orchestration",
+            log.info("triggerDocumentGate: all {} mandatory documents present for onboarding {}, set OnboardingStatus to REQUEST and triggering orchestration",
                     mandatoryDocIds.size(), onboarding.getId());
+            onboarding.setStatus(OnboardingStatus.REQUEST);
             return triggerOrchestrationIfEnabled(onboarding).replaceWithVoid();
         }
 
