@@ -50,9 +50,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     /**
      * Counts USER-storage attachments matching a given {@code documentId} (RequiredDocument.id),
-     * either exactly or with a numeric suffix like {@code documentId_2}, {@code documentId_3}, ...
-     * <p>Used by user attachment upload to decide whether the incoming file must be persisted as
-     * {@code documentId} (first upload) or with a numeric suffix.
+     * either exactly or with a numeric suffix like {@code documentId_2}, {@code documentId_3}.
      */
     public Uni<Long> countUserAttachmentsByDocumentId(String onboardingId, String documentId) {
       return count(

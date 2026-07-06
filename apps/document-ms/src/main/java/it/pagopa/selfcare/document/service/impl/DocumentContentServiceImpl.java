@@ -252,7 +252,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         return overwriteExistingUserAttachment(existing, file);
                     }
                     if (allowsMultipleUploads(request.getMaxDocumentsRequired())) {
-                        return enforceCapAndInsert(request, file);
+                        return insertIfCapacityAvailable(request, file);
                     }
                     return insertNewUserAttachment(request, file);
                 })
@@ -264,7 +264,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .replaceWithVoid();
     }
 
-    private Uni<Void> enforceCapAndInsert(UserAttachmentRequest request, FormItem file) {
+    private Uni<Void> insertIfCapacityAvailable(UserAttachmentRequest request, FormItem file) {
         return documentRepository.countUserAttachmentsByDocumentId(
                         request.getOnboardingId(), request.getAttachmentId())
                 .onItem().transformToUni(existingCount -> {
