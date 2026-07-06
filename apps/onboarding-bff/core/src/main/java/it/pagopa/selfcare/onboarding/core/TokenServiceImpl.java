@@ -2,10 +2,13 @@ package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
+import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
@@ -14,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Optional;
+
 @Slf4j
 @Service
 public class TokenServiceImpl implements TokenService {
@@ -21,16 +26,19 @@ public class TokenServiceImpl implements TokenService {
     private final OnboardingMsConnector onboardingMsConnector;
     private final DocumentMsConnector documentMsConnector;
     private final ProductAzureService productAzureService;
+    private final ProductMsConnector productMsConnector;
 
     private static final String ONBOARDING_ID_REQUIRED_MESSAGE = "OnboardingId is required";
     private static final String TOKEN_ID_IS_REQUIRED = "TokenId is required";
 
     public TokenServiceImpl(OnboardingMsConnector onboardingMsConnector,
                             DocumentMsConnector documentMsConnector,
-                            ProductAzureService productAzureService) {
+                            ProductAzureService productAzureService,
+                            ProductMsConnector productMsConnector) {
         this.onboardingMsConnector = onboardingMsConnector;
         this.documentMsConnector = documentMsConnector;
         this.productAzureService = productAzureService;
+      this.productMsConnector = productMsConnector;
     }
 
     @Override
@@ -168,18 +176,54 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName) {
+    public void uploadAttachment(String onboardingId, MultipartFile attachment,
+                                 String attachmentName, String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Assert.notNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Assert.notNull(attachmentName, "filename is required");
         Assert.notNull(attachment, "file is required");
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
-        Product product = productAzureService.getProductValid(onboarding.getProductId());
-        AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
-        documentMsConnector.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
+
+        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(onboarding, attachmentId);
+        boolean userStorage = requiredDocument
+                .map(RequiredDocumentModel::getStorageOrigin)
+                .map(so -> so == StorageOrigin.USER)
+                .orElse(false);
+
+        if (userStorage) {
+          Integer maxDocumentsRequired = requiredDocument
+                  .map(RequiredDocumentModel::getMaxDocumentsRequired)
+                  .orElse(1);
+          log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
+          documentMsConnector.uploadUserAttachment(
+              onboardingId,
+              attachment,
+              onboarding.getProductId(),
+              attachmentId,
+              attachmentDescription,
+              attachmentName,
+              maxDocumentsRequired);
+        } else {
+          Product product = productAzureService.getProductValid(onboarding.getProductId());
+          AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
+          log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
+          documentMsConnector.uploadAttachment(
+            onboardingId, attachment, attachmentName, product.getId(), template);
+        }
         log.debug("getAttachment result = success");
         log.trace("getAttachment end");
+    }
+
+    private Optional<RequiredDocumentModel> findRequiredDocument(OnboardingData onboarding, String attachmentId) {
+      return productMsConnector
+          .getRequiredDocuments(
+              onboarding.getProductId(),
+              onboarding.getInstitutionType().name(),
+              onboarding.getInstitutionUpdate().getOrigin())
+          .stream()
+          .filter(doc -> doc.getId().equals(attachmentId))
+          .findFirst();
     }
 
     @Override

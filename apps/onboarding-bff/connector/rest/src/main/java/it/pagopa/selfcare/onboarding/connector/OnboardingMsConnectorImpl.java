@@ -226,4 +226,12 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
         return onboardingResults;
     }
 
+    @Override
+    @Retry(name = "retryTimeout")
+    public void triggerOnboardingRequest(String onboardingId) {
+        log.trace("triggerOnboardingRequest start");
+        msOnboardingApiClient._triggerOnboardingRequest(onboardingId);
+        log.trace("triggerOnboardingRequest end");
+    }
+
 }

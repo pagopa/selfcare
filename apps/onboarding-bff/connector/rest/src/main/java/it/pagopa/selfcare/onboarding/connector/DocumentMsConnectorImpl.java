@@ -3,6 +3,8 @@ package it.pagopa.selfcare.onboarding.connector;
 import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
+
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.UserAttachmentRequest;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
@@ -16,6 +18,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
 
 @Service
 @Slf4j
@@ -77,6 +80,21 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
     request.setDocumentType(DocumentType.ATTACHMENT);
     msDocumentContentApiClient._uploadAttachment(attachment, request);
   }
+
+  @Override
+  public void uploadUserAttachment(String onboardingId, MultipartFile attachment, String productId,
+                                   String attachmentId, String attachmentDescription, String attachmentName,
+                                   Integer maxDocumentsRequired) {
+    UserAttachmentRequest request = new UserAttachmentRequest();
+    request.setOnboardingId(onboardingId);
+    request.setProductId(productId);
+    request.setAttachmentId(attachmentId);
+    request.setAttachmentDescription(attachmentDescription);
+    request.setAttachmentName(attachmentName);
+    request.setMaxDocumentsRequired(maxDocumentsRequired);
+    msDocumentContentApiClient._uploadUserAttachment(attachment, request);
+  }
+
 
   @Override
   @Retry(name = "retryTimeout")

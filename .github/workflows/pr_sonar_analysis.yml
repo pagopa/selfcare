@@ -130,7 +130,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           JACOCO_PATHS=$(find "$PWD" -path '*/target/*jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
-          
+
           SONAR_ARGS=(
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.organization=pagopa
@@ -150,8 +150,4 @@ jobs:
             )
           fi
 
-          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
-            mvn -T 1C -B -ntp sonar:sonar --projects "${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
-          else
-            mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
-          fi
+          mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"

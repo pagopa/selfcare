@@ -6,11 +6,15 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
+import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
+import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +55,9 @@ public class TokenServiceImplTest {
 
     @Mock
     private ProductAzureService productAzureService;
+
+    @Mock
+    private ProductMsConnector productMsConnector;
 
 
     @Test
@@ -253,12 +260,47 @@ public class TokenServiceImplTest {
         final String templatePath = "templatePath";
         mockAttachmentContext(onboardingId, productId, filename, templatePath);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString())).thenReturn(List.of());
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename);
+        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename, null, null);
         //then
         Mockito.verify(documentMsConnector, Mockito.times(1))
                 .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
                         argThat(template -> templatePath.equals(template.getTemplatePath())));
+    }
+
+
+    @Test
+    void uploadAttachment_userStorage() throws IOException {
+        //given
+        final String onboardingId = "onboardingId";
+        final String attachmentName = "attachmentName";
+        final String attachmentId = "statuto";
+        final String attachmentDescription = "attachmentDescription";
+        final String productId = "productId";
+        final String templatePath = "templatePath";
+        final String filename = "filename";
+        final Integer maxDocumentsRequired = 3;
+
+        mockAttachmentContext(onboardingId, productId, filename, templatePath);
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
+
+        RequiredDocumentModel requiredDocument = new RequiredDocumentModel();
+        requiredDocument.setId(attachmentId);
+        requiredDocument.setStorageOrigin(StorageOrigin.USER);
+        requiredDocument.setMaxDocumentsRequired(maxDocumentsRequired);
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString()))
+                .thenReturn(List.of(requiredDocument));
+
+        // when
+        tokenService.uploadAttachment(onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
+
+        //then
+        Mockito.verify(documentMsConnector, Mockito.times(1))
+                .uploadUserAttachment(onboardingId, mockMultipartFile, productId, attachmentId,
+                        attachmentDescription, attachmentName, maxDocumentsRequired);
+        Mockito.verify(documentMsConnector, Mockito.never())
+                .uploadAttachment(anyString(), any(), anyString(), anyString(), any());
     }
 
 
@@ -331,6 +373,9 @@ public class TokenServiceImplTest {
         OnboardingData onboardingData = new OnboardingData();
         onboardingData.setInstitutionType(InstitutionType.AS);
         onboardingData.setProductId(productId);
+        InstitutionUpdate institutionUpdate = new InstitutionUpdate();
+        institutionUpdate.setOrigin("SELC");
+        onboardingData.setInstitutionUpdate(institutionUpdate);
 
         AttachmentTemplate attachmentTemplate = new AttachmentTemplate();
         attachmentTemplate.setName(filename);
@@ -344,7 +389,7 @@ public class TokenServiceImplTest {
         product.setInstitutionContractMappings(Map.of(InstitutionType.AS.name(), contractTemplate));
 
         when(onboardingMsConnector.getOnboarding(onboardingId)).thenReturn(onboardingData);
-        when(productAzureService.getProductValid(productId)).thenReturn(product);
+        Mockito.lenient().when(productAzureService.getProductValid(productId)).thenReturn(product);
         return onboardingData;
     }
 }
