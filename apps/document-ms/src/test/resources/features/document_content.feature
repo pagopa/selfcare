@@ -168,7 +168,7 @@ Feature: Document content health
   Scenario: Upload user attachment successfully (single instance)
     Given User login with username "j.doe" and password "test"
     And The following form params:
-      | request | {"onboardingId":"onb-user-single","productId":"prod-test","attachmentName":"visura-camerale","attachmentId":"visura-camerale","maxDocumentsRequired":1} |
+      | request | {"onboardingId":"onb-user-single","productId":"prod-pagopa","attachmentName":"visura-camerale","attachmentId":"visura-camerale","maxDocumentsRequired":1} |
     And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
     When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
     Then The status code is 204
@@ -176,7 +176,7 @@ Feature: Document content health
   Scenario: Upload user attachment successfully (overwrite existing single instance)
     Given User login with username "j.doe" and password "test"
     And The following form params:
-      | request | {"onboardingId":"onb-user-single","productId":"prod-test","attachmentName":"visura-camerale","attachmentId":"visura-camerale","maxDocumentsRequired":1} |
+      | request | {"onboardingId":"onb-user-single","productId":"prod-pagopa","attachmentName":"visura-camerale","attachmentId":"visura-camerale","maxDocumentsRequired":1} |
     And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
     When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
     Then The status code is 204
@@ -184,7 +184,32 @@ Feature: Document content health
   Scenario: Upload user attachment successfully (multi-instance within cap)
     Given User login with username "j.doe" and password "test"
     And The following form params:
-      | request | {"onboardingId":"onb-user-multi","productId":"prod-test","attachmentName":"attestazione-gsp_1","attachmentId":"attestazione-gsp","maxDocumentsRequired":3} |
+      | request | {"onboardingId":"onb-user-multi","productId":"prod-pagopa","attachmentName":"attestazione-gsp_1","attachmentId":"attestazione-gsp","maxDocumentsRequired":3} |
     And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
     When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
     Then The status code is 204
+
+  Scenario: Upload user attachment successfully (multi-instance second element)
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-user-multi","productId":"prod-pagopa","attachmentName":"attestazione-gsp_2","attachmentId":"attestazione-gsp","maxDocumentsRequired":3} |
+    And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
+    Then The status code is 204
+
+  Scenario: Upload user attachment successfully (multi-instance reaches cap)
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-user-multi","productId":"prod-pagopa","attachmentName":"attestazione-gsp_3","attachmentId":"attestazione-gsp","maxDocumentsRequired":3} |
+    And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
+    Then The status code is 204
+
+  Scenario: Upload user attachment fails when cap is exceeded
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-user-multi","productId":"prod-pagopa","attachmentName":"attestazione-gsp_4","attachmentId":"attestazione-gsp","maxDocumentsRequired":3} |
+    And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
+    Then The status code is 409
+
