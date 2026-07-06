@@ -19,19 +19,20 @@ import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
+@RequestMapping(value = "/v1", produces = MediaType.APPLICATION_JSON_VALUE)
 @Api(tags = "product")
-public class ProductController {
+public class ProductV1Controller {
 
     private final ProductAzureService productAzureService;
     private final ProductMapper productMapper;
 
     @Autowired
-    public ProductController(ProductAzureService productAzureService, ProductMapper productMapper) {
+    public ProductV1Controller(ProductAzureService productAzureService, ProductMapper productMapper) {
         this.productAzureService = productAzureService;
         this.productMapper = productMapper;
     }
 
-    @GetMapping(value = "/v1/product/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/product/{id}")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.product.api.getProduct}",
             description = "${swagger.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
@@ -50,7 +51,7 @@ public class ProductController {
         return resource;
     }
 
-    @GetMapping(value = "/v1/products",  produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/products")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.product.api.getProducts}",
             description = "${swagger.onboarding.product.api.getProducts}", operationId = "getProducts")
@@ -65,7 +66,7 @@ public class ProductController {
         return resources;
     }
 
-    @GetMapping(value = "/v1/products/admin",  produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/products/admin")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.product.api.getProductsAdmin}",
             description = "${swagger.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
