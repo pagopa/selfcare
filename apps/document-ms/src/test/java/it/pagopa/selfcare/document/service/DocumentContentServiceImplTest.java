@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -84,7 +83,7 @@ class DocumentContentServiceImplTest {
     @Test
     void retrieveContract_notSigned_shouldReturnOkResponse() {
         Document doc = buildDocument();
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
@@ -101,7 +100,7 @@ class DocumentContentServiceImplTest {
     void retrieveContract_signed_shouldReturnOkResponse() {
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
@@ -120,7 +119,7 @@ class DocumentContentServiceImplTest {
     void retrieveContract_shouldUseSignedPath_whenIsSignedTrue() {
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract_signed.pdf");
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
@@ -142,7 +141,7 @@ class DocumentContentServiceImplTest {
         doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/signed/attachment.pdf");
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
 
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
@@ -163,7 +162,7 @@ class DocumentContentServiceImplTest {
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned(null);
         doc.setContractFilename("attachment.pdf");
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
 
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
@@ -184,7 +183,7 @@ class DocumentContentServiceImplTest {
         doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/attachment.pdf");
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
 
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
                 .thenReturn(Uni.createFrom().item(doc));
@@ -213,7 +212,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveTemplateAttachment_shouldReturnOkResponse() {
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
         String templatePath = "/templates/template.pdf";
         String attachmentName = "template.pdf";
 
@@ -251,8 +250,8 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveTemplateAttachment_shouldCallSignDocument() {
-        File mockFile = Mockito.mock(File.class);
-        File signedFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
+        File signedFile = mock(File.class);
         String templatePath = "/templates/template.pdf";
         String attachmentName = "template.pdf";
 
@@ -271,7 +270,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveTemplateAttachment_shouldPropagateError_whenSignDocumentFails() {
-        File mockFile = Mockito.mock(File.class);
+        File mockFile = mock(File.class);
         String templatePath = "/templates/template.pdf";
         String attachmentName = "template.pdf";
 
@@ -943,7 +942,7 @@ class DocumentContentServiceImplTest {
         var awaiter = documentContentService.uploadAggregatesCsv(request).await();
 
         assertThrows(InternalException.class, awaiter::indefinitely);
-        verify(azureBlobClient, org.mockito.Mockito.times(4))
+        verify(azureBlobClient, times(4))
                 .uploadFile(eq("aggregates/" + ONBOARDING_ID + "/" + PRODUCT_ID), eq("aggregates.csv"), any(byte[].class));
     }
 
@@ -1451,9 +1450,9 @@ class DocumentContentServiceImplTest {
         assertNotNull(result);
         assertEquals("Contract deleted successfully", result);
 
-        verify(azureBlobClient, Mockito.times(2)).retrieveFile(anyString());
-        verify(azureBlobClient, Mockito.times(2)).uploadFilePath(anyString(), any(byte[].class));
-        verify(azureBlobClient, Mockito.times(2)).removeFile(anyString());
+        verify(azureBlobClient, times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, times(2)).removeFile(anyString());
         verify(documentService).updateDocumentContractFiles(doc);
         verify(telemetryService).trackContractDeleted(onboardingId);
         verify(telemetryService, never()).trackContractDeleteFailed(anyString(), anyString());
@@ -1486,7 +1485,7 @@ class DocumentContentServiceImplTest {
 
         // Assert
         assertEquals("Contract deletion skipped due to error", result);
-        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+        verify(documentService, never()).updateDocumentContractFiles(any());
         verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
         verify(telemetryService, never()).trackContractDeleted(anyString());
     }
@@ -1576,7 +1575,7 @@ class DocumentContentServiceImplTest {
         String result = documentContentService.deleteContract(onboardingId).await().indefinitely();
 
         assertEquals("Contract deletion skipped due to error", result);
-        verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
+        verify(azureBlobClient, never()).retrieveFile(anyString());
         verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
         verify(telemetryService, never()).trackContractDeleted(anyString());
     }
@@ -1598,8 +1597,8 @@ class DocumentContentServiceImplTest {
 
         // Assert
         assertEquals("No contract to delete", result);
-        verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
-        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+        verify(azureBlobClient, never()).retrieveFile(anyString());
+        verify(documentService, never()).updateDocumentContractFiles(any());
         verify(telemetryService, never()).trackContractDeleted(anyString());
         verify(telemetryService, never()).trackContractDeleteFailed(anyString(), anyString());
     }
@@ -1621,8 +1620,8 @@ class DocumentContentServiceImplTest {
 
         // Assert
         assertEquals("No contract to delete", result);
-        verify(azureBlobClient, Mockito.never()).retrieveFile(anyString());
-        verify(documentService, Mockito.never()).updateDocumentContractFiles(any());
+        verify(azureBlobClient, never()).retrieveFile(anyString());
+        verify(documentService, never()).updateDocumentContractFiles(any());
         verify(telemetryService, never()).trackContractDeleted(anyString());
         verify(telemetryService, never()).trackContractDeleteFailed(anyString(), anyString());
     }
@@ -1667,9 +1666,9 @@ class DocumentContentServiceImplTest {
 
         assertEquals(3, attemptCounter.get());
 
-        verify(azureBlobClient, Mockito.times(2)).retrieveFile(anyString());
-        verify(azureBlobClient, Mockito.times(2)).uploadFilePath(anyString(), any(byte[].class));
-        verify(azureBlobClient, Mockito.times(2)).removeFile(anyString());
+        verify(azureBlobClient, times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, times(2)).removeFile(anyString());
     }
 
     @Test
@@ -1704,9 +1703,9 @@ class DocumentContentServiceImplTest {
         verify(telemetryService).trackContractDeleteFailed(eq(onboardingId), anyString());
         verify(telemetryService, never()).trackContractDeleted(anyString());
 
-        verify(azureBlobClient, Mockito.times(4)).retrieveFile(anyString());
-        verify(azureBlobClient, Mockito.times(4)).uploadFilePath(anyString(), any(byte[].class));
-        verify(azureBlobClient, Mockito.times(4)).removeFile(anyString());
+        verify(azureBlobClient, times(4)).retrieveFile(anyString());
+        verify(azureBlobClient, times(4)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, times(4)).removeFile(anyString());
 
         assertEquals(4, generatedFiles.size());
         for (File f : generatedFiles) {
@@ -1779,8 +1778,8 @@ class DocumentContentServiceImplTest {
         assertEquals("Invalid Signature", ex.getMessage());
 
         // Azure e DB non devono essere mai chiamati
-        verify(azureBlobClient, Mockito.never()).uploadFile(anyString(), anyString(), any(byte[].class));
-        verify(documentService, Mockito.never()).updateDocumentContractFilesById(any());
+        verify(azureBlobClient, never()).uploadFile(anyString(), anyString(), any(byte[].class));
+        verify(documentService, never()).updateDocumentContractFilesById(any());
     }
 
     @Test
@@ -1886,7 +1885,7 @@ class DocumentContentServiceImplTest {
         assertTrue(ex.getMessage().contains("Azure timeout"));
 
         // Il DB non deve essere toccato
-        verify(documentService, Mockito.never()).updateDocumentContractFilesById(any());
+        verify(documentService, never()).updateDocumentContractFilesById(any());
     }
 
     @Test
