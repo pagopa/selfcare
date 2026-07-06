@@ -138,3 +138,53 @@ Feature: Document content health
     """
     When I send a POST request to "/v1/document-content/contract"
     Then The status code is 400
+
+  Scenario: Upload user attachment without any form data
+    Given User login with username "j.doe" and password "test"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data only
+    Then The status code is 400
+
+  Scenario: Upload user attachment with missing file part
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-123","productId":"prod-test","attachmentName":"attestazione-gsp","attachmentId":"attestazione-gsp","maxDocumentsRequired":1} |
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data only
+    Then The status code is 400
+
+  Scenario: Upload user attachment with request payload missing mandatory fields
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"productId":"prod-test"} |
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data only
+    Then The status code is 400
+
+  Scenario: Upload user attachment with malformed request JSON
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | not-a-json |
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data only
+    Then The status code is 400
+
+  Scenario: Upload user attachment successfully (single instance)
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-user-single","productId":"prod-test","attachmentName":"visura-camerale","attachmentId":"visura-camerale","maxDocumentsRequired":1} |
+    And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
+    Then The status code is 204
+
+  Scenario: Upload user attachment successfully (overwrite existing single instance)
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-user-single","productId":"prod-test","attachmentName":"visura-camerale","attachmentId":"visura-camerale","maxDocumentsRequired":1} |
+    And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
+    Then The status code is 204
+
+  Scenario: Upload user attachment successfully (multi-instance within cap)
+    Given User login with username "j.doe" and password "test"
+    And The following form params:
+      | request | {"onboardingId":"onb-user-multi","productId":"prod-test","attachmentName":"attestazione-gsp_1","attachmentId":"attestazione-gsp","maxDocumentsRequired":3} |
+    And Upload the file at path "pdf/test.pdf" with form key "file" and content type "application/pdf"
+    When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
+    Then The status code is 204
