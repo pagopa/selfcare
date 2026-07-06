@@ -879,7 +879,11 @@ public class OnboardingServiceDefault implements OnboardingService {
             log.info("triggerDocumentGate: all {} mandatory documents present for onboarding {}, set OnboardingStatus to REQUEST and triggering orchestration",
                     mandatoryDocIds.size(), onboarding.getId());
             onboarding.setStatus(OnboardingStatus.REQUEST);
-            return triggerOrchestrationIfEnabled(onboarding).replaceWithVoid();
+            Map<String, Object> params = Map.of(
+                    "status", OnboardingStatus.REQUEST.name(),
+                    "updatedAt", LocalDateTime.now());
+            return OnboardingQueryHelper.updateOnboardingStatus(onboarding.getId(), params)
+                    .onItem().transformToUni(ignore -> triggerOrchestrationIfEnabled(onboarding).replaceWithVoid());
         }
 
         log.warn("triggerDocumentGate: mandatory documents incomplete for onboarding {} (missing={})",
