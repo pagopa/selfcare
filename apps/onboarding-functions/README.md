@@ -30,6 +30,20 @@ Before running you must set these properties as environment variables.
 | quarkus.openapi-generator.user_registry_json.auth.api_key.api-key<br/> | USER_REGISTRY_API_KEY      |             |     yes      |
 | quarkus.rest-client."*.user_registry_json.api.UserApi".url<br/>        | USER_REGISTRY_URL          |             |     yes      |
 
+### Blob storage authentication
+
+The application supports both connection-string and Managed Identity authentication for product and contract/document blob storage.
+When `BLOB_STORAGE_CONN_STRING_CONTRACT` or `BLOB_STORAGE_CONN_STRING_PRODUCT` is set, the connection string is used.
+When the connection string is empty, configure the corresponding storage account name and managed identity client id:
+
+| **Storage** | **Account Environment Variable** | **Managed Identity Client ID Environment Variable** |
+|-------------|----------------------------------|-----------------------------------------------------|
+| Contract/documents | BLOB_STORAGE_ACCOUNT_NAME_CONTRACT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT |
+| Product | BLOB_STORAGE_ACCOUNT_NAME_PRODUCT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT |
+
+Before enabling this in Azure, the Function App must have the referenced user-assigned managed identities attached by infrastructure.
+Local and Cucumber integration tests must keep using connection strings/Azurite.
+
 ### Local settings
 Under the path "apps/onboarding-functions" you should check the presence of "local.settings.json".<br>
 If it's not present than you should add a file named "local.settings.json", containing the following json:<br>
@@ -98,5 +112,3 @@ Before deploy you must set these properties as environment variables.
 ## Related Guides
 
 - Azure Functions ([guide](https://quarkus.io/guides/azure-functions)): Write Microsoft Azure functions
-
-
