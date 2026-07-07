@@ -341,6 +341,73 @@ class TokenV2ControllerTest {
     }
 
 
+    /**
+     * Method under test: {@link TokenV2Controller#getAttachment(String, String)}
+     */
+    @Test
+    void getAttachment() throws Exception {
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+        byte[] bytes = "String".getBytes();
+        InputStream is = new ByteArrayInputStream(bytes);
+        Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(tokenService.getAttachment(onboardingId, filename)).thenReturn(resource);
+        Mockito.when(resource.getInputStream()).thenReturn(is);
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .get("/v2/tokens/{onboardingId}/attachment", onboardingId)
+                        .queryParam("name", filename)
+                        .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        //then
+        verify(tokenService, times(1))
+                .getAttachment(onboardingId, filename);
+    }
+
+    /**
+     * Method under test: {@link TokenV2Controller#getAttachmentStatus(String, String)}
+     */
+    @Test
+    void getAttachmentStatus_shouldReturnNoContent() throws Exception {
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        Mockito.when(tokenService.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(204));
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .get("/v2/tokens/{onboardingId}/attachment/status", onboardingId)
+                        .queryParam("name", filename))
+                .andExpect(status().isNoContent())
+                .andReturn();
+
+        //then
+        verify(tokenService, times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+    }
+
+    @Test
+    void getAttachmentStatus_shouldReturnNotFound() throws Exception {
+        final String onboardingId = "onboardingId";
+        final String filename = "filename";
+
+        Mockito.when(tokenService.headAttachment(onboardingId, filename)).thenReturn(HttpStatusCode.valueOf(404));
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .get("/v2/tokens/{onboardingId}/attachment/status", onboardingId)
+                        .queryParam("name", filename))
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        //then
+        verify(tokenService, times(1))
+                .headAttachment(eq("onboardingId"), eq("filename"));
+    }
+
     @Test
     void headAttachmentTest() throws Exception {
         // given
@@ -382,7 +449,7 @@ class TokenV2ControllerTest {
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, MultipartFile)}
+     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, String, String, MultipartFile)}
      */
     @Test
     void uploadAttachment() throws Exception {
@@ -390,7 +457,7 @@ class TokenV2ControllerTest {
         final String filename = "filename";
 
         MockMultipartFile file = new MockMultipartFile(
-                "attachment",         
+                "attachment",
                 "hello.pdf",
                 MediaType.APPLICATION_PDF_VALUE,
                 "Hello, World!".getBytes()
@@ -405,7 +472,7 @@ class TokenV2ControllerTest {
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         verify(tokenService, times(1))
-                .uploadAttachment(onboardingId, file, filename);
+                .uploadAttachment(onboardingId, file, filename, null, null);
     }
 
 

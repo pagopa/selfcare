@@ -2846,8 +2846,7 @@
       "OnboardingPut": {
         "title": "OnboardingPut",
         "required": [
-          "productId",
-          "vatNumber"
+          "productId"
         ],
         "type": "object",
         "properties": {
@@ -2855,6 +2854,12 @@
             "type": "string"
           },
           "vatNumber": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "originId": {
             "type": "string"
           }
         }
@@ -4556,6 +4561,7 @@
       },
       "OnboardingStatus": {
         "enum": [
+          "REQUESTING",
           "REQUEST",
           "TOBEVALIDATED",
           "PENDING",

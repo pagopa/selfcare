@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -292,6 +293,20 @@ public class TokenV2Controller {
                 : ResponseEntity.notFound().build();
     }
 
+    @GetMapping(value = "/{onboardingId}/attachment/status")
+    @Operation(summary = "${swagger.tokens.headAttachment}",
+            description = "${swagger.tokens.headAttachment}", operationId = "getAttachmentStatusUsingGET")
+    public ResponseEntity<Void> getAttachmentStatus(@ApiParam("${swagger.tokens.onboardingId}")
+                                                    @PathVariable("onboardingId")
+                                                    String onboardingId,
+                                                    @NotNull @RequestParam("name") String attachmentName) {
+        log.trace("getAttachmentStatus start");
+        log.debug("getAttachmentStatus onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
+        HttpStatusCode attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
+        return attachmentResponse.is2xxSuccessful() ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
@@ -299,13 +314,15 @@ public class TokenV2Controller {
     public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
                                                  @RequestParam("attachmentName") String attachmentName,
+                                                 @RequestPart(value = "attachmentId", required = false) String attachmentId,
+                                                 @RequestPart(value = "attachmentDescription", required = false) String attachmentDescription,
                                                  @RequestPart MultipartFile attachment) {
         log.trace("uploadAttachment start");
         FileValidationUtils.validatePdfOrP7m(attachment);
         String sanitizedFileName = Encode.forJava(attachment.getOriginalFilename());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, attachment, attachmentName);
+        tokenService.uploadAttachment(onboardingId, attachment, attachmentName, attachmentId, attachmentDescription);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

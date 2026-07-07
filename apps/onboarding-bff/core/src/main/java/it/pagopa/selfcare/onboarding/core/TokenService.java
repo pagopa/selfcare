@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,8 @@ public interface TokenService {
 
   boolean verifyAllowedUserByRole(String onboardingId, String uid);
 
-  void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName);
+  void uploadAttachment(String onboardingId, MultipartFile attachment,
+                        String attachmentName, String attachmentId, String attachmentDescription);
 
   HttpStatusCode headAttachment(String onboardingId, String filename);
 }
