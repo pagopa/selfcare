@@ -123,6 +123,12 @@ jobs:
             mvn -T "$THREADS" -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
           fi
 
+      - name: Set up JDK 21 for Sonar
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Analyze with SonarCloud
         shell: bash
         env:
