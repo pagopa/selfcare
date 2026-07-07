@@ -4959,6 +4959,12 @@
             "items": {
               "$ref": "#/components/schemas/WorkflowRule"
             }
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocument"
+            }
           }
         }
       },
@@ -5018,9 +5024,6 @@
           "institutionType": {
             "$ref": "#/components/schemas/InstitutionType1"
           },
-          "multiroleAllowed": {
-            "type": "boolean"
-          },
           "phasesAdditionAllowed": {
             "type": "array",
             "items": {
@@ -5072,6 +5075,12 @@
           },
           "productLabel": {
             "type": "string"
+          },
+          "multiroleGroups": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -5300,6 +5309,50 @@
           }
         }
       },
+      "RequiredDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "labelKey": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "mimeType": {
+            "type": "string"
+          },
+          "maxDocumentsRequired": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/RequiredDocumentFilter"
+          }
+        }
+      },
+      "RequiredDocumentFilter": {
+        "type": "object",
+        "properties": {
+          "institutionType": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionType1"
+            }
+          },
+          "origin": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Origin1"
+            }
+          }
+        }
+      },
       "ProductOriginResponse": {
         "type": "object",
         "properties": {
@@ -5404,6 +5457,12 @@
             "items": {
               "$ref": "#/components/schemas/WorkflowRule"
             }
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocument"
+            }
           }
         }
       },
@@ -5499,6 +5558,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/WorkflowRule"
+            }
+          },
+          "requiredDocuments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequiredDocument"
             }
           },
           "id": {
@@ -5664,6 +5729,21 @@
       "ProductRolePermissionsList": {
         "type": "object",
         "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "productId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "familyName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -6909,6 +6989,7 @@
       },
       "OnboardingStatus": {
         "enum": [
+          "REQUESTING",
           "REQUEST",
           "TOBEVALIDATED",
           "PENDING",
