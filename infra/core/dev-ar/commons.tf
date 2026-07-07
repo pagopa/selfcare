@@ -731,6 +731,97 @@ module "upload_file_logo" {
 }
 
 ###############################################################################
+# Storage user-attachments (sandbox for end-user uploaded documents)
+# Dedicated storage account with Defender for Storage + on-upload Malware Scanning enabled
+###############################################################################
+
+resource "azurerm_resource_group" "user_attachments_sa_rg" {
+  name     = "${local.project}-user-attachments-storage-rg"
+  location = local.location
+  tags     = local.tags
+}
+
+module "storage_user_attachments" {
+  source = "../_modules/storage_user_attachments"
+
+  prefix          = local.prefix_short
+  env_short       = local.env_short
+  location        = local.location
+  domain          = "ar"
+  app_name        = "usrattach"
+  instance_number = "01"
+
+  # Container name is not subject to the 24-char limit, so we keep it readable
+  # and aligned with the value the application expects.
+  container_name = "sc-${local.env_short}-user-attachments-blob"
+
+  resource_group_name  = azurerm_resource_group.user_attachments_sa_rg.name
+  virtual_network_name = module.network.rg_vnet_name
+
+  tags                                 = local.tags
+  cidr_subnet_user_attachments_storage = local.cidr_subnet_user_attachments_storage
+
+  project = local.prefix
+
+  private_dns_zone_resource_group_name = module.network.rg_vnet_name
+
+  # Soft-delete of blobs enabled so that Defender can soft-delete files
+  # flagged as malicious (see storage_account.tf precondition).
+  blob_features = {
+    immutability_policy = {
+      enabled                       = false
+      allow_protected_append_writes = false
+      period_since_creation_in_days = 1
+    }
+    restore_policy_days   = 0
+    delete_retention_days = 7 # required for Defender "soft-delete malicious blobs"
+    versioning            = false
+    last_access_time      = true
+    change_feed = {
+      enabled           = false
+      retention_in_days = 0
+    }
+  }
+
+  # Lifecycle: aggressive cleanup in DEV to avoid storage cost accumulation.
+  # Prefix scoped so it only targets blobs already "soft-deleted" by the
+  # application (document-ms moves them from "parties/docs/..." to
+  # "parties/deleted/..." via DocumentContentServiceImpl.deleteFileFromAzure,
+  # driven by application.properties → document-ms.blob-storage.path-deleted).
+  # Live user attachments under "parties/docs/..." are NEVER touched by this rule.
+  lifecycle_prefix_match                                            = ["parties/deleted"]
+  base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
+  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
+  base_delete_after_days_since_creation_greater_than                = 1
+  snapshot_change_tier_to_cool_after_days_since_creation            = 1
+  snapshot_delete_after_days_since_creation_greater_than            = 1
+  version_change_tier_to_cool_after_days_since_creation             = 1
+  version_delete_after_days_since_creation                          = 1
+
+  # Defender for Storage (per Security team recommendation).
+  defender_enabled                           = true
+  defender_malware_scanning_enabled          = true
+  defender_malware_scanning_cap_gb_per_month = 100 # DEV: keep cap small to bound cost
+  defender_sensitive_data_discovery_enabled  = false
+  defender_soft_delete_malicious_blobs       = true
+
+  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
+  key_vault_name                = module.key_vault.key_vault_name
+}
+
+resource "azurerm_user_assigned_identity" "user_attachments_identity" {
+  name                = "${local.project}-user-attachments-identity"
+  resource_group_name = azurerm_resource_group.user_attachments_sa_rg.name
+  location            = local.location
+}
+
+data "azurerm_key_vault_secret" "selc_user_attachments_storage_connection_string" {
+  name         = module.storage_user_attachments.kv_secret_name
+  key_vault_id = module.key_vault.key_vault_id
+  depends_on   = [module.storage_user_attachments]
+}
+
+###############################################################################
 # AI Search
 ###############################################################################
 
