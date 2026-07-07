@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.integration_test.steps;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Assertions;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -149,6 +151,65 @@ public class UserSteps {
                         });
 
     }
+
+  @And("A mock userInstitution with id {string} and the following data:")
+  public void createMockInstitutionWithData(String id, DataTable dataTable) {
+
+    final UserInstitution userInstitution = new UserInstitution();
+    userInstitution.setId(new ObjectId(id));
+    userInstitution.setUserId(mockUserId);
+    userInstitution.setInstitutionId(mockInstitutionId);
+    userInstitution.setInstitutionDescription("Comune di Milano");
+    userInstitution.setUserMailUuid("ID_MAIL#123123-55555-efaz-12312-apclacpela");
+
+    List<OnboardedProduct> onboardedProducts = dataTable.asMaps(String.class, String.class)
+      .stream()
+      .map(row -> {
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setCreatedAt(
+          OffsetDateTime.of(2024, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC)
+        );
+        onboardedProduct.setProductId(row.get("productId"));
+        onboardedProduct.setProductRole(row.get("productRole"));
+        onboardedProduct.setRole(PartyRole.valueOf(row.get("role")));
+        onboardedProduct.setEnv(Env.ROOT);
+        onboardedProduct.setStatus(
+          OnboardedProductState.valueOf(row.get("onboardedProductState"))
+        );
+        onboardedProduct.setTokenId("asda8312-3311-5642-gsds-gfr2252341");
+        return onboardedProduct;
+      })
+      .toList();
+
+    userInstitution.setProducts(onboardedProducts);
+
+    CountDownLatch latch = new CountDownLatch(1);
+
+    UserInstitution.persist(userInstitution).subscribe().with(
+      success -> {
+        log.info("userInstitution with id {} created", id);
+        latch.countDown();
+      },
+      failure -> {
+        log.error(
+          "Failed to create userInstitution with id {}: {}",
+          id,
+          failure.getMessage()
+        );
+        latch.countDown();
+      }
+    );
+
+    try {
+      latch.await();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(
+        "Interrupted while waiting for userInstitution persistence",
+        e
+      );
+    }
+  }
 
     @And("A mock userInstitution with id {string} and onboardedProductState {string} and role {string} and productId {string}")
     public void createMockInstitution(String id, String onboardedProductState, String role, String productId) {
