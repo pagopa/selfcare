@@ -835,43 +835,6 @@ public class UserServiceImpl implements UserService {
         return productRoleFinal;
     }
 
-
-    public Uni<Void> checkMultiroleWithPreviousUserInstitution(String productId, PartyRole role, String productRole, UserInstitution userInstitution, OnboardedProductState status) {
-
-        if (org.gradle.internal.impldep.org.apache.commons.lang.StringUtils.isBlank(productId) || productRole == null) {
-            return Uni.createFrom().voidItem();
-        }
-
-        try {
-            List<List<String>> groupsPerRole = new ArrayList<>();
-
-            // validate role via product sdk
-            ProductRole validatedRole =
-                    productService.validateProductRole(productId, productRole, role);
-            groupsPerRole.add(validatedRole.getMultiroleGroups());
-
-        } catch (IllegalArgumentException e) {
-            throw new InvalidRequestException(e.getMessage());
-        }
-
-        if(ACTIVE == status || SUSPENDED == status) {
-
-
-
-            ArrayList<String> productAlreadyOnboarded = new ArrayList<>(Optional.ofNullable(userInstitution.getProducts())
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .filter(onboardedProduct -> onboardedProduct.getProductId().equals(productId))
-                    .filter(onboardedProduct -> productRole.contains(onboardedProduct.getProductRole()))
-                    .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
-                    .map(OnboardedProduct::getProductRole)
-                    .toList());
-        }
-
-        return Uni.createFrom().voidItem();
-    }
-
-
     /**
      * The retrieveUsers function is used to retrieve a list of users from the database and userRegistry.
      * The function takes in an userId, institutionId, personId, roles, states, products and productRoles as parameters.

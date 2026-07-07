@@ -481,7 +481,7 @@ class UserInstitutionServiceTest {
         roleInfo.setRoles(List.of(productRoleEntity));
         Product product = new Product();
         product.setRoleMappings(Map.of(PartyRole.OPERATOR, roleInfo));
-        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(product);
+        when(productServiceCacheable.getProduct(productId)).thenReturn(product);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
@@ -512,7 +512,7 @@ class UserInstitutionServiceTest {
         roleInfo.setRoles(List.of(productRoleEntity));
         Product product = new Product();
         product.setRoleMappings(Map.of(PartyRole.OPERATOR, roleInfo));
-        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(product);
+        when(productServiceCacheable.getProduct(productId)).thenReturn(product);
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, productRole, OnboardedProductState.ACTIVE)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted().assertItem(0L);
@@ -534,7 +534,7 @@ class UserInstitutionServiceTest {
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
-        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(new Product());
+        when(productServiceCacheable.getProduct(productId)).thenReturn(new Product());
         when(update.where(embeddedCaptor.capture())).thenReturn(Uni.createFrom().item(1L));
         UniAssertSubscriber<Long> subscriber = userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, null, productRole, OnboardedProductState.DELETED)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -567,7 +567,7 @@ class UserInstitutionServiceTest {
         Product product = new Product();
         product.setRoleMappings(Map.of(PartyRole.OPERATOR, roleInfo));
 
-        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(product);
+        when(productServiceCacheable.getProduct(productId)).thenReturn(product);
         ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
         when(UserInstitution.update(any(Document.class)))
                 .thenReturn(update);
@@ -584,7 +584,7 @@ class UserInstitutionServiceTest {
         String productId = "productId";
         String productRole = "admin2";
         UserInstitution userInstitution = getUserInstitution(userId, institutionId, productId);
-        when(productServiceCacheable.getProduct(eq(productId))).thenReturn(new Product());
+        when(productServiceCacheable.getProduct(productId)).thenReturn(new Product());
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(UserInstitution.find(any(Document.class), any())).thenReturn(query);
