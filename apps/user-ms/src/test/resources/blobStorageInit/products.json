@@ -1074,12 +1074,24 @@
           {
             "code": "api",
             "description": "Gestisce il ciclo di vita degli e-service",
-            "label": "Operatore API"
+            "label": "Operatore API",
+            "multiroleGroups": ["group1"]
           },
           {
             "code": "security",
             "description": "Gestisce il ciclo di vita dei client di connessione",
-            "label": "Operatore Sicurezza"
+            "label": "Operatore Sicurezza",
+            "multiroleGroups": ["group1"]
+          },
+          {
+            "code": "viewer",
+            "description": "Può consultare le analisi del rischio",
+            "label": "Operatore Consultatore"
+          },
+          {
+            "code": "reviewer",
+            "description": "Può compilare e consultare le analisi del rischio",
+            "label": "Operatore Valutatore"
           }
         ]
       },
