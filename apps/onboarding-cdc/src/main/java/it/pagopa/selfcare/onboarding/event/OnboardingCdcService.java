@@ -169,6 +169,12 @@ public class OnboardingCdcService {
 
         log.info("Starting consumerRegistryIndexEvent for onboarding id {}", document.getFullDocument().getId());
 
+        log.info(
+          "consumer Onboarding {}, deletedAt={}",
+          document.getFullDocument().getId(),
+          document.getFullDocument().getDeletedAt()
+        );
+
         registryIndexService.updateIndex(document.getFullDocument())
                 .subscribe().with(
                         result -> {

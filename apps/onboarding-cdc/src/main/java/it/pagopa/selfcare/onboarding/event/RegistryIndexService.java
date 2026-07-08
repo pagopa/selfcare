@@ -48,6 +48,12 @@ public class RegistryIndexService {
 
         assert onboarding != null;
 
+        log.info(
+          "Updating index onboarding {} - deletedAt={}",
+          onboarding.getId(),
+          onboarding.getDeletedAt()
+        );
+
         log.info("Sending updateOnboardingIndex for onboarding id {} with status {}", onboarding.getId(), onboarding.getStatus());
 
         return onboardingApi.updateOnboardingIndex(onboardingMapper.toIndexResource(onboarding))
