@@ -27,5 +27,6 @@ public class SearchServiceOnboardingIndex extends SearchServiceIndex {
     private OffsetDateTime updatedAt;
     private OffsetDateTime activatedAt;
     private OffsetDateTime expiringDate;
+    private OffsetDateTime deletedAt;
 
 }
