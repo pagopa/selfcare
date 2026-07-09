@@ -3,7 +3,8 @@ locals {
   eventhub_names = var.eventhub_namespace_name != null && var.eventhub_namespace_rg != null ? toset([
     "sc-delegations",
     "sc-usergroups",
-    "selfcare-fd"
+    "selfcare-fd",
+    "sc-users"
   ]) : toset([])
 }
 
