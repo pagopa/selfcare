@@ -41,7 +41,7 @@ module "selc_onboarding_fn" {
   user_identity_ids       = var.user_assigned_identity_ids
   storage_account_name    = replace(format("%s-sa", var.functions_name), "-", "")
   export_keys             = true
-  app_service_plan_type   = "internal"
+  app_service_plan_type   = local.app_service_plan_info.type
   app_service_plan_info   = local.app_service_plan_info
   storage_account_info    = local.storage_account_info
 
@@ -96,6 +96,7 @@ locals {
   ], 0)
 
   app_service_plan_info = {
+    type                         = "internal"
     kind                         = "Linux"
     sku_size                     = var.service_plan_sku
     maximum_elastic_worker_count = 0
