@@ -80,7 +80,7 @@ locals {
     },
     {
       name  = "STORAGE_CONTAINER_USER"
-      value = "sc-p-user-attachments-blob"
+      value = "sc-p-usrattach-blob"
     },
     {
       name  = "NAMIRIAL_BASE_URL"

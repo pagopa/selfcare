@@ -79,7 +79,7 @@ locals {
     },
     {
       name  = "STORAGE_CONTAINER_USER"
-      value = "sc-u-user-attachments-blob"
+      value = "sc-u-usrattach-blob"
     },
     {
       name  = "NAMIRIAL_BASE_URL"
