@@ -25,6 +25,8 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private String onboardingId;
     private String productId;
     private String attachmentName;
+    private String attachmentPath;
+    private String attachmentDescription;
     private String checksum;
     private String contractVersion;
     private String contractTemplate;

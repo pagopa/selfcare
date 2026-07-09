@@ -12,6 +12,7 @@ import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
@@ -79,6 +80,32 @@ public class DocumentServiceImpl implements DocumentService {
                 .onItem().transform(attachments -> attachments.stream()
                         .map(Document::getAttachmentName)
                         .toList());
+    }
+
+    @Override
+    public Uni<AvailableDocumentsResponse> getAvailableDocuments(String onboardingId) {
+        log.info("Retrieving available documents for onboardingId={}", sanitize(onboardingId));
+
+        Uni<List<String>> attachmentsUni = getAttachments(onboardingId);
+
+        Uni<String> contractFilenameUni =
+                documentRepository.findByOnboardingId(onboardingId)
+                        .onItem().transform(this::resolveSignedContractFilename);
+
+        return Uni.combine().all().unis(attachmentsUni, contractFilenameUni)
+                .with((attachments, contractFilename) -> AvailableDocumentsResponse.builder()
+                        .attachments(attachments)
+                        .contractFilename(contractFilename)
+                        .build());
+    }
+
+    private String resolveSignedContractFilename(Document document) {
+        if (Objects.isNull(document)
+                || Objects.isNull(document.getContractSigned())
+                || document.getContractSigned().isBlank()) {
+            return null;
+        }
+        return document.getContractFilename();
     }
 
     @Override

@@ -48,6 +48,22 @@
           }
         }
       },
+      "AvailableDocumentsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "attachments" : {
+            "description" : "Names of the attachments available for the onboarding. Empty list if none.",
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "contractFilename" : {
+            "description" : "Filename of the signed contract available for download. Null when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).",
+            "type" : "string"
+          }
+        }
+      },
       "BillingPdfData" : {
         "type" : "object",
         "properties" : {
@@ -169,6 +185,12 @@
             "type" : "string"
           },
           "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentPath" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
             "type" : "string"
           },
           "checksum" : {
@@ -1476,6 +1498,43 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/available-documents" : {
+      "get" : {
+        "summary" : "Retrieve the list of documents available for download for a given onboarding",
+        "description" : "Returns the attachments associated with the onboarding and, if present, the contractFilename.",
+        "operationId" : "getAvailableDocuments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AvailableDocumentsResponse"
+                }
+              }
             }
           },
           "401" : {
