@@ -6,7 +6,7 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
-import it.pagopa.selfcare.user.auth.EventhubSasTokenAuthorization;
+import it.pagopa.selfcare.user.auth.EventhubTokenAuthorization;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Produces;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -63,8 +63,8 @@ public class UserMsConfig {
 
     @Produces
     @ApplicationScoped
-    public EventhubSasTokenAuthorization eventhubSasTokenAuthorization(){
-        return new EventhubSasTokenAuthorization();
+    public EventhubTokenAuthorization eventhubSasTokenAuthorization(){
+        return new EventhubTokenAuthorization();
 
     }
 
