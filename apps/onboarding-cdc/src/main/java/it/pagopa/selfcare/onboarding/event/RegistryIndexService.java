@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.party_registry_proxy_json.api.OnboardingApi;
-import org.openapi.quarkus.party_registry_proxy_json.model.OnboardingIndexResource;
 
 import java.time.Duration;
 
@@ -51,11 +50,7 @@ public class RegistryIndexService {
 
         log.info("Sending updateOnboardingIndex for onboarding id {} with status {}", onboarding.getId(), onboarding.getStatus());
 
-        OnboardingIndexResource indexResource = onboardingMapper.toIndexResource(onboarding);
-
-        log.info("OnboardingIndexResource for onboarding id {} with deletedAt {}", indexResource.getOnboardingId(), indexResource.getDeletedAt());
-
-        return onboardingApi.updateOnboardingIndex(indexResource)
+        return onboardingApi.updateOnboardingIndex(onboardingMapper.toIndexResource(onboarding))
                 .onFailure().retry()
                 .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff))
                 .atMost(maxRetry);
