@@ -15,8 +15,8 @@ module "local" {
   ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
-  container_app_cpu              = 1.25
-  container_app_memory           = "2.5Gi"
+  container_app_cpu              = 2.0
+  container_app_memory           = "4.0Gi"
 }
 
 ###############################################################################
@@ -80,7 +80,7 @@ locals {
     },
     {
       name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-p-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "DOCUMENT_MS_UPLOAD_MAX_BODY_SIZE"

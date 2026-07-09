@@ -14,6 +14,8 @@ module "local" {
   container_app_environment_name = "selc-u-cae-002"
   ca_resource_group_name         = "selc-u-container-app-002-rg"
   container_app_min_replicas     = 0
+  container_app_cpu              = 1.0
+  container_app_memory           = "2.0Gi"
 }
 
 ###############################################################################
@@ -77,7 +79,7 @@ locals {
     },
     {
       name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-u-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "DOCUMENT_MS_UPLOAD_MAX_BODY_SIZE"
