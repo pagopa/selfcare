@@ -286,9 +286,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     private Uni<Void> insertNewUserAttachment(UserAttachmentRequest request, FormItem file) {
         String attachmentName = request.getAttachmentName();
-        String storageFilename = attachmentName + ".pdf";
         return persistUserAttachment(request, attachmentName)
-                .call(document -> uploadUserFileToAzureReactive(document, file, storageFilename)
+                .call(document -> uploadUserFileToAzureReactive(document, file, attachmentName)
                         .onFailure().call(azureError -> {
                             log.error("Upload to USER storage failed for attachmentName {}. Rolling back DB record...",
                                     sanitize(attachmentName));
