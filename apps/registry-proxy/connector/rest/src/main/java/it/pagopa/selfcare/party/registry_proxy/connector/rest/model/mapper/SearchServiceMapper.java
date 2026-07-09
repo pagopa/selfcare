@@ -19,7 +19,6 @@ import java.time.OffsetDateTime;
 public interface SearchServiceMapper {
 
     @Mapping(target = "action", constant = "mergeOrUpload")
-    @Mapping(target = "statusUpdatedAt", source = ".", qualifiedByName = "toStatusUpdatedAt")
     SearchServiceOnboardingIndex toSearchServiceOnboardingIndex(OnboardingIndex onboardingIndex);
 
     @Mapping(target = "totalElements", source = "count")
@@ -48,15 +47,6 @@ public interface SearchServiceMapper {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    @Named("toStatusUpdatedAt")
-    default OffsetDateTime toStatusUpdatedAt(OnboardingIndex onboardingIndexResource) {
-      return switch (OnboardingStatus.valueOf(onboardingIndexResource.getStatus())) {
-        case COMPLETED -> onboardingIndexResource.getActivatedAt();
-        case DELETED -> onboardingIndexResource.getDeletedAt();
-        default -> null;
-      };
     }
 
 }
