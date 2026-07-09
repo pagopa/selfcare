@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper;
 
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
@@ -12,10 +13,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
+import java.time.OffsetDateTime;
+
 @Mapper(componentModel = "spring")
 public interface SearchServiceMapper {
 
     @Mapping(target = "action", constant = "mergeOrUpload")
+    @Mapping(target = "statusUpdatedAt", source = ".", qualifiedByName = "toStatusUpdatedAt")
     SearchServiceOnboardingIndex toSearchServiceOnboardingIndex(OnboardingIndex onboardingIndex);
 
     @Mapping(target = "totalElements", source = "count")
@@ -44,6 +48,15 @@ public interface SearchServiceMapper {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    @Named("toStatusUpdatedAt")
+    default OffsetDateTime toStatusUpdatedAt(OnboardingIndex onboardingIndexResource) {
+      return switch (OnboardingStatus.valueOf(onboardingIndexResource.getStatus())) {
+        case COMPLETED -> onboardingIndexResource.getActivatedAt();
+        case DELETED -> onboardingIndexResource.getDeletedAt();
+        default -> null;
+      };
     }
 
 }
