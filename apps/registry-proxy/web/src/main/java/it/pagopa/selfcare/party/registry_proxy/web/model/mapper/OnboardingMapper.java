@@ -14,8 +14,8 @@ import java.time.OffsetDateTime;
 @Mapper(componentModel = "spring")
 public interface OnboardingMapper {
 
-  @Mapping(target = "statusUpdatedAt", source = ".", qualifiedByName = "toStatusUpdatedAt")
-  OnboardingIndex toOnboardingIndex(OnboardingIndexResource onboardingIndexResource);
+    @Mapping(target = "statusUpdatedAt", source = ".", qualifiedByName = "toStatusUpdatedAt")
+    OnboardingIndex toOnboardingIndex(OnboardingIndexResource onboardingIndexResource);
 
     OnboardingIndexSearchResource toOnboardingIndexSearchResource(OnboardingIndexSearch onboardingIndexSearch);
 
@@ -23,11 +23,16 @@ public interface OnboardingMapper {
 
     @Named("toStatusUpdatedAt")
     default OffsetDateTime toStatusUpdatedAt(OnboardingIndexResource onboardingIndexResource) {
-      return switch (OnboardingStatus.valueOf(onboardingIndexResource.getStatus())) {
-        case COMPLETED -> onboardingIndexResource.getActivatedAt();
-        case DELETED -> onboardingIndexResource.getDeletedAt();
-        default -> null;
-      };
+      String status = onboardingIndexResource.getStatus();
+      if (OnboardingStatus.COMPLETED.name().equals(status)) {
+        return onboardingIndexResource.getActivatedAt();
+      }
+
+      if (OnboardingStatus.DELETED.name().equals(status)) {
+        return onboardingIndexResource.getDeletedAt();
+      }
+
+      return null;
     }
 
 }
