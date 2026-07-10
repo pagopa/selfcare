@@ -42,7 +42,7 @@ When the connection string is empty, configure the corresponding storage account
 | Product | BLOB_STORAGE_ACCOUNT_NAME_PRODUCT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT |
 
 Before enabling this in Azure, the Function App must have the referenced user-assigned managed identities attached by infrastructure.
-Local and Cucumber integration tests must keep using connection strings/Azurite.
+Local and Cucumber integration tests must set connection strings explicitly for Azurite; Azure environments must leave `BLOB_STORAGE_CONN_STRING_CONTRACT` and `BLOB_STORAGE_CONN_STRING_PRODUCT` unset. The main `application.properties` does not declare connection-string properties, while test properties provide them explicitly.
 
 ### Local settings
 Under the path "apps/onboarding-functions" you should check the presence of "local.settings.json".<br>
