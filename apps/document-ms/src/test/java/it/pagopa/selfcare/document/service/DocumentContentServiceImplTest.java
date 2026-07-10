@@ -637,7 +637,7 @@ class DocumentContentServiceImplTest {
         UserAttachmentRequest request = UserAttachmentRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .attachmentName("statuto")
+                .attachmentName("statuto.pdf")
                 .attachmentId("statuto")
                 .maxDocumentsRequired(1)
                 .build();
@@ -702,7 +702,7 @@ class DocumentContentServiceImplTest {
         UserAttachmentRequest request = UserAttachmentRequest.builder()
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
-                .attachmentName("attestazione-gsp-2")
+                .attachmentName("attestazione-gsp-2.pdf")
                 .attachmentId("attestazione-gsp")
                 .maxDocumentsRequired(3)
                 .build();
@@ -721,7 +721,7 @@ class DocumentContentServiceImplTest {
 
         verify(azureBlobClient).uploadFile(anyString(), eq("attestazione-gsp-2.pdf"), any(byte[].class));
         verify(documentRepository).persist(argThat((Document doc) ->
-          "attestazione-gsp-2".equals(doc.getAttachmentName())));
+          "attestazione-gsp-2.pdf".equals(doc.getAttachmentName())));
     }
 
     @Test
