@@ -13,7 +13,6 @@ module "local" {
   private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-u-cae-002"
   ca_resource_group_name         = "selc-u-container-app-002-rg"
-  container_app_min_replicas     = 0
 }
 
 locals {
