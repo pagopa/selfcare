@@ -37,6 +37,7 @@ public class Onboarding extends ReactivePanacheMongoEntityBase {
     private LocalDateTime activatedAt;
     private LocalDateTime updatedAt;
     private LocalDateTime expiringDate;
+    private LocalDateTime deletedAt;
     private OnboardingStatus status;
     private UserRequester userRequester;
     private AdditionalInformations additionalInformations;

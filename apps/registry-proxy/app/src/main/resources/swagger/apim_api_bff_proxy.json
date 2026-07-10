@@ -2053,6 +2053,10 @@
           "expiringDate" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "deletedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },
