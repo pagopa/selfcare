@@ -47,6 +47,10 @@ data "azurerm_user_assigned_identity" "delegations_eventhub_sender_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+###############################################################################
+# COSMOS DB
+###############################################################################
+
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
 
