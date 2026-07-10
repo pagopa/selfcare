@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
@@ -22,7 +23,9 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 
 @QuarkusTest
@@ -525,6 +528,58 @@ class DocumentControllerTest {
     given()
         .when()
         .get("/v1/documents/" + ONBOARDING_ID + "/attachment-list")
+        .then()
+        .statusCode(500);
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename_whenAvailable() {
+    AvailableDocumentsResponse response = AvailableDocumentsResponse.builder()
+            .attachments(Arrays.asList("attachment1.pdf", "attachment2.pdf"))
+            .contractFilename("contract.pdf")
+            .build();
+
+    Mockito.when(documentService.getAvailableDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().item(response));
+
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
+        .then()
+        .statusCode(200)
+        .body("attachments.size()", is(2))
+        .body("attachments[0]", equalTo("attachment1.pdf"))
+        .body("attachments[1]", equalTo("attachment2.pdf"))
+        .body("contractFilename", equalTo("contract.pdf"));
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnEmptyAttachmentsAndNoContractFilename_whenNothingAvailable() {
+    AvailableDocumentsResponse response = AvailableDocumentsResponse.builder()
+            .attachments(Collections.emptyList())
+            .contractFilename(null)
+            .build();
+
+    Mockito.when(documentService.getAvailableDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().item(response));
+
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
+        .then()
+        .statusCode(200)
+        .body("attachments.size()", is(0))
+        .body("$", not(hasKey("contractFilename")));
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnInternalServerError_whenServiceFails() {
+    Mockito.when(documentService.getAvailableDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
+
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
         .then()
         .statusCode(500);
   }
