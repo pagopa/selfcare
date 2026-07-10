@@ -6,6 +6,10 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSe
 import it.pagopa.selfcare.party.registry_proxy.web.model.OnboardingIndexResource;
 import it.pagopa.selfcare.party.registry_proxy.web.model.OnboardingIndexSearchResource;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Named;
+
+import java.time.OffsetDateTime;
 
 @Mapper(componentModel = "spring")
 public interface OnboardingMapper {
