@@ -86,6 +86,8 @@ public class SearchControllerTest {
     final List<String> statuses = List.of("ACTIVE", "PENDING");
     final OffsetDateTime createdFromDate = OffsetDateTime.parse("2024-01-01T00:00:00Z");
     final OffsetDateTime createdToDate = OffsetDateTime.parse("2024-12-31T23:59:59Z");
+    final OffsetDateTime statusUpdatedFromDate = OffsetDateTime.parse("2024-01-01T00:00:00Z");
+    final OffsetDateTime statusUpdatedToDate = OffsetDateTime.parse("2024-12-31T23:59:59Z");
     final List<String> orderBy = List.of("description_ASC");
 
     final OnboardingIndexSearch response = new OnboardingIndexSearch();
@@ -98,7 +100,7 @@ public class SearchControllerTest {
     onboardingIndex.setDescription("Test Onboarding");
     response.setOnboardings(List.of(onboardingIndex));
 
-    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, 0L, 15L, orderBy, false))
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate,  statusUpdatedFromDate, statusUpdatedToDate,0L, 15L, orderBy, false))
             .thenReturn(response);
 
     mockMvc.perform(get("/search/onboardings")
@@ -108,6 +110,8 @@ public class SearchControllerTest {
                     .param("statuses", String.join(",", statuses))
                     .param("createdFromDate", createdFromDate.toString())
                     .param("createdToDate", createdToDate.toString())
+                    .param("statusUpdatedFromDate", statusUpdatedFromDate.toString())
+                    .param("statusUpdatedToDate", statusUpdatedToDate.toString())
                     .param("orderBy", String.join(",", orderBy))
                     .contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -128,6 +132,8 @@ public class SearchControllerTest {
     final List<String> statuses = List.of("ACTIVE", "PENDING");
     final OffsetDateTime createdFromDate = OffsetDateTime.parse("2024-01-01T00:00:00Z");
     final OffsetDateTime createdToDate = OffsetDateTime.parse("2024-12-31T23:59:59Z");
+    final OffsetDateTime statusUpdatedFromDate = OffsetDateTime.parse("2024-01-01T00:00:00Z");
+    final OffsetDateTime statusUpdatedToDate = OffsetDateTime.parse("2024-12-31T23:59:59Z");
     final List<String> orderBy = List.of("description_ASC");
 
     final OnboardingIndexSearch response = new OnboardingIndexSearch();
@@ -140,7 +146,7 @@ public class SearchControllerTest {
     onboardingIndex.setDescription("Test Onboarding");
     response.setOnboardings(List.of(onboardingIndex));
 
-    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, 0L, 15L, orderBy, true))
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, statusUpdatedFromDate, statusUpdatedToDate,0L, 15L, orderBy, true))
       .thenReturn(response);
 
     mockMvc.perform(get("/search/onboardings")
@@ -150,6 +156,8 @@ public class SearchControllerTest {
         .param("statuses", String.join(",", statuses))
         .param("createdFromDate", createdFromDate.toString())
         .param("createdToDate", createdToDate.toString())
+        .param("statusUpdatedFromDate", statusUpdatedFromDate.toString())
+        .param("statusUpdatedToDate", statusUpdatedToDate.toString())
         .param("orderBy", String.join(",", orderBy))
         .param("includeTest", "true")
         .contentType(MediaType.APPLICATION_JSON))
@@ -165,7 +173,7 @@ public class SearchControllerTest {
 
   @Test
   void searchOnboardingTest_internalServerError() throws Exception {
-    when(searchService.searchOnboarding(anyString(), any(), any(), any(), any(), any(), anyLong(), anyLong(), any(), anyBoolean()))
+    when(searchService.searchOnboarding(anyString(), any(), any(), any(), any(), any(), any(), any(), anyLong(), anyLong(), any(), anyBoolean()))
             .thenThrow(new RuntimeException("Internal service error"));
 
     mockMvc.perform(get("/search/onboardings")
