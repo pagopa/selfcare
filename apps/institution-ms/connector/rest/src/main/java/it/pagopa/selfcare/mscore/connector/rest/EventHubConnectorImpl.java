@@ -1,5 +1,9 @@
 package it.pagopa.selfcare.mscore.connector.rest;
 
+import com.azure.core.credential.AccessToken;
+import com.azure.core.credential.TokenRequestContext;
+import com.azure.identity.DefaultAzureCredential;
+import com.azure.identity.DefaultAzureCredentialBuilder;
 import it.pagopa.selfcare.mscore.api.EventHubConnector;
 import it.pagopa.selfcare.mscore.connector.rest.client.EventHubRestClient;
 import it.pagopa.selfcare.mscore.model.DelegationNotificationToSend;
@@ -15,6 +19,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -24,27 +29,44 @@ public class EventHubConnectorImpl implements EventHubConnector {
     private final String resourceUri;
     private final String keyName;
     private final String key;
+    private final Optional<DefaultAzureCredential> credential;
+    private AccessToken cachedToken;
 
     public EventHubConnectorImpl(EventHubRestClient eventHubRestClient,
                                  @Value("${rest-client.event-hub.base-url}") String resourceUri,
                                  @Value("${rest-client.event-hub.keyName}") String keyName,
-                                 @Value("${rest-client.event-hub.key}") String key) {
+                                 @Value("${rest-client.event-hub.key}") String key,
+                                 @Value("${rest-client.event-hub.sender.managed-identity-client-id}") String managedIdentityClientId) {
         this.eventHubRestClient = eventHubRestClient;
         this.resourceUri = resourceUri;
         this.keyName = keyName;
         this.key = key;
+        this.credential = Optional.ofNullable(managedIdentityClientId)
+          .filter(ci -> !ci.isBlank())
+          .map(ci -> new DefaultAzureCredentialBuilder().managedIdentityClientId(ci).build());
+        log.info("EventhubTokenAuthorization managedIdentityClientId: {}", managedIdentityClientId);
     }
 
     @Override
     public boolean sendEvent(DelegationNotificationToSend notification) {
         try {
-            eventHubRestClient.sendMessage(notification, Map.of("Authorization", getSASToken(resourceUri, keyName, key)));
+            final String authToken = credential.map(this::getBearerToken)
+              .orElse(getSASToken(resourceUri, keyName, key));
+            eventHubRestClient.sendMessage(notification, Map.of("Authorization", authToken));
             log.info("Event notification of delegation with id {} sent", notification.getDelegationId());
             return true;
         } catch (Exception ex) {
             log.error("Error sending event notification of delegation with id {}", notification.getDelegationId(), ex);
             return false;
         }
+    }
+
+    private String getBearerToken(DefaultAzureCredential c) {
+        if (cachedToken == null || cachedToken.isExpired()) {
+            log.info("EventhubTokenAuthorization cachedToken expired: fetching new token from Azure AD");
+            cachedToken = c.getTokenSync(new TokenRequestContext().addScopes("https://eventhubs.azure.net/.default"));
+        }
+        return "Bearer " + cachedToken.getToken();
     }
 
     private String getSASToken(String resourceUri, String keyName, String key) throws NoSuchAlgorithmException, InvalidKeyException {
