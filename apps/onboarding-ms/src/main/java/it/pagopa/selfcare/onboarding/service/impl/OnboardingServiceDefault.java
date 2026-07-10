@@ -41,6 +41,7 @@ import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
@@ -870,9 +871,14 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     private Uni<Void> evaluateAndAdvance(Onboarding onboarding, List<String> mandatoryDocIds,
                                           List<String> presentAttachments) {
-        Set<String> presentSet = presentAttachments != null ? new HashSet<>(presentAttachments) : Set.of();
+        Set<String> presentSet = presentAttachments != null
+                ? presentAttachments.stream()
+                        .filter(Objects::nonNull)
+                        .map(this::stripFileExtension)
+                        .collect(Collectors.toSet())
+                : Set.of();
         List<String> missingDocs = mandatoryDocIds.stream()
-                .filter(docId -> !presentSet.contains(docId))
+                .filter(docId -> !presentSet.contains(stripFileExtension(docId)))
                 .toList();
 
         if (missingDocs.isEmpty()) {
@@ -891,6 +897,23 @@ public class OnboardingServiceDefault implements OnboardingService {
         return Uni.createFrom().failure(new InvalidRequestException(
                 String.format("Missing mandatory documents for onboarding %s: %s",
                         onboarding.getId(), missingDocs)));
+    }
+
+    /**
+     * Removes the file extension from the given name (e.g. "statuto.pdf" -> "statuto").
+     * If the name has no extension, is null, or starts with a dot, it is returned unchanged.
+     */
+    private String stripFileExtension(String name) {
+        if (name == null) {
+            return null;
+        }
+        int lastDot = name.lastIndexOf('.');
+        int lastSep = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+        if (lastDot <= lastSep + 1) {
+            // no dot, or dot belongs to a leading segment / hidden file with no extension
+            return name;
+        }
+        return name.substring(0, lastDot);
     }
 
     private boolean hasRequiredContext(Onboarding onboarding) {
