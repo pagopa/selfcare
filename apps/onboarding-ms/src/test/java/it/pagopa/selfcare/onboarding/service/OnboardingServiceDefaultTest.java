@@ -5988,4 +5988,46 @@ class OnboardingServiceDefaultTest {
         });
     }
 
+    @Nested
+    class StripFileExtensionTest {
+
+        private String invokeStripFileExtension(String name) throws Exception {
+            java.lang.reflect.Method method = OnboardingServiceDefault.class
+                    .getDeclaredMethod("stripFileExtension", String.class);
+            method.setAccessible(true);
+            return (String) method.invoke(onboardingService, name);
+        }
+
+        @Test
+        void stripFileExtension_shouldReturnNull_whenNameIsNull() throws Exception {
+            assertNull(invokeStripFileExtension(null));
+        }
+
+        @Test
+        void stripFileExtension_shouldRemoveExtension_whenNameHasExtension() throws Exception {
+            assertEquals("statuto", invokeStripFileExtension("statuto.pdf"));
+        }
+
+        @Test
+        void stripFileExtension_shouldRemoveOnlyLastExtension_whenNameHasMultipleDots() throws Exception {
+            assertEquals("archive.tar", invokeStripFileExtension("archive.tar.gz"));
+        }
+
+        @Test
+        void stripFileExtension_shouldRemoveExtension_whenNameContainsPathSeparator() throws Exception {
+            assertEquals("folder/statuto", invokeStripFileExtension("folder/statuto.pdf"));
+            assertEquals("folder\\statuto", invokeStripFileExtension("folder\\statuto.pdf"));
+        }
+
+        @Test
+        void stripFileExtension_shouldReturnSameName_whenNameHasNoExtension() throws Exception {
+            assertEquals("statuto", invokeStripFileExtension("statuto"));
+        }
+
+        @Test
+        void stripFileExtension_shouldReturnSameName_whenNameIsHiddenFileWithoutExtension() throws Exception {
+            assertEquals(".hidden", invokeStripFileExtension(".hidden"));
+        }
+    }
+
 }
