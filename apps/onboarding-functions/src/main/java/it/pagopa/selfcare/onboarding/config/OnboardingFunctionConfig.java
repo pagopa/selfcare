@@ -53,26 +53,40 @@ public class OnboardingFunctionConfig {
     public AzureBlobClient azureBobClientContract(AzureStorageConfig azureStorageConfig){
         return azureStorageConfig.connectionStringContract()
                 .filter(connectionString -> !connectionString.isBlank())
-                .map(connectionString -> new AzureBlobClientDefault(connectionString, azureStorageConfig.containerContract()))
-                .orElseGet(() -> new AzureBlobClientDefault(
+                .map(connectionString -> {
+                    log.info("Contract blob storage client configured with connection string");
+                    return new AzureBlobClientDefault(connectionString, azureStorageConfig.containerContract());
+                })
+                .orElseGet(() -> {
+                    log.info("Contract blob storage client configured with Managed Identity for account {}",
+                            azureStorageConfig.accountNameContract().orElse(""));
+                    return new AzureBlobClientDefault(
                         azureStorageConfig.containerContract(),
                         azureStorageConfig.accountNameContract().orElse(""),
-                        azureStorageConfig.managedIdentityClientIdContract().orElse("")));
+                        azureStorageConfig.managedIdentityClientIdContract().orElse(""));
+                });
     }
 
     @ApplicationScoped
     public ProductService productService(AzureStorageConfig azureStorageConfig){
        return azureStorageConfig.connectionStringProduct()
                .filter(connectionString -> !connectionString.isBlank())
-               .map(connectionString -> new ProductServiceCacheable(
+               .map(connectionString -> {
+                   log.info("Product blob storage client configured with connection string");
+                   return new ProductServiceCacheable(
                        connectionString,
                        azureStorageConfig.containerProduct(),
-                       azureStorageConfig.productFilepath()))
-               .orElseGet(() -> new ProductServiceCacheable(
+                       azureStorageConfig.productFilepath());
+               })
+               .orElseGet(() -> {
+                   log.info("Product blob storage client configured with Managed Identity for account {}",
+                           azureStorageConfig.accountNameProduct().orElse(""));
+                   return new ProductServiceCacheable(
                        azureStorageConfig.containerProduct(),
                        azureStorageConfig.productFilepath(),
                        azureStorageConfig.accountNameProduct().orElse(""),
-                       azureStorageConfig.managedIdentityClientIdProduct().orElse("")));
+                       azureStorageConfig.managedIdentityClientIdProduct().orElse(""));
+               });
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){
