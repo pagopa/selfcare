@@ -24,6 +24,7 @@ import java.time.OffsetDateTime;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,8 +61,7 @@ public class OnboardingControllerTest {
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
-        Mockito.verify(searchService).indexOnboarding(captor.capture());
-
+        verify(searchService).indexOnboarding(captor.capture());
         assertEquals(activatedAt, captor.getValue().getStatusUpdatedAt());
     }
 
@@ -84,7 +84,7 @@ public class OnboardingControllerTest {
             .andExpect(status().isNoContent());
 
         ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
-        Mockito.verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
+        verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
 
         assertEquals(deletedAt, captor.getValue().getStatusUpdatedAt());
     }
@@ -105,7 +105,7 @@ public class OnboardingControllerTest {
             .andExpect(status().isNoContent());
 
         ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
-        Mockito.verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
+        verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
 
         assertNull(captor.getValue().getStatusUpdatedAt());
     }
