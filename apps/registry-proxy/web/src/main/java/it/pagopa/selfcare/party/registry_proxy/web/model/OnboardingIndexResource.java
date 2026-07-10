@@ -28,5 +28,6 @@ public class OnboardingIndexResource {
     private OffsetDateTime activatedAt;
     private OffsetDateTime expiringDate;
     private OffsetDateTime deletedAt;
+    private OffsetDateTime statusUpdatedAt;
 
 }
