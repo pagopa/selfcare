@@ -100,7 +100,7 @@ public class SearchControllerTest {
     onboardingIndex.setDescription("Test Onboarding");
     response.setOnboardings(List.of(onboardingIndex));
 
-    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate,  statusUpdatedFromDate, statusUpdatedToDate,0L, 15L, orderBy, false))
+    when(searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, statusUpdatedFromDate, statusUpdatedToDate,0L, 15L, orderBy, false))
             .thenReturn(response);
 
     mockMvc.perform(get("/search/onboardings")
