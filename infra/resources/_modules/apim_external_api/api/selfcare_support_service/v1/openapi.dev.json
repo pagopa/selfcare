@@ -4582,7 +4582,8 @@
           "COMPLETED",
           "FAILED",
           "REJECTED",
-          "DELETED"
+          "DELETED",
+          "OVERRIDDEN"
         ],
         "type": "string"
       },
