@@ -20,6 +20,8 @@ public interface CompletionService {
 
     void rejectOutdatedOnboardings(Onboarding onboarding);
 
+    void overridePendingOnboardings(Onboarding onboarding);
+
     void sendCompletedEmail(OnboardingWorkflow onboardingWorkflow);
 
     void sendDeletedEmail(String  onboardingId);
