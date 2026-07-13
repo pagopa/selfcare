@@ -944,7 +944,7 @@
     "/v1/document-content/upload-user-attachment" : {
       "post" : {
         "summary" : "Upload a user-driven attachment (PDF only) to the USER storage.",
-        "description" : "Persists a user-uploaded attachment. Skips signature verification and template digest checks: the file is only validated to be a well-formed PDF.",
+        "description" : "Persists a user-uploaded attachment. Skips signature verification and template digest checks: the file is only validated to be a well-formed PDF. Target storage is implicitly USER",
         "operationId" : "uploadUserAttachment",
         "tags" : [ "Document Content Controller" ],
         "requestBody" : {

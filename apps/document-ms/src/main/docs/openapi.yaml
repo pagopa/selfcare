@@ -734,9 +734,7 @@ paths:
       summary: Upload a user-driven attachment (PDF only) to the USER storage.
       description: "Persists a user-uploaded attachment. Skips signature verification\
         \ and template digest checks: the file is only validated to be a well-formed\
-        \ PDF. Target storage is implicitly USER; the on-storage filename is derived\
-        \ from the documentId, with an incremental suffix (_2, _3, ...) when multiple\
-        \ documents already exist for the same (onboardingId, documentId)."
+        \ PDF. Target storage is implicitly USER"
       operationId: uploadUserAttachment
       tags:
       - Document Content Controller
