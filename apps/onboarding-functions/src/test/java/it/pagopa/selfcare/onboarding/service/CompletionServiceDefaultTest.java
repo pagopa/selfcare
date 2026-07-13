@@ -441,6 +441,66 @@ public class CompletionServiceDefaultTest {
     }
 
     @Test
+    void overridePendingOnboardings_withoutSubunitCode() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setTaxCode("12345678901");
+        onboarding.getInstitution().setOrigin(Origin.IPA);
+        onboarding.getInstitution().setOriginId("originId");
+        onboarding.getInstitution().setSubunitCode(null);
+
+        com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
+        when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
+        when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
+                .thenReturn(mock(com.mongodb.client.result.UpdateResult.class));
+
+        completionServiceDefault.overridePendingOnboardings(onboarding);
+
+        ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        ArgumentCaptor<org.bson.Document> updateCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        verify(mongoCollection, times(1)).updateMany(queryCaptor.capture(), updateCaptor.capture());
+
+        org.bson.Document query = queryCaptor.getValue();
+        assertEquals("12345678901", query.getString("institution.taxCode"));
+        assertEquals("IPA", query.getString("institution.origin"));
+        assertEquals("originId", query.getString("institution.originId"));
+        assertEquals(onboarding.getProductId(), query.getString("productId"));
+        assertNotNull(query.get("_id"));
+        assertNotNull(query.get("status"));
+        assertNull(query.getString("institution.subunitCode"));
+
+        org.bson.Document update = updateCaptor.getValue();
+        org.bson.Document setDoc = update.get("$set", org.bson.Document.class);
+        assertEquals("OVERRIDDEN", setDoc.getString("status"));
+        assertNotNull(setDoc.get("updatedAt"));
+    }
+
+    @Test
+    void overridePendingOnboardings_withSubunitCode() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.getInstitution().setTaxCode("12345678901");
+        onboarding.getInstitution().setOrigin(Origin.IPA);
+        onboarding.getInstitution().setOriginId("originId");
+        onboarding.getInstitution().setSubunitCode("SUB001");
+
+        com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
+        when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
+        when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
+                .thenReturn(mock(com.mongodb.client.result.UpdateResult.class));
+
+        completionServiceDefault.overridePendingOnboardings(onboarding);
+
+        ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        verify(mongoCollection, times(1)).updateMany(queryCaptor.capture(), any(org.bson.Document.class));
+
+        org.bson.Document query = queryCaptor.getValue();
+        assertEquals("12345678901", query.getString("institution.taxCode"));
+        assertEquals("IPA", query.getString("institution.origin"));
+        assertEquals("originId", query.getString("institution.originId"));
+        assertEquals(onboarding.getProductId(), query.getString("productId"));
+        assertEquals("SUB001", query.getString("institution.subunitCode"));
+    }
+
+    @Test
     void createInstitutionAndPersistInstitutionId_notFoundInstitutionAndCreateSaAnac() {
         Onboarding onboarding = createOnboarding();
 
@@ -915,24 +975,24 @@ public class CompletionServiceDefaultTest {
         productRoleInfo.setSkipUserCreation(false);
         Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
         when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
-        
+
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("product-not-pn");
         onboarding.setIsAggregator(true);
         onboarding.setWorkflowType(WorkflowType.IMPORT_AGGREGATION);
         onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
         createDummyUser(onboarding);
-        
+
         Response response = new ServerResponse(null, 200, null);
         when(userControllerApi.createUserByUserId(any(), any())).thenReturn(response);
         when(productService.getProduct(any())).thenReturn(product);
-        
-        ArgumentCaptor<org.openapi.quarkus.user_json.model.AddUserRoleDto> captor = 
+
+        ArgumentCaptor<org.openapi.quarkus.user_json.model.AddUserRoleDto> captor =
                 ArgumentCaptor.forClass(org.openapi.quarkus.user_json.model.AddUserRoleDto.class);
-        
+
         // When
         completionServiceDefault.persistUsers(onboarding);
-        
+
         // Then
         verify(userControllerApi, times(1)).createUserByUserId(anyString(), captor.capture());
         org.openapi.quarkus.user_json.model.AddUserRoleDto capturedDto = captor.getValue();
@@ -980,23 +1040,23 @@ public class CompletionServiceDefaultTest {
         productRoleInfo.setSkipUserCreation(false);
         Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
         when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
-        
+
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("prod-pn");
         onboarding.setIsAggregator(true);
         onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
         createDummyUser(onboarding);
-        
+
         Response response = new ServerResponse(null, 200, null);
         when(userControllerApi.createUserByUserId(any(), any())).thenReturn(response);
         when(productService.getProduct(any())).thenReturn(product);
-        
-        ArgumentCaptor<org.openapi.quarkus.user_json.model.AddUserRoleDto> captor = 
+
+        ArgumentCaptor<org.openapi.quarkus.user_json.model.AddUserRoleDto> captor =
                 ArgumentCaptor.forClass(org.openapi.quarkus.user_json.model.AddUserRoleDto.class);
-        
+
         // When
         completionServiceDefault.persistUsers(onboarding);
-        
+
         // Then
         verify(userControllerApi, times(1)).createUserByUserId(anyString(), captor.capture());
         org.openapi.quarkus.user_json.model.AddUserRoleDto capturedDto = captor.getValue();
@@ -1012,23 +1072,23 @@ public class CompletionServiceDefaultTest {
         productRoleInfo.setSkipUserCreation(false);
         Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
         when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
-        
+
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("any-product");
         onboarding.setIsAggregator(false);
         onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
         createDummyUser(onboarding);
-        
+
         Response response = new ServerResponse(null, 200, null);
         when(userControllerApi.createUserByUserId(any(), any())).thenReturn(response);
         when(productService.getProduct(any())).thenReturn(product);
-        
-        ArgumentCaptor<org.openapi.quarkus.user_json.model.AddUserRoleDto> captor = 
+
+        ArgumentCaptor<org.openapi.quarkus.user_json.model.AddUserRoleDto> captor =
                 ArgumentCaptor.forClass(org.openapi.quarkus.user_json.model.AddUserRoleDto.class);
-        
+
         // When
         completionServiceDefault.persistUsers(onboarding);
-        
+
         // Then
         verify(userControllerApi, times(1)).createUserByUserId(anyString(), captor.capture());
         org.openapi.quarkus.user_json.model.AddUserRoleDto capturedDto = captor.getValue();
