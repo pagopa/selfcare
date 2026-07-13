@@ -356,7 +356,7 @@ public class CompletionServiceImpl implements CompletionService {
         LocalDateTime now = LocalDateTime.now();
         Institution institution = onboarding.getInstitution();
 
-        List<String> excludedStatuses = List.of(
+        Set<String> excludedStatuses = Set.of(
                 OnboardingStatus.COMPLETED.name(),
                 OnboardingStatus.DELETED.name(),
                 OnboardingStatus.REJECTED.name());
