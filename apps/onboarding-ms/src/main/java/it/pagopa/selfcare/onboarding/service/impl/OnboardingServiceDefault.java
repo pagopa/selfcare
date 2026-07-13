@@ -33,7 +33,6 @@ import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
@@ -86,9 +85,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
-
-    @ConfigProperty(name = "onboarding.orchestration.enabled")
-    Boolean onboardingOrchestrationEnabled;
 
     // -------------------------------------------------------------------------
     // Public interface — onboarding flows
@@ -251,10 +247,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 .replaceWith(onboarding))
             .onItem().call(onboarding ->
                     OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
-            .onItem().transformToUni(onboarding ->
-                        onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboardingId, null).map(ignore -> onboarding)
-                                : Uni.createFrom().item(onboarding))
+            .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, null))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
 
@@ -304,10 +297,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
                         OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
-                .onItem().transformToUni(onboarding ->
-                        onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboardingId, "60").map(ignore -> onboarding)
-                                : Uni.createFrom().item(onboarding));
+                .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, "60"));
     }
 
     @Override
@@ -559,11 +549,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
                 .onItem().transformToUni(ignored -> validationHelper.validateAggregates(aggregates, getManagerTaxCode(userRequests)))
                 .onItem().transformToUni(current -> persistenceHelper.persistOnboarding(onboarding, userRequests, product, aggregates))
-                .onItem().transformToUni(persisted ->
+                .onItem().transformToUni(persistenceHelper::updateOnboarding)
+                .onItem().call(persisted ->
                         OnboardingStatus.REQUESTING.equals(persisted.getStatus())
-                                ? Uni.createFrom().item(persisted)
-                                : persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                        orchestrationService.triggerOrchestration(persisted.getId(), null)))
+                                ? Uni.createFrom().nullItem()
+                                : orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), null))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
@@ -623,9 +613,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 documentService.persistDocumentForImport(
                                         onboardingDocumentMapper.toRequest(persisted, product, contract)),
                                 "persistDocumentForImport", persisted.getId()))
-                .onItem().transformToUni(persisted ->
-                        persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                orchestrationService.triggerOrchestration(persisted.getId(), TIMEOUT_ORCHESTRATION_RESPONSE)))
+                .onItem().transformToUni(persistenceHelper::updateOnboarding)
+                .onItem().call(persisted ->
+                        orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), TIMEOUT_ORCHESTRATION_RESPONSE))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
@@ -638,9 +628,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 .onItem().invoke(() -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
                                 .onItem().transformToUni(current ->
                                         persistenceHelper.persistOnboarding(onboarding, userRequests, product, null))
-                                .onItem().transformToUni(persisted ->
-                                        persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                                orchestrationService.triggerOrchestration(persisted.getId(), null)))
+                                .onItem().transformToUni(persistenceHelper::updateOnboarding)
+                                .onItem().call(persisted ->
+                                        orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), null))
                                 .onItem().transform(onboardingMapper::toResponse));
     }
 
@@ -682,9 +672,8 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<Onboarding> triggerOrchestrationIfEnabled(Onboarding onboarding) {
-        return onboardingOrchestrationEnabled
-                ? orchestrationService.triggerOrchestration(onboarding.getId(), null).map(ignore -> onboarding)
-                : Uni.createFrom().item(onboarding);
+        return orchestrationService.triggerOrchestrationIfEnabled(onboarding.getId(), null)
+                .replaceWith(onboarding);
     }
 
     private Uni<Void> uploadSignedContractAndUpdateDocument(Onboarding onboarding, FormItem formItem,

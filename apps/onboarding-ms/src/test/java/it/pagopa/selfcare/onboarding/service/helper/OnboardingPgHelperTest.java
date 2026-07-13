@@ -312,11 +312,11 @@ class OnboardingPgHelperTest {
         result.setVerificationResult(true);
         when(nationalRegistriesApi.verifyLegalUsingGET(anyString(), anyString()))
                 .thenReturn(Uni.createFrom().item(result));
-        when(orchestrationService.triggerOrchestration(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
         Onboarding saved = buildOnboarding();
-        when(persistenceHelper.persistAndStartOrchestrationOnboarding(any(), any()))
-                .thenReturn(Uni.createFrom().item(saved));
+        when(persistenceHelper.updateOnboarding(any()))
+          .thenReturn(Uni.createFrom().item(saved));
         OnboardingResponse expected = new OnboardingResponse();
         when(onboardingMapper.toResponse(any())).thenReturn(expected);
 
@@ -343,9 +343,9 @@ class OnboardingPgHelperTest {
         businesses.setBusinesses(List.of(business));
         when(infocamereApi.institutionsByLegalTaxIdUsingPOST(any()))
                 .thenReturn(Uni.createFrom().item(businesses));
-        when(orchestrationService.triggerOrchestration(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
-        when(persistenceHelper.persistAndStartOrchestrationOnboarding(any(), any()))
+        when(persistenceHelper.updateOnboarding(any()))
                 .thenReturn(Uni.createFrom().item(onboarding));
         OnboardingResponse expected = new OnboardingResponse();
         when(onboardingMapper.toResponse(any())).thenReturn(expected);

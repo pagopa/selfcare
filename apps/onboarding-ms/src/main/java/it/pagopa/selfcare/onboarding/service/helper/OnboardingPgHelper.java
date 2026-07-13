@@ -76,9 +76,9 @@ public class OnboardingPgHelper {
                 .flatMap(unused -> retrieveAndSetManagerUid(onboarding, userRequests))
                 .flatMap(unused -> checkIfUserIsAlreadyManager(onboarding))
                 .flatMap(unused -> checkIfUserIsManagerOnRegistries(onboarding, userRequests))
-                .onItem().transformToUni(unused ->
-                        persistenceHelper.persistAndStartOrchestrationOnboarding(onboarding,
-                                orchestrationService.triggerOrchestration(onboarding.getId(), TIMEOUT_ORCHESTRATION_RESPONSE)))
+                .onItem().transformToUni(unused -> persistenceHelper.updateOnboarding(onboarding))
+                .onItem().call(persisted ->
+                        orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), TIMEOUT_ORCHESTRATION_RESPONSE))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 

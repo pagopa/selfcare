@@ -239,7 +239,7 @@ class OnboardingServiceIntegrationTest {
                     return Uni.createFrom().nullItem();
                 }));
 
-        asserter.execute(() -> when(orchestrationService.triggerOrchestration(any(), any()))
+        asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
     }
 
