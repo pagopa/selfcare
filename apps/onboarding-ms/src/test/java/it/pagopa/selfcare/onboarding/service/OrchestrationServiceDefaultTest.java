@@ -34,7 +34,7 @@ class OrchestrationServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(response));
 
         // when
-        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestration(onboardingId, null);
+        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null);
 
         // then
         UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
@@ -55,7 +55,7 @@ class OrchestrationServiceDefaultTest {
                 .thenReturn(Uni.createFrom().failure(boom));
 
         // when
-        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestration(onboardingId, null);
+        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null);
 
         // then
         UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
