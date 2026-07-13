@@ -3,6 +3,7 @@ package it.pagopa.selfcare.document.service;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.entity.Document;
 
@@ -17,6 +18,12 @@ public interface DocumentService {
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 
     Uni<List<String>> getAttachments(String onboardingId);
+
+    /**
+     * Returns the aggregated list of documents available for download for a given onboarding:
+     * the attachment names and, if present, the contractFilename.
+    */
+    Uni<AvailableDocumentsResponse> getAvailableDocuments(String onboardingId);
 
     Uni<ContractSignedReport> reportContractSigned(String onboardingId);
 
