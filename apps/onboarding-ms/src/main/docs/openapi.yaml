@@ -2219,6 +2219,7 @@ components:
       - FAILED
       - REJECTED
       - DELETED
+      - OVERRIDDEN
       type: string
     OnboardingUserPgRequest:
       required:

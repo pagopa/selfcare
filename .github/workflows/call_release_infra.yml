@@ -74,18 +74,6 @@ jobs:
         with:
           terraform_version: ${{ steps.set-terraform-version.outputs.terraform_version }}
 
-      - name: Terraform Init
-        shell: bash
-        working-directory: ${{ inputs.dir }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -f "./terraform.sh" ]; then
-            bash ./terraform.sh init ${{ env.TERRAFORM_ENVIRONMENT }}
-          else
-            terraform init
-          fi
-
       - name: Set Plan File Name
         id: set-plan-file
         run: |
@@ -99,6 +87,18 @@ jobs:
           key: terraform-${{ inputs.dir }}-${{ steps.set-plan-file.outputs.plan_file }}
           restore-keys: |
             terraform-${{ inputs.dir }}
+
+      - name: Terraform Init
+        shell: bash
+        working-directory: ${{ inputs.dir }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f "./terraform.sh" ]; then
+            bash ./terraform.sh init ${{ env.TERRAFORM_ENVIRONMENT }}
+          else
+            terraform init
+          fi
 
       - name: Terraform Plan
         shell: bash

@@ -785,6 +785,22 @@ public class OnboardingFunctions {
     completionService.rejectOutdatedOnboardings(onboarding);
   }
 
+  @FunctionName(OVERRIDE_PENDING_ONBOARDINGS)
+  public void overridePendingOnboardings(
+      @DurableActivityTrigger(name = "onboardingString") String onboardingString,
+      final ExecutionContext context) {
+      Onboarding onboarding = readOnboardingValue(objectMapper, onboardingString);
+    telemetryService.trackFunction(
+        OVERRIDE_PENDING_ONBOARDINGS,
+        String.format(
+            FORMAT_LOGGER_ONBOARDING_STRING, OVERRIDE_PENDING_ONBOARDINGS, onboardingString),
+        SeverityLevel.Information,
+        Map.of(
+            ONBOARDING_ID, onboarding.getId(),
+            PRODUCT_ID, onboarding.getProductId()));
+    completionService.overridePendingOnboardings(onboarding);
+  }
+
   @FunctionName(CREATE_ONBOARDING_ACTIVITY)
   public void createOnboarding(
       @DurableActivityTrigger(name = "onboardingString") String onboardingString,

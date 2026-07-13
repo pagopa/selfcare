@@ -1017,7 +1017,7 @@ class OnboardingServiceDefaultTest {
                     return Uni.createFrom().nullItem();
                 }));
 
-        asserter.execute(() -> when(orchestrationService.triggerOrchestration(any(), any()))
+        asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
     }
 
@@ -1833,7 +1833,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
 
-        asserter.execute(() -> when(orchestrationService.triggerOrchestration(any(), any()))
+        asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), response -> {
@@ -1942,7 +1942,7 @@ class OnboardingServiceDefaultTest {
 
         mockPersistOnboarding(asserter);
 
-        asserter.execute(() -> when(orchestrationService.triggerOrchestration(any(), any()))
+        asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), response -> {
@@ -2829,7 +2829,7 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
-        when(orchestrationService.triggerOrchestration(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         when(productAzureService.isProductEnabled(onboarding.getProductId()))
@@ -2894,7 +2894,7 @@ class OnboardingServiceDefaultTest {
         Assertions.assertEquals(onboarding.getId(), actual.getId());
 
         verify(orchestrationService, times(1))
-                .triggerOrchestration(any(), any());
+                .triggerOrchestrationIfEnabled(any(), any());
     }
 
     @Test
@@ -3794,7 +3794,7 @@ class OnboardingServiceDefaultTest {
                     return Uni.createFrom().nullItem();
                 }));
 
-        asserter.execute(() -> when(orchestrationService.triggerOrchestration(any(), any()))
+        asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
 
         asserter.assertNotNull(() -> onboardingService.onboardingUserPg(newOnboarding, userRequests));
@@ -5816,7 +5816,7 @@ class OnboardingServiceDefaultTest {
         ReactivePanacheUpdate updateQuery = mock(ReactivePanacheUpdate.class);
         when(Onboarding.update(any(Document.class))).thenReturn(updateQuery);
         when(updateQuery.where("_id", onboarding.getId())).thenReturn(Uni.createFrom().item(1L));
-        when(orchestrationService.triggerOrchestration(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         UniAssertSubscriber<Void> subscriber = onboardingService
@@ -5825,7 +5825,7 @@ class OnboardingServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertCompleted();
-        verify(orchestrationService).triggerOrchestration(onboarding.getId(), null);
+        verify(orchestrationService).triggerOrchestrationIfEnabled(onboarding.getId(), null);
         assertEquals(OnboardingStatus.REQUEST, onboarding.getStatus());
     }
 
@@ -5852,7 +5852,7 @@ class OnboardingServiceDefaultTest {
         ReactivePanacheUpdate updateQuery = mock(ReactivePanacheUpdate.class);
         when(Onboarding.update(any(Document.class))).thenReturn(updateQuery);
         when(updateQuery.where("_id", onboarding.getId())).thenReturn(Uni.createFrom().item(1L));
-        when(orchestrationService.triggerOrchestration(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
         UniAssertSubscriber<Void> subscriber = onboardingService
@@ -5861,7 +5861,7 @@ class OnboardingServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertCompleted();
-        verify(orchestrationService).triggerOrchestration(onboarding.getId(), null);
+        verify(orchestrationService).triggerOrchestrationIfEnabled(onboarding.getId(), null);
         assertEquals(OnboardingStatus.REQUEST, onboarding.getStatus());
     }
 
@@ -5899,8 +5899,10 @@ class OnboardingServiceDefaultTest {
                     eq(PROD_PAGOPA),
                     eq(org.openapi.quarkus.product_json.model.InstitutionType.PRV),
                     eq(org.openapi.quarkus.product_json.model.Origin.PDND_INFOCAMERE));
+            // When status is REQUESTING, orchestration must NOT start, but persistOrUpdate
+            // (called via OnboardingPersistenceHelper.updateOnboarding) YES: it serves to flush
+            // the users populated asynchronously by retrieveUserResources after the first persist.
             assertOnboardingBranching(OnboardingStatus.REQUESTING, 0);
-            PanacheMock.verify(Onboarding.class, never()).persistOrUpdate(any(List.class));
         });
     }
 
@@ -5939,7 +5941,7 @@ class OnboardingServiceDefaultTest {
         PanacheMock.verify(Onboarding.class).persist(captor.capture(), any());
         assertEquals(expectedStatus, captor.getValue().getStatus(),
                 "Unexpected status on the persisted onboarding for the feature-flag branching");
-        verify(orchestrationService, times(expectedOrchestrationInvocations)).triggerOrchestration(any(), any());
+        verify(orchestrationService, times(expectedOrchestrationInvocations)).triggerOrchestrationIfEnabled(any(), any());
     }
 
     private Onboarding buildPrvOnboardingRequest() {
@@ -5986,6 +5988,48 @@ class OnboardingServiceDefaultTest {
             when(userRegistryApi.findByIdUsingGET(any(), any()))
                     .thenReturn(Uni.createFrom().item(managerResourceWk));
         });
+    }
+
+    @Nested
+    class StripFileExtensionTest {
+
+        private String invokeStripFileExtension(String name) throws Exception {
+            java.lang.reflect.Method method = OnboardingServiceDefault.class
+                    .getDeclaredMethod("stripFileExtension", String.class);
+            method.setAccessible(true);
+            return (String) method.invoke(onboardingService, name);
+        }
+
+        @Test
+        void stripFileExtension_shouldReturnNull_whenNameIsNull() throws Exception {
+            assertNull(invokeStripFileExtension(null));
+        }
+
+        @Test
+        void stripFileExtension_shouldRemoveExtension_whenNameHasExtension() throws Exception {
+            assertEquals("statuto", invokeStripFileExtension("statuto.pdf"));
+        }
+
+        @Test
+        void stripFileExtension_shouldRemoveOnlyLastExtension_whenNameHasMultipleDots() throws Exception {
+            assertEquals("archive.tar", invokeStripFileExtension("archive.tar.gz"));
+        }
+
+        @Test
+        void stripFileExtension_shouldRemoveExtension_whenNameContainsPathSeparator() throws Exception {
+            assertEquals("folder/statuto", invokeStripFileExtension("folder/statuto.pdf"));
+            assertEquals("folder\\statuto", invokeStripFileExtension("folder\\statuto.pdf"));
+        }
+
+        @Test
+        void stripFileExtension_shouldReturnSameName_whenNameHasNoExtension() throws Exception {
+            assertEquals("statuto", invokeStripFileExtension("statuto"));
+        }
+
+        @Test
+        void stripFileExtension_shouldReturnSameName_whenNameIsHiddenFileWithoutExtension() throws Exception {
+            assertEquals(".hidden", invokeStripFileExtension(".hidden"));
+        }
     }
 
 }

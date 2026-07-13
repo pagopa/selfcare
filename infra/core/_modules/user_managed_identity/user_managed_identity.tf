@@ -1,27 +1,26 @@
 
+locals {
+  eventhub_names = var.eventhub_namespace_name != null && var.eventhub_namespace_rg != null ? toset([
+    "sc-delegations",
+    "sc-usergroups",
+    "selfcare-fd",
+    "sc-users"
+  ]) : toset([])
+}
+
 resource "azurerm_resource_group" "user_managed_identity_rg" {
   name     = "${var.prefix}-${var.env_short}-${var.domain}-user-managed-identity-rg"
   location = var.location
 }
 
+###############################################################################
+# Product Storage Table + Blob Managed Identity
+###############################################################################
+
 data "azurerm_storage_account" "product_storage" {
   name                = var.product_storage_name
   resource_group_name = var.product_storage_rg
 }
-
-data "azurerm_storage_account" "documents_storage" {
-  name                = var.documents_storage_name
-  resource_group_name = var.documents_storage_rg
-}
-
-data "azurerm_storage_account" "web_storage" {
-  name                = var.web_storage_name
-  resource_group_name = var.web_storage_rg
-}
-
-###############################################################################
-# Product Storage Table Managed Identity
-###############################################################################
 
 resource "azurerm_user_assigned_identity" "product_storage_table_identity" {
   name                = "${var.prefix}-${var.env_short}-${var.domain}-product-storage-table-managed-identity"
@@ -42,10 +41,6 @@ resource "azurerm_role_assignment" "product_storage_table_identity_role_assignme
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = azurerm_user_assigned_identity.product_storage_table_identity.principal_id
 }
-
-###############################################################################
-# Product Storage Blob Managed Identity
-###############################################################################
 
 resource "azurerm_user_assigned_identity" "product_storage_blob_identity" {
   name                = "${var.prefix}-${var.env_short}-${var.domain}-product-storage-blob-managed-identity"
@@ -71,6 +66,11 @@ resource "azurerm_role_assignment" "product_storage_blob_identity_role_assignmen
 # Documents Storage Blob Managed Identity
 ###############################################################################
 
+data "azurerm_storage_account" "documents_storage" {
+  name                = var.documents_storage_name
+  resource_group_name = var.documents_storage_rg
+}
+
 resource "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
   name                = "${var.prefix}-${var.env_short}-${var.domain}-documents-storage-blob-managed-identity"
   location            = var.location
@@ -95,6 +95,11 @@ resource "azurerm_role_assignment" "documents_storage_blob_identity_role_assignm
 # Web Storage Blob Managed Identity
 ###############################################################################
 
+data "azurerm_storage_account" "web_storage" {
+  name                = var.web_storage_name
+  resource_group_name = var.web_storage_rg
+}
+
 resource "azurerm_user_assigned_identity" "web_storage_blob_identity" {
   name                = "${var.prefix}-${var.env_short}-${var.domain}-web-storage-blob-managed-identity"
   location            = var.location
@@ -113,4 +118,42 @@ resource "azurerm_role_assignment" "web_storage_blob_identity_role_assignment" {
   scope                = data.azurerm_storage_account.web_storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.web_storage_blob_identity.principal_id
+}
+
+###############################################################################
+# Event Hub Data Sender Managed Identities
+###############################################################################
+
+data "azurerm_eventhub" "eventhubs" {
+  for_each = local.eventhub_names
+
+  name                = each.value
+  namespace_name      = var.eventhub_namespace_name
+  resource_group_name = var.eventhub_namespace_rg
+}
+
+resource "azurerm_user_assigned_identity" "eventhub_sender_identity" {
+  for_each = local.eventhub_names
+
+  name                = "${var.prefix}-${var.env_short}-${var.domain}-${each.value}-eventhub-sender-managed-identity"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.user_managed_identity_rg.name
+  tags                = var.tags
+}
+
+resource "azurerm_management_lock" "eventhub_sender_identity_lock" {
+  for_each = local.eventhub_names
+
+  name       = azurerm_user_assigned_identity.eventhub_sender_identity[each.key].name
+  scope      = azurerm_user_assigned_identity.eventhub_sender_identity[each.key].id
+  lock_level = "CanNotDelete"
+  notes      = "Lock for the ${each.value} Event Hub Data Sender Managed Identity"
+}
+
+resource "azurerm_role_assignment" "eventhub_sender_identity_role_assignment" {
+  for_each = local.eventhub_names
+
+  scope                = data.azurerm_eventhub.eventhubs[each.key].id
+  role_definition_name = "Azure Event Hubs Data Sender"
+  principal_id         = azurerm_user_assigned_identity.eventhub_sender_identity[each.key].principal_id
 }

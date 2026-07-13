@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user.client;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.user.auth.EventhubFdSasTokenAuthorization;
+import it.pagopa.selfcare.user.auth.EventhubFdTokenAuthorization;
 import it.pagopa.selfcare.user.model.FdUserNotificationToSend;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.POST;
@@ -12,7 +12,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 @RegisterRestClient(configKey = "event-hub-fd")
 @ApplicationScoped
 @Path("/")
-@RegisterProvider(EventhubFdSasTokenAuthorization.class)
+@RegisterProvider(EventhubFdTokenAuthorization.class)
 public interface EventHubFdRestClient {
 
     @POST

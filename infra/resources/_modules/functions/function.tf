@@ -6,7 +6,7 @@ resource "azurerm_resource_group" "fn_rg" {
 
 module "onboarding_fn_snet" {
   count  = var.subnet_cidr != null && length(var.subnet_cidr) > 0 ? 1 : 0
-  source = "github.com/pagopa/terraform-azurerm-v3.git//subnet?ref=v8.53.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v10.17.0"
 
   name                 = format("%s-snet", var.functions_name)
   resource_group_name  = var.vnet_resource_group_name
@@ -23,7 +23,7 @@ module "onboarding_fn_snet" {
 }
 
 module "selc_onboarding_fn" {
-  source = "github.com/pagopa/terraform-azurerm-v3.git//function_app?ref=v8.53.0"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//function_app?ref=v10.17.0"
 
   name                = var.functions_name
   location            = azurerm_resource_group.fn_rg.location
@@ -35,10 +35,13 @@ module "selc_onboarding_fn" {
   application_insights_instrumentation_key = local.resolved_appinsights_key
   java_version                             = "17"
   runtime_version                          = "~4"
+  minimum_tls_version                      = "1.2"
 
   system_identity_enabled = true
+  user_identity_ids       = var.user_assigned_identity_ids
   storage_account_name    = replace(format("%s-sa", var.functions_name), "-", "")
   export_keys             = true
+  app_service_plan_type   = local.app_service_plan_info.type
   app_service_plan_info   = local.app_service_plan_info
   storage_account_info    = local.storage_account_info
 
@@ -93,6 +96,7 @@ locals {
   ], 0)
 
   app_service_plan_info = {
+    type                         = "internal"
     kind                         = "Linux"
     sku_size                     = var.service_plan_sku
     maximum_elastic_worker_count = 0

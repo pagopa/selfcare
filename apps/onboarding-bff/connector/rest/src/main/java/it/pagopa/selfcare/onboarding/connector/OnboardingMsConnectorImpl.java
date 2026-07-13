@@ -230,7 +230,7 @@ public class OnboardingMsConnectorImpl implements OnboardingMsConnector {
     @Retry(name = "retryTimeout")
     public void triggerOnboardingRequest(String onboardingId) {
         log.trace("triggerOnboardingRequest start");
-        msOnboardingApiClient._triggerOnboardingRequest(onboardingId);
+        msOnboardingApiClient._triggerDocumentGate(onboardingId);
         log.trace("triggerOnboardingRequest end");
     }
 

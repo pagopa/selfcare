@@ -33,7 +33,6 @@ import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
@@ -41,6 +40,7 @@ import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
@@ -85,9 +85,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
-
-    @ConfigProperty(name = "onboarding.orchestration.enabled")
-    Boolean onboardingOrchestrationEnabled;
 
     // -------------------------------------------------------------------------
     // Public interface — onboarding flows
@@ -250,10 +247,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 .replaceWith(onboarding))
             .onItem().call(onboarding ->
                     OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
-            .onItem().transformToUni(onboarding ->
-                        onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboardingId, null).map(ignore -> onboarding)
-                                : Uni.createFrom().item(onboarding))
+            .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, null))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
 
@@ -303,10 +297,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
                         OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
-                .onItem().transformToUni(onboarding ->
-                        onboardingOrchestrationEnabled
-                                ? orchestrationService.triggerOrchestration(onboardingId, "60").map(ignore -> onboarding)
-                                : Uni.createFrom().item(onboarding));
+                .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, "60"));
     }
 
     @Override
@@ -558,11 +549,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
                 .onItem().transformToUni(ignored -> validationHelper.validateAggregates(aggregates, getManagerTaxCode(userRequests)))
                 .onItem().transformToUni(current -> persistenceHelper.persistOnboarding(onboarding, userRequests, product, aggregates))
-                .onItem().transformToUni(persisted ->
+                .onItem().transformToUni(persistenceHelper::updateOnboarding)
+                .onItem().call(persisted ->
                         OnboardingStatus.REQUESTING.equals(persisted.getStatus())
-                                ? Uni.createFrom().item(persisted)
-                                : persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                        orchestrationService.triggerOrchestration(persisted.getId(), null)))
+                                ? Uni.createFrom().nullItem()
+                                : orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), null))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
@@ -622,9 +613,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 documentService.persistDocumentForImport(
                                         onboardingDocumentMapper.toRequest(persisted, product, contract)),
                                 "persistDocumentForImport", persisted.getId()))
-                .onItem().transformToUni(persisted ->
-                        persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                orchestrationService.triggerOrchestration(persisted.getId(), TIMEOUT_ORCHESTRATION_RESPONSE)))
+                .onItem().transformToUni(persistenceHelper::updateOnboarding)
+                .onItem().call(persisted ->
+                        orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), TIMEOUT_ORCHESTRATION_RESPONSE))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
@@ -637,9 +628,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 .onItem().invoke(() -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
                                 .onItem().transformToUni(current ->
                                         persistenceHelper.persistOnboarding(onboarding, userRequests, product, null))
-                                .onItem().transformToUni(persisted ->
-                                        persistenceHelper.persistAndStartOrchestrationOnboarding(persisted,
-                                                orchestrationService.triggerOrchestration(persisted.getId(), null)))
+                                .onItem().transformToUni(persistenceHelper::updateOnboarding)
+                                .onItem().call(persisted ->
+                                        orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), null))
                                 .onItem().transform(onboardingMapper::toResponse));
     }
 
@@ -681,9 +672,8 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<Onboarding> triggerOrchestrationIfEnabled(Onboarding onboarding) {
-        return onboardingOrchestrationEnabled
-                ? orchestrationService.triggerOrchestration(onboarding.getId(), null).map(ignore -> onboarding)
-                : Uni.createFrom().item(onboarding);
+        return orchestrationService.triggerOrchestrationIfEnabled(onboarding.getId(), null)
+                .replaceWith(onboarding);
     }
 
     private Uni<Void> uploadSignedContractAndUpdateDocument(Onboarding onboarding, FormItem formItem,
@@ -870,9 +860,14 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     private Uni<Void> evaluateAndAdvance(Onboarding onboarding, List<String> mandatoryDocIds,
                                           List<String> presentAttachments) {
-        Set<String> presentSet = presentAttachments != null ? new HashSet<>(presentAttachments) : Set.of();
+        Set<String> presentSet = presentAttachments != null
+                ? presentAttachments.stream()
+                        .filter(Objects::nonNull)
+                        .map(this::stripFileExtension)
+                        .collect(Collectors.toSet())
+                : Set.of();
         List<String> missingDocs = mandatoryDocIds.stream()
-                .filter(docId -> !presentSet.contains(docId))
+                .filter(docId -> !presentSet.contains(stripFileExtension(docId)))
                 .toList();
 
         if (missingDocs.isEmpty()) {
@@ -891,6 +886,23 @@ public class OnboardingServiceDefault implements OnboardingService {
         return Uni.createFrom().failure(new InvalidRequestException(
                 String.format("Missing mandatory documents for onboarding %s: %s",
                         onboarding.getId(), missingDocs)));
+    }
+
+    /**
+     * Removes the file extension from the given name (e.g. "statuto.pdf" -> "statuto").
+     * If the name has no extension, is null, or starts with a dot, it is returned unchanged.
+     */
+    private String stripFileExtension(String name) {
+        if (name == null) {
+            return null;
+        }
+        int lastDot = name.lastIndexOf('.');
+        int lastSep = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+        if (lastDot <= lastSep + 1) {
+            // no dot, or dot belongs to a leading segment / hidden file with no extension
+            return name;
+        }
+        return name.substring(0, lastDot);
     }
 
     private boolean hasRequiredContext(Onboarding onboarding) {

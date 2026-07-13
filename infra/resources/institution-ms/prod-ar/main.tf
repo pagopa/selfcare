@@ -42,6 +42,15 @@ data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_user_assigned_identity" "delegations_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
+# COSMOS DB
+###############################################################################
+
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
 
@@ -240,6 +249,10 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
     }
   ]
 
@@ -253,8 +266,6 @@ locals {
     "JWT_TOKEN_PUBLIC_KEY"                       = "jwt-public-key"
     "AWS_SES_ACCESS_KEY_ID"                      = "aws-ses-access-key-id"
     "AWS_SES_SECRET_ACCESS_KEY"                  = "aws-ses-secret-access-key"
-    "EVENTHUB-SC-DELEGATIONS-SELFCARE-WO-KEY-LC" = "eventhub-sc-delegations-selfcare-wo-key-lc"
-
   }
 }
 
@@ -275,6 +286,7 @@ module "container_app_institution_ms" {
   tags                           = module.local.config.tags
   additional_user_assigned_identity_ids = [
     data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
-    data.azurerm_user_assigned_identity.documents_storage_blob_identity.id
+    data.azurerm_user_assigned_identity.documents_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.id
   ]
 }

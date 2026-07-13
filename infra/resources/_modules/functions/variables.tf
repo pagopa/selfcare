@@ -57,6 +57,12 @@ variable "app_settings" {
   description = "Settings references to be set as app settings in the function app"
 }
 
+variable "user_assigned_identity_ids" {
+  type        = list(string)
+  description = "User-assigned identity IDs to attach to the Function App"
+  default     = []
+}
+
 variable "vnet_resource_group_name" {
   type        = string
   description = "Name of the Virtual Network Resource Group"
