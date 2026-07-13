@@ -31,6 +31,11 @@ data "azurerm_user_assigned_identity" "product_storage_table_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_user_assigned_identity" "delegations_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 ###############################################################################
 # Delegation CDC
 ###############################################################################
@@ -68,13 +73,16 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
+    },
+    {
+      name = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
     }
   ]
 
   secrets_names_delegation_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"      = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"                  = "mongodb-connection-string"
-    "EVENTHUB-SC-DELEGATIONS-SELFCARE-WO-KEY-LC" = "eventhub-sc-delegations-selfcare-wo-key-lc"
   }
 
 }
@@ -95,5 +103,8 @@ module "container_app_delegation_cdc" {
   key_vault_name                        = module.local.config.key_vault_name
   probes                                = module.local.config.quarkus_health_probes
   tags                                  = module.local.config.tags
-  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.product_storage_table_identity.id]
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_table_identity.id,
+    data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.id
+  ]
 }

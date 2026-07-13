@@ -22,6 +22,7 @@ module "local" {
 ###############################################################################
 # DATA SOURCES
 ###############################################################################
+
 data "azurerm_storage_account" "product_storage" {
   name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutst01"
   resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
@@ -32,10 +33,19 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_user_assigned_identity" "users_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 ###############################################################################
 # COSMOS DB
 ###############################################################################
-
 
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
@@ -172,6 +182,14 @@ locals {
       name  = "BLOB-STORAGE-TEMPLATES-MANAGED-IDENTITY-CLIENT-ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
+    {
+      name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.users_eventhub_sender_identity.client_id
+    },
+    {
+      name  = "EVENTHUBFD_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.client_id
+    }
   ]
 
   secrets_names_user_ms = {
@@ -181,9 +199,6 @@ locals {
     "USER-REGISTRY-API-KEY"                              = "user-registry-api-key"
     "AWS-SES-ACCESS-KEY-ID"                              = "aws-ses-access-key-id"
     "AWS-SES-SECRET-ACCESS-KEY"                          = "aws-ses-secret-access-key"
-    "EVENTHUB-SC-USERS-SELFCARE-WO-CONNECTION-STRING-LC" = "eventhub-sc-users-selfcare-wo-connection-string-lc"
-    "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"               = "eventhub-sc-users-selfcare-wo-key-lc"
-    "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"               = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
   }
 }
 
@@ -204,6 +219,8 @@ module "container_app_user_ms" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
   additional_user_assigned_identity_ids = [
-    data.azurerm_user_assigned_identity.product_storage_blob_identity.id
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.users_eventhub_sender_identity.id,
+    data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.id
   ]
 }

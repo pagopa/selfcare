@@ -5,17 +5,18 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @QuarkusTest
-public class EventhubSasTokenAuthorizationTest {
+public class EventhubTokenAuthorizationTest {
 
     @Test
     void testGetSASToken() {
-        final EventhubSasTokenAuthorization auth = new EventhubSasTokenAuthorization(URI.create("testURI"), "testKeyName", "testKey");
+        final EventhubTokenAuthorization auth = new EventhubTokenAuthorization(URI.create("testURI"), "testKeyName", "testKey", Optional.empty());
         final ClientRequestContext clientRequestContext = mock(ClientRequestContext.class);
 
         final jakarta.ws.rs.core.MultivaluedHashMap<String, Object> headers = new jakarta.ws.rs.core.MultivaluedHashMap<>();

@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user.client;
 
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.user.auth.EventhubSasTokenAuthorization;
+import it.pagopa.selfcare.user.auth.EventhubTokenAuthorization;
 import it.pagopa.selfcare.user.model.UserGroupNotificationToSend;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -13,7 +13,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 @RegisterRestClient(configKey = "event-hub")
 @ApplicationScoped
 @Path("/")
-@RegisterProvider(EventhubSasTokenAuthorization.class)
+@RegisterProvider(EventhubTokenAuthorization.class)
 public interface EventHubRestClient {
 
     @POST

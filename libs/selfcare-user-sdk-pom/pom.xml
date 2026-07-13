@@ -11,7 +11,7 @@
 
     <artifactId>selfcare-user-sdk-pom</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
 
     <properties>
         <maven.deploy.skip>true</maven.deploy.skip>
