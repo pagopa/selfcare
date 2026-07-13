@@ -798,10 +798,10 @@ module "storage_user_attachments" {
   version_change_tier_to_cool_after_days_since_creation             = 1
   version_delete_after_days_since_creation                          = 1
 
-  # Defender for Storage (per Security team recommendation).
+  # Defender for Storage
   defender_enabled                           = true
   defender_malware_scanning_enabled          = true
-  defender_malware_scanning_cap_gb_per_month = 100 # DEV: keep cap small to bound cost
+  defender_malware_scanning_cap_gb_per_month = 100
   defender_sensitive_data_discovery_enabled  = false
   defender_soft_delete_malicious_blobs       = true
 
