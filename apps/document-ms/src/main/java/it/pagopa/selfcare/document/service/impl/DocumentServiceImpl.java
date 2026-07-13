@@ -277,7 +277,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setAttachmentName(request.getAttachmentName());
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
-        document.setStorageOrigin(Objects.nonNull(request.getStorageOrigin()) ? request.getStorageOrigin() : StorageOrigin.SYSTEM);
+        document.setStorageOrigin(StorageOrigin.SYSTEM);
         setContractFileName(request, document);
 
         switch (request.getDocumentType()) {
@@ -314,12 +314,15 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private boolean verifyAttachmentInStorage(Document document, String onboardingId, String attachmentName) {
+        String blobPath = StorageOrigin.USER == document.getStorageOrigin()
+                ? document.getAttachmentPath()
+                : document.getContractSigned();
         try {
-            storageRegistry.clientFor(document.getStorageOrigin()).getProperties(document.getContractSigned());
-            log.info("Attachment found in storage onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
+            storageRegistry.clientFor(document.getStorageOrigin()).getProperties(blobPath);
+            log.info("Attachment found in {} storage onboardingId={}, attachmentName={}", sanitize(String.valueOf(document.getStorageOrigin())), sanitize(onboardingId), sanitize(attachmentName));
             return true;
         } catch (SelfcareAzureStorageException e) {
-            log.info("Attachment not found in storage onboardingId={}, attachmentName={}", sanitize(onboardingId), sanitize(attachmentName));
+            log.info("Attachment not found in {} storage onboardingId={}, attachmentName={}", sanitize(String.valueOf(document.getStorageOrigin())), sanitize(onboardingId), sanitize(attachmentName));
             return false;
         }
     }
