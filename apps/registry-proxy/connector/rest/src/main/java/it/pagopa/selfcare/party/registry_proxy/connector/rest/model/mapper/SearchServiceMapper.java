@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper;
 
+import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
@@ -11,6 +12,8 @@ import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.Searc
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+
+import java.time.OffsetDateTime;
 
 @Mapper(componentModel = "spring")
 public interface SearchServiceMapper {

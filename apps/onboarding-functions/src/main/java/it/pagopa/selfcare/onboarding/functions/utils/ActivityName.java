@@ -29,6 +29,7 @@ public class ActivityName {
   public static final String SEND_MAIL_REJECTION_ACTIVITY = "SendMailRejection";
   public static final String STORE_ONBOARDING_ACTIVATEDAT = "StoreOnboardingActivatedAt";
   public static final String REJECT_OUTDATED_ONBOARDINGS = "RejectOutdatedOnboardings";
+  public static final String OVERRIDE_PENDING_ONBOARDINGS = "OverridePendingOnboardings";
   public static final String CREATE_USERS_ACTIVITY = "CreateUsers";
   public static final String SEND_ONBOARDING_NOTIFICATION = "SendOnboardingNotification";
   public static final String CREATE_AGGREGATE_ONBOARDING_REQUEST_ACTIVITY =
