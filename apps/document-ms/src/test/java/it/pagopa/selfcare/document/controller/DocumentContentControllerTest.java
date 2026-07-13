@@ -54,7 +54,7 @@ class DocumentContentControllerTest {
         File tempFile = Files.createTempFile("signed", ".pdf").toFile();
         tempFile.deleteOnExit();
 
-        Mockito.when(documentContentService.retrieveSignedFile(DOCUMENT_ID))
+        when(documentContentService.retrieveSignedFile(DOCUMENT_ID))
                 .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
 
         given()
@@ -66,7 +66,7 @@ class DocumentContentControllerTest {
 
     @Test
     void getContractSigned_shouldReturnInternalServerError_whenServiceFails() {
-        Mockito.when(documentContentService.retrieveSignedFile(DOCUMENT_ID))
+        when(documentContentService.retrieveSignedFile(DOCUMENT_ID))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
         given()
@@ -81,7 +81,7 @@ class DocumentContentControllerTest {
         File tempFile = Files.createTempFile("template", ".pdf").toFile();
         tempFile.deleteOnExit();
 
-        Mockito.when(
+        when(
                 documentContentService.retrieveTemplateAttachment(
                     ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME, INSTITUTION_DESCRIPTION, PRODUCT_ID))
             .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
@@ -99,7 +99,7 @@ class DocumentContentControllerTest {
 
     @Test
     void getTemplateAttachment_shouldReturnInternalServerError_whenServiceFails() {
-        Mockito.when(
+        when(
                 documentContentService.retrieveTemplateAttachment(
                     ONBOARDING_ID, TEMPLATE_PATH, ATTACHMENT_NAME, INSTITUTION_DESCRIPTION, PRODUCT_ID))
             .thenReturn(Uni.createFrom().failure(new RuntimeException("Template processing error")));
@@ -120,7 +120,7 @@ class DocumentContentControllerTest {
         File tempFile = Files.createTempFile("attachment", ".pdf").toFile();
         tempFile.deleteOnExit();
 
-        Mockito.when(documentContentService.retrieveAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
+        when(documentContentService.retrieveAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
                 .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
 
         given()
@@ -133,7 +133,7 @@ class DocumentContentControllerTest {
 
     @Test
     void getAttachment_shouldReturnInternalServerError_whenServiceFails() {
-        Mockito.when(documentContentService.retrieveAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
+        when(documentContentService.retrieveAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
         given()
@@ -204,7 +204,7 @@ class DocumentContentControllerTest {
                 .attachmentName(ATTACHMENT_NAME)
                 .build();
 
-        Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
+        when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()
@@ -228,7 +228,7 @@ class DocumentContentControllerTest {
                 .attachmentName(ATTACHMENT_NAME)
                 .build();
 
-        Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
+        when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
                 .thenReturn(Uni.createFrom().failure(new UpdateNotAllowedException("Attachment already exists")));
 
         given()
@@ -252,7 +252,7 @@ class DocumentContentControllerTest {
                 .attachmentName(ATTACHMENT_NAME)
                 .build();
 
-        Mockito.when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
+        when(documentContentService.uploadAttachment(any(DocumentBuilderRequest.class), any(FormItem.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
         given()
@@ -269,7 +269,7 @@ class DocumentContentControllerTest {
         File csvFile = Files.createTempFile("aggregates", ".csv").toFile();
         csvFile.deleteOnExit();
 
-        Mockito.when(documentContentService.uploadAggregatesCsv(any(UploadAggregateCsvRequest.class)))
+        when(documentContentService.uploadAggregatesCsv(any(UploadAggregateCsvRequest.class)))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()
@@ -289,7 +289,7 @@ class DocumentContentControllerTest {
         File csvFile = Files.createTempFile("aggregates", ".csv").toFile();
         csvFile.deleteOnExit();
 
-        Mockito.when(documentContentService.uploadAggregatesCsv(any(UploadAggregateCsvRequest.class)))
+        when(documentContentService.uploadAggregatesCsv(any(UploadAggregateCsvRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
         given()
@@ -328,7 +328,7 @@ class DocumentContentControllerTest {
                 .filename("VISURA_test.xml")
                 .build();
 
-        Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
+        when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
                 .thenReturn(Uni.createFrom().voidItem());
 
         given()
@@ -351,7 +351,7 @@ class DocumentContentControllerTest {
                 .filename("VISURA_test.xml")
                 .build();
 
-        Mockito.when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
+        when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Generic error")));
 
         given()
@@ -369,7 +369,7 @@ class DocumentContentControllerTest {
         File tempFile = Files.createTempFile("contract", ".pdf").toFile();
         tempFile.deleteOnExit();
 
-        Mockito.when(documentContentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
+        when(documentContentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
                 .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
 
         given()
@@ -381,7 +381,7 @@ class DocumentContentControllerTest {
 
     @Test
     void getContract_shouldReturnInternalServerError_whenServiceFails() {
-        Mockito.when(documentContentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
+        when(documentContentService.retrieveContract(ONBOARDING_ID, Boolean.FALSE))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
         given()
@@ -895,7 +895,7 @@ class DocumentContentControllerTest {
         String onboardingId = "test-onboarding-123";
         String expectedMessage = "Contract deleted successfully";
 
-        Mockito.when(documentContentService.deleteContract(onboardingId))
+        when(documentContentService.deleteContract(onboardingId))
                 .thenReturn(Uni.createFrom().item(expectedMessage));
 
         given()
@@ -924,7 +924,7 @@ class DocumentContentControllerTest {
         String onboardingId = "test-onboarding-123";
 
         // Simuliamo il fallimento del service (es. eccezione di I/O o DB)
-        Mockito.when(documentContentService.deleteContract(onboardingId))
+        when(documentContentService.deleteContract(onboardingId))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Error deleting contract files from Azure")));
 
         // Act & Assert
@@ -941,7 +941,7 @@ class DocumentContentControllerTest {
         // GIVEN: Il service risponde con successo
         String onboardingId = "onb-123";
 
-        Mockito.when(
+        when(
                 documentContentService.uploadSignedContract(
                     eq(onboardingId),
                     eq(new DocumentBuilderRequest()),
@@ -979,7 +979,7 @@ class DocumentContentControllerTest {
         String onboardingId = "onb-123";
 
         // SOSTITUISCI QUI: Usa InvalidRequestException invece di IllegalArgumentException
-        Mockito.when(documentContentService.uploadSignedContract(
+        when(documentContentService.uploadSignedContract(
                     any(), any(), anyBoolean(), any(), anyString(), anyBoolean(), anyInt()))
             .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Invalid signature", "CODE-400")));
 
@@ -1006,7 +1006,7 @@ class DocumentContentControllerTest {
         // GIVEN: Il service lancia un'eccezione di sistema (es. RuntimeException per Azure)
         String onboardingId = "onb-123";
 
-        Mockito.when(documentContentService.uploadSignedContract(
+        when(documentContentService.uploadSignedContract(
                     eq(onboardingId), any(), anyBoolean(), any(), anyString(), anyBoolean(), anyInt()))
             .thenReturn(Uni.createFrom().failure(new RuntimeException("Azure is down")));
 
@@ -1024,6 +1024,105 @@ class DocumentContentControllerTest {
                 .post(BASE_PATH + "{onboardingId}/upload-signed-contract")
                 .then()
                 .statusCode(500);
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnNoContent_whenUploadSuccessful() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId(PRODUCT_ID)
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .attachmentDescription("Statuto societario")
+                .build();
+
+        when(documentContentService.uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", request, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(204);
+
+        verify(documentContentService).uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class));
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnConflict_whenCapReached() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId(PRODUCT_ID)
+                .attachmentName("attestazione-gsp_4")
+                .attachmentId("attestazione-gsp")
+                .maxDocumentsRequired(3)
+                .build();
+
+        when(documentContentService.uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class)))
+                .thenReturn(Uni.createFrom().failure(new UpdateNotAllowedException("Max documents cap (3) reached")));
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", request, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(409);
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnInternalServerError_whenServiceFails() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        UserAttachmentRequest request = UserAttachmentRequest.builder()
+                .onboardingId(ONBOARDING_ID)
+                .productId(PRODUCT_ID)
+                .attachmentName("statuto")
+                .attachmentId("statuto")
+                .maxDocumentsRequired(1)
+                .build();
+
+        when(documentContentService.uploadUserAttachment(any(UserAttachmentRequest.class), any(FormItem.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Azure error")));
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", request, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(500);
+    }
+
+    @Test
+    void uploadUserAttachment_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
+        File tempFile = Files.createTempFile("user-upload", ".pdf").toFile();
+        tempFile.deleteOnExit();
+
+        // Missing required fields (onboardingId, productId, attachmentId, maxDocumentsRequired)
+        UserAttachmentRequest invalidRequest = UserAttachmentRequest.builder()
+                .attachmentName("statuto")
+                .build();
+
+        given()
+                .multiPart("file", tempFile, "application/pdf")
+                .multiPart("request", invalidRequest, "application/json")
+                .when()
+                .post(BASE_PATH + "upload-user-attachment")
+                .then()
+                .statusCode(400);
+
+        verify(documentContentService, never()).uploadUserAttachment(any(), any());
     }
 
     // ============================================
