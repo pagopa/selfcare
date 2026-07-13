@@ -43,84 +43,84 @@ public class OnboardingControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
-    @Test
-    void indexOnboardingTest() throws Exception {
-        OffsetDateTime activatedAt = OffsetDateTime.now();
-        final OnboardingIndexResource resource = new OnboardingIndexResource();
-        resource.setOnboardingId("123");
-        resource.setStatus(OnboardingStatus.COMPLETED.name());
-        resource.setActivatedAt(activatedAt);
+  @Test
+  void indexOnboardingTest() throws Exception {
+    OffsetDateTime activatedAt = OffsetDateTime.now();
+    final OnboardingIndexResource resource = new OnboardingIndexResource();
+    resource.setOnboardingId("123");
+    resource.setStatus(OnboardingStatus.COMPLETED.name());
+    resource.setActivatedAt(activatedAt);
 
-        Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
+    Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
 
-        mvc.perform(MockMvcRequestBuilders
-                        .post(BASE_URL + "/update-index")
-                        .contentType(APPLICATION_JSON_VALUE)
-                        .accept(APPLICATION_JSON_VALUE)
-                        .content(mapper.writeValueAsString(resource)))
-                .andExpect(status().isNoContent());
+    mvc.perform(MockMvcRequestBuilders
+        .post(BASE_URL + "/update-index")
+        .contentType(APPLICATION_JSON_VALUE)
+        .accept(APPLICATION_JSON_VALUE)
+        .content(mapper.writeValueAsString(resource)))
+      .andExpect(status().isNoContent());
 
-        ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
-        verify(searchService).indexOnboarding(captor.capture());
-        assertEquals(activatedAt, captor.getValue().getStatusUpdatedAt());
-    }
+    ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
+    verify(searchService).indexOnboarding(captor.capture());
+    assertEquals(activatedAt, captor.getValue().getStatusUpdatedAt());
+  }
 
-    @Test
-    void indexOnboardingTest_deletedStatus() throws Exception {
-        OffsetDateTime deletedAt = OffsetDateTime.now();
+  @Test
+  void indexOnboardingTest_deletedStatus() throws Exception {
+    OffsetDateTime deletedAt = OffsetDateTime.now();
 
-        OnboardingIndexResource resource = new OnboardingIndexResource();
-        resource.setOnboardingId("123");
-        resource.setStatus(OnboardingStatus.DELETED.name());
-        resource.setDeletedAt(deletedAt);
+    OnboardingIndexResource resource = new OnboardingIndexResource();
+    resource.setOnboardingId("123");
+    resource.setStatus(OnboardingStatus.DELETED.name());
+    resource.setDeletedAt(deletedAt);
 
-        Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
+    Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
 
-        mvc.perform(MockMvcRequestBuilders
-                  .post(BASE_URL + "/update-index")
-                  .contentType(APPLICATION_JSON_VALUE)
-                  .accept(APPLICATION_JSON_VALUE)
-                  .content(mapper.writeValueAsString(resource)))
-            .andExpect(status().isNoContent());
+    mvc.perform(MockMvcRequestBuilders
+        .post(BASE_URL + "/update-index")
+        .contentType(APPLICATION_JSON_VALUE)
+        .accept(APPLICATION_JSON_VALUE)
+        .content(mapper.writeValueAsString(resource)))
+      .andExpect(status().isNoContent());
 
-        ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
-        verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
+    ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
+    verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
 
-        assertEquals(deletedAt, captor.getValue().getStatusUpdatedAt());
-    }
+    assertEquals(deletedAt, captor.getValue().getStatusUpdatedAt());
+  }
 
-    @Test
-    void indexOnboardingTest_pendingStatus() throws Exception {
-        OnboardingIndexResource resource = new OnboardingIndexResource();
-        resource.setOnboardingId("123");
-        resource.setStatus(OnboardingStatus.PENDING.name());
+  @Test
+  void indexOnboardingTest_pendingStatus() throws Exception {
+    OnboardingIndexResource resource = new OnboardingIndexResource();
+    resource.setOnboardingId("123");
+    resource.setStatus(OnboardingStatus.PENDING.name());
 
-        Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
+    Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
 
-        mvc.perform(MockMvcRequestBuilders
-                  .post(BASE_URL + "/update-index")
-                  .contentType(APPLICATION_JSON_VALUE)
-                  .accept(APPLICATION_JSON_VALUE)
-                  .content(mapper.writeValueAsString(resource)))
-            .andExpect(status().isNoContent());
+    mvc.perform(MockMvcRequestBuilders
+        .post(BASE_URL + "/update-index")
+        .contentType(APPLICATION_JSON_VALUE)
+        .accept(APPLICATION_JSON_VALUE)
+        .content(mapper.writeValueAsString(resource)))
+      .andExpect(status().isNoContent());
 
-        ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
-        verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
+    ArgumentCaptor<OnboardingIndex> captor = ArgumentCaptor.forClass(OnboardingIndex.class);
+    verify(searchService, Mockito.atLeastOnce()).indexOnboarding(captor.capture());
 
-        assertNull(captor.getValue().getStatusUpdatedAt());
-    }
+    assertNull(captor.getValue().getStatusUpdatedAt());
+  }
 
-    @Test
-    void indexOnboardingTest_withMissingOnboardingId() throws Exception {
-        final OnboardingIndexResource resource = new OnboardingIndexResource();
-        resource.setDescription("test");
-        Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
-        mvc.perform(MockMvcRequestBuilders
-                        .post(BASE_URL + "/update-index")
-                        .contentType(APPLICATION_JSON_VALUE)
-                        .accept(APPLICATION_JSON_VALUE)
-                        .content(mapper.writeValueAsString(resource)))
-                .andExpect(status().isBadRequest());
-    }
+  @Test
+  void indexOnboardingTest_withMissingOnboardingId() throws Exception {
+    final OnboardingIndexResource resource = new OnboardingIndexResource();
+    resource.setDescription("test");
+    Mockito.when(searchService.indexOnboarding(any())).thenReturn(true);
+    mvc.perform(MockMvcRequestBuilders
+        .post(BASE_URL + "/update-index")
+        .contentType(APPLICATION_JSON_VALUE)
+        .accept(APPLICATION_JSON_VALUE)
+        .content(mapper.writeValueAsString(resource)))
+      .andExpect(status().isBadRequest());
+  }
 
 }
