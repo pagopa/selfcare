@@ -29,6 +29,7 @@ import static com.mongodb.client.model.Projections.fields;
 import static com.mongodb.client.model.Projections.include;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.DELETED;
+import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.OVERRIDDEN;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.REQUEST;
 import static java.util.Arrays.asList;
 
@@ -119,7 +120,7 @@ public class OnboardingCdcService {
 
         Bson match = Aggregates.match(Filters.and(
                 Filters.in("operationType", asList("update", "replace", "insert")),
-                Filters.ne("fullDocument.status", REQUEST.name()),
+                Filters.nin("fullDocument.status", REQUEST.name(), OVERRIDDEN.name()),
                 Filters.ne("fullDocument.workflowType", WorkflowType.USERS.name())));
         Bson project = Aggregates.project(fields(include("_id", "ns", DOCUMENT_KEY, "fullDocument")));
         List<Bson> pipeline = Arrays.asList(match, project);
