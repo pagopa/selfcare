@@ -267,9 +267,6 @@
           "productTitle" : {
             "type" : "string"
           },
-          "storageOrigin" : {
-            "$ref" : "#/components/schemas/StorageOrigin"
-          },
           "attachment" : {
             "type" : "boolean"
           }
@@ -291,6 +288,12 @@
             "type" : "string"
           },
           "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
+            "type" : "string"
+          },
+          "attachmentPath" : {
             "type" : "string"
           },
           "checksum" : {
@@ -621,6 +624,31 @@
           }
         }
       },
+      "UserAttachmentRequest" : {
+        "required" : [ "onboardingId", "productId", "attachmentName", "attachmentId", "maxDocumentsRequired" ],
+        "type" : "object",
+        "properties" : {
+          "onboardingId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentId" : {
+            "type" : "string"
+          },
+          "maxDocumentsRequired" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "attachmentDescription" : {
+            "type" : "string"
+          }
+        }
+      },
       "UserPdfData" : {
         "required" : [ "id", "taxCode" ],
         "type" : "object",
@@ -882,6 +910,56 @@
                   },
                   "request" : {
                     "$ref" : "#/components/schemas/DocumentBuilderRequest"
+                  }
+                }
+              },
+              "encoding" : {
+                "request" : {
+                  "contentType" : "application/json"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/upload-user-attachment" : {
+      "post" : {
+        "summary" : "Upload a user-driven attachment (PDF only) to the USER storage.",
+        "description" : "Persists a user-uploaded attachment. Skips signature verification and template digest checks: the file is only validated to be a well-formed PDF.",
+        "operationId" : "uploadUserAttachment",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "required" : [ "file" ],
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  },
+                  "request" : {
+                    "$ref" : "#/components/schemas/UserAttachmentRequest"
                   }
                 }
               },

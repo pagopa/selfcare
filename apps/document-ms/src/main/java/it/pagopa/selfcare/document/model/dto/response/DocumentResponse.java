@@ -16,6 +16,8 @@ public class DocumentResponse {
     private String onboardingId;
     private String productId;
     private String attachmentName;
+    private String attachmentDescription;
+    private String attachmentPath;
     private String checksum;
     private String contractVersion;
     private String contractTemplate;

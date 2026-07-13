@@ -5,20 +5,20 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.95 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4 |
 
 ## Providers
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.117.1 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.80.0 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_onboarding_fn_snet"></a> [onboarding\_fn\_snet](#module\_onboarding\_fn\_snet) | github.com/pagopa/terraform-azurerm-v3.git//subnet | v8.53.0 |
-| <a name="module_selc_onboarding_fn"></a> [selc\_onboarding\_fn](#module\_selc\_onboarding\_fn) | github.com/pagopa/terraform-azurerm-v3.git//function_app | v8.53.0 |
+| <a name="module_onboarding_fn_snet"></a> [onboarding\_fn\_snet](#module\_onboarding\_fn\_snet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v10.17.0 |
+| <a name="module_selc_onboarding_fn"></a> [selc\_onboarding\_fn](#module\_selc\_onboarding\_fn) | github.com/pagopa/terraform-azurerm-v4.git//function_app | v10.17.0 |
 
 ## Resources
 
@@ -52,6 +52,7 @@
 | <a name="input_subnet_cidr"></a> [subnet\_cidr](#input\_subnet\_cidr) | Network address space. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | n/a | yes |
 | <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | Azure tenant ID | `string` | n/a | yes |
+| <a name="input_user_assigned_identity_ids"></a> [user\_assigned\_identity\_ids](#input\_user\_assigned\_identity\_ids) | User-assigned identity IDs to attach to the Function App | `list(string)` | `[]` | no |
 | <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name) | Name of the Virtual Network | `string` | n/a | yes |
 | <a name="input_vnet_resource_group_name"></a> [vnet\_resource\_group\_name](#input\_vnet\_resource\_group\_name) | Name of the Virtual Network Resource Group | `string` | n/a | yes |
 

@@ -38,6 +38,16 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_user_assigned_identity" "users_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 locals {
 
   app_settings_user_cdc = [
@@ -108,15 +118,21 @@ locals {
     {
       name  = "INTERNAL_API_URL"
       value = "https://api.dev.selfcare.pagopa.it/external/internal/v1"
+    },
+    {
+      name = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.users_eventhub_sender_identity.client_id
+    },
+    {
+      name = "EVENTHUBFD_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.client_id
     }
   ]
 
   secrets_names_user_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "EVENTHUB-SC-USERS-SELFCARE-WO-KEY-LC"  = "eventhub-sc-users-selfcare-wo-key-lc"
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
-    "EVENTHUB_SELFCARE_FD_EXTERNAL_KEY_LC"  = "eventhub-selfcare-fd-external-interceptor-wo-key-lc"
     "INTERNAL_API_KEY"                      = "internal-api-key"
   }
 
@@ -140,6 +156,8 @@ module "container_app_user_cdc" {
   tags                           = module.local.config.tags
   additional_user_assigned_identity_ids = [
     data.azurerm_user_assigned_identity.product_storage_table_identity.id,
-    data.azurerm_user_assigned_identity.product_storage_blob_identity.id
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.users_eventhub_sender_identity.id,
+    data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.id
   ]
 }

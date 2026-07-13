@@ -206,8 +206,6 @@ components:
             type: string
         productTitle:
           type: string
-        storageOrigin:
-          $ref: "#/components/schemas/StorageOrigin"
         attachment:
           type: boolean
     DocumentResponse:
@@ -222,6 +220,10 @@ components:
         productId:
           type: string
         attachmentName:
+          type: string
+        attachmentDescription:
+          type: string
+        attachmentPath:
           type: string
         checksum:
           type: string
@@ -494,6 +496,28 @@ components:
         fileContent:
           format: binary
           type: string
+    UserAttachmentRequest:
+      required:
+      - onboardingId
+      - productId
+      - attachmentName
+      - attachmentId
+      - maxDocumentsRequired
+      type: object
+      properties:
+        onboardingId:
+          type: string
+        productId:
+          type: string
+        attachmentName:
+          type: string
+        attachmentId:
+          type: string
+        maxDocumentsRequired:
+          format: int32
+          type: integer
+        attachmentDescription:
+          type: string
     UserPdfData:
       required:
       - id
@@ -690,6 +714,45 @@ paths:
                   type: string
                 request:
                   $ref: "#/components/schemas/DocumentBuilderRequest"
+            encoding:
+              request:
+                contentType: application/json
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /v1/document-content/upload-user-attachment:
+    post:
+      summary: Upload a user-driven attachment (PDF only) to the USER storage.
+      description: "Persists a user-uploaded attachment. Skips signature verification\
+        \ and template digest checks: the file is only validated to be a well-formed\
+        \ PDF. Target storage is implicitly USER; the on-storage filename is derived\
+        \ from the documentId, with an incremental suffix (_2, _3, ...) when multiple\
+        \ documents already exist for the same (onboardingId, documentId)."
+      operationId: uploadUserAttachment
+      tags:
+      - Document Content Controller
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  format: binary
+                  type: string
+                request:
+                  $ref: "#/components/schemas/UserAttachmentRequest"
             encoding:
               request:
                 contentType: application/json

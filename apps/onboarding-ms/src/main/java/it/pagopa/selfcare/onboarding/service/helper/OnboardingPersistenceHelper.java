@@ -36,9 +36,6 @@ public class OnboardingPersistenceHelper {
 
     private static final String INTEGRATION_PROFILE = "integrationProfile";
 
-    @ConfigProperty(name = "onboarding.orchestration.enabled")
-    Boolean onboardingOrchestrationEnabled;
-
     @ConfigProperty(name = "quarkus.profile")
     String activeProfile;
 
@@ -79,23 +76,15 @@ public class OnboardingPersistenceHelper {
     }
 
     /**
-     * Persiste l'onboarding e avvia l'orchestrazione se abilitata.
+     * Persiste (upsert) l'onboarding senza alcun side-effect di orchestrazione.
+     * Da usare quando il chiamante vuole controllare esplicitamente il trigger.
      */
-    public Uni<Onboarding> persistAndStartOrchestrationOnboarding(Onboarding onboarding,
-                                                                    Uni<OrchestrationResponse> orchestration) {
-        log.info("Persist onboarding and start orchestration {}: taxCode {}, subunitCode {}, type {}",
-                onboardingOrchestrationEnabled,
-                onboarding.getInstitution().getTaxCode(),
-                onboarding.getInstitution().getSubunitCode(),
-                onboarding.getInstitution().getInstitutionType());
-
-        List<Onboarding> list = List.of(onboarding);
-        if (Boolean.TRUE.equals(onboardingOrchestrationEnabled)) {
-            return Onboarding.persistOrUpdate(list)
-                    .onItem().transformToUni(saved -> orchestration)
-                    .replaceWith(onboarding);
-        }
-        return Onboarding.persistOrUpdate(list).replaceWith(onboarding);
+    public Uni<Onboarding> updateOnboarding(Onboarding onboarding) {
+        log.info("Persist onboarding: taxCode {}, subunitCode {}, type {}",
+          onboarding.getInstitution().getTaxCode(),
+          onboarding.getInstitution().getSubunitCode(),
+          onboarding.getInstitution().getInstitutionType());
+        return Onboarding.persistOrUpdate(List.of(onboarding)).replaceWith(onboarding);
     }
 
     /**
