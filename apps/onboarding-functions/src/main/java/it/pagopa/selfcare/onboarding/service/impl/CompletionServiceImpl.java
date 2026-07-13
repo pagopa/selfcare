@@ -29,6 +29,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.DelegationApi;
@@ -351,6 +352,35 @@ public class CompletionServiceImpl implements CompletionService {
     }
 
     @Override
+    public void overridePendingOnboardings(Onboarding onboarding) {
+        LocalDateTime now = LocalDateTime.now();
+        Institution institution = onboarding.getInstitution();
+
+        Set<String> excludedStatuses = Set.of(
+                OnboardingStatus.COMPLETED.name(),
+                OnboardingStatus.DELETED.name(),
+                OnboardingStatus.REJECTED.name());
+
+        Document query = new Document()
+                .append("institution.taxCode", institution.getTaxCode())
+                .append("institution.origin", institution.getOrigin().name())
+                .append("institution.originId", institution.getOriginId())
+                .append("productId", onboarding.getProductId())
+                .append("_id", new Document("$ne", onboarding.getId()))
+                .append("status", new Document("$nin", excludedStatuses));
+
+        if (StringUtils.isNotBlank(institution.getSubunitCode())) {
+            query.append("institution.subunitCode", institution.getSubunitCode());
+        }
+
+        Document update = new Document("$set", new Document()
+                .append("status", OnboardingStatus.OVERRIDDEN.name())
+                .append("updatedAt", now));
+
+        onboardingRepository.mongoCollection().updateMany(query, update);
+    }
+
+    @Override
     public void sendCompletedEmailAggregate(Onboarding onboarding) {
         List<String> destinationMails = getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
@@ -389,7 +419,7 @@ public class CompletionServiceImpl implements CompletionService {
                 throw new GenericOnboardingException(String.format("Error during retrieve delegation %s", e.getMessage()));
             }
         }
-        return existsDelegation ? "true" : "false";
+        return Boolean.toString(existsDelegation);
     }
 
     @Override
