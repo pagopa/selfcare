@@ -66,6 +66,27 @@ class OrchestrationServiceDefaultTest {
         verifyNoMoreInteractions(orchestrationApi);    }
 
     @Test
+    void triggerOrchestrationIfEnabled_returnsNullItemAndSkipsHttpCall_whenOrchestrationDisabled() {
+        // given
+        String onboardingId = "onb-disabled";
+        Boolean previous = orchestrationServiceDefault.getOnboardingOrchestrationEnabled();
+        orchestrationServiceDefault.setOnboardingOrchestrationEnabled(Boolean.FALSE);
+        try {
+            // when
+            Uni<OrchestrationResponse> uni =
+                    orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null);
+
+            // then
+            UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
+                    .withSubscriber(UniAssertSubscriber.create());
+            sub.assertCompleted().assertItem(null);
+            verifyNoInteractions(orchestrationApi);
+        } finally {
+            orchestrationServiceDefault.setOnboardingOrchestrationEnabled(previous);
+        }
+    }
+
+    @Test
     void triggerOrchestrationDeleteInstitutionAndUser_success() {
         // given
         String onboardingId = "onb-del-123";

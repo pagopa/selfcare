@@ -36,9 +36,6 @@ public class OnboardingPersistenceHelper {
 
     private static final String INTEGRATION_PROFILE = "integrationProfile";
 
-    @ConfigProperty(name = "onboarding.orchestration.enabled")
-    Boolean onboardingOrchestrationEnabled;
-
     @ConfigProperty(name = "quarkus.profile")
     String activeProfile;
 
