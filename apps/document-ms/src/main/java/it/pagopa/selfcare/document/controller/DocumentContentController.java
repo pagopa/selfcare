@@ -188,6 +188,25 @@ public class DocumentContentController {
     }
 
     @Operation(
+            summary = "Upload a user-driven attachment (PDF only) to the USER storage.",
+            description = "Persists a user-uploaded attachment. "
+                    + "Skips signature verification and template digest checks: the file is only validated to be a "
+                    + "well-formed PDF. Target storage is implicitly USER"
+    )
+    @POST
+    @Path("/upload-user-attachment")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    public Uni<Response> uploadUserAttachment(@Valid @BeanParam UploadUserAttachmentForm form,
+                                              @Context ResteasyReactiveRequestContext ctx) {
+        return documentContentService.uploadUserAttachment(
+                        form.getRequest(),
+                        retrieveAttachmentFromFormData(ctx.getFormData(), form.getFile()))
+                .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
+                .onFailure(UpdateNotAllowedException.class)
+                .recoverWithItem(err -> Response.status(HttpStatus.SC_CONFLICT).entity(err.getMessage()).build());
+    }
+
+    @Operation(
             summary = "Store the Visura in Azure Blob Storage",
             description = "Receives the Visura data (filename and content) and stores it in Azure Blob Storage."
     )
