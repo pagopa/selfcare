@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
@@ -22,8 +23,11 @@ import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @TestSecurity(authorizationEnabled = false)
@@ -46,9 +50,9 @@ class DocumentControllerTest {
     DocumentResponse response = new DocumentResponse();
     response.setId(DOCUMENT_ID);
 
-    Mockito.when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
+    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(document));
-    Mockito.when(documentMapper.toResponse(document)).thenReturn(response);
+    when(documentMapper.toResponse(document)).thenReturn(response);
 
     given()
         .when()
@@ -60,7 +64,7 @@ class DocumentControllerTest {
 
   @Test
   void updateContractSigned_shouldReturnNoContent_whenUpdateSuccessful() {
-    Mockito.when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
+    when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
         .thenReturn(Uni.createFrom().item(1L));
 
     given()
@@ -74,7 +78,7 @@ class DocumentControllerTest {
 
   @Test
   void updateContractSigned_shouldReturnNotFound_whenDocumentNotFound() {
-    Mockito.when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
+    when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
         .thenReturn(Uni.createFrom().item(0L));
 
     given()
@@ -103,7 +107,7 @@ class DocumentControllerTest {
     ContractSignedReport report = new ContractSignedReport();
     report.setCades(true);
 
-    Mockito.when(documentService.reportContractSigned(ONBOARDING_ID))
+    when(documentService.reportContractSigned(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(report));
 
     given()
@@ -128,7 +132,7 @@ class DocumentControllerTest {
 
   @Test
   void headAttachment_shouldReturnNoContent_whenAttachmentExists() {
-    Mockito.when(documentService.existsAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
+    when(documentService.existsAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
         .thenReturn(Uni.createFrom().item(true));
 
     given()
@@ -141,7 +145,7 @@ class DocumentControllerTest {
 
   @Test
   void headAttachment_shouldReturnNotFound_whenAttachmentDoesNotExist() {
-    Mockito.when(documentService.existsAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
+    when(documentService.existsAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
         .thenReturn(Uni.createFrom().item(false));
 
     given()
@@ -167,7 +171,7 @@ class DocumentControllerTest {
     document.setId(DOCUMENT_ID);
     document.setContractSigned(CONTRACT_SIGNED_PATH);
 
-    Mockito.when(documentService.updateDocumentContractFiles(any(Document.class)))
+    when(documentService.updateDocumentContractFiles(any(Document.class)))
         .thenReturn(Uni.createFrom().item(1L));
 
     given()
@@ -184,7 +188,7 @@ class DocumentControllerTest {
     Document document = new Document();
     document.setId(DOCUMENT_ID);
 
-    Mockito.when(documentService.updateDocumentContractFiles(any(Document.class)))
+    when(documentService.updateDocumentContractFiles(any(Document.class)))
         .thenReturn(Uni.createFrom().item(0L));
 
     given()
@@ -206,7 +210,7 @@ class DocumentControllerTest {
 
     Document response = new Document();
 
-    Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
+    when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().item(response));
 
     given()
@@ -228,7 +232,7 @@ class DocumentControllerTest {
 
     Document response = new Document();
 
-    Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
+    when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().item(response));
 
     given()
@@ -251,7 +255,7 @@ class DocumentControllerTest {
     document.setId(DOCUMENT_ID);
     document.setOnboardingId(ONBOARDING_ID);
 
-    Mockito.when(documentService.persistDocumentForImport(any(OnboardingDocumentRequest.class)))
+    when(documentService.persistDocumentForImport(any(OnboardingDocumentRequest.class)))
         .thenReturn(Uni.createFrom().item(document));
 
     given()
@@ -265,7 +269,7 @@ class DocumentControllerTest {
 
   @Test
   void updateDocumentUpdatedAt_shouldReturnNoContent_whenUpdateSuccessful() {
-    Mockito.when(documentService.updateDocumentUpdatedAt(ONBOARDING_ID))
+    when(documentService.updateDocumentUpdatedAt(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -278,7 +282,7 @@ class DocumentControllerTest {
 
   @Test
   void updateDocumentUpdatedAt_shouldHandleNonExistentOnboarding() {
-    Mockito.when(documentService.updateDocumentUpdatedAt("non-existent"))
+    when(documentService.updateDocumentUpdatedAt("non-existent"))
         .thenReturn(Uni.createFrom().voidItem());
 
     given()
@@ -291,7 +295,7 @@ class DocumentControllerTest {
 
   @Test
   void getDocumentByOnboardingId_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
+    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
@@ -303,7 +307,7 @@ class DocumentControllerTest {
 
   @Test
   void updateContractSigned_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
+    when(documentService.updateContractSigned(ONBOARDING_ID, CONTRACT_SIGNED_PATH))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
@@ -317,7 +321,7 @@ class DocumentControllerTest {
 
   @Test
   void reportContractSigned_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.reportContractSigned(ONBOARDING_ID))
+    when(documentService.reportContractSigned(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Report generation error")));
 
     given()
@@ -331,7 +335,7 @@ class DocumentControllerTest {
 
   @Test
   void headAttachment_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.existsAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
+    when(documentService.existsAttachment(ONBOARDING_ID, ATTACHMENT_NAME))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
     given()
@@ -347,7 +351,7 @@ class DocumentControllerTest {
     Document document = new Document();
     document.setId(DOCUMENT_ID);
 
-    Mockito.when(documentService.updateDocumentContractFiles(any(Document.class)))
+    when(documentService.updateDocumentContractFiles(any(Document.class)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
@@ -383,7 +387,7 @@ class DocumentControllerTest {
             .documentType(DocumentType.INSTITUTION)
             .build();
 
-    Mockito.when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
+    when(documentService.saveDocument(any(DocumentBuilderRequest.class)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
     given()
@@ -416,7 +420,7 @@ class DocumentControllerTest {
     request.setProductId("prod-123");
     request.setContractFilePath("/contracts/contract.pdf");
 
-    Mockito.when(documentService.persistDocumentForImport(any(OnboardingDocumentRequest.class)))
+    when(documentService.persistDocumentForImport(any(OnboardingDocumentRequest.class)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
@@ -430,7 +434,7 @@ class DocumentControllerTest {
 
   @Test
   void updateDocumentUpdatedAt_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.updateDocumentUpdatedAt(ONBOARDING_ID))
+    when(documentService.updateDocumentUpdatedAt(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
@@ -491,7 +495,7 @@ class DocumentControllerTest {
   void getAttachments_shouldReturnAttachmentList_whenAttachmentsExist() {
     List<String> attachments = Arrays.asList("attachment1.pdf", "attachment2.pdf");
 
-    Mockito.when(documentService.getAttachments(ONBOARDING_ID))
+    when(documentService.getAttachments(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(attachments));
 
     given()
@@ -506,7 +510,7 @@ class DocumentControllerTest {
 
   @Test
   void getAttachments_shouldReturnEmptyList_whenNoAttachmentsExist() {
-    Mockito.when(documentService.getAttachments(ONBOARDING_ID))
+    when(documentService.getAttachments(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(Collections.emptyList()));
 
     given()
@@ -519,12 +523,64 @@ class DocumentControllerTest {
 
   @Test
   void getAttachments_shouldReturnInternalServerError_whenServiceFails() {
-    Mockito.when(documentService.getAttachments(ONBOARDING_ID))
+    when(documentService.getAttachments(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
     given()
         .when()
         .get("/v1/documents/" + ONBOARDING_ID + "/attachment-list")
+        .then()
+        .statusCode(500);
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename_whenAvailable() {
+    AvailableDocumentsResponse response = AvailableDocumentsResponse.builder()
+            .attachments(Arrays.asList("attachment1.pdf", "attachment2.pdf"))
+            .contractFilename("contract.pdf")
+            .build();
+
+    when(documentService.getAvailableDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().item(response));
+
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
+        .then()
+        .statusCode(200)
+        .body("attachments.size()", is(2))
+        .body("attachments[0]", equalTo("attachment1.pdf"))
+        .body("attachments[1]", equalTo("attachment2.pdf"))
+        .body("contractFilename", equalTo("contract.pdf"));
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnEmptyAttachmentsAndNoContractFilename_whenNothingAvailable() {
+    AvailableDocumentsResponse response = AvailableDocumentsResponse.builder()
+            .attachments(Collections.emptyList())
+            .contractFilename(null)
+            .build();
+
+    when(documentService.getAvailableDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().item(response));
+
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
+        .then()
+        .statusCode(200)
+        .body("attachments.size()", is(0))
+        .body("$", not(hasKey("contractFilename")));
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnInternalServerError_whenServiceFails() {
+    when(documentService.getAvailableDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
+
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
         .then()
         .statusCode(500);
   }
