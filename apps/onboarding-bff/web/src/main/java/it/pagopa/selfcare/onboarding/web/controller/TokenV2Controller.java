@@ -9,17 +9,18 @@ import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
+import it.pagopa.selfcare.onboarding.web.model.AvailableDocumentsResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
-import it.pagopa.selfcare.product.entity.StorageOrigin;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
@@ -278,6 +279,24 @@ public class TokenV2Controller {
         log.debug("getAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
         Resource contract = tokenService.getAttachment(onboardingId, filename);
         return getResponseEntity(contract);
+    }
+
+    @GetMapping(value = "/{onboardingId}/available-documents")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
+    @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
+            description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
+            operationId = "getAvailableDocumentsUsingGET")
+    public AvailableDocumentsResource getAvailableDocuments(@ApiParam("${swagger.tokens.onboardingId}")
+                                                            @PathVariable("onboardingId") String onboardingId) {
+        log.trace("getAvailableDocuments start");
+        log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
+        AvailableDocuments source = tokenService.getAvailableDocuments(onboardingId);
+        AvailableDocumentsResource resource = new AvailableDocumentsResource();
+        resource.setAttachments(source.getAttachments());
+        resource.setContractFilename(source.getContractFilename());
+        log.trace("getAvailableDocuments end");
+        return resource;
     }
 
     @RequestMapping(method = HEAD, value = "/{onboardingId}/attachment/status")
