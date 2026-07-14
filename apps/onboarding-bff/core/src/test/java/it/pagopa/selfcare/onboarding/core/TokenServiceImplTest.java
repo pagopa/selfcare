@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
@@ -391,5 +392,50 @@ public class TokenServiceImplTest {
         when(onboardingMsConnector.getOnboarding(onboardingId)).thenReturn(onboardingData);
         Mockito.lenient().when(productAzureService.getProductValid(productId)).thenReturn(product);
         return onboardingData;
+    }
+
+    @Test
+    void shouldNotGetAvailableDocumentsWhenOnboardingIdIsNull() {
+        Executable executable = () -> tokenService.getAvailableDocuments(null);
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, executable);
+        Assertions.assertEquals("OnboardingId is required", e.getMessage());
+        Mockito.verifyNoInteractions(documentMsConnector);
+    }
+
+    @Test
+    void shouldGetAvailableDocuments() {
+        // given
+        String onboardingId = "onboarding-1";
+        AvailableDocuments expected = new AvailableDocuments();
+        expected.setAttachments(List.of("attachment1.pdf", "attachment2.pdf"));
+        expected.setContractFilename("contract.pdf");
+        when(documentMsConnector.getAvailableDocuments(onboardingId)).thenReturn(expected);
+
+        // when
+        AvailableDocuments actual = tokenService.getAvailableDocuments(onboardingId);
+
+        // then
+        Assertions.assertSame(expected, actual);
+        Mockito.verify(documentMsConnector, Mockito.times(1)).getAvailableDocuments(onboardingId);
+        Mockito.verifyNoMoreInteractions(documentMsConnector);
+    }
+
+    @Test
+    void shouldGetAvailableDocumentsWhenContractNotAvailable() {
+        // given
+        String onboardingId = "onboarding-2";
+        AvailableDocuments expected = new AvailableDocuments();
+        expected.setAttachments(List.of());
+        expected.setContractFilename(null); // no signed contract (e.g. TOBEVALIDATED)
+        when(documentMsConnector.getAvailableDocuments(onboardingId)).thenReturn(expected);
+
+        // when
+        AvailableDocuments actual = tokenService.getAvailableDocuments(onboardingId);
+
+        // then
+        Assertions.assertNotNull(actual);
+        Assertions.assertNull(actual.getContractFilename());
+        Assertions.assertTrue(actual.getAttachments().isEmpty());
+        Mockito.verify(documentMsConnector, Mockito.times(1)).getAvailableDocuments(onboardingId);
     }
 }
