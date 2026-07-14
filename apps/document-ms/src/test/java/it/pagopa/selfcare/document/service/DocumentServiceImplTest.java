@@ -55,9 +55,6 @@ class DocumentServiceImplTest {
     SignatureService signatureService;
 
     @InjectMock
-    DocumentMsTelemetryService telemetryService;
-
-    @InjectMock
     StorageRegistry storageRegistry;
 
     @BeforeEach
@@ -152,6 +149,84 @@ class DocumentServiceImplTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(documentRepository).findAttachments(ONBOARDING_ID);
+    }
+
+    // ---- getAvailableDocuments ----
+
+    @Test
+    void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename_whenContractSigned() {
+        Document attachment = buildDocument();
+        attachment.setType(DocumentType.ATTACHMENT);
+        attachment.setAttachmentName("attachment-1");
+
+        Document contractDoc = buildDocument();
+        contractDoc.setContractSigned("/path/signed.pdf");
+        contractDoc.setContractFilename("contract.pdf");
+
+        when(documentRepository.findAttachments(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(attachment)));
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(contractDoc));
+
+        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(result);
+        assertEquals(1, result.getAttachments().size());
+        assertTrue(result.getAttachments().contains("attachment-1"));
+        assertEquals("contract.pdf", result.getContractFilename());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldReturnNullContractFilename_whenDocumentIsNull() {
+        when(documentRepository.findAttachments(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of()));
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(result);
+        assertNotNull(result.getAttachments());
+        assertTrue(result.getAttachments().isEmpty());
+        assertNull(result.getContractFilename());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldReturnNullContractFilename_whenContractSignedIsNull() {
+        Document contractDoc = buildDocument();
+        contractDoc.setContractSigned(null);
+        contractDoc.setContractFilename("contract.pdf");
+
+        when(documentRepository.findAttachments(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of()));
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(contractDoc));
+
+        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(result);
+        assertNull(result.getContractFilename());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldReturnNullContractFilename_whenContractSignedIsBlank() {
+        Document contractDoc = buildDocument();
+        contractDoc.setContractSigned("   ");
+        contractDoc.setContractFilename("contract.pdf");
+
+        when(documentRepository.findAttachments(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of()));
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(contractDoc));
+
+        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertNotNull(result);
+        assertNull(result.getContractFilename());
     }
 
     // ---- updateContractSigned ----
