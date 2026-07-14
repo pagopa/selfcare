@@ -136,3 +136,18 @@ Feature: Token
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10001/contract"
     Then The status code is 502
+
+  Scenario: Success to retrieve available documents
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/available-documents"
+    Then The status code is 200
+    And The response body contains:
+      | attachments[0] | Dichiarazione_sostitutiva_certificazione |
+
+  Scenario: Forbidden to retrieve available documents when user has no permission
+    Given User login with username "r.balboa" and password "test"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/available-documents"
+    Then The status code is 403
+    And The response body contains:
+      | detail | Access Denied |
+

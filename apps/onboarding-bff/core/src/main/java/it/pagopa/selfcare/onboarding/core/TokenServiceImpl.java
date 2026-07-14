@@ -4,6 +4,7 @@ import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
@@ -236,5 +237,16 @@ public class TokenServiceImpl implements TokenService {
         log.debug("headAttachment result {}", resource.value());
         log.trace("headAttachment end");
         return resource;
+    }
+
+    @Override
+    public AvailableDocuments getAvailableDocuments(String onboardingId) {
+        log.trace("getAvailableDocuments start");
+        log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
+        Assert.notNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
+        AvailableDocuments result = documentMsConnector.getAvailableDocuments(onboardingId);
+        log.debug("getAvailableDocuments result = success");
+        log.trace("getAvailableDocuments end");
+        return result;
     }
 }
