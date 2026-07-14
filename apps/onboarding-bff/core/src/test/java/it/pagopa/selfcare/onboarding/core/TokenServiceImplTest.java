@@ -37,6 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -79,7 +82,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.completeTokenV2(tokenId, mockMultipartFile);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .onboardingTokenComplete(tokenId, mockMultipartFile);
     }
 
@@ -101,7 +104,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.completeOnboardingUsers(tokenId, mockMultipartFile);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .onboardingUsersComplete(tokenId, mockMultipartFile);
     }
 
@@ -112,7 +115,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.verifyOnboarding(onboardingId);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .getOnboarding(onboardingId);
     }
 
@@ -123,7 +126,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getOnboardingWithUserInfo(onboardingId);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .getOnboardingWithUserInfo(onboardingId);
     }
 
@@ -136,7 +139,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.approveOnboarding(onboardingId, userUid);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .approveOnboarding(onboardingId, userUid);
     }
 
@@ -150,7 +153,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.rejectOnboarding(onboardingId, reason, userUid);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .rejectOnboarding(onboardingId, reason, userUid);
     }
 
@@ -161,7 +164,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getContract(onboardingId);
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getContract(onboardingId);
     }
 
@@ -173,7 +176,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getAttachment(onboardingId, filename);
         // then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getAttachment(onboardingId, filename);
     }
 
@@ -190,7 +193,7 @@ public class TokenServiceImplTest {
         tokenService.getTemplateAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getTemplateAttachment(onboardingData, filename, templatePath);
     }
 
@@ -207,7 +210,7 @@ public class TokenServiceImplTest {
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertTrue(result.is2xxSuccessful());
         assertFalse(result.is4xxClientError());
@@ -226,7 +229,7 @@ public class TokenServiceImplTest {
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertFalse(result.is2xxSuccessful());
         assertTrue(result.is4xxClientError());
@@ -245,7 +248,7 @@ public class TokenServiceImplTest {
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertFalse(result.is2xxSuccessful());
         assertFalse(result.is4xxClientError());
@@ -265,7 +268,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename, null, null);
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
                         argThat(template -> templatePath.equals(template.getTemplatePath())));
     }
@@ -297,10 +300,10 @@ public class TokenServiceImplTest {
         tokenService.uploadAttachment(onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .uploadUserAttachment(onboardingId, mockMultipartFile, productId, attachmentId,
                         attachmentDescription, attachmentName, maxDocumentsRequired);
-        Mockito.verify(documentMsConnector, Mockito.never())
+        verify(documentMsConnector, Mockito.never())
                 .uploadAttachment(anyString(), any(), anyString(), anyString(), any());
     }
 
@@ -313,7 +316,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getAggregatesCsv(onboardingId, productId);
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getAggregatesCsv(onboardingId, productId);
     }
 
@@ -341,7 +344,7 @@ public class TokenServiceImplTest {
 
         //then
         assertTrue(result);
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
             .getOnboardingWithUserInfo(anyString());
     }
 
@@ -366,7 +369,7 @@ public class TokenServiceImplTest {
 
         //then
         assertFalse(result);
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
             .getOnboardingWithUserInfo(anyString());
     }
 
@@ -416,8 +419,8 @@ public class TokenServiceImplTest {
 
         // then
         Assertions.assertSame(expected, actual);
-        Mockito.verify(documentMsConnector, Mockito.times(1)).getAvailableDocuments(onboardingId);
-        Mockito.verifyNoMoreInteractions(documentMsConnector);
+        verify(documentMsConnector, times(1)).getAvailableDocuments(onboardingId);
+        verifyNoMoreInteractions(documentMsConnector);
     }
 
     @Test
@@ -436,6 +439,6 @@ public class TokenServiceImplTest {
         Assertions.assertNotNull(actual);
         Assertions.assertNull(actual.getContractFilename());
         Assertions.assertTrue(actual.getAttachments().isEmpty());
-        Mockito.verify(documentMsConnector, Mockito.times(1)).getAvailableDocuments(onboardingId);
+        verify(documentMsConnector, times(1)).getAvailableDocuments(onboardingId);
     }
 }
