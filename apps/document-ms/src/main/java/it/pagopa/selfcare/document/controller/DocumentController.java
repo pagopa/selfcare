@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
@@ -105,6 +106,18 @@ public class DocumentController {
   public Uni<List<String>> getAttachments(@PathParam(value = "onboardingId") String onboardingId) {
     log.info("Getting attachment names for onboardingId: {}", sanitize(onboardingId));
     return documentService.getAttachments(onboardingId);
+  }
+
+  @Operation(
+          summary = "Retrieve the list of documents available for download for a given onboarding",
+          description = "Returns the attachments associated with the onboarding and, if present, the contractFilename."
+  )
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/{onboardingId}/available-documents")
+  public Uni<AvailableDocumentsResponse> getAvailableDocuments(@PathParam(value = "onboardingId") String onboardingId) {
+    log.info("Getting available documents for onboardingId: {}", sanitize(onboardingId));
+    return documentService.getAvailableDocuments(onboardingId);
   }
 
   @Operation(
