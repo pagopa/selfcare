@@ -28,7 +28,6 @@ import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
-@TestProfile(NotificationTestProfile.class)
 class NotificationServiceTest {
     @Mock
     private OnboardingMapper onboardingMapper;
