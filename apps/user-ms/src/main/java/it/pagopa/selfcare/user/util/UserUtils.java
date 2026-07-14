@@ -4,6 +4,7 @@ import io.quarkus.security.identity.CurrentIdentityAssociation;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -367,5 +368,28 @@ public class UserUtils {
                     return Uni.createFrom().nullItem();
                 });
     }
+
+  /**
+   * Checks whether the onboarded product should be excluded from the list of users
+   * that can be added to a user group.
+   *
+   * If the product or its role configuration cannot be found, the product is
+   * excluded by default.
+   */
+  public boolean shouldExcludeFromUserGroups(OnboardedProduct onboardingProduct) {
+
+    Product product = productService.getProduct(onboardingProduct.getProductId());
+
+    if (product == null || product.getRoleMappings() == null || onboardingProduct.getRole() == null) {
+      log.warn("Unable to evaluate excludeRoleFromUserGroups for product {} and role {}",
+        onboardingProduct.getProductId(),
+        onboardingProduct.getRole());
+      return true;
+    }
+
+    ProductRoleInfo roleMapping = product.getRoleMappings().get(onboardingProduct.getRole());
+
+    return roleMapping == null || roleMapping.isExcludeRoleFromUserGroups();
+  }
 
 }

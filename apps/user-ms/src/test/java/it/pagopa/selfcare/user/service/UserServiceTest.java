@@ -591,7 +591,7 @@ class UserServiceTest {
         UserInstitution userInstitution = createUserInstitution();
         when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
         AssertSubscriber<UserInstitutionResponse> subscriber = userService
-                .findAllUserInstitutions("institutionId", "userId", null, null, null, null)
+                .findAllUserInstitutions("institutionId", "userId", null, null, null, null, false)
                 .subscribe()
                 .withSubscriber(AssertSubscriber.create(10));
 

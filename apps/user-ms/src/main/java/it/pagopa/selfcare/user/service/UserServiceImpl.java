@@ -182,7 +182,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Multi<UserProductResponse> getUserProductsByInstitution(String institutionId, List<String> products, List<String> roles, String userId) {
-        Multi<UserInstitutionResponse> userInstitutions = findAllUserInstitutions(institutionId, userId, roles, null, products, null);
+        Multi<UserInstitutionResponse> userInstitutions = findAllUserInstitutions(institutionId, userId, roles, null, products, null, false);
         return userInstitutions.onItem()
                 .transformToUni(userInstitution -> userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
                         .map(userResource -> UserProductResponse.builder()
@@ -215,7 +215,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+    public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, boolean excludeUserFromGroups) {
         var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
         return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
@@ -852,6 +852,7 @@ public class UserServiceImpl implements UserService {
                 .onItem().invoke(userId -> log.info("userId to retrieve: {}", userId))
                 .onItem().transformToMulti(user -> retrieveFilteredUserInstitutions(user, institutionId, roles, states, products, productRoles))
                 .onItem().transform(userInstitution -> applyFiltersToRemoveProducts(userInstitution, states, products, roles, productRoles))
+                .onItem().transform(this::removeProductsExcludedFromUserGroups)
                 .onItem().invoke(userInstitution -> log.info("userInstitution found: {}", userInstitution))
                 .onItem().transformToUniAndMerge(userInstitution ->
                         userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userInstitution.getUserId())
@@ -859,7 +860,18 @@ public class UserServiceImpl implements UserService {
                 );
     }
 
-    @Override
+  private UserInstitution removeProductsExcludedFromUserGroups(UserInstitution userInstitution) {
+
+    List<OnboardedProduct> filteredProducts = userInstitution.getProducts().stream()
+      .filter(product -> !userUtils.shouldExcludeFromUserGroups(product))
+      .toList();
+
+    userInstitution.setProducts(filteredProducts);
+
+    return userInstitution;
+  }
+
+  @Override
     public Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto updateDescriptionDto) {
         return userInstitutionService.updateInstitutionDescription(institutionId, updateDescriptionDto)
                 .onFailure().invoke(exception -> log.error("Error during update institution description with id {} on UserInstitution: {} ",

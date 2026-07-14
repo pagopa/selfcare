@@ -122,7 +122,7 @@ class InstitutionControllerTest {
     @TestSecurity(user = "userJwt")
     void testGetUserInstitutions() {
         var institutionId = "institutionId";
-        Mockito.when(userService.findAllUserInstitutions(any(), any(), any(), any(), any(), any()))
+        Mockito.when(userService.findAllUserInstitutions(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
         given()
                 .when()

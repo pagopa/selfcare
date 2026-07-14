@@ -79,7 +79,7 @@ public class InstitutionController {
                                                         @QueryParam(value = "states") List<String> states,
                                                         @QueryParam(value = "products") List<String> products,
                                                         @QueryParam(value = "productRoles") List<String> productRoles) {
-        return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles);
+        return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles, true);
     }
 
     @Operation(
