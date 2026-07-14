@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.core;
 
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.product.entity.StorageOrigin;
 import org.springframework.core.io.Resource;
@@ -24,6 +25,8 @@ public interface TokenService {
   Resource getTemplateAttachment(String onboardingId, String filename);
 
   Resource getAttachment(String onboardingId, String filename);
+
+  AvailableDocuments getAvailableDocuments(String onboardingId);
 
   Resource getAggregatesCsv(String onboardingId, String productId);
 
