@@ -100,7 +100,7 @@ def get_onboarding_filter():
         "institution.description": {"$exists": True, "$ne": None},
         "institution.institutionType": {"$exists": True, "$ne": None},
         "productId": {"$exists": True, "$ne": None, "$nin": ["prod-interop-atst", "prod-interop-coll", "prod-fd", "prod-fd-garantito", "prod-pagopa-ec"]},
-        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST"]}
+        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST", "OVERRIDDEN"]}
     }
 
 def main():
