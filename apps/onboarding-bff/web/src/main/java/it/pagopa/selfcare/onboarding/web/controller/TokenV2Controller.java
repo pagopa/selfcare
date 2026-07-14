@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
 import it.pagopa.selfcare.onboarding.web.model.AvailableDocumentsResource;
+import it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
@@ -35,6 +36,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 
+import static it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType.ATTACHMENT;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
 
@@ -297,6 +299,41 @@ public class TokenV2Controller {
         resource.setContractFilename(source.getContractFilename());
         log.trace("getAvailableDocuments end");
         return resource;
+    }
+
+    @GetMapping(value = "/{onboardingId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
+    @Operation(summary = "Download a document (signed contract or attachment) for the given onboarding",
+            description = "Routes to the correct document-ms API based on the 'type' discriminator. " +
+                    "When type=CONTRACT_SIGNED downloads the signed contract; " +
+                    "when type=ATTACHMENT the 'name' query parameter is required.",
+            operationId = "downloadDocumentUsingGET")
+    public ResponseEntity<byte[]> downloadDocument(
+            @ApiParam("${swagger.tokens.onboardingId}")
+            @PathVariable("onboardingId") String onboardingId,
+            @ApiParam(value = "Type of document to download", required = true)
+            @RequestParam("type") DownloadDocumentType type,
+            @ApiParam("Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.")
+            @RequestParam(value = "name", required = false) String name) throws IOException {
+        log.trace("downloadDocument start");
+        log.debug("downloadDocument onboardingId = {}, type = {}, name = {}",
+                Encode.forJava(onboardingId), type, Encode.forJava(name));
+
+        Resource resource;
+        switch (type) {
+            case CONTRACT_SIGNED -> resource = tokenService.getContractSigned(onboardingId);
+            case ATTACHMENT -> {
+                if (name == null || name.isBlank()) {
+                    throw new IllegalArgumentException(
+                            "Query parameter 'name' is required when type=" + ATTACHMENT);
+                }
+                resource = tokenService.getAttachment(onboardingId, name);
+            }
+            default -> throw new IllegalArgumentException("Unsupported download type: " + type);
+        }
+        log.trace("downloadDocument end");
+        return getResponseEntity(resource);
     }
 
     @RequestMapping(method = HEAD, value = "/{onboardingId}/attachment/status")
