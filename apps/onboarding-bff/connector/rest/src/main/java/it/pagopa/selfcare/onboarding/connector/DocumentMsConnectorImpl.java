@@ -6,9 +6,11 @@ import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
 
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.UserAttachmentRequest;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentContentApiClient;
+import it.pagopa.selfcare.onboarding.connector.rest.mapper.DocumentMapper;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -26,12 +28,15 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
 
   private final MsDocumentContentApiClient msDocumentContentApiClient;
   private final MsDocumentApiClient msDocumentApiClient;
+  private final DocumentMapper documentMapper;
 
   public DocumentMsConnectorImpl(
       MsDocumentContentApiClient msDocumentContentApiClient,
-      MsDocumentApiClient msDocumentApiClient) {
+      MsDocumentApiClient msDocumentApiClient,
+      DocumentMapper documentMapper) {
     this.msDocumentContentApiClient = msDocumentContentApiClient;
     this.msDocumentApiClient = msDocumentApiClient;
+    this.documentMapper = documentMapper;
   }
 
   @Override
@@ -58,6 +63,14 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
   @Retry(name = "retryTimeout")
   public Resource getAttachment(String onboardingId, String filename) {
     return msDocumentContentApiClient._getAttachment(onboardingId, filename).getBody();
+  }
+
+  @Override
+  @Retry(name = "retryTimeout")
+  public AvailableDocuments getAvailableDocuments(String onboardingId) {
+    log.info("getAvailableDocuments for onboardingId: {}", Encode.forJava(onboardingId));
+    return documentMapper.toAvailableDocuments(
+            msDocumentApiClient._getAvailableDocuments(onboardingId).getBody());
   }
 
   @Override

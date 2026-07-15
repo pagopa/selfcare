@@ -17,4 +17,5 @@ public class RoleMapping {
   private List<String> phasesAdditionAllowed;
   private boolean skipUserCreation;
   private List<BackOfficeRole> backOfficeRoles;
+  private boolean excludeRoleFromUserGroups;
 }

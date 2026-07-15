@@ -744,8 +744,8 @@
           "required" : true
         },
         "responses" : {
-          "409" : {
-            "description" : "Conflict",
+          "403" : {
+            "description" : "Forbidden",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -754,8 +754,8 @@
               }
             }
           },
-          "403" : {
-            "description" : "Forbidden",
+          "409" : {
+            "description" : "Conflict",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -2580,6 +2580,81 @@
                     "type" : "string",
                     "format" : "byte"
                   }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/tokens/{onboardingId}/available-documents" : {
+      "get" : {
+        "tags" : [ "token-v-2-controller" ],
+        "summary" : "Retrieve the list of documents available for download for the given onboarding",
+        "description" : "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
+        "operationId" : "getAvailableDocumentsUsingGET",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AvailableDocumentsResource"
                 }
               }
             }
@@ -5000,6 +5075,24 @@
             "type" : "string"
           }
         }
+      },
+      "AvailableDocumentsResource" : {
+        "type" : "object",
+        "properties" : {
+          "attachments" : {
+            "type" : "array",
+            "description" : "Names of the attachments available for the onboarding. Empty list if none.",
+            "items" : {
+              "type" : "string",
+              "description" : "Names of the attachments available for the onboarding. Empty list if none."
+            }
+          },
+          "contractFilename" : {
+            "type" : "string",
+            "description" : "Filename of the signed contract available for download. Null when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED)."
+          }
+        },
+        "description" : "Aggregated list of documents available for download for a given onboarding."
       },
       "OriginEntry" : {
         "type" : "object",
