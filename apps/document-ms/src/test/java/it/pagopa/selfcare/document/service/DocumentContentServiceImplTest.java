@@ -16,6 +16,7 @@ import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.document.model.FormItem;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.*;
 import it.pagopa.selfcare.document.model.dto.response.CreatePdfResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
@@ -141,6 +142,7 @@ class DocumentContentServiceImplTest {
         doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/signed/attachment.pdf");
+        doc.setStorageOrigin(StorageOrigin.SYSTEM);
         File mockFile = mock(File.class);
 
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
@@ -162,6 +164,7 @@ class DocumentContentServiceImplTest {
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned(null);
         doc.setContractFilename("attachment.pdf");
+        doc.setStorageOrigin(StorageOrigin.SYSTEM);
         File mockFile = mock(File.class);
 
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
@@ -183,6 +186,7 @@ class DocumentContentServiceImplTest {
         doc.setType(DocumentType.ATTACHMENT);
         doc.setAttachmentName("myAttachment");
         doc.setContractSigned("/path/to/attachment.pdf");
+        doc.setStorageOrigin(StorageOrigin.SYSTEM);
         File mockFile = mock(File.class);
 
         when(documentRepository.findAttachment(ONBOARDING_ID, DocumentType.ATTACHMENT.name(), "myAttachment"))
