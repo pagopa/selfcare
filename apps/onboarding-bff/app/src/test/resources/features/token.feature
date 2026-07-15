@@ -141,8 +141,8 @@ Feature: Token
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/available-documents"
     Then The status code is 200
-    And The response body contains:
-      | attachments[0] | user_uploaded_attachment.pdf.pdf |
+    And The response body contains at path "attachments" the following list of values in any order:
+      | user_uploaded_attachment.pdf |
 
   Scenario: Forbidden to retrieve available documents when user has no permission
     Given User login with username "r.balboa" and password "test"
