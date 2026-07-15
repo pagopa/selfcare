@@ -1,0 +1,6 @@
+{
+  "prod-pagopa": [
+    { "institutionType": "GSP", "origin": "SELC", "enabled": true }
+  ]
+}
+

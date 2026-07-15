@@ -18,6 +18,7 @@ import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -75,9 +76,9 @@ public class OnboardingPgHelper {
                 .flatMap(unused -> retrieveAndSetManagerUid(onboarding, userRequests))
                 .flatMap(unused -> checkIfUserIsAlreadyManager(onboarding))
                 .flatMap(unused -> checkIfUserIsManagerOnRegistries(onboarding, userRequests))
-                .onItem().transformToUni(unused ->
-                        persistenceHelper.persistAndStartOrchestrationOnboarding(onboarding,
-                                orchestrationService.triggerOrchestration(onboarding.getId(), TIMEOUT_ORCHESTRATION_RESPONSE)))
+                .onItem().transformToUni(unused -> persistenceHelper.updateOnboarding(onboarding))
+                .onItem().call(persisted ->
+                        orchestrationService.triggerOrchestrationIfEnabled(persisted.getId(), TIMEOUT_ORCHESTRATION_RESPONSE))
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
@@ -212,10 +213,17 @@ public class OnboardingPgHelper {
     private Uni<Product> getProductByOnboarding(Onboarding onboarding) {
         return Uni.createFrom()
                 .item(() -> productAzureService.getProductIsValid(onboarding.getProductId()))
-                .onFailure().transform(ex -> new OnboardingNotAllowedException(
-                        String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
-                                onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
-                        DEFAULT_ERROR.getCode()));
+                .onFailure().transform(exception -> {
+                    log.error("Failed to retrieve product {} for institution {}: {}",
+                            onboarding.getProductId(), onboarding.getInstitution().getTaxCode(), exception.getMessage(), exception);
+                    if (exception instanceof ProductNotFoundException) {
+                        return new OnboardingNotAllowedException(
+                                String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
+                                        onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
+                                DEFAULT_ERROR.getCode());
+                    }
+                    return exception;
+                });
     }
 
     private Supplier<ResourceNotFoundException> resourceNotFoundFor(Onboarding onboarding) {

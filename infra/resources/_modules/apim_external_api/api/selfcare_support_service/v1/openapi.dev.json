@@ -1130,6 +1130,15 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "includeTest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -2846,8 +2855,7 @@
       "OnboardingPut": {
         "title": "OnboardingPut",
         "required": [
-          "productId",
-          "vatNumber"
+          "productId"
         ],
         "type": "object",
         "properties": {
@@ -2855,6 +2863,12 @@
             "type": "string"
           },
           "vatNumber": {
+            "type": "string"
+          },
+          "origin": {
+            "type": "string"
+          },
+          "originId": {
             "type": "string"
           }
         }
@@ -3299,6 +3313,10 @@
             "format": "date-time"
           },
           "expiringDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deletedAt": {
             "type": "string",
             "format": "date-time"
           }
@@ -4556,6 +4574,7 @@
       },
       "OnboardingStatus": {
         "enum": [
+          "REQUESTING",
           "REQUEST",
           "TOBEVALIDATED",
           "PENDING",
@@ -4563,7 +4582,8 @@
           "COMPLETED",
           "FAILED",
           "REJECTED",
-          "DELETED"
+          "DELETED",
+          "OVERRIDDEN"
         ],
         "type": "string"
       },

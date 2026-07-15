@@ -100,6 +100,8 @@ public interface WorkflowExecutor {
         ctx.callActivity(CREATE_USERS_ACTIVITY, onboardingWithInstitutionIdString, optionsRetry(), String.class).await();
         createTestEnvironmentsOnboarding(ctx, onboarding, onboardingWithInstitutionIdString);
         ctx.callActivity(SEND_MAIL_COMPLETION_ACTIVITY, getOnboardingWorkflowString(objectMapper(), onboardingWorkflow), optionsRetry(), String.class).await();
+        String onboardingString = getOnboardingString(objectMapper(), onboarding);
+        ctx.callActivity(OVERRIDE_PENDING_ONBOARDINGS, onboardingString, optionsRetry(), String.class).await();
         return Optional.of(COMPLETED);
     }
 

@@ -10,7 +10,6 @@ public class OnboardingIndexResource {
 
     @NotNull
     private String onboardingId;
-
     private String institutionId;
     private String description;
     private String parentDescription;
@@ -28,5 +27,7 @@ public class OnboardingIndexResource {
     private OffsetDateTime updatedAt;
     private OffsetDateTime activatedAt;
     private OffsetDateTime expiringDate;
+    private OffsetDateTime deletedAt;
+    private OffsetDateTime statusUpdatedAt;
 
 }

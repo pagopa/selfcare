@@ -196,7 +196,7 @@ locals {
     },
     {
       name  = "WELL_KNOWN_URL"
-      value = "https://selcpweupnpgcheckoutsa.z6.web.core.windows.net/.well-known/jwks.json"
+      value = "https://selcpweupnpgcheckoutst01.z6.web.core.windows.net/.well-known/jwks.json"
     }
   ]
 

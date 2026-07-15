@@ -123,6 +123,12 @@ jobs:
             mvn -T "$THREADS" -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
           fi
 
+      - name: Set up JDK 21 for Sonar
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
       - name: Analyze with SonarCloud
         shell: bash
         env:
@@ -130,7 +136,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           JACOCO_PATHS=$(find "$PWD" -path '*/target/*jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
-          
+
           SONAR_ARGS=(
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.organization=pagopa
@@ -150,8 +156,4 @@ jobs:
             )
           fi
 
-          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
-            mvn -T 1C -B -ntp sonar:sonar --projects "${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
-          else
-            mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
-          fi
+          mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"

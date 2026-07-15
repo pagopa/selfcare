@@ -7,6 +7,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -340,6 +341,7 @@ public class InstitutionController {
      * @deprecated [reference SELC-2815]
      */
     @Deprecated(forRemoval = true)
+    @Hidden
     @GetMapping(value = "/{externalInstitutionId}/products/{productId}/onboarded-institution-info")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}",

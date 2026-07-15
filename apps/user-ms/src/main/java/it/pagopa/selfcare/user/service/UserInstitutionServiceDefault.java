@@ -262,30 +262,23 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
-        return retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilterMap, filterMap))
-                .onItem().transformToUni(userInstitution -> userUtils.checkProductRoles(productId, retrieveRoleFromUserInstitution(userInstitution, productId, productRole), productRole == null ? Collections.emptyList() : List.of(productRole))
-                        .replaceWith(userInstitution))
-                .onItem().transformToUni(userInstitution -> evaluateStatusAndUpdateUserInstitutionProduct(userInstitution, userId, institutionId, productId, role, productRole, status));
+        return retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilterMap, filterMap))
+                .onItem().transformToUni(userInstitutions -> userUtils.validateMultiroleAfterStatusUpdate(userInstitutions, productId, role, productRole, status)
+                        .replaceWith(userInstitutions))
+                .onItem().transformToUni(userInstitutions -> evaluateStatusAndUpdateUserInstitutionProduct(userInstitutions, userId, institutionId, productId, role, productRole, status));
 
     }
 
-    private PartyRole retrieveRoleFromUserInstitution(UserInstitution userInstitution, String productId, String productRole) {
-        return userInstitution.getProducts().stream()
-                .filter(onboardedProduct -> Objects.nonNull(onboardedProduct.getProductRole()) && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
-                && onboardedProduct.getProductId().equalsIgnoreCase(productId))
-                .findFirst()
-                .map(OnboardedProduct::getRole)
-                .orElse(null);
-    }
+    private Uni<Long> evaluateStatusAndUpdateUserInstitutionProduct(List<UserInstitution> userInstitutions, String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
+        if(userInstitutions.size() == 1) {
+          boolean isProductRoleAlreadyActive = userInstitutions.get(0).getProducts().stream()
+            .anyMatch(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(productId)
+              && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
+              && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()));
 
-    private Uni<Long> evaluateStatusAndUpdateUserInstitutionProduct(UserInstitution userInstitution, String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
-        boolean isProductRoleAlreadyActive = userInstitution.getProducts().stream()
-                .anyMatch(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(productId)
-                        && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
-                        && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()));
-
-        if (isProductRoleAlreadyActive && status.equals(ACTIVE)) {
+          if (isProductRoleAlreadyActive && status.equals(ACTIVE)) {
             return Uni.createFrom().item(0L);
+          }
         }
 
         OnboardedProductFilter.OnboardedProductFilterBuilder filterBuilder = OnboardedProductFilter.builder()

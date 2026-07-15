@@ -1810,4 +1810,90 @@ class OnboardingControllerTest {
         assertEquals(userId, expectedUserId.getValue());
     }
 
+    // -------------------------------------------------------------------------
+    // triggerDocumentGate (PUT /{onboardingId})
+    // -------------------------------------------------------------------------
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn204WhenSuccess() {
+        final String onboardingId = "test-onboarding-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(204);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn404WhenOnboardingNotFound() {
+        final String onboardingId = "non-existing-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().failure(
+                        new ResourceNotFoundException("Onboarding with id non-existing-id not found", "0000")));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(404);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn400WhenInvalidRequest() {
+        final String onboardingId = "test-onboarding-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().failure(
+                        new InvalidRequestException("Missing mandatory documents for onboarding")));
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(400);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void triggerDocumentGate_shouldReturn204WhenIdempotent() {
+        final String onboardingId = "already-advanced-id";
+        when(onboardingService.triggerDocumentGate(onboardingId))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", onboardingId)
+                .then()
+                .statusCode(204);
+
+        verify(onboardingService, times(1)).triggerDocumentGate(onboardingId);
+    }
+
+    @Test
+    void triggerDocumentGate_shouldReturn401WhenNotAuthenticated() {
+        given()
+                .when()
+                .contentType(ContentType.JSON)
+                .put("/{onboardingId}", "some-id")
+                .then()
+                .statusCode(401);
+
+        verifyNoInteractions(onboardingService);
+    }
+
 }

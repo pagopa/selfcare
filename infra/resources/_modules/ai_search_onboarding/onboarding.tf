@@ -212,6 +212,22 @@ resource "restapi_object" "search_index" {
         "sortable" : true,
         "facetable" : true,
         "retrievable" : true
+      },
+      {
+        "name" : "deletedAt",
+        "type" : "Edm.DateTimeOffset",
+        "retrievable" : true,
+        "filterable" : true,
+        "sortable" : true,
+        "searchable" : false
+      },
+      {
+        "name" : "statusUpdatedAt",
+        "type" : "Edm.DateTimeOffset",
+        "retrievable" : true,
+        "filterable" : true,
+        "sortable" : true,
+        "searchable" : false
       }
     ]
   })

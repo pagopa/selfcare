@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.iam.service;
 
-import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
@@ -16,12 +14,6 @@ import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import it.pagopa.selfcare.iam.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -29,6 +21,11 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.institution_openapi_json.api.InstitutionApi;
 import org.openapi.quarkus.institution_openapi_json.model.InstitutionResponse;
 import org.owasp.encoder.Encode;
+
+import java.time.Duration;
+import java.util.*;
+
+import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
 
 @Slf4j
 @ApplicationScoped
@@ -85,9 +82,8 @@ public class IamServiceImpl implements IamService {
                                 email ->
                                     UserClaims.builder()
                                         .email(DataEncryptionConfig.encrypt(req.getEmail()))
-                                        .name(DataEncryptionConfig.encrypt(req.getName()))
-                                        .familyName(
-                                            DataEncryptionConfig.encrypt(req.getFamilyName()))
+                                        .name(Optional.ofNullable(req.getName()).map(DataEncryptionConfig::encrypt).orElse(null))
+                                        .familyName(Optional.ofNullable(req.getFamilyName()).map(DataEncryptionConfig::encrypt).orElse(null))
                                         .productRoles(
                                             setFilteredProductRoles(
                                                 req.getProductRoles(), productId))
@@ -288,11 +284,22 @@ public class IamServiceImpl implements IamService {
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Override
-  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(
-      String userId, String productId) {
-    return userPermissionsRepository
+  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId, String productId) {
+    return getUser(userId, productId)
+      .onItem().transform(userClaims -> ProductRolePermissionsList.builder()
+        .userId(userId)
+        .productId(productId)
+        .name(userClaims.getName())
+        .familyName(userClaims.getFamilyName())
+        .email(userClaims.getEmail())
+        .build())
+      .onFailure().recoverWithItem(new ProductRolePermissionsList())
+      .onItem().transformToUni(permissions -> userPermissionsRepository
         .getUserProductRolePermissionsList(userId, productId)
-        .map(ProductRolePermissionsList::new);
+        .onItem().transform(l -> {
+          permissions.setItems(l);
+          return permissions;
+        }));
   }
 
   /**

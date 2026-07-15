@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.util;
 
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.entity.Document;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -161,7 +162,14 @@ public final class DocumentFileUtils {
     }
 
     public static String buildAttachmentPath(Document document, String contractPath) {
-        return Objects.nonNull(document.getContractSigned()) ? document.getContractSigned() : getAttachmentByOnboarding(document.getOnboardingId(), contractPath, document.getContractFilename());
+      if (StorageOrigin.USER.equals(document.getStorageOrigin())) {
+        return document.getAttachmentPath();
+      } else {
+        return Objects.nonNull(document.getContractSigned())
+            ? document.getContractSigned()
+            : getAttachmentByOnboarding(
+                document.getOnboardingId(), contractPath, document.getContractFilename());
+      }
     }
 
     public static String getAttachmentByOnboarding(String onboardingId, String contractPath, String filename) {
@@ -173,5 +181,12 @@ public final class DocumentFileUtils {
             return CONTRACT_FILENAME_FUNC.apply(String.format("%s_%s.pdf", format, attachmentName), productName);
         }
         return CONTRACT_FILENAME_FUNC.apply(format, productName);
+    }
+
+    public static String getAttachmentFileName(Document document) {
+      return switch (document.getStorageOrigin()) {
+        case USER -> document.getAttachmentName();
+        case SYSTEM -> document.getContractFilename();
+      };
     }
 }

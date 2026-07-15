@@ -13,6 +13,7 @@ import java.util.Optional;
 
 import static it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowType.AGGREGATOR;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.*;
+import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.getOnboardingWorkflowString;
 import static it.pagopa.selfcare.onboarding.utils.Utils.readOnboardingValue;
 
@@ -47,11 +48,14 @@ public class WorkflowExecutorContractRegistrationAggregator implements WorkflowE
 
     @Override
     public Optional<OnboardingStatus> executePendingState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
-        String onboardingWithInstitutionIdString = createInstitutionAndOnboarding(ctx, onboardingWorkflow.getOnboarding());
+        Onboarding onboardingOriginal = onboardingWorkflow.getOnboarding();
+        String onboardingWithInstitutionIdString = createInstitutionAndOnboarding(ctx, onboardingOriginal);
         Onboarding onboarding = readOnboardingValue(objectMapper(), onboardingWithInstitutionIdString);
         createInstitutionAndOnboardingAggregate(ctx, onboarding, onboardingMapper);
         ctx.callActivity(CREATE_USERS_ACTIVITY, onboardingWithInstitutionIdString, optionsRetry(), String.class).await();
         ctx.callActivity(SEND_MAIL_COMPLETION_ACTIVITY, getOnboardingWorkflowString(objectMapper(), onboardingWorkflow), optionsRetry, String.class).await();
+        String onboardingString = getOnboardingString(objectMapper, onboardingOriginal);
+        ctx.callActivity(OVERRIDE_PENDING_ONBOARDINGS, onboardingString, optionsRetry(), String.class).await();
         return Optional.of(OnboardingStatus.COMPLETED);
     }
 

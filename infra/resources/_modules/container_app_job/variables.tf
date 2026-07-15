@@ -76,6 +76,12 @@ variable "key_vault_resource_group_name" {
   description = "Key Vault resource group name (for custom domain certificate)"
 }
 
+variable "additional_user_assigned_identity_ids" {
+  type        = list(string)
+  default     = []
+  description = "Additional user-assigned managed identity IDs to attach to the container app job"
+}
+
 variable "replica_timeout_in_seconds" {
   type        = number
   default     = 28800

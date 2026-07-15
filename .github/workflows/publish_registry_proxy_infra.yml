@@ -10,7 +10,7 @@ on:
       - main
       - releases/*
     paths:
-      - 'infra/resources/**'
+      - 'infra/resources/registry-proxy/**'
 
   workflow_dispatch:
     inputs:

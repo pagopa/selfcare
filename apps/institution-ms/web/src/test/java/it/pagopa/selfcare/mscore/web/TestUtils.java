@@ -191,11 +191,8 @@ public class TestUtils {
                 Arguments.of("", ""),
                 Arguments.of(null, null),
                 Arguments.of("   ", "   "),
-                Arguments.of("valid", ""),
                 Arguments.of("", "valid"),
                 Arguments.of(null, "valid"),
-                Arguments.of("valid", null),
-                Arguments.of("valid", "   "),
                 Arguments.of("   ", "valid")
         );
     }

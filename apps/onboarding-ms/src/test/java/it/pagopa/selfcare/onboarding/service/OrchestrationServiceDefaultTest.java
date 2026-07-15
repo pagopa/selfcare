@@ -34,7 +34,7 @@ class OrchestrationServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(response));
 
         // when
-        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestration(onboardingId, null);
+        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null);
 
         // then
         UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
@@ -55,7 +55,7 @@ class OrchestrationServiceDefaultTest {
                 .thenReturn(Uni.createFrom().failure(boom));
 
         // when
-        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestration(onboardingId, null);
+        Uni<OrchestrationResponse> uni = orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null);
 
         // then
         UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
@@ -64,6 +64,27 @@ class OrchestrationServiceDefaultTest {
         verify(orchestrationApi).apiStartOnboardingOrchestrationGet(
                 onboardingId, null);
         verifyNoMoreInteractions(orchestrationApi);    }
+
+    @Test
+    void triggerOrchestrationIfEnabled_returnsNullItemAndSkipsHttpCall_whenOrchestrationDisabled() {
+        // given
+        String onboardingId = "onb-disabled";
+        Boolean previous = orchestrationServiceDefault.getOnboardingOrchestrationEnabled();
+        orchestrationServiceDefault.setOnboardingOrchestrationEnabled(Boolean.FALSE);
+        try {
+            // when
+            Uni<OrchestrationResponse> uni =
+                    orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null);
+
+            // then
+            UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
+                    .withSubscriber(UniAssertSubscriber.create());
+            sub.assertCompleted().assertItem(null);
+            verifyNoInteractions(orchestrationApi);
+        } finally {
+            orchestrationServiceDefault.setOnboardingOrchestrationEnabled(previous);
+        }
+    }
 
     @Test
     void triggerOrchestrationDeleteInstitutionAndUser_success() {

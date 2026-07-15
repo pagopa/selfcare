@@ -13,7 +13,6 @@ module "local" {
   private_dns_name_domain        = "mangopond-2a5d4d65.westeurope.azurecontainerapps.io"
   container_app_environment_name = "selc-u-cae-002"
   ca_resource_group_name         = "selc-u-container-app-002-rg"
-  container_app_min_replicas     = 0
 }
 
 locals {
@@ -47,7 +46,7 @@ locals {
   private_dns_name            = "selc.internal.uat.selfcare.pagopa.it"
   private_onboarding_dns_name = "selc-u-onboarding-ms-ca.calmsky-143987c1.westeurope.azurecontainerapps.io"
   # ca_suffix_dns_private_name      = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
-  ca_pnpg_suffix_dns_private_name = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
+  ca_pnpg_suffix_dns_private_name = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
 
   # app_gateway
   app_gateway_api_certificate_name      = "api-uat-selfcare-pagopa-it"
@@ -129,19 +128,19 @@ locals {
     },
     {
       name  = "MS_ONBOARDING_URL"
-      value = "http://selc-${module.local.config.env_short}-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-${module.local.config.env_short}-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -149,7 +148,7 @@ locals {
     },
     {
       name  = "USERVICE_PARTY_MANAGEMENT_URL"
-      value = "http://selc-${module.local.config.env_short}-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "STORAGE_CONTAINER"
@@ -157,11 +156,11 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-${module.local.config.env_short}-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_DOCUMENT_URL"
-      value = "http://selc-${module.local.config.env_short}-document-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_STORAGE_CONTAINER"

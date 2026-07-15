@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.connector.api;
 
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import org.springframework.core.io.Resource;
@@ -15,7 +16,13 @@ public interface DocumentMsConnector {
 
     HttpStatusCode headAttachment(String onboardingId, String filename);
 
+    AvailableDocuments getAvailableDocuments(String onboardingId);
+
     void uploadAttachment(String onboardingId, MultipartFile attachment, String attachmentName, String id, AttachmentTemplate template);
+
+    void uploadUserAttachment(String onboardingId, MultipartFile attachment, String productId,
+                              String attachmentId, String attachmentDescription, String attachmentName,
+                              Integer maxDocumentsRequired);
 
     Resource getAggregatesCsv(String onboardingId, String productId);
 

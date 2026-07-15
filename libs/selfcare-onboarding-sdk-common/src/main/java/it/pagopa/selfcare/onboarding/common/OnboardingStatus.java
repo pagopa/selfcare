@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.common;
 
 public enum OnboardingStatus {
+  REQUESTING,
   REQUEST,
   TOBEVALIDATED,
   PENDING,
@@ -8,5 +9,6 @@ public enum OnboardingStatus {
   COMPLETED,
   FAILED,
   REJECTED,
-  DELETED
+  DELETED,
+  OVERRIDDEN
 }

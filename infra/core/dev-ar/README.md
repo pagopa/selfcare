@@ -51,6 +51,7 @@
 | <a name="module_storage"></a> [storage](#module\_storage) | ../_modules/storage | n/a |
 | <a name="module_storage_documents"></a> [storage\_documents](#module\_storage\_documents) | ../_modules/storage_accounts | n/a |
 | <a name="module_upload_file_logo"></a> [upload\_file\_logo](#module\_upload\_file\_logo) | ../_modules/upload_file | n/a |
+| <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 | <a name="module_vpn"></a> [vpn](#module\_vpn) | ../_modules/vpn | n/a |
 
 ## Resources

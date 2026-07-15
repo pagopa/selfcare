@@ -58,3 +58,15 @@ variable "web_storage_rg" {
   type        = string
   description = "Resource group name for the web storage"
 }
+
+variable "eventhub_namespace_name" {
+  type        = string
+  description = "Name of the Event Hub namespace"
+  default     = null
+}
+
+variable "eventhub_namespace_rg" {
+  type        = string
+  description = "Resource group name of the Event Hub namespace"
+  default     = null
+}

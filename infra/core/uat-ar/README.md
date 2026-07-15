@@ -15,8 +15,8 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.8.1 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.77.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
 
 ## Modules
 
@@ -47,6 +47,7 @@
 | <a name="module_redis"></a> [redis](#module\_redis) | ../_modules/redis | n/a |
 | <a name="module_resources"></a> [resources](#module\_resources) | ../_modules/resources | n/a |
 | <a name="module_storage"></a> [storage](#module\_storage) | ../_modules/storage | n/a |
+| <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 | <a name="module_vpn"></a> [vpn](#module\_vpn) | ../_modules/vpn | n/a |
 
 ## Resources

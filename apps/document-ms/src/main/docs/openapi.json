@@ -48,6 +48,22 @@
           }
         }
       },
+      "AvailableDocumentsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "attachments" : {
+            "description" : "Names of the attachments available for the onboarding. Empty list if none.",
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "contractFilename" : {
+            "description" : "Filename of the signed contract available for download. Null when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).",
+            "type" : "string"
+          }
+        }
+      },
       "BillingPdfData" : {
         "type" : "object",
         "properties" : {
@@ -171,6 +187,12 @@
           "attachmentName" : {
             "type" : "string"
           },
+          "attachmentPath" : {
+            "type" : "string"
+          },
+          "attachmentDescription" : {
+            "type" : "string"
+          },
           "checksum" : {
             "type" : "string"
           },
@@ -201,6 +223,9 @@
           },
           "activatedAt" : {
             "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
           },
           "signingStep" : {
             "format" : "int32",
@@ -265,6 +290,12 @@
           "attachmentName" : {
             "type" : "string"
           },
+          "attachmentDescription" : {
+            "type" : "string"
+          },
+          "attachmentPath" : {
+            "type" : "string"
+          },
           "checksum" : {
             "type" : "string"
           },
@@ -298,6 +329,9 @@
           "signingStep" : {
             "format" : "int32",
             "type" : "integer"
+          },
+          "storageOrigin" : {
+            "$ref" : "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -550,6 +584,10 @@
           }
         }
       },
+      "StorageOrigin" : {
+        "enum" : [ "SYSTEM", "USER" ],
+        "type" : "string"
+      },
       "UploadAggregateCsvRequest" : {
         "required" : [ "onboardingId", "productId", "csv" ],
         "type" : "object",
@@ -582,6 +620,31 @@
           },
           "fileContent" : {
             "format" : "binary",
+            "type" : "string"
+          }
+        }
+      },
+      "UserAttachmentRequest" : {
+        "required" : [ "onboardingId", "productId", "attachmentName", "attachmentId", "maxDocumentsRequired" ],
+        "type" : "object",
+        "properties" : {
+          "onboardingId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "attachmentName" : {
+            "type" : "string"
+          },
+          "attachmentId" : {
+            "type" : "string"
+          },
+          "maxDocumentsRequired" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "attachmentDescription" : {
             "type" : "string"
           }
         }
@@ -847,6 +910,56 @@
                   },
                   "request" : {
                     "$ref" : "#/components/schemas/DocumentBuilderRequest"
+                  }
+                }
+              },
+              "encoding" : {
+                "request" : {
+                  "contentType" : "application/json"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/upload-user-attachment" : {
+      "post" : {
+        "summary" : "Upload a user-driven attachment (PDF only) to the USER storage.",
+        "description" : "Persists a user-uploaded attachment. Skips signature verification and template digest checks: the file is only validated to be a well-formed PDF. Target storage is implicitly USER",
+        "operationId" : "uploadUserAttachment",
+        "tags" : [ "Document Content Controller" ],
+        "requestBody" : {
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "required" : [ "file" ],
+                "type" : "object",
+                "properties" : {
+                  "file" : {
+                    "format" : "binary",
+                    "type" : "string"
+                  },
+                  "request" : {
+                    "$ref" : "#/components/schemas/UserAttachmentRequest"
                   }
                 }
               },
@@ -1463,6 +1576,43 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/available-documents" : {
+      "get" : {
+        "summary" : "Retrieve the list of documents available for download for a given onboarding",
+        "description" : "Returns the attachments associated with the onboarding and, if present, the contractFilename.",
+        "operationId" : "getAvailableDocuments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AvailableDocumentsResponse"
+                }
+              }
             }
           },
           "401" : {

@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.model;
 
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,4 +21,5 @@ public class RequiredDocument {
   private String mimeType;
   private Integer maxDocumentsRequired;
   private RequiredDocumentFilter filter;
+  private StorageOrigin storageOrigin;
 }

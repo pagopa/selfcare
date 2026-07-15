@@ -6,11 +6,16 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
+import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
+import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -52,6 +60,9 @@ public class TokenServiceImplTest {
     @Mock
     private ProductAzureService productAzureService;
 
+    @Mock
+    private ProductMsConnector productMsConnector;
+
 
     @Test
     void shouldNotCompleteTokenV2WhenIdIsNull() {
@@ -71,7 +82,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.completeTokenV2(tokenId, mockMultipartFile);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .onboardingTokenComplete(tokenId, mockMultipartFile);
     }
 
@@ -93,7 +104,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.completeOnboardingUsers(tokenId, mockMultipartFile);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .onboardingUsersComplete(tokenId, mockMultipartFile);
     }
 
@@ -104,7 +115,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.verifyOnboarding(onboardingId);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .getOnboarding(onboardingId);
     }
 
@@ -115,7 +126,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getOnboardingWithUserInfo(onboardingId);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .getOnboardingWithUserInfo(onboardingId);
     }
 
@@ -128,7 +139,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.approveOnboarding(onboardingId, userUid);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .approveOnboarding(onboardingId, userUid);
     }
 
@@ -142,7 +153,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.rejectOnboarding(onboardingId, reason, userUid);
         //then
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
                 .rejectOnboarding(onboardingId, reason, userUid);
     }
 
@@ -153,7 +164,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getContract(onboardingId);
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getContract(onboardingId);
     }
 
@@ -165,7 +176,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getAttachment(onboardingId, filename);
         // then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getAttachment(onboardingId, filename);
     }
 
@@ -182,7 +193,7 @@ public class TokenServiceImplTest {
         tokenService.getTemplateAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getTemplateAttachment(onboardingData, filename, templatePath);
     }
 
@@ -199,7 +210,7 @@ public class TokenServiceImplTest {
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertTrue(result.is2xxSuccessful());
         assertFalse(result.is4xxClientError());
@@ -218,7 +229,7 @@ public class TokenServiceImplTest {
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertFalse(result.is2xxSuccessful());
         assertTrue(result.is4xxClientError());
@@ -237,7 +248,7 @@ public class TokenServiceImplTest {
         HttpStatusCode result = tokenService.headAttachment(onboardingId, filename);
 
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .headAttachment(eq("onboardingId"), eq("filename"));
         assertFalse(result.is2xxSuccessful());
         assertFalse(result.is4xxClientError());
@@ -253,12 +264,47 @@ public class TokenServiceImplTest {
         final String templatePath = "templatePath";
         mockAttachmentContext(onboardingId, productId, filename, templatePath);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString())).thenReturn(List.of());
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename);
+        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename, null, null);
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
                         argThat(template -> templatePath.equals(template.getTemplatePath())));
+    }
+
+
+    @Test
+    void uploadAttachment_userStorage() throws IOException {
+        //given
+        final String onboardingId = "onboardingId";
+        final String attachmentName = "attachmentName";
+        final String attachmentId = "statuto";
+        final String attachmentDescription = "attachmentDescription";
+        final String productId = "productId";
+        final String templatePath = "templatePath";
+        final String filename = "filename";
+        final Integer maxDocumentsRequired = 3;
+
+        mockAttachmentContext(onboardingId, productId, filename, templatePath);
+        MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
+
+        RequiredDocumentModel requiredDocument = new RequiredDocumentModel();
+        requiredDocument.setId(attachmentId);
+        requiredDocument.setStorageOrigin(StorageOrigin.USER);
+        requiredDocument.setMaxDocumentsRequired(maxDocumentsRequired);
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString()))
+                .thenReturn(List.of(requiredDocument));
+
+        // when
+        tokenService.uploadAttachment(onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
+
+        //then
+        verify(documentMsConnector, times(1))
+                .uploadUserAttachment(onboardingId, mockMultipartFile, productId, attachmentId,
+                        attachmentDescription, attachmentName, maxDocumentsRequired);
+        verify(documentMsConnector, Mockito.never())
+                .uploadAttachment(anyString(), any(), anyString(), anyString(), any());
     }
 
 
@@ -270,7 +316,7 @@ public class TokenServiceImplTest {
         // when
         tokenService.getAggregatesCsv(onboardingId, productId);
         //then
-        Mockito.verify(documentMsConnector, Mockito.times(1))
+        verify(documentMsConnector, times(1))
                 .getAggregatesCsv(onboardingId, productId);
     }
 
@@ -298,7 +344,7 @@ public class TokenServiceImplTest {
 
         //then
         assertTrue(result);
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
             .getOnboardingWithUserInfo(anyString());
     }
 
@@ -323,7 +369,7 @@ public class TokenServiceImplTest {
 
         //then
         assertFalse(result);
-        Mockito.verify(onboardingMsConnector, Mockito.times(1))
+        verify(onboardingMsConnector, times(1))
             .getOnboardingWithUserInfo(anyString());
     }
 
@@ -331,6 +377,9 @@ public class TokenServiceImplTest {
         OnboardingData onboardingData = new OnboardingData();
         onboardingData.setInstitutionType(InstitutionType.AS);
         onboardingData.setProductId(productId);
+        InstitutionUpdate institutionUpdate = new InstitutionUpdate();
+        institutionUpdate.setOrigin("SELC");
+        onboardingData.setInstitutionUpdate(institutionUpdate);
 
         AttachmentTemplate attachmentTemplate = new AttachmentTemplate();
         attachmentTemplate.setName(filename);
@@ -344,7 +393,52 @@ public class TokenServiceImplTest {
         product.setInstitutionContractMappings(Map.of(InstitutionType.AS.name(), contractTemplate));
 
         when(onboardingMsConnector.getOnboarding(onboardingId)).thenReturn(onboardingData);
-        when(productAzureService.getProductValid(productId)).thenReturn(product);
+        Mockito.lenient().when(productAzureService.getProductValid(productId)).thenReturn(product);
         return onboardingData;
+    }
+
+    @Test
+    void shouldNotGetAvailableDocumentsWhenOnboardingIdIsNull() {
+        Executable executable = () -> tokenService.getAvailableDocuments(null);
+        Exception e = Assertions.assertThrows(IllegalArgumentException.class, executable);
+        Assertions.assertEquals("OnboardingId is required", e.getMessage());
+        Mockito.verifyNoInteractions(documentMsConnector);
+    }
+
+    @Test
+    void shouldGetAvailableDocuments() {
+        // given
+        String onboardingId = "onboarding-1";
+        AvailableDocuments expected = new AvailableDocuments();
+        expected.setAttachments(List.of("attachment1.pdf", "attachment2.pdf"));
+        expected.setContractFilename("contract.pdf");
+        when(documentMsConnector.getAvailableDocuments(onboardingId)).thenReturn(expected);
+
+        // when
+        AvailableDocuments actual = tokenService.getAvailableDocuments(onboardingId);
+
+        // then
+        Assertions.assertSame(expected, actual);
+        verify(documentMsConnector, times(1)).getAvailableDocuments(onboardingId);
+        verifyNoMoreInteractions(documentMsConnector);
+    }
+
+    @Test
+    void shouldGetAvailableDocumentsWhenContractNotAvailable() {
+        // given
+        String onboardingId = "onboarding-2";
+        AvailableDocuments expected = new AvailableDocuments();
+        expected.setAttachments(List.of());
+        expected.setContractFilename(null); // no signed contract (e.g. TOBEVALIDATED)
+        when(documentMsConnector.getAvailableDocuments(onboardingId)).thenReturn(expected);
+
+        // when
+        AvailableDocuments actual = tokenService.getAvailableDocuments(onboardingId);
+
+        // then
+        Assertions.assertNotNull(actual);
+        Assertions.assertNull(actual.getContractFilename());
+        Assertions.assertTrue(actual.getAttachments().isEmpty());
+        verify(documentMsConnector, times(1)).getAvailableDocuments(onboardingId);
     }
 }

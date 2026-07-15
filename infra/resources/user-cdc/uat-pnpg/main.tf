@@ -11,9 +11,9 @@ module "local" {
 
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
-  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-u-pnpg-cae-001"
-  ca_resource_group_name         = "selc-u-container-app-001-rg"
+  private_dns_name_domain        = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-u-container-app-rg"
   container_app_max_replicas     = 1
   container_app_desired_replicas = "1"
   container_app_cpu              = 1
@@ -23,6 +23,21 @@ module "local" {
 ###############################################################################
 # Container App
 ###############################################################################
+
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_table_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-table-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
 
 locals {
   app_settings_user_cdc = [
@@ -37,13 +52,28 @@ locals {
     {
       name  = "STORAGE_CONTAINER_PRODUCT"
       value = "selc-u-product"
+    },
+    {
+      name  = "TABLE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "TABLE_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
+    },
+    {
+      name  = "STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "STORAGE_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     }
   ]
 
   secrets_names_user_cdc = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
   }
 }
 
@@ -64,4 +94,8 @@ module "container_app_user_cdc" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_table_identity.id,
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id
+  ]
 }
