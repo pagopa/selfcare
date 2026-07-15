@@ -151,3 +151,20 @@ Feature: Token
     And The response body contains:
       | detail | Access Denied |
 
+  Scenario: Failed to download document when type=ATTACHMENT and name is missing
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/download?type=ATTACHMENT"
+    Then The status code is 400
+
+  Scenario: Failed to download document when onboarding is not found
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i1019/download?type=CONTRACT_SIGNED"
+    Then The status code is 404
+
+  Scenario: Forbidden to download document when user has no permission
+    Given User login with username "r.balboa" and password "test"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/download?type=CONTRACT_SIGNED"
+    Then The status code is 403
+    And The response body contains:
+      | detail | Access Denied |
+
