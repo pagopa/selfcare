@@ -194,7 +194,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                         .ok(contract, MediaType.APPLICATION_OCTET_STREAM)
                                         .header(
                                                 HttpHeaders.CONTENT_DISPOSITION,
-                                                HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + document.getContractFilename()
+                                                HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + DocumentFileUtils.getAttachmentFileName(document)
                                         )
                                         .build())
                 );
