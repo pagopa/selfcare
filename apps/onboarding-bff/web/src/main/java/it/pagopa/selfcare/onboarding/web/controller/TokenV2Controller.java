@@ -4,10 +4,13 @@ package it.pagopa.selfcare.onboarding.web.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -289,6 +292,12 @@ public class TokenV2Controller {
     @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
             description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
             operationId = "getAvailableDocumentsUsingGET")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents"),
+            @ApiResponse(responseCode = "404", description = "Onboarding not found")
+    })
     public AvailableDocumentsResource getAvailableDocuments(@ApiParam("${swagger.tokens.onboardingId}")
                                                             @PathVariable("onboardingId") String onboardingId) {
         log.trace("getAvailableDocuments start");
@@ -305,10 +314,16 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
     @Operation(summary = "Download a document (signed contract or attachment) for the given onboarding",
-            description = "Routes to the correct document-ms API based on the 'type' discriminator. " +
-                    "When type=CONTRACT_SIGNED downloads the signed contract; " +
+            description = "When type=CONTRACT_SIGNED downloads the signed contract; " +
                     "when type=ATTACHMENT the 'name' query parameter is required.",
             operationId = "downloadDocumentUsingGET")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "400", description = "Invalid request - missing 'name' when type=ATTACHMENT or unsupported download type"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents"),
+            @ApiResponse(responseCode = "404", description = "Onboarding or document not found")
+    })
     public ResponseEntity<byte[]> downloadDocument(
             @ApiParam("${swagger.tokens.onboardingId}")
             @PathVariable("onboardingId") String onboardingId,
@@ -325,12 +340,12 @@ public class TokenV2Controller {
             case CONTRACT_SIGNED -> resource = tokenService.getContractSigned(onboardingId);
             case ATTACHMENT -> {
                 if (name == null || name.isBlank()) {
-                    throw new IllegalArgumentException(
+                    throw new InvalidRequestException(
                             "Query parameter 'name' is required when type=" + ATTACHMENT);
                 }
                 resource = tokenService.getAttachment(onboardingId, name);
             }
-            default -> throw new IllegalArgumentException("Unsupported download type: " + type);
+            default -> throw new InvalidRequestException("Unsupported download type: " + type);
         }
         log.trace("downloadDocument end");
         return getResponseEntity(resource);
