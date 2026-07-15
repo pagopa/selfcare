@@ -30,6 +30,27 @@ Before running you must set these properties as environment variables.
 | quarkus.openapi-generator.user_registry_json.auth.api_key.api-key<br/> | USER_REGISTRY_API_KEY      |             |     yes      |
 | quarkus.rest-client."*.user_registry_json.api.UserApi".url<br/>        | USER_REGISTRY_URL          |             |     yes      |
 
+### Blob storage authentication
+
+The application supports both connection-string and Managed Identity authentication for product and contract/document blob storage.
+When `BLOB_STORAGE_CONN_STRING_CONTRACT` or `BLOB_STORAGE_CONN_STRING_PRODUCT` is set, the connection string is used.
+When the connection string is empty, configure the corresponding storage account name and managed identity client id:
+
+| **Storage** | **Account Environment Variable** | **Managed Identity Client ID Environment Variable** |
+|-------------|----------------------------------|-----------------------------------------------------|
+| Contract/documents | BLOB_STORAGE_ACCOUNT_NAME_CONTRACT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT |
+| Product | BLOB_STORAGE_ACCOUNT_NAME_PRODUCT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT |
+
+Before enabling this in Azure, the Function App must have the referenced user-assigned managed identities attached by infrastructure.
+Local and Cucumber integration tests must set connection strings explicitly for Azurite; Azure environments must leave `BLOB_STORAGE_CONN_STRING_CONTRACT` and `BLOB_STORAGE_CONN_STRING_PRODUCT` unset. The main `application.properties` does not declare connection-string properties, while test properties provide them explicitly.
+
+
+### Custom settings
+
+Set `STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED=true` to add the optional flat `relatedDocuments` array to the standard `SC-Contracts` topic. The default is `false`, so the existing queue payload remains unchanged until the consumer is ready. SAP and webhook payloads are never enriched by this flag.
+
+Each item contains its document identifier, logical and physical names, lower-case document type, MIME type, creation timestamp and full storage path. The array is a full snapshot of ATTACHMENT and USER documents linked to the root onboarding; if none exists, it is empty.
+
 ### Local settings
 Under the path "apps/onboarding-functions" you should check the presence of "local.settings.json".<br>
 If it's not present than you should add a file named "local.settings.json", containing the following json:<br>
