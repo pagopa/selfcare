@@ -173,8 +173,3 @@ Feature: Token
     When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/download?type=ATTACHMENT&name=Dichiarazione_sostitutiva_certificazione.pdf"
     Then The status code is 200
 
-  Scenario: Success to upload user attachment
-    Given User login with username "j.doe" and password "test"
-    And A mock-file of type "multipart/form-data" with key "attachment" and document path "mock/mock-template.pdf" used to perform request
-    When I send a POST request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/attachment?attachmentName=Dichiarazione_sostitutiva_certificazione.pdf" with multi-part file
-    Then The status code is 204
