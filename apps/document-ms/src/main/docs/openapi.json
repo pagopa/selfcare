@@ -561,6 +561,42 @@
           }
         }
       },
+      "RelatedDocumentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "description" : "Unique identifier of the document.",
+            "type" : "string"
+          },
+          "name" : {
+            "description" : "Logical name of the document (e.g. required document ID or attachment label).",
+            "type" : "string"
+          },
+          "fileName" : {
+            "description" : "Physical filename of the document as stored.",
+            "type" : "string"
+          },
+          "type" : {
+            "description" : "Document type.",
+            "type" : "string"
+          },
+          "mimeType" : {
+            "description" : "MIME type derived from the file extension.",
+            "type" : "string"
+          },
+          "createdAt" : {
+            "description" : "Timestamp when the document was first created.",
+            "type" : "string",
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocalDateTime"
+            } ]
+          },
+          "filePath" : {
+            "description" : "Full storage path of the document.",
+            "type" : "string"
+          }
+        }
+      },
       "SignatureRequest" : {
         "required" : [ "onboardingId", "file", "fiscalCodes", "skipSignatureVerification" ],
         "type" : "object",
@@ -1653,6 +1689,46 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/related-documents" : {
+      "get" : {
+        "summary" : "Retrieve all related documents for a given onboarding",
+        "description" : "Returns the full metadata (id, name, fileName, filePath, mimeType, type, createdAt) for all ATTACHMENT and USER documents linked to the root onboarding. Intended for downstream integrations that need the complete document manifest (e.g. SAP gestionale di conservazione).",
+        "operationId" : "getRelatedDocuments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RelatedDocumentResponse"
+                  }
+                }
+              }
             }
           },
           "401" : {

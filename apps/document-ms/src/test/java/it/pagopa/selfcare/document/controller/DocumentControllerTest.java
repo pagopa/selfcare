@@ -10,6 +10,7 @@ import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
+import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
@@ -531,6 +532,32 @@ class DocumentControllerTest {
         .get("/v1/documents/" + ONBOARDING_ID + "/attachment-list")
         .then()
         .statusCode(500);
+  }
+
+  @Test
+  void getRelatedDocuments_shouldReturnAttachmentMetadata() {
+    // given
+    RelatedDocumentResponse response = RelatedDocumentResponse.builder()
+        .id(DOCUMENT_ID)
+        .name(ATTACHMENT_NAME)
+        .fileName("attachment.pdf")
+        .filePath("/contracts/onboarding-123/attachments/attachment.pdf")
+        .type("attachment")
+        .mimeType("application/pdf")
+        .build();
+    when(documentService.getRelatedDocuments(ONBOARDING_ID))
+        .thenReturn(Uni.createFrom().item(List.of(response)));
+
+    // when / then
+    given()
+        .when()
+        .get("/v1/documents/" + ONBOARDING_ID + "/related-documents")
+        .then()
+        .statusCode(200)
+        .body("size()", is(1))
+        .body("[0].id", equalTo(DOCUMENT_ID))
+        .body("[0].type", equalTo("attachment"))
+        .body("[0].mimeType", equalTo("application/pdf"));
   }
 
   @Test

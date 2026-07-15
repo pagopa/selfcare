@@ -15,6 +15,7 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
     public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Document, String> {
 
     private static final List<String> CONTRACT_TYPES = List.of(INSTITUTION.name(), USER.name());
+    private static final List<String> RELATED_DOCUMENT_TYPES = List.of(ATTACHMENT.name(), USER.name());
     private static final String ONBOARDING_AND_TYPES_FILTER = "onboardingId = ?1 and type in ?2";
 
     public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
@@ -46,6 +47,11 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     public Uni<List<Document>> findAttachments(String onboardingId) {
         return find("onboardingId = ?1 and type = ?2", onboardingId, ATTACHMENT.name()).list();
+    }
+
+    public Uni<List<Document>> findRelatedDocuments(String rootOnboardingId) {
+        return find("rootOnboardingId = ?1 and type in ?2",
+                Sort.by("createdAt"), rootOnboardingId, RELATED_DOCUMENT_TYPES).list();
     }
 
     /**
