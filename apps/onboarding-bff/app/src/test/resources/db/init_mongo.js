@@ -743,7 +743,6 @@ db.documents.insertMany([
   },
   {
     _id: "37f7609b-5a4b-4200-82e7-2117756d64aa",
-    attachmentName: "Dichiarazione_sostitutiva_certificazione.pdf",
     checksum: "2B0zPYLxWtxaxofkRnueQLvdXv+tCiB9tDBTqM3H6l8=",
     contractFilename: "Pagamenti_pagoPA_Dichiarazione_sostitutiva_certificazione.pdf",
     contractTemplate: "contracts/template/pagopa/attachments/1.0.0/pagopa-checklist-v1.0.0.html",
@@ -752,8 +751,21 @@ db.documents.insertMany([
     onboardingId: "37f7609b-5a4b-4200-82e7-2117756d64aa",
     productId: "prod-pagopa",
     rootOnboardingId: "37f7609b-5a4b-4200-82e7-2117756d64aa",
-    storageOrigin: "USER",
+    storageOrigin: "SYSTEM",
     type: "ATTACHMENT",
     updatedAt: ISODate("2026-04-21T13:17:32.675Z"),
+  },
+  {
+    _id: "b1c2d3e4-f567-4890-abcd-1234567890ef",
+    attachmentName: "user_uploaded_attachment.pdf",
+    attachmentPath:
+      "parties/docs/37f7609b-5a4b-4200-82e7-2117756d64aa/attachments/user_uploaded_attachment.pdf",
+    createdAt: ISODate("2026-04-22T09:00:00.000Z"),
+    onboardingId: "37f7609b-5a4b-4200-82e7-2117756d64aa",
+    productId: "prod-pagopa",
+    rootOnboardingId: "37f7609b-5a4b-4200-82e7-2117756d64aa",
+    storageOrigin: "USER",
+    type: "ATTACHMENT",
+    updatedAt: ISODate("2026-04-22T09:00:00.000Z"),
   },
 ]);

@@ -142,7 +142,7 @@ Feature: Token
     When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/available-documents"
     Then The status code is 200
     And The response body contains:
-      | attachments[0] | Dichiarazione_sostitutiva_certificazione |
+      | attachments[0] | user_uploaded_attachment.pdf.pdf |
 
   Scenario: Forbidden to retrieve available documents when user has no permission
     Given User login with username "r.balboa" and password "test"
@@ -170,6 +170,6 @@ Feature: Token
 
   Scenario: Success to download user attachment
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/download?type=ATTACHMENT&name=Dichiarazione_sostitutiva_certificazione.pdf"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/download?type=ATTACHMENT&name=user_uploaded_attachment.pdf"
     Then The status code is 200
 
