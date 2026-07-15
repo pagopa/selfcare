@@ -74,6 +74,7 @@ locals {
       "FD_TOPIC_NAME"                                      = "Selfcare-FD"
       "SAP_ALLOWED_INSTITUTION_TYPE"                       = "PA,GSP,SA,AS,SCP"
       "SAP_ALLOWED_ORIGINS"                                = "IPA,SELC"
+      "STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED"    = "false"
       "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"          = "5"
       "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH"         = "contracts/template/mail/registration-request-pt/1.0.0.json"
       "MAIL_TEMPLATE_REGISTRATION_NOTIFICATION_ADMIN_PATH" = "contracts/template/mail/registration-notification-admin/1.0.0.json"
