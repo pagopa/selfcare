@@ -5,14 +5,20 @@ import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.OnboardedProductResponse;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import it.pagopa.selfcare.user.util.UserUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
 import java.util.List;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "cdi", uses = UserUtils.class)
 public interface OnboardedProductMapper {
 
+    @Mapping(
+      target = "excludeRoleFromUserGroups",
+      source = "onboardedProduct",
+      qualifiedByName = "isExcludeRoleFromUserGroups"
+    )
     OnboardedProductResponse toResponse(OnboardedProduct onboardedProduct);
 
     List<OnboardedProductResponse> toList(List<OnboardedProduct> onboardedProducts);

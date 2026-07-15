@@ -4,6 +4,7 @@ import io.quarkus.security.identity.CurrentIdentityAssociation;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -24,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpStatus;
 import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.reactive.ClientWebApplicationException;
+import org.mapstruct.Named;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.util.*;
@@ -243,6 +245,23 @@ public class UserUtils {
           throw new InvalidRequestException(
             "Not valid multirole configuration");
         }
+    }
+
+
+  @Named("isExcludeRoleFromUserGroups")
+  public boolean isExcludeRoleFromUserGroups(OnboardedProduct onboardedProduct) {
+
+      Product product = productService.getProduct(onboardedProduct.getProductId());
+
+      if (product == null
+        || product.getRoleMappings() == null
+        || onboardedProduct.getRole() == null) {
+        return true;
+      }
+
+      ProductRoleInfo roleInfo = product.getRoleMappings().get(onboardedProduct.getRole());
+
+      return roleInfo == null || roleInfo.isExcludeRoleFromUserGroups();
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {

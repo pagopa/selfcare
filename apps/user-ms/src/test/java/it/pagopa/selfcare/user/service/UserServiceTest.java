@@ -5,6 +5,7 @@ import com.microsoft.applicationinsights.TelemetryClient;
 import io.quarkus.panache.mock.PanacheMock;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.junit.mockito.InjectSpy;
 import io.smallrye.common.constraint.Assert;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -27,6 +28,7 @@ import it.pagopa.selfcare.user.exception.ConflictException;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user.exception.UserRoleAlreadyPresentException;
+import it.pagopa.selfcare.user.mapper.OnboardedProductMapper;
 import it.pagopa.selfcare.user.mapper.UserMapper;
 import it.pagopa.selfcare.user.model.*;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
@@ -110,8 +112,10 @@ class UserServiceTest {
     private UserInfoService userInfoService;
     @InjectMock
     private UserRegistryService userRegistryApi;
-    @Spy
+    @InjectSpy
     private UserMapper userMapper;
+    @Inject
+    OnboardedProductMapper onboardedProductMapper;
     @InjectMock
     private ProductService productService;
     @InjectMock
@@ -2036,6 +2040,7 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(createUserInstitution()));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userUtils.isExcludeRoleFromUserGroups(any())).thenReturn(false);
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
@@ -2092,6 +2097,7 @@ class UserServiceTest {
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(createUserInstitution()));
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(createUserInstitution()));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userUtils.isExcludeRoleFromUserGroups(any())).thenReturn(true);
 
         // Call the method
         AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)

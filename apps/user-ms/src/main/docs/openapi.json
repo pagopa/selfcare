@@ -1865,6 +1865,9 @@
           },
           "updatedAt" : {
             "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "excludeRoleFromUserGroups" : {
+            "type" : "boolean"
           }
         }
       },

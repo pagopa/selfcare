@@ -15,7 +15,6 @@ import org.gradle.internal.impldep.org.apache.commons.lang.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
-import org.mapstruct.factory.Mappers;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
@@ -274,11 +273,9 @@ public interface UserMapper {
         return null;
     }
 
-    OnboardedProductMapper productMapper = Mappers.getMapper(OnboardedProductMapper.class);
     @Mapping(target = "id", expression = "java(userInstitution.getId().toString())")
     @Mapping(target = "role", expression = "java(getMaxRole(userInstitution.getProducts()))")
     @Mapping(target = "status", expression = "java(getMaxStatus(userInstitution.getProducts()))")
-    @Mapping(target = "products", expression = "java(productMapper.toList(userInstitution.getProducts()))")
     @Mapping(target = "userResponse", expression = "java(toUserResponse(userResource, userInstitution.getUserMailUuid()))")
     UserDataResponse toUserDataResponse(UserInstitution userInstitution, UserResource userResource);
 
