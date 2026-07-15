@@ -7,6 +7,7 @@ import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
@@ -728,5 +729,71 @@ class TokenV2ControllerTest {
     onboardingData.setUsers(List.of(user));
 
     return onboardingData;
+  }
+
+  /**
+   * Method under test: {@link TokenV2Controller#getAvailableDocuments(String)}
+   */
+  @Test
+  void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename() throws Exception {
+    // given
+    String onboardingId = UUID.randomUUID().toString();
+    AvailableDocuments source = new AvailableDocuments();
+    source.setAttachments(List.of("attachment1.pdf", "attachment2.pdf"));
+    source.setContractFilename("contract.pdf");
+    when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(source);
+
+    // when / then
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
+                    .accept(APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments", org.hamcrest.Matchers.hasSize(2)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments[0]").value("attachment1.pdf"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments[1]").value("attachment2.pdf"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").value("contract.pdf"));
+
+    verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
+  }
+
+  /**
+   * When the onboarding has no signed contract (e.g. state TOBEVALIDATED),
+   * document-ms returns contractFilename=null and the BFF must not expose it
+   * (thanks to @JsonInclude(NON_NULL) on the resource).
+   */
+  @Test
+  void getAvailableDocuments_shouldOmitContractFilenameWhenAbsent() throws Exception {
+    // given
+    String onboardingId = UUID.randomUUID().toString();
+    AvailableDocuments source = new AvailableDocuments();
+    source.setAttachments(List.of("attachment1.pdf"));
+    source.setContractFilename(null);
+    when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(source);
+
+    // when / then
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
+                    .accept(APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments", org.hamcrest.Matchers.hasSize(1)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").doesNotExist());
+
+    verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
+  }
+
+  /**
+   * Verifies that the endpoint is annotated with @PreAuthorize referencing the
+   * expected permission. Actual enforcement is covered by integration tests, since
+   * this @WebMvcTest slice excludes {@link SecurityAutoConfiguration}.
+   */
+  @Test
+  void getAvailableDocuments_shouldBeProtectedByPreAuthorize() throws NoSuchMethodException {
+    Method method = TokenV2Controller.class.getMethod("getAvailableDocuments", String.class);
+    PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
+    assertNotNull(preAuthorize, "getAvailableDocuments must be annotated with @PreAuthorize");
+    assertTrue(preAuthorize.value().contains(PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS),
+            "@PreAuthorize must reference SELC_VIEW_ACCOUNT_DOCUMENTS permission");
+    assertTrue(preAuthorize.value().contains("authorizationService.hasPermission"),
+            "@PreAuthorize must delegate to authorizationService.hasPermission");
   }
 }
