@@ -26,7 +26,7 @@
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
         <onboarding-sdk.version>0.17.5</onboarding-sdk.version>
-        <quarkus-openapi-generator.version>2.4.2</quarkus-openapi-generator.version>
+        <quarkus-openapi-generator.version>2.16.0-lts</quarkus-openapi-generator.version>
     </properties>
     <dependencyManagement>
         <dependencies>
