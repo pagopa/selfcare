@@ -99,9 +99,9 @@ jobs:
             echo "mode=full" >> "$GITHUB_OUTPUT"
             echo "projects=" >> "$GITHUB_OUTPUT"
           else
-        # Expand each detected aggregator to include ALL its sub-modules (pom.xml files).
-        # Necessary because Maven's --projects on an aggregator (packaging=pom) does NOT
-        # pull in its child modules (--also-make follows <dependency>, not parent-child).
+            # Expand each detected aggregator to include ALL its sub-modules (pom.xml files).
+            # Necessary because Maven's --projects on an aggregator (packaging=pom) does NOT
+            # pull in its child modules (--also-make follows <dependency>, not parent-child).
             EXPANDED=$(
               for mod in "${!MODULES[@]}"; do
                 find "$mod" -name pom.xml -not -path '*/target/*' -not -path '*/node_modules/*' -exec dirname {} \;
