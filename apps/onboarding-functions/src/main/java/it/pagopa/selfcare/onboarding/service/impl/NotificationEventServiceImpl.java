@@ -23,9 +23,11 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.document_json.model.RelatedDocumentResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.UserDataResponse;
 
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -122,12 +124,38 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         NotificationBuilder notificationBuilder = notificationBuilderFactory.create(consumer);
         if (notificationBuilder.shouldSendNotification(notificationsResources.getOnboarding(), notificationsResources.getInstitution())) {
             NotificationToSend notificationToSend = notificationBuilder.buildNotificationToSend(notificationsResources.getOnboarding(), notificationsResources.getDocument(), notificationsResources.getInstitution(), notificationsResources.getQueueEvent());
+
+            List<RelatedDocumentToSend> relatedDocuments = consumer.includeRelatedDocuments()
+                    ? retrieveRelatedDocuments(context, notificationsResources.getOnboarding().getId())
+                    : null;
+
+            if (Objects.nonNull(relatedDocuments)) {
+                notificationToSend.setRelatedDocuments(relatedDocuments);
+            }
+
             sendNotification(context, consumer.topic(), notificationToSend, notificationEventTraceId);
             sendWebHookNotification(context, notificationToSend, notificationEventTraceId);
             sendTestEnvProductsNotification(context, product, consumer.topic(), notificationToSend, notificationEventTraceId);
         } else {
             context.getLogger().info(() -> String.format("It was not necessary to send a notification on the topic %s because the onboarding with ID %s did not pass filter verification", notificationsResources.getOnboarding().getId(), consumer.topic()));
         }
+    }
+
+    private List<RelatedDocumentToSend> retrieveRelatedDocuments(ExecutionContext context, String onboardingId) {
+        context.getLogger().info(() -> String.format("Retrieving related documents for onboardingId=%s", onboardingId));
+        return documentService.getRelatedDocuments(onboardingId).stream()
+                .map(document -> RelatedDocumentToSend.builder()
+                        .id(document.getId())
+                        .name(document.getName())
+                        .fileName(document.getFileName())
+                        .type(document.getType())
+                        .mimeType(document.getMimeType())
+                        .createdAt(Objects.isNull(document.getCreatedAt())
+                                ? null
+                                : document.getCreatedAt().atOffset(ZoneOffset.UTC))
+                        .filePath(document.getFilePath())
+                        .build())
+                .toList();
     }
 
     /*private void prepareAndSendUserNotification(ExecutionContext context, Product product, NotificationConfig.Consumer consumer, NotificationsResources notificationsResources, String notificationEventTraceId) {
