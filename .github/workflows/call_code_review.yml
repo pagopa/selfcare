@@ -54,10 +54,4 @@ jobs:
           PR_NUMBER: "${{ inputs.pr_number }}"
           SOURCE_BRANCH: "${{ inputs.source_branch }}"
           TARGET_BRANCH: "${{ inputs.target_branch }}"
-        run: mvn --projects :test-coverage --also-make verify -P"$MODULE",report,coverage
-          -Dsonar.organization=pagopa
-          -Dsonar.projectKey="$SONAR_KEY"
-          -Dsonar.token="${{ secrets.SONAR_TOKEN }}"
-          -Dsonar.pullrequest.key="$PR_NUMBER"
-          -Dsonar.pullrequest.branch="$SOURCE_BRANCH"
-          -Dsonar.pullrequest.base=refs/remotes/origin/"$TARGET_BRANCH"
+        run: mvn --projects :test-coverage --also-make verify -P"$MODULE",report

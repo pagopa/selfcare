@@ -53,6 +53,7 @@ jobs:
 
   build_docker:
     name: 'Build Docker image'
+    needs: [code_review]
     runs-on: ubuntu-24.04
     permissions:
       packages: write

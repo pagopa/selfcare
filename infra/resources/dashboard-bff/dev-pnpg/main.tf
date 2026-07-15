@@ -17,6 +17,29 @@ module "local" {
 }
 
 ###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_storage_account" "web_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "web_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-web-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
 # Dashboard BFF
 ###############################################################################
 locals {
@@ -27,7 +50,7 @@ locals {
     },
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -47,7 +70,7 @@ locals {
     },
     {
       name  = "PUBLIC_FILE_STORAGE_BASE_URL"
-      value = "https://selcdweupnpgcheckoutsa.z6.web.core.windows.net"
+      value = "https://selcdweupnpgcheckoutst01.z6.web.core.windows.net"
     },
     {
       name  = "JWT_ISSUER"
@@ -75,19 +98,19 @@ locals {
     },
     {
       name  = "MS_CORE_URL"
-      value = "http://selc-d-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_PROCESS_URL"
-      value = "http://selc-d-pnpg-institution-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-institution-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-d-pnpg-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "MS_USER_GROUP_URL"
-      value = "http://selc-d-pnpg-user-group-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-group-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -107,7 +130,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-d-pnpg-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "B4F_DASHBOARD_SECURITY_CONNECTOR"
@@ -115,20 +138,38 @@ locals {
     },
     {
       name  = "ONBOARDING_URL"
-      value = "http://selc-d-pnpg-onboarding-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "IAM_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-iam-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "PRODUCT_AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "PRODUCT_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "WEB_AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.web_storage.name
+    },
+    {
+      name  = "WEB_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.web_storage_blob_identity.client_id
     }
   ]
 
   secrets_names_dashboard_bff = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "BLOB_STORAGE_CONN_STRING"               = "web-storage-connection-string"
-    "USER_REGISTRY_API_KEY"                  = "user-registry-api-key"
-    "SUPPORT_API_KEY"                        = "zendesk-support-api-key"
-    "JWT_TOKEN_EXCHANGE_PRIVATE_KEY"         = "jwt-exchange-private-key"
-    "JWT_TOKEN_EXCHANGE_KID"                 = "jwt-exchange-kid"
-    "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
-    "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "SUPPORT_API_KEY"                       = "zendesk-support-api-key"
+    "JWT_TOKEN_EXCHANGE_PRIVATE_KEY"        = "jwt-exchange-private-key"
+    "JWT_TOKEN_EXCHANGE_KID"                = "jwt-exchange-kid"
+    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "USERVICE_USER_REGISTRY_API_KEY"        = "user-registry-api-key"
   }
 }
 
@@ -147,6 +188,10 @@ module "container_app_dashboard_bff_pnpg" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.web_storage_blob_identity.id
+  ]
 }
 
 ###############################################################################

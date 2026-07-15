@@ -59,6 +59,12 @@ public class InstitutionV2Controller {
                     @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
                             schema = @Schema(implementation = Problem.class))
             })
+    @ApiResponse(responseCode = "409",
+            description = "Conflict",
+            content = {
+                    @Content(mediaType = APPLICATION_PROBLEM_JSON_VALUE,
+                            schema = @Schema(implementation = Problem.class))
+            })
     @PostMapping(value = "/onboarding")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
@@ -129,7 +135,7 @@ public class InstitutionV2Controller {
         return institutions;
     }
 
-    @PostMapping(value = "/onboarding/aggregation/verification")
+    @PostMapping(value = "/onboarding/aggregation/verification", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${swagger.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
@@ -205,6 +211,19 @@ public class InstitutionV2Controller {
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
         institutionService.onboardingUsersPgFromIcAndAde(onboardingResourceMapper.toEntity(companyOnboardingUserDto));
         log.trace("onboardingUsersPgFromIcAndAde end");
+    }
+
+    @PutMapping(value = "/{onboardingId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Trigger onboarding request",
+            description = "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
+            operationId = "triggerOnboardingRequest")
+    public void triggerOnboardingRequest(@ApiParam("The onboarding id")
+                                    @PathVariable("onboardingId") String onboardingId) {
+        log.trace("triggerOnboardingRequest start");
+        log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));
+        institutionService.triggerOnboardingRequest(onboardingId);
+        log.trace("triggerOnboardingRequest end");
     }
 
     @GetMapping(value = "/onboardings")

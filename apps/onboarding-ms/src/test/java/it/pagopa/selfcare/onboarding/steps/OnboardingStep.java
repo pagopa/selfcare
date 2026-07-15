@@ -100,6 +100,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     composeContainer = new ComposeContainer(new File("src/test/resources/docker-compose.yml"))
             .withPull(true)
             .waitingFor("mongo-db", Wait.forListeningPort())
+            .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();

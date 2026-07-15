@@ -21,6 +21,19 @@ module "local" {
 }
 
 ###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}pnpgcheckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.location_short}-pnpg-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
 # COSMOS DB
 ###############################################################################
 
@@ -82,7 +95,7 @@ locals {
   app_settings_user_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar",
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -120,17 +133,35 @@ locals {
       name  = "SELFCARE_URL"
       value = "https://imprese.notifichedigitali.it"
     },
+    {
+      name  = "ONBOARDING_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "BLOB-STORAGE-PRODUCT-ACCOUNT-NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "BLOB-STORAGE-PRODUCT-MANAGED-IDENTITY-CLIENT-ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "BLOB-STORAGE-TEMPLATES-ACCOUNT-NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "BLOB-STORAGE-TEMPLATES-MANAGED-IDENTITY-CLIENT-ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    }
   ]
 
   secrets_names_user_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
-    "AWS-SES-ACCESS-KEY-ID"                   = "aws-ses-access-key-id"
-    "AWS-SES-SECRET-ACCESS-KEY"               = "aws-ses-secret-access-key"
-    "BLOB-STORAGE-PRODUCT-CONNECTION-STRING"  = "blob-storage-product-connection-string"
-    "BLOB-STORAGE-CONTRACT-CONNECTION-STRING" = "blob-storage-contract-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
+    "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
   }
 }
 
@@ -151,4 +182,7 @@ module "container_app_user_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id
+  ]
 }

@@ -28,4 +28,5 @@ logging:
   level:
     it.pagopa.selfcare: ${MS_USER_GROUP_LOG_LEVEL:DEBUG}
   pattern:
+    level: "%5p [${spring.application.name:},%X{trace_id:-},%X{span_id:-}]"
     additional-info: ",%X{X-Client-Ip:-}]"

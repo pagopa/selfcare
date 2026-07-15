@@ -7,7 +7,6 @@
     "status": "200",
     "jsonBody": {
       "MANAGER": {
-        "multiroleAllowed": true,
         "roles": [
           {
             "code": "ref_admin-1",
@@ -17,7 +16,6 @@
         ]
       },
       "DELEGATE": {
-        "multiroleAllowed": true,
         "roles": [
           {
             "code": "ref_admin-2",
@@ -27,7 +25,6 @@
         ]
       },
       "SUB_DELEGATE": {
-        "multiroleAllowed": true,
         "roles": [
           {
             "code": "ref_admin-3",
@@ -37,7 +34,6 @@
         ]
       },
       "OPERATOR": {
-        "multiroleAllowed": true,
         "roles": [
           {
             "code": "op_api",

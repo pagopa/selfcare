@@ -72,7 +72,7 @@ public class TokenApiSteps{
         String token = backOfficeUrl.split("#selfCareToken=")[1].split("&")[0];
         DecodedJWT decodedJWT = JWT.decode(token);
         Map<String, Claim> payload = decodedJWT.getClaims();
-        Assertions.assertEquals("PAGOPA",payload.get("iss").asString());
+        Assertions.assertEquals("https://test.selfcare.pagopa.it",payload.get("iss").asString());
         Assertions.assertEquals("api.interop.selfcare.pagopa.it",payload.get("aud").asString());
         Assertions.assertNotNull(payload.get("jti").asString());
         Assertions.assertEquals("35a78332-d038-4bfa-8e85-2cba7f6b7bf8",payload.get("uid").asString());
@@ -94,7 +94,7 @@ public class TokenApiSteps{
         String token = backOfficeUrl.split("#selfCareToken=")[1].split("&")[0];
         DecodedJWT decodedJWT = JWT.decode(token);
         Map<String, Claim> payload = decodedJWT.getClaims();
-        Assertions.assertEquals("PAGOPA",payload.get("iss").asString());
+        Assertions.assertEquals("https://test.selfcare.pagopa.it",payload.get("iss").asString());
         Assertions.assertEquals("api.interop.selfcare.pagopa.it",payload.get("aud").asString());
         Assertions.assertNotNull(payload.get("jti").asString());
         Assertions.assertEquals("9f2b6b54-6c2b-4b36-8d83-4cd1d6fcf3e8",payload.get("uid").asString());

@@ -134,15 +134,18 @@ public class SearchServiceImplTest {
     final List<String> statuses = List.of("ACTIVE", "PENDING");
     final OffsetDateTime createdFromDate = OffsetDateTime.parse("2023-01-01T00:00:00Z");
     final OffsetDateTime createdToDate = OffsetDateTime.parse("2023-12-31T23:59:59Z");
+    final OffsetDateTime statusUpdatedFromDate = OffsetDateTime.parse("2023-01-01T00:00:00Z");
+    final OffsetDateTime statusUpdatedToDate = OffsetDateTime.parse("2023-12-31T23:59:59Z");
     final List<String> orderBy = List.of("createdAt_ASC", "description_DESC");
+    final boolean includeTest = false;
     final Long page = 2L;
     final Long pageSize = 10L;
     final String orderByString = "createdAt asc,description desc";
-    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING') and createdAt ge 2023-01-01T00:00:00Z and createdAt le 2023-12-31T23:59:59Z";
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and search.in(institutionType, 'PA,GSP') and search.in(status, 'ACTIVE,PENDING') and createdAt ge 2023-01-01T00:00:00Z and createdAt le 2023-12-31T23:59:59Z and statusUpdatedAt ge 2023-01-01T00:00:00Z and statusUpdatedAt le 2023-12-31T23:59:59Z and isTest ne true";
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
     when(searchServiceConnector.searchOnboarding(searchText, filter, pageSize, 20L, orderByString)).thenReturn(mockResponse);
-    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, page, pageSize, orderBy);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, createdFromDate, createdToDate, statusUpdatedFromDate, statusUpdatedToDate, page, pageSize, orderBy, includeTest);
     verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, pageSize, 20L, orderByString);
     assertEquals(page, onboardingIndexSearch.getPage());
     assertEquals(pageSize, onboardingIndexSearch.getPageSize());
@@ -160,7 +163,7 @@ public class SearchServiceImplTest {
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
     when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
-    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, null);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, null,null, null, true);
     verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, 15L, 0L, "description asc");
     assertEquals(0L, onboardingIndexSearch.getPage());
     assertEquals(15L, onboardingIndexSearch.getPageSize());
@@ -174,11 +177,11 @@ public class SearchServiceImplTest {
     final List<String> products = List.of("prod-io", "prod-pagopa");
     final List<String> institutionTypes = null;
     final List<String> statuses = List.of();
-    final String filter = "search.in(productId, 'prod-io,prod-pagopa')";
+    final String filter = "search.in(productId, 'prod-io,prod-pagopa') and isTest ne true";
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
     when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
-    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, null);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, null, null, null, false);
     verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, 15L, 0L, "description asc");
     assertEquals(0L, onboardingIndexSearch.getPage());
     assertEquals(15L, onboardingIndexSearch.getPageSize());
@@ -196,7 +199,7 @@ public class SearchServiceImplTest {
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
     when(searchServiceConnector.searchOnboarding(searchText, filter, 15L, 0L, "description asc")).thenReturn(mockResponse);
-    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, null);
+    final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, null, null, null, true);
     verify(searchServiceConnector, times(1)).searchOnboarding(searchText, filter, 15L, 0L, "description asc");
     assertEquals(0L, onboardingIndexSearch.getPage());
     assertEquals(15L, onboardingIndexSearch.getPageSize());
@@ -215,7 +218,7 @@ public class SearchServiceImplTest {
     final Long pageSize = 10L;
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
-    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, page, pageSize, orderBy));
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, page, pageSize, orderBy, false));
   }
 
   @Test
@@ -229,7 +232,7 @@ public class SearchServiceImplTest {
     final Long pageSize = 10L;
     final OnboardingIndexSearch mockResponse = new OnboardingIndexSearch();
     mockResponse.setTotalElements(100L);
-    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, page, pageSize, orderBy));
+    assertThrows(IllegalArgumentException.class, () -> searchService.searchOnboarding(searchText, products, institutionTypes, statuses, null, null, null, null, page, pageSize, orderBy, true));
   }
 
   @Test

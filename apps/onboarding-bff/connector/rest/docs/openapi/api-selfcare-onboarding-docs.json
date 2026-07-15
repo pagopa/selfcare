@@ -1290,8 +1290,68 @@
           "SecurityScheme" : [ ]
         } ]
       },
+      "put" : {
+        "tags": [
+          "Onboarding Controller"
+        ],
+        "summary" : "Idempotent trigger to verify mandatory documents and advance onboarding.",
+        "description" : "Idempotent trigger invoked after each document upload. Recalculates required documents for the onboarding context (productId, institutionType, origin) and verifies presence of all mandatory attachments. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING. If documents are incomplete or onboarding is already past REQUEST status, no action is taken (idempotent).",
+        "operationId" : "triggerDocumentGate",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Gate evaluated — orchestration triggered if documents complete, no action otherwise"
+          },
+          "400" : {
+            "description" : "Bad Request — no mandatory documents configured for this onboarding context",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Onboarding not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "delete" : {
-        "tags" : [ "internal-v1", "external-v2" ],
+        "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Perform delete operation of an onboarding request",
         "description" : "Perform delete operation of an onboarding request receiving onboarding id, then invokes async process to set DELETED as status for institution and user onboardings.",
         "operationId" : "deleteOnboarding",
@@ -1366,7 +1426,7 @@
     },
     "/v1/onboarding/{onboardingId}/complete" : {
       "put" : {
-        "tags" : [ "internal-v1", "external-v2" ],
+        "tags" : [ "internal-v1", "external-v2", "Onboarding Controller" ],
         "summary" : "Complete onboarding by verifying and uploading contract, then trigger async activities.",
         "description" : "Perform complete operation of an onboarding request receiving onboarding id and contract signed by the institution.It checks the contract's signature and upload the contract on an azure storageAt the end, function triggers async activities related to complete onboarding that consist of create the institution, activate the onboarding and sending data to notification queue.",
         "operationId" : "completeOnboardingUsingPUT",
@@ -1399,6 +1459,39 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
+            }
+          },
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Conflict",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
             }
           },
           "401" : {
@@ -1590,7 +1683,10 @@
     },
     "/v1/onboarding/{onboardingId}/reject" : {
       "put" : {
-        "tags" : [ "Onboarding Controller", "external-v2" ],
+        "tags": [
+          "Onboarding Controller",
+          "external-v2"
+        ],
         "summary" : "Perform reject operation of an onboarding request",
         "description" : "Perform reject operation of an onboarding request receiving onboarding id.Function change status to REJECT for an onboarding request that is not COMPLETED. ",
         "operationId" : "rejectOnboardingUsingPUT",
@@ -1727,14 +1823,21 @@
         } ]
       }
     },
-    "/v1/onboarding/{onboardingId}/user" : {
+    "/v1/onboarding/{onboardingId}/user/{userId}" : {
       "delete" : {
         "tags" : [ "internal-v1", "Onboarding Controller" ],
         "summary" : "Perform delete operation of a USER type onboarding request",
-        "description" : "Perform delete operation of a USER type onboarding request receiving onboarding id. It first deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
+        "description" : "Perform delete operation of a USER type onboarding request receiving onboarding id and userId. It verifies that the userId corresponds to a DELEGATE role in the onboarding users list. If the user is a MANAGER (and not also a DELEGATE), a 400 error is returned. If the user is a DELEGATE, it deletes the associated document from document-ms, then sets DELETED as status and updates date fields.",
         "operationId" : "deleteOnboardingUser",
         "parameters" : [ {
           "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "userId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -2925,7 +3028,7 @@
         }
       },
       "OnboardingStatus" : {
-        "enum" : [ "REQUEST", "TOBEVALIDATED", "PENDING", "PENDING_IN_REVIEW", "COMPLETED", "FAILED", "REJECTED", "DELETED" ],
+        "enum" : [ "REQUESTING", "REQUEST", "TOBEVALIDATED", "PENDING", "PENDING_IN_REVIEW", "COMPLETED", "FAILED", "REJECTED", "DELETED" ],
         "type" : "string"
       },
       "OnboardingUserPgRequest" : {
@@ -3053,6 +3156,32 @@
             "type" : "string"
           },
           "contractId" : {
+            "type" : "string"
+          }
+        }
+      },
+      "Problem" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "errors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProblemError"
+            }
+          }
+        }
+      },
+      "ProblemError" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "detail" : {
             "type" : "string"
           }
         }

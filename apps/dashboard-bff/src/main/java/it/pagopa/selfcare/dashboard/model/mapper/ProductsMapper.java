@@ -98,7 +98,6 @@ public class ProductsMapper {
             resource = new ProductRoleMappingsResource();
             resource.setPartyRole(entry.getKey().name());
             resource.setSelcRole(entry.getKey() != PartyRole.OPERATOR ? SelfCareAuthority.ADMIN : SelfCareAuthority.LIMITED);
-            resource.setMultiroleAllowed(entry.getValue().isMultiroleAllowed());
             resource.setPhasesAdditionAllowed(entry.getValue().getPhasesAdditionAllowed());
 
             if (entry.getValue().getRoles() != null) {
@@ -118,6 +117,7 @@ public class ProductsMapper {
             resource.setCode(productRole.getCode());
             resource.setLabel(productRole.getLabel());
             resource.setDescription(productRole.getDescription());
+            resource.setMultiroleGroups(productRole.getMultiroleGroups());
         }
         return resource;
     }

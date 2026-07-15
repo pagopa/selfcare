@@ -11,6 +11,7 @@
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
+    "standards@pagopa-dx": true,
     "typescript@pagopa-dx": true
   }
 }

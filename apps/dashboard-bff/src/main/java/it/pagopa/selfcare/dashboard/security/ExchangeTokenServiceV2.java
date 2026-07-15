@@ -162,6 +162,8 @@ public class ExchangeTokenServiceV2 {
         InstitutionBackofficeAdmin institutionExchange = institutionResourceMapper.toInstitutionBackofficeAdmin(institution, productRoles);
 
         TokenExchangeClaims claims = retrieveAndSetBackofficeAdminClaims(authentication.getCredentials().toString(), institutionExchange,  selfCareUser);
+        claims.setName(Optional.ofNullable(permissions).map(ProductRolePermissionsList::getName).orElse(""));
+        claims.setFamilyName(Optional.ofNullable(permissions).map(ProductRolePermissionsList::getFamilyName).orElse(""));
 
         Product product = productService.getProduct(productId);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "exchangeBackofficeAdmin getProduct result = {}", product);
@@ -260,7 +262,7 @@ public class ExchangeTokenServiceV2 {
         TokenExchangeClaims claims = new TokenExchangeClaims(selcClaims);
         claims.setId(UUID.randomUUID().toString());
 
-        claims.setIssuer(selfCareUser.getIssuer());
+        claims.setIssuer(issuer);
 
         claims.setEmail(selfCareUser.getEmail());
         claims.setInstitution(institution);
@@ -435,6 +437,8 @@ public class ExchangeTokenServiceV2 {
         public static final String DESIRED_EXPIRATION = "desired_exp";
         public static final String INSTITUTION = "organization";
         public static final String EMAIL = "email";
+        public static final String NAME = "name";
+        public static final String FAMILY_NAME = "family_name";
         public static final String TYPE = "typ";
 
         private final Claims claims;
@@ -494,6 +498,14 @@ public class ExchangeTokenServiceV2 {
 
         public void setEmail(String email) {
             claims.put(EMAIL, email);
+        }
+
+        public void setName(String name) {
+            claims.put(NAME, name);
+        }
+
+        public void setFamilyName(String familyName) {
+            claims.put(FAMILY_NAME, familyName);
         }
 
         public void setType(String type) {

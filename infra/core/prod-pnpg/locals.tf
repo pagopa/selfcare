@@ -48,8 +48,9 @@ locals {
   cidr_subnet_eventhub_rds          = ["10.1.153.0/26"]
 
 
-  cidr_subnet_selc      = ["10.1.148.0/23"]
-  cidr_subnet_selc_pnpg = ["10.1.150.0/23"]
+  cidr_subnet_selc        = ["10.1.148.0/23"]
+  cidr_subnet_selc_pnpg   = ["10.1.150.0/23"]
+  cidr_subnet_pnpg_cae_wp = ["10.1.158.0/23"]
 
   #
   # Pair VNET

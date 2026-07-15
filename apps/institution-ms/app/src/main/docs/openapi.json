@@ -1698,8 +1698,8 @@
           "style" : "form",
           "schema" : {
             "type" : "string",
-            "enum" : [ "NONE", "ASC", "DESC" ],
-            "default" : "NONE"
+            "default" : "NONE",
+            "enum" : [ "NONE", "ASC", "DESC" ]
           }
         }, {
           "name" : "page",
@@ -1822,8 +1822,8 @@
           "style" : "form",
           "schema" : {
             "type" : "string",
-            "enum" : [ "NONE", "ASC", "DESC" ],
-            "default" : "NONE"
+            "default" : "NONE",
+            "enum" : [ "NONE", "ASC", "DESC" ]
           }
         }, {
           "name" : "page",
@@ -2891,13 +2891,19 @@
       },
       "OnboardingPut" : {
         "title" : "OnboardingPut",
-        "required" : [ "productId", "vatNumber" ],
+        "required" : [ "productId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
             "type" : "string"
           },
           "vatNumber" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "type" : "string"
+          },
+          "originId" : {
             "type" : "string"
           }
         }

@@ -3,11 +3,6 @@ variable "domain" {
   description = "Domain (e.g. ar)"
 }
 
-variable "search_service_id" {
-  type        = string
-  description = "Resource ID of the AI Search service"
-}
-
 variable "srch_service_name" {
   type        = string
   description = "AI Search service name"

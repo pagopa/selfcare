@@ -6,14 +6,14 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.Origin;
+import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.service.ProductMsService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.util.WorkflowTypeResolver;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.SigningConfiguration;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
@@ -29,10 +29,10 @@ class WorkflowTypeResolverTest {
     WorkflowTypeResolver workflowTypeResolver;
 
     @InjectMock
-    ProductService productService;
+    it.pagopa.selfcare.product.service.ProductService productAzureService;
 
     @InjectMock
-    ProductMsService productMsService;
+    ProductService productService;
 
     @Test
     void resolve_shouldReturnContractWithCountersignatureWhenRequiredSignaturesGreaterThanOne() {
@@ -46,7 +46,7 @@ class WorkflowTypeResolverTest {
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setRequiredSignatures(2);
         product.setSigningConfiguration(signingConfiguration);
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -68,11 +68,11 @@ class WorkflowTypeResolverTest {
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setRequiredSignatures(1);
         product.setSigningConfiguration(signingConfiguration);
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         WorkflowTypeResponse response = new WorkflowTypeResponse();
         response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-        when(productMsService.getWorkflowType(any(), any(), anyString())).thenReturn(Uni.createFrom().item(response));
+        when(productService.getWorkflowType(any(), any(), any(ProductId.class))).thenReturn(Uni.createFrom().item(response));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -91,7 +91,7 @@ class WorkflowTypeResolverTest {
         onboarding.setIsAggregator(false);
 
         Product product = new Product();
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -110,7 +110,7 @@ class WorkflowTypeResolverTest {
         onboarding.setIsAggregator(true);
 
         Product product = new Product();
-        when(productService.getProductIsValid(anyString())).thenReturn(product);
+        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)

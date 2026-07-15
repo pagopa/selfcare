@@ -668,3 +668,24 @@ module "apim" {
   app_gateway_api_certificate_name = local.app_gateway_api_certificate_name
   application_insight_enabled      = true
 }
+
+###############################################################################
+# User Managed Identity
+###############################################################################
+
+module "user_managed_identity" {
+  source = "../_modules/user_managed_identity"
+
+  location               = local.location
+  env_short              = local.env_short
+  domain                 = local.app_domain
+  tags                   = local.tags
+  product_storage_name   = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg     = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  documents_storage_name = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
+  documents_storage_rg   = "${local.prefix}-${local.env_short}-documents-storage-rg"
+  web_storage_name       = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  web_storage_rg         = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  eventhub_namespace_name = "${local.prefix}-${local.env_short}-eventhub-ns"
+  eventhub_namespace_rg = "${local.prefix}-${local.env_short}-event-rg"
+}

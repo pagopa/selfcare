@@ -9,6 +9,8 @@ import java.util.List;
 public class ProductRoleInfo {
 
     private boolean multiroleAllowed;
+    private boolean skipUserCreation;
+    private List<String> phasesAdditionAllowed;
     private List<ProductRole> roles;
 
 
@@ -17,7 +19,9 @@ public class ProductRoleInfo {
     public static class ProductRole {
         private String code;
         private String label;
+        private String productLabel;
         private String description;
+        private List<String> multiroleGroups;
 
     }
 

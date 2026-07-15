@@ -102,4 +102,6 @@ public interface OnboardingService {
             UserRequesterDto userRequester);
 
     Uni<OnboardingGet> retrieveOnboardingByInstitutionId(String institutionId, String productId);
+
+    Uni<Void> triggerDocumentGate(String onboardingId);
 }

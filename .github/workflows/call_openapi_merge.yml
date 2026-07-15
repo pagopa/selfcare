@@ -123,57 +123,57 @@ jobs:
         if: ${{ inputs.billing-portal-api }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/billing-portal-api/v1/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - External API
         if: ${{ inputs.selc-ms-external-api }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/ms_external_api/v2/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - External Contract API
         if: ${{ inputs.selc-external-api-contract }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/external_api_contract/v1/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - Internal API
         if: ${{ inputs.selc-ms-internal-api }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/ms_internal_api/v1/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - Support Service API
         if: ${{ inputs.selc-support-service }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api/selfcare_support_service/v1/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - PNPG External API
         if: ${{ inputs.pnpg-ms-external-api }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/external_api_for_pnpg/v2/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - PNPG Support Service API
         if: ${{ inputs.pnpg-support-service }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/pnpg_support_service/v1/openapi.${{ inputs.env }}.json
 
       - name: Merge OpenAPI and PostProcess - PNPG Internal API
         if: ${{ inputs.pnpg-ms-internal-api }}
         run: |
           npx openapi-merge-cli --config ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi_merge/openapi_merge.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.${{ inputs.env }}.json
-          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.js  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/remove_v_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.json ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.${{ inputs.env }}.json
+          node ${{ env.INFRA_APIM_FOLDER }}/openapi_merge/retain_necessary_schemas_and_tags.cjs  ${{ env.INFRA_APIM_FOLDER }}/api_pnpg/internal_api_for_pnpg/v1/openapi.${{ inputs.env }}.json
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@d53f4d71fdd876f4f4b170d05ce7f1a7dd2bef03 #v6.0.5

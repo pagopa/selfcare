@@ -43,7 +43,7 @@
         .mj-column-per-100 { width:100% !important; max-width: 100%; }
       }</style>
 						<style media="screen and (min-width:480px)">.moz-text-html .mj-column-per-100 { width:100% !important; max-width: 100%; }</style>
-						<style type="text/css"/>
+						<style type="text/css"></style>
 						<style type="text/css">h1 {
           font-size: 32px;
           line-height: 40px;
@@ -185,7 +185,7 @@
 																								<p>
 																									l'ente <b>${institutionName}</b> ha <b>richiesto di aderire</b> al prodotto <b>${productName}</b>.</p>
                                                                                                 <p>
-                                                                                                    Per completare la richiesta, accedi ad Area Riservata e carica la convenzione già firmata dal Partner e dal Dirigente competente. Puoi visualizzare i dettagli della richiesta e caricare la documentazione <a href="${dashboardInstitutionUrl}"" style="color:#0073e6" class="link">qui</a>.</p>
+                                                                                                    Per completare la richiesta, accedi ad Area Riservata e carica la convenzione già firmata dal Partner e dal Dirigente competente. Puoi visualizzare i dettagli della richiesta e caricare la documentazione <a href="${dashboardInstitutionUrl}" style="color:#0073e6" class="link">qui</a>.</p>
                                                                                                 <p>
                                                                                                     Come utente abilitato, operi per conto del Dipartimento per le politiche in favore delle persone con disabilità secondo le autorizzazioni conferite internamente.</p>
 																							</div>

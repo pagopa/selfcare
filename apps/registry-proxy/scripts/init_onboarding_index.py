@@ -49,6 +49,15 @@ def get_date_string(dt: datetime) -> str:
     dt = dt.strftime("%Y-%m-%dT%H:%M:%S.") + f"{dt.microsecond // 1000:03d}+00:00"
     return dt
 
+# Define statusUpdatedAt based on the onboarding status, if the status is COMPLETED return activatedAt, if DELETED return deletedAt
+def get_status_updated_at(onboarding: dict):
+  status = onboarding.get("status")
+  if status == "COMPLETED":
+    return onboarding.get("activatedAt")
+  elif status == "DELETED":
+    return onboarding.get("deletedAt")
+  return None
+
 # Update the onboarding index with the given onboardings, it will merge or upload the documents based on the onboardingId
 def update_onboarding_index(onboardings: list[dict]):
     response = requests.post(f"{ONBOARDING_INDEX_URL}/indexes/{ONBOARDING_INDEX_NAME}/docs/index?api-version=2023-11-01", headers={"api-key": ONBOARDING_INDEX_API_KEY}, json={
@@ -69,6 +78,8 @@ def update_onboarding_index(onboardings: list[dict]):
                 **({"updatedAt": get_date_string(updatedAt)} if (updatedAt := o.get("updatedAt")) else {}),
                 **({"activatedAt": get_date_string(activatedAt)} if (activatedAt := o.get("activatedAt")) else {}),
                 **({"expiringDate": get_date_string(expiringDate)} if (expiringDate := o.get("expiringDate")) else {}),
+                **({"deletedAt": get_date_string(deletedAt)} if (deletedAt := o.get("deletedAt")) else {}),
+                **({"statusUpdatedAt": get_date_string(statusUpdatedAt)} if (statusUpdatedAt := get_status_updated_at(o)) else {}),
                 **({"isTest": isTest} if (isTest := o.get("institution", {}).get("isTest")) else {}),
                 **({"city": city} if (city := o.get("institution", {}).get("city")) else {}),
                 **({"county": county} if (county := o.get("institution", {}).get("county")) else {}),
@@ -88,8 +99,8 @@ def get_onboarding_filter():
         "institution": {"$exists": True, "$ne": None},
         "institution.description": {"$exists": True, "$ne": None},
         "institution.institutionType": {"$exists": True, "$ne": None},
-        "productId": {"$exists": True, "$ne": None, "$nin": ["prod-interop-atst", "prod-interop-coll"]},
-        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST"]}
+        "productId": {"$exists": True, "$ne": None, "$nin": ["prod-interop-atst", "prod-interop-coll", "prod-fd", "prod-fd-garantito", "prod-pagopa-ec"]},
+        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST", "OVERRIDDEN"]}
     }
 
 def main():

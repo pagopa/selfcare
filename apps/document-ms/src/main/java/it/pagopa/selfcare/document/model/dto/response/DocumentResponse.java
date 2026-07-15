@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import lombok.Data;
 
@@ -15,6 +16,8 @@ public class DocumentResponse {
     private String onboardingId;
     private String productId;
     private String attachmentName;
+    private String attachmentDescription;
+    private String attachmentPath;
     private String checksum;
     private String contractVersion;
     private String contractTemplate;
@@ -26,4 +29,5 @@ public class DocumentResponse {
     private LocalDateTime deletedAt;
     private LocalDateTime activatedAt;
     private Integer signingStep;
+    private StorageOrigin storageOrigin;
 }

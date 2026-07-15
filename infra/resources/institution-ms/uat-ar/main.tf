@@ -15,6 +15,38 @@ module "local" {
   ca_resource_group_name         = "selc-u-container-app-002-rg"
 }
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}archeckoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_storage_account" "documents_storage" {
+  name                = "sc${module.local.config.env_short}${module.local.config.location_short}ardocumentsst01"
+  resource_group_name = "selc-${module.local.config.env_short}-documents-storage-rg"
+}
+
+data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-documents-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_user_assigned_identity" "delegations_eventhub_sender_identity" {
+  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+###############################################################################
+# COSMOS DB
+###############################################################################
+
 module "cosmosdb" {
   source = "../../_modules/cosmosdb_database"
 
@@ -163,11 +195,11 @@ locals {
     },
     {
       name  = "MS_NOTIFICATION_MANAGER_URL"
-      value = "http://selc-u-notification-mngr-ca"
+      value = "https://selc-${module.local.config.env_short}-notification-mngr-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_PARTY_REGISTRY_PROXY_URL"
-      value = "http://selc-u-party-reg-proxy-ca"
+      value = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "USERVICE_USER_REGISTRY_URL"
@@ -175,7 +207,7 @@ locals {
     },
     {
       name  = "SELFCARE_USER_URL"
-      value = "http://selc-u-user-ms-ca"
+      value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "PRODUCT_STORAGE_CONTAINER"
@@ -200,22 +232,35 @@ locals {
     {
       name  = "SHARED_ACCESS_KEY_NAME"
       value = "selfcare-wo"
+    },
+    {
+      name  = "STORAGE_AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME"
+      value = data.azurerm_storage_account.product_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
     }
   ]
 
   secrets_names_institution_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"      = "appinsights-connection-string"
     "MONGODB_CONNECTION_URI"                     = "mongodb-connection-string"
-    "BLOB_STORAGE_CONN_STRING"                   = "documents-storage-connection-string"
     "SMTP_USR"                                   = "smtp-usr"
     "SMTP_PSW"                                   = "smtp-psw"
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL"   = "party-test-institution-email"
     "USER_REGISTRY_API_KEY"                      = "user-registry-api-key"
     "JWT_TOKEN_PUBLIC_KEY"                       = "jwt-public-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING"     = "blob-storage-product-connection-string"
     "AWS_SES_ACCESS_KEY_ID"                      = "aws-ses-access-key-id"
     "AWS_SES_SECRET_ACCESS_KEY"                  = "aws-ses-secret-access-key"
-    "EVENTHUB-SC-DELEGATIONS-SELFCARE-WO-KEY-LC" = "eventhub-sc-delegations-selfcare-wo-key-lc"
   }
 }
 
@@ -234,4 +279,9 @@ module "container_app_institution_ms" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.documents_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.id
+  ]
 }

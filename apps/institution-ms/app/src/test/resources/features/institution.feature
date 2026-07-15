@@ -1289,7 +1289,9 @@ Feature: Institution
         "onboardings" : [
            {
              "vatNumber":"Updated vatNumber",
-             "productId" : "prod-io"
+             "productId" : "prod-io",
+             "origin": "Updated origin",
+             "originId": "Updated originId"
            }
         ],
         "rea": "AA-00000",
@@ -1310,6 +1312,8 @@ Feature: Institution
       | address                             | Updated address                  |
       | zipCode                             | Updated zipCode                  |
       | onboarding[0].billing.vatNumber     | Updated vatNumber                |
+      | onboarding[0].origin                | Updated origin                   |
+      | onboarding[0].originId              | Updated originId                 |
       | rea                                 | AA-00000                         |
       | shareCapital                        | 9999                             |
       | businessRegisterPlace               | registerPlace                    |
@@ -1368,11 +1372,8 @@ Feature: Institution
       | ""        | ""        |
       | "   "     | "   "     |
       | "valid"   | null      |
-      | null      | "valid"   |
       | "valid"   | ""        |
-      | ""        | "valid"   |
       | "valid"   | "   "     |
-      | "   "     | "valid"   |
 
   Scenario: Not found institutionId while updating institution
     Given User login with username "j.doe" and password "test"

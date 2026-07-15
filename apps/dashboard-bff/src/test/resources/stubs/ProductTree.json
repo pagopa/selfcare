@@ -15,7 +15,6 @@
       "modifiedBy": "modifier",
       "roleMappings": {
         "MANAGER": {
-          "multiroleAllowed": true,
           "roles": [
             {
               "code": "code1",
@@ -81,7 +80,6 @@
         "modifiedBy": "modifier",
         "roleMappings": {
           "MANAGER": {
-            "multiroleAllowed": true,
             "roles": [
               {
                 "code": "code1",

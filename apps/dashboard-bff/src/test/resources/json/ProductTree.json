@@ -14,7 +14,6 @@
     "identityTokenAudience": "audience123",
     "roleMappings": {
       "MANAGER": {
-        "multiroleAllowed": false,
         "roles": [
           {
             "code": "seller",
@@ -24,7 +23,6 @@
         ]
       },
       "DELEGATE": {
-        "multiroleAllowed": false,
         "roles": [
           {
             "code": "buyer",
@@ -61,7 +59,6 @@
       "identityTokenAudience": "audience789",
       "roleMappings": {
         "MANAGER": {
-          "multiroleAllowed": true,
           "roles": [
             {
               "code": "seller",

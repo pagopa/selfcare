@@ -74,11 +74,14 @@ public class SearchController {
                                                          @RequestParam(required = false) List<String> statuses,
                                                          @RequestParam(required = false) OffsetDateTime createdFromDate,
                                                          @RequestParam(required = false) OffsetDateTime createdToDate,
+                                                         @RequestParam(required = false) OffsetDateTime statusUpdatedFromDate,
+                                                         @RequestParam(required = false) OffsetDateTime statusUpdatedToDate,
                                                          @RequestParam(defaultValue = "0") @PositiveOrZero Long page,
                                                          @RequestParam(defaultValue = "15") @Positive Long pageSize,
-                                                         @RequestParam(required = false) List<String> orderBy) {
+                                                         @RequestParam(required = false) List<String> orderBy,
+                                                         @RequestParam(required = false, defaultValue = "false") boolean includeTest) {
     final OnboardingIndexSearch onboardingIndexSearch = searchService.searchOnboarding(searchText, products,
-            institutionTypes, statuses, createdFromDate, createdToDate, page, pageSize, orderBy);
+            institutionTypes, statuses, createdFromDate, createdToDate, statusUpdatedFromDate, statusUpdatedToDate, page, pageSize, orderBy, includeTest);
     return onboardingMapper.toOnboardingIndexSearchResource(onboardingIndexSearch);
   }
 }

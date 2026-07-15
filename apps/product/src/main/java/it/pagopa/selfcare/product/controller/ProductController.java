@@ -8,6 +8,7 @@ import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
@@ -540,5 +541,85 @@ public class ProductController {
         .onFailure(NotFoundException.class)
         .recoverWithItem(
             t -> Response.status(Response.Status.NOT_FOUND).build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/{productId}/required-documents")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Get required documents for a product",
+      description =
+          "Returns the list of required documents for the given combination of productId, institutionType and origin.",
+      operationId = "getRequiredDocuments")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Required documents retrieved",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = RequiredDocumentResponse.class, type = org.eclipse.microprofile.openapi.annotations.enums.SchemaType.ARRAY))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getRequiredDocuments(
+      @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
+      @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
+          InstitutionType institutionType,
+      @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+
+    String sanitizedProductId = Encode.forJava(productId);
+
+    return productService
+        .getRequiredDocuments(productId, institutionType, origin)
+        .onItem()
+        .transform(documents -> Response.ok(documents).build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.BAD_REQUEST)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Bad Request")
+                            .detail(t.getMessage())
+                            .status(Response.Status.BAD_REQUEST.getStatusCode())
+                            .instance("/product/" + sanitizedProductId + "/required-documents")
+                            .build())
+                    .build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance("/product/" + sanitizedProductId + "/required-documents")
+                            .build())
+                    .build());
   }
 }

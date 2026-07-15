@@ -165,3 +165,9 @@ variable "restart_alert" {
   })
   default = {}
 }
+
+variable "additional_user_assigned_identity_ids" {
+  description = "Additional user-assigned identity IDs to attach to the container app"
+  type        = list(string)
+  default     = []
+}

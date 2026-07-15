@@ -5,12 +5,14 @@ import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.WorkflowRule;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
@@ -22,6 +24,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -274,10 +277,38 @@ public class ProductServiceImpl implements ProductService {
               .ifNull()
               .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
               .map(product -> {
-                boolean enabled = hasRequiredDocumentsForContext(product, institutionType, origin);
+                boolean enabled = !filterRequiredDocumentsForContext(product, institutionType, origin).isEmpty();
                 log.info("Required documents check - productId: {}, institutionType: {}, origin: {}, enabled: {}",
                     sanitizedProductId, institutionType, origin, enabled);
                 return enabled;
+              });
+        });
+  }
+
+  @Override
+  public Uni<List<RequiredDocumentResponse>> getRequiredDocuments(
+      String productId, InstitutionType institutionType, Origin origin) {
+
+    return validateProductContext(productId, institutionType, origin)
+        .onItem()
+        .transformToUni(ignored -> {
+          String sanitizedProductId = Encode.forJava(productId);
+          log.info("Retrieving required documents for product {}, institutionType {}, origin {}",
+              sanitizedProductId, institutionType, origin);
+
+          return productRepository
+              .findProductById(productId)
+              .onItem()
+              .ifNull()
+              .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+              .map(product -> {
+                List<RequiredDocumentResponse> documents =
+                    filterRequiredDocumentsForContext(product, institutionType, origin).stream()
+                        .map(productMapperResponse::toRequiredDocumentResponse)
+                        .toList();
+                log.info("Required documents retrieved - productId: {}, institutionType: {}, origin: {}, count: {}",
+                    sanitizedProductId, institutionType, origin, documents.size());
+                return documents;
               });
         });
   }
@@ -296,24 +327,28 @@ public class ProductServiceImpl implements ProductService {
     return Uni.createFrom().voidItem();
   }
 
-  private boolean hasRequiredDocumentsForContext(
+  private List<RequiredDocument> filterRequiredDocumentsForContext(
       Product product, InstitutionType institutionType, Origin origin) {
     if (Objects.isNull(product.getRequiredDocuments()) || product.getRequiredDocuments().isEmpty()) {
-      return false;
+      return List.of();
     }
 
     return product.getRequiredDocuments().stream()
-        .anyMatch(doc -> {
-          if ( Objects.isNull(doc.getFilter())) {
+        .filter(doc -> {
+          if (Objects.isNull(doc.getFilter())) {
             return false;
           }
           boolean institutionTypeMatch =
-              Objects.nonNull(doc.getFilter().getInstitutionType()) && doc.getFilter().getInstitutionType().contains(institutionType);
+              Objects.nonNull(doc.getFilter().getInstitutionType())
+                  && doc.getFilter().getInstitutionType().contains(institutionType);
           boolean originMatch =
-              Objects.nonNull(doc.getFilter().getOrigin()) && doc.getFilter().getOrigin().contains(origin);
+              Objects.nonNull(doc.getFilter().getOrigin())
+                  && doc.getFilter().getOrigin().contains(origin);
           return institutionTypeMatch && originMatch;
-        });
+        })
+        .toList();
   }
+
 
   private void applyParentOnboardingDefaults(Product product, boolean parentIdWasProvided) {
     if (!parentIdWasProvided) {

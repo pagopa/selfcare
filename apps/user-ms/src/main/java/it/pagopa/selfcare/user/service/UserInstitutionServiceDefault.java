@@ -16,15 +16,20 @@ import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionFilter;
 import it.pagopa.selfcare.user.mapper.UserInstitutionMapper;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
+import it.pagopa.selfcare.user.model.OnboardingUserDeleteInfo;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.util.QueryUtils;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.onboarding_ms_json.api.OnboardingControllerApi;
 import org.owasp.encoder.Encode;
 
 import java.time.Instant;
@@ -47,6 +52,10 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
+
+    @RestClient
+    @Inject
+    private OnboardingControllerApi onboardingClient;
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
@@ -80,14 +89,156 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<Long> deleteUserInstitutionProduct(String userId, String institutionId, String productId) {
+
         OnboardedProductFilter onboardedProductFilter = OnboardedProductFilter.builder().productId(productId).status(ACTIVE.name()).build();
         UserInstitutionFilter userInstitutionFilter = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build();
+
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(onboardedProductFilter.constructMap(), userInstitutionFilter.constructMap());
-        return updateUserStatusDao(filterMap, OnboardedProductState.DELETED);
+
+        return findTokenId(userId, institutionId, productId)
+                .flatMap(tokenId ->
+                        callOnboardingDelete(tokenId, userId, true)
+                                .flatMap(ignore ->
+                                        updateUserStatusDao(filterMap, OnboardedProductState.DELETED)
+                                )
+                );
     }
 
     @Override
+    public Uni<Void> callOnboardingDelete(String tokenId, String userId, boolean isBlocking) {
+
+        if (tokenId == null) {
+            return Uni.createFrom().voidItem();
+        }
+
+        Uni<Void> deleteUni = onboardingClient
+                .deleteOnboardingUser(tokenId, userId)
+                .replaceWithVoid();
+
+        //if isBlocking is true, we want to propagate the error if it is not ignorable, otherwise we log the error and continue
+        return isBlocking
+                ? deleteUni
+                .onFailure(this::isIgnorableOnboardingError)
+                .recoverWithNull()
+                : deleteUni
+                .onFailure()
+                .invoke(error ->
+                        log.warn(
+                                "Error deleting onboarding {} for user {}",
+                                tokenId,
+                                Encode.forJava(userId),
+                                error))
+                .onFailure()
+                .recoverWithNull();
+    }
+
+    private boolean isIgnorableOnboardingError(Throwable e) {
+
+        if (e instanceof WebApplicationException wae) {
+            int status = wae.getResponse().getStatus();
+
+            return status == 404 || status == 400;
+        }
+
+        return false;
+    }
+
+  @Override
+  public Uni<List<OnboardingUserDeleteInfo>> findTokenIdUserIdList(
+    String userId,
+    String institutionId,
+    String productId,
+    PartyRole role,
+    String productRole) {
+
+    Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder()
+      .userId(userId)
+      .institutionId(institutionId)
+      .build()
+      .constructMap();
+
+    Map<String, Object> onboardedProductFilterMap = OnboardedProductFilter.builder()
+      .productId(productId)
+      .role(role)
+      .productRole(productRole)
+      .build()
+      .constructMap();
+
+    Map<String, Object> filterMap = userUtils.retrieveMapForFilter(
+      userInstitutionFilterMap,
+      onboardedProductFilterMap
+    );
+
+    Document query = queryUtils.buildQueryDocument(
+      filterMap,
+      USER_INSTITUTION_COLLECTION
+    );
+
+    return UserInstitution.mongoCollection()
+      .find(query, UserInstitution.class)
+      .collect()
+      .asList()
+      .map(userInstitutions ->
+        userInstitutions.stream()
+          .flatMap(userInstitution ->
+            Optional.ofNullable(userInstitution.getProducts())
+              .orElse(List.of())
+              .stream()
+              .filter(product ->
+                product.getTokenId() != null
+                  && (ACTIVE.equals(product.getStatus()) || SUSPENDED.equals(product.getStatus()))
+                  && (productId == null || productId.equals(product.getProductId()))
+                  && (role == null || role.equals(product.getRole()))
+                  && (productRole == null || productRole.equals(product.getProductRole()))
+              )
+              .map(product -> new OnboardingUserDeleteInfo(
+                product.getTokenId(),
+                userInstitution.getUserId()
+              ))
+          )
+          .toList()
+      );
+  }
+
+    private Uni<String> findTokenId(String userId, String institutionId, String productId) {
+        return findTokenIdUserIdList(userId, institutionId, productId, null, null)
+                .map(tokenIdUserIdMap -> tokenIdUserIdMap.stream()
+                        .findFirst()
+                        .map(OnboardingUserDeleteInfo::getTokenId)
+                        .orElse(null)
+                );
+    }
+
+
+    @Override
     public Uni<Long> deleteUserInstitutionProductUsers(String institutionId, String productId) {
+
+        return findTokenIdUserIdList(null, institutionId, productId, null, null)
+                .flatMap(onboardingUsers -> {
+
+                    if (onboardingUsers.isEmpty()) {
+                        return updateUserInstitutionProductUsers(institutionId, productId);
+                    }
+
+                    return Multi.createFrom()
+                            .iterable(onboardingUsers)
+                            .onItem()
+                            .transformToUniAndMerge(entry ->
+                                    callOnboardingDelete(
+                                      entry.getTokenId(),
+                                      entry.getUserId(),
+                                      false
+                                    )
+                            )
+                            .collect()
+                            .asList()
+                            .flatMap(ignore ->
+                                    updateUserInstitutionProductUsers(institutionId, productId)
+                            );
+                });
+    }
+
+    private Uni<Long> updateUserInstitutionProductUsers(String institutionId, String productId) {
         final String institutionIdField = UserInstitution.Fields.institutionId.name();
         final String statusField = UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.status.name();
         final String productIdField = UserInstitution.Fields.products.name() + "." + OnboardedProduct.Fields.productId.name();
@@ -111,30 +262,23 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     public Uni<Long> updateUserStatusWithOptionalFilterByInstitutionAndProduct(String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
         Map<String, Object> filterMap = OnboardedProductFilter.builder().productId(productId).role(role).productRole(productRole).build().constructMap();
-        return retrieveFirstFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilterMap, filterMap))
-                .onItem().transformToUni(userInstitution -> userUtils.checkProductRoles(productId, retrieveRoleFromUserInstitution(userInstitution, productId, productRole), productRole == null ? Collections.emptyList() : List.of(productRole))
-                        .replaceWith(userInstitution))
-                .onItem().transformToUni(userInstitution -> evaluateStatusAndUpdateUserInstitutionProduct(userInstitution, userId, institutionId, productId, role, productRole, status));
+        return retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilterMap, filterMap))
+                .onItem().transformToUni(userInstitutions -> userUtils.validateMultiroleAfterStatusUpdate(userInstitutions, productId, role, productRole, status)
+                        .replaceWith(userInstitutions))
+                .onItem().transformToUni(userInstitutions -> evaluateStatusAndUpdateUserInstitutionProduct(userInstitutions, userId, institutionId, productId, role, productRole, status));
 
     }
 
-    private PartyRole retrieveRoleFromUserInstitution(UserInstitution userInstitution, String productId, String productRole) {
-        return userInstitution.getProducts().stream()
-                .filter(onboardedProduct -> Objects.nonNull(onboardedProduct.getProductRole()) && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
-                && onboardedProduct.getProductId().equalsIgnoreCase(productId))
-                .findFirst()
-                .map(OnboardedProduct::getRole)
-                .orElse(null);
-    }
+    private Uni<Long> evaluateStatusAndUpdateUserInstitutionProduct(List<UserInstitution> userInstitutions, String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
+        if(userInstitutions.size() == 1) {
+          boolean isProductRoleAlreadyActive = userInstitutions.get(0).getProducts().stream()
+            .anyMatch(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(productId)
+              && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
+              && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()));
 
-    private Uni<Long> evaluateStatusAndUpdateUserInstitutionProduct(UserInstitution userInstitution, String userId, String institutionId, String productId, PartyRole role, String productRole, OnboardedProductState status) {
-        boolean isProductRoleAlreadyActive = userInstitution.getProducts().stream()
-                .anyMatch(onboardedProduct -> onboardedProduct.getProductId().equalsIgnoreCase(productId)
-                        && onboardedProduct.getProductRole().equalsIgnoreCase(productRole)
-                        && OnboardedProductState.ACTIVE.equals(onboardedProduct.getStatus()));
-
-        if (isProductRoleAlreadyActive && status.equals(ACTIVE)) {
+          if (isProductRoleAlreadyActive && status.equals(ACTIVE)) {
             return Uni.createFrom().item(0L);
+          }
         }
 
         OnboardedProductFilter.OnboardedProductFilterBuilder filterBuilder = OnboardedProductFilter.builder()

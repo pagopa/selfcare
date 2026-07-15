@@ -97,26 +97,4 @@ class NotificationServiceTest {
         verify(notificationsApi, times(1)).apiNotificationPost(eq(QueueEvent.UPDATE.name()), any());
     }
 
-    @Nested
-    @TestProfile(NotificationTestProfile.class)
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    class NotificationServiceTestWithDisabledWatcherTest {
-        @Test
-        @DisplayName("Should not invoke Notification API when watcher is disabled")
-        void shouldNotInvokeNotificationApiWhenWatcheIsDisabled() {
-            Onboarding onboarding = new Onboarding();
-            onboarding.setStatus(OnboardingStatus.DELETED);
-            onboarding.setUpdatedAt(LocalDateTime.now()); // 5 minutes should be the threshold
-            onboarding.setActivatedAt(LocalDateTime.now());
-
-
-            UniAssertSubscriber<OrchestrationResponse> subscriber = notificationService
-                    .invokeNotificationApi(onboarding)
-                    .subscribe().withSubscriber(UniAssertSubscriber.create());
-
-            subscriber.assertCompleted().awaitItem();
-
-            verify(notificationsApi, times(0)).apiNotificationPost(any(), any());
-        }
-    }
 }

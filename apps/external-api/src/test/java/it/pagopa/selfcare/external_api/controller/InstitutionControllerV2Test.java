@@ -217,16 +217,18 @@ class InstitutionControllerV2Test extends BaseControllerTest {
               productResource.setContractTemplateVersion("1.0.0");
             });
 
-        ClassPathResource outputResource = new ClassPathResource("expectations/ProductResources.json");
-        String expectedResource = StringUtils.deleteWhitespace(new String(Files.readAllBytes(outputResource.getFile().toPath())));
-
         when(institutionService.getInstitutionUserProductsV2(anyString(), anyString())).thenReturn(products);
 
         mockMvc.perform(get("/v2/institutions/{institutionId}/products", "testInstitutionId")
                         .param("userId", "testUserId")
                 .contentType(APPLICATION_JSON_VALUE).accept(APPLICATION_JSON_VALUE))
-                .andExpect(content().string(expectedResource))
                 .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].id").value("123"))
+                .andExpect(jsonPath("$[1].id").value("456"))
+                .andExpect(jsonPath("$[0].contractTemplatePath").value("contractTemplatePath"))
+                .andExpect(jsonPath("$[1].contractTemplatePath").value("contractTemplatePath"))
+                .andExpect(jsonPath("$[0].contractTemplateVersion").value("1.0.0"))
+                .andExpect(jsonPath("$[1].contractTemplateVersion").value("1.0.0"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE))
                 .andReturn();

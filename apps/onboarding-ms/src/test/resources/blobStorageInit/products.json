@@ -1,6 +1,8 @@
 [
   {
     "alias": "prod-io",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Locale": {
         "identityTokenAudience": "locale",
@@ -120,6 +122,8 @@
   },
   {
     "alias": "prod-pn",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Collaudo": {
         "identityTokenAudience": "api.platform.pn-test.it",
@@ -222,6 +226,8 @@
   },
   {
     "alias": "prod-pagopa",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Collaudo": {
         "identityTokenAudience": "api.platform.pagopa.it",
@@ -251,8 +257,8 @@
         "attachments": []
       },
       "PRV": {
-        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
-        "contractTemplateVersion": "1.0.5",
+        "contractTemplatePath": "contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html",
+        "contractTemplateVersion": "1.0.4",
         "attachments": []
       },
       "PSP": {
@@ -261,8 +267,8 @@
         "attachments": []
       },
       "GPU": {
-        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
-        "contractTemplateVersion": "1.0.5",
+        "contractTemplatePath": "contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html",
+        "contractTemplateVersion": "1.0.4",
         "attachments": [
           {
             "name": "Dichiarazione_sostitutiva_certificazione",
@@ -281,8 +287,8 @@
     },
     "institutionAggregatorContractMappings": {
       "default": {
-        "contractTemplatePath": "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
-        "contractTemplateVersion": "1.0.5",
+        "contractTemplatePath": "contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html",
+        "contractTemplateVersion": "1.0.4",
         "attachments": []
       }
     },
@@ -699,6 +705,8 @@
   },
   {
     "alias": "prod-dashboard-psp",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Collaudo": {
         "identityTokenAudience": "api.platform.pagopa.it",
@@ -797,6 +805,8 @@
   },
   {
     "alias": "prod-ciban",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -874,6 +884,8 @@
   },
   {
     "alias": "prod-cgn",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -950,6 +962,8 @@
   },
   {
     "alias": "prod-interop",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Test": {
         "identityTokenAudience": "test",
@@ -1059,6 +1073,8 @@
   },
   {
     "alias": "prod-io-premium",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard",
       "SAP"
@@ -1131,6 +1147,8 @@
   },
   {
     "alias": "prod-pn-premium",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1152,6 +1170,8 @@
   },
   {
     "alias": "prod-idpay",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1228,6 +1248,8 @@
   },
   {
     "alias": "test-product",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1268,6 +1290,8 @@
   },
   {
     "alias": "test-test",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1313,6 +1337,8 @@
   },
   {
     "alias": "test-product2",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1353,6 +1379,8 @@
   },
   {
     "alias": "test-product-sub",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1375,6 +1403,8 @@
   },
   {
     "alias": "prod-pagopa-5",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1451,6 +1481,8 @@
   },
   {
     "alias": "prod-pagopa-ec",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Test": {
         "identityTokenAudience": "api.platform.pagopa.it",
@@ -1533,6 +1565,8 @@
   },
   {
     "alias": "prod-test-1",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Collaudo": {
         "identityTokenAudience": "collaudo",
@@ -1631,6 +1665,8 @@
   },
   {
     "alias": "prod-idpay-gi",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1695,7 +1731,7 @@
         ],
         "roles": [
           {
-            "code": "pagopa_admin",
+            "code": "admin",
             "description": "Ha tutti i permessi e gestisce gli utenti",
             "label": "Amministratore"
           }
@@ -1709,6 +1745,8 @@
   },
   {
     "alias": "prod-io-sign",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard",
       "SAP"
@@ -1780,6 +1818,8 @@
   },
   {
     "alias": "prod-interop-coll",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1873,6 +1913,8 @@
   },
   {
     "alias": "prod-interop-atst",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -1965,6 +2007,8 @@
   },
   {
     "alias": "prod-pn-coll",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -2041,6 +2085,8 @@
   },
   {
     "alias": "prod-idpay-merchant",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": true,
     "consumers": [
       "Standard"
     ],
@@ -2093,6 +2139,8 @@
   },
   {
     "alias": "prod-fd",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard",
       "SAP"
@@ -2185,6 +2233,8 @@
   },
   {
     "alias": "testpp",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -2276,6 +2326,8 @@
   },
   {
     "alias": "prod-fd-garantito",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard",
       "SAP"
@@ -2368,6 +2420,8 @@
   },
   {
     "alias": "prod-sendino",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "backOfficeEnvironmentConfigurations": {
       "Collaudo": {
         "identityTokenAudience": "api.platform.pn-test.it",
@@ -2456,6 +2510,8 @@
   },
   {
     "alias": "prod-piattaforma-unitaria",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
     "consumers": [
       "Standard"
     ],
@@ -2531,5 +2587,235 @@
     "title": "Piattaforma Unitaria",
     "urlBO": "https://mock.url/prod-piattaforma-unitaria/bo",
     "urlPublic": "https://mock.url/prod-piattaforma-unitaria/public"
+  },
+  {
+    "alias": "prod-pn-pg",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
+    "createdAt": "2023-01-27T12:08:39.244Z",
+    "createdBy": "f07ddb8f-17f9-47d4-b31e-35d1ac10e521",
+    "depictImageUrl": "https://mock.url/prod-pn-pg/depict-image",
+    "description": "SEND - Notifiche Digitali",
+    "enabled": true,
+    "id": "prod-pn-pg",
+    "identityTokenAudience": "imprese.notifichedigitali.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "logo": "https://mock.url/prod-pn-pg/logo",
+    "logoBgColor": "#0B3EE3",
+    "roleMappings": {
+      "MANAGER": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "pg-admin",
+            "description": "Stipula il contratto e identifica gli amministratori",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "pg-operator",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Gestore Notifiche"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "pg-admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "SEND",
+    "urlBO": "https://mock.url/prod-pn-pg/bo",
+    "urlPublic": "https://mock.url/prod-pn-pg/public",
+    "userContractMappings": {}
+  },
+  {
+    "alias": "prod-registro-beni",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
+    "consumers": [
+      "Standard"
+    ],
+    "createdAt": "2025-05-27T09:05:50.091934Z",
+    "depictImageUrl": "https://mock.url/prod-registro-beni/depict-image",
+    "description": "Crea e gestisce il registro dei beni per il bonus elettrodomestici",
+    "enabled": true,
+    "id": "prod-registro-beni",
+    "identityTokenAudience": "idpay.register.welfare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/dummy-accordo_di_adesione.html",
+        "contractTemplateVersion": "1.0.0",
+        "attachments": []
+      }
+    },
+    "logo": "https://mock.url/prod-registro-beni/logo",
+    "logoBgColor": "#0B3EE3",
+    "modifiedAt": "2025-05-27T09:05:50.091934Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "OPERATOR": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "operatore_beni",
+            "description": "Gestisce l'integrazione tecnologica e/o l'operatività dei servizi",
+            "label": "Operatore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "Registro dei beni",
+    "urlBO": "https://mock.url/prod-registro-beni/bo",
+    "urlPublic": "https://mock.url/prod-registro-beni/public"
+  },
+  {
+    "alias": "prod-ced",
+    "allowCompanyOnboarding": true,
+    "allowIndividualOnboarding": false,
+    "backOfficeEnvironmentConfigurations": {
+      "Locale": {
+        "identityTokenAudience": "locale",
+        "url": "https://mock.url/prod-ced/bo-env"
+      }
+    },
+    "consumers": [
+      "Standard",
+      "SAP"
+    ],
+    "createdAt": "2021-12-15T15:54:55.190Z",
+    "createdBy": "5096e4c6-25a1-45d5-9bdf-2fb974a7c1c8",
+    "delegable": false,
+    "depictImageUrl": "https://mock.url/prod-ced/depict-image",
+    "description": "Offri ai cittadini i servizi del tuo ente in un unico canale",
+    "enabled": true,
+    "id": "prod-ced",
+    "identityTokenAudience": "api.io.selfcare.pagopa.it",
+    "institutionContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        "contractTemplateVersion": "2.4.5",
+        "attachments": []
+      }
+    },
+    "institutionAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        "contractTemplateVersion": "2.4.5",
+        "attachments": []
+      }
+    },
+    "invoiceable": true,
+    "logo": "https://mock.url/prod-ced/logo",
+    "logoBgColor": "#0B3EE3",
+    "modifiedAt": "2022-11-18T17:59:27.744Z",
+    "modifiedBy": "d0aacc61-e6c8-4711-927e-6418f01b130b",
+    "roleMappings": {
+      "DELEGATE": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "MANAGER": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "referente operativo",
+            "description": "Operatore",
+            "label": "Operatore"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "phasesAdditionAllowed": [
+          "dashboard-async",
+          "dashboard-aggregator"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "ADMIN_EA": {
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "roles": [
+          {
+            "code": "referente amministrativo",
+            "description": "Amministratore",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "IO",
+    "urlBO": "https://mock.url/prod-ced/bo",
+    "urlPublic": "https://mock.url/prod-ced/public",
+    "userContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "userAggregatorContractMappings": {
+      "default": {
+        "contractTemplatePath": "contracts/template/io/user/1.0.0/io-aggiunta-amministratore-v.1.0.html",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "signingConfiguration": {
+      "requiredSignatures": 2
+    }
   }
 ]

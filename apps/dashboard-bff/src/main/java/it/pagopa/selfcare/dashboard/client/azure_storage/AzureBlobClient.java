@@ -1,10 +1,11 @@
 package it.pagopa.selfcare.dashboard.client.azure_storage;
 
-import com.microsoft.azure.storage.CloudStorageAccount;
-import com.microsoft.azure.storage.StorageException;
-import com.microsoft.azure.storage.blob.CloudBlobClient;
-import com.microsoft.azure.storage.blob.CloudBlobContainer;
-import com.microsoft.azure.storage.blob.CloudBlockBlob;
+import com.azure.identity.DefaultAzureCredentialBuilder;
+import com.azure.storage.blob.BlobClient;
+import com.azure.storage.blob.BlobContainerClient;
+import com.azure.storage.blob.BlobServiceClient;
+import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobHttpHeaders;
 import it.pagopa.selfcare.dashboard.connector.api.FileStorageConnector;
 import it.pagopa.selfcare.dashboard.exception.FileUploadException;
 import lombok.extern.slf4j.Slf4j;
@@ -13,10 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.security.InvalidKeyException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -24,22 +23,29 @@ import java.security.InvalidKeyException;
 class AzureBlobClient implements FileStorageConnector {
 
     private final String institutionsLogoContainerReference;
-    private final CloudBlobClient blobClient;
+    private final BlobServiceClient blobClient;
 
 
     AzureBlobClient(@Value("${blobStorage.connectionString}") String storageConnectionString,
-                    @Value("${blobStorage.institutions.logo.containerReference}") String institutionsLogoContainerReference)
-            throws URISyntaxException, InvalidKeyException {
+                    @Value("${blobStorage.institutions.logo.containerReference}") String institutionsLogoContainerReference,
+                    @Value("${blobStorage.accountNameProduct}") String accountNameProduct,
+                    @Value("${blobStorage.managedIdentityClientIdProduct}") String managedIdentityClientIdProduct) {
         if (log.isDebugEnabled()) {
             log.trace("AzureBlobClient");
-            log.debug("AzureBlobClient storageConnectionString = {}, containerReference = {}",
-                    storageConnectionString, institutionsLogoContainerReference);
+            log.debug("AzureBlobClient storageConnectionString = {}, containerReference = {}, accountNameProduct = {}, managedIdentityClientIdProduct = {}",
+                    storageConnectionString, institutionsLogoContainerReference, accountNameProduct, managedIdentityClientIdProduct);
         }
-        final CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);
-        this.blobClient = storageAccount.createCloudBlobClient();
+        this.blobClient = Optional.ofNullable(storageConnectionString)
+            .filter(cs -> !cs.isBlank())
+            .map(cs -> new BlobServiceClientBuilder().connectionString(cs).buildClient())
+            .orElseGet(() -> new BlobServiceClientBuilder()
+                .endpoint("https://" + accountNameProduct + ".blob.core.windows.net")
+                .credential(new DefaultAzureCredentialBuilder()
+                    .managedIdentityClientId(managedIdentityClientIdProduct)
+                    .build()
+                ).buildClient());
         this.institutionsLogoContainerReference = institutionsLogoContainerReference;
     }
-
 
     @Override
     public void uploadInstitutionLogo(InputStream file, String fileName, String contentType) throws FileUploadException {
@@ -49,14 +55,14 @@ class AzureBlobClient implements FileStorageConnector {
         }
 
         try {
-            final CloudBlobContainer blobContainer = blobClient.getContainerReference(institutionsLogoContainerReference);
-            final CloudBlockBlob blob = blobContainer.getBlockBlobReference(fileName);
-            blob.getProperties().setContentType(contentType);
-            blob.upload(file, file.available());
+            final BlobContainerClient blobContainer = blobClient.getBlobContainerClient(institutionsLogoContainerReference);
+            final BlobClient blob = blobContainer.getBlobClient(fileName);
+            blob.upload(file);
+            blob.setHttpHeaders(new BlobHttpHeaders().setContentType(contentType));
             log.info("Uploaded {}", Encode.forJava(fileName));
 
-        } catch (StorageException | URISyntaxException | IOException e) {
-            throw new FileUploadException(e);
+        } catch (Exception ex) {
+            throw new FileUploadException(ex);
         }
     }
 

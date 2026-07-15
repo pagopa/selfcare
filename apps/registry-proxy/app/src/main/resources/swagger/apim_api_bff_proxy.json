@@ -474,6 +474,22 @@
             "format": "date-time"
           }
         }, {
+          "name" : "statusUpdatedFromDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "name": "statusUpdatedToDate",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -502,7 +518,15 @@
               "type" : "string"
             }
           }
-        } ],
+        }, {
+          "name": "includeTest",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "boolean",
+            "default": false
+            }
+        }],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1473,6 +1497,16 @@
               "type": "integer",
               "format": "int32"
             }
+          },
+          {
+            "name": "taxCodeInvoicing",
+            "in": "query",
+            "description": "UO tax code. Optional filter to retrieve only UOs matching the given invoicing tax code",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2035,6 +2069,14 @@
           "expiringDate" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "deletedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "statusUpdatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },
@@ -2213,6 +2255,10 @@
           "codiceFiscaleEnte": {
             "type": "string",
             "description": "UO fiscal code"
+          },
+          "codiceFiscaleSfe": {
+            "type": "string",
+            "description": "UO tax code for invoicing (SFE)"
           },
           "codiceIpa": {
             "type": "string",

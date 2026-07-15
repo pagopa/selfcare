@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
@@ -107,13 +108,60 @@ public class UserServiceImpl implements UserService {
             return Uni.createFrom().failure(new InvalidRequestException(STATUS_IS_MANDATORY.getMessage()));
         }
 
-        return userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(userId, institutionId, productId, role, productRole, status)
-                .onItem().transformToUni(aLong -> {
-                    if (aLong < 1) {
-                        return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));
-                    }
-                    return Uni.createFrom().nullItem();
-                });
+        Uni<Long> updateChain;
+
+        if (OnboardedProductState.DELETED.equals(status)) {
+
+            updateChain = userInstitutionService
+                    .findTokenIdUserIdList(
+                            userId,
+                            institutionId,
+                            productId,
+                            role,
+                            productRole)
+                    .flatMap(onboardingUsers ->
+                            Multi.createFrom()
+                                    .iterable(onboardingUsers)
+                                    .onItem()
+                                    .transformToUniAndConcatenate(entry ->
+                                            userInstitutionService.callOnboardingDelete(
+                                                    entry.getTokenId(), // tokenId
+                                                    entry.getUserId(), // userId
+                                                    false
+                                            ))
+                                    .collect()
+                                    .asList()
+                                    .flatMap(ignore ->
+                                            userInstitutionService
+                                                    .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                                                            userId,
+                                                            institutionId,
+                                                            productId,
+                                                            role,
+                                                            productRole,
+                                                            status))
+                    );
+
+        } else {
+
+            updateChain =
+                    userInstitutionService
+                            .updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                                    userId,
+                                    institutionId,
+                                    productId,
+                                    role,
+                                    productRole,
+                                    status);
+        }
+
+        return updateChain.flatMap(updated -> {
+            if (updated < 1) {
+                return Uni.createFrom().failure(new ResourceNotFoundException(USER_TO_UPDATE_NOT_FOUND.getMessage()));
+            }
+
+            return Uni.createFrom().nullItem();
+        });
     }
 
     @Override
@@ -600,7 +648,7 @@ public class UserServiceImpl implements UserService {
      * If the new role is not MANAGER and the user already has any role on the product, the method throws a
      * UserRoleAlreadyPresentException to prevent assigning a conflicting role.
      */
-    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(UserInstitution userInstitution ,AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
+    private Uni<String> evaluateRoleAndCreateOrUpdateUserByUserId(UserInstitution userInstitution, AddUserRoleDto userDto, String userId, LoggedUser loggedUser) {
         PartyRole newRole;
         try {
             newRole = PartyRole.valueOf(userDto.getProduct().getRole());
@@ -698,7 +746,7 @@ public class UserServiceImpl implements UserService {
             throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
-        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution, userDto.getProduct().getRole());
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         productRoleToAdd.forEach(productRole -> userInstitution.getProducts().add(onboardedProductMapper.toNewOnboardedProduct(userDto.getProduct(), productRole, status)));
@@ -740,13 +788,12 @@ public class UserServiceImpl implements UserService {
         }
 
         log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
-        log.info(USER_INSTITUTION_FOUNDED, userId, userDto.getInstitutionId());
 
         if(checkAlreadyOnboardedRole(userDto.getProduct(), userInstitution)){
             throw new InvalidRequestException(String.format("User already has different role on Product %s", userDto.getProduct().getProductId()));
         }
 
-        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution);
+        List<String> productRoleToAdd = checkAlreadyOnboardedProductRole(userDto.getProduct().getProductId(), userDto.getProduct().getProductRoles(), userInstitution, userDto.getProduct().getRole());
         userDto.getProduct().setProductRoles(productRoleToAdd);
 
         userInstitution.setUserMailUuid(mailUuid);
@@ -755,7 +802,7 @@ public class UserServiceImpl implements UserService {
         return Uni.createFrom().item(userInstitution);
     }
 
-    private List<String> checkAlreadyOnboardedProductRole(String productId, List<String> productRole, UserInstitution userInstitution) {
+    private List<String> checkAlreadyOnboardedProductRole(String productId, List<String> productRole, UserInstitution userInstitution, String role) {
 
         List<String> productAlreadyOnboarded = new ArrayList<>(Optional.ofNullable(userInstitution.getProducts())
                 .orElse(Collections.emptyList())
@@ -772,9 +819,21 @@ public class UserServiceImpl implements UserService {
         if (!productAlreadyOnboarded.isEmpty() && CollectionUtils.isNullOrEmpty(productRoleFinal)) {
             throw new InvalidRequestException(String.format("User already has roles on Product %s", productId));
         }
+
+        // Final roles after the operation
+        List<String> finalRoles = new ArrayList<>(productAlreadyOnboarded);
+        finalRoles.addAll(productRoleFinal);
+
+        userUtils.validateMultiroleWithUserInstitution(
+                productId,
+                role,
+                finalRoles,
+                userInstitution
+        );
+
+
         return productRoleFinal;
     }
-
 
     /**
      * The retrieveUsers function is used to retrieve a list of users from the database and userRegistry.

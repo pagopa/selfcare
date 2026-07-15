@@ -47,6 +47,7 @@ public class ProductApiSteps{
         dashboardStepsUtil.status = response.statusCode();
         if(dashboardStepsUtil.status == 200) {
             dashboardStepsUtil.responses.setProductRoleMappingsResource(response.body().as(new TypeRef<>() {}));
+            dashboardStepsUtil.setResponse(response);
         }else {
             dashboardStepsUtil. errorMessage = response.body().asString();
         }

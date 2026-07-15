@@ -12,6 +12,8 @@ public class ProductRoleInfo {
     private List<String> phasesAdditionAllowed;
     private List<ProductRole> roles;
 
+    private boolean excludeRoleFromUserGroups;
+
     public boolean isSkipUserCreation() {
         return skipUserCreation;
     }
@@ -52,6 +54,14 @@ public class ProductRoleInfo {
                 getRoles(),
                 isSkipUserCreation()
         );
+    }
+
+    public boolean isExcludeRoleFromUserGroups() {
+      return excludeRoleFromUserGroups;
+    }
+
+    public void setExcludeRoleFromUserGroups(boolean excludeRoleFromUserGroups) {
+      this.excludeRoleFromUserGroups = excludeRoleFromUserGroups;
     }
 
 }

@@ -36,4 +36,5 @@ logging:
     io.kubernetes.client: DEBUG
 #    org.springframework: DEBUG
   pattern:
+    level: "%5p [${spring.application.name:},%X{trace_id:-},%X{span_id:-}]"
     additional-info: ",%X{X-Client-Ip:-}]"

@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.mscore.core.config;
 
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.mscore.config.CoreConfig;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
@@ -13,6 +11,8 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.ses.SesClient;
 
+import java.util.Optional;
+
 @Configuration
 @RequiredArgsConstructor
 public class MsCoreConfig {
@@ -21,12 +21,11 @@ public class MsCoreConfig {
 
     @Bean
     public ProductService productService(){
-        AzureBlobClient azureBlobClient = new AzureBlobClientDefault(config.getBlobStorage().getConnectionStringProduct(), config.getBlobStorage().getContainerProduct());
-        try{
-            return new ProductServiceCacheable(azureBlobClient, config.getBlobStorage().getFilepathProduct());
-        } catch(IllegalArgumentException e){
-            throw new IllegalArgumentException("Found an issue when trying to serialize product json string!!");
-        }
+        return Optional.ofNullable(config.getBlobStorage().getConnectionStringProduct())
+            .filter(cs -> !cs.isBlank())
+            .map(cs -> new ProductServiceCacheable(cs, config.getBlobStorage().getContainerProduct(), config.getBlobStorage().getFilepathProduct()))
+            .orElseGet(() -> new ProductServiceCacheable(config.getBlobStorage().getContainerProduct(), config.getBlobStorage().getFilepathProduct(),
+                config.getBlobStorage().getAccountNameProduct(), config.getBlobStorage().getManagedIdentityClientIdProduct()));
     }
 
     @Bean

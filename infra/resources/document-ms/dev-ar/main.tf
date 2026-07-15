@@ -14,6 +14,8 @@ module "local" {
   container_app_environment_name = "selc-d-cae-002"
   ca_resource_group_name         = "selc-d-container-app-002-rg"
   container_app_min_replicas     = 0
+  container_app_cpu              = 1.0
+  container_app_memory           = "2.0Gi"
 }
 
 
@@ -77,8 +79,12 @@ locals {
       value = "sc-d-documents-blob"
     },
     {
+      name  = "STORAGE_CONTAINER_USER"
+      value = "sc-d-usrattach-blob"
+    },
+    {
       name  = "NAMIRIAL_BASE_URL"
-      value = "https://selc-d-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
       name  = "DOCUMENT_MS_UPLOAD_MAX_BODY_SIZE"
@@ -91,6 +97,7 @@ locals {
     "JWT_PUBLIC_KEY"                          = "jwt-public-key"
     "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
     "BLOB_STORAGE_CONTRACT_CONNECTION_STRING" = "documents-storage-connection-string"
+    "BLOB_STORAGE_USER_CONNECTION_STRING"     = "user-attachments-storage-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }

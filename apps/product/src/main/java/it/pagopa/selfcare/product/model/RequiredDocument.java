@@ -1,9 +1,11 @@
 package it.pagopa.selfcare.product.model;
 
+import it.pagopa.selfcare.product.entity.StorageOrigin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.bson.codecs.pojo.annotations.BsonProperty;
 
 @Data
 @Builder
@@ -11,6 +13,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RequiredDocument {
 
+  @BsonProperty("id")
   private String id;
   private String name;
   private String labelKey;
@@ -18,5 +21,5 @@ public class RequiredDocument {
   private String mimeType;
   private Integer maxDocumentsRequired;
   private RequiredDocumentFilter filter;
+  private StorageOrigin storageOrigin;
 }
-

@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.external_api.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import it.pagopa.selfcare.commons.base.security.PartyRole;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.InstitutionResponse;
 import it.pagopa.selfcare.external_api.client.*;
 import it.pagopa.selfcare.external_api.mapper.ProductsMapperImpl;
@@ -13,8 +12,6 @@ import it.pagopa.selfcare.external_api.model.institution.Institutions;
 import it.pagopa.selfcare.external_api.model.institution.SearchMode;
 import it.pagopa.selfcare.external_api.model.national_registries.LegalVerification;
 import it.pagopa.selfcare.external_api.model.pnpg.CreatePnPgInstitution;
-import it.pagopa.selfcare.external_api.model.product.PartyProduct;
-import it.pagopa.selfcare.external_api.model.product.ProductOnboardingStatus;
 import it.pagopa.selfcare.external_api.model.product.ProductResource;
 import it.pagopa.selfcare.external_api.model.user.User;
 import it.pagopa.selfcare.external_api.model.user.UserProductResponse;
@@ -24,6 +21,7 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.registry_proxy.generated.openapi.v1.dto.LegalVerificationResult;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +36,6 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import jakarta.validation.ValidationException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
@@ -84,10 +81,6 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
     @Test
     void getInstitutionUserProducts_WithProductEmpty() {
         String institutionId = "institutionId";
-        PartyProduct partyProduct = new PartyProduct();
-        partyProduct.setStatus(ProductOnboardingStatus.ACTIVE);
-        partyProduct.setRole(PartyRole.MANAGER);
-        partyProduct.setId("123");
         String userId = UUID.randomUUID().toString();
         Assertions.assertEquals(0, institutionService.getInstitutionUserProductsV2(institutionId, userId).size());
     }

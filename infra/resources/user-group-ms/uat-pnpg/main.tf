@@ -11,9 +11,9 @@ module "local" {
 
   dns_zone_prefix                = "imprese.uat.notifichedigitali"
   api_dns_zone_prefix            = "api-pnpg.uat.selfcare"
-  private_dns_name_domain        = "orangeground-0bd2d4dc.westeurope.azurecontainerapps.io"
-  container_app_environment_name = "selc-u-pnpg-cae-001"
-  ca_resource_group_name         = "selc-u-container-app-001-rg"
+  private_dns_name_domain        = "thankfulsmoke-f977cdb9.westeurope.azurecontainerapps.io"
+  container_app_environment_name = "selc-u-pnpg-cae-cp"
+  ca_resource_group_name         = "selc-u-container-app-rg"
   container_app_max_replicas     = 2
   container_app_desired_replicas = "1"
   container_app_cpu              = 0.5
@@ -81,7 +81,7 @@ locals {
   app_settings_user_group_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },
     {
       name  = "APPLICATIONINSIGHTS_INSTRUMENTATION_LOGGING_LEVEL"
@@ -121,4 +121,3 @@ module "container_app_user_group_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
 }
-

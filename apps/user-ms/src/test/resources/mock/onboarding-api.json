@@ -1,0 +1,78 @@
+[
+  {
+    "httpRequest": {
+      "method": "DELETE",
+      "path": "/onboarding-mock/v1/onboarding/{onboardingId}/user/{userId}",
+      "pathParameters": {
+        "onboardingId": [
+          "asda8312-3311-5642-gsds-gfr2252341"
+        ],
+        "userId": [
+          "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 204
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "DELETE",
+      "path": "/onboarding-mock/v1/onboarding/{onboardingId}/user/{userId}",
+      "pathParameters": {
+        "onboardingId": [
+          "asda8312-3311-5642-gsds-gfr2252341"
+        ],
+        "userId": [
+          "6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 204
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "DELETE",
+      "path": "/onboarding-mock/v1/onboarding/{onboardingId}/user/{userId}",
+      "pathParameters": {
+        "onboardingId": [
+          "550e8400-e29b-41d4-a716-446655440001"
+        ],
+        "userId": [
+          "8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 404,
+      "body": "Onboarding with id 550e8400-e29b-41d4-a716-446655440003 not found",
+      "headers": {
+        "Content-Type": "text/plain"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "DELETE",
+      "path": "/onboarding-mock/v1/onboarding/{onboardingId}/user/{userId}",
+      "pathParameters": {
+        "onboardingId": [
+          "550e8400-e29b-41d4-a716-446655440000"
+        ],
+        "userId": [
+          "8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 500,
+      "body": "Something has gone wrong in the server",
+      "headers": {
+        "Content-Type": "text/plain"
+      }
+    }
+  }
+]

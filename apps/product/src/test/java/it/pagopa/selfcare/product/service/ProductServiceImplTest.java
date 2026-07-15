@@ -23,6 +23,7 @@ import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
@@ -1115,5 +1116,212 @@ class ProductServiceImplTest {
 
     // then
     assertFalse(enabled);
+  }
+
+  // -------------------------------------------------------------------------
+  // getRequiredDocuments
+  // -------------------------------------------------------------------------
+
+  @Test
+  void getRequiredDocuments_returnsFilteredAndMappedList() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("statuto")
+                        .name("Statuto")
+                        .labelKey("statuto")
+                        .required(true)
+                        .mimeType("application/pdf")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.SELC))
+                                .build())
+                        .build(),
+                    RequiredDocument.builder()
+                        .id("attestazione")
+                        .name("Attestazione")
+                        .labelKey("attestazione")
+                        .required(true)
+                        .mimeType("application/pdf")
+                        .maxDocumentsRequired(3)
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.SELC))
+                                .build())
+                        .build(),
+                    RequiredDocument.builder()
+                        .id("other")
+                        .name("Other")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.PA))
+                                .origin(List.of(Origin.IPA))
+                                .build())
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    RequiredDocumentResponse mappedStatuto =
+        RequiredDocumentResponse.builder()
+            .id("statuto")
+            .name("Statuto")
+            .labelKey("statuto")
+            .required(true)
+            .mimeType("application/pdf")
+            .maxDocumentsRequired(1)
+            .build();
+    RequiredDocumentResponse mappedAttestazione =
+        RequiredDocumentResponse.builder()
+            .id("attestazione")
+            .name("Attestazione")
+            .labelKey("attestazione")
+            .required(true)
+            .mimeType("application/pdf")
+            .maxDocumentsRequired(3)
+            .build();
+    when(productMapperResponse.toRequiredDocumentResponse(any(RequiredDocument.class)))
+        .thenAnswer(
+            inv -> {
+              RequiredDocument d = inv.getArgument(0, RequiredDocument.class);
+              return "statuto".equals(d.getId()) ? mappedStatuto : mappedAttestazione;
+            });
+
+    // when
+    List<RequiredDocumentResponse> result =
+        productService
+            .getRequiredDocuments("prod-test", InstitutionType.GSP, Origin.SELC)
+            .await()
+            .indefinitely();
+
+    // then
+    assertNotNull(result);
+    assertEquals(2, result.size());
+    assertEquals("statuto", result.get(0).getId());
+    assertEquals(1, result.get(0).getMaxDocumentsRequired());
+    assertEquals("attestazione", result.get(1).getId());
+    assertEquals(3, result.get(1).getMaxDocumentsRequired());
+    verify(productMapperResponse, times(2)).toRequiredDocumentResponse(any(RequiredDocument.class));
+  }
+
+  @Test
+  void getRequiredDocuments_returnsEmptyList_whenNoDocumentMatchesContext() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .requiredDocuments(
+                List.of(
+                    RequiredDocument.builder()
+                        .id("doc-1")
+                        .filter(
+                            RequiredDocumentFilter.builder()
+                                .institutionType(List.of(InstitutionType.GSP))
+                                .origin(List.of(Origin.SELC))
+                                .build())
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    List<RequiredDocumentResponse> result =
+        productService
+            .getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+    verify(productMapperResponse, never()).toRequiredDocumentResponse(any(RequiredDocument.class));
+  }
+
+  @Test
+  void getRequiredDocuments_returnsEmptyList_whenRequiredDocumentsIsNull() {
+    // given
+    Product product = Product.builder().productId("prod-test").requiredDocuments(null).build();
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    List<RequiredDocumentResponse> result =
+        productService
+            .getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA)
+            .await()
+            .indefinitely();
+
+    // then
+    assertNotNull(result);
+    assertTrue(result.isEmpty());
+  }
+
+  @Test
+  void getRequiredDocuments_throwsNotFound_whenProductDoesNotExist() {
+    // given
+    when(productRepository.findProductById("prod-missing")).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getRequiredDocuments("prod-missing", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
+  }
+
+  @Test
+  void getRequiredDocuments_throwsIllegalArgument_whenProductIdIsBlank() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getRequiredDocuments("  ", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing productId");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void getRequiredDocuments_throwsIllegalArgument_whenInstitutionTypeIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getRequiredDocuments("prod-test", null, Origin.IPA)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+  }
+
+  @Test
+  void getRequiredDocuments_throwsIllegalArgument_whenOriginIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getRequiredDocuments("prod-test", InstitutionType.PA, null)
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
   }
 }

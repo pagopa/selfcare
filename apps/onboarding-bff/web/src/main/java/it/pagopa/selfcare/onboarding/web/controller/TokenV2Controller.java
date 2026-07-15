@@ -9,11 +9,13 @@ import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
+import it.pagopa.selfcare.onboarding.web.model.AvailableDocumentsResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
@@ -70,7 +72,7 @@ public class TokenV2Controller {
      */
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.complete}", summary = "${swagger.tokens.complete}", operationId = "completeUsingPOST")
-    @PostMapping(value = "/{onboardingId}/complete")
+    @PostMapping(value = "/{onboardingId}/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> complete(@ApiParam("${swagger.tokens.onboardingId}")
                                          @PathVariable(value = "onboardingId") String onboardingId,
                                          @RequestPart MultipartFile contract) {
@@ -99,7 +101,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.completeOnboardingUsers}", summary = "${swagger.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
-    @PostMapping(value = "/{onboardingId}/complete-onboarding-users")
+    @PostMapping(value = "/{onboardingId}/complete-onboarding-users", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> completeOnboardingUsers(@ApiParam("${swagger.tokens.onboardingId}")
                                                         @PathVariable(value = "onboardingId") String onboardingId,
                                                         @RequestPart MultipartFile contract) {
@@ -279,6 +281,24 @@ public class TokenV2Controller {
         return getResponseEntity(contract);
     }
 
+    @GetMapping(value = "/{onboardingId}/available-documents")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
+    @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
+            description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
+            operationId = "getAvailableDocumentsUsingGET")
+    public AvailableDocumentsResource getAvailableDocuments(@ApiParam("${swagger.tokens.onboardingId}")
+                                                            @PathVariable("onboardingId") String onboardingId) {
+        log.trace("getAvailableDocuments start");
+        log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
+        AvailableDocuments source = tokenService.getAvailableDocuments(onboardingId);
+        AvailableDocumentsResource resource = new AvailableDocumentsResource();
+        resource.setAttachments(source.getAttachments());
+        resource.setContractFilename(source.getContractFilename());
+        log.trace("getAvailableDocuments end");
+        return resource;
+    }
+
     @RequestMapping(method = HEAD, value = "/{onboardingId}/attachment/status")
     @Operation(summary = "${swagger.tokens.headAttachment}",
             description = "${swagger.tokens.headAttachment}",  operationId = "headAttachmentUsingGET")
@@ -292,20 +312,36 @@ public class TokenV2Controller {
                 : ResponseEntity.notFound().build();
     }
 
+    @GetMapping(value = "/{onboardingId}/attachment/status")
+    @Operation(summary = "${swagger.tokens.headAttachment}",
+            description = "${swagger.tokens.headAttachment}", operationId = "getAttachmentStatusUsingGET")
+    public ResponseEntity<Void> getAttachmentStatus(@ApiParam("${swagger.tokens.onboardingId}")
+                                                    @PathVariable("onboardingId")
+                                                    String onboardingId,
+                                                    @NotNull @RequestParam("name") String attachmentName) {
+        log.trace("getAttachmentStatus start");
+        log.debug("getAttachmentStatus onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
+        HttpStatusCode attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
+        return attachmentResponse.is2xxSuccessful() ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
-    @PostMapping(value = "/{onboardingId}/attachment")
+    @PostMapping(value = "/{onboardingId}/attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
                                                  @RequestParam("attachmentName") String attachmentName,
+                                                 @RequestPart(value = "attachmentId", required = false) String attachmentId,
+                                                 @RequestPart(value = "attachmentDescription", required = false) String attachmentDescription,
                                                  @RequestPart MultipartFile attachment) {
         log.trace("uploadAttachment start");
         FileValidationUtils.validatePdfOrP7m(attachment);
         String sanitizedFileName = Encode.forJava(attachment.getOriginalFilename());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, attachment, attachmentName);
+        tokenService.uploadAttachment(onboardingId, attachment, attachmentName, attachmentId, attachmentDescription);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 

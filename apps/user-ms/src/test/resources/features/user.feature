@@ -801,6 +801,72 @@ Feature: User
       | DELETED   | prod-pagopa |
     And The response body doesn't contain field "[0].products[0].roleId"
 
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Successfully delete logically the association institution and product when onboarding returns an handled error
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and tokenId "550e8400-e29b-41d4-a716-446655440001"
+    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                      |
+      | ACTIVE                      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+      | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
+      | productId                  | prod-pagopa                                          |
+    When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                                                                            |
+      | DELETED                                                                           |
+    And The response body doesn't contain field "[0].products[0].roleId"
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessully delete logically the association institution and product when onboarding returns an unhandled error
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and tokenId "550e8400-e29b-41d4-a716-446655440000"
+    And The following path params:
+      | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
+    And The following query params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].id                     | 65a4b6c7d8e9f01234567890                             |
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | status                      |
+      | ACTIVE                      |
+    And The response body doesn't contain field "[0].products[0].roleId"
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                     | 8c7f6e52-3d71-4c0e-b7c5-9f6c1a2d8e43                 |
+      | institutionId              | d0d28367-1695-4c50-a260-6fda526e9aab                 |
+      | productId                  | prod-pagopa                                          |
+    When I send a DELETE request to "users/{userId}/institutions/{institutionId}/products/{productId}"
+    Then The status code is 500
+    And The response body contains the string "Something has gone wrong in the server"
+
   # Cancellazione di prodotto già cancellato
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully delete logically the association institution and product because product is already deleted
@@ -1583,6 +1649,24 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessfully update user status with invalid multirole configuration
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
+      | onboardedProductState | role     | productRole | productId    |
+      | ACTIVE                | OPERATOR | api         | prod-interop |
+      | DELETED               | OPERATOR | reviewer    | prod-interop |
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-interop"
+    And The following path params:
+      | id | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The following query params:
+      | status      | ACTIVE   |
+      | productRole | reviewer |
+    When I send a PUT request to "users/{id}/status"
+    Then The status code is 400
+    And The response body contains string:
+      | Not valid multirole configuration |
+
   @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to ACTIVE)
     Given User login with username "j.doe" and password "test"
@@ -1741,20 +1825,24 @@ Feature: User
       | status          | DELETED                                                     |
       | productId       | prod-interop-coll                                           |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   Scenario: Unsuccessfully update user status with wrong userId
     Given User login with username "j.doe" and password "test"
     And The following path params:
-      | id              |  wrongUser                                     |
+      | id              |  wrongUser                                                  |
     And The following query params:
       | status          | DELETED                                                     |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   Scenario: Unsuccessfully update user status with wrong role
     Given User login with username "j.doe" and password "test"
@@ -1762,11 +1850,11 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | role            | wrongRole                                                     |
+      | role            | wrongRole                                                   |
     When I send a PUT request to "users/{id}/status"
     Then The status code is 500
     And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+      | Something has gone wrong in the server |
 
   Scenario: Unsuccessfully update user status with wrong institutionId
     Given User login with username "j.doe" and password "test"
@@ -1774,11 +1862,13 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | institutionId            | wrongInstitution                                                     |
+      | institutionId   | wrongInstitution                                            |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   Scenario: Unsuccessfully update user status with wrong productRole
     Given User login with username "j.doe" and password "test"
@@ -1786,11 +1876,13 @@ Feature: User
       | id              |  6f8b2d3a-4c1e-44d8-bf92-1a7f8e2c3d5b                       |
     And The following query params:
       | status          | DELETED                                                     |
-      | productRole            | wrongProductRole                                                     |
+      | productRole     | wrongProductRole                                            |
     When I send a PUT request to "users/{id}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                                        |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   # Cambio stato senza parametri
   Scenario: Unsuccessfully update user status without status
@@ -2712,6 +2804,26 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessfully update product status with invalid multirole configuration
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
+      | onboardedProductState | role     | productRole | productId    |
+      | PENDING               | OPERATOR | security    | prod-interop |
+      | ACTIVE                | OPERATOR | viewer      | prod-interop |
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-pagopa"
+    And The following path params:
+      | id            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+      | institutionId | d0d28367-1695-4c50-a260-6fda526e9aab |
+      | productId     | prod-interop |
+    And The following query params:
+      | status      | SUSPENDED |
+      | productRole | security  |
+    When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
+    Then The status code is 400
+    And The response body contains string:
+      | Not valid multirole configuration |
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status from DELETED to ACTIVE
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "DELETED" and role "SUB_DELEGATE" and productId "prod-pagopa"
@@ -2876,9 +2988,11 @@ Feature: User
       | status                     | DELETED                                              |
       | productRole                | referente amministrativo                             |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
@@ -2904,9 +3018,11 @@ Feature: User
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status with wrong institutionId
@@ -2918,9 +3034,11 @@ Feature: User
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
   Scenario: Unsuccessfully update user product status with wrong user
@@ -2932,12 +3050,14 @@ Feature: User
     And The following query params:
       | status                     | DELETED                                              |
     When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
-    Then The status code is 500
-    And The response body contains string:
-      | Something has gone wrong in the server                                           |
+    Then The status code is 404
+    And The response body contains:
+      | detail             | USER TO UPDATE NOT FOUND      |
+      | status             | 404                           |
+      | title              | USER TO UPDATE NOT FOUND      |
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
-  Scenario: Unsuccessfully update user product status with wrong user
+  Scenario: Unsuccessfully update user product status with wrong status
     Given User login with username "j.doe" and password "test"
     And The following path params:
       | id                         | wrongUser                                            |
@@ -3204,6 +3324,33 @@ Feature: User
     Then The status code is 400
     And The response body contains string:
       | ProductRole admin not found for role DELEGATE |
+
+  @RemoveUserInstitutionAfterScenario
+  Scenario: Unsuccessfully create user by userId with invalid multirole configuration
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+    """
+    {
+      "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+      "product": {
+        "productId": "prod-interop",
+        "role": "OPERATOR",
+        "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+        "productRoles": [
+          "viewer",
+          "api"
+        ]
+      },
+      "institutionDescription": "Comune di Bergamo",
+      "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+    }
+    """
+    And The following path params:
+      | userId | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 400
+    And The response body contains string:
+      | Not valid multirole configuration |
 
   @RemoveUserInstitutionAfterCreateFromAPI
   Scenario: Unsuccessfully update or create a user by userId with a new role (2 times with same product for same institution)
@@ -4105,6 +4252,68 @@ Feature: User
       | productId                      | productRole                                   | role         | status    | tokenId                                |
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
     And The response body doesn't contain field "[0].products[0].roleId"
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Successfully create user with existing userInstitution and valid multirole configuration
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
+      | onboardedProductState | role     | productRole | productId     |
+      | ACTIVE                | OPERATOR | security    | prod-interop  |
+    And The following request body:
+    """
+    {
+      "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+      "hasToSendEmail": false,
+      "user": {
+        "fiscalCode": "blbrki80A41H401T",
+        "institutionEmail": "prova@email.com"
+      },
+      "product": {
+        "productId": "prod-interop",
+        "role": "OPERATOR",
+        "tokenId": "aa1112-5132-4432-gsds-d12322",
+        "productRoles": [
+          "api"
+        ]
+      },
+      "institutionDescription": "Comune di Milano",
+      "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+    }
+    """
+    When I send a POST request to "users/"
+    Then The status code is 201
+
+  @RemoveUserInstitutionAndUserInfoAfterScenario
+  Scenario: Unsuccessfully create user with existing userInstitution and invalid multirole configuration
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
+      | onboardedProductState | role     | productRole | productId     |
+      | ACTIVE                | OPERATOR | viewer      | prod-interop  |
+    And The following request body:
+    """
+    {
+      "institutionId": "d0d28367-1695-4c50-a260-6fda526e9aab",
+      "hasToSendEmail": false,
+      "user": {
+        "fiscalCode": "blbrki80A41H401T",
+        "institutionEmail": "prova@email.com"
+      },
+      "product": {
+        "productId": "prod-interop",
+        "role": "OPERATOR",
+        "tokenId": "aa1112-5132-4432-gsds-d12322",
+        "productRoles": [
+          "api"
+        ]
+      },
+      "institutionDescription": "Comune di Milano",
+      "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+    }
+    """
+    When I send a POST request to "users/"
+    Then The status code is 400
+    And The response body contains string:
+      | Not valid multirole configuration |
 
 
   @RemoveUserInstitutionAndUserInfoAfterScenario
