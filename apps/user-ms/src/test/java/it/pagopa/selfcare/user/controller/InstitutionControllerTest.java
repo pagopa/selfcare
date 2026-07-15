@@ -24,8 +24,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
 
 @QuarkusTest
@@ -122,7 +121,7 @@ class InstitutionControllerTest {
     @TestSecurity(user = "userJwt")
     void testGetUserInstitutions() {
         var institutionId = "institutionId";
-        Mockito.when(userService.findAllUserInstitutions(any(), any(), any(), any(), any(), any(), any()))
+        Mockito.when(userService.findAllUserInstitutions(any(), any(), any(), any(), any(), any(), anyBoolean()))
                 .thenReturn(Multi.createFrom().items(new UserInstitutionResponse()));
         given()
                 .when()

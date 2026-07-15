@@ -220,6 +220,8 @@ public class UserServiceImpl implements UserService {
         var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
         return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
                 .onItem().transform(filterAndSetProducts(roles, states, products, productRoles))
+                .onItem().transform(userInstitution ->
+                  excludeUserFromGroups ? removeProductsExcludedFromUserGroups(userInstitution) : userInstitution)
                 .onItem().transform(userInstitutionMapper::toResponse);
     }
 
