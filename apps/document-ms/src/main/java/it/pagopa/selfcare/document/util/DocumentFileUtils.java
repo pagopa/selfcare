@@ -182,4 +182,11 @@ public final class DocumentFileUtils {
         }
         return CONTRACT_FILENAME_FUNC.apply(format, productName);
     }
+
+    public static String getAttachmentFileName(Document document) {
+      return switch (document.getStorageOrigin()) {
+        case USER -> document.getAttachmentName();
+        case SYSTEM -> document.getContractFilename();
+      };
+    }
 }
