@@ -614,6 +614,38 @@
             "type" : "string"
           }
         }
+      },
+      "RelatedDocumentResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Unique identifier of the document."
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "Logical name of the document."
+          },
+          "fileName" : {
+            "type" : "string",
+            "description" : "Physical filename of the document as stored."
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Document type."
+          },
+          "mimeType" : {
+            "type" : "string",
+            "description" : "MIME type derived from the file extension."
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/LocalDateTime"
+          },
+          "filePath" : {
+            "type" : "string",
+            "description" : "Full storage path of the document."
+          }
+        }
       }
     },
     "securitySchemes" : {
@@ -1560,6 +1592,45 @@
         "responses" : {
           "201" : {
             "description" : "Created"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/related-documents" : {
+      "get" : {
+        "tags" : [ "Document Controller" ],
+        "summary" : "Retrieve full details of all attachment documents for a given onboarding",
+        "operationId" : "getRelatedDocuments",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of related documents with full metadata",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RelatedDocumentResponse"
+                  }
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Not Authorized"
