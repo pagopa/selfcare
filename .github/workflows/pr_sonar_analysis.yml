@@ -99,9 +99,16 @@ jobs:
             echo "mode=full" >> "$GITHUB_OUTPUT"
             echo "projects=" >> "$GITHUB_OUTPUT"
           else
-            PROJECTS=$(printf '%s\n' "${!MODULES[@]}" | sort | paste -sd, -)
+        # Expand each detected aggregator to include ALL its sub-modules (pom.xml files).
+        # Necessary because Maven's --projects on an aggregator (packaging=pom) does NOT
+        # pull in its child modules (--also-make follows <dependency>, not parent-child).
+            EXPANDED=$(
+              for mod in "${!MODULES[@]}"; do
+                find "$mod" -name pom.xml -not -path '*/target/*' -not -path '*/node_modules/*' -exec dirname {} \;
+              done | sort -u | paste -sd, -
+            )
             echo "mode=partial" >> "$GITHUB_OUTPUT"
-            echo "projects=$PROJECTS" >> "$GITHUB_OUTPUT"
+            echo "projects=$EXPANDED" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build modules with coverage
