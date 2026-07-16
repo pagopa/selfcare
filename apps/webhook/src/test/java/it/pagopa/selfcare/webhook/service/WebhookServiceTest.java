@@ -248,6 +248,51 @@ class WebhookServiceTest {
   }
 
   @Test
+  void deleteWebhookByProductId_shouldDeleteAndReturnTrue() {
+    // given
+    ObjectId id = new ObjectId();
+    Webhook webhook = new Webhook();
+    webhook.setId(id);
+    webhook.setTenantId(TENANT_ID);
+    webhook.setProductId(PROD_TEST);
+
+    when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(webhook));
+    when(webhookRepository.deleteByIdSafe(id.toHexString())).thenReturn(Uni.createFrom().item(true));
+
+    // when
+    UniAssertSubscriber<Boolean> subscriber =
+        webhookService
+            .deleteWebhookByProductId(PROD_TEST, TENANT_ID)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    assertTrue(subscriber.awaitItem().getItem());
+    verify(webhookRepository).findWebhookByProduct(PROD_TEST, TENANT_ID);
+    verify(webhookRepository).deleteByIdSafe(id.toHexString());
+  }
+
+  @Test
+  void deleteWebhookByProductId_shouldFail_whenWebhookIsNotFound() {
+    // given
+    when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    UniAssertSubscriber<Boolean> subscriber =
+        webhookService
+            .deleteWebhookByProductId(PROD_TEST, TENANT_ID)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitFailure();
+    verify(webhookRepository).findWebhookByProduct(PROD_TEST, TENANT_ID);
+    verify(webhookRepository, never()).deleteByIdSafe(anyString());
+  }
+
+  @Test
   void sendNotification_shouldCreateNotificationsForActiveWebhooks() {
     // given
     String productId = "prod-io";
