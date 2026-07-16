@@ -8,14 +8,19 @@ import it.pagopa.selfcare.webhook.service.WebhookService;
 import it.pagopa.selfcare.webhook.util.Sanitizer;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
@@ -45,13 +50,16 @@ public class WebhookController {
 
   @GET
   @Operation(
-      summary = "List all webhooks",
-      description = "Retrieve all webhook configurations",
+      summary = "List tenant webhooks",
+      description = "Retrieve a paginated list of webhook configurations for a tenant",
       operationId = "listWebhooks")
   @Tag(name = "Webhook")
   @Tag(name = "internal-v1")
-  public Uni<List<WebhookResponse>> listWebhooks() {
-    return webhookService.listWebhooks();
+  public Uni<List<WebhookResponse>> listWebhooks(
+      @NotBlank @QueryParam("tenantId") String tenantId,
+      @Min(0) @DefaultValue("0") @QueryParam("page") int page,
+      @Min(1) @Max(100) @DefaultValue("20") @QueryParam("size") int size) {
+    return webhookService.listWebhooks(tenantId, page, size);
   }
 
   @GET
@@ -62,9 +70,12 @@ public class WebhookController {
       operationId = "getWebhookbyProductId")
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
-  public Uni<Response> getWebhook(@PathParam("productId") String productId) {
+  public Uni<Response> getWebhook(
+      @PathParam("productId") String productId,
+      @NotBlank @QueryParam("tenantId") String tenantId) {
     return webhookService
-        .getWebhookByProductId(Sanitizer.sanitizeString(productId))
+        .getWebhookByProductId(
+            Sanitizer.sanitizeString(productId), Sanitizer.sanitizeString(tenantId))
         .map(
             response ->
                 response != null

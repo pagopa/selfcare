@@ -9,6 +9,9 @@ public class NotificationRequest {
   @NotBlank(message = "Product ID is required")
   private String productId;
 
+  @NotBlank(message = "Tenant ID is required")
+  private String tenantId;
+
   @NotBlank(message = "Payload is required")
   private String payload;
 }

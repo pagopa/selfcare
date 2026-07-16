@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.webhook.repository;
 
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
+import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -15,16 +16,21 @@ public class WebhookRepository implements ReactivePanacheMongoRepository<Webhook
     return list("status", Webhook.WebhookStatus.ACTIVE);
   }
 
-  public Uni<List<Webhook>> findActiveWebhooksByProduct(String productId) {
-    // MongoDB query: { "status": "ACTIVE", "products": { "$in": ["productId"] } }
+  public Uni<List<Webhook>> findWebhooksByTenantId(String tenantId, int page, int size) {
+    return find("tenantId", Sort.descending("createdAt"), tenantId).page(page, size).list();
+  }
+
+  public Uni<List<Webhook>> findActiveWebhooksByProduct(String productId, String tenantId) {
     Document query =
-        new Document().append("status", Webhook.WebhookStatus.ACTIVE).append("products", productId);
+        new Document()
+            .append("status", Webhook.WebhookStatus.ACTIVE)
+            .append("products", productId)
+            .append("tenantId", tenantId);
     return find(query).list();
   }
 
-  public Uni<Webhook> findWebhookByProduct(String productId) {
-    // MongoDB query: { "productId": "productId" }
-    Document query = new Document().append("productId", productId);
+  public Uni<Webhook> findWebhookByProduct(String productId, String tenantId) {
+    Document query = new Document().append("productId", productId).append("tenantId", tenantId);
     return find(query).firstResult();
   }
 

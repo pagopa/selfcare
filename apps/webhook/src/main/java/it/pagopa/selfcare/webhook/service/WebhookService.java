@@ -35,6 +35,7 @@ public class WebhookService {
     webhook.setUrl(request.getUrl());
     webhook.setHttpMethod(Sanitizer.sanitizeString(request.getHttpMethod()));
     webhook.setHeaders(DataEncryptionConfig.encrypt(request.getHeaders()));
+    webhook.setTenantId(Sanitizer.sanitizeString(request.getTenantId()));
     webhook.setProductId(Sanitizer.sanitizeString(request.getProductId()));
     webhook.setDescription("");
     webhook.setProducts(List.of(request.getProductId()));
@@ -59,9 +60,9 @@ public class WebhookService {
         .map(this::toResponse);
   }
 
-  public Uni<List<WebhookResponse>> listWebhooks() {
+  public Uni<List<WebhookResponse>> listWebhooks(String tenantId, int page, int size) {
     return webhookRepository
-        .listAll()
+        .findWebhooksByTenantId(Sanitizer.sanitizeString(tenantId), page, size)
         .map(webhooks -> webhooks.stream().map(this::toResponse).toList());
   }
 
@@ -71,15 +72,15 @@ public class WebhookService {
         .map(webhook -> webhook != null ? toResponse(webhook) : null);
   }
 
-  public Uni<WebhookResponse> getWebhookByProductId(String productId) {
+  public Uni<WebhookResponse> getWebhookByProductId(String productId, String tenantId) {
     return webhookRepository
-        .findWebhookByProduct(productId)
+        .findWebhookByProduct(productId, tenantId)
         .map(webhook -> webhook != null ? toResponse(webhook) : null);
   }
 
   public Uni<WebhookResponse> updateWebhook(WebhookRequest request, String productId) {
     return webhookRepository
-        .findWebhookByProduct(productId)
+        .findWebhookByProduct(productId, Sanitizer.sanitizeString(request.getTenantId()))
         .onItem()
         .ifNull()
         .failWith(() -> new IllegalArgumentException("Webhook not found: " + productId))
@@ -121,9 +122,9 @@ public class WebhookService {
     log.info(DELETED_WEBHOOK_WITH_ID, Sanitizer.sanitizeString(id));
   }
 
-  public Uni<Boolean> deleteWebhookByProductId(String productId) {
+  public Uni<Boolean> deleteWebhookByProductId(String productId, String tenantId) {
     return webhookRepository
-        .findWebhookByProduct(productId)
+        .findWebhookByProduct(productId, tenantId)
         .onItem()
         .ifNull()
         .failWith(() -> new IllegalArgumentException("Webhook not found: " + productId))
@@ -134,18 +135,21 @@ public class WebhookService {
 
   public Uni<Void> sendNotification(NotificationRequest request) {
     return webhookRepository
-        .findActiveWebhooksByProduct(request.getProductId())
+        .findActiveWebhooksByProduct(
+            request.getProductId(), Sanitizer.sanitizeString(request.getTenantId()))
         .invoke(
             webhooks -> {
               if (webhooks.isEmpty()) {
                 log.warn(
-                    "No active webhooks found for product: {}",
-                    Sanitizer.sanitizeString(request.getProductId()));
+                    "No active webhooks found for product: {} and tenant: {}",
+                    Sanitizer.sanitizeString(request.getProductId()),
+                    Sanitizer.sanitizeString(request.getTenantId()));
               } else {
                 log.info(
-                    "Found {} active webhook(s) for product: {}",
+                    "Found {} active webhook(s) for product: {} and tenant: {}",
                     webhooks.size(),
-                    Sanitizer.sanitizeString(request.getProductId()));
+                    Sanitizer.sanitizeString(request.getProductId()),
+                    Sanitizer.sanitizeString(request.getTenantId()));
               }
             })
         .onItem()
@@ -155,6 +159,7 @@ public class WebhookService {
             webhook -> {
               WebhookNotification notification = new WebhookNotification();
               notification.setWebhookId(webhook.getId());
+              notification.setTenantId(webhook.getTenantId());
               notification.setPayload(encodePayload(request.getPayload()));
               notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
               notification.setAttemptCount(0);
@@ -165,10 +170,11 @@ public class WebhookService {
                   .invoke(
                       () ->
                           log.info(
-                              "Created notification with ID: {} for webhook: {} (product: {})",
+                              "Created notification with ID: {} for webhook: {} (product: {}, tenant: {})",
                               notification.getId(),
                               webhook.getId(),
-                              Sanitizer.sanitizeString(request.getProductId())))
+                              Sanitizer.sanitizeString(request.getProductId()),
+                              Sanitizer.sanitizeString(request.getTenantId())))
                   .call(n -> notificationService.processNotification(n, webhook));
             })
         .collect()
@@ -183,6 +189,7 @@ public class WebhookService {
   private WebhookResponse toResponse(Webhook webhook) {
     WebhookResponse response = new WebhookResponse();
     //        response.setId(webhook.getId().toString());
+    response.setTenantId(webhook.getTenantId());
     response.setProductId(webhook.getProductId());
     response.setDescription(webhook.getDescription());
     response.setUrl(webhook.getUrl());
