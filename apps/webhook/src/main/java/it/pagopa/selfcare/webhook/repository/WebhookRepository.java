@@ -16,7 +16,11 @@ public class WebhookRepository implements ReactivePanacheMongoRepository<Webhook
     return list("status", Webhook.WebhookStatus.ACTIVE);
   }
 
-  public Uni<List<Webhook>> findWebhooksByTenantId(String tenantId, int page, int size) {
+  public Uni<List<Webhook>> findWebhooks(String tenantId, int page, int size) {
+    if (tenantId == null) {
+      return findAll().page(page, size).list();
+    }
+
     return find("tenantId", Sort.descending("createdAt"), tenantId).page(page, size).list();
   }
 

@@ -85,7 +85,7 @@ class WebhookServiceTest {
     webhook.setProductId(PROD_TEST);
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
-    when(webhookRepository.findWebhooksByTenantId(TENANT_ID, 0, 20))
+    when(webhookRepository.findWebhooks(TENANT_ID, 0, 20))
         .thenReturn(Uni.createFrom().item(List.of(webhook)));
 
     // when
@@ -100,7 +100,31 @@ class WebhookServiceTest {
     assertEquals(1, responses.size());
     assertEquals(TENANT_ID, responses.get(0).getTenantId());
     assertEquals(PROD_TEST, responses.get(0).getProductId());
-    verify(webhookRepository).findWebhooksByTenantId(TENANT_ID, 0, 20);
+    verify(webhookRepository).findWebhooks(TENANT_ID, 0, 20);
+  }
+
+  @Test
+  void listWebhooks_shouldReturnAllTenants_whenTenantIdIsNotProvided() {
+    // given
+    Webhook webhook = new Webhook();
+    webhook.setId(new ObjectId());
+    webhook.setTenantId(TENANT_ID);
+    webhook.setProductId(PROD_TEST);
+    webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    when(webhookRepository.findWebhooks(null, 0, 20))
+        .thenReturn(Uni.createFrom().item(List.of(webhook)));
+
+    // when
+    UniAssertSubscriber<List<WebhookResponse>> subscriber =
+        webhookService
+            .listWebhooks(null, 0, 20)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    assertEquals(1, subscriber.awaitItem().getItem().size());
+    verify(webhookRepository).findWebhooks(null, 0, 20);
   }
 
   @Test

@@ -36,8 +36,8 @@
     },
     "/webhooks" : {
       "get" : {
-        "summary" : "List tenant webhooks",
-        "description" : "Retrieve a paginated list of webhook configurations for a tenant",
+        "summary" : "List webhooks",
+        "description" : "Retrieve a paginated list of webhook configurations, optionally filtered by tenant",
         "operationId" : "listWebhooks",
         "tags" : [ "Webhook", "internal-v1" ],
         "parameters" : [ {
@@ -63,10 +63,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "pattern" : "\\S"
-          },
-          "required" : true
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {

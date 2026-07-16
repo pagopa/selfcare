@@ -96,6 +96,19 @@ class WebhookControllerTest {
   }
 
   @Test
+  void listWebhooks_shouldReturnAllTenants_whenTenantIdIsNotProvided() {
+    // given
+    Mockito.when(webhookService.listWebhooks(null, 0, 20))
+        .thenReturn(Uni.createFrom().item(List.of()));
+
+    // when
+    given().when().get("/webhooks").then().statusCode(200);
+
+    // then
+    Mockito.verify(webhookService).listWebhooks(null, 0, 20);
+  }
+
+  @Test
   void getWebhookByProductId_shouldReturnWebhook_whenFound() {
     WebhookResponse response = new WebhookResponse();
     response.setTenantId(TENANT_ID);

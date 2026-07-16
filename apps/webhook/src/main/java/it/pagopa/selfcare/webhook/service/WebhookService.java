@@ -62,7 +62,7 @@ public class WebhookService {
 
   public Uni<List<WebhookResponse>> listWebhooks(String tenantId, int page, int size) {
     return webhookRepository
-        .findWebhooksByTenantId(Sanitizer.sanitizeString(tenantId), page, size)
+        .findWebhooks(Sanitizer.sanitizeString(tenantId), page, size)
         .map(webhooks -> webhooks.stream().map(this::toResponse).toList());
   }
 

@@ -50,13 +50,13 @@ public class WebhookController {
 
   @GET
   @Operation(
-      summary = "List tenant webhooks",
-      description = "Retrieve a paginated list of webhook configurations for a tenant",
+      summary = "List webhooks",
+      description = "Retrieve a paginated list of webhook configurations, optionally filtered by tenant",
       operationId = "listWebhooks")
   @Tag(name = "Webhook")
   @Tag(name = "internal-v1")
   public Uni<List<WebhookResponse>> listWebhooks(
-      @NotBlank @QueryParam("tenantId") String tenantId,
+      @QueryParam("tenantId") String tenantId,
       @Min(0) @DefaultValue("0") @QueryParam("page") int page,
       @Min(1) @Max(100) @DefaultValue("20") @QueryParam("size") int size) {
     return webhookService.listWebhooks(tenantId, page, size);
