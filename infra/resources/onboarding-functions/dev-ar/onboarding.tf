@@ -34,10 +34,12 @@ locals {
       "USER_REGISTRY_URL"                                  = "https://api.uat.pdv.pagopa.it/user-registry/v1"
       "MONGODB_CONNECTION_URI"                             = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/mongodb-connection-string/)"
       "USER_REGISTRY_API_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/user-registry-api-key/)"
-      "BLOB_STORAGE_CONN_STRING_PRODUCT"                   = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/blob-storage-product-connection-string/)"
+      "BLOB_STORAGE_ACCOUNT_NAME_PRODUCT"                  = data.azurerm_storage_account.product_storage.name
+      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT"    = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
       "STORAGE_CONTAINER_CONTRACT"                         = "sc-d-documents-blob"
       "STORAGE_CONTAINER_PRODUCT"                          = "selc-d-product"
-      "BLOB_STORAGE_CONN_STRING_CONTRACT"                  = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/documents-storage-connection-string/)"
+      "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT"                 = data.azurerm_storage_account.documents_storage.name
+      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT"   = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
       "MAIL_DESTINATION_TEST_ADDRESS"                      = "pectest@pec.pagopa.it"
       "MAIL_TEMPLATE_REGISTRATION_REQUEST_PT_PATH"         = "contracts/template/mail/registration-request-pt/1.0.0.json"
       "MAIL_SENDER_ADDRESS"                                = "@Microsoft.KeyVault(SecretUri=https://selc-d-kv.vault.azure.net/secrets/smtp-usr/)"
@@ -106,6 +108,29 @@ locals {
   }
 }
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "product_storage" {
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}checkoutst01"
+  resource_group_name = "selc-${module.local.config.env_short}-checkout-fe-rg"
+}
+
+data "azurerm_storage_account" "documents_storage" {
+  name                = "sc${module.local.config.env_short}${module.local.config.location_short}${module.local.config.domain}documentsst01"
+  resource_group_name = "selc-${module.local.config.env_short}-documents-storage-rg"
+}
+
+data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-product-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-documents-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
 module "onboarding_functions" {
   source = "../../_modules/functions"
 
@@ -122,6 +147,10 @@ module "onboarding_functions" {
   tenant_id                 = module.local.tenant_id
   replication_type          = "LRS"
   app_settings              = local.onboarding_functions.app_settings
-  location                  = module.local.config.location
-  tags                      = module.local.config.tags
+  user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
+    data.azurerm_user_assigned_identity.documents_storage_blob_identity.id,
+  ]
+  location = module.local.config.location
+  tags     = module.local.config.tags
 }
