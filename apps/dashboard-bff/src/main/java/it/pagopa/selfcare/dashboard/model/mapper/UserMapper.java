@@ -109,6 +109,7 @@ public interface UserMapper {
                     roleInfo.setPartyRole(onboardedProduct.getRole());
                     roleInfo.setCreatedAt(onboardedProduct.getCreatedAt());
                     roleInfo.setUpdatedAt(onboardedProduct.getUpdatedAt());
+                    roleInfo.setExcludeRoleFromUserGroups(onboardedProduct.getExcludeRoleFromUserGroups());
                     if (productInfo.getRoleInfos() == null)
                         productInfo.setRoleInfos(new ArrayList<>());
                     productInfo.getRoleInfos().add(roleInfo);
