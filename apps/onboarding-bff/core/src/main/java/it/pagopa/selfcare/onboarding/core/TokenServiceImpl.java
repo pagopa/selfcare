@@ -116,6 +116,17 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public Resource getContractSigned(String onboardingId) {
+        log.trace("getContractSigned start");
+        log.debug("getContractSigned id = {}", Encode.forJava(onboardingId));
+        Assert.notNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
+        Resource resource = documentMsConnector.getContractSigned(onboardingId);
+        log.debug("getContractSigned result = success");
+        log.trace("getContractSigned end");
+        return resource;
+    }
+
+    @Override
     public Resource getTemplateAttachment(String onboardingId, String filename) {
         log.trace("getTemplateAttachment start");
         log.debug("getTemplateAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
