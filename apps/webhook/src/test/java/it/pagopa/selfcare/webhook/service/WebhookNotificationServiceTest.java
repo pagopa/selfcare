@@ -180,6 +180,53 @@ class WebhookNotificationServiceTest {
   }
 
   @Test
+  void processNotification_shouldComplete_whenNotificationIsNotFound() {
+    // given
+    String notificationId = new ObjectId().toHexString();
+    when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notificationId)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitItem();
+    verify(notificationRepository).findById(new ObjectId(notificationId));
+    verifyNoInteractions(webhookRepository);
+    verifyNoInteractions(webClient);
+  }
+
+  @Test
+  void processNotification_shouldFailNotification_whenWebhookIsNotFound() {
+    // given
+    WebhookNotification notification = createNotification(new ObjectId());
+    when(webhookRepository.findById(notification.getWebhookId()))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitItem();
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository).update(captor.capture());
+    WebhookNotification captured = captor.getValue();
+    assertEquals(WebhookNotification.NotificationStatus.FAILED, captured.getStatus());
+    assertEquals("Webhook not found", captured.getLastError());
+    assertNotNull(captured.getCompletedAt());
+    verifyNoInteractions(webClient);
+  }
+
+  @Test
   void processFailedNotifications_shouldProcessPending() {
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());

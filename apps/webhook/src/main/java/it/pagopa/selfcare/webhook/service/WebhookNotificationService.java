@@ -111,42 +111,28 @@ public class WebhookNotificationService {
     return notificationRepository
         .findById(new ObjectId(notificationId))
         .onItem()
-        .ifNull()
-        .continueWith(
-            () -> {
-              log.info("Notification not found: {}", notificationId);
-              return null;
-            })
-        .onItem()
-        .ifNotNull()
-        .transformToUni(this::sendNotification);
+        .transformToUni(
+            notification -> {
+              if (notification == null) {
+                log.info("Notification not found: {}", notificationId);
+                return Uni.createFrom().voidItem();
+              }
+              return sendNotification(notification);
+            });
   }
 
   private Uni<Void> sendNotification(WebhookNotification notification) {
     return webhookRepository
         .findById(notification.getWebhookId())
         .onItem()
-        .ifNull()
-        .continueWith(
-            () -> {
-              log.error("Webhook not found for notification: {}", notification.getId().toString());
-              Uni.createFrom()
-                  .item(markNotificationAsFailed(notification, "Webhook not found"))
-                  .subscribe()
-                  .with(
-                      item ->
-                          log.error(
-                              "markNotificationAsFailed: {}", notification.getId().toString()),
-                      failure ->
-                          log.error(
-                              "Error when markNotificationAsFailed {} {}",
-                              notification.getId().toString(),
-                              failure.getMessage()));
-              return null;
-            })
-        .onItem()
-        .ifNotNull()
-        .transformToUni(webhook -> processNotification(notification, webhook));
+        .transformToUni(
+            webhook -> {
+              if (webhook == null) {
+                log.error("Webhook not found for notification: {}", notification.getId().toString());
+                return markNotificationAsFailed(notification, "Webhook not found").replaceWithVoid();
+              }
+              return processNotification(notification, webhook);
+            });
   }
 
   public Uni<Void> processNotification(WebhookNotification notification) {
