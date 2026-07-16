@@ -47,6 +47,13 @@ public class DocumentMsConnectorImpl implements DocumentMsConnector {
 
   @Override
   @Retry(name = "retryTimeout")
+  public Resource getContractSigned(String onboardingId) {
+    log.info("getContractSigned for onboardingId: {}", Encode.forJava(onboardingId));
+    return msDocumentContentApiClient._getContractSigned(onboardingId).getBody();
+  }
+
+  @Override
+  @Retry(name = "retryTimeout")
   public Resource getTemplateAttachment(
       OnboardingData onboarding, String filename, String templatePath) {
     return msDocumentContentApiClient

@@ -169,6 +169,16 @@ public class TokenServiceImplTest {
     }
 
     @Test
+    void getContractSigned() {
+      final String onboardingId = "onboardingId";
+      // when
+      tokenService.getContractSigned(onboardingId);
+      //then
+      verify(documentMsConnector, times(1))
+              .getContractSigned(onboardingId);
+    }
+
+    @Test
     void getAttachment() {
         // given
         final String onboardingId = "onboardingId";

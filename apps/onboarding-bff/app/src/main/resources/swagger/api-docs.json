@@ -2555,6 +2555,115 @@
         } ]
       }
     },
+    "/v2/tokens/{onboardingId}/download" : {
+      "get" : {
+        "tags" : [ "token-v-2-controller" ],
+        "summary" : "Download a document (signed contract or attachment) for the given onboarding",
+        "description" : "When type=CONTRACT_SIGNED downloads the signed contract; when type=ATTACHMENT the 'name' query parameter is required.",
+        "operationId" : "downloadDocumentUsingGET",
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "type",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Type of document to download.",
+            "enum" : [ "CONTRACT_SIGNED", "ATTACHMENT" ]
+          }
+        }, {
+          "name" : "name",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successful operation",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "format" : "byte"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "format" : "byte"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/v2/tokens/{onboardingId}/contract" : {
       "get" : {
         "tags" : [ "token-v-2-controller" ],
@@ -2650,7 +2759,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "OK",
+            "description" : "Successful operation",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2659,13 +2768,23 @@
               }
             }
           },
-          "400" : {
-            "description" : "Bad Request",
+          "404" : {
+            "description" : "Not Found",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
                   "type" : "object",
                   "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AvailableDocumentsResource"
                 }
               }
             }
@@ -2681,8 +2800,8 @@
               }
             }
           },
-          "404" : {
-            "description" : "Not Found",
+          "400" : {
+            "description" : "Bad Request",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
