@@ -8,6 +8,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
 import org.openapi.quarkus.onboarding_json.api.InstitutionControllerApi;
 import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
 import org.openapi.quarkus.user_json.api.UserControllerApi;
@@ -52,6 +58,7 @@ public class PartyService {
         this.userApiClient = userApiClient;
         this.institutionApiClient = institutionApiClient;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingOrganization(OnboardingData onboardingData) {
         java.util.Objects.requireNonNull(onboardingData, "Onboarding data is required");
         OnboardingInstitutionRequest onboardingInstitutionRequest = new OnboardingInstitutionRequest();
@@ -99,11 +106,12 @@ public class PartyService {
         restClient.onboardingOrganization(onboardingInstitutionRequest);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public OnboardingContract getOnboardingContract(String institutionId, String productId) {
         return restClient.getOnboardingContract(institutionId, productId);
     }
 
-    @Retry(maxRetries = 2, delay = 500)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public List<InstitutionInfo> getOnboardings(String userId) {
         log.trace("getOnboardings start");
         log.debug("getOnboardings userId = {}", userId);
@@ -130,7 +138,7 @@ public class PartyService {
         return result;
     }
 
-    @Retry(maxRetries = 2, delay = 500)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public List<InstitutionInfo> getInstitutionsByUser(Product product, String userId) {
         log.trace("getInstitutionsByUser start");
         log.debug("getInstitutionsByUser product = {}, userId = {}", product, userId);
@@ -173,22 +181,27 @@ public class PartyService {
         return result;
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public List<Institution> getInstitutionsByTaxCodeAndSubunitCode(String taxCode, String subunitCode) {
         return restClient.getInstitutionsByTaxCodeAndSubunitCode(taxCode, subunitCode);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution getInstitutionByExternalId(String externalId) {
         return restClient.getInstitutionByExternalId(externalId);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution getInstitutionById(String id) {
         return restClient.getInstitutionById(id);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public List<OnboardingResource> getOnboardings(String institutionId, String productId) {
         return restClient.getOnboardings(institutionId, productId);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromIpa(String taxCode, String subunitCode, it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType subunitType) {
         InstitutionFromIpaPost institutionFromIpaPost = new InstitutionFromIpaPost();
         institutionFromIpaPost.setTaxCode(taxCode);
@@ -199,34 +212,41 @@ public class PartyService {
         return restClient.createInstitutionFromIpa(institutionFromIpaPost);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitution(OnboardingData onboardingData) {
         InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
         return restClient.createInstitution(institutionSeed);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromANAC(OnboardingData onboardingData) {
         InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
         return restClient.createInstitutionFromANAC(institutionSeed);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromIVASS(OnboardingData onboardingData) {
         InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
         return restClient.createInstitutionFromIVASS(institutionSeed);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromInfocamere(OnboardingData onboardingData) {
         InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
         return restClient.createInstitutionFromInfocamere(institutionSeed);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void verifyOnboarding(String externalId, String productId) {
         restClient.verifyOnboarding(externalId, productId);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void verifyOnboarding(String productId, String externalId, String taxCode, String origin, String originId, String subunitCode) {
         restClient.verifyOnboarding(productId, externalId, taxCode, origin, originId, subunitCode);
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public InstitutionInfo getInstitutionBillingData(String externalId, String productId) {
         BillingDataResponse response = restClient.getInstitutionBillingData(externalId, productId);
         if (response != null) {

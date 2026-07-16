@@ -52,7 +52,7 @@ class ProductControllerTest {
         ProductResource expected = new ProductResource();
         expected.setId("id");
 
-        when(productService.getProducts(true)).thenReturn(List.of(product));
+        when(productService.getProducts(false)).thenReturn(List.of(product));
         when(institutionMapper.toResource(product)).thenReturn(expected);
 
         List<ProductResource> result = productController.getProducts();
@@ -74,12 +74,12 @@ class ProductControllerTest {
         ProductResource expected = new ProductResource();
         expected.setId("id");
 
-        when(productService.getProducts(false)).thenReturn(List.of(product));
+        when(productService.getProducts(true)).thenReturn(List.of(product));
         when(institutionMapper.toResource(product)).thenReturn(expected);
 
         List<ProductResource> result = productController.getProductsAdmin();
 
-        verify(productService).getProducts(false);
+        verify(productService).getProducts(true);
         assertEquals(1, result.size());
         assertSame(expected, result.get(0));
     }

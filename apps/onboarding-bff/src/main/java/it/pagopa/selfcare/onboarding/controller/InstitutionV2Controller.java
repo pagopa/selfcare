@@ -10,10 +10,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
-import it.pagopa.selfcare.onboarding.service.UserService;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
@@ -37,8 +36,6 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.apache.commons.lang3.StringUtils;
 import org.owasp.encoder.Encode;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
-
 import java.util.List;
 
 @Slf4j
@@ -52,7 +49,6 @@ import java.util.List;
 public class InstitutionV2Controller {
 
     private final InstitutionService institutionService;
-    private final UserService userService;
     private final OnboardingMapper onboardingMapper;
     private final InstitutionMapper institutionMapper;
     private static final String ONBOARDING_START = "onboarding start";
@@ -219,26 +215,40 @@ public class InstitutionV2Controller {
     @Path("/onboarding/users/pg")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingUsersPg}",
             description = "${openapi.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
-    public void onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
+    public Response onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
         institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto));
         log.trace("onboardingUsersPgFromIcAndAde end");
+        return Response.ok().build();
     }
 
     @GET
     @Path("/onboardings")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingInfo.summary}",
             description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
-    public OnboardingGetResponse getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
-                                                     @QueryParam("status") String inputStatus) {
+    public List<OnboardingGet> getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
+                                                   @QueryParam("status") String inputStatus) {
         log.trace("onboardingInfo start");
         String taxCode = Encode.forJava(inputTaxCode);
         String status = Encode.forJava(inputStatus);
         log.debug("onboardingInfo request = {} - {}", taxCode, status);
-        OnboardingGetResponse results = institutionService.getOnboardingWithFilter(taxCode, status);
+        List<OnboardingGet> results = institutionService.getOnboardingWithFilter(taxCode, status).getItems();
         log.trace("onboardingInfo end");
         return results;
+    }
+
+    @PUT
+    @Path("/{onboardingId}")
+    @Operation(summary = "Trigger onboarding request",
+            description = "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
+            operationId = "triggerOnboardingRequest")
+    public Response triggerOnboardingRequest(@PathParam("onboardingId") String onboardingId) {
+        log.trace("triggerOnboardingRequest start");
+        log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));
+        institutionService.triggerOnboardingRequest(onboardingId);
+        log.trace("triggerOnboardingRequest end");
+        return Response.noContent().build();
     }
 
     private static UploadedFile toUploadedFile(FileUpload fileUpload) {

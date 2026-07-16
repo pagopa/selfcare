@@ -13,7 +13,6 @@ import it.pagopa.selfcare.onboarding.controller.response.VerifyAggregatesRespons
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
-import it.pagopa.selfcare.onboarding.service.UserService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
@@ -30,8 +29,6 @@ class InstitutionV2ControllerTest {
 
     @Mock
     InstitutionService institutionService;
-    @Mock
-    UserService userService;
     @Mock
     OnboardingMapper onboardingMapper;
     @Mock

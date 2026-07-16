@@ -24,6 +24,11 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.openapi.quarkus.onboarding_functions_json.api.OrganizationApi;
 import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
 import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
@@ -431,6 +436,7 @@ class InstitutionServiceImpl implements InstitutionService {
             throw new InvalidRequestException(String.format(ONE_OTHER_PARAMETER_PROVIDED));
         }
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public void checkOrganization(String productId, String fiscalCode, String vatNumber) {
         log.trace("checkOrganization start");
@@ -520,14 +526,25 @@ class InstitutionServiceImpl implements InstitutionService {
     public org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId) {
         log.trace("validateAggregatesCsv start");
         log.debug("validateAggregatesCsv productId = {}", Encode.forJava(productId));
-        return onboardingMsConnector.aggregatesVerification(file, productId);
+        org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse result = onboardingMsConnector.aggregatesVerification(file, productId);
+        if (isEmptyCollection(result.getErrors())) {
+            log.debug("No errors found for {} aggregates:", productId);
+        } else {
+            log.debug("Errors found for {} aggregates: {}", productId, result.getErrors());
+        }
+        log.debug("validateAggregatesCsv result = {}", result);
+        log.trace("validateAggregatesCsv end");
+        return result;
     }
     @Override
     public org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus  checkRecipientCode(String originId, String recipientCode) {
         log.trace("checkRecipientCode start");
         log.debug("checkRecipientCode for institution with originId {} and recipientCode {}",
                 LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
-        return onboardingMsConnector.checkRecipientCode(originId, recipientCode);
+        org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus result = onboardingMsConnector.checkRecipientCode(originId, recipientCode);
+        log.debug("checkRecipientCode result = {}", result);
+        log.trace("checkRecipientCode end");
+        return result;
     }
     @Override
     public void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {

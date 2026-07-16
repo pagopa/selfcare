@@ -9,6 +9,13 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.openapi.quarkus.user_json.api.InstitutionControllerApi;
 
 import java.util.List;
@@ -26,6 +33,7 @@ public class UserInstitutionServiceImpl implements UserInstitutionService {
     this.userInstitutionApi = userInstitutionApi;
   }
 
+  @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
   @Override
   public boolean verifyAllowedUserInstitution(String institutionId, String product, String uid) {
     log.trace("init verifyAllowedUserInstitution");

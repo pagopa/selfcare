@@ -187,6 +187,7 @@ public class TokenServiceImpl implements TokenService {
                 .orElse(false);
 
         if (userStorage) {
+            log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
             Integer maxDocumentsRequired = requiredDocument
                     .map(RequiredDocumentModel::getMaxDocumentsRequired)
                     .orElse(1);
@@ -199,6 +200,7 @@ public class TokenServiceImpl implements TokenService {
                     attachmentName,
                     maxDocumentsRequired);
         } else {
+            log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
             Product product = productService.getProductValid(onboarding.getProductId());
             AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
             documentMsClient.uploadAttachment(

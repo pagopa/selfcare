@@ -16,6 +16,12 @@ import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentType;
 import org.openapi.quarkus.document_json.model.UserAttachmentRequest;
 import java.io.File;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
 
 @ApplicationScoped
 public class DocumentService {
@@ -32,7 +38,7 @@ public class DocumentService {
         this.documentMapper = documentMapper;
     }
 
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getContract(String onboardingId) {
         try {
             File file = documentContentApi.getContract(onboardingId).await().indefinitely();
@@ -42,7 +48,7 @@ public class DocumentService {
         }
     }
 
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getTemplateAttachment(String onboardingId,
                                             String institutionDescription,
                                             String filename,
@@ -54,23 +60,24 @@ public class DocumentService {
         return FilePayloadUtils.toBinaryData(file, filename);
     }
 
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getAttachment(String onboardingId, String filename) {
         File file = documentContentApi.getAttachment(onboardingId, filename).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, filename);
     }
 
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public AvailableDocuments getAvailableDocuments(String onboardingId) {
         return documentMapper.toAvailableDocuments(documentApi.getAvailableDocuments(onboardingId).await().indefinitely());
     }
 
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         File file = documentContentApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, file.getName());
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void uploadAttachment(String onboardingId,
                                  UploadedFile attachment,
                                  String attachmentName,
@@ -93,6 +100,7 @@ public class DocumentService {
         documentContentApi.uploadAttachment(form).await().indefinitely();
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void uploadUserAttachment(String onboardingId,
                                      UploadedFile attachment,
                                      String productId,
@@ -114,6 +122,7 @@ public class DocumentService {
         documentContentApi.uploadUserAttachment(form).await().indefinitely();
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public int headAttachment(String onboardingId, String filename) {
         return documentApi.headAttachment(onboardingId, filename)
                 .await().indefinitely()

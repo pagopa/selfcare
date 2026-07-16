@@ -34,6 +34,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
 
 @ApplicationScoped
 @Slf4j
@@ -75,7 +79,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboarding(OnboardingData onboardingData) {
         if (onboardingData.getInstitutionType() == InstitutionType.PA) {
             onboardingApi.onboardingPa(onboardingMapper.toOnboardingPaRequest(onboardingData)).await().indefinitely();
@@ -86,6 +90,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         }
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public VerifyAggregateResponse aggregatesVerification(UploadedFile file, String productId) {
         log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
@@ -116,25 +121,25 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingUsers(OnboardingData onboardingData) {
         onboardingApi.onboardingUsers(onboardingMapper.toOnboardingUsersRequest(onboardingData)).await().indefinitely();
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingUsersAggregator(OnboardingData onboardingData) {
         onboardingApi.onboardingUsersAggregator(onboardingMapper.toOnboardingUsersRequest(onboardingData)).await().indefinitely();
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingCompany(OnboardingData onboardingData) {
         onboardingApi.onboardingPgCompletion(onboardingMapper.toOnboardingPgRequest(onboardingData)).await().indefinitely();
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
         InternalV1Api.CompleteOnboardingUsingPUTMultipartForm form = new InternalV1Api.CompleteOnboardingUsingPUTMultipartForm();
         form.contract = FilePayloadUtils.toTempFile(contract, "internal-", ".bin");
@@ -149,7 +154,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
         OnboardingControllerApi.CompleteOnboardingUserMultipartForm form = new OnboardingControllerApi.CompleteOnboardingUserMultipartForm();
         form.contract = FilePayloadUtils.toTempFile(contract, "onboarding-", ".bin");
@@ -164,13 +169,13 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingPending(String onboardingId) {
         onboardingApi.getOnboardingPending(onboardingId).await().indefinitely();
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void approveOnboarding(String onboardingId, String userUid) {
         Map<String, String> approveRequest = new HashMap<>();
         if (StringUtils.isNotBlank(userUid)) {
@@ -189,7 +194,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void rejectOnboarding(String onboardingId, String reason, String userUid) {
         Map<String, String> reasonForReject = new HashMap<>();
         if (StringUtils.isNotBlank(reason)) {
@@ -208,19 +213,19 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public OnboardingGet getOnboarding(String onboardingId) {
         return onboardingApi.getById(onboardingId).await().indefinitely();
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public OnboardingGet getOnboardingWithUserInfo(String onboardingId) {
         return onboardingApi.getByIdWithUserInfo(onboardingId).await().indefinitely();
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getContract(String onboardingId) {
         try {
             File file = documentContentControllerApi.getContract(onboardingId).await().indefinitely();
@@ -231,32 +236,33 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         File file = tokenApi.getTemplateAttachment(onboardingId, filename).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, filename);
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getAttachment(String onboardingId, String filename) {
         File file = documentContentControllerApi.getAttachment(onboardingId, filename).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, filename);
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
         File file = aggregatesApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
         return FilePayloadUtils.toBinaryData(file, file.getName());
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void onboardingPaAggregation(OnboardingData onboardingData) {
         onboardingApi.onboardingPaAggregation(onboardingMapper.toOnboardingPaAggregationRequest(onboardingData)).await().indefinitely();
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
         List<OnboardingResponse> result = supportApi.onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode)
@@ -275,16 +281,18 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public CheckManagerResponse checkManager(CheckManagerRequest request) {
         return onboardingApi.checkManager(request).await().indefinitely();
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public RecipientCodeStatus checkRecipientCode(String originId, String recipientCode) {
         return billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely();
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
         log.trace("verifyOnboarding start");
@@ -303,6 +311,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         log.trace("verifyOnboarding end");
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {
         log.trace("onboardingUsersPgFromIcAndAde start");
@@ -310,6 +319,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         log.trace("onboardingUsersPgFromIcAndAde end");
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public OnboardingGetResponse onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
@@ -332,6 +342,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         return response;
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
         TokenControllerApi.UploadAttachmentMultipartForm form = new TokenControllerApi.UploadAttachmentMultipartForm();
@@ -339,6 +350,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         tokenApi.uploadAttachment(form, onboardingId, attachmentName).await().indefinitely();
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public int headAttachment(String onboardingId, String filename) {
         log.info("headAttachment for onboardingId: {}, filename: {}", Encode.forJava(onboardingId), Encode.forJava(filename));
@@ -348,7 +360,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    @Retry(maxRetries = 2, delay = 5000)
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void triggerOnboardingRequest(String onboardingId) {
         try (Response ignored = onboardingWorkflowRestClient.triggerDocumentGate(onboardingId)) {
         }

@@ -273,7 +273,7 @@ public class InstitutionController {
                                         @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}")
                                         @QueryParam("verifyType") VerifyType type) {
         verifyOnboarding(taxCode, subunitCode, productId, origin, originId, vatNumber, institutionType, type);
-        return Response.noContent().build();
+        return Response.ok().build();
     }
 
     @PUT

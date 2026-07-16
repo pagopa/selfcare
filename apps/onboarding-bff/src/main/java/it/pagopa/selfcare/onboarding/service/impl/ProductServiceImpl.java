@@ -16,6 +16,12 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.openapi.quarkus.product_json.api.ProductApi;
 import org.openapi.quarkus.product_json.model.ProductCreateRequestInstitutionOriginsInner;
 import org.openapi.quarkus.product_json.model.ProductOriginResponse;
@@ -42,6 +48,7 @@ public class ProductServiceImpl implements ProductService {
         this.productMapper = productMapper;
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public OriginResult getOrigins(String productId) {
         log.trace("getOrigins start");
@@ -95,6 +102,7 @@ public class ProductServiceImpl implements ProductService {
         return activeProducts;
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public List<RequiredDocumentModel> getRequiredDocuments(String productId, String institutionType, String origin) {
         log.trace("getRequiredDocuments start");
@@ -109,6 +117,7 @@ public class ProductServiceImpl implements ProductService {
         return result;
     }
 
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
     public boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin) {
         log.trace("isRequiredDocumentsEnabled start");

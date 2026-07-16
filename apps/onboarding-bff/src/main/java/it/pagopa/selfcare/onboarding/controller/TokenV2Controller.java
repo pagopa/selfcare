@@ -25,6 +25,8 @@ import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.security.AuthorizationService;
+import it.pagopa.selfcare.onboarding.util.PermissionConstants;
 import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -69,6 +71,9 @@ public class TokenV2Controller {
 
     @Inject
     SecurityIdentity securityIdentity;
+
+    @Inject
+    AuthorizationService authorizationService;
 
     @POST
     @Path("/{onboardingId}/complete")
@@ -126,6 +131,9 @@ public class TokenV2Controller {
     public OnboardingRequestResource retrieveOnboardingRequest(@Parameter(description = "${openapi.tokens.onboardingId}")
                                                                @PathParam("onboardingId")
                                                                String onboardingId) {
+        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_PAGE)) {
+            throw new UnauthorizedUserException("User is not allowed to access this resource.");
+        }
         log.trace("retrieveOnboardingRequest start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("retrieveOnboardingRequest onboardingId = {}", sanitizedOnboardingId);
@@ -142,6 +150,9 @@ public class TokenV2Controller {
             summary = "${openapi.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     public Response approveOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
                                       @PathParam("onboardingId") String onboardingId) {
+        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)) {
+            throw new UnauthorizedUserException("User is not allowed to access this resource.");
+        }
         log.debug("approve onboarding identified with {}", LogUtils.sanitize(onboardingId));
         String userUid = securityIdentity.getAttribute("uid");
         tokenService.approveOnboarding(onboardingId, userUid);
@@ -155,6 +166,9 @@ public class TokenV2Controller {
     public Response rejectOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      ReasonForRejectDto reasonForRejectDto) {
+        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)) {
+            throw new UnauthorizedUserException("User is not allowed to access this resource.");
+        }
         log.debug("reject onboarding identified with {}", LogUtils.sanitize(onboardingId));
         String userUid = securityIdentity.getAttribute("uid");
         tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason(), userUid);
@@ -234,6 +248,9 @@ public class TokenV2Controller {
             operationId = "getAvailableDocumentsUsingGET")
     public AvailableDocumentsResource getAvailableDocuments(@Parameter(description = "${openapi.tokens.onboardingId}")
                                                             @PathParam("onboardingId") String onboardingId) {
+        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS)) {
+            throw new UnauthorizedUserException("User is not allowed to access this resource.");
+        }
         log.trace("getAvailableDocuments start");
         log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
         AvailableDocuments source = tokenService.getAvailableDocuments(onboardingId);
@@ -242,6 +259,21 @@ public class TokenV2Controller {
         resource.setContractFilename(source.getContractFilename());
         log.trace("getAvailableDocuments end");
         return resource;
+    }
+
+    @GET
+    @Path("/{onboardingId}/attachment/status")
+    @Operation(summary = "${openapi.tokens.headAttachment}",
+            description = "${openapi.tokens.headAttachment}", operationId = "getAttachmentStatusUsingGET")
+    public Response getAttachmentStatus(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                        @PathParam("onboardingId") String onboardingId,
+                                        @NotNull @QueryParam("name") String attachmentName) {
+        log.trace("getAttachmentStatus start");
+        log.debug("getAttachmentStatus onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
+        int attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
+        return attachmentResponse >= 200 && attachmentResponse < 300
+                ? Response.noContent().build()
+                : Response.status(Response.Status.NOT_FOUND).build();
     }
 
     @HEAD
@@ -276,7 +308,7 @@ public class TokenV2Controller {
                                      @QueryParam("attachmentName") String legacyAttachmentName,
                                      @RestForm("attachmentId") String attachmentId,
                                      @RestForm("attachmentDescription") String attachmentDescription,
-                                     @RestForm("file") FileUpload attachment) {
+                                     @RestForm("attachment") FileUpload attachment) {
         log.trace("uploadAttachment start");
         UploadedFile uploadedFile = toUploadedFile(attachment);
         FileValidationUtils.validatePdfOrP7m(uploadedFile);

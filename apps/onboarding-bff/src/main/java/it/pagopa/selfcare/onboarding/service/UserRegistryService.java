@@ -8,6 +8,13 @@ import it.pagopa.selfcare.onboarding.util.LogUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import java.io.IOException;
+import jakarta.ws.rs.ProcessingException;
+import java.time.temporal.ChronoUnit;
+import org.eclipse.microprofile.faulttolerance.Retry;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.util.Collection;
@@ -24,6 +31,7 @@ public class UserRegistryService {
     public UserRegistryService(@RestClient UserRegistryRestClient restClient) {
         this.restClient = restClient;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Optional<User> search(String externalId, EnumSet<User.Fields> fieldList) {
         log.trace("getUserByExternalId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByExternalId externalId = {}", externalId);
@@ -44,6 +52,7 @@ public class UserRegistryService {
 
         return user;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public User getUserByInternalId(String userId, EnumSet<User.Fields> fieldList) {
         log.trace("getUserByInternalId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getUserByInternalId userId = {}", userId);
@@ -54,6 +63,7 @@ public class UserRegistryService {
         log.trace("getUserByInternalId end");
         return result;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void updateUser(UUID id, MutableUserFieldsDto userDto) {
         log.trace("update start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "update id = {}, userDto = {}}", id, userDto);
@@ -63,6 +73,7 @@ public class UserRegistryService {
         restClient.patchUser(id, userDto);
         log.trace("update end");
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public UserId saveUser(SaveUserDto dto) {
         log.trace("saveUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "saveUser dto = {}}", dto);
@@ -71,6 +82,7 @@ public class UserRegistryService {
         log.trace("saveUser end");
         return userId;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void deleteById(String userId) {
         log.trace("deleteById start");
         log.debug("deleteById id = {}", userId);
@@ -78,6 +90,7 @@ public class UserRegistryService {
         restClient.deleteById(UUID.fromString(userId));
         log.trace("deleteById end");
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public UserId searchUser(String taxCode) {
         log.trace("searchUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "searchUser taxCode = {}}", taxCode);

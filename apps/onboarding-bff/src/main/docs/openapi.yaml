@@ -824,16 +824,6 @@ components:
           type: array
           items:
             type: string
-    OnboardingGetResponse:
-      type: object
-      properties:
-        count:
-          type: integer
-          format: int64
-        items:
-          type: array
-          items:
-            $ref: "#/components/schemas/OnboardingGet"
     OnboardingProductDto:
       type: object
       required:
@@ -2211,8 +2201,11 @@ paths:
               $ref: "#/components/schemas/CompanyOnboardingUserDto"
         required: true
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
         "401":
           description: Not Authorized
         "403":
@@ -2241,12 +2234,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/OnboardingGetResponse"
+                type: array
+                items:
+                  $ref: "#/components/schemas/OnboardingGet"
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
       summary: Get Onboardings Info
+      tags:
+      - Institution V 2 Controller
+      security:
+      - SecurityScheme: []
+  /v2/institutions/{onboardingId}:
+    put:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Trigger Onboarding Request
       tags:
       - Institution V 2 Controller
       security:
@@ -2413,7 +2431,7 @@ paths:
                   type: string
                 attachmentDescription:
                   type: string
-                file:
+                attachment:
                   type: string
                   format: binary
         required: true
@@ -2481,6 +2499,33 @@ paths:
         "403":
           description: Not Allowed
       summary: Head Attachment
+      tags:
+      - Token V 2 Controller
+      security:
+      - SecurityScheme: []
+    get:
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: name
+        in: query
+        schema:
+          type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      summary: Get Attachment Status
       tags:
       - Token V 2 Controller
       security:

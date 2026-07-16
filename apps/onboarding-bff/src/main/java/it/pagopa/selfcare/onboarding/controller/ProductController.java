@@ -62,7 +62,7 @@ public class ProductController {
             description = "${openapi.onboarding.product.api.getProducts}", operationId = "getProducts")
     public List<ProductResource> getProducts() {
         log.trace("getProducts start");
-        final List<Product> products = productService.getProducts(true);
+        final List<Product> products = productService.getProducts(false);
         List<ProductResource> resources = products.stream()
                 .map(productMapper::toResource)
                 .toList();
@@ -77,7 +77,7 @@ public class ProductController {
             description = "${openapi.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
     public List<ProductResource> getProductsAdmin() {
         log.trace("getProductsAdmin start");
-        final List<Product> products = productService.getProducts(false);
+        final List<Product> products = productService.getProducts(true);
         List<ProductResource> resources = products.stream()
                 .filter(product -> Objects.nonNull(product.getUserContractTemplate(Product.CONTRACT_TYPE_DEFAULT).getContractTemplatePath()))
                 .map(productMapper::toResource)

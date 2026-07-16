@@ -30,6 +30,6 @@ public class CustomClientResponseLoggingFilter implements ResteasyReactiveClient
         endpoint,
         query,
         status);
-    MDC.clear();
+    MDC.remove("sc_operation_id");
   }
 }

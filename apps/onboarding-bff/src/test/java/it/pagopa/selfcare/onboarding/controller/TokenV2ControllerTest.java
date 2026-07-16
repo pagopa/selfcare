@@ -12,7 +12,10 @@ import io.quarkus.security.identity.SecurityIdentity;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.security.AuthorizationService;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.util.PermissionConstants;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
@@ -37,6 +40,8 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 class TokenV2ControllerTest {
 
     @Mock
+    AuthorizationService authorizationService;
+    @Mock
     TokenService tokenService;
     @Mock
     UserService userService;
@@ -52,9 +57,13 @@ class TokenV2ControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        Field field = TokenV2Controller.class.getDeclaredField("securityIdentity");
-        field.setAccessible(true);
-        field.set(tokenV2Controller, securityIdentity);
+        Field securityField = TokenV2Controller.class.getDeclaredField("securityIdentity");
+        securityField.setAccessible(true);
+        securityField.set(tokenV2Controller, securityIdentity);
+
+        Field authField = TokenV2Controller.class.getDeclaredField("authorizationService");
+        authField.setAccessible(true);
+        authField.set(tokenV2Controller, authorizationService);
     }
 
     @Test
@@ -71,34 +80,75 @@ class TokenV2ControllerTest {
 
     @Test
     void retrieveOnboardingRequest_returnsMappedResult() {
+        // given
         OnboardingData onboardingData = new OnboardingData();
         OnboardingRequestResource expected = new OnboardingRequestResource();
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_PAGE)).thenReturn(true);
         when(tokenService.getOnboardingWithUserInfo("42")).thenReturn(onboardingData);
         when(onboardingMapper.toOnboardingRequestResource(onboardingData)).thenReturn(expected);
 
+        // when
         OnboardingRequestResource result = tokenV2Controller.retrieveOnboardingRequest("42");
 
+        // then
         assertSame(expected, result);
     }
 
     @Test
+    void retrieveOnboardingRequest_throwsWhenUnauthorized() {
+        // given
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_PAGE)).thenReturn(false);
+
+        // when / then
+        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.retrieveOnboardingRequest("42"));
+    }
+
+    @Test
     void approveOnboarding_delegatesToService() {
+        // given
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(true);
         when(securityIdentity.getAttribute("uid")).thenReturn("test-uid");
 
+        // when
         tokenV2Controller.approveOnboarding("42");
 
+        // then
         verify(tokenService).approveOnboarding("42", "test-uid");
     }
 
     @Test
+    void approveOnboarding_throwsWhenUnauthorized() {
+        // given
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(false);
+
+        // when / then
+        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.approveOnboarding("42"));
+    }
+
+    @Test
     void rejectOnboarding_delegatesToService() {
+        // given
         ReasonForRejectDto request = new ReasonForRejectDto();
         request.setReason("reason");
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(true);
         when(securityIdentity.getAttribute("uid")).thenReturn("test-uid");
 
+        // when
         tokenV2Controller.rejectOnboarding("42", request);
 
+        // then
         verify(tokenService).rejectOnboarding("42", "reason", "test-uid");
+    }
+
+    @Test
+    void rejectOnboarding_throwsWhenUnauthorized() {
+        // given
+        ReasonForRejectDto request = new ReasonForRejectDto();
+        request.setReason("reason");
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(false);
+
+        // when / then
+        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.rejectOnboarding("42", request));
     }
 
     @Test
@@ -172,5 +222,57 @@ class TokenV2ControllerTest {
         } finally {
             Files.deleteIfExists(tempFile);
         }
+    }
+
+    @Test
+    void getAvailableDocuments_returnsMappedResult() {
+        // given
+        it.pagopa.selfcare.onboarding.client.model.AvailableDocuments source =
+                new it.pagopa.selfcare.onboarding.client.model.AvailableDocuments();
+        source.setAttachments(java.util.List.of("doc1.pdf"));
+        source.setContractFilename("contract.pdf");
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS)).thenReturn(true);
+        when(tokenService.getAvailableDocuments("42")).thenReturn(source);
+
+        // when
+        it.pagopa.selfcare.onboarding.controller.response.AvailableDocumentsResource result =
+                tokenV2Controller.getAvailableDocuments("42");
+
+        // then
+        assertEquals(java.util.List.of("doc1.pdf"), result.getAttachments());
+        assertEquals("contract.pdf", result.getContractFilename());
+    }
+
+    @Test
+    void getAvailableDocuments_throwsWhenUnauthorized() {
+        // given
+        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS)).thenReturn(false);
+
+        // when / then
+        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.getAvailableDocuments("42"));
+    }
+
+    @Test
+    void getAttachmentStatus_returnsNoContentWhenFound() {
+        // given
+        when(tokenService.headAttachment("42", "doc.pdf")).thenReturn(200);
+
+        // when
+        Response response = tokenV2Controller.getAttachmentStatus("42", "doc.pdf");
+
+        // then
+        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+    }
+
+    @Test
+    void getAttachmentStatus_returnsNotFoundWhenMissing() {
+        // given
+        when(tokenService.headAttachment("42", "doc.pdf")).thenReturn(404);
+
+        // when
+        Response response = tokenV2Controller.getAttachmentStatus("42", "doc.pdf");
+
+        // then
+        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 }
