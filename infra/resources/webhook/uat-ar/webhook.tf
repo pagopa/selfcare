@@ -63,6 +63,35 @@ module "collection_webhook_notifications" {
 }
 
 ###############################################################################
+# Service Bus
+###############################################################################
+
+module "service_bus" {
+  source = "../../_modules/azure_service_bus"
+
+  environment = {
+    prefix          = "selc"
+    env_short       = module.local.config.env_short
+    location        = module.local.config.location
+    location_short  = module.local.config.location_short
+    app_name        = "webhook"
+    instance_number = "01"
+  }
+
+  resource_group_name = module.local.config.ca_resource_group_name
+  # Standard uses the public namespace endpoint, restricted to the NAT egress IP.
+  sku                                         = "Standard"
+  outbound_public_ip_name                     = module.local.config.nat_pip_outbound_name
+  outbound_public_ip_resource_group_name      = module.local.config.resource_group_name_vnet
+  container_app_environment_identity_name     = "${module.local.config.container_app_environment_name}-managed_identity"
+  log_analytics_workspace_name                = "${module.local.config.project}-law"
+  log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
+  subscription_id                             = module.local.subscription_id
+  queue_name                                  = "webhook-notifications"
+  tags                                        = module.local.config.tags
+}
+
+###############################################################################
 # Container App
 ###############################################################################
 
