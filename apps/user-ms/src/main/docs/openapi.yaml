@@ -369,7 +369,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/UserInstitutionResponse"
+                  $ref: "#/components/schemas/UserInstitutionDataResponse"
         "401":
           description: Not Authorized
         "403":
@@ -996,7 +996,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/UserDataResponse"
+                  $ref: "#/components/schemas/UserDataWithProductInfoResponse"
         "401":
           description: Not Authorized
         "403":
@@ -1318,7 +1318,7 @@ components:
       format: date-time
       type: string
       example: 2022-03-10T12:15:50-04:00
-    OnboardedProductResponse:
+    OnboardedProductDataResponse:
       type: object
       properties:
         roleId:
@@ -1343,6 +1343,29 @@ components:
           $ref: "#/components/schemas/OffsetDateTime"
         excludeRoleFromUserGroups:
           type: boolean
+    OnboardedProductResponse:
+      type: object
+      properties:
+        roleId:
+          type: string
+        productId:
+          type: string
+        tokenId:
+          type: string
+        status:
+          $ref: "#/components/schemas/OnboardedProductState"
+        productRole:
+          type: string
+        role:
+          description: "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR,\
+            \ ADMIN_EA"
+          type: string
+        env:
+          $ref: "#/components/schemas/Env"
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
     OnboardedProductState:
       enum:
       - ACTIVE
@@ -1542,7 +1565,7 @@ components:
         institutionEmail:
           minLength: 1
           type: string
-    UserDataResponse:
+    UserDataWithProductInfoResponse:
       type: object
       properties:
         id:
@@ -1561,12 +1584,12 @@ components:
           type: string
         status:
           type: string
+        userResponse:
+          $ref: "#/components/schemas/UserResponse"
         products:
           type: array
           items:
-            $ref: "#/components/schemas/OnboardedProductResponse"
-        userResponse:
-          $ref: "#/components/schemas/UserResponse"
+            $ref: "#/components/schemas/OnboardedProductDataResponse"
     UserDetailResponse:
       type: object
       properties:
@@ -1595,6 +1618,25 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserInstitutionRoleResponse"
+    UserInstitutionDataResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        institutionId:
+          type: string
+        institutionDescription:
+          type: string
+        institutionRootName:
+          type: string
+        userMailUuid:
+          type: string
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/OnboardedProductDataResponse"
     UserInstitutionResponse:
       type: object
       properties:

@@ -21,7 +21,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Mapper(componentModel = "cdi")
+@Mapper(componentModel = "cdi", uses = OnboardedProductMapper.class)
 public interface UserMapper {
 
     UserNotificationResponse toUserNotification(UserNotificationToSend user);
@@ -277,7 +277,7 @@ public interface UserMapper {
     @Mapping(target = "role", expression = "java(getMaxRole(userInstitution.getProducts()))")
     @Mapping(target = "status", expression = "java(getMaxStatus(userInstitution.getProducts()))")
     @Mapping(target = "userResponse", expression = "java(toUserResponse(userResource, userInstitution.getUserMailUuid()))")
-    UserDataResponse toUserDataResponse(UserInstitution userInstitution, UserResource userResource);
+    UserDataWithProductInfoResponse toUserDataResponse(UserInstitution userInstitution, UserResource userResource);
 
     @Named("getMaxStatus")
     default String getMaxStatus(List<OnboardedProduct> onboardedProductList){

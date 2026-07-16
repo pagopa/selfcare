@@ -3,6 +3,7 @@ package it.pagopa.selfcare.user.mapper;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
+import it.pagopa.selfcare.user.controller.response.UserInstitutionDataResponse;
 import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -25,6 +26,9 @@ public interface UserInstitutionMapper {
 
     @Mapping(target = "id", expression = "java(objectIdToString(userInstitution.getId()))")
     UserInstitutionResponse toResponse(UserInstitution userInstitution);
+
+    @Mapping(target = "id", expression = "java(objectIdToString(userInstitution.getId()))")
+    UserInstitutionDataResponse toDataResponse(UserInstitution userInstitution);
 
     @Named("objectIdToString")
     default String objectIdToString(ObjectId objectId) {

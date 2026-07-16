@@ -20,6 +20,5 @@ public class OnboardedProductResponse {
     private Env env;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;
-    private boolean excludeRoleFromUserGroups;
 
 }

@@ -30,6 +30,8 @@ public interface UserService {
 
     Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
 
+    Multi<UserInstitutionDataResponse> findAllUserInstitutionsData(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles);
+
     Multi<UserInstitutionResponse> findPaginatedUserInstitutions(String institutionId, String userId, List<PartyRole> roles, List<String> states, List<String> products, List<String> productRoles, Integer page, Integer size);
 
     Uni<Void> deleteUserInstitutionProduct(String userId, String institutionId, String productId);
@@ -54,7 +56,7 @@ public interface UserService {
 
     Uni<String> createUserByUserId(AddUserRoleDto userDto, String userId, LoggedUser loggedUser);
 
-    Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userId);
+    Multi<UserDataWithProductInfoResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userId);
 
     Uni<Void> updateInstitutionDescription(String institutionId, UpdateDescriptionDto descriptionDto);
 

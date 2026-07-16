@@ -605,6 +605,23 @@ class UserServiceTest {
         assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
     }
 
+  @Test
+  void retrieveUsersWithExludeRoleTest() {
+    UserInstitution userInstitution = createUserInstitution();
+    when(userInstitutionService.findAllWithFilter(any())).thenReturn(Multi.createFrom().item(userInstitution));
+    when(userUtils.isExcludeRoleFromUserGroups(any())).thenReturn(true);
+    AssertSubscriber<UserInstitutionDataResponse> subscriber = userService
+      .findAllUserInstitutionsData("institutionId", "userId", null, null, null, null)
+      .subscribe()
+      .withSubscriber(AssertSubscriber.create(10));
+
+    List<UserInstitutionDataResponse> actual = subscriber.assertCompleted().getItems();
+    Assert.assertNotNull(actual);
+    assertEquals(1, actual.size());
+    assertEquals(userInstitution.getUserId(), actual.get(0).getUserId());
+    assertTrue(actual.get(0).getProducts().get(0).isExcludeRoleFromUserGroups());
+  }
+
     @Test
     void findAllUserInstitutionsPaged_whenFilterProductIdAndProductRole() {
         UserInstitution userInstitution = createUserInstitution();
@@ -1933,7 +1950,7 @@ class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
         // Call the method
-        AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
+        AssertSubscriber<UserDataWithProductInfoResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
@@ -1987,7 +2004,7 @@ class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
         // Call the method
-        AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
+        AssertSubscriber<UserDataWithProductInfoResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
@@ -2041,9 +2058,10 @@ class UserServiceTest {
         when(userInstitutionService.findAllWithFilter(anyMap())).thenReturn(Multi.createFrom().item(createUserInstitution()));
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
         when(userUtils.isExcludeRoleFromUserGroups(any())).thenReturn(false);
+        when(userUtils.isExcludeRoleFromUserGroups(any())).thenReturn(true);
 
         // Call the method
-        AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
+        AssertSubscriber<UserDataWithProductInfoResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
@@ -2052,6 +2070,7 @@ class UserServiceTest {
             assertEquals(1, actual.getProducts().size());
             assertEquals("test", actual.getProducts().get(0).getProductId());
             assertEquals(institutionId, "test-institution");
+            assertTrue(actual.getProducts().get(0).isExcludeRoleFromUserGroups());
         });
 
         // Verify the interactions
@@ -2100,7 +2119,7 @@ class UserServiceTest {
         when(userUtils.isExcludeRoleFromUserGroups(any())).thenReturn(true);
 
         // Call the method
-        AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
+        AssertSubscriber<UserDataWithProductInfoResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
@@ -2141,7 +2160,7 @@ class UserServiceTest {
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
 
         // Call the method
-        AssertSubscriber<UserDataResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
+        AssertSubscriber<UserDataWithProductInfoResponse> subscriber = userService.retrieveUsersData(institutionId, personId, roles, states, products, productRoles, userUuid)
                 .subscribe().withSubscriber(AssertSubscriber.create(10));
 
         // Verify the result
