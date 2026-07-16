@@ -119,5 +119,3 @@ Before deploy you must set these properties as environment variables.
 ## Related Guides
 
 - Azure Functions ([guide](https://quarkus.io/guides/azure-functions)): Write Microsoft Azure functions
-
-
