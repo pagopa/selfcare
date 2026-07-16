@@ -1833,6 +1833,9 @@
             "items": {
               "$ref": "#/components/schemas/BackOfficeRole"
             }
+          },
+          "excludeRoleFromUserGroups": {
+            "type": "boolean"
           }
         }
       },
