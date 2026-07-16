@@ -960,6 +960,15 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "includeTest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -5333,6 +5342,9 @@
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
+          },
+          "storageOrigin": {
+            "$ref": "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -5352,6 +5364,13 @@
             }
           }
         }
+      },
+      "StorageOrigin": {
+        "enum": [
+          "SYSTEM",
+          "USER"
+        ],
+        "type": "string"
       },
       "ProductOriginResponse": {
         "type": "object",
@@ -6997,7 +7016,8 @@
           "COMPLETED",
           "FAILED",
           "REJECTED",
-          "DELETED"
+          "DELETED",
+          "OVERRIDDEN"
         ],
         "type": "string"
       },
