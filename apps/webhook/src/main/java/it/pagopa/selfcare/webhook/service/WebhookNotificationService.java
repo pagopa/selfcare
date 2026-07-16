@@ -1,11 +1,15 @@
 package it.pagopa.selfcare.webhook.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import it.pagopa.selfcare.webhook.entity.Webhook;
@@ -15,8 +19,11 @@ import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -32,6 +39,8 @@ public class WebhookNotificationService {
   @Inject Vertx vertx;
 
   @Inject WebhookJwtService webhookJwtService;
+
+  @Inject ObjectMapper objectMapper;
 
   @ConfigProperty(name = "webhook.timeout.connect", defaultValue = "5000")
   int connectTimeout;
@@ -186,7 +195,7 @@ public class WebhookNotificationService {
           .onItem()
           .invoke(token -> request.putHeader(jwtHeaderName, jwtHeaderPrefix + token))
           .onItem()
-          .transformToUni(token -> request.sendBuffer(Buffer.buffer(notification.getPayload())))
+          .transformToUni(token -> sendDecodedPayload(request, notification))
           .onItem()
           .transformToUni(response -> handleHttpResponse(webhook, notification, response))
           .onFailure()
@@ -196,6 +205,22 @@ public class WebhookNotificationService {
       log.error("Error sending webhook notification: {} {}", notification.getId(), e.getMessage());
       return handleHttpError(webhook, notification, e);
     }
+  }
+
+  private Uni<HttpResponse<Buffer>> sendDecodedPayload(
+      HttpRequest<Buffer> request, WebhookNotification notification) {
+    try {
+      return request.sendJson(decodePayload(notification));
+    } catch (JsonProcessingException e) {
+      return Uni.createFrom().failure(e);
+    }
+  }
+
+  private Map<String, Object> decodePayload(WebhookNotification notification)
+      throws JsonProcessingException {
+    String decodedPayload =
+        new String(Base64.getDecoder().decode(notification.getPayload()), StandardCharsets.UTF_8);
+    return objectMapper.readValue(decodedPayload, new TypeReference<>() {});
   }
 
   private Uni<Void> handleHttpResponse(

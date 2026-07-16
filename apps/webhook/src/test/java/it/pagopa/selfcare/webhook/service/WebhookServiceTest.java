@@ -17,10 +17,13 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @QuarkusTest
 class WebhookServiceTest {
@@ -203,6 +206,7 @@ class WebhookServiceTest {
 
   @Test
   void sendNotification_shouldCreateNotificationsForActiveWebhooks() {
+    // given
     String productId = "prod-io";
     NotificationRequest request = new NotificationRequest();
     request.setProductId(productId);
@@ -225,6 +229,7 @@ class WebhookServiceTest {
     when(notificationService.processNotification(any(), any()))
         .thenReturn(Uni.createFrom().voidItem());
 
+    // when
     UniAssertSubscriber<Void> subscriber =
         webhookService
             .sendNotification(request)
@@ -233,12 +238,18 @@ class WebhookServiceTest {
 
     subscriber.awaitItem();
 
-    verify(notificationRepository).persist(any(WebhookNotification.class));
+    // then
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository).persist(captor.capture());
+    String expectedPayload =
+        Base64.getEncoder().encodeToString(request.getPayload().getBytes(StandardCharsets.UTF_8));
+    assertEquals(expectedPayload, captor.getValue().getPayload());
     verify(notificationService).processNotification(any(WebhookNotification.class), eq(webhook));
   }
 
   @Test
   void sendNotification_shouldDoNothing_whenNoActiveWebhooks() {
+    // given
     String productId = "prod-io";
     NotificationRequest request = new NotificationRequest();
     request.setProductId(productId);
@@ -246,6 +257,7 @@ class WebhookServiceTest {
     when(webhookRepository.findActiveWebhooksByProduct(productId))
         .thenReturn(Uni.createFrom().item(Collections.emptyList()));
 
+    // when
     UniAssertSubscriber<Void> subscriber =
         webhookService
             .sendNotification(request)
@@ -254,6 +266,7 @@ class WebhookServiceTest {
 
     subscriber.awaitItem();
 
+    // then
     verify(notificationRepository, never()).persist(any(WebhookNotification.class));
   }
 }

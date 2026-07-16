@@ -13,7 +13,9 @@ import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import it.pagopa.selfcare.webhook.util.Sanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -153,7 +155,7 @@ public class WebhookService {
             webhook -> {
               WebhookNotification notification = new WebhookNotification();
               notification.setWebhookId(webhook.getId());
-              notification.setPayload(request.getPayload());
+              notification.setPayload(encodePayload(request.getPayload()));
               notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
               notification.setAttemptCount(0);
               notification.setCreatedAt(LocalDateTime.now());
@@ -172,6 +174,10 @@ public class WebhookService {
         .collect()
         .asList()
         .replaceWithVoid();
+  }
+
+  private String encodePayload(String payload) {
+    return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
   }
 
   private WebhookResponse toResponse(Webhook webhook) {
