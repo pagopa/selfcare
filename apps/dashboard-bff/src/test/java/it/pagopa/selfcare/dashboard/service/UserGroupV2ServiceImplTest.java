@@ -13,9 +13,9 @@ import it.pagopa.selfcare.dashboard.model.user.UserInfo;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.PageOfUserGroupResource;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UpdateUserGroupDto;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UserGroupResource;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDetailResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,7 +111,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         UpdateUserGroup group = mockInstance(new UpdateUserGroup());
         UserGroupInfo userGroupInfo = mockInstance(new UserGroupInfo());
         group.setMembers(List.of(userId));
-        UserInstitutionResponse userInstitutionResponse = mockInstance(new UserInstitutionResponse(), "setUserId");
+        UserInstitutionDataResponse userInstitutionResponse = mockInstance(new UserInstitutionDataResponse(), "setUserId");
         userInstitutionResponse.setUserId(userId);
 
         when(userGroupRestClient._getUserGroupUsingGET(groupId)).thenReturn(ResponseEntity.ok(mockInstance(new UserGroupResource())));
@@ -134,7 +134,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         when(userGroupRestClient._getUserGroupUsingGET(groupId)).thenReturn(ResponseEntity.ok(mockInstance(new UserGroupResource())));
         when(groupMapper.toUserGroupInfo(any())).thenReturn(userGroupInfo);
         when(userInstitutionApiRestClient._retrieveUserInstitutions("setInstitutionId", null, List.of("setProductId"), null, List.of("ACTIVE","SUSPENDED"), null))
-                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionResponse()))));
+                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionDataResponse()))));
 
         InvalidMemberListException exception = assertThrows(InvalidMemberListException.class, () -> userGroupV2Service.updateUserGroup(groupId, group));
         assertEquals("Some members in the list aren't allowed for this institution", exception.getMessage());
@@ -176,7 +176,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         UserInfo userInfoMock1 = mockInstance(new UserInfo(), 1, "setId");
         userInfoMock1.setId(id1);
 
-        UserInstitutionResponse userInstitutionResponse = mockInstance(new UserInstitutionResponse(), "setUserId");
+        UserInstitutionDataResponse userInstitutionResponse = mockInstance(new UserInstitutionDataResponse(), "setUserId");
         userInstitutionResponse.setUserId(id1);
 
         when(userInstitutionApiRestClient._retrieveUserInstitutions("setInstitutionId", null, List.of("setProductId"), null, List.of("ACTIVE","SUSPENDED"),null))
@@ -198,7 +198,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         UserInfo userInfoMock1 = mockInstance(new UserInfo(), 1, "setId");
         userInfoMock1.setId(id1);
         when(userInstitutionApiRestClient._retrieveUserInstitutions("setInstitutionId", null, List.of("setProductId"), null, List.of("ACTIVE","SUSPENDED"),null))
-                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionResponse()))));
+                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionDataResponse()))));
 
         Executable executable = () -> userGroupV2Service.createUserGroup(userGroup);
 
@@ -262,7 +262,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
     @Test
     void testDeleteMembersByUserIdUserNotFound() {
         when(userInstitutionApiRestClient._retrieveUserInstitutions(any(), any(), any(), any(), anyList(), anyString()))
-                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionResponse(), "setInstitutionId"))));
+                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionDataResponse(), "setInstitutionId"))));
         userGroupV2Service.deleteMembersByUserId(UUID.randomUUID().toString(), "institutionId", "prod-io");
         verifyNoInteractions(userGroupRestClient);
     }
@@ -291,7 +291,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         userGroupResource.setProductId(productId);
         when(userGroupRestClient._getUserGroupUsingGET(anyString())).thenReturn(ResponseEntity.ok(userGroupResource));
         when(userInstitutionApiRestClient._retrieveUserInstitutions(null, null, List.of("productId"),null, List.of("ACTIVE","SUSPENDED"),null))
-                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionResponse(), "setInstitutionId"))));
+                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionDataResponse(), "setInstitutionId"))));
 
         Executable executable = () -> userGroupV2Service.addMemberToUserGroup(groupId, userId);
 
@@ -307,7 +307,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         UserGroupInfo foundGroup = mockInstance(new UserGroupInfo(), "setId", "setInstitutionId");
         foundGroup.setId(groupId);
         UUID userId = randomUUID();
-        UserInstitutionResponse userInstitutionResponse = mockInstance(new UserInstitutionResponse(), "setUserId");
+        UserInstitutionDataResponse userInstitutionResponse = mockInstance(new UserInstitutionDataResponse(), "setUserId");
         userInstitutionResponse.setUserId(userId.toString());
 
         UserGroupResource userGroupResource = new UserGroupResource();
@@ -333,7 +333,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         userGroupResource.setModifiedBy(modifiedBy);
         UserGroupInfo userGroupInfo = mockInstance(new UserGroupInfo());
 
-        UserDataResponse user = mockInstance(new UserDataResponse());
+        UserDataWithProductInfoResponse user = mockInstance(new UserDataWithProductInfoResponse());
         user.setRole("MANAGER");
         user.setStatus("ACTIVE");
 
@@ -366,7 +366,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         userGroupResource.setMembers(List.of(memberUUID));
         userGroupResource.setCreatedBy("");
 
-        final UserDataResponse userDataResponse = new UserDataResponse();
+        final UserDataWithProductInfoResponse userDataResponse = new UserDataWithProductInfoResponse();
         userDataResponse.setId("userInstitutionId");
         userDataResponse.setUserId(memberId);
         userDataResponse.setStatus("ACTIVE");
@@ -394,7 +394,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         userGroupResource.setDescription("groupDescription");
         userGroupResource.setMembers(List.of(UUID.fromString("81b90c5e-67e4-44bc-85d3-3556f409f11d")));
 
-        final UserDataResponse userDataResponse = new UserDataResponse();
+        final UserDataWithProductInfoResponse userDataResponse = new UserDataWithProductInfoResponse();
         userDataResponse.setId("userInstitutionId");
         userDataResponse.setUserId("81b90c5e-67e4-44bc-85d3-3556f409f11d");
         userDataResponse.setStatus("ACTIVE");
@@ -452,7 +452,7 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
     @Test
     void testDeleteMembersByUserIdUserFound2() {
         when(userInstitutionApiRestClient._retrieveUserInstitutions(any(), any(), any(), any(), anyList(), anyString()))
-                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionResponse(), "setInstitutionId"))));
+                .thenReturn(ResponseEntity.ok(Collections.singletonList(mockInstance(new UserInstitutionDataResponse(), "setInstitutionId"))));
         Assertions.assertDoesNotThrow(() -> userGroupV2Service.deleteMembersByUserId(UUID.randomUUID().toString(), "institutionId", "prod-io"));
         verifyNoInteractions(userGroupRestClient);
     }

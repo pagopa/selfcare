@@ -19,8 +19,8 @@ import it.pagopa.selfcare.group.generated.openapi.v1.dto.PageOfUserGroupResource
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UpdateUserGroupDto;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UserGroupResource;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductState;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -118,7 +118,7 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
                                         .orElse(null),
                                 null)
                         .getBody()).map(userInstitutionResponses -> userInstitutionResponses.stream()
-                        .map(UserInstitutionResponse::getUserId).toList())
+                        .map(UserInstitutionDataResponse::getUserId).toList())
                 .orElse(Collections.emptyList());
     }
 
@@ -229,7 +229,7 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
 
     private UserInfo getUserByUserIdInstitutionIdAndProductAndStates(String userId, String institutionId, String productId, List<String> states) {
         log.trace("getUserByUserIdInstitutionIdAndProduct start");
-        List<UserDataResponse> institutionResponses = userApiRestClient._retrieveUsers(institutionId, userId, userId, null, List.of(productId), null, states)
+        List<UserDataWithProductInfoResponse> institutionResponses = userApiRestClient._retrieveUsers(institutionId, userId, userId, null, List.of(productId), null, states)
                 .getBody();
 
         if (CollectionUtils.isEmpty(institutionResponses) || institutionResponses.size() != 1) {
@@ -314,7 +314,7 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
         log.trace("retrieveFilteredUser start");
         log.debug("retrieveFilteredUser userId = {}, institutionId = {}, productId = {}",
                 Encode.forJava(userId), Encode.forJava(institutionId), Encode.forJava(productId));
-        List<UserInstitutionResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(institutionId, null, List.of(productId), null, getValidUserStates(), userId).getBody();
+        List<UserInstitutionDataResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(institutionId, null, List.of(productId), null, getValidUserStates(), userId).getBody();
         if (!CollectionUtils.isEmpty(institutionResponses)) {
             log.info("retrieveFilteredUser institutionResponses size = {}", institutionResponses.size());
             return institutionResponses.stream()
