@@ -11,6 +11,7 @@ public class WebhookNotification {
 
   private ObjectId id;
   private ObjectId webhookId;
+  private String tenantId;
   private String payload;
   private NotificationStatus status;
   private Integer attemptCount;

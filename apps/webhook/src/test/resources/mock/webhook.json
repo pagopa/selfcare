@@ -2,7 +2,7 @@
   {
     "httpRequest": {
       "method": "POST",
-      "path": "/test",
+      "path": "/test"
     },
     "httpResponse": {
       "statusCode": 200,

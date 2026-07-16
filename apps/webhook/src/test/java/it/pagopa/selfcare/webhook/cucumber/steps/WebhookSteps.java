@@ -20,6 +20,7 @@ public class WebhookSteps {
   private WebhookRequest webhookRequest;
   private Response response;
   private String lastWebhookProductId;
+  private String tenantId = "SELC";
 
   @Given("the database is empty")
   public void theDatabaseIsEmpty() {
@@ -31,6 +32,7 @@ public class WebhookSteps {
     webhookRequest = new WebhookRequest();
     webhookRequest.setUrl(url);
     webhookRequest.setHttpMethod("POST");
+    webhookRequest.setTenantId(tenantId);
     webhookRequest.setProductId("prod-test");
   }
 
@@ -39,6 +41,7 @@ public class WebhookSteps {
     WebhookRequest request = new WebhookRequest();
     request.setUrl(url);
     request.setHttpMethod("POST");
+    request.setTenantId(tenantId);
     request.setProductId(productId);
 
     WebhookResponse created =
@@ -60,6 +63,7 @@ public class WebhookSteps {
     WebhookRequest request = new WebhookRequest();
     request.setUrl("http://example.com");
     request.setHttpMethod("POST");
+    request.setTenantId(tenantId);
     request.setProductId(productId);
 
     WebhookResponse created =
@@ -88,7 +92,7 @@ public class WebhookSteps {
 
   @When("I list all webhooks")
   public void iListAllWebhooks() {
-    response = given().when().get("/webhooks");
+    response = given().queryParam("tenantId", tenantId).when().get("/webhooks");
   }
 
   @When("I get the webhook by its ID")
@@ -96,6 +100,7 @@ public class WebhookSteps {
     response =
         given()
             .when()
+            .queryParam("tenantId", tenantId)
             .queryParam("requesterProductId", lastWebhookProductId)
             .get("/webhooks/" + lastWebhookProductId);
   }
@@ -105,6 +110,7 @@ public class WebhookSteps {
     WebhookRequest updateRequest = new WebhookRequest();
     updateRequest.setUrl(url);
     updateRequest.setHttpMethod("POST");
+    updateRequest.setTenantId(tenantId);
     updateRequest.setProductId(lastWebhookProductId);
 
     response =
@@ -124,6 +130,7 @@ public class WebhookSteps {
   public void iSendANotification(String productId, String payload) {
     NotificationRequest request = new NotificationRequest();
     request.setProductId(productId);
+    request.setTenantId(tenantId);
     request.setPayload(payload);
 
     response =

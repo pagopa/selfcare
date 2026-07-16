@@ -21,7 +21,10 @@ import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
 import java.lang.reflect.Field;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -65,14 +68,16 @@ class WebhookNotificationServiceTest {
 
   @Test
   void processNotification_shouldSendSuccessfully() {
+    // given
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());
 
     when(notificationRepository.update(any(WebhookNotification.class)))
         .thenReturn(Uni.createFrom().item(notification));
-    when(httpRequest.sendBuffer(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
     when(httpResponse.statusCode()).thenReturn(200);
 
+    // when
     UniAssertSubscriber<Void> subscriber =
         notificationService
             .processNotification(notification, webhook)
@@ -80,12 +85,15 @@ class WebhookNotificationServiceTest {
             .withSubscriber(UniAssertSubscriber.create());
 
     subscriber.awaitItem();
+
+    // then
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
     verify(notificationRepository, atLeastOnce()).update(captor.capture());
     WebhookNotification captured = captor.getValue();
     assertEquals(WebhookNotification.NotificationStatus.SUCCESS, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
+    verify(httpRequest).sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
   }
 
   @Test
@@ -95,7 +103,7 @@ class WebhookNotificationServiceTest {
 
     when(notificationRepository.update(any(WebhookNotification.class)))
         .thenReturn(Uni.createFrom().item(notification));
-    when(httpRequest.sendBuffer(any()))
+    when(httpRequest.sendJson(any()))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")));
 
     UniAssertSubscriber<Void> subscriber =
@@ -126,7 +134,7 @@ class WebhookNotificationServiceTest {
 
     when(notificationRepository.update(any(WebhookNotification.class)))
         .thenReturn(Uni.createFrom().item(notification));
-    when(httpRequest.sendBuffer(any()))
+    when(httpRequest.sendJson(any()))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")));
 
     UniAssertSubscriber<Void> subscriber =
@@ -172,6 +180,53 @@ class WebhookNotificationServiceTest {
   }
 
   @Test
+  void processNotification_shouldComplete_whenNotificationIsNotFound() {
+    // given
+    String notificationId = new ObjectId().toHexString();
+    when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notificationId)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitItem();
+    verify(notificationRepository).findById(new ObjectId(notificationId));
+    verifyNoInteractions(webhookRepository);
+    verifyNoInteractions(webClient);
+  }
+
+  @Test
+  void processNotification_shouldFailNotification_whenWebhookIsNotFound() {
+    // given
+    WebhookNotification notification = createNotification(new ObjectId());
+    when(webhookRepository.findById(notification.getWebhookId()))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitItem();
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository).update(captor.capture());
+    WebhookNotification captured = captor.getValue();
+    assertEquals(WebhookNotification.NotificationStatus.FAILED, captured.getStatus());
+    assertEquals("Webhook not found", captured.getLastError());
+    assertNotNull(captured.getCompletedAt());
+    verifyNoInteractions(webClient);
+  }
+
+  @Test
   void processFailedNotifications_shouldProcessPending() {
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());
@@ -188,7 +243,7 @@ class WebhookNotificationServiceTest {
     when(notificationRepository.releaseProcessingLock(any()))
         .thenReturn(Uni.createFrom().item(notification));
 
-    when(httpRequest.sendBuffer(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
     when(httpResponse.statusCode()).thenReturn(200);
 
     UniAssertSubscriber<Void> subscriber =
@@ -221,7 +276,8 @@ class WebhookNotificationServiceTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setWebhookId(webhookId);
-    notification.setPayload("{}");
+    notification.setPayload(
+        Base64.getEncoder().encodeToString("{}".getBytes(StandardCharsets.UTF_8)));
     notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
     notification.setAttemptCount(0);
     return notification;
