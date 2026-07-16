@@ -10,6 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface DocumentMsConnector {
     Resource getContract(String onboardingId);
 
+    Resource getContractSigned(String onboardingId);
+
     Resource getTemplateAttachment(OnboardingData onboardingId, String filename, String templatePath);
 
     Resource getAttachment(String onboardingId, String filename);
