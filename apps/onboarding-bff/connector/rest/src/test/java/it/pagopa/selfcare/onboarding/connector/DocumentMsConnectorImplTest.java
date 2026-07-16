@@ -79,6 +79,22 @@ class DocumentMsConnectorImplTest {
     }
 
     @Test
+    void getContractSigned() {
+      //given
+      final String onboardingId = "onboardingId";
+      Resource resource = Mockito.mock(Resource.class);
+      when(msDocumentContentApiClient._getContractSigned(onboardingId))
+              .thenReturn(ResponseEntity.of(Optional.of(resource)));
+      // when
+      final Executable executable = () -> documentMsConnector.getContractSigned(onboardingId);
+      // then
+      assertDoesNotThrow(executable);
+      verify(msDocumentContentApiClient, times(1))
+              ._getContractSigned(onboardingId);
+      verifyNoMoreInteractions(msDocumentContentApiClient);
+    }
+
+    @Test
     void getTemplateAttachment() {
         // given
         final String onboardingId = "onboardingId";

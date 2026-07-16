@@ -4,10 +4,13 @@ package it.pagopa.selfcare.onboarding.web.controller;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -16,6 +19,7 @@ import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
 import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
 import it.pagopa.selfcare.onboarding.web.model.AvailableDocumentsResource;
+import it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
@@ -35,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 
+import static it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType.ATTACHMENT;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
 
@@ -287,6 +292,12 @@ public class TokenV2Controller {
     @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
             description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
             operationId = "getAvailableDocumentsUsingGET")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents"),
+            @ApiResponse(responseCode = "404", description = "Onboarding not found")
+    })
     public AvailableDocumentsResource getAvailableDocuments(@ApiParam("${swagger.tokens.onboardingId}")
                                                             @PathVariable("onboardingId") String onboardingId) {
         log.trace("getAvailableDocuments start");
@@ -297,6 +308,47 @@ public class TokenV2Controller {
         resource.setContractFilename(source.getContractFilename());
         log.trace("getAvailableDocuments end");
         return resource;
+    }
+
+    @GetMapping(value = "/{onboardingId}/download", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
+    @Operation(summary = "Download a document (signed contract or attachment) for the given onboarding",
+            description = "When type=CONTRACT_SIGNED downloads the signed contract; " +
+                    "when type=ATTACHMENT the 'name' query parameter is required.",
+            operationId = "downloadDocumentUsingGET")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successful operation"),
+            @ApiResponse(responseCode = "400", description = "Invalid request - missing 'name' when type=ATTACHMENT or unsupported download type"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents"),
+            @ApiResponse(responseCode = "404", description = "Onboarding or document not found")
+    })
+    public ResponseEntity<byte[]> downloadDocument(
+            @ApiParam("${swagger.tokens.onboardingId}")
+            @PathVariable("onboardingId") String onboardingId,
+            @ApiParam(value = "Type of document to download", required = true)
+            @RequestParam("type") DownloadDocumentType type,
+            @ApiParam("Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.")
+            @RequestParam(value = "name", required = false) String name) throws IOException {
+        log.trace("downloadDocument start");
+        log.debug("downloadDocument onboardingId = {}, type = {}, name = {}",
+                Encode.forJava(onboardingId), type, Encode.forJava(name));
+
+        Resource resource;
+        switch (type) {
+            case CONTRACT_SIGNED -> resource = tokenService.getContractSigned(onboardingId);
+            case ATTACHMENT -> {
+                if (name == null || name.isBlank()) {
+                    throw new InvalidRequestException(
+                            "Query parameter 'name' is required when type=" + ATTACHMENT);
+                }
+                resource = tokenService.getAttachment(onboardingId, name);
+            }
+            default -> throw new InvalidRequestException("Unsupported download type: " + type);
+        }
+        log.trace("downloadDocument end");
+        return getResponseEntity(resource);
     }
 
     @RequestMapping(method = HEAD, value = "/{onboardingId}/attachment/status")
