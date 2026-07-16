@@ -2128,6 +2128,9 @@
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
+          },
+          "storageOrigin": {
+            "$ref": "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -2147,6 +2150,13 @@
             }
           }
         }
+      },
+      "StorageOrigin": {
+        "type": "string",
+        "enum": [
+          "SYSTEM",
+          "USER"
+        ]
       },
       "ProductOriginResponse": {
         "type": "object",
