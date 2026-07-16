@@ -30,9 +30,14 @@ import jakarta.ws.rs.ProcessingException;
 import java.time.temporal.ChronoUnit;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.openapi.quarkus.onboarding_functions_json.api.OrganizationApi;
+import org.openapi.quarkus.onboarding_json.api.AggregatesControllerApi;
+import org.openapi.quarkus.onboarding_json.api.BillingPortalApi;
 import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
 import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
+import org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus;
+import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
 import org.owasp.encoder.Encode;
+import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
 
 import java.util.*;
 
@@ -59,6 +64,9 @@ class InstitutionServiceImpl implements InstitutionService {
     private static final String REQUIRED_AGGREGATE_INSTITUTIONS = "Aggregate institutions are required if given institution is an Aggregator";
     private static final String ONBOARDING_COMPANY_NOT_ALLOWED = "The selected business does not belong to the user";
     private static final String PROD_PN_PG = "prod-pn-pg";
+    public static final String PROD_IO = "prod-io";
+    public static final String PROD_PAGOPA = "prod-pagopa";
+    public static final String PROD_PN = "prod-pn";
     static final String DESCRIPTION_TO_REPLACE_REGEX = " - COMUNE";
     private final OnboardingService onboardingMsConnector;
     private final PartyService partyConnector;
@@ -69,6 +77,8 @@ class InstitutionServiceImpl implements InstitutionService {
     private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
     private final ProductService productService;
+    private final AggregatesControllerApi aggregatesApi;
+    private final BillingPortalApi billingPortalApi;
     InstitutionServiceImpl(OnboardingService onboardingMsConnector,
                            PartyService partyConnector,
                            ProductService productService,
@@ -77,7 +87,9 @@ class InstitutionServiceImpl implements InstitutionService {
                            PartyRegistryProxyService partyRegistryProxyConnector,
                            InstitutionMapper institutionMapper,
                            OnboardingMapper onboardingMapper,
-                           PgManagerVerifier pgManagerVerifier
+                           PgManagerVerifier pgManagerVerifier,
+                           @RestClient AggregatesControllerApi aggregatesApi,
+                           @RestClient BillingPortalApi billingPortalApi
     ) {
         this.onboardingMsConnector = onboardingMsConnector;
         this.partyConnector = partyConnector;
@@ -88,6 +100,8 @@ class InstitutionServiceImpl implements InstitutionService {
         this.institutionMapper = institutionMapper;
         this.onboardingMapper = onboardingMapper;
         this.pgManagerVerifier = pgManagerVerifier;
+        this.aggregatesApi = aggregatesApi;
+        this.billingPortalApi = billingPortalApi;
     }
     @Override
     public void onboardingProductV2(OnboardingData onboardingData) {
@@ -522,26 +536,42 @@ class InstitutionServiceImpl implements InstitutionService {
         log.trace("getInstitutionLegalAddress end");
         return result;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
-    public org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId) {
-        log.trace("validateAggregatesCsv start");
-        log.debug("validateAggregatesCsv productId = {}", Encode.forJava(productId));
-        org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse result = onboardingMsConnector.aggregatesVerification(file, productId);
-        if (isEmptyCollection(result.getErrors())) {
-            log.debug("No errors found for {} aggregates:", productId);
-        } else {
-            log.debug("Errors found for {} aggregates: {}", productId, result.getErrors());
+    public VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId) {
+        log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
+        switch (productId) {
+            case PROD_IO -> {
+                AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm form =
+                        new AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm();
+                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
+                return aggregatesApi.verifyAppIoAggregatesCsv(form).await().indefinitely();
+            }
+            case PROD_PAGOPA -> {
+                AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm form =
+                        new AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm();
+                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
+                return aggregatesApi.verifyPagoPaAggregatesCsv(form).await().indefinitely();
+            }
+            case PROD_PN -> {
+                AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm form =
+                        new AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm();
+                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
+                return aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
+            }
+            default -> {
+                log.error("Unsupported productId: {}", LogUtils.sanitize(productId));
+                throw new InvalidRequestException("Unsupported productId: " + productId);
+            }
         }
-        log.debug("validateAggregatesCsv result = {}", result);
-        log.trace("validateAggregatesCsv end");
-        return result;
     }
+    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     @Override
-    public org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus  checkRecipientCode(String originId, String recipientCode) {
+    public RecipientCodeStatus checkRecipientCode(String originId, String recipientCode) {
         log.trace("checkRecipientCode start");
         log.debug("checkRecipientCode for institution with originId {} and recipientCode {}",
                 LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
-        org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus result = onboardingMsConnector.checkRecipientCode(originId, recipientCode);
+        RecipientCodeStatus result = billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely();
         log.debug("checkRecipientCode result = {}", result);
         log.trace("checkRecipientCode end");
         return result;

@@ -43,13 +43,9 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 public class OnboardingServiceImpl implements OnboardingService {
 
-    public static final String PROD_IO = "prod-io";
-    public static final String PROD_PAGOPA = "prod-pagopa";
-    public static final String PROD_PN = "prod-pn";
     protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
 
     private final OnboardingControllerApi onboardingApi;
-    private final BillingPortalApi billingPortalApi;
     private final SupportApi supportApi;
     private final DocumentContentControllerApi documentContentControllerApi;
     private final TokenControllerApi tokenApi;
@@ -59,7 +55,6 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final OnboardingWorkflowRestClient onboardingWorkflowRestClient;
 
     public OnboardingServiceImpl(@RestClient OnboardingControllerApi onboardingApi,
-                                    @RestClient BillingPortalApi billingPortalApi,
                                     @RestClient DocumentContentControllerApi documentContentControllerApi,
                                     @RestClient TokenControllerApi tokenApi,
                                     @RestClient SupportApi supportApi,
@@ -68,7 +63,6 @@ public class OnboardingServiceImpl implements OnboardingService {
                                     @RestClient InternalV1Api internalV1Api,
                                     @RestClient OnboardingWorkflowRestClient onboardingWorkflowRestClient) {
         this.onboardingApi = onboardingApi;
-        this.billingPortalApi = billingPortalApi;
         this.documentContentControllerApi = documentContentControllerApi;
         this.tokenApi = tokenApi;
         this.supportApi = supportApi;
@@ -87,36 +81,6 @@ public class OnboardingServiceImpl implements OnboardingService {
             onboardingApi.onboardingPsp(onboardingMapper.toOnboardingPspRequest(onboardingData)).await().indefinitely();
         } else {
             onboardingApi.onboarding(onboardingMapper.toOnboardingDefaultRequest(onboardingData)).await().indefinitely();
-        }
-    }
-
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    @Override
-    public VerifyAggregateResponse aggregatesVerification(UploadedFile file, String productId) {
-        log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
-        switch (productId) {
-            case PROD_IO -> {
-                AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm form =
-                        new AggregatesControllerApi.VerifyAppIoAggregatesCsvMultipartForm();
-                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
-                return aggregatesApi.verifyAppIoAggregatesCsv(form).await().indefinitely();
-            }
-            case PROD_PAGOPA -> {
-                AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm form =
-                        new AggregatesControllerApi.VerifyPagoPaAggregatesCsvMultipartForm();
-                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
-                return aggregatesApi.verifyPagoPaAggregatesCsv(form).await().indefinitely();
-            }
-            case PROD_PN -> {
-                AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm form =
-                        new AggregatesControllerApi.VerifySendAggregatesCsvMultipartForm();
-                form.aggregates = FilePayloadUtils.toTempFile(file, "aggregates-", ".csv");
-                return aggregatesApi.verifySendAggregatesCsv(form).await().indefinitely();
-            }
-            default -> {
-                log.error("Unsupported productId: {}", LogUtils.sanitize(productId));
-                throw new InvalidRequestException("Unsupported productId: " + productId);
-            }
         }
     }
 
@@ -284,12 +248,6 @@ public class OnboardingServiceImpl implements OnboardingService {
     @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public CheckManagerResponse checkManager(CheckManagerRequest request) {
         return onboardingApi.checkManager(request).await().indefinitely();
-    }
-
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    @Override
-    public RecipientCodeStatus checkRecipientCode(String originId, String recipientCode) {
-        return billingPortalApi.checkRecipientCode(originId, recipientCode).await().indefinitely();
     }
 
     @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})

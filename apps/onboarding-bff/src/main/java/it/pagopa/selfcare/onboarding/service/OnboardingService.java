@@ -11,8 +11,6 @@ public interface OnboardingService {
 
     void onboarding(OnboardingData onboardingData);
 
-    VerifyAggregateResponse aggregatesVerification(UploadedFile file, String productId);
-
     void onboardingUsers(OnboardingData onboardingData);
 
     void onboardingUsersAggregator(OnboardingData onboardingData);
@@ -46,8 +44,6 @@ public interface OnboardingService {
     List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
     CheckManagerResponse checkManager(CheckManagerRequest request);
-
-    RecipientCodeStatus checkRecipientCode(String originId, String recipientCode);
 
     void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
 

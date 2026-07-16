@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.model.UserAuthority;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
@@ -173,7 +174,7 @@ public interface InstitutionMapper {
         institution.setCounty(model.getCounty());
         institution.setCountry(model.getCountry());
         if (model.getInstitutionType() != null) {
-            institution.setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.valueOf(model.getInstitutionType()));
+            institution.setInstitutionType(InstitutionType.valueOf(model.getInstitutionType()));
         }
         return institution;
     }

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.PartyProcessRestClient;
 import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -171,7 +172,7 @@ public class PartyService {
                         institutionInfo.setDigitalAddress(institutionResponse.getDigitalAddress());
                         institutionInfo.setZipCode(institutionResponse.getZipCode());
                         institutionInfo.setAddress(institutionResponse.getAddress());
-                        institutionInfo.setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.valueOf(institutionResponse.getInstitutionType()));
+                        institutionInfo.setInstitutionType(InstitutionType.valueOf(institutionResponse.getInstitutionType()));
                     }
                 });
             }

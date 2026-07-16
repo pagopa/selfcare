@@ -5,6 +5,7 @@ import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
 import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
+import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -227,7 +228,7 @@ public interface OnboardingMapper {
 
     @Named("toManager")
     default OnboardingRequestResource.UserInfo toManager(List<it.pagopa.selfcare.onboarding.client.model.User> users) {
-        return users.stream().filter(user -> it.pagopa.selfcare.onboarding.client.model.RelationshipState.MANAGER.name().equals(user.getRole().name()))
+        return users.stream().filter(user -> RelationshipState.MANAGER.name().equals(user.getRole().name()))
                 .map(this::toUserInfo)
                 .findAny()
                 .orElse(null);
@@ -236,7 +237,7 @@ public interface OnboardingMapper {
     @Named("toAdmin")
     default List<OnboardingRequestResource.UserInfo> toAdmin(List<it.pagopa.selfcare.onboarding.client.model.User> users) {
         return users.stream()
-                .filter(user -> it.pagopa.selfcare.onboarding.client.model.RelationshipState.DELEGATE.name().equals(user.getRole().name()))
+                .filter(user -> RelationshipState.DELEGATE.name().equals(user.getRole().name()))
                 .map(this::toUserInfo)
                 .toList();
     }
@@ -285,18 +286,18 @@ public interface OnboardingMapper {
 
     RecipientCodeStatusResult toRecipientCodeStatusResult(org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus recipientCodeStatus);
 
-    default it.pagopa.selfcare.onboarding.model.RecipientCodeStatus toRecipientCodeStatus(org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus recipientCodeStatus) {
+    default RecipientCodeStatus toRecipientCodeStatus(org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus recipientCodeStatus) {
         if (recipientCodeStatus == null) {
             return null;
         }
-        return it.pagopa.selfcare.onboarding.model.RecipientCodeStatus.valueOf(recipientCodeStatus.name());
+        return RecipientCodeStatus.valueOf(recipientCodeStatus.name());
     }
 
-    default it.pagopa.selfcare.onboarding.model.RecipientCodeStatus toRecipientCodeStatus(RecipientCodeStatusResult recipientCodeStatusResult) {
+    default RecipientCodeStatus toRecipientCodeStatus(RecipientCodeStatusResult recipientCodeStatusResult) {
         if (recipientCodeStatusResult == null) {
             return null;
         }
-        return it.pagopa.selfcare.onboarding.model.RecipientCodeStatus.valueOf(recipientCodeStatusResult.name());
+        return RecipientCodeStatus.valueOf(recipientCodeStatusResult.name());
     }
 
     default List<String> toGeographicTaxonomyCodes(List<it.pagopa.selfcare.onboarding.controller.request.GeographicTaxonomyDto> geographicTaxonomies) {
@@ -308,15 +309,15 @@ public interface OnboardingMapper {
                 .toList();
     }
 
-    default <T> T map(it.pagopa.selfcare.onboarding.client.model.CertifiedField<T> certifiedField) {
+    default <T> T map(CertifiedField<T> certifiedField) {
         return certifiedField != null ? certifiedField.getValue() : null;
     }
 
-    default <T> it.pagopa.selfcare.onboarding.client.model.CertifiedField<T> map(T value) {
+    default <T> CertifiedField<T> map(T value) {
         if (value == null) return null;
-        it.pagopa.selfcare.onboarding.client.model.CertifiedField<T> certifiedField = new it.pagopa.selfcare.onboarding.client.model.CertifiedField<>();
+        CertifiedField<T> certifiedField = new CertifiedField<>();
         certifiedField.setValue(value);
-        certifiedField.setCertification(it.pagopa.selfcare.onboarding.client.model.Certification.NONE);
+        certifiedField.setCertification(Certification.NONE);
         return certifiedField;
     }
 }
