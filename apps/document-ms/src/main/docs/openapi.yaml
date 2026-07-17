@@ -445,16 +445,15 @@ components:
         id:
           description: Unique identifier of the document.
           type: string
-        name:
-          description: Logical name of the document (e.g. required document ID or
-            attachment label).
-          type: string
         fileName:
           description: Physical filename of the document as stored.
           type: string
         type:
           description: Document type.
           type: string
+          enum:
+            - INSTITUTION
+            - ATTACHMENT
         mimeType:
           description: MIME type derived from the file extension.
           type: string

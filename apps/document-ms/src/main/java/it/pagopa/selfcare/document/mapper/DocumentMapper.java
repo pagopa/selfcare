@@ -5,7 +5,6 @@ import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import org.mapstruct.Mapper;
 
-import java.util.Locale;
 import java.util.Objects;
 
 @Mapper(componentModel = "cdi")
@@ -16,20 +15,12 @@ public interface DocumentMapper {
     default RelatedDocumentResponse toRelatedDocumentResponse(Document entity, String filePath) {
         return RelatedDocumentResponse.builder()
                 .id(entity.getId())
-                .name(resolveName(entity))
                 .fileName(extractFileName(filePath))
-                .type(Objects.isNull(entity.getType()) ? null : entity.getType().name().toLowerCase(Locale.ROOT))
+                .type(entity.getType())
                 .mimeType(resolveMimeType(filePath))
                 .createdAt(entity.getCreatedAt())
                 .filePath(filePath)
                 .build();
-    }
-
-    private static String resolveName(Document entity) {
-        if (Objects.nonNull(entity.getAttachmentName()) && !entity.getAttachmentName().isBlank()) {
-            return entity.getAttachmentName();
-        }
-        return Objects.isNull(entity.getType()) ? null : entity.getType().name().toLowerCase(Locale.ROOT);
     }
 
     private static String extractFileName(String path) {

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.document.model.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import it.pagopa.selfcare.onboarding.common.DocumentType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,14 +20,11 @@ public class RelatedDocumentResponse {
     @Schema(description = "Unique identifier of the document.")
     private String id;
 
-    @Schema(description = "Logical name of the document (e.g. required document ID or attachment label).")
-    private String name;
-
     @Schema(description = "Physical filename of the document as stored.")
     private String fileName;
 
     @Schema(description = "Document type.")
-    private String type;
+    private DocumentType type;
 
     @Schema(description = "MIME type derived from the file extension.")
     private String mimeType;

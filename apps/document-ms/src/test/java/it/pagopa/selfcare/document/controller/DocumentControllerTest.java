@@ -539,10 +539,9 @@ class DocumentControllerTest {
     // given
     RelatedDocumentResponse response = RelatedDocumentResponse.builder()
         .id(DOCUMENT_ID)
-        .name(ATTACHMENT_NAME)
         .fileName("attachment.pdf")
         .filePath("/contracts/onboarding-123/attachments/attachment.pdf")
-        .type("attachment")
+        .type(DocumentType.ATTACHMENT)
         .mimeType("application/pdf")
         .build();
     when(documentService.getRelatedDocuments(ONBOARDING_ID))
@@ -556,7 +555,7 @@ class DocumentControllerTest {
         .statusCode(200)
         .body("size()", is(1))
         .body("[0].id", equalTo(DOCUMENT_ID))
-        .body("[0].type", equalTo("attachment"))
+        .body("[0].type", equalTo("ATTACHMENT"))
         .body("[0].mimeType", equalTo("application/pdf"));
   }
 
