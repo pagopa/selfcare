@@ -1,7 +1,4 @@
 package it.pagopa.selfcare.onboarding.service.impl;
-import it.pagopa.selfcare.onboarding.service.*;
-
-
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,6 +11,9 @@ import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.dto.webhook.NotificationRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
+import it.pagopa.selfcare.onboarding.service.DocumentService;
+import it.pagopa.selfcare.onboarding.service.NotificationEventService;
+import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.utils.*;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -23,7 +23,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
-import org.openapi.quarkus.document_json.model.RelatedDocumentResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.UserDataResponse;
 
@@ -149,7 +148,6 @@ public class NotificationEventServiceImpl implements NotificationEventService {
                         .id(document.getId())
                         .type(Objects.isNull(document.getType()) ? null : valueOf(document.getType().name()))
                         .fileName(document.getFileName())
-                        .type(document.getType())
                         .mimeType(document.getMimeType())
                         .createdAt(Objects.isNull(document.getCreatedAt())
                                 ? null

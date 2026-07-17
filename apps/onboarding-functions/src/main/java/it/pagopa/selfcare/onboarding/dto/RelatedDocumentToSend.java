@@ -22,7 +22,6 @@ public class RelatedDocumentToSend {
     private String id;
     private DocumentType type;
     private String fileName;
-    private String type;
     private String mimeType;
     @JsonSerialize(using = CustomOffsetDateTimeSerializer.class)
     private OffsetDateTime createdAt;

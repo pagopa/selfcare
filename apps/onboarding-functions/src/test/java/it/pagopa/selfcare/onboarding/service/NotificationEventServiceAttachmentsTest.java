@@ -3,8 +3,8 @@ package it.pagopa.selfcare.onboarding.service;
 import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.junit.QuarkusTestProfile;
+import io.quarkus.test.junit.TestProfile;
 import it.pagopa.selfcare.onboarding.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.onboarding.client.webhook.WebhookRestClient;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
@@ -33,16 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @TestProfile(NotificationEventServiceAttachmentsTest.AttachmentsEnabledProfile.class)
@@ -123,7 +116,7 @@ class NotificationEventServiceAttachmentsTest {
 
         ArgumentCaptor<NotificationRequest> webhookCaptor = ArgumentCaptor.forClass(NotificationRequest.class);
         verify(webhookRestClient).sendNotification(webhookCaptor.capture());
-        assertFalse(webhookCaptor.getValue().getPayload().contains("\"relatedDocuments\""));
+        assertTrue(webhookCaptor.getValue().getPayload().contains("\"relatedDocuments\""));
         verify(documentService).getRelatedDocuments("onboarding-id");
     }
 
