@@ -1602,7 +1602,7 @@
         } ]
       }
     },
-    "/v1/documents/{onboardingId}/related-documents" : {
+    "/v1/documents/{onboardingId}/attachments-detail" : {
       "get" : {
         "tags" : [ "Document Controller" ],
         "summary" : "Retrieve full details of all attachment documents for a given onboarding",

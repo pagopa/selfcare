@@ -1283,7 +1283,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /v1/documents/{onboardingId}/related-documents:
+  /v1/documents/{onboardingId}/attachments-detail:
     get:
       summary: Retrieve all related documents for a given onboarding
       description: "Returns the full metadata (id, name, fileName, filePath, mimeType,\

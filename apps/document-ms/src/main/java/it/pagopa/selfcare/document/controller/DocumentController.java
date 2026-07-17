@@ -129,9 +129,9 @@ public class DocumentController {
   )
   @GET
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("/{onboardingId}/related-documents")
+  @Path("/{onboardingId}/attachments-detail")
   public Uni<List<RelatedDocumentResponse>> getRelatedDocuments(@PathParam(value = "onboardingId") String onboardingId) {
-    log.info("Getting related documents for onboardingId: {}", sanitize(onboardingId));
+    log.info("Getting attachments detail for onboardingId: {}", sanitize(onboardingId));
     return documentService.getRelatedDocuments(onboardingId);
   }
 

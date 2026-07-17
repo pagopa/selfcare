@@ -550,7 +550,7 @@ class DocumentControllerTest {
     // when / then
     given()
         .when()
-        .get("/v1/documents/" + ONBOARDING_ID + "/related-documents")
+        .get("/v1/documents/" + ONBOARDING_ID + "/attachments-detail")
         .then()
         .statusCode(200)
         .body("size()", is(1))
