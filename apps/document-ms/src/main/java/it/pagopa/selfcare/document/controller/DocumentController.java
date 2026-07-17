@@ -9,6 +9,7 @@ import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
+import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
 import jakarta.inject.Inject;
@@ -118,6 +119,20 @@ public class DocumentController {
   public Uni<AvailableDocumentsResponse> getAvailableDocuments(@PathParam(value = "onboardingId") String onboardingId) {
     log.info("Getting available documents for onboardingId: {}", sanitize(onboardingId));
     return documentService.getAvailableDocuments(onboardingId);
+  }
+
+  @Operation(
+          summary = "Retrieve all related documents for a given onboarding",
+          description = "Returns the full metadata (id, name, fileName, filePath, mimeType, type, createdAt) " +
+                  "for all ATTACHMENT and USER documents linked to the root onboarding. " +
+                  "Intended for downstream integrations that need the complete document manifest (e.g. SAP gestionale di conservazione)."
+  )
+  @GET
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("/{onboardingId}/attachments-detail")
+  public Uni<List<RelatedDocumentResponse>> getRelatedDocuments(@PathParam(value = "onboardingId") String onboardingId) {
+    log.info("Getting attachments detail for onboardingId: {}", sanitize(onboardingId));
+    return documentService.getRelatedDocuments(onboardingId);
   }
 
   @Operation(

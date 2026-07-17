@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.utils.CustomOffsetDateTimeSerializer;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -35,6 +36,7 @@ public class NotificationToSend {
     private RootAggregator rootAggregator;
     private Boolean testInstitution;
     private String referenceOnboardingId;
+    private List<RelatedDocumentToSend> relatedDocuments;
 
     public void setContentType(String contractSigned) {
         String contractFileName = Objects.isNull(contractSigned) ? "" : contractSigned;

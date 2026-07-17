@@ -6,6 +6,9 @@ import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.document_json.model.RelatedDocumentResponse;
+
+import java.util.List;
 
 public interface DocumentService {
 
@@ -24,4 +27,6 @@ public interface DocumentService {
   DocumentResponse getDocumentByOnboardingId(String onboardingId);
 
   DocumentResponse getDocumentByOnboardingIdOrNull(String onboardingId);
+
+  List<RelatedDocumentResponse> getRelatedDocuments(String onboardingId);
 }

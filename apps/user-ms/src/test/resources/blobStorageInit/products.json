@@ -103,7 +103,8 @@
             "description": "Amministratore",
             "label": "Amministratore"
           }
-        ]
+        ],
+        "excludeRoleFromUserGroups": true
       }
     },
     "status": "ACTIVE",
@@ -228,6 +229,82 @@
         "contractTemplateVersion": "1.0.0"
       }
     }
+  },
+  {
+    "alias": "prod-pn-pg",
+    "allowCompanyOnboarding": true,
+    "allowedInstitutionTaxCode": [],
+    "allowIndividualOnboarding": false,
+    "contractTemplatePath": "string",
+    "contractTemplateVersion": "string",
+    "createdAt": "2023-03-22T10:47:17.782Z",
+    "createdBy": "760df42e-f513-4d94-9e3a-a0dda884ed92",
+    "depictImageUrl": "https://mock.url/default/depict-image.jpeg",
+    "description": "SEND description",
+    "enabled": true,
+    "expirationDate": 30,
+    "id": "prod-pn-pg",
+    "identityTokenAudience": "mockidentitytoken",
+    "institutionContractMappings": {
+      "PA": {
+        "contractTemplatePath": "string",
+        "contractTemplateVersion": "1.0.0"
+      }
+    },
+    "institutionOrigins": [
+      {
+        "institutionType": "PG",
+        "origin": "INFOCAMERE",
+        "labelKey": "pg"
+      },
+      {
+        "institutionType": "PG",
+        "origin": "ADE",
+        "labelKey": "pg"
+      }
+    ],
+    "logo": "https://mock.url/prod-pn-pg/logo",
+    "logoBgColor": "#0066CC",
+    "roleMappings": {
+      "MANAGER": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["onboarding"],
+        "roles": [
+          {
+            "code": "pg-admin",
+            "description": "Legge le notifiche dell'ente e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      },
+      "OPERATOR": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["dashboard"],
+        "roles": [
+          {
+            "code": "pg-operator",
+            "description": "Legge le notifiche dell'ente",
+            "label": "Tecnico"
+          }
+        ]
+      },
+      "SUB_DELEGATE": {
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": ["dashboard"],
+        "roles": [
+          {
+            "code": "pg-admin",
+            "description": "Ha tutti i permessi e gestisce gli utenti",
+            "label": "Amministratore"
+          }
+        ]
+      }
+    },
+    "status": "ACTIVE",
+    "title": "SEND",
+    "urlBO": "mockUrl",
+    "urlPublic": "mockUrlPublic",
+    "userContractMappings": {}
   },
   {
     "alias": "prod-pagopa",

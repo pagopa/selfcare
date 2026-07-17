@@ -1,18 +1,14 @@
 package it.pagopa.selfcare.user.controller.response;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
 @Data
-public class UserInstitutionResponse {
+@EqualsAndHashCode(callSuper = true)
+public class UserInstitutionResponse extends BaseUserInstitutionResponse {
 
-    private String id;
-    private String userId;
-    private String institutionId;
-    private String institutionDescription;
-    private String institutionRootName;
-    private String userMailUuid;
     private List<OnboardedProductResponse> products;
 
 }
