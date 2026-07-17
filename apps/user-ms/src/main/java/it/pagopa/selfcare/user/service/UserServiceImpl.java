@@ -216,11 +216,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Multi<UserInstitutionResponse> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
-        var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
-        var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
-        return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
-                .onItem().transform(filterAndSetProducts(roles, states, products, productRoles))
-                .onItem().transform(userInstitutionMapper::toResponse);
+        return findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles, userInstitutionMapper::toResponse);
+    }
+
+    @Override
+    public Multi<UserInstitutionDataResponse> findAllUserInstitutionsData(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles) {
+      return findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles, userInstitutionMapper::toDataResponse);
+    }
+
+    private <T> Multi<T> findAllUserInstitutions(String institutionId, String userId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, Function<UserInstitution, T> mapper) {
+      var userInstitutionFilters = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
+      var productFilters = OnboardedProductFilter.builder().productId(products).status(states).role(roles).productRole(productRoles).build().constructMap();
+      return userInstitutionService.findAllWithFilter(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+        .onItem().transform(filterAndSetProducts(roles, states, products, productRoles))
+        .onItem().transform(mapper);
     }
 
     @Override
@@ -845,7 +854,7 @@ public class UserServiceImpl implements UserService {
      * The function then retrieves the users by ID from userRegistry and maps for each element the userInstitution and userResource to a UserDataResponse object.
      */
     @Override
-    public Multi<UserDataResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userUuid) {
+    public Multi<UserDataWithProductInfoResponse> retrieveUsersData(String institutionId, String personId, List<String> roles, List<String> states, List<String> products, List<String> productRoles, String userUuid) {
         return retrieveAdminUserInstitution(institutionId, userUuid)
                 .onItem().ifNotNull().invoke(userInstitution -> log.info("admin userInstitution found: {}", userInstitution))
                 .onItem().transform(userInstitution -> userInstitution == null ? userUuid : personId)

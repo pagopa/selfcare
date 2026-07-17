@@ -832,7 +832,7 @@ class UserControllerTest {
     @TestSecurity(user = "userJwt")
     void retrieveUsers() {
         when(userService.retrieveUsersData("test_institutionId",  null, null, null, null, null, "test_userId"))
-                .thenReturn(Multi.createFrom().items(new UserDataResponse()));
+                .thenReturn(Multi.createFrom().items(new UserDataWithProductInfoResponse()));
 
         given()
                 .when()

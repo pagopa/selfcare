@@ -406,7 +406,7 @@ public class UserController {
     @GET
     @Path(value = "/{userId}/institution/{institutionId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Multi<UserDataResponse> retrieveUsers(@PathParam(value = "institutionId") String institutionId,
+    public Multi<UserDataWithProductInfoResponse> retrieveUsers(@PathParam(value = "institutionId") String institutionId,
                                                  @PathParam(value = "userId") String userId,
                                                  @QueryParam(value = "personId") String personId,
                                                  @QueryParam(value = "roles") List<String> roles,

@@ -11,9 +11,11 @@ import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
 import it.pagopa.selfcare.document.config.StorageRegistry;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
@@ -149,6 +151,64 @@ class DocumentServiceImplTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(documentRepository).findAttachments(ONBOARDING_ID);
+    }
+
+    @Test
+    void getRelatedDocuments_shouldResolveAttachmentAndUserDocumentMetadata() {
+        // given
+        Document systemAttachment = buildDocument();
+        systemAttachment.setType(DocumentType.ATTACHMENT);
+        systemAttachment.setStorageOrigin(StorageOrigin.SYSTEM);
+        systemAttachment.setAttachmentName("system-attachment");
+        systemAttachment.setContractSigned("/contracts/onboardingId/attachments/system.PDF");
+
+        Document userDocument = buildDocument();
+        userDocument.setType(DocumentType.USER);
+        userDocument.setStorageOrigin(StorageOrigin.SYSTEM);
+        userDocument.setAttachmentName(null);
+        userDocument.setContractSigned("/contracts/user-onboarding/user.pdf.p7m");
+
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentRepository.findAttachments(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(systemAttachment, userDocument)));
+
+        // when
+        List<RelatedDocumentResponse> result = documentService.getRelatedDocuments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        // then
+        assertEquals(2, result.size());
+        assertEquals("/contracts/onboardingId/attachments/system.PDF", result.get(0).getFilePath());
+        assertEquals("system.PDF", result.get(0).getFileName());
+        assertEquals("application/pdf", result.get(0).getMimeType());
+        assertEquals(DocumentType.ATTACHMENT, result.get(0).getType());
+        assertEquals("/contracts/user-onboarding/user.pdf.p7m", result.get(1).getFilePath());
+        assertEquals("application/pkcs7-mime", result.get(1).getMimeType());
+        assertEquals(DocumentType.USER, result.get(1).getType());
+        verify(documentRepository).findAttachments(ONBOARDING_ID);
+    }
+
+    @Test
+    void getRelatedDocuments_shouldBuildSystemPathWhenSignedPathIsMissing() {
+        // given
+        Document systemAttachment = buildDocument();
+        systemAttachment.setType(DocumentType.ATTACHMENT);
+        systemAttachment.setStorageOrigin(StorageOrigin.SYSTEM);
+        systemAttachment.setContractSigned(null);
+        systemAttachment.setContractFilename("generated.pdf");
+
+        when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
+        when(documentRepository.findAttachments(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(systemAttachment)));
+
+        // when
+        List<RelatedDocumentResponse> result = documentService.getRelatedDocuments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        // then
+        assertEquals(1, result.size());
+        assertEquals("/contracts/onboardingId/attachments/generated.pdf", result.get(0).getFilePath());
+        assertEquals("generated.pdf", result.get(0).getFileName());
     }
 
     // ---- getAvailableDocuments ----
