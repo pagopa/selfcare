@@ -19,6 +19,7 @@ import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
+import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.inject.Inject;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -96,6 +97,63 @@ class WebhookNotificationServiceTest {
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
     verify(httpRequest)
         .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
+  }
+
+  @Test
+  void processNotification_shouldPreserveQueryStringInRequestPath() {
+    // given
+    Webhook webhook = createWebhook("https://example.com/api/webhook?code=test-function-key");
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(200);
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification, webhook)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.awaitItem();
+
+    // then
+    verify(webClient)
+        .request(
+            eq(io.vertx.core.http.HttpMethod.POST),
+            eq(443),
+            eq("example.com"),
+            eq("/api/webhook?code=test-function-key"));
+  }
+
+  @Test
+  void processNotification_shouldPopulateAdditionalHeadersFromWebhook() {
+    // given
+    Webhook webhook = createWebhook();
+    webhook.setHeaders(
+        DataEncryptionConfig.encrypt(
+            Map.of("x-functions-key", "function-secret", "x-custom-header", "custom-value")));
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(200);
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        notificationService
+            .processNotification(notification, webhook)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.awaitItem();
+
+    // then
+    verify(httpRequest).putHeader("x-functions-key", "function-secret");
+    verify(httpRequest).putHeader("x-custom-header", "custom-value");
   }
 
   @Test
@@ -262,9 +320,13 @@ class WebhookNotificationServiceTest {
   }
 
   private Webhook createWebhook() {
+    return createWebhook("http://example.com/webhook");
+  }
+
+  private Webhook createWebhook(String url) {
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
-    webhook.setUrl("http://example.com/webhook");
+    webhook.setUrl(url);
     webhook.setHttpMethod("POST");
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 

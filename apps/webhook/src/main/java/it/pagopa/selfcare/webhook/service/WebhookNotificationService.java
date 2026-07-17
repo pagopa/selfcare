@@ -15,6 +15,7 @@ import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
+import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.net.URI;
@@ -159,6 +160,9 @@ public class WebhookNotificationService {
       URI uri = URI.create(webhook.getUrl());
       int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
       String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
+      if (uri.getRawQuery() != null && !uri.getRawQuery().isBlank()) {
+        path = path + "?" + uri.getRawQuery();
+      }
 
       var request =
           webClient
@@ -174,7 +178,7 @@ public class WebhookNotificationService {
 
       // Add custom headers
       if (webhook.getHeaders() != null) {
-        webhook.getHeaders().forEach(request::putHeader);
+        DataEncryptionConfig.decrypt(webhook.getHeaders()).forEach(request::putHeader);
       }
 
       return webhookJwtService
