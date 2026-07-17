@@ -5,10 +5,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
-import it.pagopa.selfcare.user.controller.response.DeletedUserCountResponse;
-import it.pagopa.selfcare.user.controller.response.UserInstitutionResponse;
-import it.pagopa.selfcare.user.controller.response.UserProductResponse;
-import it.pagopa.selfcare.user.controller.response.UsersCountResponse;
+import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
@@ -73,13 +70,13 @@ public class InstitutionController {
     @GET
     @Path(value = "/{institutionId}/user-institutions")
     @Produces(MediaType.APPLICATION_JSON)
-    public Multi<UserInstitutionResponse> retrieveUserInstitutions(@PathParam(value = "institutionId") String institutionId,
-                                                        @QueryParam(value = "userId") String userId,
-                                                        @QueryParam(value = "roles") List<String> roles,
-                                                        @QueryParam(value = "states") List<String> states,
-                                                        @QueryParam(value = "products") List<String> products,
-                                                        @QueryParam(value = "productRoles") List<String> productRoles) {
-        return userService.findAllUserInstitutions(institutionId, userId, roles, states, products, productRoles);
+    public Multi<UserInstitutionDataResponse> retrieveUserInstitutions(@PathParam(value = "institutionId") String institutionId,
+                                                                       @QueryParam(value = "userId") String userId,
+                                                                       @QueryParam(value = "roles") List<String> roles,
+                                                                       @QueryParam(value = "states") List<String> states,
+                                                                       @QueryParam(value = "products") List<String> products,
+                                                                       @QueryParam(value = "productRoles") List<String> productRoles) {
+        return userService.findAllUserInstitutionsData(institutionId, userId, roles, states, products, productRoles);
     }
 
     @Operation(
