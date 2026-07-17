@@ -12,8 +12,10 @@ import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
@@ -44,17 +46,20 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentMsConfig documentMsConfig;
     private final DocumentMsTelemetryService telemetryService;
     private final StorageRegistry storageRegistry;
+    private final DocumentMapper documentMapper;
 
     @Inject
     SignatureService signatureService;
 
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
                                DocumentMsTelemetryService telemetryService,
-                               StorageRegistry storageRegistry) {
+                               StorageRegistry storageRegistry,
+                               DocumentMapper documentMapper) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
         this.telemetryService = telemetryService;
         this.storageRegistry = storageRegistry;
+        this.documentMapper = documentMapper;
     }
 
     @Override
@@ -97,6 +102,28 @@ public class DocumentServiceImpl implements DocumentService {
                         .attachments(attachments)
                         .contractFilename(contractFilename)
                         .build());
+    }
+
+    @Override
+    public Uni<List<RelatedDocumentResponse>> getRelatedDocuments(String onboardingId) {
+        log.info("Retrieving related documents for onboardingId={}", sanitize(onboardingId));
+        return documentRepository.findAttachments(onboardingId)
+                .onItem().transform(documents -> documents.stream()
+                        .map(document -> documentMapper.toRelatedDocumentResponse(
+                                document,
+                                resolveRelatedDocumentPath(document)))
+                        .toList());
+    }
+
+    private String resolveRelatedDocumentPath(Document document) {
+        if (ATTACHMENT.equals(document.getType())) {
+            return DocumentFileUtils.buildAttachmentPath(document, documentMsConfig.getContractPath());
+        }
+        if (Objects.nonNull(document.getContractSigned()) && !document.getContractSigned().isBlank()) {
+            return document.getContractSigned();
+        }
+        return DocumentFileUtils.getContractNotSigned(
+                document.getOnboardingId(), documentMsConfig.getContractPath(), document.getContractFilename());
     }
 
     private String resolveSignedContractFilename(Document document) {

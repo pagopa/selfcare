@@ -14,6 +14,10 @@ import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.document_json.model.RelatedDocumentResponse;
+
+import java.util.Collections;
+import java.util.List;
 
 @ApplicationScoped
 @Slf4j
@@ -87,6 +91,18 @@ public class DocumentServiceImpl implements DocumentService {
     } catch (WebApplicationException e) {
       if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
         return null;
+      }
+      throw e;
+    }
+  }
+
+  @Override
+  public List<RelatedDocumentResponse> getRelatedDocuments(String onboardingId) {
+    try {
+      return documentControllerApi.getRelatedDocuments(onboardingId);
+    } catch (WebApplicationException e) {
+      if (e.getResponse() != null && e.getResponse().getStatus() == 404) {
+        return Collections.emptyList();
       }
       throw e;
     }
