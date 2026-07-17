@@ -36,10 +36,36 @@
     },
     "/webhooks" : {
       "get" : {
-        "summary" : "List all webhooks",
-        "description" : "Retrieve all webhook configurations",
+        "summary" : "List webhooks",
+        "description" : "Retrieve a paginated list of webhook configurations, optionally filtered by tenant",
         "operationId" : "listWebhooks",
         "tags" : [ "Webhook", "internal-v1" ],
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0,
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1,
+            "default" : 20
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -161,6 +187,14 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "required" : true
         } ],
         "responses" : {
           "200" : {
@@ -204,9 +238,13 @@
       },
       "NotificationRequest" : {
         "type" : "object",
-        "required" : [ "productId", "payload" ],
+        "required" : [ "productId", "tenantId", "payload" ],
         "properties" : {
           "productId" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "tenantId" : {
             "type" : "string",
             "pattern" : "\\S"
           },
@@ -260,9 +298,13 @@
       },
       "WebhookRequest" : {
         "type" : "object",
-        "required" : [ "url", "productId", "httpMethod" ],
+        "required" : [ "url", "tenantId", "productId", "httpMethod" ],
         "properties" : {
           "url" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "tenantId" : {
             "type" : "string",
             "pattern" : "\\S"
           },
@@ -287,6 +329,9 @@
       "WebhookResponse" : {
         "type" : "object",
         "properties" : {
+          "tenantId" : {
+            "type" : "string"
+          },
           "productId" : {
             "type" : "string"
           },
