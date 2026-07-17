@@ -6,6 +6,10 @@ import com.azure.messaging.servicebus.ServiceBusErrorContext;
 import com.azure.messaging.servicebus.ServiceBusProcessorClient;
 import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
+import io.smallrye.common.vertx.VertxContext;
+import io.vertx.core.Context;
+import io.vertx.mutiny.core.Vertx;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import jakarta.annotation.PreDestroy;
@@ -23,6 +27,7 @@ public class WebhookNotificationConsumer {
 
   @Inject WebhookNotificationRepository notificationRepository;
   @Inject WebhookNotificationService notificationService;
+  @Inject Vertx vertx;
 
   @ConfigProperty(name = "webhook.service-bus.enabled", defaultValue = "false")
   boolean enabled;
@@ -74,6 +79,13 @@ public class WebhookNotificationConsumer {
       return;
     }
 
+    Context processingContext = VertxContext.getOrCreateDuplicatedContext(vertx.getDelegate());
+    VertxContextSafetyToggle.setContextSafe(processingContext, true);
+    processingContext.runOnContext(ignored -> processNotification(context, notificationId));
+  }
+
+  private void processNotification(
+      ServiceBusReceivedMessageContext context, String notificationId) {
     notificationRepository
         .claimForProcessing(notificationId, 5)
         .onItem()
