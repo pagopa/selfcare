@@ -13,6 +13,7 @@ import it.pagopa.selfcare.dashboard.model.user.UserInfo;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.PageOfUserGroupResource;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UpdateUserGroupDto;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UserGroupResource;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductDataResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDetailResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
@@ -140,6 +141,53 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         assertEquals("Some members in the list aren't allowed for this institution", exception.getMessage());
     }
 
+  @Test
+  void updateUserGroupThrowsInvalidMemberListExceptionWhenRoleExcluded() {
+
+    String groupId = "groupId";
+    String userId = randomUUID().toString();
+
+    UpdateUserGroup group = mockInstance(new UpdateUserGroup());
+    group.setMembers(List.of(userId));
+
+    UserGroupInfo userGroupInfo = mockInstance(new UserGroupInfo());
+
+    UserInstitutionDataResponse userInstitutionResponse =
+      mockInstance(new UserInstitutionDataResponse(), "setUserId");
+    userInstitutionResponse.setUserId(userId);
+
+    OnboardedProductDataResponse productResponse = new OnboardedProductDataResponse();
+    productResponse.setExcludeRoleFromUserGroups(true);
+
+    userInstitutionResponse.setProducts(List.of(productResponse));
+
+
+    when(userGroupRestClient._getUserGroupUsingGET(groupId))
+      .thenReturn(ResponseEntity.ok(mockInstance(new UserGroupResource())));
+
+    when(groupMapper.toUserGroupInfo(any()))
+      .thenReturn(userGroupInfo);
+
+    when(userInstitutionApiRestClient._retrieveUserInstitutions(
+      "setInstitutionId",
+      null,
+      List.of("setProductId"),
+      null,
+      List.of("ACTIVE","SUSPENDED"),
+      null))
+      .thenReturn(ResponseEntity.ok(List.of(userInstitutionResponse)));
+
+
+    InvalidMemberListException exception = assertThrows(
+      InvalidMemberListException.class,
+      () -> userGroupV2Service.updateUserGroup(groupId, group)
+    );
+
+    assertEquals(
+      "Some members cannot be added to user groups because their roles are excluded.",
+      exception.getMessage());
+  }
+
     @Test
     void getUserGroupsNullInstitutionId() {
 
@@ -205,6 +253,42 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         InvalidMemberListException e = assertThrows(InvalidMemberListException.class, executable);
         assertEquals("Some members in the list aren't allowed for this institution", e.getMessage());
     }
+
+  @Test
+  void createGroup_userWithExcludedRoleThrowsInvalidMemberListException() {
+
+    CreateUserGroup userGroup = mockInstance(new CreateUserGroup());
+    String userId = randomUUID().toString();
+
+    userGroup.setMembers(List.of(userId));
+
+    UserInstitutionDataResponse userInstitutionResponse =
+      mockInstance(new UserInstitutionDataResponse(), "setUserId");
+    userInstitutionResponse.setUserId(userId);
+
+    OnboardedProductDataResponse productResponse = new OnboardedProductDataResponse();
+    productResponse.setExcludeRoleFromUserGroups(true);
+
+    userInstitutionResponse.setProducts(List.of(productResponse));
+
+    when(userInstitutionApiRestClient._retrieveUserInstitutions(
+      "setInstitutionId",
+      null,
+      List.of("setProductId"),
+      null,
+      List.of("ACTIVE","SUSPENDED"),
+      null))
+      .thenReturn(ResponseEntity.ok(Collections.singletonList(userInstitutionResponse)));
+
+    InvalidMemberListException exception = assertThrows(
+      InvalidMemberListException.class,
+      () -> userGroupV2Service.createUserGroup(userGroup)
+    );
+
+    assertEquals(
+      "Some members cannot be added to user groups because their roles are excluded.",
+      exception.getMessage());
+  }
 
     @Test
     void delete() {
@@ -298,6 +382,49 @@ class UserGroupV2ServiceImplTest extends BaseServiceTest {
         InvalidMemberListException e = assertThrows(InvalidMemberListException.class, executable);
         assertEquals("This user is not allowed for this group", e.getMessage());
     }
+
+  @Test
+  void addMemberToUserGroup_userWithExcludedRoleThrowsInvalidMemberListException() {
+
+    String groupId = "groupId";
+    String productId = "productId";
+    UUID userId = randomUUID();
+
+    UserGroupResource userGroupResource = new UserGroupResource();
+    userGroupResource.setProductId(productId);
+
+    UserInstitutionDataResponse userInstitutionResponse =
+      new UserInstitutionDataResponse();
+    userInstitutionResponse.setUserId(userId.toString());
+
+    OnboardedProductDataResponse productResponse = new OnboardedProductDataResponse();
+    productResponse.setExcludeRoleFromUserGroups(true);
+
+    userInstitutionResponse.setProducts(List.of(productResponse));
+
+
+    when(userGroupRestClient._getUserGroupUsingGET(groupId))
+      .thenReturn(ResponseEntity.ok(userGroupResource));
+
+    when(userInstitutionApiRestClient._retrieveUserInstitutions(
+      null,
+      null,
+      List.of(productId),
+      null,
+      List.of("ACTIVE","SUSPENDED"),
+      null))
+      .thenReturn(ResponseEntity.ok(List.of(userInstitutionResponse)));
+
+
+    InvalidMemberListException exception = assertThrows(
+      InvalidMemberListException.class,
+      () -> userGroupV2Service.addMemberToUserGroup(groupId, userId)
+    );
+
+    assertEquals(
+      "This user cannot be added to user groups because their role is excluded.",
+      exception.getMessage());
+  }
 
     @Test
     void addMemberToUserGroup_validMember() {
