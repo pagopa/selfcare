@@ -19,6 +19,23 @@ The generated OpenAPI specifications are the source of truth for request and res
 
 ## APIs
 
+### How to retrieve documents for an onboarding
+
+Multiple endpoints are available, each designed for a specific use case:
+
+| Use case | Endpoint | Returns |
+| --- | --- | --- |
+| Get the main contract metadata | `GET /v1/documents/onboarding/{onboardingId}` | Metadata of the main document (`INSTITUTION` or `USER`) |
+| List existing attachments | `GET /v1/documents/{onboardingId}/attachment-list` | List of attachment names (strings only) |
+| Check what is available for download | `GET /v1/documents/{onboardingId}/available-documents` | Attachment names + signed contract filename |
+| Get full detail of all attachments | `GET /v1/documents/{onboardingId}/attachments-detail` | List of objects with complete metadata (`ATTACHMENT`, `INSTITUTION`) |
+| Check whether a specific attachment exists in storage | `HEAD /v1/documents/{onboardingId}/attachment/status?name={name}` | `204` if present, `404` if absent |
+| Download the unsigned contract | `GET /v1/document-content/{onboardingId}/contract` | Unsigned contract PDF |
+| Download the signed contract | `GET /v1/document-content/{onboardingId}/contract-signed` | Signed contract PDF |
+| Download a specific attachment | `GET /v1/document-content/{onboardingId}/attachment?name={name}` | Attachment PDF |
+| Download an attachment template | `GET /v1/document-content/{onboardingId}/template-attachment` | Attachment template PDF |
+| Download the aggregates CSV | `GET /v1/document-content/aggregates-csv/{onboardingId}/products/{productId}` | Aggregates CSV |
+
 ### Document metadata
 
 | Method | Path | Description |
@@ -33,7 +50,7 @@ The generated OpenAPI specifications are the source of truth for request and res
 | `GET` | `/v1/documents/{onboardingId}/attachment-list` | Returns the attachment names associated with an onboarding. |
 | `HEAD` | `/v1/documents/{onboardingId}/attachment/status` | Checks whether a specific attachment is available. |
 | `GET` | `/v1/documents/{onboardingId}/available-documents` | Returns attachment names and the signed contract filename available for download. |
-| `GET` | `/v1/documents/{onboardingId}/related-documents` | Returns the complete snapshot of related `ATTACHMENT` and `USER` documents. |
+| `GET` | `/v1/documents/{onboardingId}/attachments-detail` | Returns the complete detail of all `ATTACHMENT` and `INSTITUTION` documents. |
 | `GET` | `/v1/documents/contract-report` | Checks whether the signed contract is a CAdES document. |
 
 ### Document content
@@ -60,19 +77,16 @@ The generated OpenAPI specifications are the source of truth for request and res
 | --- | --- | --- |
 | `POST` | `/v1/signature/verify` | Verifies the digital signature of a contract. |
 
-## Related documents snapshot
+## Attachments detail
 
-`GET /v1/documents/{onboardingId}/related-documents` reads all `ATTACHMENT` and `USER` records linked through `rootOnboardingId`, ordered by creation time. The main `INSTITUTION` contract remains represented by the existing root fields and is not duplicated in this collection.
-
-The response follows the flat SC-Contracts data contract:
+`GET /v1/documents/{onboardingId}/attachments-detail` returns the complete detail of all `ATTACHMENT` and `INSTITUTION` documents linked through `rootOnboardingId`, ordered by creation time.
 
 ```json
 [
   {
     "id": "document-uuid",
-    "name": "Visura_Camerale",
     "fileName": "visura.pdf",
-    "type": "attachment",
+    "type": "ATTACHMENT",
     "mimeType": "application/pdf",
     "createdAt": "2026-07-15T10:00:00",
     "filePath": "parties/docs/onboarding-id/attachments/visura.pdf"
@@ -80,8 +94,10 @@ The response follows the flat SC-Contracts data contract:
 ]
 ```
 
-Paths are resolved from `attachmentPath` for user-uploaded attachments and from `contractSigned`, with a generated-path fallback, for system-managed documents. Storage details remain internal and are not exposed in the SC-Contracts related-document representation.
+Allowed values for `type`: `INSTITUTION`, `ATTACHMENT`.
+
+File paths are resolved from `attachmentPath` for user-uploaded attachments, and from `contractSigned` (with a generated-path fallback) for system-managed documents.
 
 ## Compatibility
 
-The related-documents endpoint is additive and does not alter existing APIs. Queue enrichment is controlled by `STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED` in `onboarding-functions`; when disabled, the historical SC-Contracts payload remains unchanged.
+The `attachments-detail` endpoint is additive and does not alter existing APIs. Queue enrichment is controlled by `STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED` in `onboarding-functions`; when disabled, the historical SC-Contracts payload remains unchanged.
