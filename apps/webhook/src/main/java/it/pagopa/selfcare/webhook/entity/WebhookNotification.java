@@ -28,7 +28,7 @@ public class WebhookNotification {
   public enum NotificationStatus {
     PENDING,
     SENDING,
-    SUCCESS,
+    DELIVERED,
     FAILED,
     RETRY
   }

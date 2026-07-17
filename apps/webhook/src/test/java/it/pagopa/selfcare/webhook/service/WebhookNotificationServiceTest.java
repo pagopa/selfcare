@@ -91,7 +91,7 @@ class WebhookNotificationServiceTest {
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
     verify(notificationRepository, atLeastOnce()).update(captor.capture());
     WebhookNotification captured = captor.getValue();
-    assertEquals(WebhookNotification.NotificationStatus.SUCCESS, captured.getStatus());
+    assertEquals(WebhookNotification.NotificationStatus.DELIVERED, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
     verify(httpRequest)

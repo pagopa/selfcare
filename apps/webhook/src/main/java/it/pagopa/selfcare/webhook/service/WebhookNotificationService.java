@@ -215,10 +215,10 @@ public class WebhookNotificationService {
     int statusCode = response.statusCode();
 
     if (statusCode >= 200 && statusCode < 300) {
-      notification.setStatus(WebhookNotification.NotificationStatus.SUCCESS);
+      notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
       notification.setCompletedAt(LocalDateTime.now());
       log.info(
-          "Webhook notification sent successfully: {}, status: {}",
+          "Webhook notification delivered: {}, status: {}",
           notification.getId(),
           statusCode);
       return notificationRepository.update(notification).replaceWithVoid();
