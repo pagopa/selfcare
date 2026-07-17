@@ -49,11 +49,6 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
         return find("onboardingId = ?1 and type = ?2", onboardingId, ATTACHMENT.name()).list();
     }
 
-    public Uni<List<Document>> findRelatedDocuments(String rootOnboardingId) {
-        return find("rootOnboardingId = ?1 and type in ?2",
-                Sort.by("createdAt"), rootOnboardingId, RELATED_DOCUMENT_TYPES).list();
-    }
-
     /**
      * Counts USER-storage attachments matching a given {@code documentId} (RequiredDocument.id),
      * either exactly or with a numeric suffix like {@code documentId_2}, {@code documentId_3}.

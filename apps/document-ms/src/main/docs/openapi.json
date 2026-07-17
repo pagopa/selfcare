@@ -575,7 +575,9 @@
           "type" : {
             "description" : "Document type.",
             "type" : "string",
-            "enum" : [ "INSTITUTION", "ATTACHMENT" ]
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/DocumentType"
+            } ]
           },
           "mimeType" : {
             "description" : "MIME type derived from the file extension.",
@@ -1623,6 +1625,46 @@
         } ]
       }
     },
+    "/v1/documents/{onboardingId}/attachments-detail" : {
+      "get" : {
+        "summary" : "Retrieve all related documents for a given onboarding",
+        "description" : "Returns the full metadata (id, name, fileName, filePath, mimeType, type, createdAt) for all ATTACHMENT and USER documents linked to the root onboarding. Intended for downstream integrations that need the complete document manifest (e.g. SAP gestionale di conservazione).",
+        "operationId" : "getRelatedDocuments",
+        "tags" : [ "Document Controller" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RelatedDocumentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/documents/{onboardingId}/available-documents" : {
       "get" : {
         "summary" : "Retrieve the list of documents available for download for a given onboarding",
@@ -1686,46 +1728,6 @@
             "description" : "OK",
             "content" : {
               "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/documents/{onboardingId}/attachments-detail" : {
-      "get" : {
-        "summary" : "Retrieve all related documents for a given onboarding",
-        "description" : "Returns the full metadata (id, name, fileName, filePath, mimeType, type, createdAt) for all ATTACHMENT and USER documents linked to the root onboarding. Intended for downstream integrations that need the complete document manifest (e.g. SAP gestionale di conservazione).",
-        "operationId" : "getRelatedDocuments",
-        "tags" : [ "Document Controller" ],
-        "parameters" : [ {
-          "name" : "onboardingId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/RelatedDocumentResponse"
-                  }
-                }
-              }
             }
           },
           "401" : {

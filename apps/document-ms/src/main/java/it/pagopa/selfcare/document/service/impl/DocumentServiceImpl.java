@@ -107,7 +107,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public Uni<List<RelatedDocumentResponse>> getRelatedDocuments(String onboardingId) {
         log.info("Retrieving related documents for onboardingId={}", sanitize(onboardingId));
-        return documentRepository.findRelatedDocuments(onboardingId)
+        return documentRepository.findAttachments(onboardingId)
                 .onItem().transform(documents -> documents.stream()
                         .map(document -> documentMapper.toRelatedDocumentResponse(
                                 document,

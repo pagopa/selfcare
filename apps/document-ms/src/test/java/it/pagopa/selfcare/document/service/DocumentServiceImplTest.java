@@ -169,7 +169,7 @@ class DocumentServiceImplTest {
         userDocument.setContractSigned("/contracts/user-onboarding/user.pdf.p7m");
 
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
-        when(documentRepository.findRelatedDocuments(ONBOARDING_ID))
+        when(documentRepository.findAttachments(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(List.of(systemAttachment, userDocument)));
 
         // when
@@ -181,11 +181,11 @@ class DocumentServiceImplTest {
         assertEquals("/contracts/onboardingId/attachments/system.PDF", result.get(0).getFilePath());
         assertEquals("system.PDF", result.get(0).getFileName());
         assertEquals("application/pdf", result.get(0).getMimeType());
-        assertEquals("attachment", result.get(0).getType());
+        assertEquals(DocumentType.ATTACHMENT, result.get(0).getType());
         assertEquals("/contracts/user-onboarding/user.pdf.p7m", result.get(1).getFilePath());
         assertEquals("application/pkcs7-mime", result.get(1).getMimeType());
-        assertEquals("user", result.get(1).getType());
-        verify(documentRepository).findRelatedDocuments(ONBOARDING_ID);
+        assertEquals(DocumentType.USER, result.get(1).getType());
+        verify(documentRepository).findAttachments(ONBOARDING_ID);
     }
 
     @Test
@@ -198,7 +198,7 @@ class DocumentServiceImplTest {
         systemAttachment.setContractFilename("generated.pdf");
 
         when(documentMsConfig.getContractPath()).thenReturn("/contracts/");
-        when(documentRepository.findRelatedDocuments(ONBOARDING_ID))
+        when(documentRepository.findAttachments(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(List.of(systemAttachment)));
 
         // when
