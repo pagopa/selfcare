@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import it.pagopa.selfcare.onboarding.common.DocumentType;
+
 import java.time.OffsetDateTime;
 
 @Data
@@ -18,7 +20,7 @@ import java.time.OffsetDateTime;
 public class RelatedDocumentToSend {
 
     private String id;
-    private String name;
+    private DocumentType type;
     private String fileName;
     private String type;
     private String mimeType;

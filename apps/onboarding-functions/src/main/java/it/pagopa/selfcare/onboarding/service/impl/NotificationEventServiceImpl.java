@@ -31,6 +31,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static it.pagopa.selfcare.onboarding.common.DocumentType.valueOf;
 import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_FN_NAME;
 import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_INSTTITUTION_FN_SUCCESS;
 import static it.pagopa.selfcare.onboarding.utils.Utils.isNotInstitutionOnboarding;
@@ -146,7 +147,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         return documentService.getRelatedDocuments(onboardingId).stream()
                 .map(document -> RelatedDocumentToSend.builder()
                         .id(document.getId())
-                        .name(document.getName())
+                        .type(Objects.isNull(document.getType()) ? null : valueOf(document.getType().name()))
                         .fileName(document.getFileName())
                         .type(document.getType())
                         .mimeType(document.getMimeType())

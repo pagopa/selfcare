@@ -622,17 +622,14 @@
             "type" : "string",
             "description" : "Unique identifier of the document."
           },
-          "name" : {
-            "type" : "string",
-            "description" : "Logical name of the document."
-          },
           "fileName" : {
             "type" : "string",
             "description" : "Physical filename of the document as stored."
           },
           "type" : {
             "type" : "string",
-            "description" : "Document type."
+            "description" : "Document type.",
+            "enum" : [ "INSTITUTION", "ATTACHMENT" ]
           },
           "mimeType" : {
             "type" : "string",
