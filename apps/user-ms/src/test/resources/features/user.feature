@@ -203,8 +203,8 @@ Feature: User
     And The response body contains:
       | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The response body contains at path "institutions" the following list of objects in any order:
-      | institutionId                        | institutionName       | role    | status  |
-      | f2e4d6c8-9876-5432-ba10-abcdef123456 | Università di Bologna | MANAGER | PENDING |
+      | institutionId                        | institutionName       | role     | status  |
+      | f2e4d6c8-9876-5432-ba10-abcdef123456 | Università di Bologna | ADMIN_EA | PENDING |
 
   Scenario: Successfully get products info and role which the user is enabled with userId and states
     Given User login with username "j.doe" and password "test"
@@ -236,7 +236,7 @@ Feature: User
     And The response body contains at path "institutions" the following list of objects in any order:
       | institutionId                                   | institutionName                  | role                   | status              |
       | a1b2c3d4-5678-90ab-cdef-1234567890ab            | Regione Lazio                    | SUB_DELEGATE           | ACTIVE              |
-      | f2e4d6c8-9876-5432-ba10-abcdef123456            | Università di Bologna            | MANAGER                | PENDING             |
+      | f2e4d6c8-9876-5432-ba10-abcdef123456            | Università di Bologna            | ADMIN_EA               | PENDING             |
 
   Scenario: Unsuccessfully get products info and role which the user is enabled with userId and not present state
     Given User login with username "j.doe" and password "test"
@@ -4659,11 +4659,35 @@ Feature: User
       | [0].userResponse.workContacts.ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375      | 875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it  |
     And The response body contains the list "[0].products" of size 2
     And The response body contains at path "[0].products" the following list of objects in any order:
-      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    |
-      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z     |
-      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     |
+      | productId           | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    | excludeRoleFromUserGroups |
+      | prod-ciban          | a3d660df-649d-457c-b4e8-23f6b6e4d135    | PENDING       | referente amministrativo    | MANAGER     | ROOT    | 2022-09-21T16:44:30.773Z     | false                     |
+      | prod-pagopa         | f9a23bcd-6b2a-4f08-a7f3-1e6d5c9e8b74    | ACTIVE        | referente amministrativo    | MANAGER     | ROOT    | 2023-03-10T10:15:45.123Z     | false                     |
     And The response body doesn't contain field "[0].products[0].roleId"
     And The response body doesn't contain field "[0].products[1].roleId"
+
+  Scenario: Successfully retrieve a list of users with optional filters and permissions when excludeRoleFromUserGroups is true
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | userId                                                                              | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | institutionId                                                                       | f2e4d6c8-9876-5432-ba10-abcdef123456          |
+    When I send a GET request to "users/{userId}/institution/{institutionId}"
+    Then The status code is 200
+    And The response body contains:
+      | [0].userId                                                                          | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].institutionId                                                                   | f2e4d6c8-9876-5432-ba10-abcdef123456          |
+      | [0].institutionDescription                                                          | Università di Bologna                         |
+      | [0].userMailUuid                                                                    | ID_MAIL#123123-55555-efaz-12312-apclacpela    |
+      | [0].role                                                                            | ADMIN_EA                                      |
+      | [0].status                                                                          | PENDING                                       |
+      | [0].userResponse.id                                                                 | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7          |
+      | [0].userResponse.taxCode                                                            | blbrki80A41H401T                              |
+      | [0].userResponse.name                                                               | rocky                                         |
+      | [0].userResponse.surname                                                            | Balboa                                        |
+      | [0].userResponse.email                                                              | r.balboa@unibologna.it                        |
+    And The response body contains the list "[0].products" of size 1
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId        | tokenId                                 | status        | productRole                 | role        | env     | createdAt                    | excludeRoleFromUserGroups |
+      | prod-io          | ghi78901-2345-6789-abcd-ef0123456789    | PENDING       | referente amministrativo    | ADMIN_EA    | ROOT    | 2024-02-10T12:15:45.89Z      | true                      |
 
   Scenario: Successfully retrieve a list of users with optional filters and permissions without personId
     Given User login with username "j.doe" and password "test"
