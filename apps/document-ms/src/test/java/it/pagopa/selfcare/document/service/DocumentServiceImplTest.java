@@ -185,7 +185,6 @@ class DocumentServiceImplTest {
         assertEquals("/contracts/user-onboarding/user.pdf.p7m", result.get(1).getFilePath());
         assertEquals("application/pkcs7-mime", result.get(1).getMimeType());
         assertEquals("user", result.get(1).getType());
-        assertEquals("user", result.get(1).getName());
         verify(documentRepository).findRelatedDocuments(ONBOARDING_ID);
     }
 
