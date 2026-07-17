@@ -7,8 +7,8 @@ import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class UserDataResponse extends BaseUserDataResponse {
+public class UserInstitutionDataResponse extends BaseUserInstitutionResponse {
 
-    private List<OnboardedProductResponse> products;
+    private List<OnboardedProductDataResponse> products;
 
 }
