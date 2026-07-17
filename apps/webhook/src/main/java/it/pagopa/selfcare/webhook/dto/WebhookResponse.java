@@ -9,6 +9,7 @@ import lombok.Data;
 public class WebhookResponse {
 
   //    private String id;
+  private String tenantId;
   private String productId;
   private String description;
   private String url;

@@ -530,6 +530,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/BackOfficeRole"
+        excludeRoleFromUserGroups:
+          type: boolean
     SigningConfiguration:
       type: object
       properties:

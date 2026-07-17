@@ -7,6 +7,7 @@ import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
@@ -16,6 +17,7 @@ import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
 import it.pagopa.selfcare.onboarding.web.handler.TokenExceptionHandler;
+import it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType;
 import it.pagopa.selfcare.onboarding.web.model.OnboardingRequestResource;
 import it.pagopa.selfcare.onboarding.web.model.ReasonForRejectDto;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapperImpl;
@@ -46,6 +48,8 @@ import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
 
+import static it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType.ATTACHMENT;
+import static it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType.CONTRACT_SIGNED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -728,5 +732,222 @@ class TokenV2ControllerTest {
     onboardingData.setUsers(List.of(user));
 
     return onboardingData;
+  }
+
+  /**
+   * Method under test: {@link TokenV2Controller#getAvailableDocuments(String)}
+   */
+  @Test
+  void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename() throws Exception {
+    // given
+    String onboardingId = UUID.randomUUID().toString();
+    AvailableDocuments source = new AvailableDocuments();
+    source.setAttachments(List.of("attachment1.pdf", "attachment2.pdf"));
+    source.setContractFilename("contract.pdf");
+    when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(source);
+
+    // when / then
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
+                    .accept(APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments", org.hamcrest.Matchers.hasSize(2)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments[0]").value("attachment1.pdf"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments[1]").value("attachment2.pdf"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").value("contract.pdf"));
+
+    verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
+  }
+
+  /**
+   * When the onboarding has no signed contract (e.g. state TOBEVALIDATED),
+   * document-ms returns contractFilename=null and the BFF must not expose it
+   * (thanks to @JsonInclude(NON_NULL) on the resource).
+   */
+  @Test
+  void getAvailableDocuments_shouldOmitContractFilenameWhenAbsent() throws Exception {
+    // given
+    String onboardingId = UUID.randomUUID().toString();
+    AvailableDocuments source = new AvailableDocuments();
+    source.setAttachments(List.of("attachment1.pdf"));
+    source.setContractFilename(null);
+    when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(source);
+
+    // when / then
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
+                    .accept(APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments", org.hamcrest.Matchers.hasSize(1)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").doesNotExist());
+
+    verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
+  }
+
+  /**
+   * Verifies that the endpoint is annotated with @PreAuthorize referencing the
+   * expected permission. Actual enforcement is covered by integration tests, since
+   * this @WebMvcTest slice excludes {@link SecurityAutoConfiguration}.
+   */
+  @Test
+  void getAvailableDocuments_shouldBeProtectedByPreAuthorize() throws NoSuchMethodException {
+    Method method = TokenV2Controller.class.getMethod("getAvailableDocuments", String.class);
+    PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
+    assertNotNull(preAuthorize, "getAvailableDocuments must be annotated with @PreAuthorize");
+    assertTrue(preAuthorize.value().contains(PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS),
+            "@PreAuthorize must reference SELC_VIEW_ACCOUNT_DOCUMENTS permission");
+    assertTrue(preAuthorize.value().contains("authorizationService.hasPermission"),
+            "@PreAuthorize must delegate to authorizationService.hasPermission");
+  }
+
+  /**
+   * Method under test: {@link TokenV2Controller#downloadDocument(String, DownloadDocumentType, String)}
+   * <p>
+   * type=CONTRACT_SIGNED: must delegate to {@code tokenService.getContractSigned} and ignore {@code name}.
+   */
+  @Test
+  void downloadDocument_shouldDownloadContractSigned() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+    Resource resource = Mockito.mock(Resource.class);
+    when(resource.getInputStream()).thenReturn(new ByteArrayInputStream("contract-bytes".getBytes()));
+    when(tokenService.getContractSigned(onboardingId)).thenReturn(resource);
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .queryParam("type", CONTRACT_SIGNED.name())
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isOk());
+
+    verify(tokenService, times(1)).getContractSigned(onboardingId);
+    verify(tokenService, never()).getAttachment(anyString(), anyString());
+  }
+
+  /**
+   * type=CONTRACT_SIGNED with an ignored {@code name} query param: still delegates to getContractSigned,
+   * name is discarded.
+   */
+  @Test
+  void downloadDocument_shouldDownloadContractSigned_ignoringName() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+    Resource resource = Mockito.mock(Resource.class);
+    when(resource.getInputStream()).thenReturn(new ByteArrayInputStream("contract-bytes".getBytes()));
+    when(tokenService.getContractSigned(onboardingId)).thenReturn(resource);
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .queryParam("type", CONTRACT_SIGNED.name())
+                    .queryParam("name", "ignored.pdf")
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isOk());
+
+    verify(tokenService, times(1)).getContractSigned(onboardingId);
+    verify(tokenService, never()).getAttachment(anyString(), anyString());
+  }
+
+  /**
+   * type=ATTACHMENT + name: must delegate to {@code tokenService.getAttachment}.
+   */
+  @Test
+  void downloadDocument_shouldDownloadAttachment() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+    String attachmentName = "statuto.pdf";
+    Resource resource = Mockito.mock(Resource.class);
+    when(resource.getInputStream()).thenReturn(new ByteArrayInputStream("attachment-bytes".getBytes()));
+    when(tokenService.getAttachment(onboardingId, attachmentName)).thenReturn(resource);
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .queryParam("type", ATTACHMENT.name())
+                    .queryParam("name", attachmentName)
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isOk());
+
+    verify(tokenService, times(1)).getAttachment(onboardingId, attachmentName);
+    verify(tokenService, never()).getContractSigned(anyString());
+  }
+
+  /**
+   * type=ATTACHMENT without {@code name}: must fail with 400 (InvalidRequestException) and
+   * never invoke the service.
+   */
+  @Test
+  void downloadDocument_shouldReturnBadRequest_whenAttachmentAndNameMissing() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .queryParam("type", ATTACHMENT.name())
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isBadRequest());
+
+    verify(tokenService, never()).getAttachment(anyString(), anyString());
+    verify(tokenService, never()).getContractSigned(anyString());
+  }
+
+  /**
+   * type=ATTACHMENT with blank {@code name}: same behavior as missing name → 400.
+   */
+  @Test
+  void downloadDocument_shouldReturnBadRequest_whenAttachmentAndNameBlank() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .queryParam("type", ATTACHMENT.name())
+                    .queryParam("name", "   ")
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isBadRequest());
+
+    verify(tokenService, never()).getAttachment(anyString(), anyString());
+    verify(tokenService, never()).getContractSigned(anyString());
+  }
+
+  /**
+   * Missing {@code type} query param → 400 (Spring binding failure).
+   */
+  @Test
+  void downloadDocument_shouldReturnBadRequest_whenTypeMissing() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isBadRequest());
+
+    verify(tokenService, never()).getAttachment(anyString(), anyString());
+    verify(tokenService, never()).getContractSigned(anyString());
+  }
+
+  /**
+   * Invalid enum value for {@code type} → 400 (Spring conversion failure).
+   */
+  @Test
+  void downloadDocument_shouldReturnBadRequest_whenTypeInvalid() throws Exception {
+    String onboardingId = UUID.randomUUID().toString();
+
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/download", onboardingId)
+                    .queryParam("type", "UNKNOWN_TYPE")
+                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+            .andExpect(status().isBadRequest());
+
+    verify(tokenService, never()).getAttachment(anyString(), anyString());
+    verify(tokenService, never()).getContractSigned(anyString());
+  }
+
+  /**
+   * Verifies that the download endpoint is annotated with @PreAuthorize referencing the
+   * expected permission. Actual enforcement is covered by integration tests.
+   */
+  @Test
+  void downloadDocument_shouldBeProtectedByPreAuthorize() throws NoSuchMethodException {
+    Method method = TokenV2Controller.class.getMethod(
+            "downloadDocument", String.class, DownloadDocumentType.class, String.class);
+    PreAuthorize preAuthorize = method.getAnnotation(PreAuthorize.class);
+    assertNotNull(preAuthorize, "downloadDocument must be annotated with @PreAuthorize");
+    assertTrue(preAuthorize.value().contains(PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS),
+            "@PreAuthorize must reference SELC_VIEW_ACCOUNT_DOCUMENTS permission");
+    assertTrue(preAuthorize.value().contains("authorizationService.hasPermission"),
+            "@PreAuthorize must delegate to authorizationService.hasPermission");
   }
 }

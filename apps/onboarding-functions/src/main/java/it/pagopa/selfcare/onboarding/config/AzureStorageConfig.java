@@ -2,12 +2,22 @@ package it.pagopa.selfcare.onboarding.config;
 
 import io.smallrye.config.ConfigMapping;
 
+import java.util.Optional;
+
 @ConfigMapping(prefix = "onboarding-functions.blob-storage")
 public interface AzureStorageConfig {
 
-  String connectionStringContract();
+  Optional<String> connectionStringContract();
 
-  String connectionStringProduct();
+  Optional<String> connectionStringProduct();
+
+  Optional<String> accountNameContract();
+
+  Optional<String> accountNameProduct();
+
+  Optional<String> managedIdentityClientIdContract();
+
+  Optional<String> managedIdentityClientIdProduct();
 
   String containerContract();
 

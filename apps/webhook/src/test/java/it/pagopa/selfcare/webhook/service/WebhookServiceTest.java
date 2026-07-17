@@ -17,15 +17,19 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @QuarkusTest
 class WebhookServiceTest {
 
   private static final String PROD_TEST = "prod-test";
+  private static final String TENANT_ID = "SELC";
   @Inject WebhookService webhookService;
 
   @InjectMock WebhookRepository webhookRepository;
@@ -39,6 +43,7 @@ class WebhookServiceTest {
     WebhookRequest request = new WebhookRequest();
     request.setUrl("http://example.com");
     request.setHttpMethod("POST");
+    request.setTenantId(TENANT_ID);
     request.setProductId(PROD_TEST);
 
     WebhookRequest.RetryPolicyRequest retryPolicyRequest = new WebhookRequest.RetryPolicyRequest();
@@ -60,6 +65,7 @@ class WebhookServiceTest {
             .withSubscriber(UniAssertSubscriber.create());
 
     WebhookResponse response = subscriber.awaitItem().getItem();
+    assertEquals(TENANT_ID, response.getTenantId());
     assertEquals(PROD_TEST, response.getProductId());
     assertEquals("ACTIVE", response.getStatus());
     assertEquals(1, response.getProducts().size());
@@ -72,19 +78,53 @@ class WebhookServiceTest {
 
   @Test
   void listWebhooks_shouldReturnListOfWebhooks() {
+    // given
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
+    webhook.setTenantId(TENANT_ID);
     webhook.setProductId(PROD_TEST);
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
-    when(webhookRepository.listAll()).thenReturn(Uni.createFrom().item(List.of(webhook)));
+    when(webhookRepository.findWebhooks(TENANT_ID, 0, 20))
+        .thenReturn(Uni.createFrom().item(List.of(webhook)));
 
+    // when
     UniAssertSubscriber<List<WebhookResponse>> subscriber =
-        webhookService.listWebhooks().subscribe().withSubscriber(UniAssertSubscriber.create());
+        webhookService
+            .listWebhooks(TENANT_ID, 0, 20)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
 
+    // then
     List<WebhookResponse> responses = subscriber.awaitItem().getItem();
     assertEquals(1, responses.size());
+    assertEquals(TENANT_ID, responses.get(0).getTenantId());
     assertEquals(PROD_TEST, responses.get(0).getProductId());
+    verify(webhookRepository).findWebhooks(TENANT_ID, 0, 20);
+  }
+
+  @Test
+  void listWebhooks_shouldReturnAllTenants_whenTenantIdIsNotProvided() {
+    // given
+    Webhook webhook = new Webhook();
+    webhook.setId(new ObjectId());
+    webhook.setTenantId(TENANT_ID);
+    webhook.setProductId(PROD_TEST);
+    webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    when(webhookRepository.findWebhooks(null, 0, 20))
+        .thenReturn(Uni.createFrom().item(List.of(webhook)));
+
+    // when
+    UniAssertSubscriber<List<WebhookResponse>> subscriber =
+        webhookService
+            .listWebhooks(null, 0, 20)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    assertEquals(1, subscriber.awaitItem().getItem().size());
+    verify(webhookRepository).findWebhooks(null, 0, 20);
   }
 
   @Test
@@ -92,6 +132,7 @@ class WebhookServiceTest {
     ObjectId id = new ObjectId();
     Webhook webhook = new Webhook();
     webhook.setId(id);
+    webhook.setTenantId(TENANT_ID);
     webhook.setProductId(PROD_TEST);
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
@@ -106,6 +147,7 @@ class WebhookServiceTest {
 
     WebhookResponse response = subscriber.awaitItem().getItem();
     assertNotNull(response);
+    assertEquals(TENANT_ID, response.getTenantId());
     assertEquals(PROD_TEST, response.getProductId());
   }
 
@@ -127,6 +169,7 @@ class WebhookServiceTest {
     ObjectId id = new ObjectId();
     Webhook existingWebhook = new Webhook();
     existingWebhook.setId(id);
+    existingWebhook.setTenantId(TENANT_ID);
     existingWebhook.setProductId(PROD_TEST);
     existingWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
     existingWebhook.setUrl("http://old-url.com");
@@ -134,8 +177,9 @@ class WebhookServiceTest {
     WebhookRequest request = new WebhookRequest();
     request.setUrl("http://new-url.com");
     request.setHttpMethod("PUT");
+    request.setTenantId(TENANT_ID);
 
-    when(webhookRepository.findWebhookByProduct(anyString()))
+    when(webhookRepository.findWebhookByProduct(anyString(), anyString()))
         .thenReturn(Uni.createFrom().item(existingWebhook));
     when(webhookRepository.update(any(Webhook.class)))
         .thenReturn(Uni.createFrom().item(existingWebhook));
@@ -156,8 +200,10 @@ class WebhookServiceTest {
   void updateWebhook_shouldFail_whenNotFound() {
     WebhookRequest request = new WebhookRequest();
     request.setUrl("http://404-url.com");
+    request.setTenantId(TENANT_ID);
 
-    when(webhookRepository.findByIdOptional(anyString())).thenReturn(Uni.createFrom().nullItem());
+    when(webhookRepository.findWebhookByProduct(anyString(), anyString()))
+        .thenReturn(Uni.createFrom().nullItem());
 
     UniAssertSubscriber<WebhookResponse> subscriber =
         webhookService
@@ -202,18 +248,66 @@ class WebhookServiceTest {
   }
 
   @Test
+  void deleteWebhookByProductId_shouldDeleteAndReturnTrue() {
+    // given
+    ObjectId id = new ObjectId();
+    Webhook webhook = new Webhook();
+    webhook.setId(id);
+    webhook.setTenantId(TENANT_ID);
+    webhook.setProductId(PROD_TEST);
+
+    when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(webhook));
+    when(webhookRepository.deleteByIdSafe(id.toHexString())).thenReturn(Uni.createFrom().item(true));
+
+    // when
+    UniAssertSubscriber<Boolean> subscriber =
+        webhookService
+            .deleteWebhookByProductId(PROD_TEST, TENANT_ID)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    assertTrue(subscriber.awaitItem().getItem());
+    verify(webhookRepository).findWebhookByProduct(PROD_TEST, TENANT_ID);
+    verify(webhookRepository).deleteByIdSafe(id.toHexString());
+  }
+
+  @Test
+  void deleteWebhookByProductId_shouldFail_whenWebhookIsNotFound() {
+    // given
+    when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    UniAssertSubscriber<Boolean> subscriber =
+        webhookService
+            .deleteWebhookByProductId(PROD_TEST, TENANT_ID)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitFailure();
+    verify(webhookRepository).findWebhookByProduct(PROD_TEST, TENANT_ID);
+    verify(webhookRepository, never()).deleteByIdSafe(anyString());
+  }
+
+  @Test
   void sendNotification_shouldCreateNotificationsForActiveWebhooks() {
+    // given
     String productId = "prod-io";
     NotificationRequest request = new NotificationRequest();
     request.setProductId(productId);
+    request.setTenantId(TENANT_ID);
     request.setPayload("{}");
 
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
+    webhook.setTenantId(TENANT_ID);
     webhook.setProducts(List.of(productId));
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
-    when(webhookRepository.findActiveWebhooksByProduct(productId))
+    when(webhookRepository.findActiveWebhooksByProduct(productId, TENANT_ID))
         .thenReturn(Uni.createFrom().item(List.of(webhook)));
     when(notificationRepository.persist(any(WebhookNotification.class)))
         .thenAnswer(
@@ -225,6 +319,7 @@ class WebhookServiceTest {
     when(notificationService.processNotification(any(), any()))
         .thenReturn(Uni.createFrom().voidItem());
 
+    // when
     UniAssertSubscriber<Void> subscriber =
         webhookService
             .sendNotification(request)
@@ -233,19 +328,28 @@ class WebhookServiceTest {
 
     subscriber.awaitItem();
 
-    verify(notificationRepository).persist(any(WebhookNotification.class));
+    // then
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository).persist(captor.capture());
+    String expectedPayload =
+        Base64.getEncoder().encodeToString(request.getPayload().getBytes(StandardCharsets.UTF_8));
+    assertEquals(expectedPayload, captor.getValue().getPayload());
+    assertEquals(TENANT_ID, captor.getValue().getTenantId());
     verify(notificationService).processNotification(any(WebhookNotification.class), eq(webhook));
   }
 
   @Test
   void sendNotification_shouldDoNothing_whenNoActiveWebhooks() {
+    // given
     String productId = "prod-io";
     NotificationRequest request = new NotificationRequest();
     request.setProductId(productId);
+    request.setTenantId(TENANT_ID);
 
-    when(webhookRepository.findActiveWebhooksByProduct(productId))
+    when(webhookRepository.findActiveWebhooksByProduct(productId, TENANT_ID))
         .thenReturn(Uni.createFrom().item(Collections.emptyList()));
 
+    // when
     UniAssertSubscriber<Void> subscriber =
         webhookService
             .sendNotification(request)
@@ -254,6 +358,7 @@ class WebhookServiceTest {
 
     subscriber.awaitItem();
 
+    // then
     verify(notificationRepository, never()).persist(any(WebhookNotification.class));
   }
 }

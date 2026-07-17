@@ -765,4 +765,182 @@ class UserUtilTest {
   }
 
 
+  /**
+   * Test: isExcludeRoleFromUserGroups should return true when product is null
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenProductIsNull() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.MANAGER);
+
+    when(productService.getProduct("test-product")).thenReturn(null);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups should return true when roleMappings is null
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenRoleMappingsIsNull() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.MANAGER);
+    Product product = new Product();
+    product.setRoleMappings(null);
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups should return true when onboardedProduct role is null
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenOnboardedProductRoleIsNull() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", null);
+    Product product = new Product();
+    product.setRoleMappings(Map.of());
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups should return true when roleInfo is null
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenRoleInfoIsNull() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.MANAGER);
+    Product product = new Product();
+    product.setRoleMappings(Map.of()); // Empty mapping, so MANAGER will not be found
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups should return true when roleInfo.isExcludeRoleFromUserGroups is true
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenRoleInfoExcludeFlagIsTrue() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.MANAGER);
+
+    ProductRoleInfo roleInfo = new ProductRoleInfo();
+    roleInfo.setExcludeRoleFromUserGroups(true);
+
+    Product product = new Product();
+    product.setRoleMappings(Map.of(PartyRole.MANAGER, roleInfo));
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups should return false when roleInfo.isExcludeRoleFromUserGroups is false
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnFalse_whenRoleInfoExcludeFlagIsFalse() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.DELEGATE);
+
+    ProductRoleInfo roleInfo = new ProductRoleInfo();
+    roleInfo.setExcludeRoleFromUserGroups(false);
+
+    Product product = new Product();
+    product.setRoleMappings(Map.of(PartyRole.DELEGATE, roleInfo));
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertFalse(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups with multiple roles - test OPERATOR role
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnFalse_whenOperatorRoleExcludeFlagIsFalse() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.OPERATOR);
+
+    ProductRoleInfo operatorRoleInfo = new ProductRoleInfo();
+    operatorRoleInfo.setExcludeRoleFromUserGroups(false);
+
+    ProductRoleInfo managerRoleInfo = new ProductRoleInfo();
+    managerRoleInfo.setExcludeRoleFromUserGroups(true);
+
+    Product product = new Product();
+    product.setRoleMappings(Map.of(
+      PartyRole.OPERATOR, operatorRoleInfo,
+      PartyRole.MANAGER, managerRoleInfo
+    ));
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertFalse(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups with ADMIN_EA role
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenAdminEARoleExcludeFlagIsTrue() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.ADMIN_EA);
+
+    ProductRoleInfo adminEARoleInfo = new ProductRoleInfo();
+    adminEARoleInfo.setExcludeRoleFromUserGroups(true);
+
+    Product product = new Product();
+    product.setRoleMappings(Map.of(PartyRole.ADMIN_EA, adminEARoleInfo));
+
+    when(productService.getProduct("test-product")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups with SUB_DELEGATE role
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnFalse_whenSubDelegateRoleExcludeFlagIsFalse() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-prod", PartyRole.SUB_DELEGATE);
+
+    ProductRoleInfo subDelegateRoleInfo = new ProductRoleInfo();
+    subDelegateRoleInfo.setExcludeRoleFromUserGroups(false);
+
+    Product product = new Product();
+    product.setRoleMappings(Map.of(PartyRole.SUB_DELEGATE, subDelegateRoleInfo));
+
+    when(productService.getProduct("test-prod")).thenReturn(product);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertFalse(result);
+  }
+
+  // Helper method
+  private OnboardedProduct createOnboardedProduct(String productId, PartyRole role) {
+    OnboardedProduct onboardedProduct = new OnboardedProduct();
+    onboardedProduct.setProductId(productId);
+    onboardedProduct.setRole(role);
+    onboardedProduct.setStatus(OnboardedProductState.ACTIVE);
+    return onboardedProduct;
+  }
+
+
 }

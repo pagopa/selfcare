@@ -11,6 +11,9 @@ public class WebhookRequest {
   @NotBlank(message = "URL is required")
   private String url;
 
+  @NotBlank(message = "Tenant ID is required")
+  private String tenantId;
+
   @NotBlank(message = "ProductId is required")
   private String productId;
 

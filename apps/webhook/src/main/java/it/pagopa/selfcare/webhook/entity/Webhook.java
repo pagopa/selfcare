@@ -12,6 +12,7 @@ import org.bson.types.ObjectId;
 public class Webhook {
 
   private ObjectId id;
+  private String tenantId;
   private String productId;
   private String description;
   private String url;
