@@ -72,10 +72,12 @@ resource "azurerm_servicebus_queue" "this" {
   name         = var.queue_name
   namespace_id = local.namespace.id
 
-  lock_duration                        = "PT1M"
-  max_delivery_count                   = 10
-  default_message_ttl                  = "P14D"
-  dead_lettering_on_message_expiration = true
+  lock_duration                           = "PT1M"
+  max_delivery_count                      = 10
+  default_message_ttl                     = "P14D"
+  dead_lettering_on_message_expiration    = true
+  requires_duplicate_detection            = true
+  duplicate_detection_history_time_window = "PT10M"
 }
 
 resource "azurerm_monitor_diagnostic_setting" "this" {

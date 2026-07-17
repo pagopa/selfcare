@@ -28,7 +28,7 @@ public class WebhookService {
 
   @Inject WebhookNotificationRepository notificationRepository;
 
-  @Inject WebhookNotificationService notificationService;
+  @Inject WebhookNotificationPublisher notificationPublisher;
 
   public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
     Webhook webhook = new Webhook();
@@ -161,9 +161,11 @@ public class WebhookService {
               notification.setWebhookId(webhook.getId());
               notification.setTenantId(webhook.getTenantId());
               notification.setPayload(encodePayload(request.getPayload()));
-              notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
+              notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
               notification.setAttemptCount(0);
               notification.setCreatedAt(LocalDateTime.now());
+              notification.setPublishing(true);
+              notification.setPublishingUntil(LocalDateTime.now().plusMinutes(5));
 
               return notificationRepository
                   .persist(notification)
@@ -175,7 +177,15 @@ public class WebhookService {
                               webhook.getId(),
                               Sanitizer.sanitizeString(request.getProductId()),
                               Sanitizer.sanitizeString(request.getTenantId())))
-                  .call(n -> notificationService.processNotification(n, webhook));
+                  .call(
+                      n ->
+                          notificationPublisher
+                              .publish(n.getId().toHexString())
+                              .call(ignored -> notificationRepository.markAsPublished(n.getId()))
+                              .onFailure()
+                              .call(
+                                  error ->
+                                      notificationRepository.releasePublishingLock(n.getId())));
             })
         .collect()
         .asList()

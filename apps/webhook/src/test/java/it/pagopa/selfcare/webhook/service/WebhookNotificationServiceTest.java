@@ -57,7 +57,8 @@ class WebhookNotificationServiceTest {
     when(httpRequest.ssl(anyBoolean())).thenReturn(httpRequest);
     when(httpRequest.timeout(anyLong())).thenReturn(httpRequest);
     when(httpRequest.putHeader(anyString(), anyString())).thenReturn(httpRequest);
-    when(webhookJwtService.generateNotificationToken(any(Webhook.class), any(WebhookNotification.class)))
+    when(webhookJwtService.generateNotificationToken(
+            any(Webhook.class), any(WebhookNotification.class)))
         .thenReturn(Uni.createFrom().item("signed-token"));
 
     Object serviceInstance = io.quarkus.arc.ClientProxy.unwrap(notificationService);
@@ -93,7 +94,8 @@ class WebhookNotificationServiceTest {
     assertEquals(WebhookNotification.NotificationStatus.SUCCESS, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
-    verify(httpRequest).sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
+    verify(httpRequest)
+        .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
   }
 
   @Test
@@ -183,7 +185,8 @@ class WebhookNotificationServiceTest {
   void processNotification_shouldComplete_whenNotificationIsNotFound() {
     // given
     String notificationId = new ObjectId().toHexString();
-    when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().nullItem());
 
     // when
     UniAssertSubscriber<Void> subscriber =

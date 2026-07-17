@@ -19,6 +19,9 @@ public class WebhookNotification {
   private LocalDateTime createdAt;
   private LocalDateTime lastAttemptAt;
   private LocalDateTime completedAt;
+  private LocalDateTime busPublishedAt;
+  private Boolean publishing = false;
+  private LocalDateTime publishingUntil;
   private Boolean processing = false;
   private LocalDateTime processingUntil;
 

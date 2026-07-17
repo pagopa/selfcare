@@ -16,6 +16,11 @@ module "local" {
   container_app_min_replicas     = 0
 }
 
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
 ###############################################################################
 # CosmosDB
 ###############################################################################
@@ -111,6 +116,22 @@ locals {
     {
       name  = "MONGODB_DATABASE_NAME"
       value = "selcWebhook"
+    },
+    {
+      name  = "WEBHOOK_SERVICE_BUS_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "WEBHOOK_SERVICE_BUS_NAMESPACE"
+      value = "${module.service_bus.namespace_name}.servicebus.windows.net"
+    },
+    {
+      name  = "WEBHOOK_SERVICE_BUS_QUEUE"
+      value = module.service_bus.queue_name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }
   ]
 

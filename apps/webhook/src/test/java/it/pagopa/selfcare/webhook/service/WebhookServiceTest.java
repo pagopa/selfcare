@@ -36,7 +36,7 @@ class WebhookServiceTest {
 
   @InjectMock WebhookNotificationRepository notificationRepository;
 
-  @InjectMock WebhookNotificationService notificationService;
+  @InjectMock WebhookNotificationPublisher notificationPublisher;
 
   @Test
   void createWebhook_shouldCreateAndReturnWebhook() {
@@ -258,7 +258,8 @@ class WebhookServiceTest {
 
     when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
         .thenReturn(Uni.createFrom().item(webhook));
-    when(webhookRepository.deleteByIdSafe(id.toHexString())).thenReturn(Uni.createFrom().item(true));
+    when(webhookRepository.deleteByIdSafe(id.toHexString()))
+        .thenReturn(Uni.createFrom().item(true));
 
     // when
     UniAssertSubscriber<Boolean> subscriber =
@@ -316,8 +317,8 @@ class WebhookServiceTest {
               notification.setId(new ObjectId());
               return Uni.createFrom().item(notification);
             });
-    when(notificationService.processNotification(any(), any()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
 
     // when
     UniAssertSubscriber<Void> subscriber =
@@ -335,7 +336,9 @@ class WebhookServiceTest {
         Base64.getEncoder().encodeToString(request.getPayload().getBytes(StandardCharsets.UTF_8));
     assertEquals(expectedPayload, captor.getValue().getPayload());
     assertEquals(TENANT_ID, captor.getValue().getTenantId());
-    verify(notificationService).processNotification(any(WebhookNotification.class), eq(webhook));
+    assertEquals(WebhookNotification.NotificationStatus.PENDING, captor.getValue().getStatus());
+    verify(notificationPublisher).publish(captor.getValue().getId().toHexString());
+    verify(notificationRepository).markAsPublished(captor.getValue().getId());
   }
 
   @Test

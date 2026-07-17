@@ -3,7 +3,6 @@ package it.pagopa.selfcare.webhook.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -67,7 +66,6 @@ public class WebhookNotificationService {
     }
   }
 
-  @Scheduled(every = "10s")
   public Uni<Void> processFailedNotifications() {
     init();
     // Lock notifications for 5 minutes - if processing takes longer, lock expires
@@ -128,8 +126,10 @@ public class WebhookNotificationService {
         .transformToUni(
             webhook -> {
               if (webhook == null) {
-                log.error("Webhook not found for notification: {}", notification.getId().toString());
-                return markNotificationAsFailed(notification, "Webhook not found").replaceWithVoid();
+                log.error(
+                    "Webhook not found for notification: {}", notification.getId().toString());
+                return markNotificationAsFailed(notification, "Webhook not found")
+                    .replaceWithVoid();
               }
               return processNotification(notification, webhook);
             });
@@ -169,7 +169,8 @@ public class WebhookNotificationService {
                   path)
               .ssl(uri.getScheme().equals("https"))
               .timeout(readTimeout)
-              .putHeader("Content-Type", "application/json");
+              .putHeader("Content-Type", "application/json")
+              .putHeader("X-Webhook-Notification-Id", notification.getId().toHexString());
 
       // Add custom headers
       if (webhook.getHeaders() != null) {
