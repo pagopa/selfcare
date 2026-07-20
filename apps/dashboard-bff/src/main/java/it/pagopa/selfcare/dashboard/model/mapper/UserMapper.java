@@ -49,7 +49,7 @@ public interface UserMapper {
     @Mapping(target = "role", expression = "java(it.pagopa.selfcare.commons.base.security.PartyRole.valueOf(userDashboardResponse.getRole()).getSelfCareAuthority())")
     @Mapping(target = "products", expression = "java(toProductInfoMap(userDashboardResponse.getProducts()))")
     @Mapping(target = "user.mobilePhone", expression = "java(toCertifiedField(userResponse.getMobilePhone()))")
-    UserInfo toUserInfo(UserDataResponse userDashboardResponse);
+    UserInfo toUserInfo(UserDataWithProductInfoResponse userDashboardResponse);
 
     @Mapping(target = "fiscalCode", source = "user.taxCode")
     @Mapping(target = "partyRole", expression = "java(mapPartyRole(latest))")
@@ -93,10 +93,10 @@ public interface UserMapper {
     }
 
     @Named("toProductInfoMap")
-    default Map<String, ProductInfo> toProductInfoMap(List<OnboardedProductResponse> products) {
+    default Map<String, ProductInfo> toProductInfoMap(List<OnboardedProductDataResponse> products) {
         Map<String, ProductInfo> productInfoMap = new HashMap<>();
         if (products != null && !products.isEmpty()) {
-            Map<String, List<OnboardedProductResponse>> map = products.stream().collect(Collectors.groupingBy(OnboardedProductResponse::getProductId));
+            Map<String, List<OnboardedProductDataResponse>> map = products.stream().collect(Collectors.groupingBy(OnboardedProductDataResponse::getProductId));
             map.forEach((s, onboardedProducts) -> {
                 ProductInfo productInfo = new ProductInfo();
                 onboardedProducts.forEach(onboardedProduct -> {
@@ -109,6 +109,7 @@ public interface UserMapper {
                     roleInfo.setPartyRole(onboardedProduct.getRole());
                     roleInfo.setCreatedAt(onboardedProduct.getCreatedAt());
                     roleInfo.setUpdatedAt(onboardedProduct.getUpdatedAt());
+                    roleInfo.setExcludeRoleFromUserGroups(onboardedProduct.getExcludeRoleFromUserGroups());
                     if (productInfo.getRoleInfos() == null)
                         productInfo.setRoleInfos(new ArrayList<>());
                     productInfo.getRoleInfos().add(roleInfo);
@@ -120,15 +121,15 @@ public interface UserMapper {
     }
 
     @Mapping(target = "products", expression = "java(toOnboardedProducts(userInstitutionResponse.getProducts()))")
-    UserInstitution toUserInstitution(UserInstitutionResponse userInstitutionResponse);
+    UserInstitution toUserInstitution(UserInstitutionDataResponse userInstitutionResponse);
 
     @Named("toOnboardedProducts")
-    List<OnboardedProduct> toOnboardedProducts(List<OnboardedProductResponse> onboardedProductResponse);
+    List<OnboardedProduct> toOnboardedProducts(List<OnboardedProductDataResponse> onboardedProductResponse);
 
     @Mapping(target = "status", expression = "java(it.pagopa.selfcare.dashboard.model.institution.RelationshipState.valueOf(onboardedProductResponse.getStatus().name()))")
     @Mapping(target = "env", expression = "java(it.pagopa.selfcare.commons.base.utils.Env.valueOf(onboardedProductResponse.getEnv().name()))")
     @Mapping(target = "role", expression = "java(it.pagopa.selfcare.commons.base.security.PartyRole.valueOf(onboardedProductResponse.getRole()))")
-    OnboardedProduct toOnboardedProducts(OnboardedProductResponse onboardedProductResponse);
+    OnboardedProduct toOnboardedProducts(OnboardedProductDataResponse onboardedProductResponse);
 
     UserOtpEmailInfo toUserOtpEmailInfo(UserOtpEmailInfoResponse userOtpEmailInfoResponse);
 
@@ -159,6 +160,7 @@ public interface UserMapper {
             resource.setPartyRole(model.getPartyRole());
             resource.setCreatedAt(model.getCreatedAt());
             resource.setUpdatedAt(model.getUpdatedAt());
+            resource.setExcludeRoleFromUserGroups(model.isExcludeRoleFromUserGroups());
         }
         return resource;
     }

@@ -20,7 +20,7 @@ import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionWithActions;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserProductResponse;
 import org.junit.jupiter.api.Assertions;
@@ -132,7 +132,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         List<UserInfo> userInfo = objectMapper.readValue(resourceStream, new TypeReference<>() {
         });
 
-        UserDataResponse userData = new UserDataResponse();
+        UserDataWithProductInfoResponse userData = new UserDataWithProductInfoResponse();
         userData.setUserId("123e4567-e89b-12d3-a456-426614174000");
         userData.setRole("MANAGER");
 

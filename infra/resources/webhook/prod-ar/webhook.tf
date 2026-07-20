@@ -19,6 +19,11 @@ module "local" {
   container_app_memory           = "2.5Gi"
 }
 
+data "azurerm_user_assigned_identity" "cae_identity" {
+  name                = "${module.local.config.container_app_environment_name}-managed_identity"
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
 
 ###############################################################################
 # CosmosDB
@@ -67,6 +72,37 @@ module "collection_webhook_notifications" {
 }
 
 ###############################################################################
+# Service Bus
+###############################################################################
+
+module "service_bus" {
+  source = "../../_modules/azure_service_bus"
+
+  environment = {
+    prefix          = "selc"
+    env_short       = module.local.config.env_short
+    location        = module.local.config.location
+    location_short  = module.local.config.location_short
+    app_name        = "webhook"
+    instance_number = "01"
+  }
+
+  resource_group_name = module.local.config.ca_resource_group_name
+  # Premium disables public access and connects through the private endpoint.
+  sku                                         = "Premium"
+  private_endpoint_subnet_name                = "${module.local.config.project}-private-endpoints-snet"
+  virtual_network_name                        = module.local.vnet_selc_name
+  virtual_network_resource_group_name         = module.local.vnet_resource_group_name
+  private_dns_zone_resource_group_name        = module.local.vnet_resource_group_name
+  container_app_environment_identity_name     = "${module.local.config.container_app_environment_name}-managed_identity"
+  log_analytics_workspace_name                = "${module.local.config.project}-law"
+  log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
+  subscription_id                             = module.local.subscription_id
+  queue_name                                  = "webhook-notifications"
+  tags                                        = module.local.config.tags
+}
+
+###############################################################################
 # Container App
 ###############################################################################
 
@@ -86,6 +122,22 @@ locals {
     {
       name  = "MONGODB_DATABASE_NAME"
       value = "selcWebhook"
+    },
+    {
+      name  = "WEBHOOK_SERVICE_BUS_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "WEBHOOK_SERVICE_BUS_NAMESPACE"
+      value = "${module.service_bus.namespace_name}.servicebus.windows.net"
+    },
+    {
+      name  = "WEBHOOK_SERVICE_BUS_QUEUE"
+      value = module.service_bus.queue_name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }
   ]
 

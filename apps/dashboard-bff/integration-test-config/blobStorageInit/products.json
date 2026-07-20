@@ -98,7 +98,8 @@
             "description": "Amministratore",
             "label": "Amministratore"
           }
-        ]
+        ],
+        "excludeRoleFromUserGroups": true
       }
     },
     "status": "ACTIVE",

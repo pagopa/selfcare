@@ -5,6 +5,7 @@ import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
 import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
+import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 
 import java.util.List;
@@ -24,6 +25,8 @@ public interface DocumentService {
      * the attachment names and, if present, the contractFilename.
     */
     Uni<AvailableDocumentsResponse> getAvailableDocuments(String onboardingId);
+
+    Uni<List<RelatedDocumentResponse>> getRelatedDocuments(String onboardingId);
 
     Uni<ContractSignedReport> reportContractSigned(String onboardingId);
 

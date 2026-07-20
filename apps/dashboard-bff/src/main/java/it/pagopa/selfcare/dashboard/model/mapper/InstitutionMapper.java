@@ -6,6 +6,7 @@ import it.pagopa.selfcare.dashboard.model.product.PartyProduct;
 import it.pagopa.selfcare.dashboard.model.product.ProductOnBoardingStatus;
 import it.pagopa.selfcare.dashboard.model.user.UserInstitution;
 import it.pagopa.selfcare.dashboard.model.institution.Billing;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionRoleResponse;
 import org.mapstruct.Mapper;
@@ -48,7 +49,7 @@ public interface InstitutionMapper {
     @Mapping(target = "category", expression = "java(getCategory(institution.getAttributes()))")
     Institution toInstitution(InstitutionResponse institution);
 
-    UserInstitution toInstitution(UserInstitutionResponse institutionResponse);
+    UserInstitution toInstitution(UserInstitutionDataResponse institutionResponse);
 
     InstitutionPut toInstitutionPut(UpdateInstitutionResource updateInstitutionResource);
 

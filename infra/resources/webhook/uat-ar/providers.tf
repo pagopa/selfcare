@@ -3,6 +3,7 @@ terraform {
 
   required_providers {
     azurerm = { source = "hashicorp/azurerm", version = "~> 4.0" }
+    dx      = { source = "pagopa-dx/azure", version = "~> 0.12" }
   }
 
   backend "azurerm" {
@@ -18,3 +19,5 @@ provider "azurerm" {
   features {}
   storage_use_azuread = true
 }
+
+provider "dx" {}

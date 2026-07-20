@@ -51,7 +51,8 @@ public class WebhookController {
   @GET
   @Operation(
       summary = "List webhooks",
-      description = "Retrieve a paginated list of webhook configurations, optionally filtered by tenant",
+      description =
+          "Retrieve a paginated list of webhook configurations, optionally filtered by tenant",
       operationId = "listWebhooks")
   @Tag(name = "Webhook")
   @Tag(name = "internal-v1")
@@ -71,8 +72,7 @@ public class WebhookController {
   @Tag(name = "Webhook")
   @Tag(name = "external-v2")
   public Uni<Response> getWebhook(
-      @PathParam("productId") String productId,
-      @NotBlank @QueryParam("tenantId") String tenantId) {
+      @PathParam("productId") String productId, @NotBlank @QueryParam("tenantId") String tenantId) {
     return webhookService
         .getWebhookByProductId(
             Sanitizer.sanitizeString(productId), Sanitizer.sanitizeString(tenantId))

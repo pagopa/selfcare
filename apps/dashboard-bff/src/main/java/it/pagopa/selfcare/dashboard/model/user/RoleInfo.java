@@ -16,4 +16,5 @@ public class RoleInfo {
     private String partyRole;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private boolean excludeRoleFromUserGroups;
 }
