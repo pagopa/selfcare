@@ -83,6 +83,7 @@ public class NotificationEventServiceDefaultTest {
       .sendMessage(anyString(), anyString());
     verify(webhookRestClient, times(3))
       .sendNotification(any(NotificationRequest.class));
+    verify(documentService, never()).getRelatedDocuments(anyString());
   }
 
   @Test

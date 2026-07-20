@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.webhook.repository;
 
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.FindOneAndUpdateOptions;
 import com.mongodb.client.model.ReturnDocument;
+import com.mongodb.client.model.Updates;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepository;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -76,6 +78,87 @@ public class WebhookNotificationRepository
     notification.setProcessing(false);
     notification.setProcessingUntil(null);
     return update(notification);
+  }
+
+  public Uni<WebhookNotification> claimForProcessing(
+      String notificationId, int lockDurationMinutes) {
+    LocalDateTime now = LocalDateTime.now();
+    Document query =
+        new Document("_id", new ObjectId(notificationId))
+            .append(
+                "status",
+                new Document(
+                    "$in",
+                    List.of(
+                        WebhookNotification.NotificationStatus.PENDING.name(),
+                        WebhookNotification.NotificationStatus.RETRY.name())))
+            .append(
+                "$or",
+                List.of(
+                    new Document("processing", new Document("$ne", true)),
+                    new Document("processingUntil", new Document("$lt", now))));
+
+    Document update =
+        new Document(
+            "$set",
+            new Document("processing", true)
+                .append("processingUntil", now.plusMinutes(lockDurationMinutes)));
+
+    return mongoCollection()
+        .findOneAndUpdate(
+            query, update, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
+  }
+
+  public Uni<Void> markAsPublished(ObjectId notificationId) {
+    return mongoCollection()
+        .updateOne(
+            Filters.eq("_id", notificationId),
+            Updates.combine(
+                Updates.set("busPublishedAt", LocalDateTime.now()),
+                Updates.set("publishing", false),
+                Updates.unset("publishingUntil")))
+        .replaceWithVoid();
+  }
+
+  public Uni<Void> releasePublishingLock(ObjectId notificationId) {
+    return mongoCollection()
+        .updateOne(
+            Filters.eq("_id", notificationId),
+            Updates.combine(Updates.set("publishing", false), Updates.unset("publishingUntil")))
+        .replaceWithVoid();
+  }
+
+  public Uni<List<WebhookNotification>> claimUnpublishedNotifications(
+      int limit, int lockDurationMinutes) {
+    LocalDateTime now = LocalDateTime.now();
+    Document query =
+        new Document("status", WebhookNotification.NotificationStatus.PENDING.name())
+            .append("busPublishedAt", null)
+            .append(
+                "$or",
+                List.of(
+                    new Document("publishing", new Document("$ne", true)),
+                    new Document("publishingUntil", new Document("$lt", now))));
+    Document update =
+        new Document(
+            "$set",
+            new Document("publishing", true)
+                .append("publishingUntil", now.plusMinutes(lockDurationMinutes)));
+
+    return Multi.createBy()
+        .repeating()
+        .uni(
+            () ->
+                mongoCollection()
+                    .findOneAndUpdate(
+                        query,
+                        update,
+                        new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)))
+        .atMost(limit)
+        .filter(Objects::nonNull)
+        .map(doc -> mongoCollection().getDocumentClass().cast(doc))
+        .collect()
+        .asList();
   }
 
   public Uni<List<WebhookNotification>> findByWebhookId(String webhookId) {

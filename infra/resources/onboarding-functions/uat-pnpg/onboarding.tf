@@ -94,6 +94,7 @@ locals {
       "FD_TOPIC_NAME"                                      = "Selfcare-FD"
       "SAP_ALLOWED_INSTITUTION_TYPE"                       = "PA,GSP,SA,AS,SCP"
       "SAP_ALLOWED_ORIGINS"                                = "IPA,SELC"
+      "STANDARD_NOTIFICATION_RELATED_DOCUMENTS_ENABLED"    = "false"
       "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"          = "5"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
