@@ -57,7 +57,8 @@ class WebhookRepositoryTest {
     persistWebhook(PNPG, PRODUCT_ID, Webhook.WebhookStatus.ACTIVE, LocalDateTime.now());
 
     // when
-    List<Webhook> tenantWebhooks = webhookRepository.findWebhooks(SELC, 0, 1).await().indefinitely();
+    List<Webhook> tenantWebhooks =
+        webhookRepository.findWebhooks(SELC, 0, 1).await().indefinitely();
     List<Webhook> allWebhooks = webhookRepository.findWebhooks(null, 0, 10).await().indefinitely();
 
     // then
@@ -109,7 +110,8 @@ class WebhookRepositoryTest {
         persistWebhook(SELC, PRODUCT_ID, Webhook.WebhookStatus.ACTIVE, LocalDateTime.now());
 
     // when
-    Webhook found = webhookRepository.findByIdOptional(persisted.getId().toHexString()).await().indefinitely();
+    Webhook found =
+        webhookRepository.findByIdOptional(persisted.getId().toHexString()).await().indefinitely();
     boolean deleted =
         webhookRepository.deleteByIdSafe(persisted.getId().toHexString()).await().indefinitely();
     Webhook deletedWebhook =
@@ -123,10 +125,7 @@ class WebhookRepositoryTest {
   }
 
   private Webhook persistWebhook(
-      String tenantId,
-      String productId,
-      Webhook.WebhookStatus status,
-      LocalDateTime createdAt) {
+      String tenantId, String productId, Webhook.WebhookStatus status, LocalDateTime createdAt) {
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
     webhook.setTenantId(tenantId);
