@@ -214,7 +214,7 @@ class UserV2ServiceImplTest extends BaseServiceTest {
         Collection<UserInfo> userInfo = objectMapper.readValue(resourceStream, new TypeReference<>() {
         });
 
-        UserDataResponse user = new UserDataResponse();
+        UserDataWithProductInfoResponse user = new UserDataWithProductInfoResponse();
         user.setRole("MANAGER");
 
         when(userApiRestClient._retrieveUsers(institutionId, loggedUserId, null, productRoles, List.of(productId), null, null))

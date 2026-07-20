@@ -19,8 +19,8 @@ import it.pagopa.selfcare.group.generated.openapi.v1.dto.PageOfUserGroupResource
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UpdateUserGroupDto;
 import it.pagopa.selfcare.group.generated.openapi.v1.dto.UserGroupResource;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductState;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -32,6 +32,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static it.pagopa.selfcare.dashboard.model.institution.RelationshipState.ACTIVE;
@@ -63,13 +64,20 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
         userInfoFilter.setProductId(group.getProductId());
         userInfoFilter.setAllowedStates(List.of(ACTIVE, SUSPENDED));
 
-        List<String> retrievedId = retrieveIds(group.getInstitutionId(), userInfoFilter);
+        Map<String, Boolean> retrievedUsers = retrieveIds(group.getInstitutionId(), userInfoFilter);
 
         if (group.getMembers().stream()
-                .filter(uuid -> Collections.binarySearch(retrievedId, uuid) >= 0)
-                .count() != group.getMembers().size()) {
-            throw new InvalidMemberListException("Some members in the list aren't allowed for this institution");
+          .anyMatch(uuid -> !retrievedUsers.containsKey(uuid))) {
+          throw new InvalidMemberListException(
+            "Some members in the list aren't allowed for this institution");
         }
+
+        if (group.getMembers().stream()
+          .anyMatch(uuid -> Boolean.TRUE.equals(retrievedUsers.get(uuid)))) {
+          throw new InvalidMemberListException(
+            "Some members cannot be added to user groups because their roles are excluded.");
+        }
+
         Assert.notNull(group, "A User Group is required");
         CreateUserGroupDto userGroupDto = groupMapper.toCreateUserGroupDto(group);
         userGroupDto.setStatus(CreateUserGroupDto.StatusEnum.ACTIVE);
@@ -99,28 +107,38 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
         log.trace("activate end");
     }
 
-    private List<String> retrieveIds(String institutionId, UserInfo.UserInfoFilter userInfoFilter) {
-        List<String> retrievedUsers = retrieveFilteredUserInstitution(
-                institutionId,
-                userInfoFilter);
-        return retrievedUsers.stream()
-                .sorted()
-                .toList();
-    }
+  private Map<String, Boolean> retrieveIds(String institutionId, UserInfo.UserInfoFilter userInfoFilter) {
+    return retrieveFilteredUserInstitution(institutionId, userInfoFilter).entrySet().stream()
+      .sorted(Map.Entry.comparingByKey())
+      .collect(Collectors.toMap(
+        Map.Entry::getKey,
+        Map.Entry::getValue,
+        (a, b) -> a,
+        LinkedHashMap::new
+      ));
+  }
 
-    private List<String> retrieveFilteredUserInstitution(String institutionId, UserInfo.UserInfoFilter userInfoFilter) {
-        return Optional.ofNullable(userInstitutionApiRestClient._retrieveUserInstitutions(institutionId,
-                                null,
-                                List.of(userInfoFilter.getProductId()),
-                                null,
-                                Optional.ofNullable(userInfoFilter.getAllowedStates())
-                                        .map(relationshipStates -> relationshipStates.stream().map(Enum::name).toList())
-                                        .orElse(null),
-                                null)
-                        .getBody()).map(userInstitutionResponses -> userInstitutionResponses.stream()
-                        .map(UserInstitutionResponse::getUserId).toList())
-                .orElse(Collections.emptyList());
-    }
+  private Map<String, Boolean> retrieveFilteredUserInstitution(String institutionId, UserInfo.UserInfoFilter userInfoFilter) {
+    return Optional.ofNullable(userInstitutionApiRestClient._retrieveUserInstitutions(
+          institutionId,
+          null,
+          List.of(userInfoFilter.getProductId()),
+          null,
+          Optional.ofNullable(userInfoFilter.getAllowedStates())
+            .map(states -> states.stream().map(Enum::name).toList())
+            .orElse(null),
+          null)
+        .getBody())
+      .map(responses -> responses.stream()
+        .collect(Collectors.toMap(
+          UserInstitutionDataResponse::getUserId,
+          response -> Optional.ofNullable(response.getProducts())
+            .orElse(Collections.emptyList())
+            .stream()
+            .anyMatch(product -> Boolean.TRUE.equals(product.getExcludeRoleFromUserGroups()))
+        )))
+      .orElse(Collections.emptyMap());
+  }
 
     @Override
     public void suspend(String groupId) {
@@ -142,12 +160,18 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
         userInfoFilter.setProductId(userGroupInfo.getProductId());
         userInfoFilter.setAllowedStates(List.of(ACTIVE, SUSPENDED));
 
-        List<String> retrievedId = retrieveIds(userGroupInfo.getInstitutionId(), userInfoFilter);
+        Map<String, Boolean> retrievedUsers = retrieveIds(userGroupInfo.getInstitutionId(), userInfoFilter);
 
         if (group.getMembers().stream()
-                .filter(uuid -> Collections.binarySearch(retrievedId, uuid) >= 0)
-                .count() != group.getMembers().size()) {
-            throw new InvalidMemberListException("Some members in the list aren't allowed for this institution");
+          .anyMatch(uuid -> !retrievedUsers.containsKey(uuid))) {
+          throw new InvalidMemberListException(
+            "Some members in the list aren't allowed for this institution");
+        }
+
+        if (group.getMembers().stream()
+          .anyMatch(uuid -> Boolean.TRUE.equals(retrievedUsers.get(uuid)))) {
+          throw new InvalidMemberListException(
+            "Some members cannot be added to user groups because their roles are excluded.");
         }
         UpdateUserGroupDto updateUserGroupDto = groupMapper.toUpdateUserGroupDto(group);
         userGroupRestClient._updateUserGroupUsingPUT(groupId, updateUserGroupDto);
@@ -169,9 +193,14 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
         UserInfo.UserInfoFilter userInfoFilter = new UserInfo.UserInfoFilter();
         userInfoFilter.setProductId(retrievedGroup.getProductId());
         userInfoFilter.setAllowedStates(List.of(ACTIVE, SUSPENDED));
-        List<String> retrievedIds = retrieveIds(retrievedGroup.getInstitutionId(), userInfoFilter);
-        if (!retrievedIds.contains(userId.toString())) {
-            throw new InvalidMemberListException("This user is not allowed for this group");
+        Map<String, Boolean> retrievedUsers = retrieveIds(retrievedGroup.getInstitutionId(), userInfoFilter);
+
+        if (!retrievedUsers.containsKey(userId.toString())) {
+          throw new InvalidMemberListException("This user is not allowed for this group");
+        }
+
+        if (Boolean.TRUE.equals(retrievedUsers.get(userId.toString()))) {
+          throw new InvalidMemberListException("This user cannot be added to user groups because their role is excluded.");
         }
         userGroupRestClient._addMemberToUserGroupUsingPUT(groupId, userId);
         log.trace("addMemberToUserGroup end");
@@ -229,7 +258,7 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
 
     private UserInfo getUserByUserIdInstitutionIdAndProductAndStates(String userId, String institutionId, String productId, List<String> states) {
         log.trace("getUserByUserIdInstitutionIdAndProduct start");
-        List<UserDataResponse> institutionResponses = userApiRestClient._retrieveUsers(institutionId, userId, userId, null, List.of(productId), null, states)
+        List<UserDataWithProductInfoResponse> institutionResponses = userApiRestClient._retrieveUsers(institutionId, userId, userId, null, List.of(productId), null, states)
                 .getBody();
 
         if (CollectionUtils.isEmpty(institutionResponses) || institutionResponses.size() != 1) {
@@ -314,7 +343,7 @@ public class UserGroupV2ServiceImpl implements UserGroupV2Service {
         log.trace("retrieveFilteredUser start");
         log.debug("retrieveFilteredUser userId = {}, institutionId = {}, productId = {}",
                 Encode.forJava(userId), Encode.forJava(institutionId), Encode.forJava(productId));
-        List<UserInstitutionResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(institutionId, null, List.of(productId), null, getValidUserStates(), userId).getBody();
+        List<UserInstitutionDataResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(institutionId, null, List.of(productId), null, getValidUserStates(), userId).getBody();
         if (!CollectionUtils.isEmpty(institutionResponses)) {
             log.info("retrieveFilteredUser institutionResponses size = {}", institutionResponses.size());
             return institutionResponses.stream()

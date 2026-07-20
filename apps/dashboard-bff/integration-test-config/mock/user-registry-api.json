@@ -598,5 +598,25 @@
       "templateType": "VELOCITY",
       "template": "{\"statusCode\":404,\"body\":\"Not Found\"}"
     }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41\",\"fiscalCode\":\"VRDLGI90A41F205X\",\"name\":{\"certification\":\"SPID\",\"value\":\"Giulia\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Verdi\"},\"email\":{\"certification\":\"SPID\",\"value\":\"giulia.verdi@test.it\"},\"workContacts\":{\"ID_CONTACTS#4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41\":{\"email\":{\"certification\":\"NONE\",\"value\":\"giulia.verdi@test.it\"}}}}}"
+    }
   }
 ]
