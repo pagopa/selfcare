@@ -27,6 +27,15 @@ Feature: UserGroups
     Then the response status should be 500
     And the response should contain an error message "Some members in the list aren't allowed for this institution"
 
+  Scenario: Attempt to create a group with members excluded from user groups
+    Given user login with username "j.doe" and password "test"
+    And the following user group details:
+      | name       | description | productId | institutionId                        | members                              |
+      | Group Name | TestGroup   | prod-io   | c9a50656-f345-4c81-84be-5b2474470544 | 4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41 |
+    When I send a POST request to "/v2/user-groups/" with the given details to create usergroup
+    Then the response status should be 500
+    And the response should contain an error message "Some members cannot be added to user groups because their roles are excluded."
+
   Scenario: Attempt to create a user group with a duplicate name
     Given user login with username "j.doe" and password "test"
     And the following user group details:
@@ -98,6 +107,16 @@ Feature: UserGroups
     When I send a PUT request to "/v2/user-groups/{groupId}" to update userGroup
     Then the response status should be 500
     And the response should contain an error message "Some members in the list aren't allowed for this institution"
+
+  Scenario: Attempt to update a group with members excluded from user groups
+    Given user login with username "j.doe" and password "test"
+    And I have groupId "6759f8df78b6af202b222d29"
+    And I have data to update:
+      | name         | description        | members                              |
+      | updated Name | updatedDescription | 4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41 |
+    When I send a PUT request to "/v2/user-groups/{groupId}" to update userGroup
+    Then the response status should be 500
+    And the response should contain an error message "Some members cannot be added to user groups because their roles are excluded."
 
   Scenario: Attempt to update a non-existent group
     Given user login with username "j.doe" and password "test"
@@ -324,3 +343,11 @@ Feature: UserGroups
     And I have memberId "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     When I send a POST request to "/v2/user-groups/{id}/members/{userId}" to add userGroup member
     Then the response status should be 400
+
+  Scenario: Attempt to add a member excluded from user groups
+    Given user login with username "j.doe" and password "test"
+    And I have groupId "6759f8df78b6af202b222d29"
+    And I have memberId "4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41"
+    When I send a POST request to "/v2/user-groups/{id}/members/{userId}" to add userGroup member
+    Then the response status should be 500
+    And the response should contain an error message "This user cannot be added to user groups because their role is excluded."
