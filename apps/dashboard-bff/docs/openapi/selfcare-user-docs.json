@@ -512,7 +512,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/UserInstitutionResponse"
+                    "$ref" : "#/components/schemas/UserInstitutionDataResponse"
                   }
                 }
               }
@@ -1398,7 +1398,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/UserDataResponse"
+                    "$ref" : "#/components/schemas/UserDataWithProductInfoResponse"
                   }
                 }
               }
@@ -1609,7 +1609,7 @@
     },
     "/users/{userId}/otp-info" : {
       "get" : {
-        "tags" : [ "User" ],
+        "tags" : [ "User", "internal-v1", "support" ],
         "summary" : "Get user's email for OTP",
         "description" : "Get the user's email configured to receive the OTP",
         "operationId" : "getUserOtpEmailInfo",
@@ -1815,6 +1815,10 @@
           }
         }
       },
+      "EmailType" : {
+        "enum" : [ "USER_REQUEST", "CONVENTION_REQUEST" ],
+        "type" : "string"
+      },
       "Env" : {
         "enum" : [ "ROOT", "DEV", "COLL", "PROD" ],
         "type" : "string"
@@ -1834,6 +1838,42 @@
         "format" : "date-time",
         "type" : "string",
         "example" : "2022-03-10T12:15:50-04:00"
+      },
+      "OnboardedProductDataResponse" : {
+        "type" : "object",
+        "properties" : {
+          "roleId" : {
+            "type" : "string"
+          },
+          "productId" : {
+            "type" : "string"
+          },
+          "tokenId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/OnboardedProductState"
+          },
+          "productRole" : {
+            "type" : "string"
+          },
+          "role" : {
+            "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
+            "type" : "string"
+          },
+          "env" : {
+            "$ref" : "#/components/schemas/Env"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "excludeRoleFromUserGroups" : {
+            "type" : "boolean"
+          }
+        }
       },
       "OnboardedProductResponse" : {
         "type" : "object",
@@ -2046,6 +2086,12 @@
           "productId" : {
             "minLength" : 1,
             "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/EmailType"
+          },
+          "institutionId" : {
+            "type" : "string"
           }
         }
       },
@@ -2103,7 +2149,7 @@
           }
         }
       },
-      "UserDataResponse" : {
+      "UserDataWithProductInfoResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2130,14 +2176,14 @@
           "status" : {
             "type" : "string"
           },
+          "userResponse" : {
+            "$ref" : "#/components/schemas/UserResponse"
+          },
           "products" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/OnboardedProductResponse"
+              "$ref" : "#/components/schemas/OnboardedProductDataResponse"
             }
-          },
-          "userResponse" : {
-            "$ref" : "#/components/schemas/UserResponse"
           }
         }
       },
@@ -2180,6 +2226,35 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/UserInstitutionRoleResponse"
+            }
+          }
+        }
+      },
+      "UserInstitutionDataResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "institutionId" : {
+            "type" : "string"
+          },
+          "institutionDescription" : {
+            "type" : "string"
+          },
+          "institutionRootName" : {
+            "type" : "string"
+          },
+          "userMailUuid" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OnboardedProductDataResponse"
             }
           }
         }

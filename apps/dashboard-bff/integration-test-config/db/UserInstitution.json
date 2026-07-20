@@ -136,6 +136,31 @@
   },
   {
     "_id": {
+      "$oid": "6872b2dfb957efbe104b7398"
+    },
+    "institutionDescription": "Comune di Castelbuono",
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-io",
+        "productRole": "admin",
+        "role": "ADMIN_EA",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "excludeRoleFromUserGroups": true
+      }
+    ],
+    "userId": "4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41",
+    "userMailUuid": "ID_MAIL#7c2e8b51-6a3d-4c17-8c2d-91f5e4b8d723"
+  },
+  {
+    "_id": {
       "$oid": "678004d29a9240780b3964c8"
     },
     "institutionDescription": "PT test",

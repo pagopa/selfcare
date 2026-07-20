@@ -31,6 +31,7 @@ import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissions;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsList;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
 import lombok.Data;
 import lombok.ToString;
@@ -360,7 +361,7 @@ public class ExchangeTokenServiceV2 {
 
     private UserInstitution getProducts(String institutionId, String userId) {
         log.trace("getProducts start");
-        List<UserInstitutionResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(
+        List<UserInstitutionDataResponse> institutionResponses = userInstitutionApiRestClient._retrieveUserInstitutions(
                 institutionId,
                 null,
                 null,
