@@ -59,12 +59,12 @@ module "collection_documents" {
 # DATA SOURCES
 ###############################################################################
 data "azurerm_storage_account" "documents_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}documentsst01"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}ardocumentsst01"
   resource_group_name = "selc-${module.local.config.env_short}-storage-rg"
 }
 
 data "azurerm_storage_account" "user_attachments_storage" {
-  name                = "selc${module.local.config.env_short}${module.local.config.location_short}usrattachst01"
+  name                = "selc${module.local.config.env_short}${module.local.config.location_short}arusrattachst01"
   resource_group_name = "selc-${module.local.config.env_short}-storage-rg"
 }
 
