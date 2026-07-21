@@ -70,7 +70,7 @@ data "azurerm_storage_account" "user_attachments_storage" {
 }
 
 data "azurerm_user_assigned_identity" "document_storage_blob_identity" {
-  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-document-storage-blob-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-documents-storage-blob-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
