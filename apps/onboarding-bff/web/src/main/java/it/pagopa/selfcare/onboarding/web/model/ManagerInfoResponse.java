@@ -1,12 +1,13 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class ManagerInfoResponse {
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.name}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.name}", requiredMode = Schema.RequiredMode.REQUIRED)
     private String name;
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.surname}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.surname}", requiredMode = Schema.RequiredMode.REQUIRED)
     private String surname;
 }

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import lombok.Data;
 
@@ -12,25 +13,25 @@ import java.util.List;
 @Data
 public class CompanyOnboardingDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.users}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.users}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty
     @Valid
     private List<CompanyUserDto> users;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.billingData}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.billingData}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Valid
     private CompanyBillingDataDto billingData;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.institutionType}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.institutionType}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     private InstitutionType institutionType;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.id}", required = true)
+    @Schema(description = "${swagger.onboarding.product.model.id}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     private String productId;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.taxCode}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.taxCode}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     private String taxCode;
 
