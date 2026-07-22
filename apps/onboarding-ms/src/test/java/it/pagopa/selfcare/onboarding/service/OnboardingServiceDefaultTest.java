@@ -5311,6 +5311,17 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(productAzureService.getProductIsValid(PROD_IO.getValue()))
                 .thenReturn(product));
 
+        // Product-ms flag: same user MANAGER+DELEGATE is allowed for this product
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setAllowSameUserManagerAndDelegate(true);
+        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        productResponse.setProductId(PROD_IO.getValue());
+        productResponse.setFeatures(features);
+        asserter.execute(() -> when(productService.getProduct(PROD_IO.getValue()))
+                .thenReturn(Uni.createFrom().item(productResponse)));
+
         mockVerifyOnboardingNotFound();
         mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
