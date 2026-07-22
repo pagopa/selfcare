@@ -1572,7 +1572,7 @@
           },
           "recipientCode" : {
             "type" : "string",
-            "description" : "Billing recipient code, not required only for institutionType SA"
+            "description" : "Billing recipient code"
           },
           "publicServices" : {
             "type" : "boolean",
@@ -2611,7 +2611,7 @@
           },
           "recipientCode" : {
             "type" : "string",
-            "description" : "Billing recipient code, not required only for institutionType SA"
+            "description" : "Billing recipient code"
           },
           "companyInformations" : {
             "$ref" : "#/components/schemas/CompanyInformationsResource"
@@ -2768,6 +2768,9 @@
         "title" : "ProductRoleInfo",
         "type" : "object",
         "properties" : {
+          "multiroleAllowed" : {
+            "type" : "boolean"
+          },
           "skipUserCreation" : {
             "type" : "boolean"
           },
