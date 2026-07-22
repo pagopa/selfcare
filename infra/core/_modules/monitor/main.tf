@@ -14,7 +14,7 @@ locals {
       frequency                         = 300
       expected_http_status              = 200
       ssl_cert_remaining_lifetime_check = 7
-      opsgenie                          = true
+      jsm                               = true
     },
     "apigw-pnpg-selfcare" = {
       host                              = trimsuffix(var.dns_a_api_pnpg_fqdn, "."),
@@ -22,7 +22,7 @@ locals {
       frequency                         = 300,
       expected_http_status              = 200,
       ssl_cert_remaining_lifetime_check = 7,
-      opsgenie                          = true
+      jsm                               = true
     },
     "login-selfcare" = {
       host                              = trimsuffix(var.cdn_fqdn, "."),
@@ -30,7 +30,7 @@ locals {
       frequency                         = 900,
       expected_http_status              = 200,
       ssl_cert_remaining_lifetime_check = 7,
-      opsgenie                          = true
+      jsm                               = true
     },
     "login-pnpg" = {
       host                              = "imprese.notifichedigitali.it",
@@ -38,7 +38,7 @@ locals {
       frequency                         = 900,
       expected_http_status              = 200,
       ssl_cert_remaining_lifetime_check = 7,
-      opsgenie                          = true
+      jsm                               = true
     }
   }
 
@@ -49,7 +49,7 @@ locals {
       frequency                         = 900,
       expected_http_status              = 200,
       ssl_cert_remaining_lifetime_check = 7,
-      opsgenie                          = false
+      jsm                               = false
     },
     "apigw-pnpg-selfcare" = {
       host                              = trimsuffix(var.dns_a_api_pnpg_fqdn, "."),
@@ -57,7 +57,7 @@ locals {
       frequency                         = 900,
       expected_http_status              = 200,
       ssl_cert_remaining_lifetime_check = 7,
-      opsgenie                          = false
+      jsm                               = false
     },
     "login-selfcare" = {
       host                              = trimsuffix(var.cdn_fqdn, "."),
@@ -65,7 +65,7 @@ locals {
       frequency                         = 900,
       expected_http_status              = 200,
       ssl_cert_remaining_lifetime_check = 7,
-      opsgenie                          = false
+      jsm                               = false
     }
   }
 }
@@ -83,8 +83,8 @@ data "azurerm_key_vault_secret" "alert_error_notification_slack" {
   key_vault_id = var.key_vault_id
 }
 
-data "azurerm_key_vault_secret" "monitor_notification_opsgenie" {
-  name         = "monitor-notification-opsgenie"
+data "azurerm_key_vault_secret" "monitor_notification_jsm" {
+  name         = "monitor-notification-jsm"
   key_vault_id = var.key_vault_id
 }
 
@@ -124,8 +124,8 @@ resource "azurerm_monitor_action_group" "error_action_group" {
   }
 
   webhook_receiver {
-    name                    = "opsgenie"
-    service_uri             = data.azurerm_key_vault_secret.monitor_notification_opsgenie.value
+    name                    = "jsm"
+    service_uri             = data.azurerm_key_vault_secret.monitor_notification_jsm.value
     use_common_alert_schema = true
   }
 
@@ -224,7 +224,7 @@ module "web_test_api" {
   frequency                         = each.value.frequency
   alert_description                 = "Web availability check alert triggered when it fails. Runbook: https://pagopa.atlassian.net/wiki/spaces/SCP/pages/823722319/Web+Availability+Test+-+TLS+Probe+Check"
 
-  actions = var.env_short == "p" && each.value.opsgenie ? [
+  actions = var.env_short == "p" && each.value.jsm ? [
     {
       action_group_id    = azurerm_monitor_action_group.error_action_group[0].id
       webhook_properties = null
