@@ -194,6 +194,9 @@
           "requiresParentOnboarding" : {
             "type" : "boolean"
           },
+          "allowSameUserManagerAndDelegate" : {
+            "type" : "boolean"
+          },
           "expirationDays" : {
             "type" : "integer",
             "format" : "int32"
