@@ -1,15 +1,16 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class InstitutionLegalAddressResource {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.address}")
+    @Schema(description = "${swagger.onboarding.institutions.model.address}")
     private String address;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.zipCode}")
+    @Schema(description = "${swagger.onboarding.institutions.model.zipCode}")
     private String zipCode;
 
 }

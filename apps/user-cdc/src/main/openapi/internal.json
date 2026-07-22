@@ -3324,7 +3324,7 @@
           },
           "recipientCode": {
             "type": "string",
-            "description": "Billing recipient code, not required only for institutionType SA"
+            "description": "Billing recipient code"
           },
           "registeredOffice": {
             "type": "string",

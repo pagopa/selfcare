@@ -1730,51 +1730,47 @@
         },
         "description": "Institution's assistance contacts"
       },
-      "BillingDataDto": {
-        "title": "BillingDataDto",
-        "required": [
-          "businessName",
-          "digitalAddress",
-          "registeredOffice"
-        ],
-        "type": "object",
-        "properties": {
-          "businessName": {
-            "type": "string",
-            "description": "Institution's legal name"
+      "BillingDataDto" : {
+        "title" : "BillingDataDto",
+        "required" : [ "businessName", "digitalAddress", "registeredOffice" ],
+        "type" : "object",
+        "properties" : {
+          "businessName" : {
+            "type" : "string",
+            "description" : "Institution's legal name"
           },
-          "registeredOffice": {
-            "type": "string",
-            "description": "Institution's physical address"
+          "registeredOffice" : {
+            "type" : "string",
+            "description" : "Institution's physical address"
           },
-          "digitalAddress": {
-            "type": "string",
-            "description": "Institution's digitalAddress"
+          "digitalAddress" : {
+            "type" : "string",
+            "description" : "Institution's digitalAddress"
           },
-          "zipCode": {
-            "type": "string",
-            "description": "Institution's zipCode"
+          "zipCode" : {
+            "type" : "string",
+            "description" : "Institution's zipCode"
           },
-          "taxCode": {
-            "type": "string",
-            "description": "Institution's taxCode"
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's taxCode"
           },
-          "taxCodeInvoicing": {
-            "type": "string",
-            "description": "Institution's taxCodeInvoicing"
+          "taxCodeInvoicing" : {
+            "type" : "string",
+            "description" : "Institution's taxCodeInvoicing"
           },
-          "vatNumber": {
-            "type": "string",
-            "description": "Institution's VAT number"
+          "vatNumber" : {
+            "type" : "string",
+            "description" : "Institution's VAT number"
           },
-          "recipientCode": {
-            "type": "string",
-            "description": "Billing recipient code, not required only for institutionType SA"
+          "recipientCode" : {
+            "type" : "string",
+            "description" : "Billing recipient code"
           },
-          "publicServices": {
-            "type": "boolean",
-            "description": "Institution's service type",
-            "example": false
+          "publicServices" : {
+            "type" : "boolean",
+            "description" : "Institution's service type",
+            "example" : false
           }
         },
         "description": "Institution's billing information"
@@ -2885,130 +2881,111 @@
         },
         "description": "GPS, SCP, PT optional data"
       },
-      "InstitutionResource": {
-        "title": "InstitutionResource",
-        "required": [
-          "id",
-          "origin",
-          "originId"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Institution's unique internal Id",
-            "format": "uuid"
+      "InstitutionResource" : {
+        "title" : "InstitutionResource",
+        "required" : [ "id", "origin", "originId" ],
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "Institution's unique internal Id",
+            "format" : "uuid"
           },
-          "description": {
-            "type": "string",
-            "description": "Institution's legal name"
+          "description" : {
+            "type" : "string",
+            "description" : "Institution's legal name"
           },
-          "externalId": {
-            "type": "string",
-            "description": "Institution's unique external identifier"
+          "externalId" : {
+            "type" : "string",
+            "description" : "Institution's unique external identifier"
           },
-          "originId": {
-            "type": "string",
-            "description": "Institution's details origin Id"
+          "originId" : {
+            "type" : "string",
+            "description" : "Institution's details origin Id"
           },
-          "institutionType": {
-            "type": "string",
-            "description": "Institution's type",
-            "enum": [
-              "PA",
-              "PG",
-              "GSP",
-              "SA",
-              "PT",
-              "SCP",
-              "PSP",
-              "AS",
-              "REC",
-              "CON",
-              "PRV",
-              "PRV_PF",
-              "GPU",
-              "SCEC"
-            ]
+          "institutionType" : {
+            "type" : "string",
+            "description" : "Institution's type",
+            "enum" : [ "PA", "PG", "GSP", "SA", "PT", "SCP", "PSP", "AS", "REC", "CON", "PRV", "PRV_PF", "GPU", "SCEC" ]
           },
-          "digitalAddress": {
-            "type": "string",
-            "description": "Institution's digitalAddress"
+          "digitalAddress" : {
+            "type" : "string",
+            "description" : "Institution's digitalAddress"
           },
-          "status": {
-            "type": "string",
-            "description": "Institution onboarding status"
+          "status" : {
+            "type" : "string",
+            "description" : "Institution onboarding status"
           },
-          "address": {
-            "type": "string",
-            "description": "Institution's physical address"
+          "address" : {
+            "type" : "string",
+            "description" : "Institution's physical address"
           },
-          "zipCode": {
-            "type": "string",
-            "description": "Institution's zipCode"
+          "zipCode" : {
+            "type" : "string",
+            "description" : "Institution's zipCode"
           },
-          "taxCode": {
-            "type": "string",
-            "description": "Institution's taxCode"
+          "taxCode" : {
+            "type" : "string",
+            "description" : "Institution's taxCode"
           },
-          "taxCodeInvoicing": {
-            "type": "string",
-            "description": "Institution's taxCodeInvoicing"
+          "taxCodeInvoicing" : {
+            "type" : "string",
+            "description" : "Institution's taxCodeInvoicing"
           },
-          "origin": {
-            "type": "string",
-            "description": "Institution data origin"
+          "origin" : {
+            "type" : "string",
+            "description" : "Institution data origin"
           },
-          "userProductRoles": {
-            "type": "array",
-            "description": "Logged user's roles on product",
-            "items": {
-              "type": "string",
-              "description": "Logged user's roles on product"
+          "userProductRoles" : {
+            "type" : "array",
+            "description" : "Logged user's roles on product",
+            "items" : {
+              "type" : "string",
+              "description" : "Logged user's roles on product"
             }
           },
-          "recipientCode": {
-            "type": "string",
-            "description": "Billing recipient code, not required only for institutionType SA"
+          "recipientCode" : {
+            "type" : "string",
+            "description" : "Billing recipient code"
           },
-          "companyInformations": {
-            "$ref": "#/components/schemas/CompanyInformationsResource"
+          "companyInformations" : {
+            "$ref" : "#/components/schemas/CompanyInformationsResource"
           },
-          "assistanceContacts": {
-            "$ref": "#/components/schemas/AssistanceContactsResource"
+          "assistanceContacts" : {
+            "$ref" : "#/components/schemas/AssistanceContactsResource"
           },
-          "pspData": {
-            "$ref": "#/components/schemas/PspDataResource"
+          "pspData" : {
+            "$ref" : "#/components/schemas/PspDataResource"
           },
-          "dpoData": {
-            "$ref": "#/components/schemas/DpoDataResource"
+          "dpoData" : {
+            "$ref" : "#/components/schemas/DpoDataResource"
           },
-          "subunitCode": {
-            "type": "string",
-            "description": "Institutions AOO/UO unit Code"
+          "subunitCode" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit Code"
           },
-          "subunitType": {
-            "type": "string",
-            "description": "Institutions AOO/UO unit type"
+          "subunitType" : {
+            "type" : "string",
+            "description" : "Institutions AOO/UO unit type"
           },
-          "rootParent": {
-            "$ref": "#/components/schemas/RootParentResource"
+          "rootParent" : {
+            "$ref" : "#/components/schemas/RootParentResource"
           },
-          "aooParentCode": {
-            "type": "string",
-            "description": "AOO unit parent institution Code"
+          "aooParentCode" : {
+            "type" : "string",
+            "description" : "AOO unit parent institution Code"
           },
-          "country": {
-            "type": "string",
-            "description": "Institution's physical address country"
+          "country" : {
+            "type" : "string",
+            "description" : "Institution's physical address country"
           },
-          "county": {
-            "type": "string",
-            "description": "Institution's physical address county"
+          "county" : {
+            "type" : "string",
+            "description" : "Institution's physical address county"
           },
-          "city": {
-            "type": "string",
-            "description": "Institution's physical address city"
+          "city" : {
+            "type" : "string",
+            "description" : "Institution's physical address city"
           }
         }
       },
@@ -3130,12 +3107,15 @@
           }
         }
       },
-      "ProductRoleInfo": {
-        "title": "ProductRoleInfo",
-        "type": "object",
-        "properties": {
-          "skipUserCreation": {
-            "type": "boolean"
+      "ProductRoleInfo" : {
+        "title" : "ProductRoleInfo",
+        "type" : "object",
+        "properties" : {
+          "multiroleAllowed" : {
+            "type" : "boolean"
+          },
+          "skipUserCreation" : {
+            "type" : "boolean"
           },
           "phasesAdditionAllowed": {
             "type": "array",
