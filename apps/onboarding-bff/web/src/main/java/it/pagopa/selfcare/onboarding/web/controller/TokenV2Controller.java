@@ -1,8 +1,9 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -46,7 +47,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v2/tokens", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "tokens")
+@Tag(name = "tokens")
 public class TokenV2Controller {
 
     private final TokenService tokenService;
@@ -78,7 +79,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.complete}", summary = "${swagger.tokens.complete}", operationId = "completeUsingPOST")
     @PostMapping(value = "/{onboardingId}/complete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> complete(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<Void> complete(@Parameter(description = "${swagger.tokens.onboardingId}")
                                          @PathVariable(value = "onboardingId") String onboardingId,
                                          @RequestPart MultipartFile contract) {
         log.trace("complete Token start");
@@ -107,7 +108,7 @@ public class TokenV2Controller {
     @Operation(description = "${swagger.tokens.completeOnboardingUsers}", summary = "${swagger.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
     @PostMapping(value = "/{onboardingId}/complete-onboarding-users", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> completeOnboardingUsers(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<Void> completeOnboardingUsers(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                         @PathVariable(value = "onboardingId") String onboardingId,
                                                         @RequestPart MultipartFile contract) {
         log.trace("complete Onboarding Users start");
@@ -134,7 +135,7 @@ public class TokenV2Controller {
     @Operation(description = "${swagger.tokens.verify}",
             summary = "${swagger.tokens.verify}", operationId = "verifyOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/verify")
-    public OnboardingVerify verifyOnboarding(@ApiParam("${swagger.tokens.onboardingId}") @PathVariable("onboardingId") String onboardingId) {
+    public OnboardingVerify verifyOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}") @PathVariable("onboardingId") String onboardingId) {
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("Verify token identified with {}", sanitizedOnboardingId);
         final OnboardingData onboardingData = tokenService.verifyOnboarding(sanitizedOnboardingId);
@@ -149,7 +150,7 @@ public class TokenV2Controller {
     @Operation(summary = "${swagger.tokens.retrieveOnboardingRequest}",
             description = "${swagger.tokens.retrieveOnboardingRequest}", operationId = "retrieveOnboardingRequestUsingGET")
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_PAGE + "')")
-    public OnboardingRequestResource retrieveOnboardingRequest(@ApiParam("${swagger.tokens.onboardingId}")
+    public OnboardingRequestResource retrieveOnboardingRequest(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                                @PathVariable("onboardingId")
                                                                String onboardingId) {
         log.trace("retrieveOnboardingRequest start");
@@ -177,7 +178,7 @@ public class TokenV2Controller {
             summary = "${swagger.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/approve")
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
-    public void approveOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
+    public void approveOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
                                   @PathVariable("onboardingId") String onboardingId,
                                   Principal principal) {
         log.debug("approve onboarding identified with {}", onboardingId);
@@ -202,7 +203,7 @@ public class TokenV2Controller {
             description = "Service to reject a specific onboarding request", operationId = "rejectOnboardingUsingPOST")
     @PostMapping("/{onboardingId}/reject")
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE + "')")
-    public void rejectOnboarding(@ApiParam("${swagger.tokens.onboardingId}")
+    public void rejectOnboarding(@Parameter(description = "${swagger.tokens.onboardingId}")
                                  @PathVariable("onboardingId") String onboardingId,
                                  @RequestBody ReasonForRejectDto reasonForRejectDto,
                                  Principal principal) {
@@ -227,7 +228,7 @@ public class TokenV2Controller {
     @Operation(summary = "${swagger.tokens.complete}",
             description = "${swagger.tokens.complete}", operationId = "deleteUsingDELETE")
     @DeleteMapping(value = "/{onboardingId}/complete")
-    public ResponseEntity<Void> deleteOnboarding(@ApiParam("${swagger.tokens.tokenId}")
+    public ResponseEntity<Void> deleteOnboarding(@Parameter(description = "${swagger.tokens.tokenId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
                                                  Principal principal) {
         log.trace("delete Token start");
@@ -245,7 +246,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.tokens.getContract}",
             description = "${swagger.tokens.getContract}", operationId = "getContractUsingGET")
-    public ResponseEntity<byte[]> getContract(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<byte[]> getContract(@Parameter(description = "${swagger.tokens.onboardingId}")
                                               @PathVariable("onboardingId")
                                               String onboardingId) throws IOException {
         log.trace("getContract start");
@@ -258,10 +259,10 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.tokens.getTemplateAttachment}",
             description = "${swagger.tokens.getTemplateAttachment}",  operationId = "getTemplateAttachmentUsingGET")
-    public ResponseEntity<byte[]> getTemplateAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<byte[]> getTemplateAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                 @PathVariable("onboardingId")
                                                 String onboardingId,
-                                                        @ApiParam("${swagger.tokens.attachmentName}")
+                                                        @Parameter(description = "${swagger.tokens.attachmentName}")
                                                 @RequestParam(name = "attachmentName") String attachmentName) throws IOException {
         log.trace("getTemplateAttachment start");
         String sanitizedFilename = attachmentName.replaceAll(SANITIZIER, "_");
@@ -274,10 +275,10 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.tokens.getAttachment}",
             description = "${swagger.tokens.getAttachment}",  operationId = "getAttachmentUsingGET")
-    public ResponseEntity<byte[]> getAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<byte[]> getAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                         @PathVariable("onboardingId")
                                                         String onboardingId,
-                                                        @ApiParam("${swagger.tokens.attachmentName}")
+                                                        @Parameter(description = "${swagger.tokens.attachmentName}")
                                                         @RequestParam(name = "name") String filename) throws IOException {
         log.trace("getAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
@@ -298,7 +299,7 @@ public class TokenV2Controller {
             @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents"),
             @ApiResponse(responseCode = "404", description = "Onboarding not found")
     })
-    public AvailableDocumentsResource getAvailableDocuments(@ApiParam("${swagger.tokens.onboardingId}")
+    public AvailableDocumentsResource getAvailableDocuments(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                             @PathVariable("onboardingId") String onboardingId) {
         log.trace("getAvailableDocuments start");
         log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
@@ -325,11 +326,11 @@ public class TokenV2Controller {
             @ApiResponse(responseCode = "404", description = "Onboarding or document not found")
     })
     public ResponseEntity<byte[]> downloadDocument(
-            @ApiParam("${swagger.tokens.onboardingId}")
+            @Parameter(description = "${swagger.tokens.onboardingId}")
             @PathVariable("onboardingId") String onboardingId,
-            @ApiParam(value = "Type of document to download", required = true)
+            @Parameter(description = "Type of document to download", required = true)
             @RequestParam("type") DownloadDocumentType type,
-            @ApiParam("Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.")
+            @Parameter(description = "Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.")
             @RequestParam(value = "name", required = false) String name) throws IOException {
         log.trace("downloadDocument start");
         log.debug("downloadDocument onboardingId = {}, type = {}, name = {}",
@@ -354,7 +355,7 @@ public class TokenV2Controller {
     @RequestMapping(method = HEAD, value = "/{onboardingId}/attachment/status")
     @Operation(summary = "${swagger.tokens.headAttachment}",
             description = "${swagger.tokens.headAttachment}",  operationId = "headAttachmentUsingGET")
-    public ResponseEntity<Void> headAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<Void> headAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                 @PathVariable("onboardingId")
                                                 String onboardingId, @NotNull @RequestParam("name") String attachmentName) {
         log.trace("headAttachment start");
@@ -367,7 +368,7 @@ public class TokenV2Controller {
     @GetMapping(value = "/{onboardingId}/attachment/status")
     @Operation(summary = "${swagger.tokens.headAttachment}",
             description = "${swagger.tokens.headAttachment}", operationId = "getAttachmentStatusUsingGET")
-    public ResponseEntity<Void> getAttachmentStatus(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<Void> getAttachmentStatus(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                     @PathVariable("onboardingId")
                                                     String onboardingId,
                                                     @NotNull @RequestParam("name") String attachmentName) {
@@ -382,7 +383,7 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(description = "${swagger.tokens.uploadAttachment}", summary = "${swagger.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
     @PostMapping(value = "/{onboardingId}/attachment", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Void> uploadAttachment(@ApiParam("${swagger.tokens.onboardingId}")
+    public ResponseEntity<Void> uploadAttachment(@Parameter(description = "${swagger.tokens.onboardingId}")
                                                  @PathVariable(value = "onboardingId") String onboardingId,
                                                  @RequestParam("attachmentName") String attachmentName,
                                                  @RequestPart(value = "attachmentId", required = false) String attachmentId,
@@ -401,9 +402,9 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.tokens.getAggregatesCsv}",
             description = "${swagger.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
-    public ResponseEntity<byte[]> getAggregatesCsv(@ApiParam("${swagger.tokens.onboardingId}") @PathVariable("onboardingId")
+    public ResponseEntity<byte[]> getAggregatesCsv(@Parameter(description = "${swagger.tokens.onboardingId}") @PathVariable("onboardingId")
                                                    String onboardingIdInput,
-                                                   @ApiParam("${swagger.tokens.productId}")
+                                                   @Parameter(description = "${swagger.tokens.productId}")
                                                    @PathVariable("productId")
                                                    String productIdInput, Principal principal) throws Exception {
 
