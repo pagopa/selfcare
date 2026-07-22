@@ -12,7 +12,7 @@ overrides:
   hosts: # Use these hosts instead of those inside the OpenApi spec
     - api.selfcare.pagopa.it
   endpoints:
-    /institutions:
+    /v2/institutions:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -20,8 +20,8 @@ overrides:
       response_time_threshold: 2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /institutions/{institutionId}/contract:
+      response_time_event_occurrences: 30 # Default:
+    /v2/institutions/{institutionId}/contract:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -29,8 +29,8 @@ overrides:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /institutions/{institutionId}/products:
+      response_time_event_occurrences: 30 # Default:
+    /v2/institutions/{institutionId}/products:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -38,8 +38,8 @@ overrides:
       response_time_threshold: 2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /institutions/{institutionId}/users:
+      response_time_event_occurrences: 30 # Default:
+    /v2/institutions/{institutionId}/users:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -47,8 +47,8 @@ overrides:
       response_time_threshold: 2.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /onboarding:
+      response_time_event_occurrences: 30 # Default:
+    /v2/onboarding:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -56,8 +56,8 @@ overrides:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /onboarding/{externalInstitutionId}:
+      response_time_event_occurrences: 30 # Default:
+    /v2/onboarding/{externalInstitutionId}:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -65,8 +65,8 @@ overrides:
       response_time_threshold: 3 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /onboarding/{externalInstitutionId}/products/{productId}:
+      response_time_event_occurrences: 30 # Default:
+    /v2/onboarding/{externalInstitutionId}/products/{productId}:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -74,8 +74,8 @@ overrides:
       response_time_threshold: 5.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /onboarding/pda/{injectionInstitutionType}:
+      response_time_event_occurrences: 30 # Default:
+    /v2/onboarding/pda/{injectionInstitutionType}:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -83,8 +83,8 @@ overrides:
       response_time_threshold: 2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /pn-pg/institutions/add:
+      response_time_event_occurrences: 30 # Default:
+    /v2/pn-pg/institutions/add:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -92,8 +92,8 @@ overrides:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /products/{productId}:
+      response_time_event_occurrences: 30 # Default:
+    /v2/products/{productId}:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -101,8 +101,8 @@ overrides:
       response_time_threshold: 2.5 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /users:
+      response_time_event_occurrences: 30 # Default:
+    /v2/users:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -110,8 +110,8 @@ overrides:
       response_time_threshold: 2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
-    /users/{id}/onboarded-product:
+      response_time_event_occurrences: 30 # Default:
+    /v2/users/{id}/onboarded-product:
       availability_threshold: 0.95 # Default: 99%
       availability_evaluation_frequency: 30 # Default: 10
       availability_evaluation_time_window: 50 # Default: 20
@@ -119,4 +119,4 @@ overrides:
       response_time_threshold: 1 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
-      response_time_event_occurrences: 30 # Default: 
+      response_time_event_occurrences: 30 # Default:
