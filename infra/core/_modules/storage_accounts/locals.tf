@@ -10,6 +10,6 @@ locals {
 
   project = "selc-${var.env_short}"
   # ca_resource_group_name   = "${local.project}-container-app${var.suffix_increment}-rg"
-  naming_config            = "documents"
+  naming_config            = var.naming_config
   resource_group_name_vnet = "${local.project}-vnet-rg"
 }
