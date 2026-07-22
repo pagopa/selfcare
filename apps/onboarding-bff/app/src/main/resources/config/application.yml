@@ -10,6 +10,10 @@ spring:
     include:
       - swaggerEN
 
+springdoc:
+  api-docs:
+    resolve-schema-properties: true
+
 management:
   tracing:
     sampling:

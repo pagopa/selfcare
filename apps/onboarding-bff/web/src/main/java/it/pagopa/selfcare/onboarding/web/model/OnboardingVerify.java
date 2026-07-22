@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -10,14 +11,14 @@ import java.time.LocalDateTime;
 public class OnboardingVerify {
 
 
-    @ApiModelProperty(value = "${swagger.onboarding.model.status}", required = true)
+    @Schema(description = "${swagger.onboarding.model.status}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     private String status;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.id}")
+    @Schema(description = "${swagger.onboarding.product.model.id}")
     private String productId;
 
-    @ApiModelProperty(value = "${swagger.onboarding.model.expiringDate}")
+    @Schema(description = "${swagger.onboarding.model.expiringDate}")
     private LocalDateTime expiringDate;
 
 }

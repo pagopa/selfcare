@@ -1,36 +1,37 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 @Data
 public class BillingDataResponseDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.name}")
+    @Schema(description = "${swagger.onboarding.institutions.model.name}")
     private String businessName;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.address}")
+    @Schema(description = "${swagger.onboarding.institutions.model.address}")
     private String registeredOffice;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.digitalAddress}")
+    @Schema(description = "${swagger.onboarding.institutions.model.digitalAddress}")
     private String digitalAddress;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.zipCode}")
+    @Schema(description = "${swagger.onboarding.institutions.model.zipCode}")
     private String zipCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.taxCode}")
+    @Schema(description = "${swagger.onboarding.institutions.model.taxCode}")
     private String taxCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.vatNumber}")
+    @Schema(description = "${swagger.onboarding.institutions.model.vatNumber}")
     private String vatNumber;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.recipientCode}")
+    @Schema(description = "${swagger.onboarding.institutions.model.recipientCode}")
     private String recipientCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.publicServices}")
+    @Schema(description = "${swagger.onboarding.institutions.model.publicServices}")
     private Boolean publicServices;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.certified}")
+    @Schema(description = "${swagger.onboarding.institutions.model.certified}")
     private boolean certified;
 
 }

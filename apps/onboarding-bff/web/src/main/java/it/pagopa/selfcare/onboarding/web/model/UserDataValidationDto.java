@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import jakarta.validation.constraints.NotBlank;
@@ -9,15 +10,15 @@ import jakarta.validation.constraints.NotBlank;
 @Data
 public class UserDataValidationDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.fiscalCode}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.fiscalCode}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String taxCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.name}")
+    @Schema(description = "${swagger.onboarding.user.model.name}")
     private String name;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.surname}")
+    @Schema(description = "${swagger.onboarding.user.model.surname}")
     private String surname;
 
 }
