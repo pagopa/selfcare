@@ -1,8 +1,9 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 
-import io.swagger.annotations.Api;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v1/users", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "user")
+@Tag(name = "user")
 public class UserController {
 
     private final UserService userService;
