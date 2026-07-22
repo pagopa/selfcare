@@ -1,5 +1,10 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import static it.pagopa.selfcare.onboarding.common.DocumentType.valueOf;
+import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_FN_NAME;
+import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_INSTTITUTION_FN_SUCCESS;
+import static it.pagopa.selfcare.onboarding.utils.Utils.isNotInstitutionOnboarding;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -19,21 +24,15 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.UserDataResponse;
-
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
-
-import static it.pagopa.selfcare.onboarding.common.DocumentType.valueOf;
-import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_FN_NAME;
-import static it.pagopa.selfcare.onboarding.utils.CustomMetricsConst.EVENT_ONBOARDING_INSTTITUTION_FN_SUCCESS;
-import static it.pagopa.selfcare.onboarding.utils.Utils.isNotInstitutionOnboarding;
 
 @ApplicationScoped
 public class NotificationEventServiceImpl implements NotificationEventService {
@@ -228,7 +227,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
             context.getLogger().info(() -> String.format("Sending notification to webhook with message: %s", finalMessage));
         }
 
-        webhookRestClient.sendNotification(NotificationRequest.builder().productId(notificationToSend.getProduct()).payload(message).build());
+        webhookRestClient.sendNotification(NotificationRequest.builder().productId(notificationToSend.getProduct()).payload(message).tenantId("SELC").build());
         telemetryService.trackEvent(EVENT_ONBOARDING_FN_NAME, notificationEventMap(notificationToSend, "WEBHOOK", notificationEventTraceId), Map.of(EVENT_ONBOARDING_INSTTITUTION_FN_SUCCESS, 1D));
     }
 
