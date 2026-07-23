@@ -46,7 +46,7 @@ Feature: Onboarding collection
     Given I have a request object named "same_user_manager_delegate_request"
     When I send a POST request to "/pa" with this request
     Then the response status code should be 400
-    And the response should contain the text "Manager and delegate cannot be the same user"
+    And the response should contain the text "Manager and delegate (or two delegates) identify the same user"
 
   Scenario: Can't perform onboarding with parent not completed
     Given I have a request object named "invalid_child_product_request"
