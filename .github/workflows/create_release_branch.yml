@@ -76,6 +76,9 @@ jobs:
 
       - name: Calculate New Version
         id: versioning
+        env:
+          INPUT_MANUAL_VERSION: ${{ inputs.manual-version }}
+          INPUT_VERSION_BUMP: ${{ inputs.version-bump }}
         run: |
           PREFIX="releases/${DOMAIN}_"
           LAST_BRANCH=$(git branch -a | grep -Eo "${PREFIX}v?[0-9]+\.[0-9]+\.[0-9]+" | sort -V | tail -n 1)
@@ -86,10 +89,10 @@ jobs:
             OLD_VERSION=$(echo "$LAST_BRANCH" | grep -Eo "[0-9]+\.[0-9]+\.[0-9]+")
           fi
 
-          if [ -n "${{ inputs.manual-version }}" ]; then
-            NEW_VERSION="${{ inputs.manual-version }}"
+          if [ -n "$INPUT_MANUAL_VERSION" ]; then
+            NEW_VERSION="$INPUT_MANUAL_VERSION"
           else
-            NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "$OLD_VERSION")
+            NEW_VERSION=$(semver --increment "$INPUT_VERSION_BUMP" "$OLD_VERSION")
           fi
 
           NEW_BRANCH="releases/${DOMAIN}_v${NEW_VERSION}"
@@ -142,14 +145,16 @@ jobs:
     steps:
       - name: Trigger Domain Orchestrator Workflow
         shell: bash
+        env:
+          INPUT_DOMAIN: ${{ inputs.domain }}
+          GITHUB_REPO: ${{ github.repository }}
+          NEW_BRANCH: ${{ needs.create_branch.outputs.new_branch }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DOMAIN="${{ inputs.domain }}"
-          WF_DOMAIN="${DOMAIN//-/_}"
+          WF_DOMAIN="${INPUT_DOMAIN//-/_}"
 
           gh workflow run "trigger_release_${WF_DOMAIN}.yml" \
-            --repo "${{ github.repository }}" \
-            --ref "${{ needs.create_branch.outputs.new_branch }}" \
+            --repo "$GITHUB_REPO" \
+            --ref "$NEW_BRANCH" \
             -f env=uat \
-            -f branch="${{ needs.create_branch.outputs.new_branch }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            -f branch="$NEW_BRANCH"
