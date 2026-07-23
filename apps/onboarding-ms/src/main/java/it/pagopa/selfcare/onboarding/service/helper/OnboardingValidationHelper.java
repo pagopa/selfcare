@@ -29,10 +29,13 @@ import jakarta.ws.rs.WebApplicationException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.product_json.model.Features;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
@@ -144,8 +147,16 @@ public class OnboardingValidationHelper {
     // -------------------------------------------------------------------------
 
     /**
-     * Verifica che lo stesso codice fiscale non abbia più email distinte
-     * tra i ruoli MANAGER e DELEGATE.
+     * Consistency check on user identity across the MANAGER and DELEGATE roles: for any given
+     * {@code taxCode} appearing in the request, all associated {@code email}s must be identical.
+     *
+     * <p><b>What this method does NOT check:</b> it does <em>not</em> enforce that MANAGER and
+     * DELEGATE must be different people — the same {@code (taxCode, email)} pair may appear as
+     * both MANAGER and DELEGATE without triggering an error. That business rule is delegated to
+     * {@link #verifySameUserManagerAndDelegate(List, ProductResponse)}, which is product-aware.
+     *
+     * <p>Failure yields {@code VALIDATION_USER_BY_TAXCODE} ("Different emails cannot exist for
+     * the same tax code (MANAGER/DELEGATE)").</p>
      */
     public Uni<Void> verifyAllowManagerAsDelegate(List<UserRequest> userRequests) {
         log.info("Starting verifyAllowManagerAsDelegate");
@@ -164,6 +175,65 @@ public class OnboardingValidationHelper {
                     VALIDATION_USER_BY_TAXCODE.getMessage(), VALIDATION_USER_BY_TAXCODE.getCode()));
         }
         return Uni.createFrom().voidItem();
+    }
+
+    /**
+     * Verifies that no user is duplicated across the MANAGER
+     * and DELEGATE roles when the product does not allow it.
+     *
+     * <p>Two users are considered the "same" when EITHER their {@code taxCode} OR their
+     * {@code email} match. The check is therefore equivalent to
+     * looking for any duplicate taxCode OR any duplicate email in the combined MANAGER + DELEGATE
+     * set. If the product flag {@code features.allowSameUserManagerAndDelegate} is {@code true},
+     * the validation is skipped.
+     *
+     * @param userRequests the users provided for the onboarding
+     * @param product      the product configuration
+     * @return a {@link Uni} that fails with {@link InvalidRequestException} when the constraint
+     *         is violated, completes with {@code void} otherwise
+     */
+    public Uni<Void> verifySameUserManagerAndDelegate(List<UserRequest> userRequests, ProductResponse product) {
+        String productId = product != null ? product.getProductId() : null;
+        log.info("Starting verifySameUserManagerAndDelegate for productId={}", productId);
+
+        boolean allowSameUserManagerAndDelegate = Optional.ofNullable(product)
+                .map(ProductResponse::getFeatures)
+                .map(Features::getAllowSameUserManagerAndDelegate)
+                .orElse(Boolean.FALSE);
+
+        if (allowSameUserManagerAndDelegate || userRequests == null || userRequests.isEmpty()) {
+            return Uni.createFrom().voidItem();
+        }
+
+        List<UserRequest> managerAndDelegateList = userRequests.stream()
+                .filter(u -> PartyRole.MANAGER.equals(u.getRole()) || PartyRole.DELEGATE.equals(u.getRole()))
+                .toList();
+
+        boolean duplicateFound =
+                hasDuplicate(managerAndDelegateList.stream().map(u -> normalize(u.getTaxCode())))
+                        || hasDuplicate(managerAndDelegateList.stream().map(u -> normalize(u.getEmail())));
+
+        if (duplicateFound) {
+            log.warn("Manager and delegate (or two delegates) identify the same user for productId={} " +
+                    "(taxCode match or email match)", productId);
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format(MANAGER_AND_DELEGATE_SAME_USER.getMessage(), productId),
+                    MANAGER_AND_DELEGATE_SAME_USER.getCode()));
+        }
+        return Uni.createFrom().voidItem();
+    }
+
+    /**
+     * Returns {@code true} if the given stream contains at least one duplicated non-empty value
+     * (case-sensitive on the already-normalized input).
+     */
+    private boolean hasDuplicate(Stream<String> values) {
+        Set<String> seen = new HashSet<>();
+        return values.filter(s -> !s.isEmpty()).anyMatch(s -> !seen.add(s));
+    }
+
+    private String normalize(String s) {
+        return s == null ? "" : s.trim().toLowerCase(Locale.ROOT);
     }
 
     public Uni<List<UserRequest>> validationRole(List<UserRequest> users, List<PartyRole> validRoles) {

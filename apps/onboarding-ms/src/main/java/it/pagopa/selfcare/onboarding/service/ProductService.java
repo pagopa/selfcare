@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.ProductId;
 import org.openapi.quarkus.product_json.model.InstitutionType;
 import org.openapi.quarkus.product_json.model.Origin;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 
@@ -15,4 +16,6 @@ public interface ProductService {
   Uni<List<RequiredDocumentResponse>> getRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin);
 
   Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin);
+
+  Uni<ProductResponse> getProduct(String productId);
 }

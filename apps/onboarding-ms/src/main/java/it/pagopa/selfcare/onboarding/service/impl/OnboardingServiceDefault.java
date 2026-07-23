@@ -544,6 +544,10 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().transformToUni(ignored -> rm.validateInstitutionType(product))
                 .onItem().invoke(() -> validationHelper.validateTaxCode(onboarding.getInstitution().getTaxCode(), product))
                 .onItem().transformToUni(ignored -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
+                .onItem().transformToUni(ignored ->
+                        productService.getProduct(onboarding.getProductId())
+                                .onItem().transformToUni(pr ->
+                                        validationHelper.verifySameUserManagerAndDelegate(userRequests, pr)))
                 .onItem().transformToUni(ignored -> userRegistryHelper.addUserRequester(userRequester, onboarding.getUserRequester()))
                 .onItem().transformToUni(ignored -> rm.customValidation(product))
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
