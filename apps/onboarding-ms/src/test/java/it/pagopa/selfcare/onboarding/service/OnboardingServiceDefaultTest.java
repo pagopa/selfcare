@@ -1511,7 +1511,7 @@ class OnboardingServiceDefaultTest {
         onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setOrigin(Origin.IVASS);
-        institutionBaseRequest.setInstitutionType(InstitutionType.SA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.AS);
         institutionBaseRequest.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
         onboardingRequest.setInstitution(institutionBaseRequest);
@@ -1746,6 +1746,7 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingDefaultRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
+        institution.setInstitutionType(InstitutionType.AS);
         institution.setOrigin(Origin.IVASS);
         institution.setDescription(DESCRIPTION_FIELD);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -3010,8 +3011,8 @@ class OnboardingServiceDefaultTest {
         request.setProductId(PROD_INTEROP.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setTaxCode("taxCode");
-        institutionBaseRequest.setInstitutionType(InstitutionType.SA);
-        institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.GSP);
+        institutionBaseRequest.setOrigin(Origin.SELC);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
         institutionBaseRequest.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         request.setInstitution(institutionBaseRequest);
@@ -3055,8 +3056,8 @@ class OnboardingServiceDefaultTest {
         request.setProductId(PROD_INTEROP.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setTaxCode("taxCode");
-        institutionBaseRequest.setInstitutionType(InstitutionType.SA);
-        institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.GSP);
+        institutionBaseRequest.setOrigin(Origin.SELC);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
         institutionBaseRequest.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         request.setInstitution(institutionBaseRequest);
@@ -3087,6 +3088,38 @@ class OnboardingServiceDefaultTest {
             PanacheMock.verify(Onboarding.class).find(any(Document.class));
             PanacheMock.verifyNoMoreInteractions(Onboarding.class);
         });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingCompletion_shouldFailWhenInstitutionTypeNotAllowedForOrigin(UniAsserter asserter) {
+        Onboarding request = new Onboarding();
+        Product product = createDummyProduct(PROD_INTEROP.getValue(), false, false, true);
+        List<UserRequest> users = List.of(manager);
+        request.setProductId(PROD_INTEROP.getValue());
+        Institution institutionBaseRequest = new Institution();
+        institutionBaseRequest.setTaxCode("taxCode");
+        institutionBaseRequest.setInstitutionType(InstitutionType.PG);
+        institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
+        institutionBaseRequest.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
+        request.setInstitution(institutionBaseRequest);
+
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        mockVerifyOnboardingNotFound();
+        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
+
+        asserter.execute(() -> when(productAzureService.getProduct(any())).thenReturn(product));
+
+        InstitutionResource institutionResource = new InstitutionResource();
+        institutionResource.setCategory("L37");
+        institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
+        institutionResource.setDescription(DESCRIPTION_FIELD);
+        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+                .thenReturn(Uni.createFrom().item(institutionResource)));
+
+        asserter.assertFailedWith(() -> onboardingService.onboardingCompletion(request, users, null),
+                InvalidRequestException.class);
     }
 
     @Test
@@ -5117,6 +5150,7 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
+        institution.setInstitutionType(InstitutionType.AS);
         institution.setOrigin(Origin.IVASS);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institution.setDescription(DESCRIPTION_FIELD);
@@ -5204,6 +5238,7 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingRequest.setProductId(PROD_IO.getValue());
         Institution institution = dummyInstitution();
+        institution.setInstitutionType(InstitutionType.AS);
         institution.setOrigin(Origin.IVASS);
         institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institution.setDescription(DESCRIPTION_FIELD);

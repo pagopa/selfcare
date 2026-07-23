@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -773,6 +774,20 @@ class UserUtilTest {
     OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.MANAGER);
 
     when(productService.getProduct("test-product")).thenReturn(null);
+
+    boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
+
+    assertTrue(result);
+  }
+
+  /**
+   * Test: isExcludeRoleFromUserGroups should return true when product doesn't exist
+   */
+  @Test
+  void isExcludeRoleFromUserGroups_shouldReturnTrue_whenProductDoesntExist() {
+    OnboardedProduct onboardedProduct = createOnboardedProduct("test-product", PartyRole.MANAGER);
+
+    when(productService.getProduct("test-product")).thenThrow(new ProductNotFoundException());
 
     boolean result = userUtils.isExcludeRoleFromUserGroups(onboardedProduct);
 
