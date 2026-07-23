@@ -3011,8 +3011,8 @@ class OnboardingServiceDefaultTest {
         request.setProductId(PROD_INTEROP.getValue());
         Institution institutionBaseRequest = new Institution();
         institutionBaseRequest.setTaxCode("taxCode");
-        institutionBaseRequest.setInstitutionType(InstitutionType.PA);
-        institutionBaseRequest.setOrigin(Origin.IPA);
+        institutionBaseRequest.setInstitutionType(InstitutionType.GSP);
+        institutionBaseRequest.setOrigin(Origin.SELC);
         institutionBaseRequest.setDescription(DESCRIPTION_FIELD);
         institutionBaseRequest.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         request.setInstitution(institutionBaseRequest);
