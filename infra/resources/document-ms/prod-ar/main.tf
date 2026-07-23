@@ -16,7 +16,7 @@ module "local" {
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
   container_app_cpu              = 2.0
-  container_app_memory           = "4.0Gi"
+  container_app_memory           = "4Gi"
 }
 
 ###############################################################################
