@@ -42,6 +42,12 @@ Feature: Onboarding collection
     And the response body should not be empty
     And the response should have field "status" with value "REQUEST"
 
+  Scenario: Can't perform onboarding when manager and delegate identify the same user for a product that does not allow it
+    Given I have a request object named "same_user_manager_delegate_request"
+    When I send a POST request to "/pa" with this request
+    Then the response status code should be 400
+    And the response should contain the text "Manager and delegate cannot be the same user"
+
   Scenario: Can't perform onboarding with parent not completed
     Given I have a request object named "invalid_child_product_request"
     When I send a POST request to "/pa" with this request
