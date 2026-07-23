@@ -122,12 +122,12 @@ Feature: Onboarding collection
     And the response should have field "status" with value "REQUESTING"
     And the response should have field "workflowType" with value "FOR_APPROVE"
 
-  Scenario: Can't perform onboarding request for GSP not IPA with Invalid workflow type
+  Scenario: Can't perform onboarding request with institutionType not allowed for origin SELC
     Given I have a request object named "invalid_gsp_selc_request"
     When I send a POST request to "" with this request
     Then the response status code should be 400
     And the response body should not be empty
-    And the response should contain the text "Invalid workflow type for origin SELC"
+    And the response should contain the text "InstitutionType 'PA' is not allowed for origin 'SELC'"
 
   Scenario: Successfully store onboarding in status REQUEST
     Given I have a request object named "success_con_request"
@@ -411,6 +411,13 @@ Feature: Onboarding collection
     When I send a POST request to "" with this request
     Then the response status code should be 400
     And the response should contain the text "IBAN is not in an Italian format or is not 27 characters long"
+
+  Scenario: Can't perform onboarding request with institutionType not allowed for origin IPA
+    Given I have a request object named "invalid_institution_type_for_origin_request"
+    When I send a POST request to "/pa" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "InstitutionType 'PG' is not allowed for origin 'IPA'. Allowed institution types: [GSP, PA, SCEC]"
 
   Scenario: Successfully store onboarding in status REQUEST with institutionType SCEC
     Given I have a request object named "success_scec_request"
