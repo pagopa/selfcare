@@ -9,6 +9,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.product_json.api.ProductApi;
 import org.openapi.quarkus.product_json.model.InstitutionType;
 import org.openapi.quarkus.product_json.model.Origin;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 
@@ -43,5 +44,11 @@ public class ProductServiceImpl implements ProductService {
                 .onItem()
                 .transform(response -> Boolean.parseBoolean(
                         response.getHeaderString("X-Required-Documents-Enabled")));
+    }
+
+    @Override
+    public Uni<ProductResponse> getProduct(String productId) {
+        log.info("Calling getProductById: productId={}", productId);
+        return productController.getProductById(productId);
     }
 }
