@@ -108,6 +108,7 @@ module "apim" {
   }
 
   diagnostic_sampling_percentage = var.diagnostic_sampling_percentage
+  diagnostic_operation_name_format  = "Url"
 
   xml_content = file("${path.module}/root_policy.xml")
 
