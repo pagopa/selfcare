@@ -25,7 +25,7 @@
 | <a name="module_container_app_webhook_ms"></a> [container\_app\_webhook\_ms](#module\_container\_app\_webhook\_ms) | ../../_modules/container_app_microservice | n/a |
 | <a name="module_cosmosdb_webhook"></a> [cosmosdb\_webhook](#module\_cosmosdb\_webhook) | ../../_modules/cosmosdb_database | n/a |
 | <a name="module_local"></a> [local](#module\_local) | ../../_modules/local-env | n/a |
-| <a name="module_service_bus"></a> [service\_bus](#module\_service\_bus) | ../../_modules/azure_service_bus | n/a |
+| <a name="module_storage_queue"></a> [storage\_queue](#module\_storage\_queue) | ../../_modules/azure_storage_queue | n/a |
 
 ## Resources
 

@@ -1,18 +1,18 @@
 package it.pagopa.selfcare.webhook.service;
 
+import com.azure.core.credential.TokenCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
-import com.azure.messaging.servicebus.ServiceBusClientBuilder;
-import com.azure.messaging.servicebus.ServiceBusErrorContext;
-import com.azure.messaging.servicebus.ServiceBusProcessorClient;
-import com.azure.messaging.servicebus.ServiceBusReceivedMessageContext;
+import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.QueueClientBuilder;
+import com.azure.storage.queue.models.QueueMessageItem;
 import io.quarkus.runtime.StartupEvent;
+import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.common.vertx.VertxContext;
 import io.vertx.core.Context;
 import io.vertx.mutiny.core.Vertx;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
-import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -29,63 +29,73 @@ public class WebhookNotificationConsumer {
   @Inject WebhookNotificationService notificationService;
   @Inject Vertx vertx;
 
-  @ConfigProperty(name = "webhook.service-bus.enabled", defaultValue = "false")
+  @ConfigProperty(name = "webhook.storage-queue.enabled", defaultValue = "false")
   boolean enabled;
 
-  @ConfigProperty(name = "webhook.service-bus.namespace")
-  String namespace;
+  @ConfigProperty(name = "webhook.storage-queue.endpoint")
+  String endpoint;
 
-  @ConfigProperty(name = "webhook.service-bus.queue")
+  @ConfigProperty(name = "webhook.storage-queue.queue")
   String queue;
 
-  @ConfigProperty(name = "webhook.service-bus.connection-string", defaultValue = "none")
+  @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
-  @ConfigProperty(name = "webhook.service-bus.max-concurrent-calls", defaultValue = "8")
-  int maxConcurrentCalls;
+  @ConfigProperty(name = "webhook.storage-queue.max-messages-per-poll", defaultValue = "32")
+  int maxMessagesPerPoll;
 
-  private ServiceBusProcessorClient processor;
+  @ConfigProperty(name = "webhook.storage-queue.visibility-timeout-seconds", defaultValue = "300")
+  int visibilityTimeoutSeconds;
+
+  private QueueClient client;
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
       return;
     }
-    ServiceBusClientBuilder clientBuilder = new ServiceBusClientBuilder();
+    client = buildClientBuilder().buildClient();
+    client.createIfNotExists();
+  }
+
+  QueueClientBuilder buildClientBuilder() {
+    QueueClientBuilder clientBuilder = new QueueClientBuilder().queueName(queue);
     if ("none".equals(connectionString)) {
-      clientBuilder
-          .fullyQualifiedNamespace(namespace)
-          .credential(new DefaultAzureCredentialBuilder().build());
+      clientBuilder.endpoint(endpoint).credential(new DefaultAzureCredentialBuilder().build());
     } else {
       clientBuilder.connectionString(connectionString);
     }
-    processor =
-        clientBuilder
-            .processor()
-            .queueName(queue)
-            .disableAutoComplete()
-            .maxConcurrentCalls(maxConcurrentCalls)
-            .maxAutoLockRenewDuration(Duration.ofMinutes(5))
-            .processMessage(this::processMessage)
-            .processError(this::processError)
-            .buildProcessorClient();
-    processor.start();
+    return clientBuilder;
   }
 
-  private void processMessage(ServiceBusReceivedMessageContext context) {
-    String notificationId = context.getMessage().getBody().toString();
+  @Scheduled(every = "${webhook.storage-queue.poll-interval:5s}")
+  void poll() {
+    if (!enabled || client == null) {
+      return;
+    }
+    try {
+      client
+          .receiveMessages(
+              maxMessagesPerPoll, Duration.ofSeconds(visibilityTimeoutSeconds), null, null)
+          .forEach(this::processMessage);
+    } catch (Exception e) {
+      log.error("Storage Queue polling error: {}", e.getMessage(), e);
+    }
+  }
+
+  private void processMessage(QueueMessageItem message) {
+    String notificationId = message.getMessageText();
     if (!ObjectId.isValid(notificationId)) {
-      log.error("Discarding Service Bus message with invalid notification ID: {}", notificationId);
-      context.complete();
+      log.error("Discarding Storage Queue message with invalid notification ID: {}", notificationId);
+      deleteMessage(message);
       return;
     }
 
     Context processingContext = VertxContext.getOrCreateDuplicatedContext(vertx.getDelegate());
     VertxContextSafetyToggle.setContextSafe(processingContext, true);
-    processingContext.runOnContext(ignored -> processNotification(context, notificationId));
+    processingContext.runOnContext(ignored -> processNotification(message, notificationId));
   }
 
-  private void processNotification(
-      ServiceBusReceivedMessageContext context, String notificationId) {
+  private void processNotification(QueueMessageItem message, String notificationId) {
     notificationRepository
         .claimForProcessing(notificationId, 5)
         .onItem()
@@ -104,28 +114,23 @@ public class WebhookNotificationConsumer {
             notification -> {
               if (notification != null
                   && notification.getStatus() == WebhookNotification.NotificationStatus.RETRY) {
-                context.abandon();
+                // Leave the message in the queue: it will become visible again once the
+                // visibility timeout expires, triggering a natural retry.
+                log.debug(
+                    "Leaving Storage Queue message {} for retry of notification {}",
+                    message.getMessageId(),
+                    notificationId);
               } else {
-                context.complete();
+                deleteMessage(message);
               }
             },
             error -> {
-              log.error("Unable to process Service Bus notification {}", notificationId, error);
-              context.abandon();
+              log.error("Unable to process Storage Queue notification {}", notificationId, error);
+              // Leave the message in the queue for retry after the visibility timeout expires.
             });
   }
 
-  private void processError(ServiceBusErrorContext context) {
-    log.error(
-        "Service Bus consumer error: {}",
-        context.getException().getMessage(),
-        context.getException());
-  }
-
-  @PreDestroy
-  void stop() {
-    if (processor != null) {
-      processor.close();
-    }
+  private void deleteMessage(QueueMessageItem message) {
+    client.deleteMessage(message.getMessageId(), message.getPopReceipt());
   }
 }

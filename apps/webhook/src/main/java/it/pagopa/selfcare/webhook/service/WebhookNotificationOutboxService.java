@@ -16,10 +16,10 @@ public class WebhookNotificationOutboxService {
   @Inject WebhookNotificationRepository notificationRepository;
   @Inject WebhookNotificationPublisher publisher;
 
-  @ConfigProperty(name = "webhook.service-bus.enabled", defaultValue = "false")
+  @ConfigProperty(name = "webhook.storage-queue.enabled", defaultValue = "false")
   boolean enabled;
 
-  @Scheduled(every = "${webhook.service-bus.outbox-interval:30s}")
+  @Scheduled(every = "${webhook.storage-queue.outbox-interval:30s}")
   Uni<Void> publishUnpublishedNotifications() {
     if (!enabled) {
       return Uni.createFrom().voidItem();

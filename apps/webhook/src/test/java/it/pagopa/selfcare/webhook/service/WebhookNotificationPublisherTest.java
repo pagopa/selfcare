@@ -1,28 +1,28 @@
 package it.pagopa.selfcare.webhook.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.azure.messaging.servicebus.ServiceBusMessage;
-import com.azure.messaging.servicebus.ServiceBusSenderClient;
+import com.azure.storage.queue.QueueClient;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 class WebhookNotificationPublisherTest {
 
   private WebhookNotificationPublisher publisher;
-  private ServiceBusSenderClient sender;
+  private QueueClient client;
 
   @BeforeEach
   void setUp() {
     publisher = new WebhookNotificationPublisher();
-    sender = mock(ServiceBusSenderClient.class);
+    client = mock(QueueClient.class);
   }
 
   @Test
@@ -36,15 +36,15 @@ class WebhookNotificationPublisherTest {
 
     // then
     subscriber.awaitItem();
-    verify(sender, never()).sendMessage(org.mockito.ArgumentMatchers.any());
+    verify(client, never()).sendMessage(any(String.class));
   }
 
   @Test
-  void publish_shouldSendNotificationIdAsMessageBodyAndId() throws ReflectiveOperationException {
+  void publish_shouldSendNotificationIdAsMessageText() throws ReflectiveOperationException {
     // given
     String notificationId = "notification-id";
     publisher.enabled = true;
-    setSender(sender);
+    setClient(client);
 
     // when
     UniAssertSubscriber<Void> subscriber =
@@ -52,15 +52,11 @@ class WebhookNotificationPublisherTest {
 
     // then
     subscriber.awaitItem();
-    ArgumentCaptor<ServiceBusMessage> captor = ArgumentCaptor.forClass(ServiceBusMessage.class);
-    verify(sender).sendMessage(captor.capture());
-    ServiceBusMessage message = captor.getValue();
-    org.junit.jupiter.api.Assertions.assertEquals(notificationId, message.getMessageId());
-    org.junit.jupiter.api.Assertions.assertEquals(notificationId, message.getBody().toString());
+    verify(client).sendMessage(notificationId);
   }
 
   @Test
-  void publish_shouldFailWhenSenderIsNotInitialized() {
+  void publish_shouldFailWhenClientIsNotInitialized() {
     // given
     publisher.enabled = true;
 
@@ -73,19 +69,19 @@ class WebhookNotificationPublisherTest {
   }
 
   @Test
-  void publish_shouldPropagateSenderFailure() throws ReflectiveOperationException {
+  void publish_shouldPropagateClientFailure() throws ReflectiveOperationException {
     // given
     publisher.enabled = true;
-    setSender(sender);
-    RuntimeException error = new RuntimeException("Service Bus is unavailable");
-    org.mockito.Mockito.doThrow(error).when(sender).sendMessage(org.mockito.ArgumentMatchers.any());
+    setClient(client);
+    RuntimeException error = new RuntimeException("Storage Queue is unavailable");
+    doThrow(error).when(client).sendMessage(any(String.class));
 
     // when
     UniAssertSubscriber<Void> subscriber =
         publisher.publish("notification-id").subscribe().withSubscriber(UniAssertSubscriber.create());
 
     // then
-    subscriber.awaitFailure().assertFailedWith(RuntimeException.class, "Service Bus is unavailable");
+    subscriber.awaitFailure().assertFailedWith(RuntimeException.class, "Storage Queue is unavailable");
   }
 
   @Test
@@ -97,24 +93,23 @@ class WebhookNotificationPublisherTest {
     assertDoesNotThrow(() -> publisher.start(null));
 
     // then
-    verify(sender, never()).sendMessage(org.mockito.ArgumentMatchers.any());
+    verify(client, never()).sendMessage(any(String.class));
   }
 
   @Test
-  void stop_shouldCloseInitializedSender() throws ReflectiveOperationException {
+  void buildClientBuilder_shouldUseConnectionStringWhenProvided() {
     // given
-    setSender(sender);
+    publisher.connectionString =
+        "DefaultEndpointsProtocol=https;AccountName=test;AccountKey=dGVzdA==;EndpointSuffix=core.windows.net";
+    publisher.queue = "webhook-notifications";
 
     // when
-    publisher.stop();
-
-    // then
-    verify(sender).close();
+    assertDoesNotThrow(() -> publisher.buildClientBuilder());
   }
 
-  private void setSender(ServiceBusSenderClient sender) throws ReflectiveOperationException {
-    Field field = WebhookNotificationPublisher.class.getDeclaredField("sender");
+  private void setClient(QueueClient client) throws ReflectiveOperationException {
+    Field field = WebhookNotificationPublisher.class.getDeclaredField("client");
     field.setAccessible(true);
-    field.set(publisher, sender);
+    field.set(publisher, client);
   }
 }
