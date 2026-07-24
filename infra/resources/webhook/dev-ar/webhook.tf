@@ -45,7 +45,7 @@ module "collection_webhooks" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["productId"], unique = true },
+    { keys = ["productId", "tenantId"], unique = true },
     { keys = ["products"], unique = false }
   ]
 }

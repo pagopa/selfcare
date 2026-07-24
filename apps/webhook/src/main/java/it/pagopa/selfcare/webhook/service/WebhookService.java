@@ -7,6 +7,7 @@ import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.exception.WebhookAlreadyExistsException;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
@@ -55,7 +56,21 @@ public class WebhookService {
     }
 
     return webhookRepository
-        .persist(webhook)
+        .findWebhookByProduct(webhook.getProductId(), webhook.getTenantId())
+        .onItem()
+        .transformToUni(
+            existingWebhook -> {
+              if (existingWebhook != null) {
+                return Uni.createFrom()
+                    .failure(
+                        new WebhookAlreadyExistsException(
+                            "Webhook already exists for product: "
+                                + webhook.getProductId()
+                                + " and tenant: "
+                                + webhook.getTenantId()));
+              }
+              return webhookRepository.persist(webhook);
+            })
         .invoke(() -> log.info("Created webhook with ID: {}", webhook.getId()))
         .map(this::toResponse);
   }
