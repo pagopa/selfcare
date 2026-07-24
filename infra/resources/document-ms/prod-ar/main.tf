@@ -16,7 +16,7 @@ module "local" {
   container_app_max_replicas     = 5
   container_app_desired_replicas = "3"
   container_app_cpu              = 2.0
-  container_app_memory           = "4.0Gi"
+  container_app_memory           = "4Gi"
 }
 
 ###############################################################################
@@ -72,6 +72,12 @@ data "azurerm_storage_account" "user_attachments_storage" {
 data "azurerm_user_assigned_identity" "document_storage_blob_identity" {
   name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-documents-storage-blob-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+resource "azurerm_role_assignment" "document_user_attachments_blob_identity_role_assignment" {
+  scope                = data.azurerm_storage_account.user_attachments_storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.document_storage_blob_identity.principal_id
 }
 
 locals {
