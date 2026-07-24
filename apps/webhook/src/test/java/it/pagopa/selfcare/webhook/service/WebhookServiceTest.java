@@ -14,6 +14,7 @@ import it.pagopa.selfcare.webhook.dto.WebhookRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.exception.WebhookAlreadyExistsException;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
@@ -50,6 +51,8 @@ class WebhookServiceTest {
     retryPolicyRequest.setMaxAttempts(3);
     request.setRetryPolicy(retryPolicyRequest);
 
+    when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
+        .thenReturn(Uni.createFrom().nullItem());
     when(webhookRepository.persist(any(Webhook.class)))
         .thenAnswer(
             invocation -> {
@@ -73,7 +76,33 @@ class WebhookServiceTest {
     assertNotNull(response.getRetryPolicy());
     assertEquals(3, response.getRetryPolicy().getMaxAttempts());
 
+    verify(webhookRepository).findWebhookByProduct(PROD_TEST, TENANT_ID);
     verify(webhookRepository).persist(any(Webhook.class));
+  }
+
+  @Test
+  void createWebhook_shouldFailWhenWebhookWithSameProductAndTenantAlreadyExists() {
+    // given
+    WebhookRequest request = new WebhookRequest();
+    request.setUrl("http://example.com");
+    request.setHttpMethod("POST");
+    request.setTenantId(TENANT_ID);
+    request.setProductId(PROD_TEST);
+    when(webhookRepository.findWebhookByProduct(PROD_TEST, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(new Webhook()));
+
+    // when
+    UniAssertSubscriber<WebhookResponse> subscriber =
+        webhookService
+            .createWebhook(request)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber
+        .awaitFailure()
+        .assertFailedWith(WebhookAlreadyExistsException.class, "Webhook already exists");
+    verify(webhookRepository, never()).persist(any(Webhook.class));
   }
 
   @Test

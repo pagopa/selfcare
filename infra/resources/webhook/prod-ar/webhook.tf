@@ -49,7 +49,7 @@ module "collection_webhooks" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["productId"], unique = true },
+    { keys = ["productId", "tenantId"], unique = true },
     { keys = ["products"], unique = false }
   ]
 }
@@ -72,11 +72,11 @@ module "collection_webhook_notifications" {
 }
 
 ###############################################################################
-# Service Bus
+# Storage Queue
 ###############################################################################
 
-module "service_bus" {
-  source = "../../_modules/azure_service_bus"
+module "storage_queue" {
+  source = "../../_modules/azure_storage_queue"
 
   environment = {
     prefix          = "selc"
@@ -87,9 +87,7 @@ module "service_bus" {
     instance_number = "01"
   }
 
-  resource_group_name = module.local.config.ca_resource_group_name
-  # Premium disables public access and connects through the private endpoint.
-  sku                                         = "Premium"
+  resource_group_name                         = module.local.config.ca_resource_group_name
   private_endpoint_subnet_name                = "${module.local.config.project}-private-endpoints-snet"
   virtual_network_name                        = module.local.vnet_selc_name
   virtual_network_resource_group_name         = module.local.vnet_resource_group_name
@@ -124,16 +122,16 @@ locals {
       value = "selcWebhook"
     },
     {
-      name  = "WEBHOOK_SERVICE_BUS_ENABLED"
+      name  = "WEBHOOK_STORAGE_QUEUE_ENABLED"
       value = "true"
     },
     {
-      name  = "WEBHOOK_SERVICE_BUS_NAMESPACE"
-      value = "${module.service_bus.namespace_name}.servicebus.windows.net"
+      name  = "WEBHOOK_STORAGE_QUEUE_ENDPOINT"
+      value = module.storage_queue.queue_endpoint
     },
     {
-      name  = "WEBHOOK_SERVICE_BUS_QUEUE"
-      value = module.service_bus.queue_name
+      name  = "WEBHOOK_STORAGE_QUEUE_NAME"
+      value = module.storage_queue.queue_name
     },
     {
       name  = "AZURE_CLIENT_ID"

@@ -45,7 +45,7 @@ module "collection_webhooks" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["productId"], unique = true },
+    { keys = ["productId", "tenantId"], unique = true },
     { keys = ["products"], unique = false }
   ]
 }
@@ -71,8 +71,37 @@ module "collection_webhook_notifications" {
 # Service Bus
 ###############################################################################
 
-module "service_bus" {
-  source = "../../_modules/azure_service_bus"
+# module "service_bus" {
+#   source = "../../_modules/azure_service_bus"
+#
+#   environment = {
+#     prefix          = "selc"
+#     env_short       = module.local.config.env_short
+#     location        = module.local.config.location
+#     location_short  = module.local.config.location_short
+#     app_name        = "webhook"
+#     instance_number = "01"
+#   }
+#
+#   resource_group_name = module.local.config.ca_resource_group_name
+#   # Standard uses the public namespace endpoint, restricted to the NAT egress IP.
+#   sku                                         = "Standard"
+#   outbound_public_ip_name                     = module.local.config.nat_pip_outbound_name
+#   outbound_public_ip_resource_group_name      = module.local.config.resource_group_name_vnet
+#   container_app_environment_identity_name     = "${module.local.config.container_app_environment_name}-managed_identity"
+#   log_analytics_workspace_name                = "${module.local.config.project}-law"
+#   log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
+#   subscription_id                             = module.local.subscription_id
+#   queue_name                                  = "webhook-notifications"
+#   tags                                        = module.local.config.tags
+# }
+
+###############################################################################
+# Storage Queue
+###############################################################################
+
+module "storage_queue" {
+  source = "../../_modules/azure_storage_queue"
 
   environment = {
     prefix          = "selc"
@@ -83,11 +112,11 @@ module "service_bus" {
     instance_number = "01"
   }
 
-  resource_group_name = module.local.config.ca_resource_group_name
-  # Standard uses the public namespace endpoint, restricted to the NAT egress IP.
-  sku                                         = "Standard"
-  outbound_public_ip_name                     = module.local.config.nat_pip_outbound_name
-  outbound_public_ip_resource_group_name      = module.local.config.resource_group_name_vnet
+  resource_group_name                         = module.local.config.ca_resource_group_name
+  private_endpoint_subnet_name                = "${module.local.config.project}-private-endpoints-snet"
+  virtual_network_name                        = module.local.vnet_selc_name
+  virtual_network_resource_group_name         = module.local.vnet_resource_group_name
+  private_dns_zone_resource_group_name        = module.local.vnet_resource_group_name
   container_app_environment_identity_name     = "${module.local.config.container_app_environment_name}-managed_identity"
   log_analytics_workspace_name                = "${module.local.config.project}-law"
   log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
@@ -118,16 +147,16 @@ locals {
       value = "selcWebhook"
     },
     {
-      name  = "WEBHOOK_SERVICE_BUS_ENABLED"
+      name  = "WEBHOOK_STORAGE_QUEUE_ENABLED"
       value = "true"
     },
     {
-      name  = "WEBHOOK_SERVICE_BUS_NAMESPACE"
-      value = "${module.service_bus.namespace_name}.servicebus.windows.net"
+      name  = "WEBHOOK_STORAGE_QUEUE_ENDPOINT"
+      value = module.storage_queue.queue_endpoint
     },
     {
-      name  = "WEBHOOK_SERVICE_BUS_QUEUE"
-      value = module.service_bus.queue_name
+      name  = "WEBHOOK_STORAGE_QUEUE_NAME"
+      value = module.storage_queue.queue_name
     },
     {
       name  = "AZURE_CLIENT_ID"
