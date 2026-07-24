@@ -476,8 +476,90 @@ module "contracts_storage" {
 }
 
 ###############################################################################
-# Logs storage
+# Storage user-attachments (sandbox for end-user uploaded documents)
+# Dedicated storage account with Defender for Storage + on-upload Malware Scanning enabled.
 ###############################################################################
+
+resource "azurerm_resource_group" "user_attachments_sa_rg" {
+  name     = "${local.project}-user-attachments-storage-rg"
+  location = local.location
+  tags     = local.tags
+}
+
+module "storage_user_attachments" {
+  source = "../_modules/storage_accounts"
+
+  prefix          = local.prefix_short
+  env_short       = local.env_short
+  location        = local.location
+  domain          = "ar"
+  app_name        = "usrattach"
+  instance_number = "01"
+
+  resource_group_name  = azurerm_resource_group.user_attachments_sa_rg.name
+  virtual_network_name = module.network.rg_vnet_name
+
+  tags                         = local.tags
+  cidr_subnet_contract_storage = local.cidr_subnet_user_attachments_storage
+
+  project = local.prefix
+
+  private_dns_zone_resource_group_name = module.network.rg_vnet_name
+
+  # Generic knobs — semantics decided here in the caller, not in the module.
+  naming_config          = "user-attachments"
+  kv_secret_name         = "user-attachments-storage-connection-string"
+  lifecycle_prefix_match = ["parties/deleted"]
+
+  # Soft-delete of blobs enabled so that Defender can soft-delete files
+  # flagged as malicious (see module storage_account.tf precondition).
+  blob_features = {
+    immutability_policy = {
+      enabled                       = false
+      allow_protected_append_writes = false
+      period_since_creation_in_days = 1
+    }
+    restore_policy_days   = 0
+    delete_retention_days = 30 # required for Defender "soft-delete malicious blobs"
+    versioning            = false
+    last_access_time      = true
+    change_feed = {
+      enabled           = false
+      retention_in_days = 0
+    }
+  }
+
+  # Lifecycle: conservative cleanup in UAT.
+  # Prefix scoped so it only targets blobs already "soft-deleted" by the
+  # application (document-ms moves them from "parties/docs/..." to
+  # "parties/deleted/..." via DocumentContentServiceImpl.deleteFileFromAzure,
+  # driven by application.properties → document-ms.blob-storage.path-deleted).
+  # Live user attachments under "parties/docs/..." are NEVER touched by this rule.
+  base_blob_tier_to_cool_after_days_since_modification_greater_than = 30
+  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 60
+  base_delete_after_days_since_creation_greater_than                = 90
+  snapshot_change_tier_to_cool_after_days_since_creation            = 30
+  snapshot_delete_after_days_since_creation_greater_than            = 90
+  version_change_tier_to_cool_after_days_since_creation             = 30
+  version_delete_after_days_since_creation                          = 90
+
+  # Defender for Storage
+  defender_enabled                           = true
+  defender_malware_scanning_enabled          = true
+  defender_malware_scanning_cap_gb_per_month = 100
+  defender_sensitive_data_discovery_enabled  = false
+  defender_soft_delete_malicious_blobs       = true
+
+  key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
+  key_vault_name                = module.key_vault.key_vault_name
+}
+
+resource "azurerm_user_assigned_identity" "user_attachments_identity" {
+  name                = "${local.project}-user-attachments-identity"
+  resource_group_name = azurerm_resource_group.user_attachments_sa_rg.name
+  location            = local.location
+}
+
 
 module "logs_storage" {
   source = "../_modules/storage_account_template"
