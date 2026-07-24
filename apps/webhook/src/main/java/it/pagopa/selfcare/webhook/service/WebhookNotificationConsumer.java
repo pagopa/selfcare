@@ -5,6 +5,7 @@ import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.queue.QueueClient;
 import com.azure.storage.queue.QueueClientBuilder;
 import com.azure.storage.queue.models.QueueMessageItem;
+import com.azure.storage.queue.models.QueueStorageException;
 import io.quarkus.runtime.StartupEvent;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
@@ -77,6 +78,15 @@ public class WebhookNotificationConsumer {
           .receiveMessages(
               maxMessagesPerPoll, Duration.ofSeconds(visibilityTimeoutSeconds), null, null)
           .forEach(this::processMessage);
+    } catch (QueueStorageException e) {
+      if (e.getStatusCode() == 404) {
+        // The queue may not be fully provisioned yet right after startup (e.g. local
+        // emulator): recreate it and retry on the next poll instead of failing loudly.
+        log.warn("Storage Queue {} not found yet, attempting to recreate it", queue);
+        client.createIfNotExists();
+      } else {
+        log.error("Storage Queue polling error: {}", e.getMessage(), e);
+      }
     } catch (Exception e) {
       log.error("Storage Queue polling error: {}", e.getMessage(), e);
     }
