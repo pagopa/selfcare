@@ -49,7 +49,7 @@ services:
       - webhook-network
 
   sql-edge:
-    image: mcr.microsoft.com/azure-sql-edge:latest
+    image: mcr.microsoft.com/azure-sql-edge:latest@sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "ServiceBusEmulator1!"
@@ -57,7 +57,7 @@ services:
       - webhook-network
 
   servicebus-emulator:
-    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest@sha256:5a96d893b245031740f7d46e0fe5ff282d24b78c4b7d761dd57590f3f010a9b3
     ports:
       - "5672:5672"
     environment:

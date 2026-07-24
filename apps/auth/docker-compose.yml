@@ -48,7 +48,7 @@ services:
       - develop-network
 
   userms:
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:5ccdb3e115fdbd6e35cb5f5ded687c1773704274c0702fdf1997deea92abe07e
     platform: linux/amd64
     ports:
       - '8080:8080'
@@ -65,7 +65,7 @@ services:
         condition: service_started
 
   institutionms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:de9358d54eaef37bb42526e747e3c9ff3426980cdce2ef8b9fed3c5ca3f48c4f
     platform: linux/amd64
     ports:
       - '8083:8083'
@@ -82,7 +82,7 @@ services:
         condition: service_started
 
   iamms:
-    image: ghcr.io/pagopa/selfcare-iam-ms:latest
+    image: ghcr.io/pagopa/selfcare-iam-ms:latest@sha256:19393f9e1d58fc1eeae0fb07e1bfaf320e46f51360b4c48c28450ceb7562983d
     platform: linux/amd64
     ports:
       - '8085:8085'
