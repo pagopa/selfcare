@@ -1801,6 +1801,9 @@
           "requiresParentOnboarding": {
             "type": "boolean"
           },
+          "allowSameUserManagerAndDelegate": {
+            "type": "boolean"
+          },
           "expirationDays": {
             "type": "integer",
             "format": "int32"
@@ -1833,6 +1836,9 @@
             "items": {
               "$ref": "#/components/schemas/BackOfficeRole"
             }
+          },
+          "excludeRoleFromUserGroups": {
+            "type": "boolean"
           }
         }
       },
@@ -2563,7 +2569,7 @@
           },
           "recipientCode": {
             "type": "string",
-            "description": "Billing recipient code, not required only for institutionType SA"
+            "description": "Billing recipient code"
           },
           "companyInformations": {
             "$ref": "#/components/schemas/CompanyInformationsResource"
@@ -2839,6 +2845,9 @@
         "title": "ProductRoleInfo",
         "type": "object",
         "properties": {
+          "multiroleAllowed": {
+            "type": "boolean"
+          },
           "skipUserCreation": {
             "type": "boolean"
           },
