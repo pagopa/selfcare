@@ -2,7 +2,7 @@ version: '3.8'
 services:
 
   mongodb:
-    image: mongo:latest
+    image: mongo:latest@sha256:e0ce8c35124d4a9f9785532d1f268f39e9728ffa1cb38f46fa482436424c4bd3
     ports:
       - '27017:27017'
     volumes:
@@ -11,7 +11,7 @@ services:
       - develop-network
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
+    image: mcr.microsoft.com/azure-storage/azurite@sha256:37493d0f2e764467421ffe16eb3caa39277e5fa7f6adea18eb5bbfb3c5247f98
     ports:
       - "10000:10000"
     command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
@@ -35,7 +35,7 @@ services:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
 
   mockserver:
-    image: mockserver/mockserver
+    image: mockserver/mockserver@sha256:fed9b2089e021947f785d1f0bfda3723352bb2c1634ce7b0bcd42dfd1b0fd02f
     ports:
       - '1080:1080'
     environment:
