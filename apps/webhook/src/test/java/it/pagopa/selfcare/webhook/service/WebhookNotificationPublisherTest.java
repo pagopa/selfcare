@@ -1,28 +1,38 @@
 package it.pagopa.selfcare.webhook.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.QueueClientBuilder;
+import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import jakarta.inject.Inject;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@QuarkusTest
 class WebhookNotificationPublisherTest {
+
+  @Inject WebhookNotificationPublisher webhookNotificationPublisher;
 
   private WebhookNotificationPublisher publisher;
   private QueueClient client;
 
   @BeforeEach
-  void setUp() {
-    publisher = new WebhookNotificationPublisher();
+  void setUp() throws ReflectiveOperationException {
+    publisher = io.quarkus.arc.ClientProxy.unwrap(webhookNotificationPublisher);
     client = mock(QueueClient.class);
+    publisher.enabled = false;
+    setClient(null);
   }
 
   @Test
@@ -101,6 +111,33 @@ class WebhookNotificationPublisherTest {
     // given
     publisher.connectionString =
         "DefaultEndpointsProtocol=https;AccountName=test;AccountKey=dGVzdA==;EndpointSuffix=core.windows.net";
+    publisher.queue = "webhook-notifications";
+
+    // when
+    assertDoesNotThrow(() -> publisher.buildClientBuilder());
+  }
+
+  @Test
+  void start_shouldCreateQueueWhenEnabled() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    publisher = spy(publisher);
+    publisher.enabled = true;
+    doReturn(clientBuilder).when(publisher).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+
+    // when
+    publisher.start(null);
+
+    // then
+    verify(client).createIfNotExists();
+  }
+
+  @Test
+  void buildClientBuilder_shouldUseManagedIdentityWhenConnectionStringIsNotProvided() {
+    // given
+    publisher.connectionString = "none";
+    publisher.endpoint = "https://test.queue.core.windows.net";
     publisher.queue = "webhook-notifications";
 
     // when
