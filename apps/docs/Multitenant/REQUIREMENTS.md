@@ -20,14 +20,11 @@
 ### SELC-2: Tenant Identification via JWT Claim
 - SELC-2.1: Every JWT session token issued by either authentication flow (OneIdentity/`auth` or `hub-spid-login`) MUST contain a tenant claim identifying the tenant the session belongs to.
 - SELC-2.2: The tenant claim MUST remain present and verifiable for the lifetime of the authenticated session, independent of which login mechanism issued the token.
-- SELC-2.3: Backend microservices MUST validate that the tenant claim in the JWT is consistent with the `X-Tenant-Id` header on the same request; on mismatch, the system MUST reject the request. If the JWT lacks the tenant claim entirely (e.g., a `hub-spid-login` token per SELC-3.4), validation MUST default the claim value to `PNPG` before performing this consistency check, rather than treating the token as invalid.
+- SELC-2.3: Backend microservices MUST validate that the tenant claim in the JWT is consistent with the `X-Tenant-Id` header on the same request; on mismatch, the system MUST reject the request. If the JWT lacks the tenant claim entirely (e.g., a `hub-spid-login` token per SELC-3.1), validation MUST default the claim value to `PNPG` before performing this consistency check, rather than treating the token as invalid.
 
 ### SELC-3: Tenant Claim Injection for `hub-spid-login`
-- SELC-3.1: Since `hub-spid-login` builds session tokens internally as a black box and does not currently support adding custom claims, the system MUST define and implement a mechanism to inject the tenant claim into tokens issued via this flow (e.g., token post-processing, a wrapping service, or a shared token-issuing layer).
-- SELC-3.2: The chosen injection mechanism MUST NOT alter or invalidate other claims already produced by `hub-spid-login`.
-- SELC-3.3: The injection mechanism MUST produce a token with the tenant claim in the same format/claim name used by the OneIdentity/`auth` flow, so downstream services can consume both flows uniformly.
-- SELC-3.4: During validation, if a JWT signed by `hub-spid-login` does NOT contain the tenant claim, the system MUST treat it as valid and MUST default the tenant value to `PNPG`.
-- SELC-3.5: Even when the tenant claim is defaulted to `PNPG` per SELC-3.4, the `X-Tenant-Id` HTTP header MUST still be present on the request and MUST carry the value `PNPG`; the header is never optional, regardless of whether the claim was present in the token.
+- SELC-3.1: During validation, if a JWT signed by `hub-spid-login` does NOT contain the tenant claim, the system MUST treat it as valid and MUST default the tenant value to `PNPG`.
+- SELC-3.4: Even when the tenant claim is defaulted to `PNPG` per SELC-3.1, the `X-Tenant-Id` HTTP header MUST still be present on the request and MUST carry the value `PNPG`; the header is never optional, regardless of whether the claim was present in the token.
 
 ### SELC-4: Tenant Claim Injection for OneIdentity / `auth`
 - SELC-4.1: The `auth` microservice MUST continue to add the tenant claim to the JWT it builds internally for the OneIdentity login flow.
