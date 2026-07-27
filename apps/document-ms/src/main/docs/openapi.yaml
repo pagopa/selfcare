@@ -1006,6 +1006,39 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
+  /v1/document-content/{onboardingId}/user-attachments:
+    delete:
+      summary: Delete user attachments from Azure Blob Storage
+      description: "Soft-deletes every user-uploaded attachment associated with the\
+        \ specified onboarding: each blob is moved from the contracts path to the\
+        \ configured delete path on the USER storage account and the corresponding\
+        \ attachmentPath on Mongo is updated."
+      operationId: deleteUserAttachments
+      tags:
+      - Document Content Controller
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          pattern: \S
+          type: string
+      responses:
+        "200":
+          description: User attachments soft-deletion completed (may be a no-op if
+            none found)
+          content:
+            application/json: {}
+        "400":
+          description: Invalid onboardingId
+        "500":
+          description: Internal server error during deletion
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
   /v1/documents:
     post:
       summary: Save document (contract or attachment)

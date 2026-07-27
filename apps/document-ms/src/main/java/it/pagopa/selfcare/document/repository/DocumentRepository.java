@@ -3,6 +3,7 @@ package it.pagopa.selfcare.document.repository;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.entity.Document;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -46,6 +47,11 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     public Uni<List<Document>> findAttachments(String onboardingId) {
         return find("onboardingId = ?1 and type = ?2", onboardingId, ATTACHMENT.name()).list();
+    }
+
+    public Uni<List<Document>> findUserAttachmentsByOnboardingId(String onboardingId) {
+        return find("onboardingId = ?1 and type = ?2 and storageOrigin = ?3",
+                onboardingId, ATTACHMENT.name(), StorageOrigin.USER).list();
     }
 
     /**

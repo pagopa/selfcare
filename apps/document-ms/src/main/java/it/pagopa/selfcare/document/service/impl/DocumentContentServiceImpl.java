@@ -420,6 +420,103 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
+    public Uni<String> deleteUserAttachments(String onboardingId) {
+        log.info("START - deleteUserAttachments for onboardingId: {}", sanitize(onboardingId));
+
+        final String basePath = documentMsConfig.getContractPath();
+
+        return documentRepository.findUserAttachmentsByOnboardingId(onboardingId)
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .chain(documents -> {
+                    if (documents == null || documents.isEmpty()) {
+                        log.info("No user attachments found for onboardingId: {}. Skipping deletion.", sanitize(onboardingId));
+                        return Uni.createFrom().item("No user attachments to delete");
+                    }
+
+                    log.info("Found {} user attachment(s) to soft-delete for onboardingId: {}",
+                            documents.size(), sanitize(onboardingId));
+
+                    Uni<Integer> chain = Uni.createFrom().item(0);
+                    for (Document doc : documents) {
+                        chain = chain.chain(acc -> softDeleteSingleUserAttachment(doc, basePath, onboardingId)
+                                .map(deleted -> Boolean.TRUE.equals(deleted) ? acc + 1 : acc));
+                    }
+
+                    return chain
+                            .invoke(movedCount -> telemetryService.trackUserAttachmentsDeleted(onboardingId, movedCount))
+                            .map(movedCount -> String.format(
+                                    "User attachments deleted successfully: %d/%d", movedCount, documents.size()));
+                })
+                .onFailure().invoke(error -> {
+                    log.error("deleteUserAttachments failed for onboardingId {}: {}",
+                            sanitize(onboardingId), error.getMessage());
+                    telemetryService.trackUserAttachmentsDeleteFailed(onboardingId, error.getMessage());
+                })
+                .onFailure().recoverWithItem("User attachments deletion skipped due to error");
+    }
+
+    /**
+     * Soft-deletes a single user attachment by moving its blob from the contracts path
+     * to the configured delete path, and updating the corresponding {@code attachmentPath}
+     * on the Document collection. On DB failure the blob is restored to the original path.
+     *
+     * @return {@code Uni<Boolean>} emitting {@code true} if the blob was moved and DB updated,
+     *         {@code false} if the attachment was skipped (missing path or blob).
+     */
+    private Uni<Boolean> softDeleteSingleUserAttachment(Document document, String basePath, String onboardingId) {
+        final String originalAttachmentPath = document.getAttachmentPath();
+        if (Objects.isNull(originalAttachmentPath) || originalAttachmentPath.isBlank()) {
+            log.warn("Skipping user attachment with empty attachmentPath: documentId={}, onboardingId={}",
+                    sanitize(document.getId()), sanitize(onboardingId));
+            return Uni.createFrom().item(Boolean.FALSE);
+        }
+
+        // Path is stored as absolute blob path, validate it against traversal attempts.
+        final String safeOriginalPath = DocumentFileUtils.buildAndValidateContractFilePath(
+                originalAttachmentPath, basePath, true);
+
+        final AzureBlobClient azureBlobClient = storageRegistry.clientFor(document.getStorageOrigin());
+
+        final String movedAttachmentPath;
+        try {
+            movedAttachmentPath = deleteFileFromAzure(azureBlobClient, safeOriginalPath, basePath);
+        } catch (Exception e) {
+            log.warn("User attachment blob not found or move failed on Azure for documentId {}, onboardingId {}: {}. Skipping.",
+                    sanitize(document.getId()), sanitize(onboardingId), e.getMessage());
+            return Uni.createFrom().item(Boolean.FALSE);
+        }
+
+        return documentRepository.updateAttachmentPathById(document.getId(), movedAttachmentPath)
+                .onFailure().retry()
+                    .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                    .atMost(retryMaxAttempts)
+                .onFailure().call(dbError -> {
+                    log.error("DB attachmentPath update failed for documentId {}, onboardingId {}. Rolling back Azure move...",
+                            sanitize(document.getId()), sanitize(onboardingId));
+                    return rollbackDeletedAzureFile(azureBlobClient, movedAttachmentPath, safeOriginalPath);
+                })
+                .invoke(() -> document.setAttachmentPath(movedAttachmentPath))
+                .replaceWith(Boolean.TRUE);
+    }
+
+    /**
+     * Restores a single blob to its original path (used as compensating action when the DB
+     * update fails after a soft-delete move).
+     */
+    private Uni<Void> rollbackDeletedAzureFile(AzureBlobClient azureBlobClient, String currentPath, String originalPath) {
+        return Uni.createFrom().item(() -> {
+            try {
+                log.info("Rolling back user attachment to original path...");
+                restoreFileInAzure(azureBlobClient, currentPath, originalPath);
+                log.info("Rollback completed successfully for path {}", sanitize(originalPath));
+            } catch (Exception e) {
+                log.error("CRITICAL ERROR: Rollback failed for user attachment! Azure is out of sync with MongoDB.", e);
+            }
+            return null;
+        }).runSubscriptionOn(Infrastructure.getDefaultWorkerPool()).replaceWithVoid();
+    }
+
+    @Override
     public Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request) {
         log.info("Uploading aggregates CSV for onboardingId: {}, productId: {}",
                 sanitize(request.getOnboardingId()), sanitize(request.getProductId()));
