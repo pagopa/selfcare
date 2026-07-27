@@ -183,7 +183,7 @@ resource "azurerm_dns_a_record" "public_api_pnpg" {
 # MX record for sub domain email
 resource "azurerm_dns_mx_record" "dns-mx-email-selfcare-pagopa-it" {
   count               = var.env_short == "p" ? 1 : 0
-  name                = "email"
+  name                = "bounce"
   zone_name           = azurerm_dns_zone.selfcare_public[0].name
   resource_group_name = var.rg_vnet_name
   ttl                 = var.dns_default_ttl_sec
