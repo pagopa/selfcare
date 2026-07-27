@@ -22,8 +22,6 @@ import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.inject.Inject;
 import java.lang.reflect.Field;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import org.bson.types.ObjectId;
@@ -341,8 +339,7 @@ class WebhookNotificationServiceTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setWebhookId(webhookId);
-    notification.setPayload(
-        Base64.getEncoder().encodeToString("{}".getBytes(StandardCharsets.UTF_8)));
+    notification.setPayload(DataEncryptionConfig.encrypt("{}"));
     notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
     notification.setAttemptCount(0);
     return notification;

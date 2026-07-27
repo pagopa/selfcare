@@ -17,9 +17,8 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.exception.WebhookAlreadyExistsException;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
+import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.inject.Inject;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import org.bson.types.ObjectId;
@@ -361,9 +360,8 @@ class WebhookServiceTest {
     // then
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
     verify(notificationRepository).persist(captor.capture());
-    String expectedPayload =
-        Base64.getEncoder().encodeToString(request.getPayload().getBytes(StandardCharsets.UTF_8));
-    assertEquals(expectedPayload, captor.getValue().getPayload());
+    assertNotEquals(request.getPayload(), captor.getValue().getPayload());
+    assertEquals(request.getPayload(), DataEncryptionConfig.decrypt(captor.getValue().getPayload()));
     assertEquals(TENANT_ID, captor.getValue().getTenantId());
     assertEquals(WebhookNotification.NotificationStatus.PENDING, captor.getValue().getStatus());
     verify(notificationPublisher).publish(captor.getValue().getId().toHexString());
