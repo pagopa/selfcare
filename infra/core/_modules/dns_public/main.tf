@@ -3,16 +3,16 @@ locals {
 
   dkim_aws_ses_selfcare_pagopa_it = [
     {
-      "name"  = "6h45kkrdd3vjdinlyiiidtxxsphoaubs._domainkey"
-      "value" = "6h45kkrdd3vjdinlyiiidtxxsphoaubs.dkim.eu-south-1.amazonses.com"
+      "name"  = "5jourkvmabw73l5toacbapbkd2mv356m._domainkey"
+      "value" = "5jourkvmabw73l5toacbapbkd2mv356m.dkim.eu-south-1.amazonses.com"
     },
     {
-      "name"  = "xzxgkpr57rtojhujy5pa7allv7mpoxs4._domainkey"
-      "value" = "xzxgkpr57rtojhujy5pa7allv7mpoxs4.dkim.eu-south-1.amazonses.com"
+      "name"  = "fe5tf2wasde4lv4lygujqayz6ifvfmnz._domainkey"
+      "value" = "fe5tf2wasde4lv4lygujqayz6ifvfmnz.dkim.eu-south-1.amazonses.com"
     },
     {
-      "name"  = "6ozapd6v5bdmceyr2ap246as3mvafyd2._domainkey"
-      "value" = "6ozapd6v5bdmceyr2ap246as3mvafyd2.dkim.eu-south-1.amazonses.com"
+      "name"  = "q3mkkdxybtpnlnoicq33tzg6qf4bzwcq._domainkey"
+      "value" = "q3mkkdxybtpnlnoicq33tzg6qf4bzwcq.dkim.eu-south-1.amazonses.com"
     }
   ]
 
@@ -197,7 +197,7 @@ resource "azurerm_dns_mx_record" "dns-mx-email-selfcare-pagopa-it" {
 # spf record
 resource "azurerm_dns_txt_record" "dns-txt-email-selfcare-pagopa-it-aws-ses" {
   count               = var.env_short == "p" ? 1 : 0
-  name                = "email"
+  name                = "bounce"
   zone_name           = azurerm_dns_zone.selfcare_public[0].name
   resource_group_name = var.rg_vnet_name
   ttl                 = var.dns_default_ttl_sec
@@ -207,6 +207,19 @@ resource "azurerm_dns_txt_record" "dns-txt-email-selfcare-pagopa-it-aws-ses" {
   tags = var.tags
 }
 
+resource "azurerm_dns_txt_record" "dns-txt-dmarc-selfcare-pagopa-it-aws-ses" {
+  count               = var.env_short == "p" ? 1 : 0
+  name                = "_dmarc"
+  zone_name           = azurerm_dns_zone.selfcare_public[0].name
+  resource_group_name = var.rg_vnet_name
+  ttl                 = var.dns_default_ttl_sec
+  record {
+    value = "v=DMARC1; p=none;"
+  }
+  tags = var.tags
+}
+
+/*
 resource "azurerm_dns_txt_record" "dns-txt-selfcare-pagopa-it-aws-ses" {
   count               = var.env_short == "p" ? 1 : 0
   name                = "_amazonses"
@@ -218,6 +231,7 @@ resource "azurerm_dns_txt_record" "dns-txt-selfcare-pagopa-it-aws-ses" {
   }
   tags = var.tags
 }
+*/
 
 resource "azurerm_dns_cname_record" "dkim-aws-ses-selfcare-pagopa-it" {
   for_each            = var.env_short == "p" ? { for d in local.dkim_aws_ses_selfcare_pagopa_it : d.name => d } : {}
