@@ -195,18 +195,3 @@ module "container_app_document_ms" {
   additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.document_storage_blob_identity.id]
 }
 
-###############################################################################
-# One-off migration: `terraform import` for the pre-existing Private Endpoint
-#
-# The PE already exists in Azure (created by the legacy core stack) with the
-# Private DNS zone group already configured. Adopt it into this state with:
-#
-#   SUB=1ab5e788-3b98-4c63-bd05-de0c7388c853  # DEV-SelfCare subscription id
-#
-#   terraform import azurerm_private_endpoint.user_attachments_blob_pep \
-#     "/subscriptions/$SUB/resourceGroups/selc-d-user-attachments-storage-rg/providers/Microsoft.Network/privateEndpoints/sc-d-weu-ar-usrattach-blob-pep-01"
-#
-# After import, `terraform plan` should be a pure `update in-place` with only
-# tag reconciliation (removal of legacy `ModuleName`/`ModuleSource`/`ModuleVersion`).
-# No `must be replaced` should appear — otherwise stop and re-check.
-###############################################################################
