@@ -22,4 +22,6 @@ public class Features {
   @Builder.Default private int expirationDays = 30;
 
   private boolean enabled;
+
+  private boolean requiredRecipientCode;
 }
