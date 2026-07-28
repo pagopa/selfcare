@@ -2,13 +2,11 @@ package it.pagopa.selfcare.webhook.service;
 
 import com.azure.core.credential.TokenCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
-import com.azure.messaging.servicebus.ServiceBusClientBuilder;
-import com.azure.messaging.servicebus.ServiceBusMessage;
-import com.azure.messaging.servicebus.ServiceBusSenderClient;
+import com.azure.storage.queue.QueueClient;
+import com.azure.storage.queue.QueueClientBuilder;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import java.util.Objects;
@@ -19,32 +17,37 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @ApplicationScoped
 public class WebhookNotificationPublisher {
 
-  @ConfigProperty(name = "webhook.service-bus.enabled", defaultValue = "false")
+  @ConfigProperty(name = "webhook.storage-queue.enabled", defaultValue = "false")
   boolean enabled;
 
-  @ConfigProperty(name = "webhook.service-bus.namespace")
-  String namespace;
+  @ConfigProperty(name = "webhook.storage-queue.endpoint")
+  String endpoint;
 
-  @ConfigProperty(name = "webhook.service-bus.queue")
+  @ConfigProperty(name = "webhook.storage-queue.queue")
   String queue;
 
-  @ConfigProperty(name = "webhook.service-bus.connection-string", defaultValue = "none")
+  @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
-  private ServiceBusSenderClient sender;
+  private QueueClient client;
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
       return;
     }
-    ServiceBusClientBuilder clientBuilder = new ServiceBusClientBuilder();
+    client = buildClientBuilder().buildClient();
+    client.createIfNotExists();
+  }
+
+  QueueClientBuilder buildClientBuilder() {
+    QueueClientBuilder clientBuilder = new QueueClientBuilder().queueName(queue);
     if (hasConnectionString()) {
       clientBuilder.connectionString(connectionString);
     } else {
       TokenCredential credential = new DefaultAzureCredentialBuilder().build();
-      clientBuilder.fullyQualifiedNamespace(namespace).credential(credential);
+      clientBuilder.endpoint(endpoint).credential(credential);
     }
-    sender = clientBuilder.sender().queueName(queue).buildClient();
+    return clientBuilder;
   }
 
   private boolean hasConnectionString() {
@@ -58,18 +61,11 @@ public class WebhookNotificationPublisher {
     return Uni.createFrom()
         .item(
             () -> {
-              Objects.requireNonNull(sender, "Service Bus sender is not initialized")
-                  .sendMessage(new ServiceBusMessage(notificationId).setMessageId(notificationId));
+              Objects.requireNonNull(client, "Storage Queue client is not initialized")
+                  .sendMessage(notificationId);
               return true;
             })
         .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
         .replaceWithVoid();
-  }
-
-  @PreDestroy
-  void stop() {
-    if (sender != null) {
-      sender.close();
-    }
   }
 }

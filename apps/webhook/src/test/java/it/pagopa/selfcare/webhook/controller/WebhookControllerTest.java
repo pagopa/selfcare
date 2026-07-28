@@ -12,6 +12,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.dto.NotificationRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookResponse;
+import it.pagopa.selfcare.webhook.exception.WebhookAlreadyExistsException;
 import it.pagopa.selfcare.webhook.service.WebhookService;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
@@ -53,6 +54,29 @@ class WebhookControllerTest {
         .then()
         .statusCode(201)
         .body("url", equalTo(url));
+  }
+
+  @Test
+  void createWebhook_shouldReturnConflictWhenWebhookWithSameProductAndTenantAlreadyExists() {
+    // given
+    WebhookRequest request = new WebhookRequest();
+    request.setUrl(URL);
+    request.setHttpMethod("POST");
+    request.setTenantId(TENANT_ID);
+    request.setProductId(PROD_TEST);
+    Mockito.when(webhookService.createWebhook(any(WebhookRequest.class)))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(new WebhookAlreadyExistsException("Webhook already exists")));
+
+    // when
+    given()
+        .contentType(MediaType.APPLICATION_JSON)
+        .body(request)
+        .when()
+        .post("/webhooks")
+        .then()
+        .statusCode(409);
   }
 
   @Test

@@ -48,27 +48,11 @@ services:
     networks:
       - webhook-network
 
-  sql-edge:
-    image: mcr.microsoft.com/azure-sql-edge:latest
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "ServiceBusEmulator1!"
-    networks:
-      - webhook-network
-
-  servicebus-emulator:
-    image: mcr.microsoft.com/azure-messaging/servicebus-emulator:latest
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
     ports:
-      - "5672:5672"
-    environment:
-      ACCEPT_EULA: "Y"
-      SQL_SERVER: sql-edge
-      MSSQL_SA_PASSWORD: "ServiceBusEmulator1!"
-      CONFIG_PATH: /ServiceBus_Emulator/ConfigFiles/Config.json
-    volumes:
-      - "./src/test/resources/servicebus/config.json:/ServiceBus_Emulator/ConfigFiles/Config.json"
-    depends_on:
-      - sql-edge
+      - "10001:10001"
+    command: "azurite-queue --queueHost 0.0.0.0 --queuePort 10001"
     networks:
       - webhook-network
 
