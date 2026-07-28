@@ -19,9 +19,7 @@ import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -209,9 +207,8 @@ public class WebhookNotificationService {
 
   private Map<String, Object> decodePayload(WebhookNotification notification)
       throws JsonProcessingException {
-    String decodedPayload =
-        new String(Base64.getDecoder().decode(notification.getPayload()), StandardCharsets.UTF_8);
-    return objectMapper.readValue(decodedPayload, new TypeReference<>() {});
+    return objectMapper.readValue(
+        DataEncryptionConfig.decrypt(notification.getPayload()), new TypeReference<>() {});
   }
 
   private Uni<Void> handleHttpResponse(
