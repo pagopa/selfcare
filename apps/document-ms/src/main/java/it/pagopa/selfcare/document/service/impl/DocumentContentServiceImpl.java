@@ -39,6 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -428,24 +430,31 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return documentRepository.findUserAttachmentsByOnboardingId(onboardingId)
                 .emitOn(Infrastructure.getDefaultWorkerPool())
                 .chain(documents -> {
-                    if (documents == null || documents.isEmpty()) {
+                    if (Objects.isNull(documents) || documents.isEmpty()) {
                         log.info("No user attachments found for onboardingId: {}. Skipping deletion.", sanitize(onboardingId));
                         return Uni.createFrom().item("No user attachments to delete");
                     }
 
-                    log.info("Found {} user attachment(s) to soft-delete for onboardingId: {}",
+                    log.info("Found {} user attachment(s) to delete for onboardingId: {}",
                             documents.size(), sanitize(onboardingId));
 
-                    Uni<Integer> chain = Uni.createFrom().item(0);
+                    final int totalCount = documents.size();
+                    Uni<List<String>> chain = Uni.createFrom().item(new ArrayList<>());
                     for (Document doc : documents) {
                         chain = chain.chain(acc -> softDeleteSingleUserAttachment(doc, basePath, onboardingId)
-                                .map(deleted -> Boolean.TRUE.equals(deleted) ? acc + 1 : acc));
+                                .map(deletedName -> {
+                                    if (Objects.nonNull(deletedName)) {
+                                        acc.add(deletedName);
+                                    }
+                                    return acc;
+                                }));
                     }
 
                     return chain
-                            .invoke(movedCount -> telemetryService.trackUserAttachmentsDeleted(onboardingId, movedCount))
-                            .map(movedCount -> String.format(
-                                    "User attachments deleted successfully: %d/%d", movedCount, documents.size()));
+                            .invoke(movedNames -> telemetryService.trackUserAttachmentsDeleted(onboardingId, movedNames))
+                            .map(movedNames -> String.format(
+                                    "User attachments deleted successfully: %d/%d [%s]",
+                                    movedNames.size(), totalCount, String.join(", ", movedNames)));
                 })
                 .onFailure().invoke(error -> {
                     log.error("deleteUserAttachments failed for onboardingId {}: {}",
@@ -460,15 +469,16 @@ public class DocumentContentServiceImpl implements DocumentContentService {
      * to the configured delete path, and updating the corresponding {@code attachmentPath}
      * on the Document collection. On DB failure the blob is restored to the original path.
      *
-     * @return {@code Uni<Boolean>} emitting {@code true} if the blob was moved and DB updated,
-     *         {@code false} if the attachment was skipped (missing path or blob).
+     * @return {@code Uni<String>} emitting the {@code attachmentName} of the deleted document
+     *         if the blob was moved and DB updated, or {@code null} if the attachment was
+     *         skipped (missing path or blob).
      */
-    private Uni<Boolean> softDeleteSingleUserAttachment(Document document, String basePath, String onboardingId) {
+    private Uni<String> softDeleteSingleUserAttachment(Document document, String basePath, String onboardingId) {
         final String originalAttachmentPath = document.getAttachmentPath();
         if (Objects.isNull(originalAttachmentPath) || originalAttachmentPath.isBlank()) {
             log.warn("Skipping user attachment with empty attachmentPath: documentId={}, onboardingId={}",
                     sanitize(document.getId()), sanitize(onboardingId));
-            return Uni.createFrom().item(Boolean.FALSE);
+            return Uni.createFrom().nullItem();
         }
 
         // Path is stored as absolute blob path, validate it against traversal attempts.
@@ -477,26 +487,32 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
         final AzureBlobClient azureBlobClient = storageRegistry.clientFor(document.getStorageOrigin());
 
-        final String movedAttachmentPath;
-        try {
-            movedAttachmentPath = deleteFileFromAzure(azureBlobClient, safeOriginalPath, basePath);
-        } catch (Exception e) {
-            log.warn("User attachment blob not found or move failed on Azure for documentId {}, onboardingId {}: {}. Skipping.",
-                    sanitize(document.getId()), sanitize(onboardingId), e.getMessage());
-            return Uni.createFrom().item(Boolean.FALSE);
-        }
-
-        return documentRepository.updateAttachmentPathById(document.getId(), movedAttachmentPath)
-                .onFailure().retry()
-                    .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
-                    .atMost(retryMaxAttempts)
-                .onFailure().call(dbError -> {
-                    log.error("DB attachmentPath update failed for documentId {}, onboardingId {}. Rolling back Azure move...",
-                            sanitize(document.getId()), sanitize(onboardingId));
-                    return rollbackDeletedAzureFile(azureBlobClient, movedAttachmentPath, safeOriginalPath);
+        return Uni.createFrom().item(() -> {
+                    try {
+                        return deleteFileFromAzure(azureBlobClient, safeOriginalPath, basePath);
+                    } catch (Exception e) {
+                        log.warn("User attachment blob not found or move failed on Azure for documentId {}, onboardingId {}: {}. Skipping.",
+                                sanitize(document.getId()), sanitize(onboardingId), e.getMessage());
+                        return null;
+                    }
                 })
-                .invoke(() -> document.setAttachmentPath(movedAttachmentPath))
-                .replaceWith(Boolean.TRUE);
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .chain(movedAttachmentPath -> {
+                    if (Objects.isNull(movedAttachmentPath)) {
+                        return Uni.createFrom().nullItem();
+                    }
+                    return documentRepository.updateAttachmentPathById(document.getId(), movedAttachmentPath)
+                            .onFailure().retry()
+                                .withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff))
+                                .atMost(retryMaxAttempts)
+                            .onFailure().call(dbError -> {
+                                log.error("DB attachmentPath update failed for documentId {}, onboardingId {}. Rolling back Azure move...",
+                                        sanitize(document.getId()), sanitize(onboardingId));
+                                return rollbackDeletedAzureFile(azureBlobClient, movedAttachmentPath, safeOriginalPath);
+                            })
+                            .invoke(() -> document.setAttachmentPath(movedAttachmentPath))
+                            .replaceWith(document.getAttachmentName());
+                });
     }
 
     /**
@@ -1013,14 +1029,14 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     private void restoreFileInAzure(AzureBlobClient azureBlobClient, String currentPath, String originalPath) throws IOException {
-        if (currentPath == null || originalPath == null) return;
+        if (Objects.isNull(currentPath) || Objects.isNull(originalPath)) return;
 
         File temporaryFile = azureBlobClient.retrieveFile(currentPath);
         try {
             azureBlobClient.uploadFilePath(originalPath, Files.readAllBytes(temporaryFile.toPath()));
             azureBlobClient.removeFile(currentPath);
         } finally {
-            if (temporaryFile != null && temporaryFile.exists() && !temporaryFile.delete()) {
+            if (Objects.nonNull(temporaryFile) && temporaryFile.exists() && !temporaryFile.delete()) {
                 log.warn("Unable to delete temporary local file during rollback: {}", sanitize(temporaryFile.getAbsolutePath()));
             }
         }

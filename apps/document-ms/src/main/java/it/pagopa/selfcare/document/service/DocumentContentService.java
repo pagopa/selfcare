@@ -54,17 +54,6 @@ public interface DocumentContentService {
 
     Uni<String> deleteContract(String onboardingId);
 
-    /**
-     * Soft-deletes every user-uploaded attachment associated with the given onboarding.
-     * Each blob is moved from the contracts path (e.g. {@code parties/docs/…}) to the
-     * configured delete path (e.g. {@code parties/deleted/…}) on the USER storage account,
-     * and the corresponding {@code attachmentPath} on the Document collection is updated
-     * to keep DB and Blob Storage aligned. Retention is enforced by an Azure lifecycle
-     * management policy on the delete-path prefix.
-     *
-     * @param onboardingId onboarding whose user attachments must be soft-deleted
-     * @return an outcome message (never fails the caller: failures are logged and tracked)
-     */
     Uni<String> deleteUserAttachments(String onboardingId);
 
     Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request);

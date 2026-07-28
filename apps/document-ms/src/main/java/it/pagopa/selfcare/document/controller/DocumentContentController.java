@@ -242,13 +242,10 @@ public class DocumentContentController {
 
     @Operation(
             summary = "Delete user attachments from Azure Blob Storage",
-            description = "Soft-deletes every user-uploaded attachment associated with the specified onboarding: "
-                    + "each blob is moved from the contracts path to the configured delete path on the USER "
-                    + "storage account and the corresponding attachmentPath on Mongo is updated."
+            description = "Delete every user-uploaded attachment associated with the specified onboarding ID from Azure Blob Storage."
     )
     @APIResponses({
-            @APIResponse(responseCode = "200", description = "User attachments soft-deletion completed (may be a no-op if none found)"),
-            @APIResponse(responseCode = "400", description = "Invalid onboardingId"),
+            @APIResponse(responseCode = "200", description = "User attachments soft-deletion completed"),
             @APIResponse(responseCode = "500", description = "Internal server error during deletion")
     })
     @DELETE

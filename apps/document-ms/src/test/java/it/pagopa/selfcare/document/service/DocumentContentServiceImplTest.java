@@ -1993,7 +1993,8 @@ class DocumentContentServiceImplTest {
     // deleteUserAttachments
     // ============================================
 
-    private Document buildUserAttachment(String id, String attachmentPath) {
+
+    private Document buildUserAttachment(String id, String attachmentPath, String attachmentName) {
         Document doc = new Document();
         doc.setId(id);
         doc.setOnboardingId(ONBOARDING_ID);
@@ -2001,7 +2002,7 @@ class DocumentContentServiceImplTest {
         doc.setProductId("prod-io");
         doc.setType(DocumentType.ATTACHMENT);
         doc.setStorageOrigin(StorageOrigin.USER);
-        doc.setAttachmentName("allegato.pdf");
+        doc.setAttachmentName(attachmentName);
         doc.setAttachmentPath(attachmentPath);
         return doc;
     }
@@ -2018,14 +2019,14 @@ class DocumentContentServiceImplTest {
         assertEquals("No user attachments to delete", result);
         verify(azureBlobClient, never()).retrieveFile(anyString());
         verify(documentRepository, never()).updateAttachmentPathById(anyString(), anyString());
-        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyInt());
+        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyList());
         verify(telemetryService, never()).trackUserAttachmentsDeleteFailed(anyString(), anyString());
     }
 
     @Test
     void deleteUserAttachments_shouldMoveEveryAttachment_andUpdateAttachmentPath() {
-        Document a1 = buildUserAttachment("doc-1", "parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf");
-        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/a2.pdf");
+        Document a1 = buildUserAttachment("doc-1", "parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf", "a1.pdf");
+        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/a2.pdf", "a2.pdf");
 
         when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
         when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
@@ -2044,7 +2045,7 @@ class DocumentContentServiceImplTest {
         String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
                 .await().indefinitely();
 
-        assertEquals("User attachments deleted successfully: 2/2", result);
+        assertEquals("User attachments deleted successfully: 2/2 [a1.pdf, a2.pdf]", result);
 
         verify(azureBlobClient, times(2)).retrieveFile(anyString());
         verify(azureBlobClient, times(2)).uploadFilePath(anyString(), any(byte[].class));
@@ -2059,7 +2060,7 @@ class DocumentContentServiceImplTest {
         assertEquals("parties/deleted/" + ONBOARDING_ID + "/attachments/a1.pdf", a1.getAttachmentPath());
         assertEquals("parties/deleted/" + ONBOARDING_ID + "/attachments/a2.pdf", a2.getAttachmentPath());
 
-        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, 2);
+        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, List.of("a1.pdf", "a2.pdf"));
         verify(telemetryService, never()).trackUserAttachmentsDeleteFailed(anyString(), anyString());
 
         for (File f : generatedFiles) {
@@ -2069,8 +2070,8 @@ class DocumentContentServiceImplTest {
 
     @Test
     void deleteUserAttachments_shouldSkipItem_whenAttachmentPathIsBlank() {
-        Document a1 = buildUserAttachment("doc-1", " "); // blank
-        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/a2.pdf");
+        Document a1 = buildUserAttachment("doc-1", " ", "blank.pdf"); // blank
+        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/a2.pdf", "a2.pdf");
 
         when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
         when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
@@ -2084,16 +2085,16 @@ class DocumentContentServiceImplTest {
         String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
                 .await().indefinitely();
 
-        assertEquals("User attachments deleted successfully: 1/2", result);
+        assertEquals("User attachments deleted successfully: 1/2 [a2.pdf]", result);
         verify(azureBlobClient, times(1)).retrieveFile(anyString());
         verify(documentRepository, times(1)).updateAttachmentPathById(anyString(), anyString());
-        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, 1);
+        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, List.of("a2.pdf"));
     }
 
     @Test
     void deleteUserAttachments_shouldSkipItem_whenAzureBlobNotFound() {
-        Document a1 = buildUserAttachment("doc-1", "parties/docs/" + ONBOARDING_ID + "/attachments/missing.pdf");
-        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/present.pdf");
+        Document a1 = buildUserAttachment("doc-1", "parties/docs/" + ONBOARDING_ID + "/attachments/missing.pdf", "missing.pdf");
+        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/present.pdf", "present.pdf");
 
         when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
         when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
@@ -2110,10 +2111,10 @@ class DocumentContentServiceImplTest {
         String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
                 .await().indefinitely();
 
-        assertEquals("User attachments deleted successfully: 1/2", result);
+        assertEquals("User attachments deleted successfully: 1/2 [present.pdf]", result);
         verify(documentRepository, times(1)).updateAttachmentPathById(eq("doc-2"), anyString());
         verify(documentRepository, never()).updateAttachmentPathById(eq("doc-1"), anyString());
-        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, 1);
+        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, List.of("present.pdf"));
     }
 
     @Test
@@ -2127,6 +2128,6 @@ class DocumentContentServiceImplTest {
 
         assertEquals("User attachments deletion skipped due to error", result);
         verify(telemetryService).trackUserAttachmentsDeleteFailed(eq(ONBOARDING_ID), anyString());
-        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyInt());
+        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyList());
     }
 }

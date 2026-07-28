@@ -11,7 +11,9 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -218,15 +220,17 @@ public class DocumentMsTelemetryService {
      * Tracks the soft-deletion (move to delete path) of every user-uploaded attachment
      * associated with an onboarding.
      *
-     * @param onboardingId onboarding identifier
-     * @param movedCount   number of attachment blobs successfully moved to the delete path
+     * @param onboardingId    onboarding identifier
+     * @param attachmentNames list of attachment names successfully moved to the delete path
      */
-    public void trackUserAttachmentsDeleted(String onboardingId, int movedCount) {
+    public void trackUserAttachmentsDeleted(String onboardingId, List<String> attachmentNames) {
+        List<String> safeNames = attachmentNames == null ? Collections.emptyList() : attachmentNames;
         Map<String, String> props = new HashMap<>();
         props.put("onboardingId", onboardingId);
+        props.put("attachmentNames", String.join(", ", safeNames));
 
         Map<String, Double> metrics = new HashMap<>();
-        metrics.put("movedCount", (double) movedCount);
+        metrics.put("movedCount", (double) safeNames.size());
 
         track(EVENT_USER_ATTACHMENTS_DELETED, props, metrics);
     }
