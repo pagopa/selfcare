@@ -99,7 +99,7 @@ class WebhookNotificationOutboxServiceTest {
   void publishUnpublishedNotifications_shouldReleasePublishingLockWhenPublishFails() {
     // given
     WebhookNotification notification = notification();
-    RuntimeException error = new RuntimeException("Service Bus is unavailable");
+    RuntimeException error = new RuntimeException("Storage Queue is unavailable");
     when(notificationRepository.claimUnpublishedNotifications(100, 5))
         .thenReturn(Uni.createFrom().item(List.of(notification)));
     when(publisher.publish(notification.getId().toHexString()))
@@ -115,7 +115,7 @@ class WebhookNotificationOutboxServiceTest {
             .withSubscriber(UniAssertSubscriber.create());
 
     // then
-    subscriber.awaitFailure().assertFailedWith(RuntimeException.class, "Service Bus is unavailable");
+    subscriber.awaitFailure().assertFailedWith(RuntimeException.class, "Storage Queue is unavailable");
     verify(notificationRepository).releasePublishingLock(notification.getId());
     verify(notificationRepository, never()).markAsPublished(eq(notification.getId()));
   }
