@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import jakarta.validation.constraints.NotBlank;
@@ -10,21 +11,21 @@ import jakarta.validation.constraints.NotNull;
 @Data
 public class CompanyBillingDataDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.name}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.name}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     private String businessName;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.taxCode}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.taxCode}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String taxCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.certified}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.certified}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotNull
     private boolean certified;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.digitalAddress}")
+    @Schema(description = "${swagger.onboarding.institutions.model.digitalAddress}")
     private String digitalAddress;
 
 }

@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import lombok.Data;
 
@@ -11,29 +12,29 @@ import jakarta.validation.constraints.NotBlank;
 public class UserDto {
 
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.name}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.name}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String name;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.surname}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.surname}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String surname;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.fiscalCode}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.fiscalCode}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String taxCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.role}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.role}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     private PartyRole role;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.email}")
+    @Schema(description = "${swagger.onboarding.user.model.email}")
     private String email;
 
-    @ApiModelProperty(hidden = true)
+    @Schema(hidden = true)
     private String productRole;
 
 }

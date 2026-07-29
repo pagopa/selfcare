@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -35,7 +36,7 @@ import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v2/institutions", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "institutions")
+@Tag(name = "institutions")
 public class InstitutionV2Controller {
 
     private final InstitutionService institutionService;
@@ -110,19 +111,19 @@ public class InstitutionV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.onboarding.subunit}",
             description = "${swagger.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
-    public List<InstitutionResource> getInstitution(@ApiParam("${swagger.onboarding.institutions.model.productFilter}")
+    public List<InstitutionResource> getInstitution(@Parameter(description = "${swagger.onboarding.institutions.model.productFilter}")
                                                     @RequestParam(value = "productId")
                                                     String productId,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.taxCode}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
                                                     @RequestParam(value = "taxCode", required = false)
                                                     String taxCode,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.origin}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.origin}")
                                                     @RequestParam(value = "origin", required = false)
                                                     String origin,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.originId}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.originId}")
                                                     @RequestParam(value = "originId", required = false)
                                                     String originId,
-                                                    @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
+                                                    @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
                                                     @RequestParam(value = "subunitCode", required = false)
                                                     String subunitCode) {
         log.trace("getInstitution start");
@@ -218,7 +219,7 @@ public class InstitutionV2Controller {
     @Operation(summary = "Trigger onboarding request",
             description = "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
             operationId = "triggerOnboardingRequest")
-    public void triggerOnboardingRequest(@ApiParam("The onboarding id")
+    public void triggerOnboardingRequest(@Parameter(description = "The onboarding id")
                                     @PathVariable("onboardingId") String onboardingId) {
         log.trace("triggerOnboardingRequest start");
         log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));

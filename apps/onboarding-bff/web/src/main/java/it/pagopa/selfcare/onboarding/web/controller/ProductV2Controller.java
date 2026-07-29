@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v2/product", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "product-ms")
+@Tag(name = "product-ms")
 public class ProductV2Controller {
 
     private final ProductService productService;
@@ -36,7 +37,7 @@ public class ProductV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.product.ms.api.getOrigins.summary}",
             description = "${swagger.product.ms.api.getOrigins.description}", operationId = "getOrigins")
-    public OriginResponse getOrigins(@ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+    public OriginResponse getOrigins(@Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
                                       @RequestParam(value = "productId", required = true)
                                       String productId) {
         log.trace("getOrigins start");
@@ -54,7 +55,7 @@ public class ProductV2Controller {
             description = "Returns the list of required documents for the given product, institutionType and origin.",
             operationId = "getRequiredDocuments")
     public List<RequiredDocumentModel> getRequiredDocuments(
-            @ApiParam("The product id") @PathVariable("productId") String productId,
+            @Parameter(description = "The product id") @PathVariable("productId") String productId,
             @RequestParam("institutionType") String institutionType,
             @RequestParam("origin") String origin) {
         log.trace("getRequiredDocuments start");
@@ -76,7 +77,7 @@ public class ProductV2Controller {
                     + "when required documents are configured for the given product, institutionType and origin.",
             operationId = "isRequiredDocumentsEnabled")
     public RequiredDocumentsEnabledResource isRequiredDocumentsEnabled(
-            @ApiParam("The product id") @PathVariable("productId") String productId,
+            @Parameter(description = "The product id") @PathVariable("productId") String productId,
             @RequestParam("institutionType") String institutionType,
             @RequestParam("origin") String origin) {
         log.trace("isRequiredDocumentsEnabled start");

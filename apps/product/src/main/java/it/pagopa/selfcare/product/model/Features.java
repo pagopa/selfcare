@@ -17,8 +17,11 @@ public class Features {
   private boolean delegable;
   private boolean invoiceable;
   private boolean requiresParentOnboarding;
+  private boolean allowSameUserManagerAndDelegate;
 
   @Builder.Default private int expirationDays = 30;
 
   private boolean enabled;
+
+  private boolean requiredRecipientCode;
 }

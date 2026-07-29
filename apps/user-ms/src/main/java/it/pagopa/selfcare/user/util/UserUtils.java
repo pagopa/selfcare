@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
@@ -250,18 +251,17 @@ public class UserUtils {
 
   @Named("isExcludeRoleFromUserGroups")
   public boolean isExcludeRoleFromUserGroups(OnboardedProduct onboardedProduct) {
-
-      Product product = productService.getProduct(onboardedProduct.getProductId());
-
-      if (product == null
-        || product.getRoleMappings() == null
-        || onboardedProduct.getRole() == null) {
+      try {
+        Product product = productService.getProduct(onboardedProduct.getProductId());
+        if (product == null || product.getRoleMappings() == null || onboardedProduct.getRole() == null) {
+          return true;
+        }
+        ProductRoleInfo roleInfo = product.getRoleMappings().get(onboardedProduct.getRole());
+        return roleInfo == null || roleInfo.isExcludeRoleFromUserGroups();
+      } catch (ProductNotFoundException ex) {
+        log.warn("Product not found for productId: {}", onboardedProduct.getProductId());
         return true;
       }
-
-      ProductRoleInfo roleInfo = product.getRoleMappings().get(onboardedProduct.getRole());
-
-      return roleInfo == null || roleInfo.isExcludeRoleFromUserGroups();
     }
 
     public static boolean checkIfNotFoundException(Throwable throwable) {

@@ -334,7 +334,7 @@ public class PdfMapperData {
                 .append(Optional.ofNullable(user.getSurname()).orElse(EMPTY_STR)).append("&nbsp;</span></p>\n")
                 .append("<p class=\"c141\"><span class=\"c6\">Codice Fiscale: ")
                 .append(user.getTaxCode()).append("</span></p>\n")
-                .append("<p class=\"c141\"><span class=\"c6\">e-mail: ")
+                .append("<p class=\"c141\"><span class=\"c6\">E-mail aziendale/istituzionale: ")
                 .append(Optional.ofNullable(user.getEmail()).orElse(EMPTY_STR))
                 .append("&nbsp;</span></p>\n").append("</br>"));
         return builder.toString();

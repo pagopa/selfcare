@@ -3,7 +3,6 @@ package it.pagopa.selfcare.webhook.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.quarkus.scheduler.Scheduled;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -16,12 +15,11 @@ import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
+import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -67,7 +65,6 @@ public class WebhookNotificationService {
     }
   }
 
-  @Scheduled(every = "10s")
   public Uni<Void> processFailedNotifications() {
     init();
     // Lock notifications for 5 minutes - if processing takes longer, lock expires
@@ -128,8 +125,10 @@ public class WebhookNotificationService {
         .transformToUni(
             webhook -> {
               if (webhook == null) {
-                log.error("Webhook not found for notification: {}", notification.getId().toString());
-                return markNotificationAsFailed(notification, "Webhook not found").replaceWithVoid();
+                log.error(
+                    "Webhook not found for notification: {}", notification.getId().toString());
+                return markNotificationAsFailed(notification, "Webhook not found")
+                    .replaceWithVoid();
               }
               return processNotification(notification, webhook);
             });
@@ -159,6 +158,9 @@ public class WebhookNotificationService {
       URI uri = URI.create(webhook.getUrl());
       int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
       String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
+      if (uri.getRawQuery() != null && !uri.getRawQuery().isBlank()) {
+        path = path + "?" + uri.getRawQuery();
+      }
 
       var request =
           webClient
@@ -169,11 +171,12 @@ public class WebhookNotificationService {
                   path)
               .ssl(uri.getScheme().equals("https"))
               .timeout(readTimeout)
-              .putHeader("Content-Type", "application/json");
+              .putHeader("Content-Type", "application/json")
+              .putHeader("X-Webhook-Notification-Id", notification.getId().toHexString());
 
       // Add custom headers
       if (webhook.getHeaders() != null) {
-        webhook.getHeaders().forEach(request::putHeader);
+        DataEncryptionConfig.decrypt(webhook.getHeaders()).forEach(request::putHeader);
       }
 
       return webhookJwtService
@@ -204,9 +207,8 @@ public class WebhookNotificationService {
 
   private Map<String, Object> decodePayload(WebhookNotification notification)
       throws JsonProcessingException {
-    String decodedPayload =
-        new String(Base64.getDecoder().decode(notification.getPayload()), StandardCharsets.UTF_8);
-    return objectMapper.readValue(decodedPayload, new TypeReference<>() {});
+    return objectMapper.readValue(
+        DataEncryptionConfig.decrypt(notification.getPayload()), new TypeReference<>() {});
   }
 
   private Uni<Void> handleHttpResponse(
@@ -214,10 +216,10 @@ public class WebhookNotificationService {
     int statusCode = response.statusCode();
 
     if (statusCode >= 200 && statusCode < 300) {
-      notification.setStatus(WebhookNotification.NotificationStatus.SUCCESS);
+      notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
       notification.setCompletedAt(LocalDateTime.now());
       log.info(
-          "Webhook notification sent successfully: {}, status: {}",
+          "Webhook notification delivered: {}, status: {}",
           notification.getId(),
           statusCode);
       return notificationRepository.update(notification).replaceWithVoid();

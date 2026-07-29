@@ -171,7 +171,6 @@ Feature: User
     Then the response status should be 400
     And the response should contain an error message "Required request parameter 'institutionId' for method parameter type String is not present"
 
-
   Scenario: Retrieving user data for given fiscalCode with institutionId filter, not found
     Given user login with username "j.doe" and password "test"
     And the fiscalCode is "CCCCCC80C05C525C"
@@ -192,7 +191,33 @@ Feature: User
     And the productRoles are "admin"
     When I send a GET request to "/v2/users/institution/{institutionId}" to retrieve user product data
     Then the response status should be 200
-    And the response should contain 5 items
+    And the response should contain 6 items
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | id                                   | name   | surname | fiscalCode           | role      | product.id     |
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | rocky  | Balboa  | blbrki80A41H401T     | LIMITED   | prod-io        |
+      | 4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41 | Giulia | Verdi   | VRDLGI90A41F205X     | ADMIN_EA  | prod-io        |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-io        |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-pagopa    |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-pn        |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-interop   |
+    And The dashboard response body contains at path "find { it.id == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.product.roleInfos" the following list of objects in any order:
+      | role     | partyRole | excludeRoleFromUserGroups |
+      | admin    | OPERATOR  | false                     |
+    And The dashboard response body contains at path "find { it.id == '4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41' }.product.roleInfos" the following list of objects in any order:
+      | role  | partyRole | excludeRoleFromUserGroups |
+      | admin | ADMIN_EA  | true                      |
+    And The dashboard response body contains at path "find { it.id == '97a511a7-2acc-47b9-afed-2f3c65753b4a' && it.product.id == 'prod-io' }.product.roleInfos" the following list of objects in any order:
+      | role  | partyRole | excludeRoleFromUserGroups |
+      | admin | DELEGATE  | false                     |
+    And The dashboard response body contains at path "find { it.id == '97a511a7-2acc-47b9-afed-2f3c65753b4a' && it.product.id == 'prod-pagopa' }.product.roleInfos" the following list of objects in any order:
+      | role  | partyRole | excludeRoleFromUserGroups |
+      | admin | DELEGATE  | false                     |
+    And The dashboard response body contains at path "find { it.id == '97a511a7-2acc-47b9-afed-2f3c65753b4a' && it.product.id == 'prod-pn' }.product.roleInfos" the following list of objects in any order:
+      | role  | partyRole | excludeRoleFromUserGroups |
+      | admin | DELEGATE  | false                     |
+    And The dashboard response body contains at path "find { it.id == '97a511a7-2acc-47b9-afed-2f3c65753b4a' && it.product.id == 'prod-interop' }.product.roleInfos" the following list of objects in any order:
+      | role  | partyRole | excludeRoleFromUserGroups |
+      | admin | MANAGER   | false                     |
 
   Scenario: Successfully retrieve users for given institutionId with roles and product filter
     Given user login with username "j.doe" and password "test"
@@ -202,6 +227,9 @@ Feature: User
     When I send a GET request to "/v2/users/institution/{institutionId}" to retrieve user product data
     Then the response status should be 200
     And the response should contain 1 items
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | id                                   | name | surname | fiscalCode           | role  | product.id |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john | Doe     | PRVTNT80A41H401T     | ADMIN | prod-io    |
 
   Scenario: Successfully retrieve users for given institutionId with productId filter
     Given user login with username "j.doe" and password "test"
@@ -209,7 +237,12 @@ Feature: User
     And the productId is "prod-io"
     When I send a GET request to "/v2/users/institution/{institutionId}" to retrieve user product data
     Then the response status should be 200
-    And the response should contain 2 items
+    And the response should contain 3 items
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | id                                   | name   | surname | role     | product.id |
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | rocky  | Balboa  | LIMITED  | prod-io    |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | ADMIN    | prod-io    |
+      | 4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41 | Giulia | Verdi   | ADMIN_EA | prod-io    |
 
   Scenario: Successfully retrieve users for given institutionId with productId, roles and productRoles filters
     Given user login with username "j.doe" and password "test"
@@ -220,6 +253,9 @@ Feature: User
     When I send a GET request to "/v2/users/institution/{institutionId}" to retrieve user product data
     Then the response status should be 200
     And the response should contain 1 items
+    And The dashboard response body contains at path "" the following list of objects in any order:
+      | id                                   | name   | surname | fiscalCode        | role    | product.id    |
+      | 4a7be530-1c36-41f4-8967-c479fb2d7fa9 | Flavia | Doe     | SCDFLV80A41H401T  | LIMITED | prod-interop  |
 
   Scenario: Successfully retrieve users for given institutionId with productId, roles and productRoles filters, no users found
     Given user login with username "j.doe" and password "test"

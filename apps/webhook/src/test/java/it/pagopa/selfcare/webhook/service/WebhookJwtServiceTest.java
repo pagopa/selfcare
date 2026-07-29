@@ -31,10 +31,7 @@ class WebhookJwtServiceTest {
     notification.setId(notificationId);
 
     String token =
-        webhookJwtService
-            .generateNotificationToken(webhook, notification)
-            .await()
-            .indefinitely();
+        webhookJwtService.generateNotificationToken(webhook, notification).await().indefinitely();
 
     JsonWebToken parsedToken = jwtParser.parseOnly(token);
 

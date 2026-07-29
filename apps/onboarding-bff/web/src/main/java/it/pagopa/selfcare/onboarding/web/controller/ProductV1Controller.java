@@ -1,7 +1,8 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.core.ProductAzureService;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v1", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "product")
+@Tag(name = "product")
 public class ProductV1Controller {
 
     private final ProductAzureService productAzureService;
@@ -36,10 +37,10 @@ public class ProductV1Controller {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.product.api.getProduct}",
             description = "${swagger.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
-    public ProductResource getProduct(@ApiParam("${swagger.onboarding.product.model.id}")
+    public ProductResource getProduct(@Parameter(description = "${swagger.onboarding.product.model.id}")
                                       @PathVariable("id")
                                       String id,
-                                      @ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+                                      @Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
                                       @RequestParam(value = "institutionType", required = false)
                                       Optional<InstitutionType> institutionType) {
         log.trace("getProduct start");

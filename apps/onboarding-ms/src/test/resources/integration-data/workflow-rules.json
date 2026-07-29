@@ -18,7 +18,8 @@
     { "institutionType": "PSP", "origin": "SELC", "workflowType": "FOR_APPROVE" },
     { "institutionType": "CON", "origin": "SELC", "workflowType": "FOR_APPROVE" },
     { "institutionType": "REC", "origin": "SELC", "workflowType": "FOR_APPROVE" },
-    { "institutionType": "SCP", "origin": "SELC", "workflowType": "FOR_APPROVE" }
+    { "institutionType": "SCP", "origin": "SELC", "workflowType": "FOR_APPROVE" },
+    { "institutionType": "PG", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
   ],
   "prod-dashboard-psp": [
     { "institutionType": "PSP", "origin": "SELC", "workflowType": "FOR_APPROVE" }

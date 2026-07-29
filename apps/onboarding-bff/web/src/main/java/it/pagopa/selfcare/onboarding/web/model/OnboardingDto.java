@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import lombok.Data;
 
@@ -12,39 +13,39 @@ import java.util.List;
 @Data
 public class OnboardingDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.users}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.users}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty
     @Valid
     private List<UserDto> users;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.billingData}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.billingData}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Valid
     private BillingDataDto billingData;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.institutionType}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.institutionType}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     private InstitutionType institutionType;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.origin}")
+    @Schema(description = "${swagger.onboarding.institutions.model.origin}")
     private String origin;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.pricingPlan}")
+    @Schema(description = "${swagger.onboarding.institutions.model.pricingPlan}")
     private String pricingPlan;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.pspData}")
+    @Schema(description = "${swagger.onboarding.institutions.model.pspData}")
     @Valid
     private PspDataDto pspData;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.geographicTaxonomies}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.geographicTaxonomies}", requiredMode = Schema.RequiredMode.REQUIRED)
     @Valid
     private List<GeographicTaxonomyDto> geographicTaxonomies;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.companyInformations}")
+    @Schema(description = "${swagger.onboarding.institutions.model.companyInformations}")
     @Valid
     private CompanyInformationsDto companyInformations;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.assistance}")
+    @Schema(description = "${swagger.onboarding.institutions.model.assistance}")
     @Valid
     private AssistanceContactsDto assistanceContacts;
 

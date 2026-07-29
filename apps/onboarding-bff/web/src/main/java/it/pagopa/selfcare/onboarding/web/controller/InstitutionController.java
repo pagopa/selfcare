@@ -1,12 +1,13 @@
 package it.pagopa.selfcare.onboarding.web.controller;
 
+
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import static it.pagopa.selfcare.commons.base.utils.ProductId.PROD_FD;
 import static it.pagopa.selfcare.commons.base.utils.ProductId.PROD_FD_GARANTITO;
 import static org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,7 +41,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequestMapping(value = "/v1/institutions", produces = MediaType.APPLICATION_JSON_VALUE)
-@Api(tags = "institutions")
+@Tag(name = "institutions")
 public class InstitutionController {
 
     private final InstitutionService institutionService;
@@ -105,10 +106,10 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@ApiParam("${swagger.onboarding.institutions.model.id}")
+    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${swagger.onboarding.institutions.model.id}")
                                                                           @RequestParam("institutionId")
                                                                           String institutionId,
-                                                                          @ApiParam("${swagger.onboarding.product.model.id}")
+                                                                          @Parameter(description = "${swagger.onboarding.product.model.id}")
                                                                           @RequestParam("productId")
                                                                           String productId) {
         log.trace("getInstitutionOnboardingInfoById start");
@@ -124,7 +125,7 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
             description = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getInstitutionGeographicTaxonomyUsingGET")
-    public List<GeographicTaxonomyResource> getInstitutionGeographicTaxonomy(@ApiParam("${swagger.onboarding.institutions.model.externalId}")
+    public List<GeographicTaxonomyResource> getInstitutionGeographicTaxonomy(@Parameter(description = "${swagger.onboarding.institutions.model.externalId}")
                                                                              @PathVariable("externalInstitutionId")
                                                                              String externalInstitutionId) {
         log.trace("getInstitutionGeographicTaxonomy start");
@@ -142,10 +143,10 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
             description = "${swagger.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET")
-    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@ApiParam("${swagger.onboarding.institutions.model.taxCode}")
+    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
                                                                                            @RequestParam("taxCode")
                                                                                            String taxCode,
-                                                                                           @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
+                                                                                           @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
                                                                                            @RequestParam(value = "subunitCode", required = false)
                                                                                            String subunitCode) {
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode start");
@@ -166,7 +167,7 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutions}",
             description = "${swagger.onboarding.institutions.api.getInstitutions}", operationId = "getInstitutionsUsingGET")
-    public List<InstitutionResource> getInstitutions(@ApiParam("${swagger.onboarding.institutions.model.productFilter}")
+    public List<InstitutionResource> getInstitutions(@Parameter(description = "${swagger.onboarding.institutions.model.productFilter}")
                                                      @RequestParam(value = "productId", required = false)
                                                      String productId,
                                                      Principal principal) {
@@ -194,10 +195,10 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "${swagger.onboarding.institutions.api.verifyOnboarding}",
             description = "${swagger.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingProductUsingHEAD")
-    public void verifyOnboarding(@ApiParam("${swagger.onboarding.institutions.model.externalId}")
+    public void verifyOnboarding(@Parameter(description = "${swagger.onboarding.institutions.model.externalId}")
                                  @PathVariable("externalInstitutionId")
                                  String externalInstitutionId,
-                                 @ApiParam("${swagger.onboarding.product.model.id}")
+                                 @Parameter(description = "${swagger.onboarding.product.model.id}")
                                  @PathVariable("productId")
                                  String productId) {
         log.trace("verifyOnboarding start");
@@ -216,28 +217,28 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "${swagger.onboarding.institutions.api.verifyOnboarding}",
             description = "${swagger.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingHEAD")
-    public void verifyOnboarding(@ApiParam("${swagger.onboarding.institutions.model.taxCode}")
+    public void verifyOnboarding(@Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
                                      @RequestParam(value = "taxCode", required = false)
                                      String taxCode,
-                                 @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
+                                 @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
                                      @RequestParam(value = "subunitCode", required = false)
                                      String subunitCode,
-                                 @ApiParam("${swagger.onboarding.product.model.id}")
+                                 @Parameter(description = "${swagger.onboarding.product.model.id}")
                                      @RequestParam("productId")
                                      String productId,
-                                 @ApiParam("${swagger.onboarding.institutions.model.origin}")
+                                 @Parameter(description = "${swagger.onboarding.institutions.model.origin}")
                                      @RequestParam(value = "origin", required = false)
                                      String origin,
-                                 @ApiParam("${swagger.onboarding.institutions.model.originId}")
+                                 @Parameter(description = "${swagger.onboarding.institutions.model.originId}")
                                      @RequestParam(value = "originId", required = false)
                                      String originId,
-                                 @ApiParam("${swagger.onboarding.institutions.model.vatNumber}")
+                                 @Parameter(description = "${swagger.onboarding.institutions.model.vatNumber}")
                                      @RequestParam(value = "vatNumber", required = false)
                                      Optional<String> vatNumber,
-                                 @ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+                                 @Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
                                      @RequestParam(value = "institutionType", required = false)
                                      String institutionType,
-                                 @ApiParam("${swagger.onboarding.institutions.model.verifyType}")
+                                 @Parameter(description = "${swagger.onboarding.institutions.model.verifyType}")
                                      @RequestParam(value = "verifyType", required = false) VerifyType type) {
         log.trace("verifyOnboarding start");
         if (VerifyType.EXTERNAL.equals(type) && vatNumber.isPresent() && (PROD_FD.getValue().equals(productId) || PROD_FD_GARANTITO.getValue().equals(productId))) {
@@ -262,28 +263,28 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.verifyOnboarding}",
             description = "${swagger.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingGET")
-    public void verifyOnboardingGet(@ApiParam("${swagger.onboarding.institutions.model.taxCode}")
+    public void verifyOnboardingGet(@Parameter(description = "${swagger.onboarding.institutions.model.taxCode}")
                                         @RequestParam(value = "taxCode", required = false)
                                         String taxCode,
-                                    @ApiParam("${swagger.onboarding.institutions.model.subunitCode}")
+                                    @Parameter(description = "${swagger.onboarding.institutions.model.subunitCode}")
                                         @RequestParam(value = "subunitCode", required = false)
                                         String subunitCode,
-                                    @ApiParam("${swagger.onboarding.product.model.id}")
+                                    @Parameter(description = "${swagger.onboarding.product.model.id}")
                                         @RequestParam("productId")
                                         String productId,
-                                    @ApiParam("${swagger.onboarding.institutions.model.origin}")
+                                    @Parameter(description = "${swagger.onboarding.institutions.model.origin}")
                                         @RequestParam(value = "origin", required = false)
                                         String origin,
-                                    @ApiParam("${swagger.onboarding.institutions.model.originId}")
+                                    @Parameter(description = "${swagger.onboarding.institutions.model.originId}")
                                         @RequestParam(value = "originId", required = false)
                                         String originId,
-                                    @ApiParam("${swagger.onboarding.institutions.model.vatNumber}")
+                                    @Parameter(description = "${swagger.onboarding.institutions.model.vatNumber}")
                                         @RequestParam(value = "vatNumber", required = false)
                                         Optional<String> vatNumber,
-                                    @ApiParam("${swagger.onboarding.institutions.model.institutionType}")
+                                    @Parameter(description = "${swagger.onboarding.institutions.model.institutionType}")
                                         @RequestParam(value = "institutionType", required = false)
                                         String institutionType,
-                                    @ApiParam("${swagger.onboarding.institutions.model.verifyType}")
+                                    @Parameter(description = "${swagger.onboarding.institutions.model.verifyType}")
                                         @RequestParam(value = "verifyType", required = false) VerifyType type) {
         verifyOnboarding(taxCode, subunitCode, productId, origin, originId, vatNumber, institutionType, type);
     }
@@ -346,10 +347,10 @@ public class InstitutionController {
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${swagger.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET_1")
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfo(@ApiParam("${swagger.onboarding.institutions.model.externalId}")
+    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfo(@Parameter(description = "${swagger.onboarding.institutions.model.externalId}")
                                                                           @PathVariable("externalInstitutionId")
                                                                           String externalInstitutionId,
-                                                                          @ApiParam("${swagger.onboarding.product.model.id}")
+                                                                          @Parameter(description = "${swagger.onboarding.product.model.id}")
                                                                           @PathVariable("productId")
                                                                           String productId) {
         log.trace("getInstitutionOnBoardingInfo start");

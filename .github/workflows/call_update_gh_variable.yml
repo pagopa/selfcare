@@ -20,12 +20,16 @@ jobs:
       actions: write
     steps:
       - name: Update Variable
-        run: |
-          VAR_DOMAIN=$(echo "${{ inputs.domain }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-          VAR_ENV=$(echo "${{ inputs.env }}" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-          VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
-
-          echo "Updating variable $VAR_NAME to ${{ inputs.version }} in repo ${{ github.repository }}"
-          gh variable set "$VAR_NAME" --body "${{ inputs.version }}" --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
+          INPUT_DOMAIN: ${{ inputs.domain }}
+          INPUT_ENV: ${{ inputs.env }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_REPO: ${{ github.repository }}
+        run: |
+          VAR_DOMAIN=$(echo "$INPUT_DOMAIN" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          VAR_ENV=$(echo "$INPUT_ENV" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+          VAR_NAME="${VAR_DOMAIN}_CURRENT_${VAR_ENV}_VERSION"
+
+          echo "Updating variable $VAR_NAME to $INPUT_VERSION in repo $INPUT_REPO"
+          gh variable set "$VAR_NAME" --body "$INPUT_VERSION" --repo "$INPUT_REPO"

@@ -1,4 +1,4 @@
-name: OpEx Dashboards
+name: OPEX Dashboards
 
 on:
   push:
@@ -40,6 +40,6 @@ permissions:
 
 jobs:
   opex_dashboards:
-    name: OpEx Dashboards
+    name: OPEX Dashboards
     uses: pagopa/dx/.github/workflows/opex-dashboard-deploy.yaml@main
     secrets: inherit

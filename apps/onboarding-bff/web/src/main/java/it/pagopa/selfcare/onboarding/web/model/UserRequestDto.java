@@ -1,24 +1,25 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import io.swagger.annotations.ApiModelProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 @Data
 public class UserRequestDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.name}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.name}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String name;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.surname}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.surname}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String surname;
 
-    @ApiModelProperty(value = "${swagger.onboarding.user.model.email}", required = true)
+    @Schema(description = "${swagger.onboarding.user.model.email}", requiredMode = Schema.RequiredMode.REQUIRED)
     @JsonProperty(required = true)
     @NotBlank
     private String email;

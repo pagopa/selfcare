@@ -20,8 +20,10 @@ jobs:
       version: ${{ steps.extract.outputs.VERSION }}
     steps:
       - id: extract
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
         run: |
-          VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')
+          VERSION=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
   release_product_cdc:

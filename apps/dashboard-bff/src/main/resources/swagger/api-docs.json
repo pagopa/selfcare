@@ -4700,6 +4700,10 @@
             "type" : "string",
             "description" : "User's role last update date",
             "format" : "date-time"
+          },
+          "excludeRoleFromUserGroups" : {
+            "type" : "boolean",
+            "description" : "Boolean indicating if the current product role should be excluded from the user groups"
           }
         },
         "description" : "User's role infos in product"

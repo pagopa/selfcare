@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import lombok.Data;
 
@@ -12,31 +13,31 @@ import java.util.List;
 @Data
 public class OnboardingUserDto {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.users}", required = true)
+    @Schema(description = "${swagger.onboarding.institutions.model.users}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotEmpty
     @Valid
     private List<UserDto> users;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.institutionType}")
+    @Schema(description = "${swagger.onboarding.institutions.model.institutionType}")
     private InstitutionType institutionType;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.origin}")
+    @Schema(description = "${swagger.onboarding.institutions.model.origin}")
     private String origin;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.originId}")
+    @Schema(description = "${swagger.onboarding.institutions.model.originId}")
     private String originId;
 
-    @ApiModelProperty(value = "${swagger.onboarding.product.model.id}", required = true)
+    @Schema(description = "${swagger.onboarding.product.model.id}", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     private String productId;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.taxCode}")
+    @Schema(description = "${swagger.onboarding.institutions.model.taxCode}")
     private String taxCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.subunitCode}")
+    @Schema(description = "${swagger.onboarding.institutions.model.subunitCode}")
     private String subunitCode;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.toAddOnAggregates}")
+    @Schema(description = "${swagger.onboarding.institutions.model.toAddOnAggregates}")
     private Boolean toAddOnAggregates;
 
 }

@@ -109,6 +109,7 @@ resource "azurerm_role_definition" "container_apps_jobs_writer" {
   permissions {
     actions = [
       "Microsoft.Authorization/roleDefinitions/write",
+      "Microsoft.Authorization/roleAssignments/write",
       "microsoft.app/managedEnvironments/daprComponents/read",
       "microsoft.app/managedEnvironments/daprComponents/write",
       "microsoft.app/managedEnvironments/daprComponents/delete",

@@ -71,6 +71,7 @@ public enum ErrorMessage {
 
     VERIFY_USER_ERROR("0000", "Error while searching institutions related to given productId"),
     VALIDATION_USER_BY_TAXCODE("0000", "Different emails cannot exist for the same tax code (MANAGER/DELEGATE)"),
+    MANAGER_AND_DELEGATE_SAME_USER("0000", "Manager and delegate (or two delegates) identify the same user for productId=%s (taxCode match or email match)"),
     GET_USER_ERROR("0000", "Error while searching user given UserID"),
     ATTACHMENT_UPLOAD_ERROR("0000", "Attachment already uploaded"),
 

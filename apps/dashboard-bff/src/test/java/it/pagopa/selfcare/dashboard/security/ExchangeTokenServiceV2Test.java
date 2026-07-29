@@ -21,9 +21,7 @@ import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissions;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsList;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductState;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
+import it.pagopa.selfcare.user.generated.openapi.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,8 +120,8 @@ class ExchangeTokenServiceV2Test {
         String productId = "productId";
         String credential = "password";
         String userId = UUID.randomUUID().toString();
-        UserInstitutionResponse userInstitution = mockInstance(new UserInstitutionResponse());
-        OnboardedProductResponse onboardedProductResponse = mockInstance(new OnboardedProductResponse());
+        UserInstitutionDataResponse userInstitution = mockInstance(new UserInstitutionDataResponse());
+        OnboardedProductDataResponse onboardedProductResponse = mockInstance(new OnboardedProductDataResponse());
         onboardedProductResponse.setProductId(productId);
         onboardedProductResponse.setRole("MANAGER");
         onboardedProductResponse.setStatus(OnboardedProductState.ACTIVE);
@@ -173,7 +171,7 @@ class ExchangeTokenServiceV2Test {
         String institutionId = "institutionId";
         String productId = "productId";
         String userId = UUID.randomUUID().toString();
-        UserInstitutionResponse userInstitution = mockInstance(new UserInstitutionResponse());
+        UserInstitutionDataResponse userInstitution = mockInstance(new UserInstitutionDataResponse());
         userInstitution.setProducts(Collections.emptyList());
 
         List<ProductGrantedAuthority> roleOnProducts = List.of(new ProductGrantedAuthority(MANAGER, "productRole", "invalid"));
@@ -298,8 +296,8 @@ class ExchangeTokenServiceV2Test {
 
         TestSecurityContextHolder.setAuthentication(authentication);
 
-        UserInstitutionResponse userInstitution = mockInstance(new UserInstitutionResponse());
-        OnboardedProductResponse onboardedProductResponse = mockInstance(new OnboardedProductResponse());
+        UserInstitutionDataResponse userInstitution = mockInstance(new UserInstitutionDataResponse());
+        OnboardedProductDataResponse onboardedProductResponse = mockInstance(new OnboardedProductDataResponse());
         onboardedProductResponse.setProductId(productId);
         onboardedProductResponse.setRole("MANAGER");
         onboardedProductResponse.setStatus(OnboardedProductState.ACTIVE);
@@ -351,8 +349,8 @@ class ExchangeTokenServiceV2Test {
 
         TestSecurityContextHolder.setAuthentication(authentication);
 
-        UserInstitutionResponse userInstitution = mockInstance(new UserInstitutionResponse());
-        OnboardedProductResponse onboardedProductResponse = mockInstance(new OnboardedProductResponse());
+        UserInstitutionDataResponse userInstitution = mockInstance(new UserInstitutionDataResponse());
+        OnboardedProductDataResponse onboardedProductResponse = mockInstance(new OnboardedProductDataResponse());
         onboardedProductResponse.setProductId(productId);
         onboardedProductResponse.setRole("MANAGER");
         onboardedProductResponse.setStatus(OnboardedProductState.ACTIVE);

@@ -23,5 +23,7 @@ public class ProductRoleInfoResource {
     private LocalDateTime createdAt;
     @Schema(description = "${swagger.dashboard.user.model.updatedAt}")
     private LocalDateTime updatedAt;
+    @Schema(description = "${swagger.dashboard.products.model.excludeRoleFromUserGroups}")
+    private boolean excludeRoleFromUserGroups;
 
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 @Data
 @Builder
 public class NotificationRequest {
-    private String productId;
-    private String payload;
+  private String productId;
+  private String payload;
+  private String tenantId;
 }

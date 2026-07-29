@@ -48,7 +48,14 @@ services:
     networks:
       - webhook-network
 
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    ports:
+      - "10001:10001"
+    command: "azurite-queue --queueHost 0.0.0.0 --queuePort 10001"
+    networks:
+      - webhook-network
+
 networks:
   webhook-network:
     driver: bridge
-

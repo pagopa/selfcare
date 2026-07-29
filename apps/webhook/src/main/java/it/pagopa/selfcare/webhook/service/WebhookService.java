@@ -7,15 +7,14 @@ import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.exception.WebhookAlreadyExistsException;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import it.pagopa.selfcare.webhook.util.Sanitizer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.Base64;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +27,7 @@ public class WebhookService {
 
   @Inject WebhookNotificationRepository notificationRepository;
 
-  @Inject WebhookNotificationService notificationService;
+  @Inject WebhookNotificationPublisher notificationPublisher;
 
   public Uni<WebhookResponse> createWebhook(WebhookRequest request) {
     Webhook webhook = new Webhook();
@@ -55,7 +54,21 @@ public class WebhookService {
     }
 
     return webhookRepository
-        .persist(webhook)
+        .findWebhookByProduct(webhook.getProductId(), webhook.getTenantId())
+        .onItem()
+        .transformToUni(
+            existingWebhook -> {
+              if (existingWebhook != null) {
+                return Uni.createFrom()
+                    .failure(
+                        new WebhookAlreadyExistsException(
+                            "Webhook already exists for product: "
+                                + webhook.getProductId()
+                                + " and tenant: "
+                                + webhook.getTenantId()));
+              }
+              return webhookRepository.persist(webhook);
+            })
         .invoke(() -> log.info("Created webhook with ID: {}", webhook.getId()))
         .map(this::toResponse);
   }
@@ -160,10 +173,12 @@ public class WebhookService {
               WebhookNotification notification = new WebhookNotification();
               notification.setWebhookId(webhook.getId());
               notification.setTenantId(webhook.getTenantId());
-              notification.setPayload(encodePayload(request.getPayload()));
-              notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
+              notification.setPayload(DataEncryptionConfig.encrypt(request.getPayload()));
+              notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
               notification.setAttemptCount(0);
               notification.setCreatedAt(LocalDateTime.now());
+              notification.setPublishing(true);
+              notification.setPublishingUntil(LocalDateTime.now().plusMinutes(5));
 
               return notificationRepository
                   .persist(notification)
@@ -175,15 +190,19 @@ public class WebhookService {
                               webhook.getId(),
                               Sanitizer.sanitizeString(request.getProductId()),
                               Sanitizer.sanitizeString(request.getTenantId())))
-                  .call(n -> notificationService.processNotification(n, webhook));
+                  .call(
+                      n ->
+                          notificationPublisher
+                              .publish(n.getId().toHexString())
+                              .call(ignored -> notificationRepository.markAsPublished(n.getId()))
+                              .onFailure()
+                              .call(
+                                  error ->
+                                      notificationRepository.releasePublishingLock(n.getId())));
             })
         .collect()
         .asList()
         .replaceWithVoid();
-  }
-
-  private String encodePayload(String payload) {
-    return Base64.getEncoder().encodeToString(payload.getBytes(StandardCharsets.UTF_8));
   }
 
   private WebhookResponse toResponse(Webhook webhook) {

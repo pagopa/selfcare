@@ -15,7 +15,7 @@ module "local" {
   ca_resource_group_name         = "selc-d-container-app-002-rg"
   container_app_min_replicas     = 0
   container_app_cpu              = 1.0
-  container_app_memory           = "2.0Gi"
+  container_app_memory           = "2Gi"
 }
 
 
@@ -56,6 +56,65 @@ module "collection_documents" {
 # Container App
 ###############################################################################
 
+###############################################################################
+# DATA SOURCES
+###############################################################################
+data "azurerm_storage_account" "documents_storage" {
+  name                = "sc${module.local.config.env_short}${module.local.config.location_short}ardocumentsst01"
+  resource_group_name = "selc-${module.local.config.env_short}-documents-storage-rg"
+}
+
+data "azurerm_storage_account" "user_attachments_storage" {
+  name                = "sc${module.local.config.env_short}${module.local.config.location_short}arusrattachst01"
+  resource_group_name = "selc-${module.local.config.env_short}-user-attachments-storage-rg"
+}
+
+data "azurerm_user_assigned_identity" "document_storage_blob_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-documents-storage-blob-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
+}
+
+resource "azurerm_role_assignment" "document_user_attachments_blob_identity_role_assignment" {
+  scope                = data.azurerm_storage_account.user_attachments_storage.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = data.azurerm_user_assigned_identity.document_storage_blob_identity.principal_id
+}
+
+###############################################################################
+# Private Endpoint + Private DNS integration for user-attachments storage
+###############################################################################
+data "azurerm_subnet" "user_attachments_pep_snet" {
+  name                 = "${module.local.config.project}-user-attachments-snet"
+  virtual_network_name = module.local.vnet_selc_name
+  resource_group_name  = module.local.vnet_resource_group_name
+}
+
+data "azurerm_private_dns_zone" "privatelink_blob_core_windows_net" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = module.local.vnet_resource_group_name
+}
+
+resource "azurerm_private_endpoint" "user_attachments_blob_pep" {
+  name                = "sc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-usrattach-blob-pep-01"
+  location            = module.local.config.location
+  resource_group_name = data.azurerm_storage_account.user_attachments_storage.resource_group_name
+  subnet_id           = data.azurerm_subnet.user_attachments_pep_snet.id
+
+  private_service_connection {
+    name                           = "sc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-usrattach-blob-pep-01"
+    private_connection_resource_id = data.azurerm_storage_account.user_attachments_storage.id
+    is_manual_connection           = false
+    subresource_names              = ["blob"]
+  }
+
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.privatelink_blob_core_windows_net.id]
+  }
+
+  tags = module.local.config.tags
+}
+
 locals {
   app_settings_document_ms = [
     {
@@ -89,6 +148,18 @@ locals {
     {
       name  = "DOCUMENT_MS_UPLOAD_MAX_BODY_SIZE"
       value = "10M"
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME_CONTRACTS"
+      value = data.azurerm_storage_account.documents_storage.name
+    },
+    {
+      name  = "AZURE_STORAGE_ACCOUNT_NAME_USER"
+      value = data.azurerm_storage_account.user_attachments_storage.name
+    },
+    {
+      name  = "AZURE_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.document_storage_blob_identity.client_id
     }
   ]
 
@@ -96,8 +167,6 @@ locals {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "JWT_PUBLIC_KEY"                          = "jwt-public-key"
     "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
-    "BLOB_STORAGE_CONTRACT_CONNECTION_STRING" = "documents-storage-connection-string"
-    "BLOB_STORAGE_USER_CONNECTION_STRING"     = "user-attachments-storage-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
@@ -122,4 +191,7 @@ module "container_app_document_ms" {
   probes = module.local.config.quarkus_health_probes
 
   tags = module.local.config.tags
+
+  additional_user_assigned_identity_ids = [data.azurerm_user_assigned_identity.document_storage_blob_identity.id]
 }
+

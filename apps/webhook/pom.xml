@@ -32,6 +32,8 @@
     <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.17.5</selfcare-onboarding-sdk.version>
+    <azure-identity.version>1.18.4</azure-identity.version>
+    <azure-storage-queue.version>12.25.0</azure-storage-queue.version>
   </properties>
 
   <dependencyManagement>
@@ -160,6 +162,17 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-scheduler</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-identity</artifactId>
+      <version>${azure-identity.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-storage-queue</artifactId>
+      <version>${azure-storage-queue.version}</version>
     </dependency>
 
     <dependency>

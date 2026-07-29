@@ -34,33 +34,50 @@ jobs:
           ref: ${{ inputs.branch }}
 
       - name: Extract Version
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
         run: |
-          echo "VERSION=$(echo "${{ inputs.branch }}" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
+          echo "VERSION=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
 
       - name: Trigger Functions Release
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
         run: |
           gh workflow run release_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar -f app=onboarding-functions
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=onboarding-functions
 
       - name: Trigger Onboarding ms Release
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar -f app=onboarding-ms
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=onboarding-ms
 
       - name: Trigger Onboarding CDC Release
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=ar -f app=onboarding-cdc
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=onboarding-cdc
 
       - name: Trigger PNPG Functions Release
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
         run: |
           gh workflow run release_functions.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-functions
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=pnpg -f app=onboarding-functions
 
       - name: Trigger PNPG Onboarding ms Release
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
         run: |
           gh workflow run release_app.yml \
-            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-ms
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=pnpg -f app=onboarding-ms
 
 #      - name: Trigger PNPG Onboarding CDC Release
 #        run: |

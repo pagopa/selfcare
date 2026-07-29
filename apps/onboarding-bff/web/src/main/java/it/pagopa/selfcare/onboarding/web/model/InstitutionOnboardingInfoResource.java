@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.web.model;
 
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.util.List;
@@ -8,10 +9,10 @@ import java.util.List;
 @Data
 public class InstitutionOnboardingInfoResource {
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.institutionData}")
+    @Schema(description = "${swagger.onboarding.institutions.model.institutionData}")
     private InstitutionData institution;
 
-    @ApiModelProperty(value = "${swagger.onboarding.institutions.model.geographicTaxonomy}")
+    @Schema(description = "${swagger.onboarding.institutions.model.geographicTaxonomy}")
     private List<GeographicTaxonomyResource> geographicTaxonomies;
 
 }
