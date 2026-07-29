@@ -512,17 +512,17 @@ module "storage_documents" {
     }
   }
 
-  base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
-  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
-  base_delete_after_days_since_creation_greater_than                = 1
+  base_blob_tier_to_cool_after_days_since_modification_greater_than = 30
+  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 90
+  base_delete_after_days_since_creation_greater_than                = 3651
 
   # snapshot_change_tier_to_archive_after_days_since_creation    = 30
-  snapshot_change_tier_to_cool_after_days_since_creation = 1
-  snapshot_delete_after_days_since_creation_greater_than = 1
+  snapshot_change_tier_to_cool_after_days_since_creation = 90
+  snapshot_delete_after_days_since_creation_greater_than = 3651
 
   # version_change_tier_to_archive_after_days_since_creation    = 30
-  version_change_tier_to_cool_after_days_since_creation = 1
-  version_delete_after_days_since_creation              = 1
+  version_change_tier_to_cool_after_days_since_creation = 90
+  version_delete_after_days_since_creation              = 3651
 
   key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
   key_vault_name                = module.key_vault.key_vault_name
