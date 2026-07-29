@@ -779,17 +779,13 @@ module "storage_user_attachments" {
     }
   }
 
-  # Lifecycle: aggressive cleanup in DEV to avoid storage cost accumulation.
-  # Prefix scoped so it only targets blobs already "soft-deleted" by the
-  # application (document-ms moves them from "parties/docs/..." to
-  # "parties/deleted/..." via DocumentContentServiceImpl.deleteFileFromAzure,
-  # driven by application.properties → document-ms.blob-storage.path-deleted).
-  # Live user attachments under "parties/docs/..." are NEVER touched by this rule.
   base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
   base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
   base_delete_after_days_since_creation_greater_than                = 1
+
   snapshot_change_tier_to_cool_after_days_since_creation            = 1
   snapshot_delete_after_days_since_creation_greater_than            = 1
+
   version_change_tier_to_cool_after_days_since_creation             = 1
   version_delete_after_days_since_creation                          = 1
 

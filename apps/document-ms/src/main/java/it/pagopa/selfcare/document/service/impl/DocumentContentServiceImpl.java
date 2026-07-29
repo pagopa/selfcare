@@ -435,10 +435,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         return Uni.createFrom().item("No user attachments to delete");
                     }
 
-                    log.info("Found {} user attachment(s) to delete for onboardingId: {}",
-                            documents.size(), sanitize(onboardingId));
-
                     final int totalCount = documents.size();
+                    log.info("Found {} user attachment(s) to delete for onboardingId: {}",
+                            totalCount, sanitize(onboardingId));
+
                     Uni<List<String>> chain = Uni.createFrom().item(new ArrayList<>());
                     for (Document doc : documents) {
                         chain = chain.chain(acc -> softDeleteSingleUserAttachment(doc, basePath, onboardingId)
@@ -906,6 +906,15 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         ).map(signedFile -> new PdfContext(signedFile, ctx.filename, ctx.storagePath));
     }
 
+    /**
+     * Deletes a file from Azure Blob Storage by moving it to the delete path and removing the original file.
+     *
+     * @param azureBlobClient the Azure Blob client
+     * @param filePath the path of the file to delete
+     * @param basePath the base path to replace with the delete path
+     * @return the path of the deleted file
+     * @throws IOException if an I/O error occurs
+     */
     private String deleteFileFromAzure(AzureBlobClient azureBlobClient, String filePath, String basePath) throws IOException {
         File temporaryFile = azureBlobClient.retrieveFile(filePath);
         String deletedFileName = filePath.replace(basePath, documentMsConfig.getDeletePath());
