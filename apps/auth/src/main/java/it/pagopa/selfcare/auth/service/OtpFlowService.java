@@ -16,7 +16,7 @@ public interface OtpFlowService {
 
   Uni<OtpFlow> findLastOtpFlowByUserId(String userId);
 
-  Uni<TokenResponse> verifyOtp(String otpUid, String otp);
+  Uni<TokenResponse> verifyOtp(String otpUid, String otp, String tenantId);
 
   Uni<OidcExchangeOtpResponse> resendOtp(String otpUid);
 }

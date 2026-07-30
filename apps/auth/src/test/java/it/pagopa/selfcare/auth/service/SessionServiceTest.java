@@ -20,9 +20,25 @@ public class SessionServiceTest {
                 .fiscalCode("fiscalNumber")
                 .name("name")
                 .familyName("familyName")
+                .tenantId("AR")
                 .build())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
+  }
+
+  @Test
+  void generateSessionTokenFailsWithoutTenantId() {
+    sessionService
+        .generateSessionToken(
+            UserClaims.builder()
+                .uid("uid")
+                .fiscalCode("fiscalNumber")
+                .name("name")
+                .familyName("familyName")
+                .build())
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailed();
   }
 }

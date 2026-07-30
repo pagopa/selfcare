@@ -47,11 +47,11 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
+                        "fiscalNumber",
                         "TINIT-FISCALCODE",
                         "name",
                         "name",
-                        "family_name",
+                        "familyName",
                         "Doe")));
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
@@ -64,7 +64,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().item("sessionToken"));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
@@ -81,11 +81,11 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
+                        "fiscalNumber",
                         "TINIT-FISCALCODE",
                         "name",
                         "name",
-                        "family_name",
+                        "familyName",
                         "Doe")));
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
@@ -103,7 +103,7 @@ public class OidcServiceTest {
 
     var response =
         oidcService
-            .exchange("authCode", "redirectUri")
+            .exchange("authCode", "redirectUri", "AR")
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -119,7 +119,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -134,7 +134,7 @@ public class OidcServiceTest {
             Uni.createFrom().failure(new WebApplicationException(Response.status(403).build())));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -149,7 +149,7 @@ public class OidcServiceTest {
             Uni.createFrom().failure(new WebApplicationException(Response.status(404).build())));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -165,7 +165,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception("Error")));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -188,7 +188,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -213,7 +213,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -238,7 +238,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()

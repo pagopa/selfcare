@@ -4,7 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.model.UserClaims;
 
 public interface SAMLService {
-  Uni<String> generateSessionToken(String samlResponse) throws Exception;
+  Uni<String> generateSessionToken(String samlResponse, String tenantId) throws Exception;
 
   String getLoginSuccessUrl(String token);
 

@@ -147,7 +147,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
 
     otpFlowService
-        .verifyOtp(otpUid, otp)
+        .verifyOtp(otpUid, otp, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(ResourceNotFoundException.class, "Cannot find OtpFlow");
@@ -159,6 +159,7 @@ public class OtpFlowServiceTest {
     String otp = "test-otp";
     OtpFlow otpFlow = new OtpFlow();
     otpFlow.setUuid(otpUid);
+    otpFlow.setUserId("test-user-id");
     otpFlow.setOtp(DigestUtils.md5Hex(otp));
     otpFlow.setExpiresAt(OffsetDateTime.now().plusMinutes(5));
     otpFlow.setStatus(OtpStatus.PENDING);
@@ -178,7 +179,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().item("session-token"));
     TokenResponse response =
         otpFlowService
-            .verifyOtp(otpUid, otp)
+            .verifyOtp(otpUid, otp, "AR")
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -213,7 +214,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().item("session-token"));
 
     otpFlowService
-        .verifyOtp(otpUid, otp)
+        .verifyOtp(otpUid, otp, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(OtpForbiddenException.class, "Wrong Otp Code");
@@ -245,7 +246,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().item("session-token"));
 
     otpFlowService
-        .verifyOtp(otpUid, otp)
+        .verifyOtp(otpUid, otp, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(OtpForbiddenException.class, "Max attempts reached");
@@ -277,7 +278,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().item("session-token"));
 
     otpFlowService
-        .verifyOtp(otpUid, otp)
+        .verifyOtp(otpUid, otp, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(ConflictException.class, "Otp is expired");

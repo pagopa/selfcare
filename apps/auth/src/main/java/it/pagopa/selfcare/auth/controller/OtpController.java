@@ -5,8 +5,11 @@ import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
 import it.pagopa.selfcare.auth.controller.request.OtpVerifyRequest;
 import it.pagopa.selfcare.auth.controller.response.*;
 import it.pagopa.selfcare.auth.service.OtpFlowService;
+import it.pagopa.selfcare.auth.util.TenantHeaderUtils;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,8 +81,12 @@ public class OtpController {
   @Path(value = "/verify")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<TokenResponse> verifyOtp(@Valid OtpVerifyRequest otpVerifyRequest) {
-    return otpFlowService.verifyOtp(otpVerifyRequest.getOtpUuid(), otpVerifyRequest.getOtp());
+  public Uni<TokenResponse> verifyOtp(
+      @Context ContainerRequestContext requestContext, @Valid OtpVerifyRequest otpVerifyRequest) {
+    return otpFlowService.verifyOtp(
+        otpVerifyRequest.getOtpUuid(),
+        otpVerifyRequest.getOtp(),
+        TenantHeaderUtils.resolveTenantId(requestContext));
   }
 
   @Operation(

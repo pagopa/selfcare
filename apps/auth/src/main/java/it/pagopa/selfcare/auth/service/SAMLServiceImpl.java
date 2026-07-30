@@ -67,18 +67,18 @@ public class SAMLServiceImpl implements SAMLService {
   @RestClient @Inject IamMsApi iamApi;
 
   @Override
-  public Uni<String> generateSessionToken(String samlResponse) throws Exception {
+  public Uni<String> generateSessionToken(String samlResponse, String tenantId) throws Exception {
     return samlValidator
         .validateSamlResponseAsync(samlResponse, idpCert, timeInterval)
         .onItem()
-        .transformToUni(this::createSessionToken);
+        .transformToUni(attributes -> this.createSessionToken(attributes, tenantId));
   }
 
-  private Uni<String> createSessionToken(Map<String, String> attributes) {
+  private Uni<String> createSessionToken(Map<String, String> attributes, String tenantId) {
     return Uni.createFrom()
         .item(attributes)
         .onItem()
-        .transformToUni(this::createUserClaims)
+        .transformToUni(attrs -> this.createUserClaims(attrs, tenantId))
         .onItem()
         .transformToUni(
             userClaims ->
@@ -87,17 +87,18 @@ public class SAMLServiceImpl implements SAMLService {
                     .onItem()
                     .transform(token -> tokenContext.setToken(token))
                     .onItem()
-                    .transformToUni(token -> saveUser(userClaims.getEmail())))
+                    .transformToUni(token -> saveUser(userClaims.getEmail(), tenantId)))
         .onItem()
         .transformToUni(sessionService::generateSessionTokenInternal)
         .onFailure()
         .transform(failure -> new SamlSignatureException("SAML validation failed"));
   }
 
-  private Uni<UserClaims> createUserClaims(Map<String, String> attributes) {
+  private Uni<UserClaims> createUserClaims(Map<String, String> attributes, String tenantId) {
     UserClaims userClaims = new UserClaims();
     userClaims.setUid(attributes.get(INTERNAL_ID));
     userClaims.setEmail(attributes.get(INTERNAL_ID));
+    userClaims.setTenantId(tenantId);
     return Uni.createFrom().item(userClaims);
   }
 
@@ -108,6 +109,10 @@ public class SAMLServiceImpl implements SAMLService {
 
   @Override
   public Uni<UserClaims> saveUser(String email) {
+    return saveUser(email, null);
+  }
+
+  private Uni<UserClaims> saveUser(String email, String tenantId) {
     return Uni.createFrom()
         .item(email)
         .onItem()
@@ -134,6 +139,7 @@ public class SAMLServiceImpl implements SAMLService {
                     .name(userClaims.getName())
                     .familyName(userClaims.getFamilyName())
                     .test(userClaims.getTest())
+                    .tenantId(tenantId)
                     .build());
   }
 }

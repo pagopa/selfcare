@@ -221,7 +221,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     return updateOtpFlow(uuid, newStatus, true);
   }
 
-  private Uni<String> handleOtpVerification(OtpFlow otpFlow, String hashedOtp) {
+  private Uni<String> handleOtpVerification(OtpFlow otpFlow, String hashedOtp, String tenantId) {
     if (otpFlow.getExpiresAt().isBefore(OffsetDateTime.now())) {
       return Uni.createFrom().failure(new ConflictException("Otp is expired"));
     }
@@ -269,6 +269,11 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .atMost(maxRetry)
         .onFailure(WebApplicationException.class)
         .transform(GeneralUtils::extractExceptionFromWebAppException)
+        .map(
+            userClaims -> {
+              userClaims.setTenantId(tenantId);
+              return userClaims;
+            })
         .chain(sessionService::generateSessionToken)
         .chain(
             sessionToken ->
@@ -280,7 +285,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   }
 
   @Override
-  public Uni<TokenResponse> verifyOtp(String otpUid, String otp) {
+  public Uni<TokenResponse> verifyOtp(String otpUid, String otp, String tenantId) {
     return Uni.createFrom()
         .item(DigestUtils.md5Hex(otp))
         .chain(
@@ -291,7 +296,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                             maybeOtpFlow
                                 .map(
                                     otpFlow ->
-                                        handleOtpVerification(otpFlow, hashOtp)
+                                        handleOtpVerification(otpFlow, hashOtp, tenantId)
                                             .map(TokenResponse::new))
                                 .orElse(
                                     Uni.createFrom()

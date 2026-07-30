@@ -81,6 +81,14 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** JWTs issued via OneIdentity login contain the tenant claim, consistent with the
   `X-Tenant-Id` the same client would receive from APIM.
 - **Depends on:** Sub-task 1.
+- **Status: implemented.** Tenant is resolved fresh from the incoming `X-Tenant-Id` header (via a shared
+  `TenantHeaderUtils.resolveTenantId`, reusing `TenantId`/`TenantConstants` from `libs/selfcare-sdk-security`)
+  at each of the three OneIdentity entry points — `SamlCallbackController`, `OidcController`, `OtpController`
+  (`/verify` only) — and threaded through `UserClaims.tenantId` into `SessionServiceImpl`, which embeds it as
+  the `tenant_id` claim on every issued JWT (both `generateSessionToken` and `generateSessionTokenInternal`).
+  Resolution fails closed with a 400 (`InvalidRequestException`) if the header is missing/unknown; token
+  signing fails closed with a 500 if `tenantId` is somehow absent at that point (defense in depth). 167 unit
+  tests pass in `apps/auth` (no regressions).
 
 ### 4. `hub-spid-login`: tenant claim injection layer
 - **Maps to:** SELC-3

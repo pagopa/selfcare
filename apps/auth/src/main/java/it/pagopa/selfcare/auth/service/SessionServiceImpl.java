@@ -5,6 +5,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.Pkcs8Utils;
+import it.pagopa.selfcare.security.tenant.TenantConstants;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.time.Duration;
 import java.time.Instant;
@@ -42,6 +43,7 @@ public class SessionServiceImpl implements SessionService {
                     .claim("family_name", userClaims.getFamilyName())
                     .claim("uid", userClaims.getUid())
                     .claim("spid_level", SPID_LEVEL_L2)
+                    .claim(TenantConstants.TENANT_CLAIM, requireTenantId(userClaims))
                     .issuer(ISSUER)
                     .audience(audience)
                     .issuedAt(Instant.now())
@@ -59,10 +61,25 @@ public class SessionServiceImpl implements SessionService {
                 Jwt.claims()
                     .claim("uid", userClaims.getUid())
                     .claim("email", userClaims.getEmail())
+                    .claim(TenantConstants.TENANT_CLAIM, requireTenantId(userClaims))
                     .issuer("PAGOPA")
                     .audience(audience)
                     .issuedAt(Instant.now())
                     .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
                     .sign(rsaPrivateKey));
   }
+
+  /**
+   * Fails closed (Step_0 SELC-1.3 philosophy applied to token issuance) rather than silently
+   * omitting the {@code tenant_id} claim: every session token issued by {@code auth} MUST carry
+   * the tenant resolved from the incoming {@code X-Tenant-Id} header (Step_0 SELC-4).
+   */
+  private String requireTenantId(UserClaims userClaims) {
+    String tenantId = userClaims.getTenantId();
+    if (tenantId == null || tenantId.isBlank()) {
+      throw new InternalException("Cannot issue session token without a resolved tenantId");
+    }
+    return tenantId;
+  }
 }
+

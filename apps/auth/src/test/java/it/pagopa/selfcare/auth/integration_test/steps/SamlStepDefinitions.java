@@ -79,7 +79,7 @@ public class SamlStepDefinitions {
 
   private void execute() {
     try {
-      tokenUni = samlService.generateSessionToken(samlResponse);
+      tokenUni = samlService.generateSessionToken(samlResponse, "AR");
       // Trigger resolution to capture failure
       tokenUni.subscribe().with(t -> {}, f -> failure = f);
       // Wait briefly for async completion

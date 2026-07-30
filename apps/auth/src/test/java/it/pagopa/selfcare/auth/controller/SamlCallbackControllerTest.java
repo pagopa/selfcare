@@ -50,7 +50,7 @@ class SamlCallbackControllerTest {
   @Test
   public void testHandleSamlResponse_Invalid() throws Exception {
     // Arrange: Configure the mock service to return 'false' for validation.
-    when(samlService.generateSessionToken(anyString()))
+    when(samlService.generateSessionToken(anyString(), anyString()))
         .thenThrow(new SamlSignatureException("Validation Error"));
 
     // Act & Assert
@@ -94,7 +94,7 @@ class SamlCallbackControllerTest {
         .body(equalTo("SAMLResponse is required."));
 
     // Verify that the service is not called when SAMLResponse is null
-    verify(samlService, never()).generateSessionToken(anyString());
+    verify(samlService, never()).generateSessionToken(anyString(), anyString());
   }
 
   @Test
@@ -110,18 +110,19 @@ class SamlCallbackControllerTest {
         .body(equalTo("SAMLResponse is required."));
 
     // Verify that the service is not called when SAMLResponse is empty
-    verify(samlService, never()).generateSessionToken(anyString());
+    verify(samlService, never()).generateSessionToken(anyString(), anyString());
   }
 
   @Test
   void handleSamlResponse_ServiceValidationFailure_ShouldReturnBadRequest() throws Exception {
     // Given
-    when(samlService.generateSessionToken(anyString()))
+    when(samlService.generateSessionToken(anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Validation failed")));
 
     // When & Then
     given()
         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+        .header("X-Tenant-Id", "AR")
         .formParam("SAMLResponse", VALID_SAML_RESPONSE)
         .when()
         .post("/acs")
@@ -150,7 +151,7 @@ class SamlCallbackControllerTest {
     }
     String longResponse = longSamlResponse.toString();
 
-    when(samlService.generateSessionToken(longResponse))
+    when(samlService.generateSessionToken(eq(longResponse), anyString()))
         .thenReturn(Uni.createFrom().item(SESSION_TOKEN));
 
     // When & Then
@@ -174,9 +175,10 @@ class SamlCallbackControllerTest {
     // Mock the ContainerRequestContext to simulate a correct Content-Type
     ContainerRequestContext mockRequestContext = Mockito.mock(ContainerRequestContext.class);
     when(mockRequestContext.getMediaType()).thenReturn(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+    when(mockRequestContext.getHeaderString("X-Tenant-Id")).thenReturn("AR");
 
     // Mock the calls to SAMLService
-    when(samlService.generateSessionToken(samlResponse))
+    when(samlService.generateSessionToken(samlResponse, "AR"))
         .thenReturn(Uni.createFrom().item(sessionToken));
     when(samlService.getLoginSuccessUrl(sessionToken)).thenReturn(redirectUrl);
 
@@ -190,7 +192,7 @@ class SamlCallbackControllerTest {
     assertEquals(URI.create(redirectUrl), response.getLocation());
 
     // Verify that the service methods were called correctly
-    Mockito.verify(samlService).generateSessionToken(samlResponse);
+    Mockito.verify(samlService).generateSessionToken(samlResponse, "AR");
     Mockito.verify(samlService).getLoginSuccessUrl(sessionToken);
   }
 
@@ -223,6 +225,7 @@ class SamlCallbackControllerTest {
     // ARRANGE
     ContainerRequestContext mockRequestContext = Mockito.mock(ContainerRequestContext.class);
     when(mockRequestContext.getMediaType()).thenReturn(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+    when(mockRequestContext.getHeaderString("X-Tenant-Id")).thenReturn("AR");
 
     // ACT
     Uni<Response> responseUni =
@@ -242,10 +245,11 @@ class SamlCallbackControllerTest {
     String samlResponse = "invalid-saml-response";
     ContainerRequestContext mockRequestContext = Mockito.mock(ContainerRequestContext.class);
     when(mockRequestContext.getMediaType()).thenReturn(MediaType.APPLICATION_FORM_URLENCODED_TYPE);
+    when(mockRequestContext.getHeaderString("X-Tenant-Id")).thenReturn("AR");
 
     // Mock the service to simulate a failure
     SamlSignatureException expectedException = new SamlSignatureException("Invalid signature");
-    when(samlService.generateSessionToken(anyString()))
+    when(samlService.generateSessionToken(anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(expectedException));
 
     // ACT & ASSERT
@@ -261,7 +265,7 @@ class SamlCallbackControllerTest {
             });
 
     assertEquals("Invalid signature", thrown.getMessage());
-    Mockito.verify(samlService).generateSessionToken(samlResponse);
+    Mockito.verify(samlService).generateSessionToken(samlResponse, "AR");
     Mockito.verifyNoMoreInteractions(samlService); // getLoginSuccessUrl should not be called
   }
 }

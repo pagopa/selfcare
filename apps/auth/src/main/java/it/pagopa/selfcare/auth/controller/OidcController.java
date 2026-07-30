@@ -7,8 +7,11 @@ import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
 import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.service.OidcService;
+import it.pagopa.selfcare.auth.util.TenantHeaderUtils;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,7 +84,12 @@ public class OidcController {
   @Path(value = "/exchange")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<OidcExchangeResponse> oidcExchange(@Valid OidcExchangeRequest oidcExchangeRequest) {
-    return oidcService.exchange(oidcExchangeRequest.code, oidcExchangeRequest.redirectUri);
+  public Uni<OidcExchangeResponse> oidcExchange(
+      @Context ContainerRequestContext requestContext,
+      @Valid OidcExchangeRequest oidcExchangeRequest) {
+    return oidcService.exchange(
+        oidcExchangeRequest.code,
+        oidcExchangeRequest.redirectUri,
+        TenantHeaderUtils.resolveTenantId(requestContext));
   }
 }
