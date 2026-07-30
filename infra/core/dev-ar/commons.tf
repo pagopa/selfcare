@@ -756,11 +756,6 @@ module "storage_user_attachments" {
 
   private_dns_zone_resource_group_name = module.network.rg_vnet_name
 
-  # Generic knobs — semantics decided here in the caller, not in the module.
-  naming_config          = "user-attachments"
-  kv_secret_name         = "user-attachments-storage-connection-string"
-  lifecycle_prefix_match = ["parties/deleted"]
-
   # Soft-delete of blobs enabled so that Defender can soft-delete files
   # flagged as malicious (see module storage_account.tf precondition).
   blob_features = {
@@ -863,16 +858,16 @@ module "apim" {
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location               = local.location
-  env_short              = local.env_short
-  domain                 = local.app_domain
-  tags                   = local.tags
-  product_storage_name   = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  product_storage_rg     = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-  documents_storage_name = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
-  documents_storage_rg   = "${local.prefix}-${local.env_short}-documents-storage-rg"
-  web_storage_name       = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  web_storage_rg         = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  location                = local.location
+  env_short               = local.env_short
+  domain                  = local.app_domain
+  tags                    = local.tags
+  product_storage_name    = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg      = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  documents_storage_name  = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
+  documents_storage_rg    = "${local.prefix}-${local.env_short}-documents-storage-rg"
+  web_storage_name        = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  web_storage_rg          = "${local.prefix}-${local.env_short}-checkout-fe-rg"
   eventhub_namespace_name = "${local.prefix}-${local.env_short}-eventhub-ns"
-  eventhub_namespace_rg = "${local.prefix}-${local.env_short}-event-rg"
+  eventhub_namespace_rg   = "${local.prefix}-${local.env_short}-event-rg"
 }

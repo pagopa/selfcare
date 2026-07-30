@@ -26,26 +26,26 @@ locals {
 
   # networking
   # main vnet
-  cidr_vnet                         = ["10.1.0.0/16"]
-  cidr_subnet_k8s                   = ["10.1.0.0/17"]
-  cidr_subnet_appgateway            = ["10.1.128.0/24"]
-  cidr_subnet_cdn                   = ["10.1.129.0/24"] // condivisa con pnpg cdn
-  cidr_subnet_azdoa                 = ["10.1.130.0/24"]
-  cidr_subnet_redis                 = ["10.1.132.0/24"]
-  cidr_subnet_vpn                   = ["10.1.133.0/24"]
-  cidr_subnet_dns_forwarder         = ["10.1.134.0/29"]
-  cidr_subnet_cosmosdb_mongodb      = ["10.1.135.0/24"]
-  cidr_subnet_document_storage      = ["10.1.136.0/24"] #this is a place holder for document storage account
-  cidr_subnet_contract_storage      = ["10.1.137.0/24"]
+  cidr_vnet                            = ["10.1.0.0/16"]
+  cidr_subnet_k8s                      = ["10.1.0.0/17"]
+  cidr_subnet_appgateway               = ["10.1.128.0/24"]
+  cidr_subnet_cdn                      = ["10.1.129.0/24"] // condivisa con pnpg cdn
+  cidr_subnet_azdoa                    = ["10.1.130.0/24"]
+  cidr_subnet_redis                    = ["10.1.132.0/24"]
+  cidr_subnet_vpn                      = ["10.1.133.0/24"]
+  cidr_subnet_dns_forwarder            = ["10.1.134.0/29"]
+  cidr_subnet_cosmosdb_mongodb         = ["10.1.135.0/24"]
+  cidr_subnet_document_storage         = ["10.1.136.0/24"] #this is a place holder for document storage account
+  cidr_subnet_contract_storage         = ["10.1.137.0/24"]
   cidr_subnet_user_attachments_storage = ["10.1.131.0/24"]
-  cidr_subnet_eventhub              = ["10.1.138.0/24"]
-  cidr_subnet_logs_storage          = ["10.1.139.0/24"]
-  cidr_subnet_pnpg_cosmosdb_mongodb = ["10.1.140.0/24"] #this is a place holder for pnpg mongo
-  cidr_subnet_private_endpoints     = ["10.1.141.0/24"]
-  cidr_subnet_load_tests            = ["10.1.142.0/24"]
-  cidr_subnet_ai_search             = ["10.1.145.0/29"]
-  cidr_subnet_eventhub_rds          = ["10.1.153.0/26"]
-  cidr_subnet_apim                  = ["10.1.161.0/24"]
+  cidr_subnet_eventhub                 = ["10.1.138.0/24"]
+  cidr_subnet_logs_storage             = ["10.1.139.0/24"]
+  cidr_subnet_pnpg_cosmosdb_mongodb    = ["10.1.140.0/24"] #this is a place holder for pnpg mongo
+  cidr_subnet_private_endpoints        = ["10.1.141.0/24"]
+  cidr_subnet_load_tests               = ["10.1.142.0/24"]
+  cidr_subnet_ai_search                = ["10.1.145.0/29"]
+  cidr_subnet_eventhub_rds             = ["10.1.153.0/26"]
+  cidr_subnet_apim                     = ["10.1.161.0/24"]
 
   cidr_subnet_selc      = ["10.1.148.0/23"]
   cidr_subnet_selc_pnpg = ["10.1.150.0/23"]
