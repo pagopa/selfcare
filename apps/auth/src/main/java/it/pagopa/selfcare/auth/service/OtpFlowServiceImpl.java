@@ -126,7 +126,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
             .chain(isRequired ->
                     isRequired
-                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
                             .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                             : checkPendingOtpFlow(otpFlow, institutionalEmail));
   }
@@ -147,7 +147,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     otpLimitConfig.getDailyLimit())
             .chain(isRequired ->
                     isRequired
-                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
                             .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                             : Uni.createFrom().item(Optional.empty()));
   }
@@ -160,7 +160,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
    * @param email the user's institutional email
    * @return a new Otp Flow
    */
-  private Uni<OtpFlow> createAndSendOtp(String userId, String email) {
+  private Uni<OtpFlow> createAndSendOtp(String userId, String email, String name) {
     return Uni.createFrom()
         .item(OtpUtils::generateOTP)
         .chain(
@@ -171,7 +171,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     .chain(
                         otpFlow ->
                             otpNotificationService
-                                .sendOtpEmail(userId, email, otp)
+                                .sendOtpEmail(userId, email, otp, name)
                                 .replaceWith(otpFlow)));
   }
 
@@ -327,7 +327,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                             maybeUserEmail
                                 .map(
                                     institutionalEmail ->
-                                        createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                                        createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
                                             .chain(
                                                 createdOtpFlow ->
                                                     // Fire & Forget update old otp flow status

@@ -450,3 +450,26 @@ Feature: Oidc with no active periodic OTP flow
     And The response body contains:
       | status | 500       |
       | detail | Cannot Handle OTP Flow:it.pagopa.selfcare.auth.exception.InternalException: Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#getUserOtpEmailInfo' |
+
+  @RemoveOtpFlow
+  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", forced OTP enabled but OTP email not sent
+    Given User login with username "r.balboa" and password "test"
+    And OTP feature flag is set to "BETA"
+    And User in the beta user list with the following details:
+      | fiscalCode  | blbrki80A41H401T             |
+      | forcedEmail | unknown@regionelazio.it      |
+      | forceOtp    | true                         |
+    And The following request body:
+    """
+    {
+        "code": "auth_code_123456",
+        "redirectUri": "https://example.com/callback"
+    }
+    """
+    When I send a POST request to "oidc/exchange"
+    Then The status code is 200
+    And The response body contains:
+      | requiresOtpFlow | true                       |
+      | maskedEmail     | u*****n@regionelazio.it    |
+    And The response body contains field "otpSessionUid"
+    And An OTP flow should be created with status "PENDING"
