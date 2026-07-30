@@ -1,5 +1,5 @@
-resource "azurerm_subnet" "documents_snet" {
-  name                 = "${local.project}-${local.naming_config}-snet"
+resource "azurerm_subnet" "storage_account_snet" {
+  name                 = "${local.project}-${var.app_name}-snet"
   virtual_network_name = data.azurerm_virtual_network.vnet_selc.name
   resource_group_name  = data.azurerm_virtual_network.vnet_selc.resource_group_name
   address_prefixes     = var.cidr_subnet_contract_storage
