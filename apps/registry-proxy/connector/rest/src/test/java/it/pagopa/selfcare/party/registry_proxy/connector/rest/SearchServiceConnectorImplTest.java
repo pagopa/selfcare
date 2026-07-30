@@ -3,6 +3,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapperImpl;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.*;
 
 
-@ContextConfiguration(classes = {SearchServiceConnectorImpl.class})
+@ContextConfiguration(classes = {SearchServiceConnectorImpl.class, SearchServiceMapperImpl.class})
 @ExtendWith(SpringExtension.class)
 public class SearchServiceConnectorImplTest {
 
