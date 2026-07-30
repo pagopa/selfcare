@@ -156,24 +156,6 @@ variable "version_delete_after_days_since_creation" {
   type = number
 }
 
-# -----------------------------------------------------------------------------
-# Generic knobs — allow the caller to fully decide semantics (subnet name,
-# key vault secret name, lifecycle filter). Defaults preserve backward
-# compatibility for pre-existing callers (module "storage_documents").
-# -----------------------------------------------------------------------------
-
-variable "naming_config" {
-  type        = string
-  description = "Logical name used to build the storage subnet name (e.g. \"documents\", \"user-attachments\")."
-  default     = "documents"
-}
-
-variable "kv_secret_name" {
-  type        = string
-  description = "Name of the Key Vault secret that will hold the primary connection string."
-  default     = "documents-storage-connection-string"
-}
-
 variable "lifecycle_prefix_match" {
   type        = list(string)
   description = "Blob path prefixes the lifecycle management policy applies to."

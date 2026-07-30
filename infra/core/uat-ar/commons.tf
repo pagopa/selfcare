@@ -581,11 +581,6 @@ module "storage_user_attachments" {
 
   private_dns_zone_resource_group_name = module.network.rg_vnet_name
 
-  # Generic knobs — semantics decided here in the caller, not in the module.
-  naming_config          = "user-attachments"
-  kv_secret_name         = "user-attachments-storage-connection-string"
-  lifecycle_prefix_match = ["parties/deleted"]
-
   # Soft-delete of blobs enabled so that Defender can soft-delete files
   # flagged as malicious (see module storage_account.tf precondition).
   blob_features = {
@@ -830,10 +825,10 @@ module "user_managed_identity" {
   eventhub_namespace_rg   = "${local.prefix}-${local.env_short}-event-rg"
 }
 
-module "upload_file_logo" {
-  source = "../_modules/upload_file"
+# module "upload_file_logo" {
+#   source = "../_modules/upload_file"
 
-  file_path                 = "${path.module}/../resources/logo.png"
-  container                 = module.storage_documents.storage_container_name
-  primary_connection_string = module.storage_documents.storage_account.primary_connection_string
-}
+#   file_path                 = "${path.module}/../resources/logo.png"
+#   container                 = module.storage_documents.storage_container_name
+#   primary_connection_string = module.storage_documents.storage_account.primary_connection_string
+# }
