@@ -38,6 +38,7 @@ No requirements.
 | <a name="input_external_domain"></a> [external\_domain](#input\_external\_domain) | Domain for delegation | `string` | `"pagopa.it"` | no |
 | <a name="input_openapi_path"></a> [openapi\_path](#input\_openapi\_path) | Path to the OpenAPI specification file. | `string` | n/a | yes |
 | <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | The private DNS name of the API in the API Management instance. | `string` | n/a | yes |
+| <a name="input_tenant_ids"></a> [tenant\_ids](#input\_tenant\_ids) | Tenants served by this API group (multitenant migration, see apps/docs/Multitenant/Step\_0/REQUIREMENTS.md SELC-1/SELC-2). Each entry maps a tenant id (AR/PNPG) to its frontend origin (scheme + host, e.g. https://selfcare.pagopa.it). APIM allow-lists every listed origin for CORS and resolves X-Tenant-Id at request time from the calling Origin/Referer against this list, always discarding any X-Tenant-Id sent by the caller. The first entry is used as the fallback tenant when a request carries no Origin/Referer header (server-to-server calls, health checks). | <pre>list(object({<br/>    id     = string<br/>    origin = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

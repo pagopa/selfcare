@@ -61,3 +61,16 @@ variable "api_operation_policies" {
   default     = []
   description = "List of api policy for given operation."
 }
+
+variable "tenant_ids" {
+  type = list(object({
+    id     = string
+    origin = string
+  }))
+  description = "Tenants served by this API group (multitenant migration, see apps/docs/Multitenant/Step_0/REQUIREMENTS.md SELC-1/SELC-2). Each entry maps a tenant id (AR/PNPG) to its frontend origin (scheme + host, e.g. https://selfcare.pagopa.it). APIM allow-lists every listed origin for CORS and resolves X-Tenant-Id at request time from the calling Origin/Referer against this list, always discarding any X-Tenant-Id sent by the caller. The first entry is used as the fallback tenant when a request carries no Origin/Referer header (server-to-server calls, health checks)."
+
+  validation {
+    condition     = length(var.tenant_ids) > 0 && alltrue([for t in var.tenant_ids : contains(["AR", "PNPG"], t.id)])
+    error_message = "tenant_ids must be non-empty and every entry's id must be AR or PNPG."
+  }
+}

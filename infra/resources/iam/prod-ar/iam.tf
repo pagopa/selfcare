@@ -37,6 +37,7 @@ module "apim_api" {
   openapi_path        = "../../../../apps/iam/src/main/docs/openapi.json"
 
   api_operation_policies = []
+  tenant_ids             = module.local.config.tenant_ids
 }
 
 ###############################################################################

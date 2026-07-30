@@ -49,6 +49,37 @@ locals {
   key_vault_resource_group_name = local.domain == "pnpg" ? "${local.prefix}-${local.env_short}-${local.domain}-sec-rg" : "${local.prefix}-${local.env_short}-sec-rg"
   key_vault_name                = local.domain == "pnpg" ? "${local.prefix}-${local.env_short}-${local.domain}-kv" : "${local.prefix}-${local.env_short}-kv"
 
+  # ============================================================
+  # Multitenant tenant registry (single source of truth).
+  # See apps/docs/Multitenant/Step_0/{REQUIREMENTS,ARCHITECTURE}.md (SELC-1, SELC-6): the canonical
+  # list of tenants and their frontend origins per environment tier, consumed by every apim_api
+  # module call (var.tenant_ids) instead of being repeated per microservice/env. The -pnpg env
+  # folders are slated for deprecation once a single -ar deployment per tier serves both tenants;
+  # until then this module instance's own domain is listed first (used by APIM as the fallback
+  # tenant for calls without an Origin/Referer header).
+  tenant_frontend_origins = {
+    dev = {
+      AR   = "https://dev.selfcare.pagopa.it"
+      PNPG = "https://pnpg.dev.selfcare.pagopa.it"
+    }
+    uat = {
+      AR   = "https://uat.selfcare.pagopa.it"
+      PNPG = "https://imprese.uat.notifichedigitali.it"
+    }
+    prod = {
+      AR   = "https://selfcare.pagopa.it"
+      PNPG = "https://imprese.notifichedigitali.it"
+    }
+  }
+
+  tenant_ids = local.domain == "pnpg" ? [
+    { id = "PNPG", origin = local.tenant_frontend_origins[local.env]["PNPG"] },
+    { id = "AR", origin = local.tenant_frontend_origins[local.env]["AR"] },
+    ] : [
+    { id = "AR", origin = local.tenant_frontend_origins[local.env]["AR"] },
+    { id = "PNPG", origin = local.tenant_frontend_origins[local.env]["PNPG"] },
+  ]
+
   resource_group_name_vnet = "${local.project}-vnet-rg"
 
   # ============================================================

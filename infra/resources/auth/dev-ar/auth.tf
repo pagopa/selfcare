@@ -66,6 +66,7 @@ module "apim_api_auth" {
       XML
     }
   ]
+  tenant_ids = module.local.config.tenant_ids
 }
 
 ###############################################################################

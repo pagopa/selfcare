@@ -53,6 +53,26 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** Requests to either tenant hostname reach the shared backend with a correct, non
   client-controlled `X-Tenant-Id`; requests with unknown hosts are rejected, not defaulted.
 - **Depends on:** Sub-task 1.
+- **Status: implemented (within current per-tenant deployment topology).** The shared `apim_api` Terraform
+  module (`infra/resources/_modules/apim_api`) now takes a required `tenant_ids = list(object({ id, origin }))`
+  variable declaring every tenant frontend an API group serves (e.g.
+  `[{ id = "AR", origin = "https://selfcare.pagopa.it" }, { id = "PNPG", origin = "https://imprese.notifichedigitali.it" }]`).
+  Its inbound policy builds a CORS allow-list from that list and resolves `X-Tenant-Id` at request time from the
+  calling `Origin`/`Referer` against it, unconditionally overriding any client-supplied value (never trusted from
+  the caller); an origin that matches none of the declared tenants is rejected with `403 application/problem+json`
+  (fail-closed), and requests without `Origin`/`Referer` (server-to-server, health checks) fall back to
+  `tenant_ids[0]`. All 27 call sites (`dashboard-bff`, `onboarding-bff`, `iam`, `auth`, `webhook`,
+  `registry-proxy`; every `dev`/`uat`/`prod` × `-ar` deployment folder that exists today, since the `-pnpg`
+  folders are slated for deprecation once a single `-ar` deployment per environment serves both tenants) already
+  declare **both** `AR` and `PNPG` in `tenant_ids`, so every API group is ready to accept and correctly label
+  traffic from either frontend ahead of that consolidation. The `tenant_ids` origin table is centralized once in
+  `infra/resources/_modules/local-env` (`local.tenant_frontend_origins`, keyed by `env`) and exposed as
+  `module.local.config.tenant_ids` — every call site simply sets `tenant_ids = module.local.config.tenant_ids`,
+  eliminating per-file duplication of the AR/PNPG origin list; the module orders its own tenant first
+  (`local.domain`-aware) so the no-`Origin` fallback (`tenant_ids[0]`) still resolves correctly per deployment.
+  True `Host`-header-based resolution (a single API definition backed by a single shared Container App) is
+  completed by this policy already for the origin resolution/label; only the backend consolidation itself (one
+  Container App instead of `-ar`/`-pnpg` pairs) is deferred to sub-task 7.
 
 ### 3. `auth` microservice: tenant claim issuance (OneIdentity flow)
 - **Maps to:** SELC-4
@@ -81,6 +101,9 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** All authenticated endpoints reject tenant-inconsistent requests; no endpoint
   authorizes on the header alone.
 - **Depends on:** Sub-tasks 2, 3, 4.
+- **Status: filter implemented in `libs/selfcare-sdk-security` (tenant package), unit-tested (14 tests).** Not
+  yet wired into a consuming microservice's live request path (no `@QuarkusTest` integration test yet); not
+  yet unblocked by sub-tasks 3/4 (`auth`/`hub-spid-login` claim issuance).
 
 ### 6. Per-service tenant data isolation
 - **Maps to:** SELC-7.2, SELC-7.3
