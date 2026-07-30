@@ -140,6 +140,8 @@ components:
           format: int32
         enabled:
           type: boolean
+        requiredRecipientCode:
+          type: boolean
     Instant:
       type: string
       format: date-time

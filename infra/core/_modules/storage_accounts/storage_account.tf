@@ -2,7 +2,7 @@ module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
   version = "~>1.0"
 
-  subnet_pep_id       = azurerm_subnet.documents_snet.id
+  subnet_pep_id       = azurerm_subnet.storage_account_snet.id
   tags                = var.tags
   tier                = "l"
   environment         = local.environment
@@ -20,10 +20,29 @@ module "storage_account" {
     "bypass" : [],
     "default_action" : "Deny",
     "ip_rules" : [],
-    "virtual_network_subnet_ids" : [azurerm_subnet.documents_snet.id]
+    "virtual_network_subnet_ids" : [azurerm_subnet.storage_account_snet.id]
   }
 
   blob_features = var.blob_features
+
+  # -----------------------------------------------------------------------------
+  # Microsoft Defender for Storage — WAITING FOR UPSTREAM SUPPORT.
+  #
+  # The pagopa-dx module v1.x creates an
+  # `azurerm_security_center_storage_defender.this` internally but does NOT
+  # expose the malware scanning / subscription override attributes as inputs.
+  # As agreed on review, we asked pagopa-dx to release a new version exposing
+  # these variables. When it lands, UNCOMMENT the lines below and bump
+  # `version = "~> X.Y"` above accordingly. The final upstream variable names
+  # may differ slightly — check the pagopa-dx CHANGELOG / variables.tf and
+  # adapt the mapping (this module already exposes the caller-facing
+  # `defender_*` inputs, so callers won't need any change).
+  #
+  # defender_malware_scanning_on_upload_enabled          = var.defender_malware_scanning_enabled
+  # defender_malware_scanning_on_upload_cap_gb_per_month = coalesce(var.defender_malware_scanning_cap_gb_per_month, -1)
+  # defender_override_subscription_settings_enabled      = var.defender_enabled
+  # defender_sensitive_data_discovery_enabled            = var.defender_sensitive_data_discovery_enabled
+  # -----------------------------------------------------------------------------
 }
 
 # Lifecycle Management Policy
@@ -36,7 +55,7 @@ resource "azurerm_storage_management_policy" "lifecycle" {
     enabled = true
 
     filters {
-      prefix_match = ["parties/deleted"]
+      prefix_match = var.lifecycle_prefix_match
       blob_types   = ["blockBlob"]
     }
 
@@ -60,8 +79,8 @@ resource "azurerm_storage_management_policy" "lifecycle" {
   }
 }
 
-resource "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
-  name         = "documents-storage-connection-string"
+resource "azurerm_key_vault_secret" "storage_connection_string" {
+  name         = "${var.app_name}-storage-connection-string"
   value        = module.storage_account.primary_connection_string
   content_type = "text/plain"
 
@@ -69,9 +88,31 @@ resource "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
 }
 
 
-resource "azurerm_management_lock" "selc_documents_storage_management_lock" {
+resource "azurerm_management_lock" "storage_account_lock" {
   name       = module.storage_account.name
   scope      = module.storage_account.id
   lock_level = "CanNotDelete"
   notes      = "This items can't be deleted in this subscription!"
 }
+
+################################################################################
+# Microsoft Defender for Storage — validation guardrail.
+#
+# The upstream `pagopa-dx/azure-storage-account` module v1.x already creates an
+# `azurerm_security_center_storage_defender.this` internally with hardcoded
+# defaults: `malware_scanning_on_upload_enabled = false`,
+# `override_subscription_settings_enabled = false`, etc. It does not expose any
+# input to configure these attributes.
+################################################################################
+
+resource "terraform_data" "defender_soft_delete_guard" {
+  count = var.defender_enabled && var.defender_soft_delete_malicious_blobs ? 1 : 0
+
+  lifecycle {
+    precondition {
+      condition     = var.blob_features.delete_retention_days >= 1
+      error_message = "defender_soft_delete_malicious_blobs=true requires blob_features.delete_retention_days >= 1 so that Defender can soft-delete malicious blobs."
+    }
+  }
+}
+
