@@ -115,6 +115,37 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   `http://localhost:3000` in its own inline CORS block in all environments; that is outside this module and
   should be given the same treatment as a follow-up.
 
+- **Follow-up: server-to-server callers routed through APIM had no way to express a tenant.** Found while
+  sweeping sub-task 6's callers for `X-Tenant-Id` propagation. The design assumed every backend-to-backend
+  call goes direct, callee private DNS name to callee private DNS name, carrying the caller's JWT and the
+  `X-Tenant-Id` header — which is how `onboarding-ms`, `document-ms` and `institution-ms` call each other.
+  But `user-cdc` is different: its three internal clients are pointed at
+  `INTERNAL_API_URL = https://api.dev.selfcare.pagopa.it/external/internal/v1`
+  (`infra/resources/user-cdc/dev-ar/main.tf`) and authenticate with `Ocp-Apim-Subscription-Key`, not a JWT.
+  They go **through APIM**, and the inbound policy above overrides `X-Tenant-Id` unconditionally from the
+  caller's `Origin`/`Referer`. A CDC process has no `Origin`. So:
+
+  1. Adding `X-Tenant-Id` in `user-cdc`'s `InternalApiHeadersFactory` would have been **useless** — APIM
+     discards it. This is worth stating explicitly because it is the obvious first fix and it silently
+     does nothing.
+  2. Once the tenant policy is applied to the API serving `external/internal/v1`, those calls resolve to
+     `default_tenant_id`, i.e. **403 fail-closed** — a live breakage, not a soft degradation.
+
+  Widening `default_tenant_id` to cover it would reintroduce exactly the silent fallback point 2 above
+  removed. Instead the module now takes **`service_caller_tenants`**, a map of APIM subscription id →
+  tenant, evaluated before `default_tenant_id` and only for requests with no `Origin`/`Referer`. Each
+  s2s caller's tenant is pinned to a credential it does not control, and one subscription is issued per
+  *(calling service, tenant)* pair. `default_tenant_id` is now the last resort, for non-browser traffic
+  that genuinely cannot be enumerated.
+
+  Still open: the API that serves `external/internal/v1` is **not** declared through this module in this
+  repo, so the mapping cannot yet be applied to it. Two options, to decide before `user-cdc` is converted
+  in sub-task 7 — (a) bring that API under `_modules/apim_api` and populate `service_caller_tenants`, or
+  (b) re-point `user-cdc`'s three internal clients at the callees' private DNS names with a JWT, matching
+  the pattern the other services already use, which removes APIM from the path entirely. (b) is more
+  consistent with the rest of the estate; (a) is smaller. Note `delegation-cdc` was checked and is **not**
+  affected — its only outbound client is an `EventHubRestClient`.
+
 ### 3. `auth` microservice: tenant claim issuance (OneIdentity flow)
 - **Maps to:** SELC-4
 - **Description:** Extend `auth` to add the tenant claim to JWTs it issues, using the same resolution strategy
