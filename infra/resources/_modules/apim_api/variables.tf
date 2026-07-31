@@ -101,3 +101,14 @@ variable "default_tenant_id" {
     error_message = "default_tenant_id must be null, AR or PNPG."
   }
 }
+
+variable "default_tenant_operation_ids" {
+  type        = set(string)
+  default     = []
+  description = "Operation ids allowed to use default_tenant_id even when Origin/Referer is present but not a tenant frontend (for example a SAML ACS receiving a browser POST from the IdP origin). Empty by default. Keep this list minimal: the fallback is scoped to the named operation and never applies API-wide to an unknown origin."
+
+  validation {
+    condition     = length(var.default_tenant_operation_ids) == 0 || var.default_tenant_id != null
+    error_message = "default_tenant_id must be set when default_tenant_operation_ids is non-empty."
+  }
+}

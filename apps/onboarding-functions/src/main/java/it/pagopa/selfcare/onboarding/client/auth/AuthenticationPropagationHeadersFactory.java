@@ -38,7 +38,7 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {
         final String tenantId = tenantContext.currentTenantId();
         String bearerToken;
-        boolean tokenCarriesTenant = false;
+        String tenantForHeader = null;
 
         // If user is founded on PDV, a bearer token is created starting from it
         if (!clientOutgoingHeaders.isEmpty() && clientOutgoingHeaders.containsKey(USER_ID_HEADER)) {
@@ -46,18 +46,39 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
             final String jwt = tokenService.createJwt(uuid, tenantId);
             if (Objects.nonNull(jwt)) {
                 bearerToken = jwt;
-                tokenCarriesTenant = Objects.nonNull(tenantId);
+                tenantForHeader = tenantId;
             } else {
                 bearerToken = System.getenv(JWT_BEARER_TOKEN_ENV);
+                tenantForHeader = tenantFromMachineToken(bearerToken, tenantId);
             }
         } else {
             bearerToken = System.getenv(JWT_BEARER_TOKEN_ENV);
+            tenantForHeader = tenantFromMachineToken(bearerToken, tenantId);
         }
         clientOutgoingHeaders.put("Authorization", List.of("Bearer " + bearerToken));
 
-        if (tokenCarriesTenant) {
-            clientOutgoingHeaders.put(FunctionTenantContext.TENANT_HEADER, List.of(tenantId));
+        if (tenantForHeader != null) {
+            clientOutgoingHeaders.put(
+                    FunctionTenantContext.TENANT_HEADER, List.of(tenantForHeader));
         }
         return clientOutgoingHeaders;
+    }
+
+    private String tenantFromMachineToken(String bearerToken, String currentTenant) {
+        var tokenTenant = MachineTokenTenantResolver.tenantOf(bearerToken);
+        if (currentTenant == null) {
+            // Some legacy activities carry no onboarding payload. In today's per-tenant deployment
+            // topology the provisioned token is the trusted deployment tenant, so derive the header
+            // from that same signed credential. Consolidation must add tenant to those payloads.
+            return tokenTenant.orElse(null);
+        }
+        String resolvedTokenTenant = tokenTenant
+                .orElseThrow(() -> new IllegalStateException(
+                        "JWT_BEARER_TOKEN must carry tenant_id for a tenant-scoped activity"));
+        if (!currentTenant.equals(resolvedTokenTenant)) {
+            throw new IllegalStateException(
+                    "JWT_BEARER_TOKEN tenant_id does not match the current activity tenant");
+        }
+        return resolvedTokenTenant;
     }
 }

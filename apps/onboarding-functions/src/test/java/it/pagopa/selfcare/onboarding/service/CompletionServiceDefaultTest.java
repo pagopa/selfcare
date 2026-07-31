@@ -426,18 +426,23 @@ public class CompletionServiceDefaultTest {
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setOriginId("originId");
         onboarding.getInstitution().setOrigin(Origin.IPA);
+        onboarding.setTenantId("PNPG");
 
-        PanacheUpdate panacheUpdateMock = mock(PanacheUpdate.class);
-        when(panacheUpdateMock.where("productId = ?1 and institution.origin = ?2 and institution.originId = ?3 and status = PENDING or status = TOBEVALIDATED",
-                onboarding.getProductId(), onboarding.getInstitution().getOrigin(), onboarding.getInstitution().getOriginId()))
-                .thenReturn(Long.valueOf(1));
-        when(onboardingRepository.update("status = ?1 and updatedAt = ?2 ", any(), any()))
-                .thenReturn(panacheUpdateMock);
+        com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
+        when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
+        when(mongoCollection.updateMany(any(org.bson.Document.class), any(org.bson.Document.class)))
+                .thenReturn(mock(com.mongodb.client.result.UpdateResult.class));
 
         completionServiceDefault.rejectOutdatedOnboardings(onboarding);
 
-        verify(onboardingRepository, times(1))
-                .update("status = ?1 and updatedAt = ?2 ", any(), any());
+        ArgumentCaptor<org.bson.Document> queryCaptor = ArgumentCaptor.forClass(org.bson.Document.class);
+        verify(mongoCollection).updateMany(queryCaptor.capture(), any(org.bson.Document.class));
+        org.bson.Document query = queryCaptor.getValue();
+        assertEquals(onboarding.getId(), query.get("_id", org.bson.Document.class).get("$ne"));
+        assertEquals(List.of("PENDING", "TOBEVALIDATED"),
+                query.get("status", org.bson.Document.class).getList("$in", String.class));
+        assertEquals("PNPG",
+                query.getList("$or", org.bson.Document.class).get(0).getString("tenantId"));
     }
 
     @Test
@@ -447,6 +452,7 @@ public class CompletionServiceDefaultTest {
         onboarding.getInstitution().setOrigin(Origin.IPA);
         onboarding.getInstitution().setOriginId("originId");
         onboarding.getInstitution().setSubunitCode(null);
+        onboarding.setTenantId("AR");
 
         com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
         when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
@@ -463,6 +469,7 @@ public class CompletionServiceDefaultTest {
         assertEquals("12345678901", query.getString("institution.taxCode"));
         assertEquals("IPA", query.getString("institution.origin"));
         assertEquals("originId", query.getString("institution.originId"));
+        assertEquals("AR", query.getList("$or", org.bson.Document.class).get(0).getString("tenantId"));
         assertEquals(onboarding.getProductId(), query.getString("productId"));
         assertNotNull(query.get("_id"));
         assertNotNull(query.get("status"));
@@ -481,6 +488,7 @@ public class CompletionServiceDefaultTest {
         onboarding.getInstitution().setOrigin(Origin.IPA);
         onboarding.getInstitution().setOriginId("originId");
         onboarding.getInstitution().setSubunitCode("SUB001");
+        onboarding.setTenantId("PNPG");
 
         com.mongodb.client.MongoCollection mongoCollection = mock(com.mongodb.client.MongoCollection.class);
         when(onboardingRepository.mongoCollection()).thenReturn(mongoCollection);
@@ -496,6 +504,7 @@ public class CompletionServiceDefaultTest {
         assertEquals("12345678901", query.getString("institution.taxCode"));
         assertEquals("IPA", query.getString("institution.origin"));
         assertEquals("originId", query.getString("institution.originId"));
+        assertEquals("PNPG", query.getList("$or", org.bson.Document.class).get(0).getString("tenantId"));
         assertEquals(onboarding.getProductId(), query.getString("productId"));
         assertEquals("SUB001", query.getString("institution.subunitCode"));
     }

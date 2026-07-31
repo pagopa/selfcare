@@ -30,7 +30,7 @@ public class InstitutionRepository {
                         }
                     });
         }
-        Document query = new Document("id", institutionId);
+        Document query = new Document("_id", institutionId);
         addTenantFilter(query, tenantId);
         return Institution.find(query).firstResultOptional()
                 .flatMap(optionalEntity -> {

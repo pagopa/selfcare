@@ -81,18 +81,17 @@ module "apim_api" {
             tenant. When the request carries no Origin, the Referer is parsed and reduced to its
             scheme + authority before the same exact lookup.
 
-            Requests carrying neither Origin nor Referer are server-to-server callers. They are
-            resolved by APIM subscription id against var.service_caller_tenants, so a backend
-            service that legitimately calls this API through APIM gets a deterministic tenant it
-            cannot choose for itself. Note the caller cannot express its tenant any other way:
+            A subscription listed in var.service_caller_tenants is resolved FIRST, regardless of
+            Origin/Referer. A non-browser caller controls those headers and must not be able to
+            override the tenant pinned to its APIM credential by pretending to be a browser.
+            Note the caller cannot express its tenant any other way:
             the policy below OVERRIDES X-Tenant-Id unconditionally, so a header set by the calling
             application is discarded — mapping the subscription is the only supported mechanism.
 
-            Only if the subscription is unknown does the request fall back to var.default_tenant_id,
-            which defaults to null => rejected. A default is only configured for APIs that provably
-            receive non-browser traffic, so the fallback is always an explicit, reviewable
-            per-API decision rather than a silent one (EPIC sub-task 2 DoD: no silent tenant
-            fallback).
+            An unknown subscription then follows browser origin resolution. var.default_tenant_id
+            applies to origin-less requests, or to the exact operations listed in
+            var.default_tenant_operation_ids (for example a SAML ACS posted from the IdP origin).
+            It defaults to null => rejected.
         -->
         <set-variable name="callerOrigin" value="@{
             var origin = context.Request.Headers.GetValueOrDefault("Origin", "");
@@ -118,22 +117,33 @@ module "apim_api" {
                 { "${lower(o)}", "${var.tenant_ids[0].id}" },
 %{endfor}
             };
+            var tenantBySubscription = new Dictionary<string, string> {
+%{for sub, tenant in var.service_caller_tenants}
+                { "${lower(sub)}", "${tenant}" },
+%{endfor}
+            };
+            var subscriptionId = context.Subscription == null ? "" : (context.Subscription.Id ?? "").ToLowerInvariant();
+            string serviceTenant;
+            if (!string.IsNullOrEmpty(subscriptionId) && tenantBySubscription.TryGetValue(subscriptionId, out serviceTenant)) {
+                return serviceTenant;
+            }
+
+            var defaultOperations = new HashSet<string> {
+%{for operation_id in var.default_tenant_operation_ids}
+                "${operation_id}",
+%{endfor}
+            };
             var caller = (string)context.Variables["callerOrigin"];
             if (string.IsNullOrEmpty(caller)) {
-                var tenantBySubscription = new Dictionary<string, string> {
-%{for sub, tenant in var.service_caller_tenants}
-                    { "${lower(sub)}", "${tenant}" },
-%{endfor}
-                };
-                var subscriptionId = context.Subscription == null ? "" : (context.Subscription.Id ?? "").ToLowerInvariant();
-                string serviceTenant;
-                if (!string.IsNullOrEmpty(subscriptionId) && tenantBySubscription.TryGetValue(subscriptionId, out serviceTenant)) {
-                    return serviceTenant;
-                }
-                return "${local.default_tenant_id}";
+                return defaultOperations.Count == 0 || defaultOperations.Contains(context.Operation.Id)
+                    ? "${local.default_tenant_id}"
+                    : "";
             }
             string tenant;
-            return tenantByOrigin.TryGetValue(caller, out tenant) ? tenant : "";
+            if (tenantByOrigin.TryGetValue(caller, out tenant)) {
+                return tenant;
+            }
+            return defaultOperations.Contains(context.Operation.Id) ? "${local.default_tenant_id}" : "";
         }" />
         <choose>
             <when condition="@(string.IsNullOrEmpty((string)context.Variables["resolvedTenant"]))">

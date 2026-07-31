@@ -79,22 +79,39 @@ failure rather than an apply error.
 
 ## Cutover procedure
 
+**State ownership is transferred, never duplicated.** Disable every plan/apply pipeline for
+`dev-ar`, `dev-pnpg` and `dev` before starting and take timestamped `terraform state pull` backups
+of all three backends. Do not use `terraform import` by itself: importing an Azure resource into
+the unified state while leaving its address in a legacy state gives two states authority to update
+or destroy the same object.
+
 ```bash
 cd infra/resources/iam/dev
 terraform init
 
-# 1. Adopt the AR resources. Get the ids from the legacy state rather than the portal:
-#      cd ../dev-ar && terraform state list && terraform state show <addr>
-terraform import module.container_app_iam_ms.<resource> <azure-resource-id>
-terraform import module.cosmosdb.<resource>              <azure-resource-id>
-terraform import module.collection_iam_user.<resource>   <azure-resource-id>
-terraform import module.collection_iam_roles.<resource>  <azure-resource-id>
-terraform import module.apim_api_ar.<resource>           <azure-resource-id>
+# 1. Pull local working copies of the two legacy states and the unified state.
+#    Keep immutable backups before changing any of them.
+cd ../dev-ar   && terraform init && terraform state pull > /tmp/iam-dev-ar.tfstate
+cd ../dev-pnpg && terraform init && terraform state pull > /tmp/iam-dev-pnpg.tfstate
+cd ../dev      && terraform init && terraform state pull > /tmp/iam-dev-unified.tfstate
+cp /tmp/iam-dev-ar.tfstate /tmp/iam-dev-ar.backup.tfstate
+cp /tmp/iam-dev-pnpg.tfstate /tmp/iam-dev-pnpg.backup.tfstate
+cp /tmp/iam-dev-unified.tfstate /tmp/iam-dev-unified.backup.tfstate
 
-# 2. Adopt the PNPG APIM API (from the dev-pnpg state).
-terraform import module.apim_api_pnpg.<resource>         <azure-resource-id>
+# 2. Use `terraform state list` on each legacy copy as the inventory. Move EVERY address owned by
+#    the modules adopted by dev (including locks, alerts, DNS records and module child resources)
+#    with `terraform state mv -state=<legacy> -state-out=<unified> <old> <new>`.
+#    Do not copy only the headline Azure resources shown in this README.
 
-# 3. The plan must now be EMPTY except for the two intended changes:
+# 3. Push the legacy states with the moved addresses removed, then push the unified state.
+#    Re-enable no pipeline until all three pushes and the ownership checks below have succeeded.
+
+# 4. Prove single ownership:
+#    - the transferred addresses are absent from `terraform state list` in both legacy backends;
+#    - every resource declared by the unified modules is present in the unified state;
+#    - no Azure resource id appears in more than one of the three `terraform state show` inventories.
+
+# 5. The plan must now be EMPTY except for the two intended changes:
 #      - module.apim_api_pnpg service_url  -> the AR container app
 #      - module.collection_iam_user index  -> composite (tenantId, email)
 #    Anything else in the plan means an import was missed. Do not apply past it.
@@ -104,8 +121,9 @@ terraform apply
 ```
 
 The exact resource addresses are deliberately not hard-coded here: they depend on the module versions
-pinned at cutover time, and a stale copied list is worse than no list. `terraform state list` in the
-legacy stack is the source of truth.
+pinned at cutover time, and a stale copied list is worse than no list. `terraform state list` in each
+legacy stack is the source of truth. Keep the pipelines disabled until the legacy states have relinquished
+ownership; a later `terraform destroy` must not contain any resource transferred to `dev`.
 
 ### Verification before decommissioning anything
 
@@ -117,9 +135,14 @@ legacy stack is the source of truth.
 
 ### Rollback
 
-Before step 3's apply, rollback is `terraform apply` in `dev-pnpg` (nothing has changed).
-After it, rollback is re-pointing `module.apim_api_pnpg`'s `service_url` back to the PNPG container
-app, which must be left running and un-decommissioned until the verification window closes.
+Before the unified `terraform apply`, restore the three state backups (or reverse every
+`terraform state mv`) before re-enabling the legacy pipelines. Do not run `terraform apply`
+in `dev-pnpg` while its transferred resources are absent from that state, because Terraform
+would try to recreate them.
+
+After the unified apply, first re-point `module.apim_api_pnpg`'s `service_url` back to the PNPG
+container app, which must be left running and un-decommissioned until the verification window
+closes. Then restore the pre-cutover state ownership before resuming legacy applies.
 
 ### Decommissioning
 

@@ -108,6 +108,19 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
      port 3000 on a user's machine make credentialed calls to production. It is now the
      `local_development_origins` variable, sourced from `module.local.config.local_development_origins`,
      which is non-empty only when `env == "dev"`.
+  4. *Subscription-bound callers could override their assigned tenant with `Origin`.* The first s2s mapping
+     was consulted only when `Origin`/`Referer` was absent. Those headers are caller-controlled outside a
+     browser, so an AR subscription could send the PNPG origin and receive `X-Tenant-Id: PNPG`. Subscription
+     mapping is now evaluated first, regardless of those headers; a mapped credential cannot select another
+     tenant.
+  5. *The SAML fallback did not cover a real SAML POST.* `default_tenant_id` applied only when both browser
+     headers were absent, while the IdP POST normally carries the IdP origin and was therefore rejected before
+     the AR default. The fallback is now restricted by `default_tenant_operation_ids`; only `loginSaml` may
+     resolve unknown-origin traffic to AR. Other auth operations remain fail-closed.
+  6. *The external API minted claimless JWTs and trusted a caller header.* Every AR/PNPG JWT policy in
+     `_modules/apim_external_api` now embeds the fixed tenant of that API topology in `tenant_id` and
+     overwrites `X-Tenant-Id` with the same value. Existing subscription-key clients therefore do not need to
+     supply a new header, and cannot claim the other tenant.
 
   Note this hardening is a **behavioural change**: callers that previously succeeded without an
   `Origin`/`Referer` header will now receive `403`. It must be observed in `dev` before promotion to `uat`
@@ -353,7 +366,7 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** No query path can return cross-tenant data; isolation model choice is documented per
   service.
 - **Depends on:** Sub-task 5.
-- **Status: complete across all Mongo-using services (see rollout table below); backfill and s2s header sweep still open.**
+- **Status: broad rollout implemented, but closure is blocked by the explicit migration items below.**
   - **Inventory (Cosmos DB / Mongo):** `auth`, `delegation-cdc`, `document-ms`, `iam`, `institution-send-mail-scheduler`,
     `onboarding-cdc`, `onboarding-functions`, `onboarding-ms`, `product`, `product-cdc`, `user-cdc`, `user-group-cdc`,
     `user-ms`, `webhook`, `user-group-ms` (Spring). **Chosen model: discriminator field** (`tenantId` on every
@@ -553,6 +566,38 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
       tagged every document, so isolation remains additive defence rather than a hard boundary; and the
       service-to-service `X-Tenant-Id` sweep flagged above is still required for `user-ms`, `iam`, `product` and
       `webhook`.
+  - **Review fixes after the rollout:**
+    - `document-ms` had two attachment creation paths in `DocumentContentServiceImpl` that persisted directly
+      and bypassed the tenant stamping used by `DocumentServiceImpl`; both now stamp from the validated
+      `CurrentTenantProvider`.
+    - `delegation-cdc`'s tenant-aware institution lookup queried `id`, but Mongo stores the Panache identifier
+      as `_id`; tenant-bearing events now resolve the institution correctly.
+    - `onboarding-functions` now carries `tenantId` through `OnboardingAggregateOrchestratorInput`, publishes
+      it into `FunctionTenantContext` when deserialising aggregate activities, and scopes the bulk
+      reject/override updates by `(tenantId = current OR tenantId = null)`. The previous direct `updateMany`
+      paths could mutate another tenant's onboardings sharing institution/product identifiers.
+    - The functions machine-token fallback now reads `tenant_id` from the exact token it sends and refuses a
+      tenant-scoped call if the claim is absent or disagrees with an activity tenant. Legacy activities whose
+      payload has no tenant derive the header from that same deployment-scoped token, which is safe while AR
+      and PNPG functions remain separate; those payloads must gain `tenantId` before consolidation. Re-issuing
+      the per-deployment token with the appropriate claim remains an operational prerequisite.
+    - `institution-ms` still has global `externalId` uniqueness, which prevents the same institution from
+      existing independently under both tenants. This cannot be changed in-place: Cosmos DB for MongoDB only
+      permits creating a unique index while the collection is empty. The required fix is a collection
+      migration/cutover that creates `(tenantId, externalId)` uniqueness on the empty target before loading
+      the backfilled data; changing the Terraform index on populated production collections would only make
+      deployment fail.
+  - **New blocker found by review — `user-cdc` mirror identity.** `userInfo._id` is still the bare PDV
+    `userId`, while reads now treat `(tenantId, userId)` as distinct. A person present in both tenants makes the
+    second insert fail with duplicate `_id`. Fixing this safely requires a coordinated schema migration in
+    both `user-cdc` and `user-ms` (tenant-qualified/surrogate `_id`, retained logical `userId`, all ID-based
+    mutations updated, and existing documents migrated). It is not safe to change one producer class in
+    isolation.
+  - **New blocker found by review — cross-tenant scheduler credentials.**
+    `institution-send-mail-scheduler` intentionally reads both tenants' notifications but has one
+    `JWT_BEARER_TOKEN`; after deployment consolidation it cannot call `user-ms` for records owned by the other
+    tenant. The consolidated stack needs tenant-specific machine credentials and record-scoped selection
+    before this worker can process both tenants.
 
 ### 7. Deployment consolidation (parallel-run migration)
 - **Maps to:** System purpose, SELC-5.3
@@ -607,6 +652,11 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
     **successor** that adopts the existing AR resources and the existing PNPG APIM API into a new state file
     via `terraform import`. Nothing is destroyed and recreated. The consequence is documented prominently:
     applying this stack before importing would try to create resources that already exist.
+  - **State ownership correction after review.** `terraform import` alone is forbidden for these conversions:
+    it copies an existing resource into the unified state but leaves the legacy state able to update or destroy
+    it. Both runbooks now require pipelines to be disabled, all state files backed up, and every module child
+    resource (including locks, DNS records and alerts) moved out of the legacy state and into the unified state.
+    Cutover cannot proceed until no Azure resource id is owned by more than one state.
   - **Not wired into CI on purpose.** `pr_iam_infra.yml` does not plan the new folder. Its state file does not
     exist yet, so every pull request would show "create 12 resources" for resources that must be imported, not
     created — a permanently red plan that invites approving the wrong thing. The plan job belongs in the same
@@ -704,3 +754,11 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   database routing driven by the product's `dataIsolation` config (sub-task 6).
 - Fine-grained authorization model (RBAC/ABAC/ReBAC), if needed beyond tenant scoping.
 - Rate-limit thresholds and replica bounds (pending APIM analytics).
+- `userInfo` tenant-qualified identity migration coordinated between `user-cdc` and `user-ms`.
+- Tenant-specific machine credentials for the consolidated cross-tenant mail scheduler.
+- `institution-ms` collection migration to replace global `externalId` uniqueness with
+  `(tenantId, externalId)` on an empty target collection before data load.
+- Re-issue the per-deployment `onboarding-functions` machine token with its `tenant_id` claim before enabling
+  tenant-enforcing downstream calls.
+- Add `tenantId` to the remaining tenantless `onboarding-functions` activity payloads before consolidating
+  AR and PNPG functions; deployment-token fallback is valid only while deployments remain tenant-specific.

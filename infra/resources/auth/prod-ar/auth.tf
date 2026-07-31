@@ -75,7 +75,8 @@ module "apim_api_auth" {
   # arrives with the IdP's Origin/Referer, not a tenant frontend's. auth/OneIdentity serves the AR
   # tenant only (PNPG logs in through hub-spid-login), so AR is the correct, and only valid,
   # resolution for those requests. Without this the API-level policy would 403 the login callback.
-  default_tenant_id = "AR"
+  default_tenant_id            = "AR"
+  default_tenant_operation_ids = ["loginSaml"]
 }
 
 ###############################################################################

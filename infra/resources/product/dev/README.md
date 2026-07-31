@@ -100,35 +100,42 @@ import will otherwise fail partway through and leave a half-merged catalogue.
 ## Cutover procedure
 
 Nothing here creates infrastructure. Every resource already exists; this stack adopts
-them. Applying before importing will attempt to create resources that exist and fail.
+them. **Ownership must be moved out of the legacy states, not copied with `terraform import`.**
+Otherwise both the legacy and unified states can update or destroy the same Azure object.
+
+Disable all `dev-ar`, `dev-pnpg` and `dev` plan/apply pipelines and take timestamped
+`terraform state pull` backups before touching state.
 
 ```bash
 cd infra/resources/product/dev
 terraform init
 
-# 1. adopt the surviving AR resources
-terraform import module.cosmosdb.azurerm_cosmosdb_mongo_database.this \
-  "/subscriptions/<sub>/resourceGroups/selc-d-cosmosdb-mongodb-rg/providers/Microsoft.DocumentDB/databaseAccounts/selc-d-cosmosdb-mongodb-account/mongodbDatabases/selcProduct"
-terraform import module.collection_products.azurerm_cosmosdb_mongo_collection.this "<.../collections/products>"
-terraform import module.collection_contract_templates.azurerm_cosmosdb_mongo_collection.this "<.../collections/contractTemplates>"
-terraform import module.container_app_product_ms.azurerm_container_app.this \
-  "/subscriptions/<sub>/resourceGroups/selc-d-container-app-002-rg/providers/Microsoft.App/containerApps/selc-d-product-ms"
+# 1. Pull working copies (and immutable backups) of the AR, PNPG and unified remote states.
 
-# 2. must be a no-op before anything else happens
+# 2. Inventory `terraform state list` in both legacy stacks. Move EVERY address belonging to the
+#    modules adopted by this stack with `terraform state mv -state=<legacy> -state-out=<unified>`.
+#    This includes module-managed locks, private DNS records, alerts and child resources — not only
+#    the database, collections and Container App headline resources.
+
+# 3. Push the legacy states with transferred addresses removed, then push the unified state.
+#    Verify that no Azure resource id occurs in more than one state before re-enabling any pipeline.
+
+# 4. must be a no-op before anything else happens
 terraform plan   # expected: "No changes."
 ```
 
-A non-empty plan at step 2 means the stack and reality disagree — stop and reconcile
+A non-empty plan at step 4 means the stack and reality disagree — stop and reconcile
 the difference rather than applying it.
 
 ```bash
-# 3. merge the reconciled PNPG catalogue into the surviving database
+# 5. merge the reconciled PNPG catalogue into the surviving database
 #    (mongodump/mongorestore of the resolved documents only)
 
-# 4. re-point PNPG callers, then verify
+# 6. re-point PNPG callers, then verify
 
-# 5. decommission
-#    - terraform destroy in dev-pnpg, or delete the PNPG stack folder and state
+# 7. decommission
+#    - first prove `terraform plan -destroy` in dev-pnpg contains no transferred resource
+#    - then destroy only the resources still owned by the PNPG state
 #    - remove the PNPG Key Vault secrets that are now unused
 ```
 
@@ -144,17 +151,22 @@ the difference rather than applying it.
 
 ## Rollback
 
-Before step 3 the rollback is trivial: nothing has been mutated, so re-point callers
-back and delete this state file.
+Before step 3, rollback is restoring the untouched state backups.
 
-After step 3 it is **not** trivial — the two catalogues have been merged into one
-database. Take a Cosmos backup immediately before step 3 and treat restoring it as
-the rollback path. This is the reason the catalogue reconciliation must be signed off
-in advance rather than resolved during the cutover window.
+After step 3 but before step 5, reverse every state move (or restore all state backups)
+before re-enabling the legacy pipelines. Do not delete the unified state while the
+transferred resources are absent from the legacy states, or those resources become
+unmanaged.
+
+After step 5 it is **not** trivial — the two catalogues have been merged into one
+database. Take a Cosmos backup immediately before step 5 and treat restoring it,
+re-pointing callers and restoring the pre-cutover state ownership as the rollback path.
+This is the reason the catalogue reconciliation must be signed off in advance rather
+than resolved during the cutover window.
 
 ## Why this is not in CI
 
 `pr_product_infra.yml` does not plan this folder. Its state file does not exist yet,
 so every pull request would render a "create 4 resources" plan for resources that must
-be **imported**, not created — a permanently red plan that trains reviewers to approve
-the wrong thing. The plan job belongs in the same change that performs the import.
+be **adopted through state transfer**, not created — a permanently red plan that trains reviewers to approve
+the wrong thing. The plan job belongs in the same change that performs the state transfer.

@@ -31,6 +31,7 @@ class OnboardingMapperTest {
     @Test
     void mapToOnboardingAggregateOrchestratorInputTestWithAggregateUsers(){
         Onboarding onboarding = new Onboarding();
+        onboarding.setTenantId("PNPG");
         onboarding.setId("example");
         onboarding.setProductId("productId");
         User user = new User();
@@ -48,6 +49,7 @@ class OnboardingMapperTest {
         onboarding.setAggregates(List.of(aggregateInstitution));
 
         OnboardingAggregateOrchestratorInput response = onboardingMapper.mapToOnboardingAggregateOrchestratorInput(onboarding, aggregateInstitution);
+        Assertions.assertEquals("PNPG", response.getTenantId());
         Assertions.assertEquals(1, response.getUsers().size());
         Assertions.assertEquals("aggregateUser", response.getUsers().get(0).getId());
         Assertions.assertEquals(PartyRole.MANAGER, response.getUsers().get(0).getRole());

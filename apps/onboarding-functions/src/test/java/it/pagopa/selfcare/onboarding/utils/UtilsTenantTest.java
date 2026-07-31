@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.onboarding.client.auth.FunctionTenantContext;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
+import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
+import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,5 +49,47 @@ class UtilsTenantTest {
     Utils.readOnboardingValue(objectMapper, legacyPayload);
 
     assertNull(tenantContext.currentTenantId());
+  }
+
+  @Test
+  void publishesTheTenantCarriedByAnAggregateInput() {
+    String payload = "{\"id\":\"aggregate-1\",\"productId\":\"prod-io\",\"tenantId\":\"AR\"}";
+
+    OnboardingAggregateOrchestratorInput input =
+        Utils.readOnboardingAggregateOrchestratorInputValue(objectMapper, payload);
+
+    assertEquals("AR", input.getTenantId());
+    assertEquals("AR", tenantContext.currentTenantId());
+  }
+
+  @Test
+  void clearsThePreviousTenantWhenAnAggregateInputCarriesNone() {
+    FunctionTenantContext.set("PNPG");
+
+    Utils.readOnboardingAggregateOrchestratorInputValue(
+        objectMapper, "{\"id\":\"aggregate-legacy\",\"productId\":\"prod-io\"}");
+
+    assertNull(tenantContext.currentTenantId());
+  }
+
+  @Test
+  void publishesTheTenantCarriedByAWorkflowInput() {
+    OnboardingWorkflow workflow =
+        Utils.readOnboardingWorkflowValue(
+            objectMapper,
+            "{\"type\":\"INSTITUTION\",\"onboarding\":{\"tenantId\":\"PNPG\"}}");
+
+    assertEquals("PNPG", workflow.getOnboarding().getTenantId());
+    assertEquals("PNPG", tenantContext.currentTenantId());
+  }
+
+  @Test
+  void publishesTheTenantCarriedByAnAttachmentInput() {
+    OnboardingAttachment attachment =
+        Utils.readOnboardingAttachmentValue(
+            objectMapper, "{\"onboarding\":{\"tenantId\":\"AR\"}}");
+
+    assertEquals("AR", attachment.getOnboarding().getTenantId());
+    assertEquals("AR", tenantContext.currentTenantId());
   }
 }

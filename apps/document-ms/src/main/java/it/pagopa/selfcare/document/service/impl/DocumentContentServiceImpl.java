@@ -18,6 +18,7 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentContentService;
+import it.pagopa.selfcare.document.service.CurrentTenantProvider;
 import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.PdfGenerationService;
@@ -70,6 +71,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private final PdfGenerationService pdfGenerationService;
     private final DocumentMsTelemetryService telemetryService;
     private final StorageRegistry storageRegistry;
+    private final CurrentTenantProvider currentTenantProvider;
 
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
@@ -91,7 +93,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             DocumentService documentService,
             PdfGenerationService pdfGenerationService,
             DocumentMsTelemetryService telemetryService,
-            StorageRegistry storageRegistry) {
+            StorageRegistry storageRegistry,
+            CurrentTenantProvider currentTenantProvider) {
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
         this.documentRepository = documentRepository;
@@ -99,6 +102,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         this.pdfGenerationService = pdfGenerationService;
         this.telemetryService = telemetryService;
         this.storageRegistry = storageRegistry;
+        this.currentTenantProvider = currentTenantProvider;
     }
 
     @Override
@@ -340,9 +344,18 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         document.setUpdatedAt(LocalDateTime.now());
         document.setRootOnboardingId(request.getOnboardingId());
         document.setStorageOrigin(StorageOrigin.USER);
+        applyCurrentTenant(document);
         Optional.ofNullable(request.getAttachmentDescription())
           .ifPresent(document::setAttachmentDescription);
         return documentRepository.persist(document).replaceWith(document);
+    }
+
+    private void applyCurrentTenant(Document document) {
+        currentTenantProvider.currentTenantId().ifPresentOrElse(
+                document::setTenantId,
+                () -> log.warn("No tenant resolved while persisting attachment for onboardingId={}; "
+                                + "document will be stored untagged during the migration window",
+                        sanitize(document.getOnboardingId())));
     }
 
     private Uni<Void> uploadUserFileToAzureReactive(Document document, FormItem file, String storageFilename) {
@@ -704,6 +717,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         document.setUpdatedAt(LocalDateTime.now());
         document.setRootOnboardingId(request.getOnboardingId());
         document.setStorageOrigin(StorageOrigin.SYSTEM);
+        applyCurrentTenant(document);
 
         String signedContractFileName = extractFileName(request.getTemplatePath());
         String filename = String.format("signed_%s", signedContractFileName);

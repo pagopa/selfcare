@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -87,16 +88,17 @@ class AuthenticationPropagationHeadersFactoryTest {
      * would produce exactly the header/claim mismatch the downstream filter rejects.
      */
     @Test
-    void omitsTheTenantHeaderWhenFallingBackToTheMachineToken() {
+    void rejectsATenantScopedCallWhenTheMachineTokenHasNoTenant() {
         FunctionTenantContext.set("AR");
         try {
             MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
             outgoingHeaders.put("user-uuid", List.of(UUID.randomUUID().toString()));
             when(jwtSessionService.createJwt(any(), any())).thenReturn(null);
 
-            authenticationPropagationHeadersFactory.update(new MultivaluedHashMap<>(), outgoingHeaders);
-
-            assertFalse(outgoingHeaders.containsKey(FunctionTenantContext.TENANT_HEADER));
+            assertThrows(
+                    IllegalStateException.class,
+                    () -> authenticationPropagationHeadersFactory.update(
+                            new MultivaluedHashMap<>(), outgoingHeaders));
         } finally {
             FunctionTenantContext.clear();
         }

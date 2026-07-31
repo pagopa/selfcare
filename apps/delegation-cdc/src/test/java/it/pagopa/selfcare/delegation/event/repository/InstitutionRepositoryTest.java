@@ -91,6 +91,8 @@ class InstitutionRepositoryTest {
             ArgumentCaptor<Document> documentCaptor = ArgumentCaptor.forClass(Document.class);
             PanacheMock.verify(Institution.class, atLeastOnce()).find(documentCaptor.capture());
             Document queryDocument = documentCaptor.getValue();
+            assertEquals(institutionId, queryDocument.getString("_id"));
+            assertFalse(queryDocument.containsKey("id"));
             assertTrue(queryDocument.containsKey("$or"));
             assertEquals(tenantId, ((Document) queryDocument.getList("$or", Document.class).get(0)).get("tenantId"));
             assertNull(((Document) queryDocument.getList("$or", Document.class).get(1)).get("tenantId"));

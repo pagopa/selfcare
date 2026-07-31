@@ -57,8 +57,10 @@ public class Utils {
   public static OnboardingAggregateOrchestratorInput readOnboardingAggregateOrchestratorInputValue(
       ObjectMapper objectMapper, String onboardingAggregateOrchestratorInputString) {
     try {
-      return objectMapper.readValue(
+      OnboardingAggregateOrchestratorInput input = objectMapper.readValue(
           onboardingAggregateOrchestratorInputString, OnboardingAggregateOrchestratorInput.class);
+      FunctionTenantContext.set(input.getTenantId());
+      return input;
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }
@@ -67,7 +69,10 @@ public class Utils {
   public static OnboardingWorkflow readOnboardingWorkflowValue(
       ObjectMapper objectMapper, String onboardingString) {
     try {
-      return objectMapper.readValue(onboardingString, OnboardingWorkflow.class);
+      OnboardingWorkflow workflow = objectMapper.readValue(onboardingString, OnboardingWorkflow.class);
+      FunctionTenantContext.set(
+          workflow.getOnboarding() == null ? null : workflow.getOnboarding().getTenantId());
+      return workflow;
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }
@@ -76,7 +81,11 @@ public class Utils {
   public static OnboardingAttachment readOnboardingAttachmentValue(
       ObjectMapper objectMapper, String onboardingString) {
     try {
-      return objectMapper.readValue(onboardingString, OnboardingAttachment.class);
+      OnboardingAttachment attachment =
+          objectMapper.readValue(onboardingString, OnboardingAttachment.class);
+      FunctionTenantContext.set(
+          attachment.getOnboarding() == null ? null : attachment.getOnboarding().getTenantId());
+      return attachment;
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }
