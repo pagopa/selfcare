@@ -2,6 +2,7 @@ package it.pagopa.selfcare.dashboard.security.tenant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -60,6 +61,34 @@ class TenantValidationFilterTest {
     filter.doFilter(request, response, filterChain);
 
     verify(filterChain, times(1)).doFilter(request, response);
+    verify(response, never()).setStatus(HttpServletResponse.SC_BAD_REQUEST);
+  }
+
+  @Test
+  void noAuthenticatedPrincipalWithTenantHeader_shouldScopeRequest() throws Exception {
+    // Subscription-key authenticated server-to-server callers carry no JWT. Without this the
+    // request would run unscoped across every tenant.
+    when(request.getHeaders(TenantConstants.TENANT_HEADER))
+        .thenReturn(Collections.enumeration(new Vector<>(java.util.List.of("PNPG"))));
+
+    filter.doFilter(request, response, filterChain);
+
+    verify(filterChain, times(1)).doFilter(request, response);
+    verify(request).setAttribute(TenantConstants.TENANT_REQUEST_ATTRIBUTE, TenantId.PNPG);
+    verify(response, never()).setStatus(HttpServletResponse.SC_BAD_REQUEST);
+  }
+
+  @Test
+  void noAuthenticatedPrincipalWithUnknownTenantHeader_shouldNotRejectNorScope() throws Exception {
+    // Public endpoints must stay reachable, so an unusable header leaves the request unscoped
+    // rather than aborting it.
+    when(request.getHeaders(TenantConstants.TENANT_HEADER))
+        .thenReturn(Collections.enumeration(new Vector<>(java.util.List.of("NOT_A_TENANT"))));
+
+    filter.doFilter(request, response, filterChain);
+
+    verify(filterChain, times(1)).doFilter(request, response);
+    verify(request, never()).setAttribute(eq(TenantConstants.TENANT_REQUEST_ATTRIBUTE), any());
     verify(response, never()).setStatus(HttpServletResponse.SC_BAD_REQUEST);
   }
 

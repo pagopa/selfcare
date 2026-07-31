@@ -141,6 +141,12 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
      change is strictly additive. Trusting the header is safe only because APIM overrides it
      unconditionally on every request it forwards, and a service is not reachable from outside the
      private network without passing through APIM.
+
+     The same early-return existed in **all seven** implementations of the filter — the Quarkus one in
+     `libs/selfcare-sdk-security` plus the six independent Spring copies (`institution-ms`,
+     `external-api`, `dashboard-bff`, `onboarding-bff`, `registry-proxy`, `user-group-ms`) — so all
+     seven were fixed identically. That the same defect had to be fixed in seven places is itself an
+     argument for extracting the Spring filter into a shared library, tracked as a follow-up.
   2. *Future 403.* Adding `X-Tenant-Id` in the callers' header factories would have been **useless** —
      APIM discards it. And once the tenant policy is applied to the APIs serving `external/internal/v1`
      and `internal/user`, these calls resolve to `default_tenant_id`, i.e. **403 fail-closed**: a live
