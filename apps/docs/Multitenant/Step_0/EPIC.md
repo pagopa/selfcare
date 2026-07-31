@@ -109,9 +109,46 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** All authenticated endpoints reject tenant-inconsistent requests; no endpoint
   authorizes on the header alone.
 - **Depends on:** Sub-tasks 2, 3, 4.
-- **Status: filter implemented in `libs/selfcare-sdk-security` (tenant package), unit-tested (14 tests).** Not
-  yet wired into a consuming microservice's live request path (no `@QuarkusTest` integration test yet); not
-  yet unblocked by sub-tasks 3/4 (`auth`/`hub-spid-login` claim issuance).
+- **Status: wired into `product` (proof-of-concept microservice) and verified end-to-end.** Filter itself
+  remains in `libs/selfcare-sdk-security` (tenant package), unit-tested (14 tests). The lib ships no
+  Jandex index/`beans.xml`, so `TenantValidationFilter`/`TenantContext` are not CDI-discoverable by a
+  consumer without indexing the dependency; added
+  `quarkus.index-dependency.selfcare-sdk-security.{group,artifact}-id` to `apps/product`'s
+  `application.properties` (same pattern already used there for `selfcare-cucumber-sdk`). Added
+  `TenantValidationFilterTest` (`@QuarkusTest` + `quarkus-test-security-jwt`'s `@JwtSecurity`/`@Claim`)
+  covering: matching header/claim (200), missing header (400), header/claim mismatch (400), hub-spid-login
+  token missing the claim defaulting to `PNPG` with matching header (200) and with a different header
+  (400), and an unknown tenant header value (400). Full `apps/product` suite (126 tests) passes with no
+  regressions — pre-existing tests using `@TestSecurity` without JWT claims correctly bypass the filter
+  (no issuer ⇒ no authenticated session ⇒ nothing to enforce), consistent with SELC-2.2 scoping.
+  Remaining rollout: repeat the same `quarkus.index-dependency` wiring for the other consuming
+  microservices depending on `selfcare-sdk-security` (`document-ms`, `iam`, `onboarding-ms`, `user-ms`,
+  `webhook`) once each is ready; still gated on sub-task 4 (`hub-spid-login` claim injection) for the
+  claim side of that flow to exist in production tokens.
+  **Also wired into the Spring Boot services** (`dashboard-bff`, `external-api`, `user-group-ms`) since
+  these are not on Quarkus and cannot depend on `libs/selfcare-sdk-security` (that jar carries Quarkus
+  runtime dependencies unsuitable for a Spring Boot classpath). Each of the 3 apps gets a small,
+  duplicated (not shared — see rationale below), self-contained `security.tenant` package: `TenantId`,
+  `TenantConstants`, `TenantProblem` (plain POJOs) plus a `TenantValidationFilter` — a
+  `@Component`-registered `OncePerRequestFilter` that naturally runs after Spring Security's
+  `FilterChainProxy` (registered at Spring Boot's low default order), reads the issuer off the
+  `SelfCareUser` principal already set by `selc-commons-web`'s `JwtAuthenticationFilter`/
+  `JwtAuthenticationProvider` on `SecurityContextHolder`, and independently decodes the JWT payload
+  (already cryptographically verified upstream — this filter only reads claims, it does not
+  re-verify the signature) to read `tenant_id` via `Base64.getUrlDecoder()` + Jackson (both already on
+  every Spring Boot classpath — zero new dependencies per `ARCHITECTURE.md` Dependency Rules). Same
+  reconciliation/fail-closed/PNPG-default semantics as the Quarkus filter. Unit-tested per app (8 tests
+  each, Mockito + a fake unsigned JWT payload) — no `@SpringBootTest`/real security chain needed since
+  the filter only depends on `SecurityContextHolder` state and the request/response. Full suites pass
+  with no regressions: `user-group-ms` 96 tests, `dashboard-bff` 379 tests, `external-api` 179 tests.
+  A 4th Spring Boot app, `registry-proxy-runner`, was evaluated and **excluded**: it is a
+  scheduler/batch service with no REST controllers or inbound HTTP surface, so there is no
+  authenticated request to enforce tenant consistency on.
+  **Duplication rationale:** no shared internal Spring library exists in this monorepo for these 4
+  apps (they depend only on external `selc-commons-web`/`selc-starter-parent` artifacts published
+  from another repo); creating a brand-new shared module was weighed against duplicating ~150 lines
+  per app and the latter was chosen to avoid the release/versioning overhead of a new cross-app
+  library for a 3-consumer, single-purpose filter.
 
 ### 6. Per-service tenant data isolation
 - **Maps to:** SELC-7.2, SELC-7.3
