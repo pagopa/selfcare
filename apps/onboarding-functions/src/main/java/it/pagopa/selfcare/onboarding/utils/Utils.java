@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.HttpRequestMessage;
+import it.pagopa.selfcare.onboarding.client.auth.FunctionTenantContext;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
@@ -34,9 +35,20 @@ public class Utils {
   public static final List<WorkflowType> NOT_ALLOWED_WORKFLOWS_FOR_INSTITUTION_NOTIFICATIONS =
       List.of(WorkflowType.USERS, WorkflowType.USERS_IMPORT);
 
+  /**
+   * Deserialises the onboarding carried through the orchestration and, as a side effect, publishes
+   * its tenant for the current activity.
+   *
+   * <p>This is the single point every activity goes through to obtain an onboarding, which makes it
+   * the only place where the tenant can be established once for all the outgoing calls that follow.
+   * The tenant is always overwritten - with {@code null} for onboardings created before the tenant
+   * discriminator existed - so a previous activity's tenant can never leak onto this one.
+   */
   public static Onboarding readOnboardingValue(ObjectMapper objectMapper, String onboardingString) {
     try {
-      return objectMapper.readValue(onboardingString, Onboarding.class);
+      Onboarding onboarding = objectMapper.readValue(onboardingString, Onboarding.class);
+      FunctionTenantContext.set(onboarding.getTenantId());
+      return onboarding;
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }

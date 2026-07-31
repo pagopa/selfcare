@@ -14,19 +14,7 @@ public interface DocumentService {
 
     Uni<Document> getDocumentById(String id);
 
-    /**
-     * Step_1 SELC-8.1/8.3: tenant-scoped variant of {@link #getDocumentById(String)}. Fails with
-     * {@code ResourceNotFoundException} both when the document does not exist and when it exists
-     * but belongs to a different tenant than {@code tenantId} (no cross-tenant existence leak).
-     */
-    Uni<Document> getDocumentById(String id, String tenantId);
-
     Uni<Document> getDocumentByOnboardingId(String onboardingId);
-
-    /**
-     * Step_1 SELC-8.1/8.3: tenant-scoped variant of {@link #getDocumentByOnboardingId(String)}.
-     */
-    Uni<Document> getDocumentByOnboardingId(String onboardingId, String tenantId);
 
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 

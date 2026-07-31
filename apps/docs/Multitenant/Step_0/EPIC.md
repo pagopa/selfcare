@@ -352,6 +352,42 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
       still via connection string from Key Vault, not managed identity, so the "same identity, second database"
       premise is not yet true in infrastructure. (d) No Terraform module exists yet for a dedicated Cosmos
       database.
+  - **`document-ms` tenant enforcement + service-to-service propagation — implemented.**
+    - **Latent break found first.** `TenantValidationFilter` is a global `@Provider` and `DocumentController` is
+      class-level `@Authenticated`, so *every* endpoint is filtered — including the service-to-service ones
+      (`/contract-files`, `/import`, `/save`). The filter answers **400** to any request that carries a JWT but
+      no `X-Tenant-Id`, and neither caller (`onboarding-ms`, `onboarding-functions`) sent that header: they
+      forwarded `Authorization` only. Reproduced with the existing
+      `getDocumentByOnboardingId_withMissingHeader_shouldReturnBadRequest` test rather than by inspection. Not a
+      live outage (branch unmerged) but it would have broken onboarding document upload on release.
+    - **Propagation (`onboarding-ms`).** `AuthenticationPropagationHeadersFactory` — the single chokepoint for
+      all 5 downstream REST clients — now injects `CurrentTenantProvider` and adds `X-Tenant-Id`. It propagates
+      the **validated** `TenantContext` value, never the raw inbound header: the context value has already been
+      reconciled against the JWT claim, so echoing the header would forward unvalidated input if the filter were
+      ever bypassed for some path.
+    - **Propagation (`onboarding-functions`) — machine tokens.** The functions app mints its own JWT, which
+      carried no tenant claim; a header alone would still be rejected downstream. Per decision, the machine
+      token is now **minted per-tenant**: `Onboarding` carries `tenantId`, `Utils.readOnboardingValue` (the
+      single deserialisation chokepoint) publishes it into a `FunctionTenantContext` ThreadLocal — the app has
+      no CDI request scope at all — and `createJwt(userId, tenantId)` embeds the claim. The header is sent
+      **only** when the minted token corroborates it; when the pre-provisioned env token (`JWT_BEARER_TOKEN`) is
+      used no claim can be added, so the header is deliberately omitted rather than sent alone, which would
+      produce exactly the header/claim mismatch the downstream filter rejects. Staleness of the ThreadLocal is
+      mitigated by `readOnboardingValue` always overwriting, including with `null`.
+    - **Implicit tenant filtering in the repository.** The earlier `...ForTenant` duplicated-method pattern was
+      removed: with both variants callable, any caller could silently opt out and every newly added method
+      started unscoped. `DocumentRepository` now injects `CurrentTenantProvider` and applies a private
+      `tenantScoped()` filter inside **all ~12** query/update/delete methods, so no query can reach MongoDB
+      unscoped. The two-argument service overloads were dropped accordingly.
+    - **Tests: 487/487 passing** in `document-ms`, plus 499/499 (`onboarding-ms`) and 367
+      (`onboarding-functions`) with no regressions. `DocumentRepositoryTenantTest` was rewritten against **real
+      embedded MongoDB** (20 tests) — mock-based repository tests cannot catch a filter that compiles but
+      matches nothing.
+    - **Still open.** The `or tenantId is null` branch remains until the backfill lands, so enforcement stays
+      additive defence rather than a hard boundary. **The same service-to-service break very likely affects
+      `user-ms`, `iam`, `product` and `webhook`**, whose callers (`institution-send-mail-scheduler`,
+      `onboarding-cdc`, `user-cdc`, `auth`) were inspected and none send `X-Tenant-Id`; a systematic sweep is
+      required before release.
 
 ### 7. Deployment consolidation (parallel-run migration)
 - **Maps to:** System purpose, SELC-5.3

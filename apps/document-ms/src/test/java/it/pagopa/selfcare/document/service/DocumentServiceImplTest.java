@@ -73,7 +73,7 @@ class DocumentServiceImplTest {
     @Test
     void getDocumentById_shouldReturnDocument() {
         Document doc = buildDocument();
-        when(documentRepository.findById(anyString()))
+        when(documentRepository.findDocumentById(anyString()))
                 .thenReturn(Uni.createFrom().item(doc));
 
         Document result = documentService.getDocumentById(DOCUMENT_ID)
@@ -85,38 +85,10 @@ class DocumentServiceImplTest {
 
     @Test
     void getDocumentById_shouldThrowResourceNotFoundWhenDocumentIsNull() {
-        when(documentRepository.findById(anyString()))
+        when(documentRepository.findDocumentById(anyString()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         var awaiter = documentService.getDocumentById(DOCUMENT_ID).await();
-
-        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
-    }
-
-    @Test
-    void getDocumentByIdForTenant_shouldReturnDocument() {
-        Document doc = buildDocument();
-        doc.setTenantId("AR");
-        when(documentRepository.findByIdForTenant(DOCUMENT_ID, "AR"))
-                .thenReturn(Uni.createFrom().item(doc));
-
-        Document result = documentService.getDocumentById(DOCUMENT_ID, "AR")
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertEquals("AR", result.getTenantId());
-        verify(documentRepository).findByIdForTenant(DOCUMENT_ID, "AR");
-    }
-
-    @Test
-    void getDocumentByIdForTenant_shouldThrowResourceNotFoundWhenDocumentBelongsToAnotherTenant() {
-        // Simulates a document that exists but is owned by a different tenant: the
-        // tenant-scoped repository query must not return it (Step_1 SELC-8.1/8.3), so the
-        // caller sees the same not-found response as a truly missing document.
-        when(documentRepository.findByIdForTenant(DOCUMENT_ID, "PNPG"))
-                .thenReturn(Uni.createFrom().nullItem());
-
-        var awaiter = documentService.getDocumentById(DOCUMENT_ID, "PNPG").await();
 
         assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
     }
@@ -142,31 +114,6 @@ class DocumentServiceImplTest {
                 .thenReturn(Uni.createFrom().nullItem());
 
         var awaiter = documentService.getDocumentByOnboardingId(DOCUMENT_ID).await();
-
-        assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
-    }
-
-    @Test
-    void getDocumentByOnboardingIdForTenant_shouldReturnDocument() {
-        Document doc = buildDocument();
-        doc.setTenantId("PNPG");
-        when(documentRepository.findByOnboardingIdForTenant(ONBOARDING_ID, "PNPG"))
-                .thenReturn(Uni.createFrom().item(doc));
-
-        Document result = documentService.getDocumentByOnboardingId(ONBOARDING_ID, "PNPG")
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertEquals("PNPG", result.getTenantId());
-        verify(documentRepository).findByOnboardingIdForTenant(ONBOARDING_ID, "PNPG");
-    }
-
-    @Test
-    void getDocumentByOnboardingIdForTenant_shouldThrowResourceNotFoundWhenDocumentBelongsToAnotherTenant() {
-        when(documentRepository.findByOnboardingIdForTenant(ONBOARDING_ID, "AR"))
-                .thenReturn(Uni.createFrom().nullItem());
-
-        var awaiter = documentService.getDocumentByOnboardingId(ONBOARDING_ID, "AR").await();
 
         assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
     }

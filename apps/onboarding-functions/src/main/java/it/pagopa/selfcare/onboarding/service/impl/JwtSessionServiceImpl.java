@@ -6,6 +6,7 @@ import io.jsonwebtoken.Header;
 import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import it.pagopa.selfcare.onboarding.client.auth.FunctionTenantContext;
 import it.pagopa.selfcare.onboarding.config.TokenConfig;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -44,7 +45,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
     private final Logger logger = LoggerFactory.getLogger(JwtSessionServiceImpl.class.getName());
 
     @Override
-    public String createJwt(String userId) {
+    public String createJwt(String userId, String tenantId) {
         try {
             PrivateKey privateKey = getPrivateKey(tokenConfig.signingKey());
             UserResource userResource = userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, userId);
@@ -57,6 +58,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
                     .claim("fiscal_number", userResource.getFiscalCode())
                     .claim("name", userResource.getName().getValue())
                     .claim("uid", userId)
+                    .claim(FunctionTenantContext.TENANT_CLAIM, tenantId)
                     .signWith(SignatureAlgorithm.RS256, privateKey)
                     .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
                     .setHeaderParam(Header.TYPE, Header.JWT_TYPE)

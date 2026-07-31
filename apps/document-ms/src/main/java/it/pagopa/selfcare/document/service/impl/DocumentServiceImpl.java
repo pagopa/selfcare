@@ -68,25 +68,13 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Uni<Document> getDocumentById(String documentId) {
-        return documentRepository.findById(documentId)
-                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
-    }
-
-    @Override
-    public Uni<Document> getDocumentById(String documentId, String tenantId) {
-        return documentRepository.findByIdForTenant(documentId, tenantId)
+        return documentRepository.findDocumentById(documentId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
     }
 
     @Override
     public Uni<Document> getDocumentByOnboardingId(String onboardingId) {
         return documentRepository.findByOnboardingId(onboardingId)
-                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with onboardingId %s not found", onboardingId)));
-    }
-
-    @Override
-    public Uni<Document> getDocumentByOnboardingId(String onboardingId, String tenantId) {
-        return documentRepository.findByOnboardingIdForTenant(onboardingId, tenantId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with onboardingId %s not found", onboardingId)));
     }
 
@@ -335,11 +323,12 @@ public class DocumentServiceImpl implements DocumentService {
     /**
      * Step_1 SELC-8.2: tags the document with the tenant already validated for the current request.
      *
-     * <p>Left untagged when no tenant is resolvable — document-ms write paths are also reached by
-     * service-to-service calls (notably from {@code onboarding-ms}) that do not yet propagate the
-     * tenant. Untagged documents remain readable by every tenant during the migration phase (see
-     * {@code DocumentRepository} tenant filter); tightening this to fail-closed requires the
-     * write-path tenant propagation and the backfill to land first.
+     * <p>Service-to-service callers now forward the tenant ({@code onboarding-ms} propagates the
+     * validated tenant, {@code onboarding-functions} mints a token carrying it), so in practice every
+     * new document is tagged. A document is still stored untagged rather than rejected when no tenant
+     * is resolvable, because untagged documents remain readable by every tenant during the migration
+     * phase; refusing the write instead would turn a propagation gap into data loss. Tightening this
+     * to fail-closed requires the backfill to land first.
      */
     private void applyCurrentTenant(Document document) {
         currentTenantProvider.currentTenantId().ifPresentOrElse(

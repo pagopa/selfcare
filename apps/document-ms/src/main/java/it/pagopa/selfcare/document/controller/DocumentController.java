@@ -63,7 +63,8 @@ public class DocumentController {
     @Path("/onboarding/{onboardingId}")
     public Uni<DocumentResponse> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
         log.info("Getting document for onboardingId: {}", sanitize(onboardingId));
-        return documentService.getDocumentByOnboardingId(onboardingId, requireTenant())
+        requireTenant();
+        return documentService.getDocumentByOnboardingId(onboardingId)
                 .map(documentMapper::toResponse);
     }
 
@@ -75,21 +76,24 @@ public class DocumentController {
     @Path("/{id}")
     public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
         log.info("Getting document for documentId: {}", sanitize(id));
-        return documentService.getDocumentById(id, requireTenant())
+        requireTenant();
+        return documentService.getDocumentById(id)
                 .map(documentMapper::toResponse);
     }
 
     /**
-     * Step_1 SELC-8.1/8.5: returns the tenant already validated by Step_0's
-     * {@code TenantValidationFilter}. Fails closed if, unexpectedly, no tenant was resolved for
-     * an authenticated request (the filter always sets one or aborts the request beforehand).
+     * Fails closed if, unexpectedly, no tenant was resolved for an authenticated request.
+     *
+     * <p>The scoping itself is applied by {@code DocumentRepository}, which reads the same validated
+     * tenant. This check is defence in depth: without it, a request that somehow reached the
+     * controller with no tenant would be served with an unscoped query during the migration phase,
+     * silently returning another tenant's untagged documents instead of being refused.
      */
-    private String requireTenant() {
+    private void requireTenant() {
         TenantId tenant = tenantContext.getTenant();
         if (tenant == null) {
             throw new jakarta.ws.rs.ForbiddenException("No validated tenant resolved for this request");
         }
-        return tenant.name();
     }
 
     @Operation(

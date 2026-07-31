@@ -60,7 +60,7 @@ class DocumentControllerTest {
     DocumentResponse response = new DocumentResponse();
     response.setId(DOCUMENT_ID);
 
-    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID, "AR"))
+    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(document));
     when(documentMapper.toResponse(document)).thenReturn(response);
 
@@ -312,7 +312,7 @@ class DocumentControllerTest {
         @Claim(key = TenantConstants.TENANT_CLAIM, value = "AR")
       })
   void getDocumentByOnboardingId_shouldReturnInternalServerError_whenServiceFails() {
-    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID, "AR"))
+    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
