@@ -305,6 +305,53 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
     newly created documents keep landing untagged; (3) per-service rollout beyond `document-ms`. Until (1) and
     (2) land, `document-ms` tenant isolation is **partial and must not be relied upon as a security boundary** —
     it is additive defence, not enforcement.
+  - **Per-product database isolation (product-driven routing) — implemented, `onboarding-ms` proof-of-concept.**
+    A second, orthogonal axis was added on top of the tenant discriminator above: isolation is now also
+    selectable **per product**, because the driver is commercial/contractual (a product may require its own
+    database) rather than tenant-related. The two axes compose — a dedicated database still carries the
+    `tenantId` discriminator, so a per-product database serving both tenants stays tenant-filtered.
+    - **Configuration (owner: `product` microservice).** New `dataIsolation` block on the product entity:
+      `database` (`SHARED` | `DEDICATED`) and `databaseName`. Absent block resolves to `SHARED`, so every
+      existing product keeps today's behaviour with no migration. `ProductServiceImpl.validateDataIsolation()`
+      rejects `DEDICATED` without a `databaseName` on both create and patch, so a product cannot be persisted
+      in a state that would fail to route at runtime.
+    - **Distribution.** The config had to be added in **all three** `Product` classes along the distribution
+      chain (`apps/product` Mongo entity -> `apps/product-cdc` model + MapStruct `toResource()` -> JSON on Azure
+      Blob -> `libs/selfcare-onboarding-sdk-product` entity read by consumers). `product-cdc` is the single hop
+      where a dropped field would silently revert every consumer to `SHARED` without any error, so a pinning
+      test in `ProductMapperTest` guards that propagation specifically.
+    - **Contract hygiene.** Lombok's derived `isDedicatedDatabase()` helper leaked into both the OpenAPI schema
+      and the blob-distributed JSON; it is now `@JsonIgnore` + `@Schema(hidden = true)`. Verified with a
+      round-trip harness: helper absent from the JSON, `DEDICATED` survives write/read, a legacy document with
+      no block resolves to `SHARED`.
+    - **Routing (`onboarding-ms`).** `ProductDatabaseResolver` maps a productId to a database name, reading the
+      product from the blob-backed SDK `ProductService`. It is **fail-closed**: an unknown product, a product
+      lookup failure, or a `DEDICATED` product with no `databaseName` raises
+      `UnresolvableProductDatabaseException` rather than falling back to the shared database — falling back
+      would write a product's data into the very database it was configured out of.
+      `OnboardingMongoDatabaseResolver` implements Quarkus' `MongoDatabaseResolver` and is what Panache calls
+      on every entity operation.
+    - **Why a request-scoped holder.** Quarkus' `MongoDatabaseResolver#resolve()` takes **no arguments**, so the
+      product cannot be passed to it down the call chain; `ProductRoutingContext` (`@RequestScoped`) is that
+      channel, set in `OnboardingPersistenceHelper` where the product is known. Outside an active request
+      (orchestration callbacks, scheduled jobs) there is no scope to read and the shared database is used —
+      correct rather than a fallback, since such callers are not serving a product-scoped request.
+    - **Discriminators on write.** `Onboarding` and `Token` now carry `tenantId` alongside the existing
+      `productId`. `OnboardingPersistenceHelper.stampTenant()` tags at the single persist chokepoint, never
+      reassigns an onboarding that already has a tenant (so replays/updates cannot move a record between
+      tenants), and leaves it untagged when no tenant is resolvable rather than guessing.
+    - **Tests: 499/499 passing** (was 493; +17 new, 0 regressions). Includes a `@QuarkusTest` **wiring** test:
+      Panache discovers the resolver via `Arc.container().select(MongoDatabaseResolver.class)`, so the routing
+      would silently stop working if the bean stopped being resolvable while every unit test still passed —
+      the wiring test asserts the container really hands Panache our implementation.
+    - **Not done / open.** (a) The ~12 endpoints identified only by `onboardingId` (`/{onboardingId}`,
+      `/reject`, `/approve`, `/complete`, ...) still cannot resolve a dedicated database, because the product is
+      unknown before the document is read and the no-arg resolver cannot be told which database to open — they
+      work today only because every product is `SHARED`. This **must** be solved before any product is switched
+      to `DEDICATED`. (b) Read paths are not yet tenant-filtered (only writes are stamped). (c) Cosmos access is
+      still via connection string from Key Vault, not managed identity, so the "same identity, second database"
+      premise is not yet true in infrastructure. (d) No Terraform module exists yet for a dedicated Cosmos
+      database.
 
 ### 7. Deployment consolidation (parallel-run migration)
 - **Maps to:** System purpose, SELC-5.3

@@ -7,6 +7,8 @@ import io.quarkus.mongodb.panache.common.reactive.Panache;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.onboarding.conf.CurrentTenantProvider;
+import it.pagopa.selfcare.onboarding.conf.ProductRoutingContext;
 import it.pagopa.selfcare.onboarding.controller.request.AggregateInstitutionRequest;
 import it.pagopa.selfcare.onboarding.controller.request.UserRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -48,6 +50,12 @@ public class OnboardingPersistenceHelper {
     @Inject
     OrchestrationService orchestrationService;
 
+    @Inject
+    CurrentTenantProvider currentTenantProvider;
+
+    @Inject
+    ProductRoutingContext productRoutingContext;
+
     // -------------------------------------------------------------------------
     // Persistenza onboarding
     // -------------------------------------------------------------------------
@@ -59,6 +67,11 @@ public class OnboardingPersistenceHelper {
     public Uni<Onboarding> persistOnboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                               Product product, List<AggregateInstitutionRequest> aggregates) {
         log.info("Persist onboarding for: product {}, product parent {}", product.getId(), product.getParentId());
+
+        // Both discriminators are stamped before anything is written, so a document can never reach
+        // the database untagged and then be invisible to a tenant-scoped read.
+        stampTenant(onboarding);
+        routeToProductDatabase(product);
 
         Map<PartyRole, ProductRoleInfo> roleMappings = resolveRoleMappings(product, onboarding);
 
@@ -73,6 +86,34 @@ public class OnboardingPersistenceHelper {
         return withInstitutionId.onItem().transformToUni(o ->
                 Panache.withTransaction(() ->
                         storeAndValidateOnboarding(o, userRequests, product, aggregates, roleMappings)));
+    }
+
+    /**
+     * Stamps the onboarding with the tenant validated for the current request.
+     *
+     * <p>An onboarding already carrying a tenant is left untouched, so a replay or an update never
+     * reassigns an existing record to a different tenant. When no tenant is resolvable - a
+     * service-to-service or orchestration call that does not propagate one yet - the onboarding is
+     * left untagged rather than guessed: reads treat a null tenant as legacy data and still return
+     * it, so this degrades to today's behaviour instead of losing the record.
+     */
+    void stampTenant(Onboarding onboarding) {
+        if (Objects.nonNull(onboarding.getTenantId())) {
+            return;
+        }
+        currentTenantProvider.currentTenantId().ifPresent(onboarding::setTenantId);
+    }
+
+    /**
+     * Declares which product's database the rest of this request must be routed to.
+     *
+     * <p>For products with a shared database this is a no-op in practice, since the resolver maps
+     * them back to the shared database anyway; it matters for products configured as DEDICATED.
+     */
+    void routeToProductDatabase(Product product) {
+        if (Objects.nonNull(product) && Objects.nonNull(product.getId())) {
+            productRoutingContext.setProductId(product.getId());
+        }
     }
 
     /**
