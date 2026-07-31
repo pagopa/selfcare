@@ -209,16 +209,17 @@ module "container_app_dashboard_bff_pnpg" {
 ###############################################################################
 
 module "apim_api_bff_dashboard_pnpg" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-pnpg-api-bff-dashboard"
-  display_name        = "BFF PNPG Dashboard API"
-  base_path           = "imprese/dashboard"
-  private_dns_name    = "selc-${module.local.config.env_short}-pnpg-dashboard-backend-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  external_domain     = module.local.config.external_domain
-  openapi_path        = "../../../../apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
-  tenant_ids          = module.local.config.tenant_ids
+  source                    = "../../_modules/apim_api"
+  apim_name                 = module.local.config.apim_name
+  apim_rg                   = module.local.config.apim_rg
+  api_name                  = "selc-${module.local.config.env_short}-pnpg-api-bff-dashboard"
+  display_name              = "BFF PNPG Dashboard API"
+  base_path                 = "imprese/dashboard"
+  private_dns_name          = "selc-${module.local.config.env_short}-pnpg-dashboard-backend-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix           = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix       = module.local.config.api_dns_zone_prefix
+  external_domain           = module.local.config.external_domain
+  openapi_path              = "../../../../apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
+  tenant_ids                = module.local.config.tenant_ids
+  local_development_origins = module.local.config.local_development_origins
 }

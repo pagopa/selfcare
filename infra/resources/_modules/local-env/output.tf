@@ -27,6 +27,7 @@ output "config" {
     key_vault_resource_group_name  = local.key_vault_resource_group_name
     key_vault_name                 = local.key_vault_name
     tenant_ids                     = local.tenant_ids
+    local_development_origins      = local.local_development_origins
     resource_group_name_vnet       = local.resource_group_name_vnet
     nat_rg_name                    = local.nat_rg_name
     nat_gw_name                    = local.nat_gw_name

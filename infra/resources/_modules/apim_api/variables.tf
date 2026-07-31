@@ -67,10 +67,26 @@ variable "tenant_ids" {
     id     = string
     origin = string
   }))
-  description = "Tenants served by this API group (multitenant migration, see apps/docs/Multitenant/Step_0/REQUIREMENTS.md SELC-1/SELC-2). Each entry maps a tenant id (AR/PNPG) to its frontend origin (scheme + host, e.g. https://selfcare.pagopa.it). APIM allow-lists every listed origin for CORS and resolves X-Tenant-Id at request time from the calling Origin/Referer against this list, always discarding any X-Tenant-Id sent by the caller. The first entry is used as the fallback tenant when a request carries no Origin/Referer header (server-to-server calls, health checks)."
+  description = "Tenants served by this API group (multitenant migration, see apps/docs/Multitenant/Step_0/REQUIREMENTS.md SELC-1/SELC-2). Each entry maps a tenant id (AR/PNPG) to its frontend origin (scheme + host, e.g. https://selfcare.pagopa.it). APIM allow-lists every listed origin for CORS and resolves X-Tenant-Id at request time by matching the calling origin EXACTLY (scheme + authority, Referer reduced to the same form) against this list, always discarding any X-Tenant-Id sent by the caller. Requests whose origin is not listed are rejected with 403; requests with no Origin/Referer at all are governed by var.default_tenant_id, not by this list."
 
   validation {
     condition     = length(var.tenant_ids) > 0 && alltrue([for t in var.tenant_ids : contains(["AR", "PNPG"], t.id)])
     error_message = "tenant_ids must be non-empty and every entry's id must be AR or PNPG."
+  }
+}
+variable "local_development_origins" {
+  type        = list(string)
+  default     = []
+  description = "Extra origins allowed for local frontend development (e.g. http://localhost:3000). These are added to the CORS allow-list AND resolve to tenant_ids[0]. CORS here runs with allow-credentials=true, so a localhost origin lets any process listening on that port on a user's machine issue credentialed calls to this API: it MUST stay empty outside dev. Populated centrally from module.local.config.local_development_origins, which is non-empty only when env is dev."
+}
+
+variable "default_tenant_id" {
+  type        = string
+  default     = null
+  description = "Tenant assigned to requests that carry neither an Origin nor a Referer header (server-to-server callers, external partner integrations, probes). Defaults to null, meaning such requests are REJECTED with 403 (fail-closed). Only set it on APIs that provably receive non-browser traffic, and keep it reviewable: a blanket default would let any non-browser caller pick a tenant simply by omitting Origin, which is exactly the silent fallback the multitenant DoD forbids (apps/docs/Multitenant/Step_0/EPIC.md sub-task 2)."
+
+  validation {
+    condition     = var.default_tenant_id == null || contains(["AR", "PNPG"], coalesce(var.default_tenant_id, "AR"))
+    error_message = "default_tenant_id must be null, AR or PNPG."
   }
 }

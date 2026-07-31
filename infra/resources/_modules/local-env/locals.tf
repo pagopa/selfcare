@@ -55,8 +55,9 @@ locals {
   # list of tenants and their frontend origins per environment tier, consumed by every apim_api
   # module call (var.tenant_ids) instead of being repeated per microservice/env. The -pnpg env
   # folders are slated for deprecation once a single -ar deployment per tier serves both tenants;
-  # until then this module instance's own domain is listed first (used by APIM as the fallback
-  # tenant for calls without an Origin/Referer header).
+  # until then this module instance's own domain is listed first. That ordering only decides which
+  # tenant local development origins map to; it is NOT a fallback for origin-less requests, which
+  # are rejected unless the API sets an explicit apim_api default_tenant_id.
   tenant_frontend_origins = {
     dev = {
       AR   = "https://dev.selfcare.pagopa.it"
@@ -79,6 +80,11 @@ locals {
     { id = "AR", origin = local.tenant_frontend_origins[local.env]["AR"] },
     { id = "PNPG", origin = local.tenant_frontend_origins[local.env]["PNPG"] },
   ]
+
+  # Local frontend development origin. CORS on the APIM APIs runs with allow-credentials=true, so
+  # allow-listing http://localhost:3000 there means any process listening on port 3000 on a user's
+  # machine can issue credentialed calls to that environment. Restricted to dev only.
+  local_development_origins = local.env == "dev" ? ["http://localhost:3000"] : []
 
   resource_group_name_vnet = "${local.project}-vnet-rg"
 

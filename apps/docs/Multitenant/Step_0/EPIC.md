@@ -60,8 +60,7 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   Its inbound policy builds a CORS allow-list from that list and resolves `X-Tenant-Id` at request time from the
   calling `Origin`/`Referer` against it, unconditionally overriding any client-supplied value (never trusted from
   the caller); an origin that matches none of the declared tenants is rejected with `403 application/problem+json`
-  (fail-closed), and requests without `Origin`/`Referer` (server-to-server, health checks) fall back to
-  `tenant_ids[0]`. All 27 call sites (`dashboard-bff`, `onboarding-bff`, `iam`, `auth`, `webhook`,
+  (fail-closed). All 27 call sites (`dashboard-bff`, `onboarding-bff`, `iam`, `auth`, `webhook`,
   `registry-proxy`; every `dev`/`uat`/`prod` × `-ar` deployment folder that exists today, since the `-pnpg`
   folders are slated for deprecation once a single `-ar` deployment per environment serves both tenants) already
   declare **both** `AR` and `PNPG` in `tenant_ids`, so every API group is ready to accept and correctly label
@@ -69,10 +68,46 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   `infra/resources/_modules/local-env` (`local.tenant_frontend_origins`, keyed by `env`) and exposed as
   `module.local.config.tenant_ids` — every call site simply sets `tenant_ids = module.local.config.tenant_ids`,
   eliminating per-file duplication of the AR/PNPG origin list; the module orders its own tenant first
-  (`local.domain`-aware) so the no-`Origin` fallback (`tenant_ids[0]`) still resolves correctly per deployment.
-  True `Host`-header-based resolution (a single API definition backed by a single shared Container App) is
-  completed by this policy already for the origin resolution/label; only the backend consolidation itself (one
-  Container App instead of `-ar`/`-pnpg` pairs) is deferred to sub-task 7.
+  (`local.domain`-aware), which now only decides which tenant local development origins map to.
+  Backend consolidation itself (one Container App instead of `-ar`/`-pnpg` pairs) is deferred to sub-task 7.
+
+  **Naming correction:** this sub-task's title and acceptance criteria say `Host` header, but the policy
+  resolves on the caller's **origin** (`Origin`, falling back to a parsed `Referer`). That is the correct
+  signal here and not a shortcut: within a single APIM instance every tenant frontend reaches the same
+  gateway hostname, so `Host` does not distinguish them — the browser-declared origin does, and it is the
+  same value CORS is already allow-listed against, so the two cannot drift apart. Read `Host` in the title as
+  "the calling frontend URL".
+
+  **Hardening applied after review.** The first implementation had three weaknesses, all now fixed and
+  covered by a rendered-policy simulation of the resolution logic (legitimate AR/PNPG origins, suffix-attack
+  domains, `Referer` with a path, case-shifted origins, origin-less requests, localhost in prod):
+
+  1. *Prefix matching.* Resolution used `caller.StartsWith(declaredOrigin)`, so
+     `https://selfcare.pagopa.it.attacker.example` matched the AR tenant and any attacker-controlled domain
+     could obtain a valid `X-Tenant-Id` simply by prefixing a real tenant origin. It is now an **exact**
+     dictionary lookup on the serialised origin; a `Referer` is first reduced to `scheme://authority` (so a
+     path can no longer smuggle a prefix match), and both sides are lower-cased so casing cannot be used to
+     evade the lookup.
+  2. *Silent fallback.* Requests with neither `Origin` nor `Referer` silently resolved to `tenant_ids[0]`,
+     which directly contradicts this sub-task's own acceptance criterion ("not defaulted") and was trivially
+     reachable — any non-browser client could pick a tenant by simply omitting `Origin`. The fallback is now
+     an explicit, per-API `default_tenant_id` variable defaulting to `null` (**reject with 403**). It is set
+     on exactly two APIs, each with a stated reason: `auth`, because the SAML ACS (`loginSaml`) is a browser
+     form-POST from the IdP and therefore legitimately carries the IdP's origin rather than a tenant
+     frontend's — leaving it fail-closed would have broken login; and `webhook`, whose `external/webhook`
+     base path is a server-to-server partner integration surface. Both resolve to `AR`, the only tenant that
+     exposes those surfaces today. Every other API is now fail-closed.
+  3. *`localhost:3000` in production.* It was hardcoded into the CORS allow-list and the tenant map of every
+     API in every environment. Combined with `allow-credentials="true"` this let any process listening on
+     port 3000 on a user's machine make credentialed calls to production. It is now the
+     `local_development_origins` variable, sourced from `module.local.config.local_development_origins`,
+     which is non-empty only when `env == "dev"`.
+
+  Note this hardening is a **behavioural change**: callers that previously succeeded without an
+  `Origin`/`Referer` header will now receive `403`. It must be observed in `dev` before promotion to `uat`
+  and `prod`. The pre-existing per-operation policy on `auth`'s `loginSaml` still allow-lists
+  `http://localhost:3000` in its own inline CORS block in all environments; that is outside this module and
+  should be given the same treatment as a follow-up.
 
 ### 3. `auth` microservice: tenant claim issuance (OneIdentity flow)
 - **Maps to:** SELC-4
