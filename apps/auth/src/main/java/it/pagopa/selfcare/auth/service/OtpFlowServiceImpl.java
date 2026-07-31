@@ -198,7 +198,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
   private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId) {
     return OtpFlow.update(
-        "{ '$set': { 'requestId': ?1, 'updatedAt': ?2 } }",
+        "{ '$set': { 'mailRequestId': ?1, 'updatedAt': ?2 } }",
         requestId,
         Date.from(OffsetDateTime.now().toInstant()))
       .where("uuid", uuid);
