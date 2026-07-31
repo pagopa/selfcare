@@ -76,21 +76,27 @@ Requires `pymongo` (`pip install pymongo`).
 
 Tagging the data is only half the job. Until the services stop accepting untagged documents, an untagged
 document that appears later — from a restored backup, a replayed event, a fixture — is still readable by both
-tenants. Once `--verify` exits `0` for both tenants in an environment, set in that environment:
+tenants. Once `--verify` exits `0` for both tenants in an environment, set in `infra/resources/_modules/local-env/locals.tf`:
 
-```
-SELFCARE_TENANT_STRICT_DATA_ISOLATION=true
+```hcl
+strict_tenant_data_isolation = true
 ```
 
-(property `selfcare.tenant.strict-data-isolation`; the same variable name works for both the Quarkus and the
-Spring services). It drops the `or tenantId is null` branch in `auth`, `document-ms`, `iam`,
+and apply that environment. The value is per environment, in one place, because it describes the state of the
+environment's *data*, not of a service: each stack that carries tenant-scoped data passes
+`module.local.config.strict_tenant_data_isolation` to the `container_app_microservice` module, which injects
+`SELFCARE_TENANT_STRICT_DATA_ISOLATION` (property `selfcare.tenant.strict-data-isolation`; the same variable
+name works for both the Quarkus and the Spring services).
+
+It drops the `or tenantId is null` branch in `auth`, `document-ms`, `iam`,
 `user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`, `delegation-cdc` and `user-cdc` — every
-service that has one, so that an environment flipping the variable becomes strict everywhere at once.
+service that has one, so that an environment flipping the variable becomes strict everywhere at once. Flipping
+only some of them would produce an environment that reports isolation it does not have.
 
 It is a flag rather than a code deletion because the backfill lands at a different time in each environment:
 a hardcoded switch would keep the strict build out of PROD until PROD had been migrated. Each environment
-flips when its own data is ready, and reverts without a deployment. It defaults to `false`, so deploying the
-services changes nothing until the variable is set.
+flips when its own data is ready, and reverts by setting the local back to `false`. It defaults to `false`,
+so deploying the services changes nothing until the environment is switched.
 
 The flag is temporary. Once every environment runs strict, delete both the flag and the `or tenantId is null`
 branch, so isolation holds by construction rather than by configuration (Step_1/EPIC.md sub-task 2).

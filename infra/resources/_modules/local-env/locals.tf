@@ -137,6 +137,23 @@ locals {
   # one per dimension, so adding a dimension does not mean editing every microservice stack.
   tenant_data_isolation_json = jsonencode(local.tenant_data_isolation)
 
+  # Whether this environment has finished the tenantId backfill and can stop treating untagged
+  # documents as belonging to whoever asks (Step_1/EPIC.md sub-tasks 2 and 10).
+  #
+  # It lives here, once per environment, rather than in each app stack because it describes the
+  # state of the environment's *data*, not of a service: flipping it for some services and not
+  # others produces an environment that reports isolation it does not have. Every stack that passes
+  # it reads this same value, so an environment goes strict in one edit.
+  #
+  # Turn it on only after apps/docs/Multitenant/Step_1/scripts/backfill_tenant_id.py --verify exits 0
+  # for both tenants in this environment; before that it makes pre-existing untagged data invisible
+  # to everyone rather than visible to both.
+  #
+  # Temporary: once every environment is strict, this local, the module variable and the
+  # `or tenantId is null` branch in the services are all deleted, so isolation stops depending on
+  # configuration.
+  strict_tenant_data_isolation = false
+
   # Local frontend development origin. CORS on the APIM APIs runs with allow-credentials=true, so
   # allow-listing http://localhost:3000 there means any process listening on port 3000 on a user's
   # machine can issue credentialed calls to that environment. Restricted to dev only.

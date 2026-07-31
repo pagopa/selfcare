@@ -111,6 +111,12 @@ variable "tenant_data_isolation_json" {
   description = "Per-tenant data-layer registry (Cosmos DB account, Storage naming, personal data vault, email sender domain) serialized as JSON, i.e. module.local.config.tenant_data_isolation_json. Injected as the SELFCARE_TENANT_DATA_ISOLATION environment variable and parsed by TenantDataIsolationRegistry in libs/selfcare-sdk-security. Non-secret routing data only: credentials appear here as Key Vault secret NAMES, never as values. Set it from module.local rather than writing a literal map, so the registry stays defined once (apps/docs/Multitenant/Step_1/EPIC.md sub-task 9). Leaving it null makes the service reject every tenant-scoped data lookup, which is the intended fail-closed behaviour, not a silent single-tenant mode."
 }
 
+variable "strict_tenant_data_isolation" {
+  type        = bool
+  default     = null
+  description = "Whether the service stops treating documents without a tenantId as belonging to the requesting tenant. Injected as SELFCARE_TENANT_STRICT_DATA_ISOLATION and read by every tenant-scoped query builder. Set it from module.local.config.strict_tenant_data_isolation so a whole environment flips at once: turning it on for some services only would leave the environment reporting isolation it does not have. Turn it on for an environment only after apps/docs/Multitenant/Step_1/scripts/backfill_tenant_id.py --verify exits 0 for both tenants there, since before that it hides pre-existing untagged data from everyone. Leaving it null keeps the application default (false, the migration-phase behaviour). Temporary: once every environment runs strict, this variable and the branch it controls are deleted (apps/docs/Multitenant/Step_1/EPIC.md sub-tasks 2 and 10)."
+}
+
 variable "secrets_names" {
   type        = map(string)
   description = "KeyVault secrets to get values from <env,secret-ref>"

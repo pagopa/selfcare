@@ -28,7 +28,16 @@ locals {
     key_vault_secret_name = null
   }]
 
-  app_settings = concat(var.app_settings, local.tenant_data_isolation_env)
+  # Migration switch for the tenant discriminator (Step_1 sub-tasks 2 and 10). Kept out of the env
+  # block entirely when unset, so an unwired stack keeps the application default instead of being
+  # pinned to "false" from Terraform: the difference matters when the flag is eventually deleted.
+  strict_tenant_data_isolation_env = var.strict_tenant_data_isolation == null ? [] : [{
+    name                  = "SELFCARE_TENANT_STRICT_DATA_ISOLATION"
+    value                 = tostring(var.strict_tenant_data_isolation)
+    key_vault_secret_name = null
+  }]
+
+  app_settings = concat(var.app_settings, local.tenant_data_isolation_env, local.strict_tenant_data_isolation_env)
 
   secrets = [for secret in var.secrets_names :
     {
