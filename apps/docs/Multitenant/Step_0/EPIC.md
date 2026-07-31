@@ -121,10 +121,29 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   (400), and an unknown tenant header value (400). Full `apps/product` suite (126 tests) passes with no
   regressions — pre-existing tests using `@TestSecurity` without JWT claims correctly bypass the filter
   (no issuer ⇒ no authenticated session ⇒ nothing to enforce), consistent with SELC-2.2 scoping.
-  Remaining rollout: repeat the same `quarkus.index-dependency` wiring for the other consuming
-  microservices depending on `selfcare-sdk-security` (`document-ms`, `iam`, `onboarding-ms`, `user-ms`,
-  `webhook`) once each is ready; still gated on sub-task 4 (`hub-spid-login` claim injection) for the
-  claim side of that flow to exist in production tokens.
+  **Rollout completed for all remaining Quarkus consumers of `selfcare-sdk-security`**: `document-ms`,
+  `iam`, `onboarding-ms`, `user-ms`, `webhook` all now have the same `quarkus.index-dependency` wiring
+  and a `TenantValidationFilterTest` (6 cases each) against a real `@Authenticated` endpoint
+  (`document-ms` → `GET /v1/documents/onboarding/{onboardingId}`, `iam` → `GET /iam/ping`,
+  `onboarding-ms` → `GET /v1/onboarding`, `user-ms` → `GET /users/emails`). `webhook` has no
+  `@Authenticated` endpoints at all (pure `X-Tenant-Id`-scoped webhook CRUD, no session auth), so its
+  test (7 cases, including one confirming unauthenticated requests bypass the filter) targets
+  `GET /info/version` instead — proving the filter still fires for any request carrying a valid JWT
+  regardless of whether the hit endpoint itself requires `@Authenticated` (Priority
+  `AUTHENTICATION + 100` runs for every request with a resolved `JsonWebToken`, not just protected
+  ones; only requests with *no* JWT issuer at all are exempt, per SELC-2.2).
+  Indexing `selfcare-sdk-security` in `iam` surfaced a genuine bean conflict: `iam` had its own
+  `SecurityConfig` producing `it.pagopa.selfcare.security.JWTCallerPrincipalFactory` — the exact same
+  lib class, manually re-wrapped in a producer method — which, once the lib jar was indexed, became
+  ambiguous against the lib class's own `@ApplicationScoped @Alternative @Priority(1)` CDI bean
+  (identical annotations, so CDI could not disambiguate). Removed `iam`'s redundant `SecurityConfig`
+  (100% duplicate behavior, same `mp.jwt.verify.publickey` config property) rather than the lib bean;
+  no functional change to `iam`'s JWT verification. All full suites pass with no regressions:
+  `document-ms` 465, `iam` 61, `onboarding-ms` 482, `user-ms` 96 (pre-existing, unrelated classloader
+  flake confirmed present on baseline before this change — not caused by this rollout), `webhook` 83.
+  Sub-task 5 is now fully rolled out across every microservice depending on `selfcare-sdk-security` and
+  every Spring Boot app with an inbound HTTP surface; still gated on sub-task 4 (`hub-spid-login` claim
+  injection) for the claim side of the hub-spid-login flow to exist in production tokens.
   **Also wired into the Spring Boot services** (`dashboard-bff`, `external-api`, `user-group-ms`) since
   these are not on Quarkus and cannot depend on `libs/selfcare-sdk-security` (that jar carries Quarkus
   runtime dependencies unsuitable for a Spring Boot classpath). Each of the 3 apps gets a small,
