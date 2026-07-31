@@ -31,10 +31,22 @@ public class UserPermissionsRepository {
   String databaseName;
 
   /**
+   * Whether untagged documents are still treated as belonging to the current tenant.
+   *
+   * <p>Configuration rather than a code constant because the backfill runs at a different time in
+   * each environment, so the strict build must be promotable before every environment has been
+   * migrated (Step_1/EPIC.md sub-tasks 2 and 10). Defaults to the lenient behaviour; both the flag
+   * and the {@code tenantId is null} branch must be deleted once every environment runs strict.
+   */
+  @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+  boolean strictTenantIsolation;
+
+  /**
    * Builds the tenant predicate for aggregation pipelines.
    *
    * <p><b>Migration phase:</b> match the current tenant or documents with no tenant. The {@code
-   * tenantId is null} branch MUST be dropped after the backfill tags legacy userClaims documents.
+   * tenantId is null} branch is dropped by {@code selfcare.tenant.strict-data-isolation} once the
+   * backfill has tagged legacy userClaims documents.
    *
    * <p>When no tenant is resolvable the aggregation is left unscoped, preserving pre-multitenant
    * behaviour for non-request callers as a migration-phase concession, not a security boundary.
@@ -43,6 +55,9 @@ public class UserPermissionsRepository {
     Optional<String> tenantId = currentTenantProvider.currentTenantId();
     if (tenantId.isEmpty()) {
       return filter;
+    }
+    if (strictTenantIsolation) {
+      return Filters.and(filter, Filters.eq("tenantId", tenantId.get()));
     }
     return Filters.and(
         filter, Filters.or(Filters.eq("tenantId", tenantId.get()), Filters.eq("tenantId", null)));

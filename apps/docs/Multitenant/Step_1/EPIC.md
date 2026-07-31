@@ -67,14 +67,22 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** No repository method can execute without a tenant filter; code review checklist
   updated to flag any missing filter as a defect (`SECURITY.md` Cosmos DB rules).
 - **Depends on:** Sub-task 1.
-- **Status: rolled out to every Mongo-using service, but NOT yet a security boundary.** The filter is applied
-  inside the data-access layer (never as an opt-in variant): `TenantDataIsolation` in `institution-ms`,
-  `QueryUtils`/persistence helpers in `onboarding-ms` and `user-ms`, repository defaults elsewhere; CDC apps
-  and the scheduler propagate the source `tenantId` instead of filtering, having no request context. Two
-  documented gaps remain, both tracked in `Step_0/EPIC.md` sub-task 6: reads still match
-  `tenantId = ? or tenantId is null` so that pre-existing untagged documents stay visible during the migration
-  window, and that branch must be removed once sub-task 10's backfill has tagged everything. Until then this
-  is additive defence, not enforcement.
+- **Status: rolled out to every Mongo-using service, and now switchable to enforcement per environment.** The
+  filter is applied inside the data-access layer (never as an opt-in variant): `TenantDataIsolation` in
+  `institution-ms`, `QueryUtils`/persistence helpers in `onboarding-ms` and `user-ms`, repository defaults
+  elsewhere; CDC apps and the scheduler propagate the source `tenantId` instead of filtering, having no
+  request context. Reads still match `tenantId = ? or tenantId is null` by default, so pre-existing untagged
+  documents stay visible during the migration window. That branch is now controlled by
+  `selfcare.tenant.strict-data-isolation` (env var `SELFCARE_TENANT_STRICT_DATA_ISOLATION`, default `false`)
+  at all eight chokepoints — `document-ms`, `iam` (entity and aggregation paths), `user-ms`, `onboarding-ms`,
+  `user-group-ms`, `institution-ms`, `delegation-cdc` (both repositories). It is a flag rather than a deletion
+  because the backfill lands at a different time in each environment: a hardcoded switch would keep the strict
+  build out of PROD until PROD had been migrated, holding every unrelated change behind a data migration.
+  Each environment turns strict when its own `--verify` is clean, and reverts without a deployment.
+  **Remaining:** run the backfill everywhere, flip the flag everywhere, then delete both the flag and the
+  `or tenantId is null` branch — only after that last step is this enforcement by construction rather than by
+  configuration. The unscoped path for callers with no resolvable tenant (schedulers, consumers) is untouched
+  by the flag and remains a separate open decision.
 
 ### 3. Implement database-per-tenant isolation where selected
 - **Maps to:** SELC-8.1, SELC-8.4, SELC-8.5

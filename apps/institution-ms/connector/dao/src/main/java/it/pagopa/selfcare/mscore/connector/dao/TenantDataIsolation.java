@@ -4,6 +4,7 @@ import it.pagopa.selfcare.mscore.connector.dao.model.TenantOwnedEntity;
 import it.pagopa.selfcare.mscore.exception.InvalidRequestException;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -21,9 +22,21 @@ public class TenantDataIsolation {
     private final CurrentTenantProvider currentTenantProvider;
     private final MongoOperations mongoOperations;
 
-    public TenantDataIsolation(CurrentTenantProvider currentTenantProvider, MongoOperations mongoOperations) {
+    /**
+     * Whether untagged documents are still treated as belonging to the current tenant.
+     *
+     * <p>Configuration rather than a code constant because the backfill runs at a different time in
+     * each environment, so the strict build must be promotable before every environment has been
+     * migrated (Step_1/EPIC.md sub-tasks 2 and 10). Defaults to the lenient behaviour; both the flag
+     * and the {@code tenantId == null} branch must be deleted once every environment runs strict.
+     */
+    private final boolean strictTenantIsolation;
+
+    public TenantDataIsolation(CurrentTenantProvider currentTenantProvider, MongoOperations mongoOperations,
+                               @Value("${selfcare.tenant.strict-data-isolation:false}") boolean strictTenantIsolation) {
         this.currentTenantProvider = currentTenantProvider;
         this.mongoOperations = mongoOperations;
+        this.strictTenantIsolation = strictTenantIsolation;
     }
 
     public Query tenantScoped(Query query, Class<?> outputType) {
@@ -48,9 +61,13 @@ public class TenantDataIsolation {
 
     public Criteria tenantCriteria(String tenantId) {
         /*
-         * Migration phase: legacy documents have no discriminator. The tenantId == null branch
-         * MUST be dropped once the backfill has tagged every document.
+         * Migration phase: legacy documents have no discriminator. The tenantId == null branch is
+         * dropped by selfcare.tenant.strict-data-isolation once the backfill has tagged every
+         * document.
          */
+        if (strictTenantIsolation) {
+            return Criteria.where(TENANT_ID_FIELD).is(tenantId);
+        }
         return new Criteria().orOperator(
                 Criteria.where(TENANT_ID_FIELD).is(tenantId),
                 Criteria.where(TENANT_ID_FIELD).is(null)

@@ -61,7 +61,7 @@ python3 backfill_tenant_id.py --tenant AR --verify
 
 Run the three steps once per tenant, against that tenant's own connection string.
 
-Options:
+## Options
 
 * `--tenant AR|PNPG` (required) — tenant owning the data reachable through `MONGO_HOST`.
 * `--database <name>` — restrict to one database; repeat the flag for several.
@@ -71,3 +71,28 @@ Options:
   an environment before that environment's reads can be made strict.
 
 Requires `pymongo` (`pip install pymongo`).
+
+## After the backfill: turning isolation strict
+
+Tagging the data is only half the job. Until the services stop accepting untagged documents, an untagged
+document that appears later — from a restored backup, a replayed event, a fixture — is still readable by both
+tenants. Once `--verify` exits `0` for both tenants in an environment, set in that environment:
+
+```
+SELFCARE_TENANT_STRICT_DATA_ISOLATION=true
+```
+
+(property `selfcare.tenant.strict-data-isolation`; the same variable name works for both the Quarkus and the
+Spring services). It drops the `or tenantId is null` branch in `document-ms`, `iam`, `user-ms`,
+`onboarding-ms`, `user-group-ms`, `institution-ms` and `delegation-cdc`.
+
+It is a flag rather than a code deletion because the backfill lands at a different time in each environment:
+a hardcoded switch would keep the strict build out of PROD until PROD had been migrated. Each environment
+flips when its own data is ready, and reverts without a deployment. It defaults to `false`, so deploying the
+services changes nothing until the variable is set.
+
+The flag is temporary. Once every environment runs strict, delete both the flag and the `or tenantId is null`
+branch, so isolation holds by construction rather than by configuration (Step_1/EPIC.md sub-task 2).
+
+Note that the flag does not affect callers with no resolvable tenant — schedulers and event consumers still
+read unscoped. Closing that gap is a separate decision from the backfill.

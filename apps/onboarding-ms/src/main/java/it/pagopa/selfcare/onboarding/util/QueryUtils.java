@@ -25,6 +25,7 @@ import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class QueryUtils {
@@ -33,6 +34,17 @@ public class QueryUtils {
 
   @Inject
   CurrentTenantProvider currentTenantProvider;
+
+  /**
+   * Whether untagged documents are still treated as belonging to the current tenant.
+   *
+   * <p>Configuration rather than a code constant because the backfill runs at a different time in
+   * each environment, so the strict build must be promotable before every environment has been
+   * migrated (Step_1/EPIC.md sub-tasks 2 and 10). Defaults to the lenient behaviour; both the flag
+   * and the {@code tenantId == null} branch must be deleted once every environment runs strict.
+   */
+  @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+  boolean strictTenantIsolation;
 
   public static class FieldNames {
     private FieldNames() {
@@ -80,7 +92,8 @@ public class QueryUtils {
 
   /**
    * Migration phase: match documents owned by the current tenant or legacy untagged documents. The
-   * {@code tenantId == null} branch MUST be dropped once the backfill has tagged old records.
+   * {@code tenantId == null} branch is dropped by {@code selfcare.tenant.strict-data-isolation} once
+   * the backfill has tagged old records.
    *
    * <p>When no tenant is resolvable (scheduler/event consumer/startup code outside an active
    * request), the query is left unscoped. This preserves pre-multitenant behaviour during migration;
@@ -88,9 +101,11 @@ public class QueryUtils {
    */
   private void addTenantFilter(List<Bson> filters) {
     currentTenantId()
-      .ifPresent(tenantId -> filters.add(Filters.or(
-        Filters.eq(TENANT_ID_FIELD, tenantId),
-        Filters.eq(TENANT_ID_FIELD, null))));
+      .ifPresent(tenantId -> filters.add(strictTenantIsolation
+        ? Filters.eq(TENANT_ID_FIELD, tenantId)
+        : Filters.or(
+          Filters.eq(TENANT_ID_FIELD, tenantId),
+          Filters.eq(TENANT_ID_FIELD, null))));
   }
 
   public Optional<String> currentTenantId() {
