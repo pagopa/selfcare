@@ -51,6 +51,13 @@ authorization model beyond tenant scoping.
   reviewed; no microservice is left undecided.
 - **Blockers/open questions:** Model choice may depend on regulatory/data-residency constraints (still `TO BE
   DECIDED`).
+- **Status: done.** Inventory and decision live in `Step_0/EPIC.md` sub-task 6, which ran ahead of this
+  document: all 15 Mongo-using services (`auth`, `delegation-cdc`, `document-ms`, `iam`,
+  `institution-send-mail-scheduler`, `onboarding-cdc`, `onboarding-functions`, `onboarding-ms`, `product`,
+  `product-cdc`, `user-cdc`, `user-group-cdc`, `user-ms`, `webhook`, `user-group-ms`) use the
+  **discriminator-field** model. No service mixes both. `product`/`product-cdc` are deliberately unscoped —
+  they hold the global product catalogue, which is not tenant data. The regulatory blocker is unchanged: no
+  constraint forcing physical separation has been identified, so revisit if that changes.
 
 ### 2. Implement discriminator-field isolation where selected
 - **Maps to:** SELC-8.1, SELC-8.3, SELC-8.5
@@ -60,6 +67,14 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** No repository method can execute without a tenant filter; code review checklist
   updated to flag any missing filter as a defect (`SECURITY.md` Cosmos DB rules).
 - **Depends on:** Sub-task 1.
+- **Status: rolled out to every Mongo-using service, but NOT yet a security boundary.** The filter is applied
+  inside the data-access layer (never as an opt-in variant): `TenantDataIsolation` in `institution-ms`,
+  `QueryUtils`/persistence helpers in `onboarding-ms` and `user-ms`, repository defaults elsewhere; CDC apps
+  and the scheduler propagate the source `tenantId` instead of filtering, having no request context. Two
+  documented gaps remain, both tracked in `Step_0/EPIC.md` sub-task 6: reads still match
+  `tenantId = ? or tenantId is null` so that pre-existing untagged documents stay visible during the migration
+  window, and that branch must be removed once sub-task 10's backfill has tagged everything. Until then this
+  is additive defence, not enforcement.
 
 ### 3. Implement database-per-tenant isolation where selected
 - **Maps to:** SELC-8.1, SELC-8.4, SELC-8.5
@@ -69,6 +84,17 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** Requests for an unmapped tenant are rejected, not routed to a default database;
   connection strings/keys are Key Vault-backed (`infra/core/_modules/key_vault`).
 - **Depends on:** Sub-task 1.
+- **Status: not applicable as written — no service selected this model (sub-task 1).** What was built instead is
+  an orthogonal, product-driven axis: `ProductDatabaseResolver` + `OnboardingMongoDatabaseResolver` +
+  `ProductRoutingContext` in `onboarding-ms` route to a per-product database declared by the `product` service
+  (`DatabaseIsolationModel`), because the driver there is contractual rather than tenant-related. It is
+  fail-closed in the same sense this sub-task requires (unknown product, lookup failure, or `DEDICATED` without
+  a database name raises rather than falling back to the shared database), and a dedicated database still
+  carries the `tenantId` discriminator, so the two axes compose. If a tenant ever needs its own database, the
+  per-tenant coordinates it would need (`cosmos_account_name`, `cosmos_resource_group_name`,
+  `cosmos_connection_string_secret_name`) are already in the sub-task 9 registry, Key Vault-backed by secret
+  name. Known gap carried from `Step_0/EPIC.md`: ~12 `onboarding-ms` endpoints identified only by
+  `onboardingId` cannot resolve a dedicated database and work today only because every product is `SHARED`.
 
 ### 4. Inventory Azure Storage isolation model per microservice
 - **Maps to:** SELC-9.1, SELC-9.2, SELC-9.6
@@ -78,6 +104,12 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** A documented per-microservice mapping (service → isolation model) exists; no
   microservice is left undecided or mixing both models.
 - **Depends on:** none (can run in parallel with sub-tasks 1–3).
+- **Status: done, with one service still undecided.** Recorded in `Step_0/EPIC.md` sub-task 6: `document-ms`
+  (contracts/attachments) is **in scope** with the **shared account, tenant discriminated at container/path
+  level** model; `product` (contract templates) and `registry-proxy-runner` (public registry cache) are **out
+  of scope** as non-tenant data; `product-cdc`/`user-cdc` archive through the shared
+  `selfcare-onboarding-sdk-azure-storage` lib and inherit upstream tenant marking. `dashboard-bff`
+  (institution logos) is still **TO BE DECIDED** — the one open entry.
 
 ### 5. Implement per-tenant container isolation where selected
 - **Maps to:** SELC-9.1, SELC-9.3, SELC-9.5
@@ -87,6 +119,22 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** No blob/file operation can default to a fallback container; least-privilege
   SAS/managed-identity scope preserved per tenant.
 - **Depends on:** Sub-task 4.
+- **Status: not started; the mapping half is ready, the service half is not.** Sub-task 9 provides
+  `TenantDataIsolationRegistry.storageContainer(tenant, baseContainer)`, which appends the tenant's registered
+  suffix and throws instead of returning a base name when the tenant is unresolved. Nothing consumes it yet:
+  `document-ms` still binds one container per `StorageOrigin` at `@PostConstruct` (`StorageRegistry`), so its
+  21 `clientFor(...)` call sites (18 in `DocumentContentServiceImpl`, 3 in `DocumentServiceImpl`) are
+  tenant-blind.
+  - **Blocker found while scoping this:** the blob containers themselves are not declared in this repository —
+    `infra/resources/document-ms/*/main.tf` only reads the storage accounts through `data` blocks, and the
+    container names arrive as literal env values (`sc-<e>-documents-blob`, `sc-<e>-usrattach-blob`). The
+    per-tenant containers must therefore be provisioned wherever those are owned before this sub-task can
+    ship, otherwise every PNPG blob operation fails closed with no in-repo fix available.
+  - **Design note for whoever picks this up:** `StorageRegistry` must cache a client per (origin, tenant), and
+    each call site needs classifying first — the SYSTEM client is used both for tenant data (contracts,
+    attachments) and for shared platform assets (mail/contract templates), and only the former may be
+    tenant-suffixed. Blindly suffixing every call site would move shared templates into a per-tenant container
+    that does not contain them.
 
 ### 6. Implement per-tenant storage account isolation where selected
 - **Maps to:** SELC-9.1, SELC-9.4, SELC-9.5
@@ -96,6 +144,10 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** Requests for an unmapped tenant are rejected, not routed to a default storage
   account.
 - **Depends on:** Sub-task 4.
+- **Status: not applicable — no service selected this model (sub-task 4).** If one does, the per-tenant
+  account naming infix (`ar` / `pnpg`, matching the existing `sc<e><loc>ar…st01` / `sc<e><loc>pnpg…st01`
+  accounts) is already in the sub-task 9 registry and `storageAccountInfix()` fails closed on an unmapped
+  tenant.
 
 ### 7. Personal data vault tenant selection
 - **Maps to:** SELC-10.1, SELC-10.2, SELC-10.3
@@ -105,6 +157,10 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** Every vault call uses the tenant-correct vault instance; unmapped tenants are
   rejected, not defaulted; vault responses are never logged as raw PII.
 - **Blockers/open questions:** Vault provider/mechanism still `TO BE DECIDED`.
+- **Status: blocked on the provider decision.** The registry slot exists and is deliberately empty:
+  `personal_data_vault_tenant` is `null` for both tenants, and `personalDataVaultTenant()` throws rather than
+  defaulting (SELC-10.2). Once the provider and per-tenant instance identifiers are known, filling this in is a
+  change to `local.tenant_data_isolation` alone, plus wiring the callers.
 
 ### 8. Tenant-aware outbound email sender domain
 - **Maps to:** SELC-11.1, SELC-11.2, SELC-11.3
@@ -114,6 +170,11 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** No email is sent with a mismatched or default tenant's sender domain; unresolved
   tenant blocks the send with an explicit error, not a silent default.
 - **Blockers/open questions:** Full list of email-sending services beyond the known one still `TO BE DECIDED`.
+- **Status: blocked on the sender-domain table.** Same shape as sub-task 7: `email_sender_domain` is `null` per
+  tenant and `emailSenderDomain()` throws. Note that the sender address is a Key Vault secret today
+  (`MAIL_SENDER_ADDRESS` → `smtp-usr`), so the per-tenant *domain* is new non-secret config, while the SMTP
+  credential stays in Key Vault. `institution-send-mail-scheduler` already carries `tenantId` on
+  `MailNotification` and resolves a tenant for its machine token, so the trigger-side tenant needed here exists.
 
 ### 9. Define shared tenant-mapping source of truth
 - **Maps to:** Open Question (source of truth for tenant → database/account/vault-tenant/email-domain)
@@ -175,6 +236,11 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** No pre-existing data is orphaned or misattributed after migration; migration is
   auditable and reversible where feasible.
 - **Depends on:** Sub-tasks 1–6.
+- **Status: not started — and it now gates sub-task 2.** Every discriminator-model read still carries the
+  `or tenantId is null` migration branch, which keeps pre-existing untagged documents readable by *both*
+  tenants. That branch cannot be dropped, and the Cosmos DB isolation cannot be called enforcement, until this
+  backfill has tagged existing documents. No storage/database move is needed yet, since no service selected the
+  per-tenant database or per-tenant account model (sub-tasks 3, 6).
 
 ### 11. Security review and audit logging for data-layer tenant enforcement
 - **Maps to:** `SECURITY.md` (all sections)
@@ -184,17 +250,31 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** Audit trail exists for every fail-closed rejection; security review sign-off
   obtained before epic closure.
 - **Depends on:** Sub-tasks 2, 3, 5, 6, 7, 8.
+- **Status: partial, sign-off not requested (correctly — its dependencies are not all done).** Rejections are
+  logged at the boundary (`TenantValidationFilter` logs every mismatch, missing/duplicated header, and the
+  hub-spid-login default) and data-layer rejections raise typed exceptions carrying the tenant and the missing
+  dimension, without PII. Credential handling for the new tenant-mapping configuration is Key Vault-only by
+  construction: the sub-task 9 registry stores secret *names*, and the delivered env var contains no secret
+  value. Still to do: an explicit audit-log line on each data-layer fail-closed rejection (today they surface as
+  exceptions), and a log review for PII once sub-tasks 5, 7 and 8 add vault/storage/email paths.
 
 ---
 
 ## Open blockers to resolve before/at epic kickoff
-- Per-microservice Cosmos DB isolation model assignment (SELC-8.6).
-- Per-microservice Azure Storage isolation model assignment (SELC-9.6).
+- ~~Per-microservice Cosmos DB isolation model assignment (SELC-8.6).~~ **Resolved (sub-task 1):** discriminator
+  field for all 15 Mongo-using services.
+- ~~Per-microservice Azure Storage isolation model assignment (SELC-9.6).~~ **Resolved (sub-task 4)** except
+  `dashboard-bff` (institution logos), still undecided.
 - Personal data vault provider/API contract and full integrating-service list (SELC-10.3).
 - Full list of microservices sending tenant-facing email beyond `institution-send-mail-scheduler` (SELC-11.3).
 - ~~Shared source of truth for all tenant mappings (Cosmos DB, Storage, vault, email) — same registry as Step 0
   or separate.~~ **Resolved (sub-task 9):** same registry as Step 0, `local.tenant_data_isolation` in
   `infra/resources/_modules/local-env/locals.tf`, read by `TenantDataIsolationRegistry`. The vault and email
   dimensions are declared but left `null` until the two blockers above are closed.
+- Ownership of the blob container definitions (found while scoping sub-task 5): the per-tenant containers
+  cannot be created from this repository, which only reads the storage accounts via `data` blocks. Whoever owns
+  them must provision the per-tenant containers before sub-task 5 can ship.
+- A Spring-side reader for the tenant registry: the six Spring Boot apps mirror the tenant classes instead of
+  depending on `selfcare-sdk-security`, so they can consume the same env var but have no parser yet.
 - Migration/backfill approach for pre-existing single-tenant data.
 - Regulatory/data-residency constraints that may force a specific isolation model per tenant.
