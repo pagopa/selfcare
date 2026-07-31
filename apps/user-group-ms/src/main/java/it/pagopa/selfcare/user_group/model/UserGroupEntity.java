@@ -26,6 +26,9 @@ public class UserGroupEntity implements UserGroupOperations {
         description = userGroup.getDescription();
         status = userGroup.getStatus();
         members = userGroup.getMembers();
+        if (userGroup instanceof UserGroupEntity userGroupEntity) {
+            tenantId = userGroupEntity.getTenantId();
+        }
         createdAt = userGroup.getCreatedAt();
         createdBy = userGroup.getCreatedBy();
         modifiedAt = userGroup.getModifiedAt();
@@ -48,6 +51,8 @@ public class UserGroupEntity implements UserGroupOperations {
     private UserGroupStatus status;
     @FieldNameConstants.Include
     private Set<String> members;
+    @FieldNameConstants.Include
+    private String tenantId;
     @CreatedDate
     private Instant createdAt;
     @CreatedBy

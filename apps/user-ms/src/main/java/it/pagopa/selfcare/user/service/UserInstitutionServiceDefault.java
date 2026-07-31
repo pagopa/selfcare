@@ -7,6 +7,7 @@ import io.quarkus.panache.common.Page;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.conf.CurrentTenantProvider;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.constant.SelfCareRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
@@ -52,6 +53,28 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     private final UserInstitutionMapper userInstitutionMapper;
     private final QueryUtils queryUtils;
     private final UserUtils userUtils;
+    private final CurrentTenantProvider currentTenantProvider;
+
+    /**
+     * Builds a tenant-scoped filter for the queries that do not go through
+     * {@link QueryUtils#buildQueryDocument}, which is where the rest of this service's scoping lives.
+     *
+     * <p>Same migration-phase semantics as there: documents with no tenant stay visible until the
+     * backfill has run, and a call with no resolvable tenant is left unscoped rather than
+     * unsatisfiable.
+     */
+    private Document tenantScoped(Document query) {
+        return currentTenantProvider
+                .currentTenantId()
+                .map(tenant -> new Document("$and", List.of(
+                        query,
+                        new Document("$or", List.of(
+                                new Document(TENANT_ID_FIELD, tenant),
+                                new Document(TENANT_ID_FIELD, null))))))
+                .orElse(query);
+    }
+
+    private static final String TENANT_ID_FIELD = "tenantId";
 
     @RestClient
     @Inject
@@ -59,19 +82,22 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Uni<UserInstitutionResponse> findById(String id) {
-        Uni<UserInstitution> userInstitution = UserInstitution.findById(new ObjectId(id));
+        Uni<UserInstitution> userInstitution =
+                UserInstitution.find(tenantScoped(new Document("_id", new ObjectId(id)))).firstResult();
         return userInstitution.onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
     public Uni<UserInstitutionResponse> findByInstitutionId(String institutionId) {
-        Uni<UserInstitution> userInstitution = UserInstitution.find(UserInstitution.Fields.institutionId.name(), institutionId).firstResult();
+        Uni<UserInstitution> userInstitution = UserInstitution.find(
+                tenantScoped(new Document(UserInstitution.Fields.institutionId.name(), institutionId))).firstResult();
         return userInstitution.onItem().transform(userInstitutionMapper::toResponse);
     }
 
     @Override
     public Multi<UserInstitutionResponse> findByUserId(String userId) {
-        Multi<UserInstitution> userInstitutions = UserInstitution.find(UserInstitution.Fields.userId.name(), userId).stream();
+        Multi<UserInstitution> userInstitutions = UserInstitution.find(
+                tenantScoped(new Document(UserInstitution.Fields.userId.name(), userId))).stream();
         return userInstitutions.onItem().transform(userInstitutionMapper::toResponse);
     }
 
@@ -247,9 +273,9 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         final String elemProductId = "elem." + OnboardedProduct.Fields.productId.name();
         final String elemStatus = "elem." + OnboardedProduct.Fields.status.name();
         return UserInstitution.mongoCollection().updateMany(
-                new Document(institutionIdField, institutionId)
+                tenantScoped(new Document(institutionIdField, institutionId)
                         .append(statusField, new Document("$in", List.of(ACTIVE, SUSPENDED)))
-                        .append(productIdField, productId),
+                        .append(productIdField, productId)),
                 new Document("$set", new Document(productsElemStatus, DELETED)
                         .append(productsElemUpdatedAt, Instant.now())),
                 new UpdateOptions().arrayFilters(List.of(new Document(elemProductId, productId)
@@ -388,6 +414,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Optional.ofNullable(userInstitution.getProducts()).ifPresent(l ->
                 l.stream().filter(p -> p.getRoleId() == null)
                         .forEach(p -> p.setRoleId(UUID.randomUUID().toString())));
+        stampTenant(userInstitution);
         return UserInstitution.persistOrUpdate(userInstitution)
                 .replaceWith(userInstitution);
     }
@@ -424,6 +451,21 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     }
 
+
+    /**
+     * Tags a record with the tenant it is being written under.
+     *
+     * <p>A record that already carries a tenant is never re-assigned: an update or a replayed event
+     * must not be able to move it between tenants. When no tenant is resolvable the record is left
+     * untagged rather than guessed - an untagged record stays visible to both tenants, which is the
+     * pre-multitenant behaviour, whereas a wrong tag would hide it from its real owner.
+     */
+    private void stampTenant(UserInstitution userInstitution) {
+        if (userInstitution.getTenantId() != null) {
+            return;
+        }
+        currentTenantProvider.currentTenantId().ifPresent(userInstitution::setTenantId);
+    }
 
     private boolean productFilterIsEmpty(Map<String, Object> filterMap) {
         return !filterMap.containsKey(PRODUCT_ID.getChild())

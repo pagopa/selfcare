@@ -446,6 +446,68 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** Both tenants served by one stack per environment; legacy stacks fully decommissioned;
   no security regression during the overlap period (`SECURITY.md` Deployment/CI-CD rules).
 - **Depends on:** Sub-tasks 2, 5, 6.
+- **Status: pattern established, `iam`/dev reference conversion written and `terraform validate`-clean;
+  nothing applied, imported or wired into CI.**
+  - **Inventory (`infra/resources/`, 24 app stacks).**
+    - **13 apps are deployed twice** (`{dev,uat,prod}-ar` *and* `-pnpg`) and are the actual consolidation
+      scope: `dashboard-bff`, `external-api`, `iam`, `institution-ms`, `onboarding-bff`, `onboarding-cdc`,
+      `onboarding-functions`, `onboarding-ms`, `product`, `registry-proxy`, `user-cdc`, `user-group-ms`,
+      `user-ms`. 39 stacks collapse to 13.
+    - **10 apps are `-ar` only** (`api`, `auth`, `delegation-cdc`, `document-ms`,
+      `institution-send-mail-scheduler`, `namirial-sign`, `product-cdc`, `registry-proxy-runner`,
+      `user-group-cdc`, `webhook`). These are **not** a consolidation task — there is nothing to merge — but
+      they are the opposite risk: they already run as a single deployment and will start receiving PNPG
+      traffic, so their sub-task 5/6 tenant handling has to be correct *before* cutover, not after. `auth` is
+      the exception that stays AR-specific by design: PNPG authenticates through `hub-spid-login`.
+    - **1 app is `-pnpg` only** (`spid-login`, i.e. `hub-spid-login`). It is tenant-specific by nature and is
+      out of scope for consolidation.
+  - **Two classes of conversion, and they are not equally hard.**
+    - **Stateless (7 apps: `dashboard-bff`, `external-api`, `onboarding-bff`, `onboarding-cdc`,
+      `onboarding-functions`, `registry-proxy`, `user-cdc`)** — no Cosmos database of their own, so
+      consolidation is config-only and reversible.
+    - **Stateful (6 apps: `iam`, `institution-ms`, `onboarding-ms`, `product`, `user-group-ms`, `user-ms`)** —
+      each has a Cosmos database in *both* the AR and the PNPG account. Consolidating the deployment means
+      merging two databases, which is a one-way data migration, not a Terraform change. This is the real cost
+      of sub-task 7 and it is gated on sub-task 6's backfill.
+  - **Reference conversion: `infra/resources/iam/dev/` (new).** `iam` was picked because its two legacy stacks
+    differ only in naming, DNS and one JVM flag, so the pattern could be established without also resolving
+    app-specific divergence. The stack:
+    - Deploys **one** container app (the AR one survives) against **one** Cosmos database and **one** Key Vault.
+    - Keeps **both** APIM APIs — `iam` on the AR hostname and `imprese/iam` on the PNPG hostname — both
+      pointing at that single backend. Neither frontend changes, and rollback is re-pointing one
+      `service_url` rather than rebuilding infrastructure. Collapsing the two URLs into one is a separate,
+      frontend-visible decision and is deliberately excluded.
+    - Relies on the fact that tenant identity does **not** depend on which API is called: `_modules/apim_api`
+      resolves `X-Tenant-Id` from the calling origin against the `tenant_ids` registry and discards any value
+      the caller sent, so a PNPG browser reaching the AR API is still resolved as `PNPG` and the two APIs
+      cannot be played off against each other.
+    - Changes the `userClaims` unique index from `email` to composite `(tenantId, email)`. The same person can
+      hold claims under both tenants, so a globally unique `email` makes the database merge fail on duplicate
+      keys for every user present in both.
+  - **"Alongside" is not achievable as written, and the plan was changed rather than faked.** A genuinely
+    parallel stack would have to stand up a second container app plus a third and fourth APIM API — more
+    moving parts to keep in sync than the migration it is meant to de-risk. The unified stack is instead a
+    **successor** that adopts the existing AR resources and the existing PNPG APIM API into a new state file
+    via `terraform import`. Nothing is destroyed and recreated. The consequence is documented prominently:
+    applying this stack before importing would try to create resources that already exist.
+  - **Not wired into CI on purpose.** `pr_iam_infra.yml` does not plan the new folder. Its state file does not
+    exist yet, so every pull request would show "create 12 resources" for resources that must be imported, not
+    created — a permanently red plan that invites approving the wrong thing. The plan job belongs in the same
+    change that performs the import.
+  - **Hard prerequisites identified (each fails silently, not loudly, if skipped)** — full detail in
+    `infra/resources/iam/dev/README.md`:
+    1. Sub-task 6's backfill must have run **and** the `or tenantId is null` migration branch must be removed
+       *before* the merge. Merging two databases of untagged documents produces one database in which the
+       current permissive filter shows every legacy PNPG document to AR users and vice versa.
+    2. The composite unique index must be applied *before* the data import, not after.
+    3. `JWT_PUBLIC_KEY` must verify **both** issuers (`auth` for AR, `hub-spid-login` for PNPG). Each legacy
+       stack held only its own key; if the issuers do not share one, every PNPG request fails authentication
+       the moment traffic moves, and sub-task 4 has to land first.
+    4. Any secret that genuinely differs per tenant must become a per-tenant env var resolved app-side, never
+       a single collapsed value.
+  - **Remaining: 12 of 13 apps × 3 environments (36 stacks), plus `iam` uat/prod.** Deliberately not attempted
+    in one pass — each stateful app carries its own data migration, and a bulk conversion would produce a large
+    unreviewable diff whose riskiest parts (the data merges) are invisible in it.
 
 ### 8. Scale and noisy-neighbor protection
 - **Maps to:** ARCHITECTURE.md Scale expectations

@@ -106,7 +106,7 @@ public class OidcServiceImpl implements OidcService {
         .chain(
             userClaims ->
                 otpFlowService
-                    .handleOtpFlow(userClaims)
+                    .handleOtpFlow(userClaims, tenantId)
                     .onFailure()
                     .transform(
                         failure ->

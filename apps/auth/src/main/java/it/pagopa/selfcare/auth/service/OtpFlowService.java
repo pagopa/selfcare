@@ -10,13 +10,13 @@ import java.util.Optional;
 
 public interface OtpFlowService {
 
-  Uni<Optional<OtpInfo>> handleOtpFlow(UserClaims userClaims);
+  Uni<Optional<OtpInfo>> handleOtpFlow(UserClaims userClaims, String tenantId);
 
-  Uni<OtpFlow> createNewOtpFlow(String userId, String otp);
+  Uni<OtpFlow> createNewOtpFlow(String userId, String otp, String tenantId);
 
-  Uni<OtpFlow> findLastOtpFlowByUserId(String userId);
+  Uni<OtpFlow> findLastOtpFlowByUserId(String userId, String tenantId);
 
   Uni<TokenResponse> verifyOtp(String otpUid, String otp, String tenantId);
 
-  Uni<OidcExchangeOtpResponse> resendOtp(String otpUid);
+  Uni<OidcExchangeOtpResponse> resendOtp(String otpUid, String tenantId);
 }

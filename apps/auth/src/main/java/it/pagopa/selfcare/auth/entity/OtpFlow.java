@@ -17,6 +17,7 @@ import lombok.experimental.FieldNameConstants;
 public class OtpFlow extends ReactivePanacheMongoEntity {
 
   private String uuid;
+  private String tenantId;
   private String userId;
   private String otp;
   private OtpStatus status;

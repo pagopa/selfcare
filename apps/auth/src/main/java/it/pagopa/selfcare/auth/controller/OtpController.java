@@ -135,7 +135,9 @@ public class OtpController {
   @Path(value = "/resend")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<OidcExchangeOtpResponse> resendOtp(@Valid OtpResendRequest otpResendRequest) {
-    return otpFlowService.resendOtp(otpResendRequest.getOtpUuid());
+  public Uni<OidcExchangeOtpResponse> resendOtp(
+      @Context ContainerRequestContext requestContext, @Valid OtpResendRequest otpResendRequest) {
+    return otpFlowService.resendOtp(
+        otpResendRequest.getOtpUuid(), TenantHeaderUtils.resolveTenantId(requestContext));
   }
 }

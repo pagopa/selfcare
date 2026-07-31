@@ -57,7 +57,7 @@ public class OidcServiceTest {
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(userClaims));
 
-    when(otpFlowService.handleOtpFlow(userClaims))
+    when(otpFlowService.handleOtpFlow(userClaims, "AR"))
         .thenReturn(Uni.createFrom().item(Optional.empty()));
 
     when(sessionService.generateSessionToken(userClaims))
@@ -91,7 +91,7 @@ public class OidcServiceTest {
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(userClaims));
 
-    when(otpFlowService.handleOtpFlow(any()))
+    when(otpFlowService.handleOtpFlow(any(), anyString()))
         .thenReturn(
             Uni.createFrom()
                 .item(
@@ -209,7 +209,7 @@ public class OidcServiceTest {
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().fiscalCode("").build()));
-    when(otpFlowService.handleOtpFlow(any(UserClaims.class)))
+    when(otpFlowService.handleOtpFlow(any(UserClaims.class), anyString()))
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService

@@ -10,6 +10,7 @@ import it.pagopa.selfcare.user_group.exception.ResourceAlreadyExistsException;
 import it.pagopa.selfcare.user_group.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.user_group.exception.ResourceUpdateException;
 import it.pagopa.selfcare.user_group.model.*;
+import it.pagopa.selfcare.user_group.security.tenant.CurrentTenantProvider;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,9 @@ class UserGroupServiceImplTest {
 
     @MockBean
     private MongoTemplate mongoTemplateMock;
+
+    @MockBean
+    private CurrentTenantProvider currentTenantProvider;
 
     @Autowired
     private UserGroupServiceImpl groupService;

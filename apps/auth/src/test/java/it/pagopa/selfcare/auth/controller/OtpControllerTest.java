@@ -150,6 +150,7 @@ class OtpControllerTest {
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")
@@ -161,12 +162,13 @@ class OtpControllerTest {
   void resendOtp_NotFound() {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
-    when(otpFlowService.resendOtp(anyString()))
+    when(otpFlowService.resendOtp(anyString(), anyString()))
         .thenReturn(
             Uni.createFrom().failure(new ResourceNotFoundException("Cannot find Otp Flow")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")
@@ -178,11 +180,12 @@ class OtpControllerTest {
   void resendOtp_Conflict() {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
-    when(otpFlowService.resendOtp(anyString()))
+    when(otpFlowService.resendOtp(anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")
@@ -194,11 +197,12 @@ class OtpControllerTest {
   void resendOtp_InternalServerError() {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
-    when(otpFlowService.resendOtp(anyString()))
+    when(otpFlowService.resendOtp(anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")

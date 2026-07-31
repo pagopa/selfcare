@@ -9,6 +9,7 @@ import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRole;
 import it.pagopa.selfcare.iam.model.ProductRolePermissions;
 import it.pagopa.selfcare.iam.model.UserPermissions;
+import it.pagopa.selfcare.iam.service.CurrentTenantProvider;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.*;
@@ -24,15 +25,34 @@ public class UserPermissionsRepository {
 
   public static final String ALL = "ALL";
   @Inject ReactiveMongoClient mongoClient;
+  @Inject CurrentTenantProvider currentTenantProvider;
 
   @ConfigProperty(name = "quarkus.mongodb.database")
   String databaseName;
+
+  /**
+   * Builds the tenant predicate for aggregation pipelines.
+   *
+   * <p><b>Migration phase:</b> match the current tenant or documents with no tenant. The {@code
+   * tenantId is null} branch MUST be dropped after the backfill tags legacy userClaims documents.
+   *
+   * <p>When no tenant is resolvable the aggregation is left unscoped, preserving pre-multitenant
+   * behaviour for non-request callers as a migration-phase concession, not a security boundary.
+   */
+  private Bson tenantScoped(Bson filter) {
+    Optional<String> tenantId = currentTenantProvider.currentTenantId();
+    if (tenantId.isEmpty()) {
+      return filter;
+    }
+    return Filters.and(
+        filter, Filters.or(Filters.eq("tenantId", tenantId.get()), Filters.eq("tenantId", null)));
+  }
 
   /** Aggregation query to extract a user's permissions for a specific product (optional). */
   public Uni<UserPermissions> getUserPermissions(
       String uid, String permission, List<String> products) {
     List<Bson> pipeline = new ArrayList<>();
-    pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
+    pipeline.add(Aggregates.match(tenantScoped(Filters.eq("_id", uid))));
     pipeline.add(Aggregates.unwind("$productRoles"));
 
     List<String> productIds =
@@ -86,7 +106,7 @@ public class UserPermissionsRepository {
   public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(
       String uid, String productId) {
     List<Bson> pipeline = new ArrayList<>();
-    pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
+    pipeline.add(Aggregates.match(tenantScoped(Filters.eq("_id", uid))));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
             .ifPresent(pid -> {
@@ -132,7 +152,7 @@ public class UserPermissionsRepository {
   /** Aggregation query to extract a list of product, role for a specific user. */
   public Uni<List<ProductRole>> getUserProductRoles(String uid, String productId) {
     List<Bson> pipeline = new ArrayList<>();
-    pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
+    pipeline.add(Aggregates.match(tenantScoped(Filters.eq("_id", uid))));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
         .ifPresent(

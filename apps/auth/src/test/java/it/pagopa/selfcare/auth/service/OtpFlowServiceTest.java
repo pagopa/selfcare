@@ -54,7 +54,7 @@ public class OtpFlowServiceTest {
     UserClaims input = getUserClaims();
     Optional<OtpInfo> created =
         otpFlowService
-            .handleOtpFlow(input)
+            .handleOtpFlow(input, "AR")
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -70,7 +70,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.builder()).thenCallRealMethod();
     OtpFlow created =
         otpFlowService
-            .createNewOtpFlow(input.getUid(), otp)
+            .createNewOtpFlow(input.getUid(), otp, "AR")
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -79,6 +79,7 @@ public class OtpFlowServiceTest {
     Assertions.assertEquals(0, created.getAttempts());
     Assertions.assertEquals(OtpStatus.PENDING, created.getStatus());
     Assertions.assertEquals(input.getUid(), created.getUserId());
+    Assertions.assertEquals("AR", created.getTenantId());
   }
 
   @Test
@@ -91,7 +92,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.persist(any(OtpFlow.class), any()))
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
     otpFlowService
-        .createNewOtpFlow(input.getUid(), otp)
+        .createNewOtpFlow(input.getUid(), otp, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -110,7 +111,7 @@ public class OtpFlowServiceTest {
     when(query.firstResult()).thenReturn(Uni.createFrom().item(otpFlow));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     otpFlowService
-        .findLastOtpFlowByUserId(input.getUid())
+        .findLastOtpFlowByUserId(input.getUid(), "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
@@ -128,7 +129,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
 
     otpFlowService
-        .findLastOtpFlowByUserId(input.getUid())
+        .findLastOtpFlowByUserId(input.getUid(), "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -171,7 +172,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -206,7 +207,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -238,7 +239,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -270,7 +271,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -296,7 +297,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(ResourceNotFoundException.class, "Cannot find OtpFlow");
@@ -315,7 +316,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(InternalException.class, "Internal Error");
@@ -351,7 +352,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
     when(OtpFlow.persist(any(OtpFlow.class), any())).thenReturn(Uni.createFrom().voidItem());
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class)))
+    when(update.where(any(Document.class)))
         .thenReturn(Uni.createFrom().failure(new Exception("Cannot update old OTP")));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
 
@@ -362,7 +363,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().voidItem());
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
@@ -386,7 +387,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(ConflictException.class, "Otp is expired or in a final state");
@@ -414,7 +415,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().failure(new InternalException("PDV unreachable")));
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(InternalException.class, "PDV unreachable");
@@ -447,7 +448,7 @@ public class OtpFlowServiceTest {
             Uni.createFrom().failure(new InternalException("Internal User MS not reachable")));
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(InternalException.class, "Internal User MS not reachable");
@@ -479,7 +480,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().failure(new NotFoundException("User not found")));
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(ConflictException.class, "User not found");
@@ -512,7 +513,7 @@ public class OtpFlowServiceTest {
     when(userService.getUserInfoEmail(any())).thenReturn(Uni.createFrom().item("test@test.it"));
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailedWith(Exception.class, "Cannot create Otp Flow");
@@ -548,7 +549,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
     when(OtpFlow.persist(any(OtpFlow.class), any())).thenReturn(Uni.createFrom().voidItem());
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class)))
+    when(update.where(any(Document.class)))
         .thenReturn(Uni.createFrom().failure(new Exception("Cannot update old OTP")));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
 
@@ -559,7 +560,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().voidItem());
 
     otpFlowService
-        .resendOtp(otpUid)
+        .resendOtp(otpUid, "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
