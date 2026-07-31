@@ -52,6 +52,43 @@ class TenantValidationFilterTest {
   }
 
   @Test
+  void shouldScopeUnauthenticatedRequestFromTenantHeader() {
+    // Subscription-key authenticated server-to-server callers carry no JWT. Without this the
+    // request would run unscoped across every tenant.
+    when(jwt.getIssuer()).thenReturn(null);
+    when(requestContext.getHeaderString(TENANT_HEADER)).thenReturn("PNPG");
+
+    filter.filter(requestContext);
+
+    verify(requestContext, never()).abortWith(any());
+    assertEquals(TenantId.PNPG, tenantContext.getTenant());
+  }
+
+  @Test
+  void shouldNotRejectUnauthenticatedRequestWithUnknownTenantHeader() {
+    // Public endpoints must stay reachable, so an unusable header leaves the context unset
+    // rather than aborting the request.
+    when(jwt.getIssuer()).thenReturn("");
+    when(requestContext.getHeaderString(TENANT_HEADER)).thenReturn("NOT_A_TENANT");
+
+    filter.filter(requestContext);
+
+    verify(requestContext, never()).abortWith(any());
+    assertEquals(null, tenantContext.getTenant());
+  }
+
+  @Test
+  void shouldNotScopeUnauthenticatedRequestWithDuplicatedTenantHeader() {
+    when(jwt.getIssuer()).thenReturn(null);
+    when(requestContext.getHeaderString(TENANT_HEADER)).thenReturn("AR,PNPG");
+
+    filter.filter(requestContext);
+
+    verify(requestContext, never()).abortWith(any());
+    assertEquals(null, tenantContext.getTenant());
+  }
+
+  @Test
   void shouldAcceptConsistentHeaderAndClaimForOneIdentityFlow() {
     when(jwt.getIssuer()).thenReturn(TenantConstants.ONE_IDENTITY_ISSUER);
     when(requestContext.getHeaderString(TENANT_HEADER)).thenReturn("AR");

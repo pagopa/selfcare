@@ -64,8 +64,9 @@ class UserInstitutionServiceTest {
         final String id = new ObjectId().toHexString();
         UserInstitution userInstitution = createDummyUserInstitution();
         PanacheMock.mock(UserInstitution.class);
-        when(UserInstitution.findById(any()))
-                .thenReturn(Uni.createFrom().item(userInstitution));
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
+        when(UserInstitution.find(any(Document.class))).thenReturn(query);
         Uni<UserInstitutionResponse> response = userInstitutionService.findById(id);
         Assertions.assertNotNull(response);
     }
@@ -284,7 +285,7 @@ class UserInstitutionServiceTest {
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
-        when(UserInstitution.find(any(), (Object) any()))
+        when(UserInstitution.find(any(Document.class)))
                 .thenReturn(query);
         Uni<UserInstitutionResponse> response = userInstitutionService.findByInstitutionId(institutionId);
         Assertions.assertNotNull(response);
@@ -296,8 +297,8 @@ class UserInstitutionServiceTest {
         UserInstitution userInstitution = createDummyUserInstitution();
         PanacheMock.mock(UserInstitution.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
-        when(query.firstResult()).thenReturn(Uni.createFrom().item(userInstitution));
-        when(UserInstitution.find(any(), (Object) any()))
+        when(query.stream()).thenReturn(Multi.createFrom().item(userInstitution));
+        when(UserInstitution.find(any(Document.class)))
                 .thenReturn(query);
         Multi<UserInstitutionResponse> response = userInstitutionService.findByUserId(userId);
         Assertions.assertNotNull(response);

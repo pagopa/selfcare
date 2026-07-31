@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.user.controller.response.UserInfoResponse;
 import it.pagopa.selfcare.user.entity.UserInfo;
 import jakarta.inject.Inject;
+import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -28,7 +29,7 @@ class UserInfoServiceTest {
         PanacheMock.mock(UserInfo.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(userInfo));
-        when(UserInfo.find(any(), (Object) any()))
+        when(UserInfo.find(any(Document.class)))
                 .thenReturn(query);
         Uni<UserInfoResponse> response = userInfoService.findById(userId);
         Assertions.assertNotNull(response);

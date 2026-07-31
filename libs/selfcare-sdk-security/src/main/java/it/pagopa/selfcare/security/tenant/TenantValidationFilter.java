@@ -27,9 +27,11 @@ import org.slf4j.LoggerFactory;
  *   <li>exposes the validated tenant via {@link TenantContext} for downstream code.</li>
  * </ul>
  *
- * <p>Requests without an authenticated JWT principal (e.g. public/health endpoints) are not
- * enforced here, since there is no session tenant claim to reconcile against; this scoping
- * follows SELC-2.2 ("for the lifetime of the authenticated session").
+ * <p>Requests without an authenticated JWT principal are never rejected here (public and health
+ * endpoints legitimately have no session tenant claim to reconcile against; this scoping follows
+ * SELC-2.2, "for the lifetime of the authenticated session"). They are still tenant-scoped from a
+ * usable {@code X-Tenant-Id} header when one is present, so that subscription-key authenticated
+ * server-to-server calls do not run unscoped across all tenants.
  */
 @ApplicationScoped
 @Provider
@@ -48,7 +50,21 @@ public class TenantValidationFilter implements ContainerRequestFilter {
   public void filter(ContainerRequestContext requestContext) {
     String issuer = jwt.getIssuer();
     if (issuer == null || issuer.isEmpty()) {
-      // No authenticated session for this request; nothing to enforce here.
+      // No authenticated session, so there is no tenant claim to reconcile against and this filter
+      // must not reject: public and health endpoints legitimately land here.
+      //
+      // But "no JWT" is NOT the same as "no tenant". Server-to-server callers authenticated with an
+      // Ocp-Apim-Subscription-Key rather than a JWT (auth -> user-ms during login, user-cdc -> the
+      // internal APIs) also land here, and leaving TenantContext unset makes every downstream
+      // repository query run UNSCOPED across all tenants. So when such a request carries a usable
+      // X-Tenant-Id we honour it and scope the request to it.
+      //
+      // Trusting the header is safe only because it is not caller-controlled: the APIM inbound
+      // policy overrides X-Tenant-Id unconditionally on every request it forwards, deriving it from
+      // the caller's origin or, for s2s callers, from their subscription id (see
+      // infra/resources/_modules/apim_api). A request that reaches a service without passing
+      // through APIM cannot reach it from outside the private network either.
+      resolveHeaderTenant(requestContext).ifPresent(tenantContext::setTenant);
       return;
     }
 

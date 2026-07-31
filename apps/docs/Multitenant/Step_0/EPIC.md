@@ -115,21 +115,36 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   `http://localhost:3000` in its own inline CORS block in all environments; that is outside this module and
   should be given the same treatment as a follow-up.
 
-- **Follow-up: server-to-server callers routed through APIM had no way to express a tenant.** Found while
-  sweeping sub-task 6's callers for `X-Tenant-Id` propagation. The design assumed every backend-to-backend
-  call goes direct, callee private DNS name to callee private DNS name, carrying the caller's JWT and the
-  `X-Tenant-Id` header — which is how `onboarding-ms`, `document-ms` and `institution-ms` call each other.
-  But `user-cdc` is different: its three internal clients are pointed at
-  `INTERNAL_API_URL = https://api.dev.selfcare.pagopa.it/external/internal/v1`
-  (`infra/resources/user-cdc/dev-ar/main.tf`) and authenticate with `Ocp-Apim-Subscription-Key`, not a JWT.
-  They go **through APIM**, and the inbound policy above overrides `X-Tenant-Id` unconditionally from the
-  caller's `Origin`/`Referer`. A CDC process has no `Origin`. So:
+- **Follow-up: server-to-server callers routed through APIM had no way to express a tenant, and ran
+  unscoped.** Found while sweeping sub-task 6's callers for `X-Tenant-Id` propagation. The design assumed
+  every backend-to-backend call goes direct, callee private DNS name to callee private DNS name, carrying
+  the caller's JWT and the `X-Tenant-Id` header — which is how `onboarding-ms`, `document-ms`,
+  `institution-ms` and `auth`→`iam` call each other. Five clients across two apps do **not**:
 
-  1. Adding `X-Tenant-Id` in `user-cdc`'s `InternalApiHeadersFactory` would have been **useless** — APIM
-     discards it. This is worth stating explicitly because it is the obvious first fix and it silently
-     does nothing.
-  2. Once the tenant policy is applied to the API serving `external/internal/v1`, those calls resolve to
-     `default_tenant_id`, i.e. **403 fail-closed** — a live breakage, not a soft degradation.
+  | Caller | Client | URL | Auth |
+  |---|---|---|---|
+  | `auth` | `internal.user-api` | `${INTERNAL_API_URL}` = `…/external/internal/v1` | subscription key |
+  | `auth` | `internal.user-ms.api` | `${INTERNAL_MS_USER_API_URL}` = `…/internal/user` | subscription key |
+  | `user-cdc` | `client.internal.delegation-api` | `${INTERNAL_API_URL}` | subscription key |
+  | `user-cdc` | `client.internal.user-api` | `${INTERNAL_API_URL}` | subscription key |
+  | `user-cdc` | `client.internal.user-group-api` | `${INTERNAL_API_URL}` | subscription key |
+
+  These go **through APIM** and authenticate with `Ocp-Apim-Subscription-Key`, not a JWT. Two distinct
+  problems, one of which is live today:
+
+  1. *Present-tense data leak.* `TenantValidationFilter` returned early whenever there was no JWT issuer,
+     so it never set `TenantContext`. `CurrentTenantProvider.currentTenantId()` then returned empty and
+     every `tenantScoped(...)` call fell through to the unscoped query. So these five clients — including
+     the **login path**, `auth` looking a user up in `user-ms` — read and wrote across **both tenants**.
+     Fixed: the filter now scopes the request from a usable `X-Tenant-Id` when there is no JWT. It still
+     never *rejects* unauthenticated requests (public and health endpoints must stay reachable), so the
+     change is strictly additive. Trusting the header is safe only because APIM overrides it
+     unconditionally on every request it forwards, and a service is not reachable from outside the
+     private network without passing through APIM.
+  2. *Future 403.* Adding `X-Tenant-Id` in the callers' header factories would have been **useless** —
+     APIM discards it. And once the tenant policy is applied to the APIs serving `external/internal/v1`
+     and `internal/user`, these calls resolve to `default_tenant_id`, i.e. **403 fail-closed**: a live
+     breakage of login, not a soft degradation.
 
   Widening `default_tenant_id` to cover it would reintroduce exactly the silent fallback point 2 above
   removed. Instead the module now takes **`service_caller_tenants`**, a map of APIM subscription id →
@@ -138,13 +153,19 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   *(calling service, tenant)* pair. `default_tenant_id` is now the last resort, for non-browser traffic
   that genuinely cannot be enumerated.
 
-  Still open: the API that serves `external/internal/v1` is **not** declared through this module in this
-  repo, so the mapping cannot yet be applied to it. Two options, to decide before `user-cdc` is converted
-  in sub-task 7 — (a) bring that API under `_modules/apim_api` and populate `service_caller_tenants`, or
-  (b) re-point `user-cdc`'s three internal clients at the callees' private DNS names with a JWT, matching
-  the pattern the other services already use, which removes APIM from the path entirely. (b) is more
-  consistent with the rest of the estate; (a) is smaller. Note `delegation-cdc` was checked and is **not**
-  affected — its only outbound client is an `EventHubRestClient`.
+  Still open: the APIs serving `external/internal/v1` and `internal/user` are **not** declared through
+  this module in this repo, so the mapping cannot yet be applied to them. Two options, to decide before
+  `auth` or `user-cdc` are converted in sub-task 7 — (a) bring those APIs under `_modules/apim_api` and
+  populate `service_caller_tenants`, or (b) re-point the five clients at the callees' private DNS names
+  with a JWT, matching the pattern the rest of the estate already uses, which removes APIM from the path
+  entirely. (b) is more consistent and is what `auth`→`iam` already does in the same codebase; (a) is
+  smaller. Note `delegation-cdc` was checked and is **not** affected — its only outbound client is an
+  `EventHubRestClient` — and `dashboard-bff`'s subscription-key interceptor targets the external PagoPA
+  backoffice, not a tenant-scoped selfcare API.
+
+  Because the filter lives in `libs/selfcare-sdk-security`, which every consumer pins at `0.2.3`, the fix
+  reaches the services only once that library is republished. This follows the same in-place practice as
+  the commit that first added the filter (`72de5545d`), which also did not bump the version.
 
 ### 3. `auth` microservice: tenant claim issuance (OneIdentity flow)
 - **Maps to:** SELC-4
