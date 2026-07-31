@@ -123,6 +123,49 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** Single documented source of truth referenced by sub-tasks 1–8; no mapping data
   duplicated ad hoc per microservice.
 - **Depends on:** none directly, but should be resolved early since sub-tasks 1–8 consume it.
+- **Status: implemented (registry and consumption mechanism; two dimensions intentionally empty).**
+  **Decision: the same registry as Step 0**, not a second one. `local.tenant_data_isolation` lives in
+  `infra/resources/_modules/local-env/locals.tf` directly next to `local.tenant_frontend_origins` /
+  `local.tenant_ids`, so one file declares everything a tenant *is* — its frontend origin (routing,
+  Step 0) and its data-layer resources (Step 1). A second registry would have made it possible for
+  the two to disagree about which tenants exist.
+  - **What the registry holds, per tenant:** `cosmos_account_name`, `cosmos_resource_group_name`,
+    `cosmos_connection_string_secret_name`, `storage_account_infix`, `storage_container_suffix`,
+    `personal_data_vault_tenant`, `email_sender_domain`. Values are the names the existing
+    `-ar`/`-pnpg` stacks already use (`selc-<e>-cosmosdb-mongodb-account` vs
+    `selc-<e>-weu-pnpg-cosmosdb-mongodb-account`; storage accounts `sc<e><loc>ar…st01` vs
+    `sc<e><loc>pnpg…st01`), so this is a re-declaration of current infrastructure, not a new naming
+    scheme. `local.mongo_db` picks one of the two by deployment folder; the registry exposes both
+    unconditionally, because a consolidated deployment serves both tenants and can no longer pick by
+    folder.
+  - **Secrets stay out.** The registry carries the Key Vault secret *name* of a connection string,
+    never its value (`Step_1/SECURITY.md`, secret handling). PNPG's entry uses a suffixed name
+    (`mongodb-connection-string-pnpg`) because after consolidation both tenants' secrets live in the
+    surviving stack's single Key Vault, where the bare name is already taken by AR.
+  - **`personal_data_vault_tenant` and `email_sender_domain` are `null` on purpose.** The vault
+    provider (SELC-10.3) and the per-tenant sender domain table (SELC-11.3) are still open, and
+    guessing a value would be exactly the silent default SELC-10.2/SELC-11.2 forbid. Reading a null
+    dimension throws. Filling them in later is a change to this map alone, with no application code
+    change.
+  - **Application side:** `TenantDataIsolationRegistry` (`libs/selfcare-sdk-security`) parses the map
+    from one env var (`SELFCARE_TENANT_DATA_ISOLATION` → `selfcare.tenant.data-isolation`) and is
+    injectable via `TenantDataIsolationRegistryProducer`. Every lookup is fail-closed: unknown tenant,
+    tenant missing from the registry, `null` tenant, or undecided dimension all raise
+    `UnresolvedTenantMappingException` instead of returning a fallback (SELC-8.4, SELC-9.4, SELC-10.2,
+    SELC-11.2). Lookups take the tenant already validated upstream (`TenantContext`); the registry never
+    derives one itself (SELC-8.5, SELC-9.5). Unknown JSON properties are ignored so a new dimension can
+    be rolled out to services one at a time; a malformed payload or an unknown tenant key fails at
+    startup, since that means the registry and the `TenantId` enum disagree.
+  - **Delivery:** `container_app_microservice` takes `tenant_data_isolation_json` and injects the env
+    var, so a consuming stack adds one line —
+    `tenant_data_isolation_json = module.local.config.tenant_data_isolation_json` — and never a literal
+    map. Deliberately **not** yet added to the ~40 existing app stacks: injecting it into services that
+    do not read it yet would roll every container app revision for no behavioural gain. Sub-tasks 2–8
+    add the line to the stacks they touch.
+  - **Not covered:** the Spring Boot apps (`institution-ms`, `user-group-ms`, `external-api`,
+    `dashboard-bff`, `registry-proxy`, `onboarding-bff`) do not depend on `selfcare-sdk-security` and
+    mirror its tenant classes instead. The mapping *data* stays single-sourced (same env var, same
+    Terraform map), but a Spring-side reader is still to be written by the first sub-task that needs one.
 
 ### 10. Data migration / backfill for pre-existing single-tenant data
 - **Maps to:** Open Question (migration/backfill approach)
@@ -149,7 +192,9 @@ authorization model beyond tenant scoping.
 - Per-microservice Azure Storage isolation model assignment (SELC-9.6).
 - Personal data vault provider/API contract and full integrating-service list (SELC-10.3).
 - Full list of microservices sending tenant-facing email beyond `institution-send-mail-scheduler` (SELC-11.3).
-- Shared source of truth for all tenant mappings (Cosmos DB, Storage, vault, email) — same registry as Step 0
-  or separate.
+- ~~Shared source of truth for all tenant mappings (Cosmos DB, Storage, vault, email) — same registry as Step 0
+  or separate.~~ **Resolved (sub-task 9):** same registry as Step 0, `local.tenant_data_isolation` in
+  `infra/resources/_modules/local-env/locals.tf`, read by `TenantDataIsolationRegistry`. The vault and email
+  dimensions are declared but left `null` until the two blockers above are closed.
 - Migration/backfill approach for pre-existing single-tenant data.
 - Regulatory/data-residency constraints that may force a specific isolation model per tenant.

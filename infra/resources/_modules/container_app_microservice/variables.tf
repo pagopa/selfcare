@@ -105,6 +105,12 @@ variable "app_settings" {
   }))
 }
 
+variable "tenant_data_isolation_json" {
+  type        = string
+  default     = null
+  description = "Per-tenant data-layer registry (Cosmos DB account, Storage naming, personal data vault, email sender domain) serialized as JSON, i.e. module.local.config.tenant_data_isolation_json. Injected as the SELFCARE_TENANT_DATA_ISOLATION environment variable and parsed by TenantDataIsolationRegistry in libs/selfcare-sdk-security. Non-secret routing data only: credentials appear here as Key Vault secret NAMES, never as values. Set it from module.local rather than writing a literal map, so the registry stays defined once (apps/docs/Multitenant/Step_1/EPIC.md sub-task 9). Leaving it null makes the service reject every tenant-scoped data lookup, which is the intended fail-closed behaviour, not a silent single-tenant mode."
+}
+
 variable "secrets_names" {
   type        = map(string)
   description = "KeyVault secrets to get values from <env,secret-ref>"
