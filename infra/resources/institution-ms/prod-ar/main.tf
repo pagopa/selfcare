@@ -43,7 +43,7 @@ data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
 }
 
 data "azurerm_user_assigned_identity" "delegations_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
@@ -257,20 +257,23 @@ locals {
   ]
 
   secrets_names_institution_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"      = "appinsights-connection-string"
-    "MONGODB_CONNECTION_URI"                     = "mongodb-connection-string"
-    "SMTP_USR"                                   = "smtp-usr"
-    "SMTP_PSW"                                   = "smtp-psw"
-    "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL"   = "party-test-institution-email"
-    "USER_REGISTRY_API_KEY"                      = "user-registry-api-key"
-    "JWT_TOKEN_PUBLIC_KEY"                       = "jwt-public-key"
-    "AWS_SES_ACCESS_KEY_ID"                      = "aws-ses-access-key-id"
-    "AWS_SES_SECRET_ACCESS_KEY"                  = "aws-ses-secret-access-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"    = "appinsights-connection-string"
+    "MONGODB_CONNECTION_URI"                   = "mongodb-connection-string"
+    "SMTP_USR"                                 = "smtp-usr"
+    "SMTP_PSW"                                 = "smtp-psw"
+    "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
+    "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
+    "JWT_TOKEN_PUBLIC_KEY"                     = "jwt-public-key"
+    "AWS_SES_ACCESS_KEY_ID"                    = "aws-ses-access-key-id"
+    "AWS_SES_SECRET_ACCESS_KEY"                = "aws-ses-secret-access-key"
   }
 }
 
 module "container_app_institution_ms" {
   source = "../../_modules/container_app_microservice"
+
+  tenant_data_isolation_json   = module.local.config.tenant_data_isolation_json
+  strict_tenant_data_isolation = module.local.config.strict_tenant_data_isolation
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name

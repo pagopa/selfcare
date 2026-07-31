@@ -28,8 +28,10 @@ Only the databases and collections whose entities declare a `tenantId` field:
 | `selcWebhook` | `webhooks`, `webhookNotifications` |
 
 The product catalogue database is deliberately excluded: product definitions are global and shared
-between tenants, so tagging them would be wrong rather than merely useless. Collections listed above
-but absent from the host being migrated are reported as skipped, not as failures.
+between tenants, so tagging them would be wrong rather than merely useless. An expected collection
+that is absent is a failure by default: otherwise a wrong or inaccessible host could verify
+successfully without inspecting data. A collection known to be intentionally absent must be named
+explicitly with `--allow-missing`.
 
 ## Safety properties
 
@@ -37,6 +39,14 @@ but absent from the host being migrated are reported as skipped, not as failures
 * **Never reassigns.** Only documents *without* a `tenantId` are updated, so a document already
   attributed to a tenant is left alone. Re-running the script, or running it for the wrong tenant
   after a correct run, cannot move data across tenants.
+* **Validates the account before connecting.** `--account-name` must exactly match the account in
+  `MONGO_HOST`, and that account name must belong to `--tenant` according to the platform naming
+  convention (`...-pnpg-cosmosdb-mongodb-account` for PNPG, the non-PNPG form for AR).
+* **Fails before writing on inconsistent data.** If any inspected document already has a non-null
+  `tenantId` different from the requested tenant, the whole run is rejected and no collection is
+  modified.
+* **Verifies real coverage.** Collection discovery errors, unexpected missing collections and a run
+  that inspects zero collections all fail; they cannot produce a successful `--verify`.
 * **Interruptible.** Each collection converges independently; re-running resumes where it stopped.
 
 ## Usage
@@ -48,15 +58,16 @@ mislabelled database.
 
 ```bash
 export MONGO_HOST="<connection string of the tenant's mongo/cosmos account>"
+ACCOUNT_NAME="selc-d-cosmosdb-mongodb-account"
 
 # 1. See what would be tagged
-python3 backfill_tenant_id.py --tenant AR
+python3 backfill_tenant_id.py --tenant AR --account-name "$ACCOUNT_NAME"
 
 # 2. Write
-python3 backfill_tenant_id.py --tenant AR --apply
+python3 backfill_tenant_id.py --tenant AR --account-name "$ACCOUNT_NAME" --apply
 
-# 3. Confirm nothing is left untagged
-python3 backfill_tenant_id.py --tenant AR --verify
+# 3. Confirm nothing is untagged or attributed to another tenant
+python3 backfill_tenant_id.py --tenant AR --account-name "$ACCOUNT_NAME" --verify
 ```
 
 Run the three steps once per tenant, against that tenant's own connection string.
@@ -64,11 +75,16 @@ Run the three steps once per tenant, against that tenant's own connection string
 ## Options
 
 * `--tenant AR|PNPG` (required) — tenant owning the data reachable through `MONGO_HOST`.
+* `--account-name <name>` (required) — expected Cosmos account. It must match both `MONGO_HOST` and
+  the selected tenant; obtain it from `module.local.config.tenant_data_isolation`.
 * `--database <name>` — restrict to one database; repeat the flag for several.
+* `--allow-missing <database.collection>` — explicitly allow one expected collection to be absent;
+  repeatable. This is deliberately per collection rather than a broad “ignore missing” switch.
 * `--apply` — perform the updates.
-* `--verify` — report only, exiting non-zero while untagged documents remain. This is the gate for
-  dropping the `or tenantId is null` branch from the services: it must exit `0` for both tenants in
-  an environment before that environment's reads can be made strict.
+* `--verify` — report only, exiting non-zero while untagged, mismatched, inaccessible or unexpectedly
+  absent data remains. This is the gate for dropping the `or tenantId is null` branch from the
+  services: it must exit `0` for both tenants in an environment before that environment's reads can
+  be made strict.
 
 Requires `pymongo` (`pip install pymongo`).
 

@@ -13,7 +13,9 @@
 
 ## Providers
 
-No providers.
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
 
 ## Modules
 
@@ -27,7 +29,12 @@ No providers.
 
 ## Resources
 
-No resources.
+| Name | Type |
+| ---- | ---- |
+| [azurerm_storage_account.product_storage](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_account) | data source |
+| [azurerm_user_assigned_identity.fd_eventhub_sender_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
+| [azurerm_user_assigned_identity.product_storage_blob_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
+| [azurerm_user_assigned_identity.users_eventhub_sender_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 
 ## Inputs
 

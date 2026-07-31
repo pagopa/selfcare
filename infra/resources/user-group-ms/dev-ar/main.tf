@@ -92,6 +92,9 @@ locals {
 module "container_app_user_group_ms" {
   source = "../../_modules/container_app_microservice"
 
+  tenant_data_isolation_json   = module.local.config.tenant_data_isolation_json
+  strict_tenant_data_isolation = module.local.config.strict_tenant_data_isolation
+
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name
   container_app                  = module.local.config.container_app
@@ -105,4 +108,3 @@ module "container_app_user_group_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
 }
-

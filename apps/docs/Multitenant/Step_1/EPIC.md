@@ -81,6 +81,9 @@ authorization model beyond tenant scoping.
   keep the strict build out of PROD until PROD had been migrated, holding every unrelated change behind a data
   migration.
   Each environment turns strict when its own `--verify` is clean, and reverts without a deployment.
+  Both the registry JSON and the strict switch are wired from `module.local.config` into all 46
+  environment-specific Container App module invocations for these ten services; changing the
+  environment local therefore reaches every chokepoint instead of merely changing an unused output.
   **Remaining:** run the backfill everywhere, flip the flag everywhere, then delete both the flag and the
   `or tenantId is null` branch — only after that last step is this enforcement by construction rather than by
   configuration. The unscoped path for callers with no resolvable tenant (schedulers, consumers) is untouched
@@ -274,12 +277,17 @@ authorization model beyond tenant scoping.
   enforcement, until the backfill has run in each environment. `scripts/backfill_tenant_id.py` (see
   `scripts/README.md`) performs it across the eight tenant-scoped databases, taking the tenant as an explicit
   argument because it is the connection string — one Cosmos account per tenant — that decides which tenant's
-  data is being tagged. It only ever writes to documents that have no `tenantId`, so it cannot reassign an
-  already-attributed document and is safe to re-run or interrupt; it is dry-run unless `--apply` is passed.
-  Its `--verify` mode is the gate for sub-task 2: it must exit `0` for both tenants in an environment before
-  that environment's reads can be made strict. The product catalogue database is deliberately excluded, as
-  product definitions are global rather than tenant-owned. No storage/database move is needed, since no
-  service selected the per-tenant database or per-tenant account model (sub-tasks 3, 6).
+  data is being tagged. The expected account name is also mandatory: it must match both `MONGO_HOST` and the
+  tenant-specific platform naming convention before the script connects. It only ever writes to documents
+  whose `tenantId` is missing or explicitly null, and a preflight scan aborts the whole run before any write
+  if a non-null value belongs to another/unknown tenant. Collection discovery errors, unexpected missing
+  collections and zero inspected collections are failures rather than verification success; intentional
+  absence is declared per collection with `--allow-missing`. The script remains safe to re-run or interrupt
+  and is dry-run unless `--apply` is passed. Its `--verify` mode is the gate for sub-task 2: it must exit `0`
+  for both tenants in an environment before that environment's reads can be made strict. The product catalogue
+  database is deliberately excluded, as product definitions are global rather than tenant-owned. No
+  storage/database move is needed, since no service selected the per-tenant database or per-tenant account
+  model (sub-tasks 3, 6).
 
 ### 11. Security review and audit logging for data-layer tenant enforcement
 - **Maps to:** `SECURITY.md` (all sections)

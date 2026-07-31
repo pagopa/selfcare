@@ -31,7 +31,7 @@ data "azurerm_user_assigned_identity" "product_storage_table_identity" {
 }
 
 data "azurerm_user_assigned_identity" "delegations_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-delegations-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
@@ -74,14 +74,14 @@ locals {
       value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
     },
     {
-      name = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
     }
   ]
 
   secrets_names_delegation_cdc = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"      = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"                  = "mongodb-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
   }
 
 }
@@ -89,19 +89,22 @@ locals {
 module "container_app_delegation_cdc" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                             = module.local.config.env_short
-  resource_group_name                   = module.local.config.ca_resource_group_name
-  container_app                         = module.local.config.container_app
-  container_app_name                    = "selc-${module.local.config.env_short}-delegation-cdc"
-  container_app_environment_name        = module.local.config.container_app_environment_name
-  image_name                            = "selfcare-delegation-cdc"
-  image_tag                             = var.image_tag
-  app_settings                          = local.app_settings_delegation_cdc
-  secrets_names                         = local.secrets_names_delegation_cdc
-  key_vault_resource_group_name         = module.local.config.key_vault_resource_group_name
-  key_vault_name                        = module.local.config.key_vault_name
-  probes                                = module.local.config.quarkus_health_probes
-  tags                                  = module.local.config.tags
+  tenant_data_isolation_json   = module.local.config.tenant_data_isolation_json
+  strict_tenant_data_isolation = module.local.config.strict_tenant_data_isolation
+
+  env_short                      = module.local.config.env_short
+  resource_group_name            = module.local.config.ca_resource_group_name
+  container_app                  = module.local.config.container_app
+  container_app_name             = "selc-${module.local.config.env_short}-delegation-cdc"
+  container_app_environment_name = module.local.config.container_app_environment_name
+  image_name                     = "selfcare-delegation-cdc"
+  image_tag                      = var.image_tag
+  app_settings                   = local.app_settings_delegation_cdc
+  secrets_names                  = local.secrets_names_delegation_cdc
+  key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
+  key_vault_name                 = module.local.config.key_vault_name
+  probes                         = module.local.config.quarkus_health_probes
+  tags                           = module.local.config.tags
   additional_user_assigned_identity_ids = [
     data.azurerm_user_assigned_identity.product_storage_table_identity.id,
     data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.id
