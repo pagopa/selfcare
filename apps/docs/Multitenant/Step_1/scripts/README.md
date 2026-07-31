@@ -83,8 +83,9 @@ SELFCARE_TENANT_STRICT_DATA_ISOLATION=true
 ```
 
 (property `selfcare.tenant.strict-data-isolation`; the same variable name works for both the Quarkus and the
-Spring services). It drops the `or tenantId is null` branch in `document-ms`, `iam`, `user-ms`,
-`onboarding-ms`, `user-group-ms`, `institution-ms` and `delegation-cdc`.
+Spring services). It drops the `or tenantId is null` branch in `auth`, `document-ms`, `iam`,
+`user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`, `delegation-cdc` and `user-cdc` — every
+service that has one, so that an environment flipping the variable becomes strict everywhere at once.
 
 It is a flag rather than a code deletion because the backfill lands at a different time in each environment:
 a hardcoded switch would keep the strict build out of PROD until PROD had been migrated. Each environment

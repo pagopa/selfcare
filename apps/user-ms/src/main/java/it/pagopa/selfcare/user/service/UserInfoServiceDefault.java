@@ -9,6 +9,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.List;
 
@@ -24,20 +25,32 @@ public class UserInfoServiceDefault implements UserInfoService {
     private final CurrentTenantProvider currentTenantProvider;
 
     /**
+     * Whether untagged documents are still treated as belonging to the current tenant. Configuration
+     * rather than a code constant because the backfill runs at a different time in each environment
+     * (Step_1/EPIC.md sub-tasks 2 and 10); both the flag and the null branch must be deleted once
+     * every environment runs strict.
+     */
+    @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+    boolean strictTenantIsolation;
+
+    /**
      * Restricts a lookup to the tenant validated for the current request.
      *
      * <p>Migration-phase semantics, matching the rest of the service: records written before the
-     * discriminator existed carry no tenant and stay visible to both, and a call with no resolvable
-     * tenant is left unscoped rather than made unsatisfiable.
+     * discriminator existed carry no tenant and stay visible to both until {@code
+     * selfcare.tenant.strict-data-isolation} is turned on after the backfill, and a call with no
+     * resolvable tenant is left unscoped rather than made unsatisfiable.
      */
     private Document tenantScoped(Document query) {
         return currentTenantProvider
                 .currentTenantId()
-                .map(tenant -> new Document("$and", List.of(
-                        query,
-                        new Document("$or", List.of(
-                                new Document(TENANT_ID_FIELD, tenant),
-                                new Document(TENANT_ID_FIELD, null))))))
+                .map(tenant -> strictTenantIsolation
+                        ? new Document("$and", List.of(query, new Document(TENANT_ID_FIELD, tenant)))
+                        : new Document("$and", List.of(
+                                query,
+                                new Document("$or", List.of(
+                                        new Document(TENANT_ID_FIELD, tenant),
+                                        new Document(TENANT_ID_FIELD, null))))))
                 .orElse(query);
     }
 

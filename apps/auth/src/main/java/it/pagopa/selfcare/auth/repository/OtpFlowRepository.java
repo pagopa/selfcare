@@ -9,13 +9,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import org.bson.Document;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * Data-access chokepoint for OTP flows.
  *
  * <p>Auth issues sessions before {@code TenantContext} exists, so callers pass the tenant resolved
  * fail-closed from {@code X-Tenant-Id}. During migration, tenant-scoped reads also match legacy
- * records with no {@code tenantId}; the null branch MUST be dropped after the backfill.
+ * records with no {@code tenantId}; that branch is dropped by {@code
+ * selfcare.tenant.strict-data-isolation} once the backfill has run.
  */
 @ApplicationScoped
 public class OtpFlowRepository {
@@ -25,11 +27,23 @@ public class OtpFlowRepository {
   private static final String USER_ID_FIELD = OtpFlow.Fields.userId.name();
   private static final String CREATED_AT_FIELD = OtpFlow.Fields.createdAt.name();
 
-  private static Document tenantScoped(Document filter, String tenantId) {
+  /**
+   * Whether untagged records are still treated as belonging to the given tenant. Configuration
+   * rather than a code constant because the backfill runs at a different time in each environment
+   * (Step_1/EPIC.md sub-tasks 2 and 10); both the flag and the null branch must be deleted once
+   * every environment runs strict.
+   */
+  @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+  boolean strictTenantIsolation;
+
+  private Document tenantScoped(Document filter, String tenantId) {
     if (tenantId == null || tenantId.isBlank()) {
       // Migration-phase concession for non-request callers/tests: preserve pre-multitenant
       // behaviour when no tenant can be resolved. Auth endpoints pass a mandatory tenant.
       return filter;
+    }
+    if (strictTenantIsolation) {
+      return new Document("$and", List.of(filter, new Document(TENANT_ID_FIELD, tenantId)));
     }
     return new Document(
         "$and",

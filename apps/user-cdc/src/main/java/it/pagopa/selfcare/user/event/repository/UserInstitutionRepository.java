@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bson.Document;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.*;
 
@@ -28,6 +29,15 @@ import static java.util.function.Predicate.not;
 public class UserInstitutionRepository {
     private static final List<OnboardedProductState> VALID_PRODUCT_STATE = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING, OnboardedProductState.TOBEVALIDATED);
     private static final String TENANT_ID_FIELD = "tenantId";
+
+    /**
+     * Whether untagged documents are still treated as belonging to the event's tenant. Configuration
+     * rather than a code constant because the backfill runs at a different time in each environment
+     * (Step_1/EPIC.md sub-tasks 2 and 10); both the flag and the null branch must be deleted once
+     * every environment runs strict.
+     */
+    @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+    boolean strictTenantIsolation;
 
     private final UserMapper userMapper;
     private final CloningMapper cloningMapper;
@@ -265,8 +275,11 @@ public class UserInstitutionRepository {
             // unscoped lookup instead of creating an unsatisfiable query. This is not a security boundary.
             return query;
         }
-        // Migration phase: tenantId == null keeps pre-backfill documents visible. Drop the null
-        // branch once every source and mirror collection has been backfilled.
+        if (strictTenantIsolation) {
+            return query.append(TENANT_ID_FIELD, tenantId);
+        }
+        // Migration phase: tenantId == null keeps pre-backfill documents visible. The null branch
+        // goes away when selfcare.tenant.strict-data-isolation is turned on after the backfill.
         return query.append("$or", List.of(new Document(TENANT_ID_FIELD, tenantId), new Document(TENANT_ID_FIELD, null)));
     }
 

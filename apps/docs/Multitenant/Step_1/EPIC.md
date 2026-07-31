@@ -74,10 +74,12 @@ authorization model beyond tenant scoping.
   request context. Reads still match `tenantId = ? or tenantId is null` by default, so pre-existing untagged
   documents stay visible during the migration window. That branch is now controlled by
   `selfcare.tenant.strict-data-isolation` (env var `SELFCARE_TENANT_STRICT_DATA_ISOLATION`, default `false`)
-  at all eight chokepoints — `document-ms`, `iam` (entity and aggregation paths), `user-ms`, `onboarding-ms`,
-  `user-group-ms`, `institution-ms`, `delegation-cdc` (both repositories). It is a flag rather than a deletion
-  because the backfill lands at a different time in each environment: a hardcoded switch would keep the strict
-  build out of PROD until PROD had been migrated, holding every unrelated change behind a data migration.
+  at all fourteen chokepoints, across every service that has one: `auth`, `document-ms`, `iam` (entity and
+  aggregation paths), `user-ms` (query builder and two service-level lookups), `onboarding-ms`,
+  `user-group-ms`, `institution-ms`, `delegation-cdc` (both repositories) and `user-cdc`. It is a flag rather
+  than a deletion because the backfill lands at a different time in each environment: a hardcoded switch would
+  keep the strict build out of PROD until PROD had been migrated, holding every unrelated change behind a data
+  migration.
   Each environment turns strict when its own `--verify` is clean, and reverts without a deployment.
   **Remaining:** run the backfill everywhere, flip the flag everywhere, then delete both the flag and the
   `or tenantId is null` branch — only after that last step is this enforcement by construction rather than by
