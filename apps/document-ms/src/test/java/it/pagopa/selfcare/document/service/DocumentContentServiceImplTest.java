@@ -2118,6 +2118,55 @@ class DocumentContentServiceImplTest {
     }
 
     @Test
+    void deleteUserAttachments_shouldRollbackAzureMove_whenDbUpdateFailsConsistently() {
+        // Arrange: one user attachment, Azure move succeeds, Mongo update keeps failing → rollback is triggered.
+        Document a1 = buildUserAttachment("doc-1",
+                "parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf", "a1.pdf");
+
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(a1)));
+
+        List<File> generatedFiles = new ArrayList<>();
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(inv -> {
+            File tmp = createTempPdf();
+            generatedFiles.add(tmp);
+            return tmp;
+        });
+
+        // Persistent DB failure to exhaust the retry policy and trigger the rollback path.
+        when(documentRepository.updateAttachmentPathById(eq("doc-1"), anyString()))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Fatal DB Error")));
+
+        // Act
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        // Assert: outer flow recovers gracefully, failure is tracked, success telemetry is not emitted.
+        assertEquals("User attachments deletion skipped due to error", result);
+        verify(telemetryService).trackUserAttachmentsDeleteFailed(eq(ONBOARDING_ID), anyString());
+        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyList());
+
+        // Rollback contract: 1 initial move + 1 rollback move → 2 retrieve / upload / remove interactions on Azure.
+        verify(azureBlobClient, times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, times(2)).removeFile(anyString());
+
+        // Rollback re-uploads back to the original path and removes the moved (deleted-path) blob.
+        verify(azureBlobClient).uploadFilePath(
+                eq("parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf"), any(byte[].class));
+        verify(azureBlobClient).removeFile(
+                eq("parties/deleted/" + ONBOARDING_ID + "/attachments/a1.pdf"));
+
+        // No temp files must be left behind by the rollback helper.
+        for (File f : generatedFiles) {
+            assertFalse(f.exists(),
+                    "temporary file " + f.getName() + " should have been removed by the rollback path");
+        }
+    }
+
+    @Test
     void deleteUserAttachments_shouldRecoverGracefully_whenRepositoryFails() {
         when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
         when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
