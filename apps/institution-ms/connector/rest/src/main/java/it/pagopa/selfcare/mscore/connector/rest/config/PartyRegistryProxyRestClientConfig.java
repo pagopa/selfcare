@@ -5,6 +5,6 @@ import it.pagopa.selfcare.commons.connector.rest.interceptor.AuthorizationHeader
 import it.pagopa.selfcare.commons.connector.rest.interceptor.PartyTraceIdInterceptor;
 import org.springframework.context.annotation.Import;
 
-@Import({RestClientBaseConfig.class, AuthorizationHeaderInterceptor.class, PartyTraceIdInterceptor.class})
+@Import({RestClientBaseConfig.class, AuthorizationHeaderInterceptor.class, TenantHeaderInterceptor.class, PartyTraceIdInterceptor.class})
 public class PartyRegistryProxyRestClientConfig {
 }

@@ -237,6 +237,46 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   from another repo); creating a brand-new shared module was weighed against duplicating ~150 lines
   per app and the latter was chosen to avoid the release/versioning overhead of a new cross-app
   library for a 3-consumer, single-purpose filter.
+  **Outbound propagation sweep — the enforcement filter had made every internal call fail.** Enforcing
+  the header on inbound requests is only half of it: the filter rejects with **400** any request that
+  carries a JWT but no `X-Tenant-Id`, and *no* caller in the monorepo was sending it. A full audit of
+  every outbound code path (`ClientHeadersFactory` implementations on Quarkus, Feign
+  `RequestInterceptor`/`@Import` configurations on Spring, and the multi-module `web`/`connector`
+  layouts that the earlier scans had missed) produced this map, fixed in full:
+  - **`onboarding-ms` → 5 clients** and **`onboarding-functions` → `document-ms`**: covered under
+    sub-task 6 (machine token minted per-tenant for the functions app).
+  - **`auth` → `iam`**: `IamMsHeadersFactory` sent the freshly minted session token with no header.
+    `TokenContext` now carries the tenant that went into that token's `tenant_id` claim, and the
+    header is derived from it — the header can never disagree with the claim it is validated against.
+  - **`user-ms` → `onboarding-ms`**: now propagates the validated `TenantContext` (new
+    `CurrentTenantProvider`, same pattern as `onboarding-ms`), never the raw inbound header.
+  - **`dashboard-bff` and `external-api` → 15 internal Feign clients**: new `TenantHeaderInterceptor`
+    reading the request attribute set by each app's `TenantValidationFilter`, imported per client
+    alongside `AuthorizationHeaderInterceptor`. Deliberately **not** a `@Component`: a globally
+    registered Feign interceptor attaches to every client, which would leak the internal tenant
+    identifier to third parties (user-registry, PagoPA back-office). The `registry-proxy` clients are
+    included — that service acquired the filter in this sub-task, so it is internal, not third-party.
+  - **`institution-ms` → `user-ms`, `registry-proxy`** (3 Feign clients): same interceptor, placed in
+    the `connector/rest` module. It matches the attribute as an `Enum` rather than importing
+    `TenantId`, because that type lives in the `web` module and the module dependency runs the other
+    way; an enum still rules out a `String` planted under the same attribute name.
+  - **`institution-send-mail-scheduler` → `user-ms`** and **`onboarding-cdc` → `registry-proxy`**:
+    these have no inbound request and authenticate with a pre-provisioned `JWT_BEARER_TOKEN`. The
+    header is decoded **from that token's own `tenant_id` claim** (`MachineTokenTenantResolver`)
+    rather than from a separate config value, which could drift out of sync with the token and turn
+    every call into a mismatch rejection. If the provisioned token has no claim, no header is sent:
+    the receiving service would reject for the missing claim anyway, and a fabricated header would
+    only mask that the token must be re-issued. **Ops action required before release: re-issue both
+    machine tokens with a `tenant_id` claim.**
+  - **Deliberately untouched, verified not to need it:** `user-cdc` and two of `auth`'s three clients
+    authenticate with `Ocp-Apim-Subscription-Key` and send no JWT, so the filter exempts them
+    (SELC-2.2); `onboarding-bff`'s Feign clients carry no `Authorization` interceptor at all;
+    `registry-proxy-runner` calls only Azure Search.
+  - Tests: 5 new unit suites (18 cases) plus the existing ones, all suites green — `auth` 170,
+    `institution-send-mail-scheduler` 13, `onboarding-cdc` 28, `dashboard-bff` 383,
+    `external-api` 183, `institution-ms` 429. `user-ms`'s suite has a pre-existing `PartyRole`
+    classloader linkage failure, confirmed identical on a stashed baseline; its new test passes when
+    run on its own.
 
 ### 6. Per-service tenant data isolation
 - **Maps to:** SELC-7.2, SELC-7.3

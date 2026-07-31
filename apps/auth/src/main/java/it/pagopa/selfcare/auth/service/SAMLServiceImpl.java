@@ -85,7 +85,11 @@ public class SAMLServiceImpl implements SAMLService {
                 sessionService
                     .generateSessionTokenInternal(userClaims)
                     .onItem()
-                    .transform(token -> tokenContext.setToken(token))
+                    .transform(
+                        token -> {
+                          tokenContext.setTenantId(tenantId);
+                          return tokenContext.setToken(token);
+                        })
                     .onItem()
                     .transformToUni(token -> saveUser(userClaims.getEmail(), tenantId)))
         .onItem()
