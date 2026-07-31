@@ -17,6 +17,16 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
     private static final List<String> CONTRACT_TYPES = List.of(INSTITUTION.name(), USER.name());
     private static final String ONBOARDING_AND_TYPES_FILTER = "onboardingId = ?1 and type in ?2";
 
+    /**
+     * Step_1 SELC-8 migration-phase tenant filter: matches documents tagged for the given tenant
+     * plus documents written before the {@code tenantId} discriminator existed (untagged).
+     * <p>
+     * Once the backfill has tagged every pre-existing document, the {@code or tenantId is null}
+     * branch MUST be dropped so that untagged documents are rejected rather than shared.
+     */
+    private static final String TENANT_FILTER_P3 = "(tenantId = ?3 or tenantId is null)";
+    private static final String TENANT_FILTER_P2 = "(tenantId = ?2 or tenantId is null)";
+
     public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
                 contractSigned, contractFilename, LocalDateTime.now())
@@ -74,10 +84,15 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
      * Step_1 SELC-8.1/8.3: tenant-scoped variant of {@link #findByOnboardingId(String)}.
      * The tenant filter MUST always be the validated tenant from Step_0's {@code TenantContext},
      * never re-derived independently (SELC-8.5).
+     *
+     * <p><b>Migration phase:</b> documents written before the {@code tenantId} discriminator was
+     * introduced carry no tenant, and would otherwise become invisible to every tenant (breaking
+     * all reads). Until the backfill has run, untagged documents are therefore still matched — see
+     * {@code TENANT_FILTER_P3}.
      */
     public Uni<Document> findByOnboardingIdForTenant(String onboardingId, String tenantId) {
         return find(
-                "onboardingId = ?1 and type in ?2 and tenantId = ?3",
+                ONBOARDING_AND_TYPES_FILTER + " and " + TENANT_FILTER_P3,
                 Sort.by("createdAt").descending(),
                 onboardingId,
                 CONTRACT_TYPES,
@@ -87,11 +102,12 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
 
     /**
      * Step_1 SELC-8.1/8.3: tenant-scoped variant of {@code findById}. Returns empty (not the
-     * document) when the document exists but belongs to a different tenant, so callers cannot
+     * document) when the document exists but is tagged for a different tenant, so callers cannot
      * distinguish "not found" from "found for another tenant" (no cross-tenant existence leak).
+     * Same migration-phase caveat as {@link #findByOnboardingIdForTenant} applies.
      */
     public Uni<Document> findByIdForTenant(String id, String tenantId) {
-        return find("_id = ?1 and tenantId = ?2", id, tenantId).firstResult();
+        return find("_id = ?1 and " + TENANT_FILTER_P2, id, tenantId).firstResult();
     }
 
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {

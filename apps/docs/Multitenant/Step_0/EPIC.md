@@ -195,21 +195,34 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
     account, tenant discriminated at the container/path level** (extends `document-ms`'s existing per-purpose
     storage-account pattern) — no per-tenant storage account has been justified yet.
   - **`document-ms` proof-of-concept (implemented):**
-    - Added `tenantId` field to the `Document` Mongo entity (nullable, additive — no migration/backfill performed
-      yet; pre-existing documents will have `tenantId = null` until a backfill script runs, which is an explicit
-      open follow-up before this can be relied on in production).
+    - Added `tenantId` field to the `Document` Mongo entity (nullable, additive).
     - Added tenant-scoped repository queries `findByOnboardingIdForTenant`/`findByIdForTenant` (additive, existing
       non-tenant-scoped queries left untouched) and tenant-scoped service overloads
-      `getDocumentByOnboardingId(id, tenantId)` / `getDocumentById(id, tenantId)`, fail-closed: a document that
-      exists but belongs to a different tenant is indistinguishable from a genuinely missing one (no cross-tenant
-      existence leak).
+      `getDocumentByOnboardingId(id, tenantId)` / `getDocumentById(id, tenantId)`: a document tagged for a
+      different tenant is indistinguishable from a genuinely missing one (no cross-tenant existence leak).
+    - **Migration-phase read filter:** the tenant predicate is `(tenantId = ?N or tenantId is null)`, not a strict
+      equality. A strict filter would have made every pre-existing (untagged) document invisible to both tenants,
+      turning both GET endpoints into a blanket 404 the moment the filter shipped — a self-inflicted outage that
+      mock-based service tests could not detect. The `or tenantId is null` branch MUST be removed once the
+      backfill has tagged every document; until then untagged documents remain readable by both tenants, which is
+      the explicit, documented trade-off of the migration window.
+    - **Tenant tagging on write:** `CurrentTenantProvider` (new, app-local) reads the validated `TenantContext`
+      and degrades to an empty `Optional` instead of throwing when there is no active request scope
+      (`ContextNotActiveException` — scheduled jobs, CDC consumers). `DocumentServiceImpl` tags documents at
+      persist time (`buildDocument`, `persistDocumentForImport`) when a tenant is resolvable, and logs a warning
+      + stores the document untagged otherwise, since service-to-service write calls (notably from
+      `onboarding-ms`) do not propagate the tenant yet.
     - Wired `DocumentController`'s two `@Authenticated` GET endpoints (`/v1/documents/onboarding/{onboardingId}`,
       `/v1/documents/{id}` — the same ones covered by sub-task 5's `TenantValidationFilterTest`) to consume
       `TenantContext.getTenant()` (already populated by sub-task 5's filter) instead of re-deriving tenant, per
       SELC-8.5. Fails closed with `403` if, unexpectedly, no tenant was resolved.
-    - Added 4 new unit tests (tenant match / cross-tenant not-found) in `DocumentServiceImplTest`; updated
-      `DocumentControllerTest`/`TenantValidationFilterTest` mocks to the new tenant-scoped overloads. Full suite:
-      469/469 passing (was 465; +4 new tests, 0 regressions).
+    - Tests: 4 unit tests (tenant match / cross-tenant not-found) + 2 tagging tests (tenant applied on persist /
+      left untagged when unresolvable) in `DocumentServiceImplTest`, and a new `DocumentRepositoryTenantTest`
+      running the tenant-scoped queries against **real embedded MongoDB** (6 tests: same-tenant hit,
+      cross-tenant miss, legacy-untagged still readable — for both query methods). The real-Mongo test is
+      deliberate: the mock-based service tests pass regardless of whether the query matches any real data, so
+      they are structurally incapable of catching the "filter matches nothing" class of bug. Full suite:
+      **477/477 passing** (was 465 pre-sub-task-6; +12 new tests, 0 regressions).
   - **Remaining rollout (explicit follow-up, not done this iteration):** the other ~10 `DocumentRepository`
     methods (`updateContractFiles`, `updateAttachmentPathById`, `findAttachments`, `deleteDocument`, etc.) and the
     write/persist paths (`saveDocument`, `persistDocumentForImport`) are **not yet** tenant-scoped. Write paths are
@@ -217,8 +230,12 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
     those calls carry a forwardable tenant context — this needs investigation before tenantId can be safely set at
     persist time. The other 13 Mongo-using apps have not been touched at all; this proof-of-concept establishes the
     pattern (`TenantContext` injection + additive tenant-scoped query methods) to replicate per service.
-  - **Blockers:** backfill/migration strategy for pre-existing untagged documents; write-path tenant propagation
-    from `onboarding-ms`; per-service rollout beyond `document-ms` still outstanding.
+  - **Blockers / required before this can be tightened:** (1) backfill script tagging every pre-existing
+    document, after which the `or tenantId is null` branch must be dropped and the read filter becomes strictly
+    fail-closed; (2) tenant propagation on service-to-service write calls from `onboarding-ms`, without which
+    newly created documents keep landing untagged; (3) per-service rollout beyond `document-ms`. Until (1) and
+    (2) land, `document-ms` tenant isolation is **partial and must not be relied upon as a security boundary** —
+    it is additive defence, not enforcement.
 
 ### 7. Deployment consolidation (parallel-run migration)
 - **Maps to:** System purpose, SELC-5.3
