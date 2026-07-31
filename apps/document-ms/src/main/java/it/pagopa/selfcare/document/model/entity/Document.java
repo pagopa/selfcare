@@ -34,6 +34,9 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private String contractFilename;
     @Schema(description = "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION.")
     private String rootOnboardingId;
+    @Schema(description = "Step_1 SELC-8: tenant discriminator (AR/PNPG) resolved and validated per Step_0. " +
+            "Set at persist time from the validated request tenant; every read/query path MUST filter on it.")
+    private String tenantId;
     //@Indexed
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

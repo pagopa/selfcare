@@ -36,7 +36,7 @@ class TenantValidationFilterTest {
         @Claim(key = TenantConstants.TENANT_CLAIM, value = "AR")
       })
   void getDocumentByOnboardingId_withMatchingHeaderAndClaim_shouldReturnOk() {
-    when(documentService.getDocumentByOnboardingId("onboardingId"))
+    when(documentService.getDocumentByOnboardingId("onboardingId", "AR"))
         .thenReturn(Uni.createFrom().item(new Document()));
 
     given()
@@ -87,7 +87,7 @@ class TenantValidationFilterTest {
   @TestSecurity(user = "userJwt")
   @JwtSecurity(claims = {@Claim(key = "iss", value = "SPID")})
   void getDocumentByOnboardingId_hubSpidLoginTokenMissingClaim_defaultsToPnpg() {
-    when(documentService.getDocumentByOnboardingId("onboardingId"))
+    when(documentService.getDocumentByOnboardingId("onboardingId", "PNPG"))
         .thenReturn(Uni.createFrom().item(new Document()));
 
     given()

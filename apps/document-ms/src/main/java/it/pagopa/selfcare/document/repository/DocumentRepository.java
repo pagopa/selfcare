@@ -70,6 +70,30 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
         .firstResult();
     }
 
+    /**
+     * Step_1 SELC-8.1/8.3: tenant-scoped variant of {@link #findByOnboardingId(String)}.
+     * The tenant filter MUST always be the validated tenant from Step_0's {@code TenantContext},
+     * never re-derived independently (SELC-8.5).
+     */
+    public Uni<Document> findByOnboardingIdForTenant(String onboardingId, String tenantId) {
+        return find(
+                "onboardingId = ?1 and type in ?2 and tenantId = ?3",
+                Sort.by("createdAt").descending(),
+                onboardingId,
+                CONTRACT_TYPES,
+                tenantId)
+            .firstResult();
+    }
+
+    /**
+     * Step_1 SELC-8.1/8.3: tenant-scoped variant of {@code findById}. Returns empty (not the
+     * document) when the document exists but belongs to a different tenant, so callers cannot
+     * distinguish "not found" from "found for another tenant" (no cross-tenant existence leak).
+     */
+    public Uni<Document> findByIdForTenant(String id, String tenantId) {
+        return find("_id = ?1 and tenantId = ?2", id, tenantId).firstResult();
+    }
+
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
         return update("contractSigned = ?1", contractSignedPath)
                 .where(ONBOARDING_AND_TYPES_FILTER, onboardingId, CONTRACT_TYPES);

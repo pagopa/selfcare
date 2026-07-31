@@ -177,7 +177,48 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   model.
 - **Acceptance criteria:** No query path can return cross-tenant data; isolation model choice is documented per
   service.
-- **Depends on:** Sub-task 5. **Blockers:** final model choice per service still `TO BE DECIDED` (SELC-7.3).
+- **Depends on:** Sub-task 5.
+- **Status: inventory done, `document-ms` proof-of-concept implemented (read paths).**
+  - **Inventory (Cosmos DB / Mongo):** `auth`, `delegation-cdc`, `document-ms`, `iam`, `institution-send-mail-scheduler`,
+    `onboarding-cdc`, `onboarding-functions`, `onboarding-ms`, `product`, `product-cdc`, `user-cdc`, `user-group-cdc`,
+    `user-ms`, `webhook`, `user-group-ms` (Spring). **Chosen model: discriminator field** (`tenantId` on every
+    document) for all of them — lower retrofit risk than database-per-tenant, and no regulatory/privacy constraint
+    has been identified yet that would force stricter physical separation (`REQUIREMENTS.md` "Regulatory or privacy
+    constraints" is still `TO BE DECIDED`; revisit database-per-tenant if that changes).
+  - **Inventory (Azure Storage, source only):** `document-ms` (contracts/attachments — clearly tenant-scoped via
+    onboarding, **in scope**), `dashboard-bff` (institution logos — shared/uncertain tenant-partitioning, **TO BE
+    DECIDED**), `product` (contract templates — shared platform assets, **out of scope**, not per-tenant data),
+    `registry-proxy-runner` (public IPA/ANAC registry cache — **out of scope**, not tenant data, same rationale as
+    its sub-task-5 HTTP-surface exclusion). `product-cdc`/`user-cdc` use the shared
+    `selfcare-onboarding-sdk-azure-storage` lib for CDC archival (different usage pattern; inherits whatever tenant
+    marking exists upstream rather than an independent decision). **Chosen model where in scope: shared storage
+    account, tenant discriminated at the container/path level** (extends `document-ms`'s existing per-purpose
+    storage-account pattern) — no per-tenant storage account has been justified yet.
+  - **`document-ms` proof-of-concept (implemented):**
+    - Added `tenantId` field to the `Document` Mongo entity (nullable, additive — no migration/backfill performed
+      yet; pre-existing documents will have `tenantId = null` until a backfill script runs, which is an explicit
+      open follow-up before this can be relied on in production).
+    - Added tenant-scoped repository queries `findByOnboardingIdForTenant`/`findByIdForTenant` (additive, existing
+      non-tenant-scoped queries left untouched) and tenant-scoped service overloads
+      `getDocumentByOnboardingId(id, tenantId)` / `getDocumentById(id, tenantId)`, fail-closed: a document that
+      exists but belongs to a different tenant is indistinguishable from a genuinely missing one (no cross-tenant
+      existence leak).
+    - Wired `DocumentController`'s two `@Authenticated` GET endpoints (`/v1/documents/onboarding/{onboardingId}`,
+      `/v1/documents/{id}` — the same ones covered by sub-task 5's `TenantValidationFilterTest`) to consume
+      `TenantContext.getTenant()` (already populated by sub-task 5's filter) instead of re-deriving tenant, per
+      SELC-8.5. Fails closed with `403` if, unexpectedly, no tenant was resolved.
+    - Added 4 new unit tests (tenant match / cross-tenant not-found) in `DocumentServiceImplTest`; updated
+      `DocumentControllerTest`/`TenantValidationFilterTest` mocks to the new tenant-scoped overloads. Full suite:
+      469/469 passing (was 465; +4 new tests, 0 regressions).
+  - **Remaining rollout (explicit follow-up, not done this iteration):** the other ~10 `DocumentRepository`
+    methods (`updateContractFiles`, `updateAttachmentPathById`, `findAttachments`, `deleteDocument`, etc.) and the
+    write/persist paths (`saveDocument`, `persistDocumentForImport`) are **not yet** tenant-scoped. Write paths are
+    reached mostly via service-to-service REST calls from `onboarding-ms`, and it has not yet been verified whether
+    those calls carry a forwardable tenant context — this needs investigation before tenantId can be safely set at
+    persist time. The other 13 Mongo-using apps have not been touched at all; this proof-of-concept establishes the
+    pattern (`TenantContext` injection + additive tenant-scoped query methods) to replicate per service.
+  - **Blockers:** backfill/migration strategy for pre-existing untagged documents; write-path tenant propagation
+    from `onboarding-ms`; per-service rollout beyond `document-ms` still outstanding.
 
 ### 7. Deployment consolidation (parallel-run migration)
 - **Maps to:** System purpose, SELC-5.3

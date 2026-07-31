@@ -12,6 +12,8 @@ import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.security.tenant.TenantContext;
+import it.pagopa.selfcare.security.tenant.TenantId;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -37,6 +39,9 @@ public class DocumentController {
   @Inject
   SecurityIdentity securityIdentity;
 
+  @Inject
+  TenantContext tenantContext;
+
   private final DocumentService documentService;
   private final DocumentMapper documentMapper;
 
@@ -58,7 +63,7 @@ public class DocumentController {
     @Path("/onboarding/{onboardingId}")
     public Uni<DocumentResponse> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
         log.info("Getting document for onboardingId: {}", sanitize(onboardingId));
-        return documentService.getDocumentByOnboardingId(onboardingId)
+        return documentService.getDocumentByOnboardingId(onboardingId, requireTenant())
                 .map(documentMapper::toResponse);
     }
 
@@ -70,8 +75,21 @@ public class DocumentController {
     @Path("/{id}")
     public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
         log.info("Getting document for documentId: {}", sanitize(id));
-        return documentService.getDocumentById(id)
+        return documentService.getDocumentById(id, requireTenant())
                 .map(documentMapper::toResponse);
+    }
+
+    /**
+     * Step_1 SELC-8.1/8.5: returns the tenant already validated by Step_0's
+     * {@code TenantValidationFilter}. Fails closed if, unexpectedly, no tenant was resolved for
+     * an authenticated request (the filter always sets one or aborts the request beforehand).
+     */
+    private String requireTenant() {
+        TenantId tenant = tenantContext.getTenant();
+        if (tenant == null) {
+            throw new jakarta.ws.rs.ForbiddenException("No validated tenant resolved for this request");
+        }
+        return tenant.name();
     }
 
     @Operation(
