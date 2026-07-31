@@ -236,11 +236,18 @@ authorization model beyond tenant scoping.
 - **Acceptance criteria:** No pre-existing data is orphaned or misattributed after migration; migration is
   auditable and reversible where feasible.
 - **Depends on:** Sub-tasks 1–6.
-- **Status: not started — and it now gates sub-task 2.** Every discriminator-model read still carries the
-  `or tenantId is null` migration branch, which keeps pre-existing untagged documents readable by *both*
-  tenants. That branch cannot be dropped, and the Cosmos DB isolation cannot be called enforcement, until this
-  backfill has tagged existing documents. No storage/database move is needed yet, since no service selected the
-  per-tenant database or per-tenant account model (sub-tasks 3, 6).
+- **Status: tooling done, execution pending — it still gates sub-task 2.** Every discriminator-model read
+  still carries the `or tenantId is null` migration branch, which keeps pre-existing untagged documents
+  readable by *both* tenants. That branch cannot be dropped, and the Cosmos DB isolation cannot be called
+  enforcement, until the backfill has run in each environment. `scripts/backfill_tenant_id.py` (see
+  `scripts/README.md`) performs it across the eight tenant-scoped databases, taking the tenant as an explicit
+  argument because it is the connection string — one Cosmos account per tenant — that decides which tenant's
+  data is being tagged. It only ever writes to documents that have no `tenantId`, so it cannot reassign an
+  already-attributed document and is safe to re-run or interrupt; it is dry-run unless `--apply` is passed.
+  Its `--verify` mode is the gate for sub-task 2: it must exit `0` for both tenants in an environment before
+  that environment's reads can be made strict. The product catalogue database is deliberately excluded, as
+  product definitions are global rather than tenant-owned. No storage/database move is needed, since no
+  service selected the per-tenant database or per-tenant account model (sub-tasks 3, 6).
 
 ### 11. Security review and audit logging for data-layer tenant enforcement
 - **Maps to:** `SECURITY.md` (all sections)
@@ -276,5 +283,7 @@ authorization model beyond tenant scoping.
   them must provision the per-tenant containers before sub-task 5 can ship.
 - A Spring-side reader for the tenant registry: the six Spring Boot apps mirror the tenant classes instead of
   depending on `selfcare-sdk-security`, so they can consume the same env var but have no parser yet.
-- Migration/backfill approach for pre-existing single-tenant data.
+- ~~Migration/backfill approach for pre-existing single-tenant data.~~ **Resolved (sub-task 10):** in-place
+  discriminator backfill via `Step_1/scripts/backfill_tenant_id.py`, run per tenant against that tenant's own
+  Cosmos account. Execution in each environment is still outstanding and blocks sub-task 2.
 - Regulatory/data-residency constraints that may force a specific isolation model per tenant.
