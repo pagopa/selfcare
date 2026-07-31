@@ -120,7 +120,7 @@ public class AuthSteps {
         });
   }
 
-  @And("An OTP flow should be created with status {string} and requestId {string}")
+  @And("An OTP flow should be created with status {string} and mailRequestId {string}")
   public void anOtpFlowShouldBeCreatedWithStatusAndRequestId(String status, String requestId) {
     String otpSessionUid =
         sharedStepData.getResponse().body().jsonPath().getString("otpSessionUid");
@@ -137,7 +137,7 @@ public class AuthSteps {
         OtpStatus.valueOf(status), otpFlow.getStatus(), "OtpFlow status is not : " + status);
     Assertions.assertEquals(
       "null".equals(requestId) ? null : requestId,
-      otpFlow.getRequestId(),
+      otpFlow.getMailRequestId(),
       "OtpFlow requestId is not : " + requestId);
   }
 

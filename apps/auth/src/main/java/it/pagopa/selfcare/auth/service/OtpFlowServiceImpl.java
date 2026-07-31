@@ -184,15 +184,16 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                           if (requestId == null) {
                             return Uni.createFrom().item(otpFlow);
                           }
-
-                          return updateOtpFlowRequestId(otpFlow.getUuid(), requestId)
-                            .replaceWith(() -> {
-                              otpFlow.setRequestId(requestId);
-                              return otpFlow;
-                            });
-                        })
-                  )
-        );
+                          return updateOtpFlowRequestId(
+                            otpFlow.getUuid(), requestId)
+                            .onFailure()
+                            .recoverWithItem(0L)
+                            .map(
+                              ignored -> {
+                                otpFlow.setMailRequestId(requestId);
+                                return otpFlow;
+                              });
+                        })));
   }
 
   private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId) {

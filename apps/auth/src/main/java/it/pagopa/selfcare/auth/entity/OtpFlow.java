@@ -24,5 +24,5 @@ public class OtpFlow extends ReactivePanacheMongoEntity {
   private OffsetDateTime createdAt;
   private OffsetDateTime updatedAt;
   private OffsetDateTime expiresAt;
-  private String requestId;
+  private String mailRequestId;
 }
