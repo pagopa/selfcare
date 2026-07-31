@@ -145,6 +145,28 @@ authorization model beyond tenant scoping.
     attachments) and for shared platform assets (mail/contract templates), and only the former may be
     tenant-suffixed. Blindly suffixing every call site would move shared templates into a per-tenant container
     that does not contain them.
+  - **Call-site classification (derived, so it does not have to be re-derived).** The split is *not* along
+    `StorageOrigin`: `clientFor(StorageOrigin.SYSTEM)` serves both categories. It follows the storage **path**,
+    so the routing decision belongs next to the path construction, not inside `clientFor`. Of the 21 sites,
+    14 are tenant-owned and 7 read shared templates:
+    - *Tenant-owned — must be tenant-suffixed.* `DocumentContentServiceImpl` lines 190, 302, 360, 384, 626,
+      827, 875 (contract/attachment paths built from the stored `Document` and `documentMsConfig.contractPath`),
+      434 and 459 (aggregates CSV under `aggregatesPath`), 488 (`saveVisuraForMerchant`, under
+      `contractPath/<onboardingId>/visura`), 724 (`uploadFileToAzure`, `pathContracts/<onboardingId>/attachments`),
+      736 (`uploadAndBuildResponse`, generated contract/attachment PDFs); `DocumentServiceImpl` lines 147 and 399.
+    - *Shared platform assets — must NOT be suffixed.* `DocumentContentServiceImpl` lines 172
+      (`retrieveTemplateAttachment`), 677 (`documentTemplatePath`), 755/757 (`contractTemplatePath`), 774/776
+      (`attachmentTemplatePath`); `DocumentServiceImpl` line 412 (`calculateDigestFromAzureFile`, explicitly
+      "original template").
+  - **Security finding raised while classifying (worth its own ticket).** Every shared-template path above is
+    **client-supplied**: `retrieveTemplateAttachment(..., String templatePath, ...)` takes it as a request
+    parameter, and `request.getContractTemplatePath()` / `request.getAttachmentTemplatePath()` /
+    `azureFilePath` come from the caller. This sub-task's acceptance criterion is that the container is derived
+    "only from the validated tenant, never from client-supplied input" — that holds for the container, but the
+    *path within* it does not. Once the shared and per-tenant containers are distinct, a caller able to choose
+    the path in the shared container is choosing which shared asset to read; if the classification were ever
+    implemented by inspecting the supplied path rather than the call site, a crafted path would also select the
+    container. Route by call site (a compile-time property), never by parsing the supplied path.
 
 ### 6. Implement per-tenant storage account isolation where selected
 - **Maps to:** SELC-9.1, SELC-9.4, SELC-9.5
