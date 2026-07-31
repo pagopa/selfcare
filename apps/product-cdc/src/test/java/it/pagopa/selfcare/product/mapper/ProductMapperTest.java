@@ -79,4 +79,47 @@ class ProductMapperTest {
       System.out.println(jsonEntity);
     }
   }
+
+  @Test
+  void toResource_shouldPropagateDedicatedDataIsolationToTheProductJson() {
+    // given: product-cdc is the only hop between the Mongo product and the JSON consumers read to
+    // route their persistence, so a dropped field here would silently send every product back to
+    // the shared database.
+    it.pagopa.selfcare.product.model.Product product =
+        new it.pagopa.selfcare.product.model.Product();
+    product.setProductId("prod-dedicated");
+    product.setDataIsolation(
+        it.pagopa.selfcare.product.model.DataIsolationConfig.builder()
+            .database(it.pagopa.selfcare.product.model.enums.DatabaseIsolationModel.DEDICATED)
+            .databaseName("selcOnboardingDedicated")
+            .build());
+
+    // when
+    it.pagopa.selfcare.product.entity.Product entity = mapper.toResource(product);
+
+    // then
+    assertNotNull(entity.getDataIsolation());
+    assertEquals(
+        it.pagopa.selfcare.product.entity.DatabaseIsolationModel.DEDICATED,
+        entity.getDataIsolation().getDatabase());
+    assertEquals("selcOnboardingDedicated", entity.getDataIsolation().getDatabaseName());
+    assertTrue(entity.getDataIsolation().isDedicatedDatabase());
+    assertEquals(
+        it.pagopa.selfcare.product.entity.DatabaseIsolationModel.DEDICATED,
+        entity.resolveDatabaseIsolationModel());
+  }
+
+  @Test
+  void toResource_whenNoDataIsolation_shouldResolveAsShared() {
+    it.pagopa.selfcare.product.model.Product product =
+        new it.pagopa.selfcare.product.model.Product();
+    product.setProductId("prod-legacy");
+
+    it.pagopa.selfcare.product.entity.Product entity = mapper.toResource(product);
+
+    assertNull(entity.getDataIsolation());
+    assertEquals(
+        it.pagopa.selfcare.product.entity.DatabaseIsolationModel.SHARED,
+        entity.resolveDatabaseIsolationModel());
+  }
 }

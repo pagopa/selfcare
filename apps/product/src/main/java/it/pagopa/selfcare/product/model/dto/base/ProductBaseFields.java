@@ -37,4 +37,10 @@ public class ProductBaseFields {
   private List<ManagingInstitution> managingInstitutions;
   private List<WorkflowRule> workflowRules;
   private List<RequiredDocument> requiredDocuments;
+
+  /**
+   * Declares whether this product's data lives in the shared database or in a dedicated one. Null
+   * means SHARED, so existing clients that omit it keep the current behaviour.
+   */
+  private DataIsolationConfig dataIsolation;
 }

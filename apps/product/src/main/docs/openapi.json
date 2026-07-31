@@ -150,6 +150,21 @@
         "type" : "string",
         "enum" : [ "CONTRACT", "ATTACHMENT" ]
       },
+      "DataIsolationConfig" : {
+        "type" : "object",
+        "properties" : {
+          "database" : {
+            "$ref" : "#/components/schemas/DatabaseIsolationModel"
+          },
+          "databaseName" : {
+            "type" : "string"
+          }
+        }
+      },
+      "DatabaseIsolationModel" : {
+        "type" : "string",
+        "enum" : [ "SHARED", "DEDICATED" ]
+      },
       "EmailTemplateConfig" : {
         "type" : "object",
         "properties" : {
@@ -391,6 +406,9 @@
             "items" : {
               "$ref" : "#/components/schemas/RequiredDocument"
             }
+          },
+          "dataIsolation" : {
+            "$ref" : "#/components/schemas/DataIsolationConfig"
           }
         }
       },
@@ -513,6 +531,9 @@
             "items" : {
               "$ref" : "#/components/schemas/RequiredDocument"
             }
+          },
+          "dataIsolation" : {
+            "$ref" : "#/components/schemas/DataIsolationConfig"
           }
         }
       },
@@ -613,6 +634,9 @@
             "items" : {
               "$ref" : "#/components/schemas/RequiredDocument"
             }
+          },
+          "dataIsolation" : {
+            "$ref" : "#/components/schemas/DataIsolationConfig"
           },
           "id" : {
             "type" : "string"

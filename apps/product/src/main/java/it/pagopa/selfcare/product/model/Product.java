@@ -59,4 +59,10 @@ public class Product {
 
   private List<RequiredDocument> requiredDocuments;
 
+  /**
+   * Declares whether this product's data lives in the shared database or in a dedicated one, so
+   * consuming microservices can route persistence accordingly. Null means SHARED.
+   */
+  private DataIsolationConfig dataIsolation;
+
 }

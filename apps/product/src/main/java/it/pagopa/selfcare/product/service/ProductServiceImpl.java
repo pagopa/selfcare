@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Features;
+import it.pagopa.selfcare.product.model.DataIsolationConfig;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.WorkflowRule;
@@ -43,6 +44,8 @@ public class ProductServiceImpl implements ProductService {
   private static final String PARENT_PRODUCT_NOT_FOUND = "Parent product %s not found";
   private static final String PARENT_CANNOT_BE_CHILD = "Parent product %s cannot be a child product";
   private static final String PARENT_ID_SELF_REFERENCE = "parentId cannot be equal to productId";
+  private static final String DEDICATED_DATABASE_NAME_REQUIRED =
+      "dataIsolation.databaseName is required when dataIsolation.database is DEDICATED";
 
 
   // JPA
@@ -84,6 +87,8 @@ public class ProductServiceImpl implements ProductService {
 
     requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
     applyParentOnboardingDefaults(requestProduct, true);
+
+    validateDataIsolation(requestProduct);
 
     return validateParentRelationship(requestProduct)
         .onItem()
@@ -197,6 +202,7 @@ public class ProductServiceImpl implements ProductService {
                         current -> {
                           Product patched = productMapperRequest.toPatch(patchRequest, current);
                           applyParentOnboardingDefaults(patched, patchRequest.getParentId() != null);
+                          validateDataIsolation(patched);
 
                           return validateParentRelationship(patched)
                               .onItem()
@@ -370,6 +376,16 @@ public class ProductServiceImpl implements ProductService {
       return;
     }
     product.getFeatures().setRequiresParentOnboarding(enabled);
+  }
+
+  private void validateDataIsolation(Product product) {
+    DataIsolationConfig dataIsolation = product.getDataIsolation();
+    if (dataIsolation == null || !dataIsolation.isDedicatedDatabase()) {
+      return;
+    }
+    if (StringUtils.isBlank(dataIsolation.getDatabaseName())) {
+      throw new BadRequestException(DEDICATED_DATABASE_NAME_REQUIRED);
+    }
   }
 
   private void validateParentRelationshipSync(Product product) {

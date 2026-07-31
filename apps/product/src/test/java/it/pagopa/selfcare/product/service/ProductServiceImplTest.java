@@ -13,6 +13,8 @@ import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.OriginEntry;
+import it.pagopa.selfcare.product.model.DataIsolationConfig;
+import it.pagopa.selfcare.product.model.enums.DatabaseIsolationModel;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
 import it.pagopa.selfcare.product.model.RequiredDocument;
@@ -1323,5 +1325,115 @@ class ProductServiceImplTest {
 
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
+  }
+
+  @Test
+  void createProduct_whenDedicatedDatabaseWithoutName_thenBadRequest() {
+    // given: a product declared DEDICATED but with no database to route to
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-dedicated");
+
+    Product product =
+        Product.builder()
+            .productId("prod-dedicated")
+            .dataIsolation(
+                DataIsolationConfig.builder()
+                    .database(DatabaseIsolationModel.DEDICATED)
+                    .databaseName(null)
+                    .build())
+            .build();
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+
+    // when / then: rejected rather than persisted, so consumers never see an unroutable product
+    BadRequestException exception =
+        assertThrows(
+            BadRequestException.class, () -> productService.createProduct(request, "createdBy"));
+    assertTrue(exception.getMessage().contains("dataIsolation.databaseName is required"));
+    verify(productRepository, never()).persist(any(Product.class));
+  }
+
+  @Test
+  void createProduct_whenDedicatedDatabaseWithBlankName_thenBadRequest() {
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-dedicated");
+
+    Product product =
+        Product.builder()
+            .productId("prod-dedicated")
+            .dataIsolation(
+                DataIsolationConfig.builder()
+                    .database(DatabaseIsolationModel.DEDICATED)
+                    .databaseName("   ")
+                    .build())
+            .build();
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+
+    assertThrows(
+        BadRequestException.class, () -> productService.createProduct(request, "createdBy"));
+    verify(productRepository, never()).persist(any(Product.class));
+  }
+
+  @Test
+  void createProduct_whenDedicatedDatabaseWithName_thenPersisted() {
+    // given
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-dedicated");
+
+    Product product =
+        Product.builder()
+            .productId("prod-dedicated")
+            .dataIsolation(
+                DataIsolationConfig.builder()
+                    .database(DatabaseIsolationModel.DEDICATED)
+                    .databaseName("selcOnboardingDedicated")
+                    .build())
+            .build();
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+    when(productRepository.findProductById("prod-dedicated"))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(product));
+    when(productMapperResponse.toProductBaseResponse(any(Product.class)))
+        .thenReturn(new ProductBaseResponse());
+
+    // when
+    productService.createProduct(request, "createdBy").await().indefinitely();
+
+    // then: the isolation config survives to persistence unchanged
+    ArgumentCaptor<Product> persisted = ArgumentCaptor.forClass(Product.class);
+    verify(productRepository, times(1)).persist(persisted.capture());
+    DataIsolationConfig isolation = persisted.getValue().getDataIsolation();
+    assertNotNull(isolation);
+    assertEquals(DatabaseIsolationModel.DEDICATED, isolation.getDatabase());
+    assertEquals("selcOnboardingDedicated", isolation.getDatabaseName());
+    assertTrue(isolation.isDedicatedDatabase());
+  }
+
+  @Test
+  void createProduct_whenNoDataIsolation_thenPersistedAndTreatedAsShared() {
+    // given: products predating the field must keep working, no migration required
+    ProductCreateRequest request = new ProductCreateRequest();
+    request.setProductId("prod-legacy");
+
+    Product product = Product.builder().productId("prod-legacy").build();
+    when(productMapperRequest.toProduct(request)).thenReturn(product);
+    when(productRepository.findProductById("prod-legacy")).thenReturn(Uni.createFrom().nullItem());
+    when(productRepository.persist(any(Product.class))).thenReturn(Uni.createFrom().item(product));
+    when(productMapperResponse.toProductBaseResponse(any(Product.class)))
+        .thenReturn(new ProductBaseResponse());
+
+    // when
+    productService.createProduct(request, "createdBy").await().indefinitely();
+
+    // then
+    ArgumentCaptor<Product> persisted = ArgumentCaptor.forClass(Product.class);
+    verify(productRepository, times(1)).persist(persisted.capture());
+    assertNull(persisted.getValue().getDataIsolation());
+  }
+
+  @Test
+  void dataIsolationConfig_defaultsToSharedWhenModelIsNull() {
+    DataIsolationConfig isolation = DataIsolationConfig.builder().build();
+    assertEquals(DatabaseIsolationModel.SHARED, isolation.resolveDatabaseModel());
+    assertFalse(isolation.isDedicatedDatabase());
   }
 }

@@ -483,4 +483,36 @@ public class ProductTest {
       return null;
     }
   }
+
+    @Test
+    void resolveDatabaseIsolationModel_shouldDefaultToSharedWhenUnconfigured() {
+        // products serialised before the field existed must keep working without a data migration
+        Product product = new Product();
+
+        assertNull(product.getDataIsolation());
+        assertEquals(DatabaseIsolationModel.SHARED, product.resolveDatabaseIsolationModel());
+    }
+
+    @Test
+    void resolveDatabaseIsolationModel_shouldDefaultToSharedWhenModelIsNull() {
+        Product product = new Product();
+        product.setDataIsolation(new DataIsolationConfig());
+
+        assertEquals(DatabaseIsolationModel.SHARED, product.resolveDatabaseIsolationModel());
+        assertFalse(product.getDataIsolation().isDedicatedDatabase());
+    }
+
+    @Test
+    void resolveDatabaseIsolationModel_shouldReturnDedicatedWhenConfigured() {
+        DataIsolationConfig isolation = new DataIsolationConfig();
+        isolation.setDatabase(DatabaseIsolationModel.DEDICATED);
+        isolation.setDatabaseName("selcOnboardingDedicated");
+
+        Product product = new Product();
+        product.setDataIsolation(isolation);
+
+        assertEquals(DatabaseIsolationModel.DEDICATED, product.resolveDatabaseIsolationModel());
+        assertTrue(product.getDataIsolation().isDedicatedDatabase());
+        assertEquals("selcOnboardingDedicated", product.getDataIsolation().getDatabaseName());
+    }
 }
