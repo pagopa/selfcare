@@ -242,6 +242,9 @@
           },
           "referenceOnboardingId": {
             "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
           }
         }
       },

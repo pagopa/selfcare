@@ -14,10 +14,11 @@ import java.time.OffsetDateTime;
 @Document("Delegations")
 @Sharded(shardKey = {"id"})
 @FieldNameConstants(asEnum = true)
-public class DelegationEntity {
+public class DelegationEntity implements TenantOwnedEntity {
 
     @Id
     private String id;
+    private String tenantId;
     private String from;
     private String institutionFromName;
     private String institutionToName;

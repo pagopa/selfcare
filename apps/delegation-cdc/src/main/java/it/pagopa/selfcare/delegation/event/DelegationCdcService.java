@@ -206,7 +206,7 @@ public class DelegationCdcService {
     }
 
     private Uni<Void> attemptToCreateAggregatesDelegations(DelegationsEntity insertedDelegation) {
-        return institutionRepository.findInstitutionById(insertedDelegation.getFrom())
+        return institutionRepository.findInstitutionById(insertedDelegation.getFrom(), insertedDelegation.getTenantId())
                 .flatMap(institution -> {
                     if (institution == null) {
                         return Uni.createFrom().failure(new IllegalArgumentException("Institution not found"));
@@ -216,10 +216,10 @@ public class DelegationCdcService {
                                 if (!Boolean.TRUE.equals(isAggregator)) {
                                     return Uni.createFrom().nullItem();
                                 }
-                                return delegationRepository.getInstitutionsAlreadyPresent(insertedDelegation.getTo(), insertedDelegation.getProductId())
+                                return delegationRepository.getInstitutionsAlreadyPresent(insertedDelegation.getTo(), insertedDelegation.getProductId(), insertedDelegation.getTenantId())
                                         .collect().asList()
                                         .flatMap(existingInstitutions ->
-                                                delegationRepository.getDelegationsEA(insertedDelegation.getFrom(), insertedDelegation.getProductId())
+                                                delegationRepository.getDelegationsEA(insertedDelegation.getFrom(), insertedDelegation.getProductId(), insertedDelegation.getTenantId())
                                                 .filter(delegation -> !existingInstitutions.contains(delegation.getFrom())) //filter the delegations already presents
                                                 .collect().asList()
                                                 .flatMap(delegations -> {

@@ -66,6 +66,9 @@ public class OnboardingValidationHelper {
     @Inject
     InstitutionMapper institutionMapper;
 
+    @Inject
+    QueryUtils queryUtils;
+
     // -------------------------------------------------------------------------
     // Verifica duplicati onboarding
     // -------------------------------------------------------------------------
@@ -368,11 +371,26 @@ public class OnboardingValidationHelper {
                         return Uni.createFrom().failure(new InvalidRequestException(
                                 INVALID_REFERENCE_ONBORADING.getMessage(), INVALID_REFERENCE_ONBORADING.getCode()));
                     }
-                    return Onboarding.findByIdOptional(onboarding.getReferenceOnboardingId())
-                            .onItem().transformToUni(opt ->
-                                    opt.map(Onboarding.class::cast)
-                                            .filter(ref -> ref.getStatus().equals(COMPLETED))
-                                            .map(ref -> Uni.createFrom().item(Boolean.TRUE))
+                    // Migration-phase concession for code outside an active request; see QueryUtils.
+                    if (queryUtils.currentTenantId().isEmpty()) {
+                        return Onboarding.findByIdOptional(onboarding.getReferenceOnboardingId())
+                                .onItem().transformToUni(opt ->
+                                        opt.map(Onboarding.class::cast)
+                                                .filter(ref -> ref.getStatus().equals(COMPLETED))
+                                                .map(ref -> Uni.createFrom().item(Boolean.TRUE))
+                                                .orElse(Uni.createFrom().failure(new InvalidRequestException(
+                                                        String.format(PRODUCT_NOT_ONBOARDED.getMessage(),
+                                                                onboarding.getProductId(),
+                                                                onboarding.getInstitution().getTaxCode(),
+                                                                PRODUCT_NOT_ONBOARDED.getCode())))));
+                    }
+                    return Onboarding.find(queryUtils.tenantScoped(new Document("_id", onboarding.getReferenceOnboardingId())))
+                            .firstResult()
+                            .onItem().transformToUni(ref ->
+                                    Optional.ofNullable(ref)
+                                            .map(Onboarding.class::cast)
+                                            .filter(reference -> reference.getStatus().equals(COMPLETED))
+                                            .map(reference -> Uni.createFrom().item(Boolean.TRUE))
                                             .orElse(Uni.createFrom().failure(new InvalidRequestException(
                                                     String.format(PRODUCT_NOT_ONBOARDED.getMessage(),
                                                             onboarding.getProductId(),
@@ -420,7 +438,7 @@ public class OnboardingValidationHelper {
                                                             String origin, OnboardingStatus status, String productId) {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, productId);
-        Document query = QueryUtils.buildQuery(params);
+        Document query = queryUtils.buildQuery(params);
         return Onboarding.find(query).stream()
                 .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
@@ -451,4 +469,3 @@ public class OnboardingValidationHelper {
         return onboarding;
     }
 }
-

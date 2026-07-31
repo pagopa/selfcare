@@ -28,5 +28,10 @@ public class UserGroupEntity extends ReactivePanacheMongoEntity {
     private String createdBy;
     private Instant modifiedAt;
     private String modifiedBy;
+    /**
+     * Tenant read from the source user group document and propagated to the emitted CDC payload.
+     * Null is accepted for legacy change events emitted before the discriminator backfill.
+     */
+    private String tenantId;
 
 }

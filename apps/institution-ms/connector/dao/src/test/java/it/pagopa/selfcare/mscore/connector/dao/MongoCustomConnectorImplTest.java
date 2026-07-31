@@ -3,6 +3,7 @@ package it.pagopa.selfcare.mscore.connector.dao;
 import com.mongodb.client.result.UpdateResult;
 import it.pagopa.selfcare.mscore.model.aggregation.UserInstitutionAggregation;
 import it.pagopa.selfcare.mscore.model.aggregation.UserInstitutionFilter;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,11 +21,13 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -34,6 +37,16 @@ class MongoCustomConnectorImplTest {
 
     @Mock
     private MongoOperations mongoOperations;
+
+    @Mock
+    private TenantDataIsolation tenantDataIsolation;
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(tenantDataIsolation.tenantScoped(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(tenantDataIsolation.stampTenantForSave(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        lenient().when(tenantDataIsolation.currentTenantCriteria()).thenReturn(Optional.empty());
+    }
 
     @Test
     void testExist() {
@@ -153,4 +166,3 @@ class MongoCustomConnectorImplTest {
     }
 
 }
-

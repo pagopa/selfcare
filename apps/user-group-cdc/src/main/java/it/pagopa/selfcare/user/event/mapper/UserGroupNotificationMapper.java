@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.user.event.mapper;
 
 import it.pagopa.selfcare.user.event.entity.UserGroupEntity;
-import it.pagopa.selfcare.user.model.UserGroupNotificationToSend;
+import it.pagopa.selfcare.user.event.model.TenantAwareUserGroupNotificationToSend;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -9,5 +9,5 @@ import org.mapstruct.Mapping;
 public interface UserGroupNotificationMapper {
 
     @Mapping(target = "id", expression = "java(java.util.Objects.nonNull(userGroupEntity.getId()) ? userGroupEntity.getId().toHexString() : null)")
-    UserGroupNotificationToSend toUserGroupNotificationToSend(UserGroupEntity userGroupEntity);
+    TenantAwareUserGroupNotificationToSend toUserGroupNotificationToSend(UserGroupEntity userGroupEntity);
 }

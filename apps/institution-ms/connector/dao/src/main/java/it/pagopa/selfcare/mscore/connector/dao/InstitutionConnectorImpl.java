@@ -51,7 +51,7 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
 
     @Override
     public List<Institution> findAll() {
-        return repository.findAll().stream().map(institutionMapper::convertToInstitution).collect(Collectors.toList());
+        return repository.find(new Query(), InstitutionEntity.class).stream().map(institutionMapper::convertToInstitution).collect(Collectors.toList());
     }
 
     @Override
@@ -80,12 +80,12 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
 
     @Override
     public void deleteById(String id) {
-        repository.deleteById(id);
+        repository.findAndRemove(Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).is(id)), InstitutionEntity.class);
     }
 
     @Override
     public Institution findById(String id) {
-        return repository.findById(id)
+        return repository.find(Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).is(id)), InstitutionEntity.class).stream().findFirst()
                 .map(institution -> {
                     log.info("Founded institution {}", institution.getExternalId());
                     return institutionMapper.convertToInstitution(institution);
@@ -180,7 +180,7 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
     @Override
     public List<Institution> findAllByIds(List<String> ids) {
         List<Institution> list = new ArrayList<>();
-        repository.findAllById(ids)
+        repository.find(Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).in(ids)), InstitutionEntity.class)
                 .forEach(entity -> list.add(institutionMapper.convertToInstitution(entity)));
         return list;
     }
@@ -201,8 +201,8 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
 
         Optional<InstitutionEntity> optionalInstitution = Objects.nonNull(productId)
                 ? Optional
-                .ofNullable(repository.findByInstitutionIdAndOnboardingProductId(institutionId, productId))
-                : repository.findById(institutionId);
+                .ofNullable(findByInstitutionIdAndOnboardingProductId(institutionId, productId))
+                : repository.find(Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).is(institutionId)), InstitutionEntity.class).stream().findFirst();
         return optionalInstitution
                 .map(institutionMapper::convertToInstitution)
                 .map(Institution::getOnboarding)
@@ -439,5 +439,12 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
         builder.append(InstitutionEntity.Fields.onboarding.name());
         Arrays.stream(variables).forEach(s -> builder.append(".").append(s));
         return builder.toString();
+    }
+
+    private InstitutionEntity findByInstitutionIdAndOnboardingProductId(String institutionId, String productId) {
+        Query query = Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).is(institutionId)
+                .and(InstitutionEntity.Fields.onboarding.name()).elemMatch(Criteria.where(Onboarding.Fields.productId.name()).is(productId)));
+        query.fields().elemMatch(InstitutionEntity.Fields.onboarding.name(), Criteria.where(Onboarding.Fields.productId.name()).is(productId));
+        return repository.find(query, InstitutionEntity.class).stream().findFirst().orElse(null);
     }
 }

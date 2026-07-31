@@ -26,6 +26,7 @@ import it.pagopa.selfcare.delegation.event.entity.DelegationsEntity;
 import it.pagopa.selfcare.delegation.event.entity.Institution;
 import it.pagopa.selfcare.delegation.event.entity.OnboardingEntity;
 import it.pagopa.selfcare.delegation.event.mapper.DelegationMapper;
+import it.pagopa.selfcare.delegation.event.model.DelegationNotificationToSend;
 import it.pagopa.selfcare.delegation.event.repository.DelegationRepository;
 import it.pagopa.selfcare.delegation.event.repository.InstitutionRepository;
 import jakarta.inject.Inject;
@@ -92,6 +93,34 @@ class DelegationCdcServiceTest {
     EventHubRestClient eventHubRestClient;
 
     @Test
+    void mapperShouldCarryTenantIdToDerivedDelegationAndNotification() {
+        DelegationsEntity sourcePt = new DelegationsEntity();
+        sourcePt.setId("pt-id");
+        sourcePt.setProductId(PROD_PAGOPA.getValue());
+        sourcePt.setTenantId("AR");
+
+        DelegationsEntity sourceEa = new DelegationsEntity();
+        sourceEa.setId("ea-id");
+        sourceEa.setFrom("aggregate-id");
+
+        DelegationsEntity derived = delegationMapper.toDelegationAggregatePT(sourceEa, sourcePt);
+        DelegationNotificationToSend notification = delegationMapper.toDelegationNotificationToSend(sourcePt);
+
+        assertEquals("AR", derived.getTenantId());
+        assertEquals("AR", notification.getTenantId());
+    }
+
+    @Test
+    void mapperShouldLeaveTenantIdEmptyWhenSourceHasNoTenant() {
+        DelegationsEntity sourcePt = new DelegationsEntity();
+        sourcePt.setId("pt-id");
+
+        DelegationNotificationToSend notification = delegationMapper.toDelegationNotificationToSend(sourcePt);
+
+        assertNull(notification.getTenantId());
+    }
+
+    @Test
     void propagateDocumentToConsumers() {
         //given
         ChangeStreamDocument<DelegationsEntity> document = mock(ChangeStreamDocument.class);
@@ -124,9 +153,9 @@ class DelegationCdcServiceTest {
         when(document.getDocumentKey()).thenReturn(bsonDocument);
         when(document.getResumeToken()).thenReturn(bsonDocument1);
         when(bsonDocument.toJson()).thenReturn("toJson");
-        when(institutionRepository.findInstitutionById(anyString())).thenReturn(Uni.createFrom().item(institution));
-        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString())).thenReturn(Multi.createFrom().empty());
-        when(delegationRepository.getDelegationsEA(anyString(), anyString())).thenReturn(Multi.createFrom().items(delegationEA));
+        when(institutionRepository.findInstitutionById(anyString(), any())).thenReturn(Uni.createFrom().item(institution));
+        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString(), any())).thenReturn(Multi.createFrom().empty());
+        when(delegationRepository.getDelegationsEA(anyString(), anyString(), any())).thenReturn(Multi.createFrom().items(delegationEA));
         when(delegationRepository.insertDelegations(ArgumentMatchers.any())).thenReturn(Uni.createFrom().nullItem());
 
         // then
@@ -134,9 +163,9 @@ class DelegationCdcServiceTest {
         assertDoesNotThrow(executable);
 
         // verify
-        verify(institutionRepository).findInstitutionById(anyString());
-        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository).findInstitutionById(anyString(), any());
+        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient).sendMessage(any());
         verify(tableClient, times(1)).upsertEntity(any());
@@ -180,9 +209,9 @@ class DelegationCdcServiceTest {
         when(document.getDocumentKey()).thenReturn(bsonDocument);
         when(document.getResumeToken()).thenReturn(bsonDocument1);
         when(bsonDocument.toJson()).thenReturn("toJson");
-        when(institutionRepository.findInstitutionById(anyString())).thenReturn(Uni.createFrom().item(institution));
-        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString())).thenReturn(Multi.createFrom().empty());
-        when(delegationRepository.getDelegationsEA(anyString(), anyString())).thenReturn(Multi.createFrom().items(delegationEA));
+        when(institutionRepository.findInstitutionById(anyString(), any())).thenReturn(Uni.createFrom().item(institution));
+        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString(), any())).thenReturn(Multi.createFrom().empty());
+        when(delegationRepository.getDelegationsEA(anyString(), anyString(), any())).thenReturn(Multi.createFrom().items(delegationEA));
         when(delegationRepository.insertDelegations(ArgumentMatchers.any())).thenReturn(Uni.createFrom().nullItem());
         when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().failure(new RuntimeException("EventHub failure")));
 
@@ -191,9 +220,9 @@ class DelegationCdcServiceTest {
         assertDoesNotThrow(executable);
 
         // verify
-        verify(institutionRepository).findInstitutionById(anyString());
-        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository).findInstitutionById(anyString(), any());
+        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient).sendMessage(any());
         verify(tableClient, never()).upsertEntity(any());
@@ -237,9 +266,9 @@ class DelegationCdcServiceTest {
         when(document.getDocumentKey()).thenReturn(bsonDocument);
         when(document.getResumeToken()).thenReturn(bsonDocument1);
         when(bsonDocument.toJson()).thenReturn("toJson");
-        when(institutionRepository.findInstitutionById(anyString())).thenReturn(Uni.createFrom().item(institution));
-        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString())).thenReturn(Multi.createFrom().empty());
-        when(delegationRepository.getDelegationsEA(anyString(), anyString())).thenReturn(Multi.createFrom().items(delegationEA));
+        when(institutionRepository.findInstitutionById(anyString(), any())).thenReturn(Uni.createFrom().item(institution));
+        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString(), any())).thenReturn(Multi.createFrom().empty());
+        when(delegationRepository.getDelegationsEA(anyString(), anyString(), any())).thenReturn(Multi.createFrom().items(delegationEA));
         when(delegationRepository.insertDelegations(ArgumentMatchers.any())).thenReturn(Uni.createFrom().nullItem());
 
         TelemetryContext context = mock(TelemetryContext.class);
@@ -262,9 +291,9 @@ class DelegationCdcServiceTest {
         assertDoesNotThrow(executable);
 
         // verify
-        verify(institutionRepository).findInstitutionById(anyString());
-        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository).findInstitutionById(anyString(), any());
+        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, never()).sendMessage(any());
         verify(tableClient, times(1)).upsertEntity(any());
@@ -291,9 +320,9 @@ class DelegationCdcServiceTest {
         assertThrows(AssertionError.class, executable);
 
         // verify
-        verify(institutionRepository, never()).findInstitutionById(anyString());
-        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository, never()).findInstitutionById(anyString(), any());
+        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository, never()).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, never()).sendMessage(any());
         verify(tableClient, never()).upsertEntity(any());
@@ -325,9 +354,9 @@ class DelegationCdcServiceTest {
         assertDoesNotThrow(executable);
 
         // verify
-        verify(institutionRepository, never()).findInstitutionById(anyString());
-        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository, never()).findInstitutionById(anyString(), any());
+        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository, never()).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, times(1)).sendMessage(any());
         verify(tableClient, times(1)).upsertEntity(any());
@@ -363,9 +392,9 @@ class DelegationCdcServiceTest {
         assertDoesNotThrow(executable);
 
         // verify
-        verify(institutionRepository, never()).findInstitutionById(anyString());
-        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository, never()).findInstitutionById(anyString(), any());
+        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository, never()).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, times(1)).sendMessage(any());
         verify(tableClient, times(1)).upsertEntity(any());
@@ -397,16 +426,16 @@ class DelegationCdcServiceTest {
         when(document.getResumeToken()).thenReturn(bsonDocument1);
         when(bsonDocument.toJson()).thenReturn("toJson");
 
-        when(institutionRepository.findInstitutionById(anyString())).thenReturn(Uni.createFrom().nullItem());
+        when(institutionRepository.findInstitutionById(anyString(), any())).thenReturn(Uni.createFrom().nullItem());
 
         // then
         final Executable executable = () -> delegationCdcService.consumerDelegationRepositoryEvent(document);
         assertDoesNotThrow(executable);
 
         // Verify
-        verify(institutionRepository).findInstitutionById(anyString());
-        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository).findInstitutionById(anyString(), any());
+        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository, never()).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, times(1)).sendMessage(any());
         verify(tableClient, never()).upsertEntity(any());
@@ -449,16 +478,16 @@ class DelegationCdcServiceTest {
         when(document.getDocumentKey()).thenReturn(bsonDocument);
         when(document.getResumeToken()).thenReturn(bsonDocument1);
         when(bsonDocument.toJson()).thenReturn("toJson");
-        when(institutionRepository.findInstitutionById(anyString())).thenReturn(Uni.createFrom().item(institution));
+        when(institutionRepository.findInstitutionById(anyString(), any())).thenReturn(Uni.createFrom().item(institution));
 
         // then
         final Executable executable = () -> delegationCdcService.consumerDelegationRepositoryEvent(document);
         assertDoesNotThrow(executable);
 
         // Verify
-        verify(institutionRepository).findInstitutionById(anyString());
-        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository).findInstitutionById(anyString(), any());
+        verify(delegationRepository, never()).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository, never()).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository, never()).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, times(1)).sendMessage(any());
         verify(tableClient, times(1)).upsertEntity(any());
@@ -495,9 +524,9 @@ class DelegationCdcServiceTest {
         when(document.getFullDocument()).thenReturn(delegationsEntity);
         when(document.getDocumentKey()).thenReturn(bsonDocument);
         when(bsonDocument.toJson()).thenReturn("toJson");
-        when(institutionRepository.findInstitutionById(anyString())).thenReturn(Uni.createFrom().item(institution));
-        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString())).thenReturn(Multi.createFrom().empty());
-        when(delegationRepository.getDelegationsEA(anyString(), anyString())).thenReturn(Multi.createFrom().items(new DelegationsEntity()));
+        when(institutionRepository.findInstitutionById(anyString(), any())).thenReturn(Uni.createFrom().item(institution));
+        when(delegationRepository.getInstitutionsAlreadyPresent(anyString(), anyString(), any())).thenReturn(Multi.createFrom().empty());
+        when(delegationRepository.getDelegationsEA(anyString(), anyString(), any())).thenReturn(Multi.createFrom().items(new DelegationsEntity()));
         when(delegationRepository.insertDelegations(ArgumentMatchers.any())).thenReturn(Uni.createFrom().failure(new RuntimeException("Insert failed")));
 
         // then
@@ -505,9 +534,9 @@ class DelegationCdcServiceTest {
         assertDoesNotThrow(executable);
 
         // verify
-        verify(institutionRepository).findInstitutionById(anyString());
-        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString());
-        verify(delegationRepository).getDelegationsEA(anyString(), anyString());
+        verify(institutionRepository).findInstitutionById(anyString(), any());
+        verify(delegationRepository).getInstitutionsAlreadyPresent(anyString(), anyString(), any());
+        verify(delegationRepository).getDelegationsEA(anyString(), anyString(), any());
         verify(delegationRepository).insertDelegations(ArgumentMatchers.any());
         verify(eventHubRestClient, times(1)).sendMessage(any());
         verify(tableClient, never()).upsertEntity(any());

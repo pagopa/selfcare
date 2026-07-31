@@ -18,6 +18,7 @@ import jakarta.inject.Inject;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Map;
 
@@ -53,7 +54,7 @@ class DelegationRepositoryTest {
         when(DelegationsEntity.find(any(Document.class))).thenAnswer(invocation -> query);
         when(query.stream()).thenReturn(Multi.createFrom().items(delegationEntity));
 
-        Multi<String> result = delegationRepository.getInstitutionsAlreadyPresent(institutionId, productId);
+        Multi<String> result = delegationRepository.getInstitutionsAlreadyPresent(institutionId, productId, null);
 
         asserter.execute(() -> {
             assertNotNull(result);
@@ -84,7 +85,7 @@ class DelegationRepositoryTest {
         when(DelegationsEntity.find(any(Document.class))).thenAnswer(invocation -> query);
         when(query.stream()).thenReturn(Multi.createFrom().items(delegationEntity));
 
-        Multi<DelegationsEntity> result = delegationRepository.getDelegationsEA(institutionId, productId);
+        Multi<DelegationsEntity> result = delegationRepository.getDelegationsEA(institutionId, productId, null);
 
         asserter.execute(() -> {
             assertNotNull(result);
@@ -92,6 +93,30 @@ class DelegationRepositoryTest {
                 assertEquals("delegationId", item.getId());
             });
             PanacheMock.verify(DelegationsEntity.class, atLeastOnce()).find(new Document(delegationFilters));
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void testGetDelegationsEAScopesQueryToSourceTenantDuringMigration(UniAsserter asserter) {
+        String institutionId = "institutionId";
+        String productId = "productId";
+        String tenantId = "AR";
+
+        PanacheMock.mock(DelegationsEntity.class);
+        ReactivePanacheQuery<DelegationsEntity> query = mock(ReactivePanacheQuery.class);
+        when(DelegationsEntity.find(any(Document.class))).thenAnswer(invocation -> query);
+        when(query.stream()).thenReturn(Multi.createFrom().empty());
+
+        delegationRepository.getDelegationsEA(institutionId, productId, tenantId);
+
+        asserter.execute(() -> {
+            ArgumentCaptor<Document> documentCaptor = ArgumentCaptor.forClass(Document.class);
+            PanacheMock.verify(DelegationsEntity.class, atLeastOnce()).find(documentCaptor.capture());
+            Document queryDocument = documentCaptor.getValue();
+            Assertions.assertTrue(queryDocument.containsKey("$or"));
+            Assertions.assertEquals(tenantId, ((Document) queryDocument.getList("$or", Document.class).get(0)).get("tenantId"));
+            Assertions.assertNull(((Document) queryDocument.getList("$or", Document.class).get(1)).get("tenantId"));
         });
     }
 

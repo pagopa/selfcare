@@ -9,6 +9,7 @@ import it.pagopa.selfcare.user.client.EventHubRestClient;
 import it.pagopa.selfcare.user.event.UserGroupCdcService;
 import it.pagopa.selfcare.user.event.entity.UserGroupEntity;
 import it.pagopa.selfcare.user.event.mapper.UserGroupNotificationMapper;
+import it.pagopa.selfcare.user.event.model.TenantAwareUserGroupNotificationToSend;
 import it.pagopa.selfcare.user.model.UserGroupNotificationToSend;
 import jakarta.inject.Inject;
 import org.bson.BsonDocument;
@@ -55,6 +56,23 @@ public class UserGroupCdcServiceTest {
         Assertions.assertEquals(userGroupEntity.getParentInstitutionId(), notification.getValue().getParentInstitutionId());
         Assertions.assertEquals(userGroupEntity.getProductId(), notification.getValue().getProductId());
         Assertions.assertEquals(2, notification.getValue().getMembers().size());
+        Assertions.assertEquals(userGroupEntity.getTenantId(), ((TenantAwareUserGroupNotificationToSend) notification.getValue()).getTenantId());
+    }
+
+    @Test
+    void consumerToSendScUserGroupEventWithoutTenantDoesNotBlowUp() {
+        UserGroupEntity userGroupEntity = dummyUserGroup();
+        userGroupEntity.setTenantId(null);
+        ChangeStreamDocument<UserGroupEntity> document = Mockito.mock(ChangeStreamDocument.class);
+        when(document.getFullDocument()).thenReturn(userGroupEntity);
+        BsonDocument bsonDocument = Mockito.mock(BsonDocument.class);
+        when(document.getDocumentKey()).thenReturn(bsonDocument);
+
+        ArgumentCaptor<UserGroupNotificationToSend> notification = ArgumentCaptor.forClass(UserGroupNotificationToSend.class);
+        userGroupCdcService.consumerToSendScUserGroupEvent(document);
+
+        verify(eventHubRestClient, times(1)).sendUserGroupMessage(notification.capture());
+        Assertions.assertNull(((TenantAwareUserGroupNotificationToSend) notification.getValue()).getTenantId());
     }
 
     UserGroupEntity dummyUserGroup() {
@@ -63,6 +81,7 @@ public class UserGroupCdcServiceTest {
         userGroupEntity.setInstitutionId("InstitutionId");
         userGroupEntity.setProductId("ProductId");
         userGroupEntity.setMembers(Set.of("Member1", "Member2"));
+        userGroupEntity.setTenantId("AR");
         return userGroupEntity;
     }
 }

@@ -54,6 +54,9 @@ public class OnboardingPersistenceHelper {
     CurrentTenantProvider currentTenantProvider;
 
     @Inject
+    QueryUtils queryUtils;
+
+    @Inject
     ProductRoutingContext productRoutingContext;
 
     // -------------------------------------------------------------------------
@@ -137,7 +140,7 @@ public class OnboardingPersistenceHelper {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, COMPLETED, productId);
         Document sort = QueryUtils.buildSortDocument(Onboarding.Fields.createdAt.name(), SortEnum.DESC);
-        Document query = QueryUtils.buildQuery(params);
+        Document query = queryUtils.buildQuery(params);
         return Onboarding.find(query, sort).stream();
     }
 
@@ -267,5 +270,4 @@ public class OnboardingPersistenceHelper {
     }
 
 }
-
 

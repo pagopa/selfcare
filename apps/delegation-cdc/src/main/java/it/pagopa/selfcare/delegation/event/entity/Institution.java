@@ -40,5 +40,10 @@ public class Institution extends ReactivePanacheMongoEntityBase {
     private String parentDescription;
     private String rootParentId;
     private boolean delegation;
+    /**
+     * Tenant owning this institution document. Null remains visible during migration for records
+     * written before the discriminator existed.
+     */
+    private String tenantId;
 
 }

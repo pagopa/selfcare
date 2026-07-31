@@ -40,13 +40,16 @@ public class DelegationConnectorImpl implements DelegationConnector {
     private final DelegationRepository repository;
     private final DelegationEntityMapper delegationMapper;
     private final MongoTemplate mongoTemplate;
+    private final TenantDataIsolation tenantDataIsolation;
 
     public DelegationConnectorImpl(DelegationRepository repository,
                                    DelegationEntityMapper delegationMapper,
-                                   MongoTemplate mongoTemplate) {
+                                   MongoTemplate mongoTemplate,
+                                   TenantDataIsolation tenantDataIsolation) {
         this.repository = repository;
         this.delegationMapper = delegationMapper;
         this.mongoTemplate = mongoTemplate;
+        this.tenantDataIsolation = tenantDataIsolation;
     }
 
     @Override
@@ -57,13 +60,12 @@ public class DelegationConnectorImpl implements DelegationConnector {
 
     @Override
     public boolean checkIfExistsWithStatus(Delegation delegation, DelegationState status) {
-        Optional<DelegationEntity> opt = repository.findByFromAndToAndProductIdAndTypeAndStatus(
-                delegation.getFrom(),
-                delegation.getTo(),
-                delegation.getProductId(),
-                delegation.getType(),
-                status
-        );
+        Query query = Query.query(Criteria.where(DelegationEntity.Fields.from.name()).is(delegation.getFrom())
+                .and(DelegationEntity.Fields.to.name()).is(delegation.getTo())
+                .and(DelegationEntity.Fields.productId.name()).is(delegation.getProductId())
+                .and(DelegationEntity.Fields.type.name()).is(delegation.getType())
+                .and(DelegationEntity.Fields.status.name()).is(status));
+        Optional<DelegationEntity> opt = repository.find(query, DelegationEntity.class).stream().findFirst();
         return opt.isPresent();
     }
 
@@ -124,7 +126,8 @@ public class DelegationConnectorImpl implements DelegationConnector {
         final long effectivePage = page != null && page > 0 ? page : 0;
         final long effectiveSize = size != null && size > 0 ? size : 100;
 
-        final MatchOperation matchOperation = Aggregation.match(Criteria.where(DelegationEntity.Fields.createdAt.name()).gte(fromDate));
+        final List<Criteria> matchCriterias = tenantScopedCriterias(Criteria.where(DelegationEntity.Fields.createdAt.name()).gte(fromDate));
+        final MatchOperation matchOperation = Aggregation.match(new Criteria().andOperator(matchCriterias));
 
         final SortOperation sortOperation = Aggregation.sort(Sort.Direction.ASC, "createdAt");
 
@@ -152,7 +155,7 @@ public class DelegationConnectorImpl implements DelegationConnector {
         Query query = Query.query(new Criteria().andOperator(getCriterias(delegationParameters.getFrom(), delegationParameters.getTo(),
                 delegationParameters.getProductId(), delegationParameters.getSearch(), delegationParameters.getTaxCode())));
 
-        long count = mongoTemplate.count(query, DelegationEntity.class);
+        long count = repository.count(query, DelegationEntity.class);
 
         Pageable pageable = PageRequest.of(delegationParameters.getPage(), delegationParameters.getSize());
         Page<Delegation> result = PageableExecutionUtils.getPage(delegations, pageable, () -> count);
@@ -180,7 +183,9 @@ public class DelegationConnectorImpl implements DelegationConnector {
 
     @Override
     public boolean checkIfDelegationsAreActive(String institutionId) {
-        List<DelegationEntity> opt = repository.findByToAndStatus(institutionId, DelegationState.ACTIVE).orElse(Collections.emptyList());
+        Query query = Query.query(Criteria.where(DelegationEntity.Fields.to.name()).is(institutionId)
+                .and(DelegationEntity.Fields.status.name()).is(DelegationState.ACTIVE));
+        List<DelegationEntity> opt = repository.find(query, DelegationEntity.class);
         return !opt.isEmpty();
     }
 
@@ -226,6 +231,7 @@ public class DelegationConnectorImpl implements DelegationConnector {
         final List<Criteria> matchCriterias = getCriterias(null, institutionId, productId, type);
         Optional.ofNullable(cursor).ifPresent(c -> matchCriterias.add(Criteria.where("createdAt")
                 .gt(OffsetDateTime.ofInstant(Instant.ofEpochMilli(c), ZoneId.systemDefault()))));
+        tenantDataIsolation.currentTenantCriteria().ifPresent(matchCriterias::add);
 
         // Filter delegations
         final MatchOperation matchOperation = Aggregation.match(new Criteria().andOperator(matchCriterias));
@@ -251,6 +257,7 @@ public class DelegationConnectorImpl implements DelegationConnector {
         final List<Criteria> matchCriterias = getCriterias(institutionId, null, productId, type);
         Optional.ofNullable(cursor).ifPresent(c -> matchCriterias.add(Criteria.where("createdAt")
                 .gt(OffsetDateTime.ofInstant(Instant.ofEpochMilli(c), ZoneId.systemDefault()))));
+        tenantDataIsolation.currentTenantCriteria().ifPresent(matchCriterias::add);
 
         // Filter delegations
         final MatchOperation matchOperation = Aggregation.match(new Criteria().andOperator(matchCriterias));
@@ -269,6 +276,13 @@ public class DelegationConnectorImpl implements DelegationConnector {
         final Aggregation aggregation = Aggregation.newAggregation(matchOperation, sortOperation, limitOperation, lookupOperationTo, unwindOperationTo);
         return mongoTemplate.aggregate(aggregation, COLLECTION_DELEGATIONS, DelegationInstitutionEntity.class).getMappedResults()
                 .stream().map(delegationMapper::convertToDelegationInstitution).toList();
+    }
+
+    private List<Criteria> tenantScopedCriterias(Criteria criteria) {
+        List<Criteria> criterias = new ArrayList<>();
+        criterias.add(criteria);
+        tenantDataIsolation.currentTenantCriteria().ifPresent(criterias::add);
+        return criterias;
     }
 
 }

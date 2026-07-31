@@ -34,5 +34,10 @@ public class DelegationsEntity extends ReactivePanacheMongoEntity {
     private String updatedAt;
     private String closedAt;
     private Boolean isTest;
+    /**
+     * Tenant read from the source delegation document and propagated to derived delegations/events.
+     * Null is accepted for legacy change events emitted before the discriminator backfill.
+     */
+    private String tenantId;
 
 }

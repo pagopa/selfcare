@@ -295,7 +295,7 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** No query path can return cross-tenant data; isolation model choice is documented per
   service.
 - **Depends on:** Sub-task 5.
-- **Status: inventory done, `document-ms` proof-of-concept implemented (read paths).**
+- **Status: complete across all Mongo-using services (see rollout table below); backfill and s2s header sweep still open.**
   - **Inventory (Cosmos DB / Mongo):** `auth`, `delegation-cdc`, `document-ms`, `iam`, `institution-send-mail-scheduler`,
     `onboarding-cdc`, `onboarding-functions`, `onboarding-ms`, `product`, `product-cdc`, `user-cdc`, `user-group-cdc`,
     `user-ms`, `webhook`, `user-group-ms` (Spring). **Chosen model: discriminator field** (`tenantId` on every
@@ -436,6 +436,65 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
       `user-ms`, `iam`, `product` and `webhook`**, whose callers (`institution-send-mail-scheduler`,
       `onboarding-cdc`, `user-cdc`, `auth`) were inspected and none send `X-Tenant-Id`; a systematic sweep is
       required before release.
+  - **Full rollout across the remaining services — implemented.** The `document-ms` pattern (tenant filter applied
+    *inside* the data-access layer, never as an opt-in `...ForTenant` variant) was replicated across every
+    remaining Mongo-using app. Isolation model everywhere: **discriminator field** with the migration predicate
+    `tenantId == current OR tenantId == null`; writes are stamped at the narrowest chokepoint and **only when
+    `tenantId` is unset**, so a replay or an update can never move a record between tenants.
+
+    | App | Chokepoint | Scoped collections | Tests |
+    |-----|-----------|--------------------|-------|
+    | `iam` | `UserClaims` entity + `UserPermissionsRepository` aggregations | `userClaims`, `userPermissions` | 61 → 67 |
+    | `auth` | new `OtpFlowRepository` | `otpFlow` | 129 → 133 |
+    | `user-group-ms` | `UserGroupServiceImpl` (the one layer both `MongoRepository` writes and `MongoTemplate` reads pass through) | `userGroups` | 96 → 104 |
+    | `user-ms` | `QueryUtils` (~20 call sites) + 5 bypasses in `UserInstitutionServiceDefault`/`UserInfoServiceDefault` | `userInstitutions`, `userInfo` | 6 new tests |
+    | `institution-ms` (Spring) | `MongoCustomConnectorImpl` + repository defaults, via new `TenantDataIsolation` | `Institution`, `Delegations`, `MailNotification` | 429 → 433 |
+    | `onboarding-ms` | `QueryUtils.buildQuery(...)` (now a CDI bean) + id/string/update bypasses | `onboardings`, `tokens` | 499 → 504 |
+    | `delegation-cdc` | `DelegationRepository` / `InstitutionRepository` | mirror collections | 19 → 23 |
+    | `user-cdc` | `UserInstitutionRepository` | `userInfo`, aggregate `userInstitutions` | 47 → 50 |
+    | `user-group-cdc` | entity + notification mapper | mirror collection | 1 → 2 |
+    | `onboarding-cdc` | `Onboarding` entity + mapper | mirror collection | 28 |
+    | `institution-send-mail-scheduler` | `MailNotification` entity + mail parameters | `MailNotification` | 13 |
+
+    - **CDC apps and the scheduler get *propagation*, not request-scoped filtering.** They have no request context
+      and no `TenantContext`, so there is nothing to filter *by*: they read a change stream that spans both
+      tenants. Their job is to carry the `tenantId` already present on the source document through to the mirror
+      collection and the outbound event, so downstream consumers can route without re-reading the source. The
+      cross-tenant batch query in `InstitutionSendMailScheduledServiceImpl.runQueryAndSendNotification` is
+      therefore **deliberately unscoped**, with an inline comment saying so — it is not a security boundary.
+    - **Event payloads.** `delegation-cdc`'s payload class is app-local, so `tenantId` is a plain field.
+      `user-cdc` and `user-group-cdc` publish payload types owned by `selfcare-user-sdk-model`; since that
+      library is pinned per-app and resolved from a remote repository, the field is added via app-local
+      `TenantAware*` subclasses rather than by bumping and republishing the shared contract. Jackson serialises
+      the runtime type, so the claim reaches the wire either way.
+    - **`auth` cannot use `TenantContext`** — it issues sessions *before* one exists — so it resolves the tenant
+      from the request via `TenantHeaderUtils.resolveTenantId(...)`, which is **fail-closed**.
+    - **Real security hole found and closed in `auth`.** OTP verification looked the flow up by UUID with no
+      tenant predicate, so an OTP issued through the PNPG frontend could be redeemed from the AR frontend (and
+      vice versa). The new `OtpFlowRepository` scopes every OTP lookup by tenant; the tenant is passed
+      explicitly because there is no `TenantContext` to read.
+    - **Cross-tenant writes fail loudly in `institution-ms`.** `TenantDataIsolation.stampTenantForSave` first
+      silently returned the pre-existing entity when the current tenant did not own it — the caller's write was
+      discarded while the call still looked successful. It now raises `InvalidRequestException`: a rejected
+      cross-tenant write must be observable, not silently swallowed.
+    - **`CurrentTenantProvider` is duplicated per app rather than added to `libs/selfcare-sdk-security`.** The
+      library is pinned per-app at `0.2.3` and CI resolves it from a remote repository, so a shared helper would
+      require a version bump plus republish across every consumer — out of scope for this branch. The
+      duplication is intentional and should be collapsed when the library is next versioned.
+    - **Explicitly excluded.** `product` and `product-cdc` hold the **global product catalogue** — including the
+      `dataIsolation` block that *drives* the routing decision above — so it is shared by all tenants by
+      definition; scoping it would make products invisible per tenant. `iam`'s `Roles` collection is excluded for
+      the same reason (global role catalogue). `webhook` was inspected and is already tenant-aware.
+      `registry-proxy` caches the public IPA/ANAC registry, which is not tenant data.
+    - **Verification.** Every suite was re-run and compared against a clean `git worktree` of the branch head
+      before accepting the result — an agent-reported "pre-existing failure" in `user-cdc` turned out to be a
+      stale `libs/*/target` in the shared working tree (Quarkus resolves workspace modules from `target/classes`
+      in preference to the `~/.m2` jar, producing `LinkageError`s that look like code regressions). Rebuilding
+      the libraries restored 47/47 at baseline and 50/50 with the change.
+    - **Still open (unchanged from `document-ms`).** The `tenantId == null` branch stays until the backfill has
+      tagged every document, so isolation remains additive defence rather than a hard boundary; and the
+      service-to-service `X-Tenant-Id` sweep flagged above is still required for `user-ms`, `iam`, `product` and
+      `webhook`.
 
 ### 7. Deployment consolidation (parallel-run migration)
 - **Maps to:** System purpose, SELC-5.3

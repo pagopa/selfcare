@@ -1,18 +1,37 @@
 package it.pagopa.selfcare.mscore.connector.dao;
 
 import it.pagopa.selfcare.mscore.connector.dao.model.DelegationEntity;
-import it.pagopa.selfcare.mscore.constant.DelegationState;
-import it.pagopa.selfcare.mscore.constant.DelegationType;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DelegationRepository extends MongoRepository<DelegationEntity, String>, MongoCustomConnector {
+public interface DelegationRepository extends MongoRepository<DelegationEntity, String>, MongoCustomConnector<DelegationEntity, String> {
 
-    Optional<DelegationEntity> findByFromAndToAndProductIdAndTypeAndStatus(String from, String to, String productId, DelegationType type, DelegationState status);
+    @Override
+    default Optional<DelegationEntity> findById(String id) {
+        return find(Query.query(Criteria.where(DelegationEntity.Fields.id.name()).is(id)), DelegationEntity.class).stream().findFirst();
+    }
 
-    Optional<List<DelegationEntity>> findByToAndStatus(String to, DelegationState status);
+    @Override
+    default List<DelegationEntity> findAll() {
+        return find(new Query(), DelegationEntity.class);
+    }
+
+    @Override
+    default List<DelegationEntity> findAllById(Iterable<String> ids) {
+        List<String> idList = new ArrayList<>();
+        ids.forEach(idList::add);
+        return find(Query.query(Criteria.where(DelegationEntity.Fields.id.name()).in(idList)), DelegationEntity.class);
+    }
+
+    @Override
+    default void deleteById(String id) {
+        findAndRemove(Query.query(Criteria.where(DelegationEntity.Fields.id.name()).is(id)), DelegationEntity.class);
+    }
 }

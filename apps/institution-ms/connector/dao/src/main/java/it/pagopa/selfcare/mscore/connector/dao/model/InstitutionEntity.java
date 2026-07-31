@@ -16,10 +16,11 @@ import java.util.List;
 @Document("Institution")
 @Sharded(shardKey = {"id"})
 @FieldNameConstants(asEnum = true)
-public class InstitutionEntity {
+public class InstitutionEntity implements TenantOwnedEntity {
 
     @Id
     private String id;
+    private String tenantId;
 
     @Indexed(unique = true)
     private String externalId;

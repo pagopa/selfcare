@@ -10,7 +10,9 @@ import org.springframework.data.mongodb.core.query.UpdateDefinition;
 
 import java.util.List;
 
-public interface MongoCustomConnector {
+public interface MongoCustomConnector<T, ID> {
+
+    <S extends T> S save(S entity);
 
     <O> boolean exists(Query query, Class<O> outputType);
 

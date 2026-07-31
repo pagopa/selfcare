@@ -3,6 +3,8 @@ package it.pagopa.selfcare.user.event.mapper;
 import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.StringUtils;
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
+import it.pagopa.selfcare.user.event.model.TenantAwareFdUserNotificationToSend;
+import it.pagopa.selfcare.user.event.model.TenantAwareUserNotificationToSend;
 import it.pagopa.selfcare.user.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,7 +26,8 @@ public interface NotificationMapper {
     @Mapping(target = "user", expression = "java(mapUser(userResource, userInstitution.getUserMailUuid(), product))")
     @Mapping(target = "id", expression = "java(toUniqueIdNotification(userInstitution, product))")
     @Mapping(target = "eventType", expression = "java(it.pagopa.selfcare.user.model.constants.QueueEvent.UPDATE)")
-    UserNotificationToSend toUserNotificationToSend(UserInstitution userInstitution, OnboardedProduct product, UserResource userResource);
+    @Mapping(target = "tenantId", source = "userInstitution.tenantId")
+    TenantAwareUserNotificationToSend toUserNotificationToSend(UserInstitution userInstitution, OnboardedProduct product, UserResource userResource);
 
     @Named("toUniqueIdNotification")
     default String toUniqueIdNotification(UserInstitution userInstitution, OnboardedProduct product) {
@@ -38,7 +41,8 @@ public interface NotificationMapper {
     @Mapping(target = "updatedAt", expression = "java((null == product.getUpdatedAt()) ? product.getCreatedAt() : product.getUpdatedAt())")
     @Mapping(target = "user", expression = "java(mapUserForFD(userResource, product))")
     @Mapping(target = "type", source = "type")
-    FdUserNotificationToSend toFdUserNotificationToSend(UserInstitution userInstitutionChanged, OnboardedProduct product, UserResource userResource, NotificationUserType type);
+    @Mapping(target = "tenantId", source = "userInstitutionChanged.tenantId")
+    TenantAwareFdUserNotificationToSend toFdUserNotificationToSend(UserInstitution userInstitutionChanged, OnboardedProduct product, UserResource userResource, NotificationUserType type);
 
     @Named("mapUserForFD")
     default UserToNotify mapUserForFD(UserResource userResource,OnboardedProduct onboardedProduct) {

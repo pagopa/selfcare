@@ -85,6 +85,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Inject
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
+    @Inject QueryUtils queryUtils;
 
     // -------------------------------------------------------------------------
     // Public interface — onboarding flows
@@ -246,7 +247,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                 onboarding.getInstitution(), product.getId(), product.getParentId()))
                                 .replaceWith(onboarding))
             .onItem().call(onboarding ->
-                    OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
+                    queryHelper.updateApproverUserUuid(onboardingId, approveRequest))
             .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, null))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
@@ -288,23 +289,21 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reason) {
-        return Onboarding.findById(onboardingId)
-                .onItem().transform(Onboarding.class::cast)
+        return findOnboardingById(onboardingId)
                 .onItem().transformToUni(o ->
                         COMPLETED.equals(o.getStatus())
                                 ? Uni.createFrom().failure(new InvalidRequestException(
                                         String.format("Onboarding with id %s is COMPLETED!", onboardingId)))
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
-                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
+                        queryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
                 .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, "60"));
     }
 
     @Override
     public Uni<Long> deleteOnboarding(String onboardingId) {
         log.info("Deleting onboarding with id {}", onboardingId);
-        return Onboarding.findById(onboardingId)
-                .onItem().transform(Onboarding.class::cast)
+        return findOnboardingById(onboardingId)
                 .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o ->
                         USERS.equals(o.getWorkflowType())
@@ -316,7 +315,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                             "status", OnboardingStatus.DELETED.name(),
                             "updatedAt", LocalDateTime.now(),
                             "deletedAt", LocalDateTime.now());
-                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                    return queryHelper.updateOnboardingStatus(onboardingId, params);
                 })
                 .onItem().transformToUni(onboarding ->
                         orchestrationService.triggerOrchestrationDeleteInstitutionAndUser(onboardingId)
@@ -326,10 +325,9 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<Long> deleteOnboardingUser(String onboardingId, String userId) {
         log.info("Deleting user onboarding with id {} for userId {}", onboardingId, userId);
-        return Onboarding.findById(onboardingId)
+        return findOnboardingById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o -> {
                     if (!USERS.equals(o.getWorkflowType())) {
@@ -349,7 +347,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                             "status", OnboardingStatus.DELETED.name(),
                             "updatedAt", LocalDateTime.now(),
                             "deletedAt", LocalDateTime.now());
-                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                    return queryHelper.updateOnboardingStatus(onboardingId, params);
                 });
     }
 
@@ -372,7 +370,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingGetResponse> onboardingGet(OnboardingGetFilters filters) {
         Document sort = queryHelper.buildSortByCreatedAtDesc();
         Map<String, Object> params = QueryUtils.createMapForOnboardingQueryParameter(filters);
-        Document query = QueryUtils.buildQuery(params);
+        Document query = queryUtils.buildQuery(params);
         return Uni.combine().all().unis(
                         filters.isSkipPagination()
                                 ? queryHelper.runQuery(query, sort).list()
@@ -384,24 +382,17 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<OnboardingGet> onboardingGet(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
-                .onItem().transformToUni(opt ->
-                        opt.map(Onboarding.class::cast)
-                                .map(onboardingResponseFactory::toGetResponse)
-                                .orElseGet(() -> Uni.createFrom().failure(
-                                        new ResourceNotFoundException(
-                                                String.format("Onboarding with id %s not found!", onboardingId)))));
+        return findOnboardingOptionalById(onboardingId)
+                .onItem().ifNotNull().transformToUni(onboardingResponseFactory::toGetResponse)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found!", onboardingId)));
     }
 
     @Override
     public Uni<OnboardingGet> onboardingGetWithUserInfo(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
-                .onItem().transformToUni(opt ->
-                        opt.map(Onboarding.class::cast)
-                                .map(Uni.createFrom()::item)
-                                .orElseGet(() -> Uni.createFrom().failure(
-                                        new ResourceNotFoundException(
-                                                String.format("Onboarding with id %s not found!", onboardingId)))))
+        return findOnboardingOptionalById(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Onboarding with id %s not found!", onboardingId)))
                 .flatMap(onboarding ->
                         userRegistryHelper.toUserResponseWithUserInfo(onboarding.getUsers())
                                 .flatMap(userResponses ->
@@ -432,7 +423,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                       OnboardingStatus status) {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, null);
-        Document query = QueryUtils.buildQuery(params);
+        Document query = queryUtils.buildQuery(params);
         return Onboarding.find(query).stream()
                 .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
@@ -449,14 +440,13 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<Long> updateOnboarding(String onboardingId, Onboarding onboarding) {
-        return Onboarding.findById(onboardingId)
-                .onItem().transform(Onboarding.class::cast)
+        return findOnboardingById(onboardingId)
                 .onItem().transformToUni(o ->
                         Objects.isNull(o)
                                 ? Uni.createFrom().failure(new InvalidRequestException(
                                         String.format("Onboarding with id %s is not present!", onboardingId)))
                                 : Uni.createFrom().item(o))
-                .onItem().transformToUni(id -> OnboardingQueryHelper.updateOnboardingValues(onboardingId, onboarding));
+                .onItem().transformToUni(id -> queryHelper.updateOnboardingValues(onboardingId, onboarding));
     }
 
     @Override
@@ -487,8 +477,21 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<OnboardingGet> retrieveOnboardingByInstitutionId(String institutionId, String productId) {
-        return Onboarding.find("institution.id = ?1 and productId = ?2 and status = ?3",
-                        institutionId, productId, COMPLETED)
+        // Migration-phase concession for code outside an active request; see QueryUtils.
+        if (queryUtils.currentTenantId().isEmpty()) {
+            return Onboarding.find("institution.id = ?1 and productId = ?2 and status = ?3",
+                            institutionId, productId, COMPLETED)
+                    .firstResult()
+                    .map(Onboarding.class::cast)
+                    .onItem().ifNotNull().transformToUni(onboardingResponseFactory::toGetResponse)
+                    .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                            String.format("Onboarding with institutionId=%s and productId=%s not found",
+                                    institutionId, productId)));
+        }
+        Document query = queryUtils.tenantScoped(new Document("institution.id", institutionId)
+                .append("productId", productId)
+                .append("status", COMPLETED.name()));
+        return Onboarding.find(query)
                 .firstResult()
                 .map(Onboarding.class::cast)
                 .onItem().ifNotNull().transformToUni(onboardingResponseFactory::toGetResponse)
@@ -499,6 +502,28 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     public static boolean isOnboardingExpired(LocalDateTime dateTime) {
         return OnboardingQueryHelper.isOnboardingExpired(dateTime);
+    }
+
+    private Uni<Onboarding> findOnboardingById(String onboardingId) {
+        // Migration-phase concession for code outside an active request; see QueryUtils.
+        if (queryUtils.currentTenantId().isEmpty()) {
+            return Onboarding.findById(onboardingId)
+                    .onItem().ifNotNull().transform(Onboarding.class::cast);
+        }
+        return Onboarding.find(queryUtils.tenantScoped(new Document("_id", onboardingId)))
+                .firstResult()
+                .onItem().ifNotNull().transform(Onboarding.class::cast);
+    }
+
+    private Uni<Onboarding> findOnboardingOptionalById(String onboardingId) {
+        // Migration-phase concession for code outside an active request; see QueryUtils.
+        if (queryUtils.currentTenantId().isEmpty()) {
+            return Onboarding.findByIdOptional(onboardingId)
+                    .onItem().transform(optional -> optional
+                            .map(Onboarding.class::cast)
+                            .orElse(null));
+        }
+        return findOnboardingById(onboardingId);
     }
 
     // -------------------------------------------------------------------------
@@ -798,10 +823,9 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<Void> triggerDocumentGate(String onboardingId) {
         log.info("triggerDocumentGate called for onboardingId={}", onboardingId);
-        return Onboarding.findById(onboardingId)
+        return findOnboardingById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(onboarding -> {
                     // Idempotent: if already past REQUESTING status, do nothing
                     if (!OnboardingStatus.REQUESTING.equals(onboarding.getStatus())) {
@@ -881,7 +905,7 @@ public class OnboardingServiceDefault implements OnboardingService {
             Map<String, Object> params = Map.of(
                     "status", OnboardingStatus.REQUEST.name(),
                     "updatedAt", LocalDateTime.now());
-            return OnboardingQueryHelper.updateOnboardingStatus(onboarding.getId(), params)
+            return queryHelper.updateOnboardingStatus(onboarding.getId(), params)
                     .onItem().transformToUni(ignore -> triggerOrchestrationIfEnabled(onboarding).replaceWithVoid());
         }
 

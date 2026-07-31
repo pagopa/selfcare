@@ -45,4 +45,9 @@ public class Onboarding extends ReactivePanacheMongoEntityBase {
     private Boolean isAggregator;
     private Aggregator aggregator;
     private String referenceOnboardingId;
+    /**
+     * Tenant read from the source onboarding document and carried across CDC boundaries. Null is
+     * allowed for legacy change events produced before the discriminator backfill.
+     */
+    private String tenantId;
 }
