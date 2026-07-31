@@ -2,7 +2,7 @@ module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
   version = "~>1.0"
 
-  subnet_pep_id       = azurerm_subnet.documents_snet.id
+  subnet_pep_id       = azurerm_subnet.storage_account_snet.id
   tags                = var.tags
   tier                = "l"
   environment         = local.environment
@@ -20,7 +20,7 @@ module "storage_account" {
     "bypass" : [],
     "default_action" : "Deny",
     "ip_rules" : [],
-    "virtual_network_subnet_ids" : [azurerm_subnet.documents_snet.id]
+    "virtual_network_subnet_ids" : [azurerm_subnet.storage_account_snet.id]
   }
 
   blob_features = var.blob_features
@@ -79,8 +79,8 @@ resource "azurerm_storage_management_policy" "lifecycle" {
   }
 }
 
-resource "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
-  name         = var.kv_secret_name
+resource "azurerm_key_vault_secret" "storage_connection_string" {
+  name         = "${var.app_name}-storage-connection-string"
   value        = module.storage_account.primary_connection_string
   content_type = "text/plain"
 
@@ -88,7 +88,7 @@ resource "azurerm_key_vault_secret" "selc_documents_storage_connection_string" {
 }
 
 
-resource "azurerm_management_lock" "selc_documents_storage_management_lock" {
+resource "azurerm_management_lock" "storage_account_lock" {
   name       = module.storage_account.name
   scope      = module.storage_account.id
   lock_level = "CanNotDelete"
