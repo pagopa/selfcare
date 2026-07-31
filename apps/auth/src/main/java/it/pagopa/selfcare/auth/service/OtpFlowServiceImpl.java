@@ -124,6 +124,14 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
     return OtpUtils.isNewOtpFlowRequired(
                     otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+      .invoke(isRequired ->
+        log.info(
+          "isNewOtpFlowRequired={} for otpFlow uuid={}, status={}, expiresAt={}, sameIdp={}",
+          isRequired,
+          otpFlow.getUuid(),
+          otpFlow.getStatus(),
+          otpFlow.getExpiresAt(),
+          userClaims.getSameIdp()))
             .chain(isRequired ->
                     isRequired
                             ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
@@ -168,11 +176,31 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                 createNewOtpFlow(userId, otp)
                     .onFailure(WebApplicationException.class)
                     .transform(GeneralUtils::extractExceptionFromWebAppException)
-                    .chain(
-                        otpFlow ->
-                            otpNotificationService
-                                .sendOtpEmail(userId, email, otp, name)
-                                .replaceWith(otpFlow)));
+                  .chain(
+                    otpFlow ->
+                      otpNotificationService
+                        .sendOtpEmail(userId, email, otp, name)
+                        .chain(requestId -> {
+                          if (requestId == null) {
+                            return Uni.createFrom().item(otpFlow);
+                          }
+
+                          return updateOtpFlowRequestId(otpFlow.getUuid(), requestId)
+                            .replaceWith(() -> {
+                              otpFlow.setRequestId(requestId);
+                              return otpFlow;
+                            });
+                        })
+                  )
+        );
+  }
+
+  private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId) {
+    return OtpFlow.update(
+        "{ '$set': { 'requestId': ?1, 'updatedAt': ?2 } }",
+        requestId,
+        Date.from(OffsetDateTime.now().toInstant()))
+      .where("uuid", uuid);
   }
 
   @Override

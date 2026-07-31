@@ -15,6 +15,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.one_mail_json.model.EmailAddress;
 import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTO;
+import org.openapi.quarkus.one_mail_json.model.EmailSuccessResponseDTO;
 
 @Slf4j
 @ApplicationScoped
@@ -38,7 +39,7 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
   OneMailEmailsApi oneMailEmailsApi;
 
   @Override
-  public Uni<Void> sendOtpEmail(String userId, String email, String otp, String name) {
+  public Uni<String> sendOtpEmail(String userId, String email, String otp, String name) {
 
     log.info("Sending OTP email. userId={}, email={}", userId, email);
 
@@ -56,6 +57,7 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
 
     return oneMailEmailsApi
       .v1EmailsSendHighPost(false, emailRequest)
+      .map(EmailSuccessResponseDTO::getRequestId)
       .invoke(() -> log.info("OneMail call completed successfully for {}", email))
       .onFailure()
       .invoke(t -> log.error("OneMail call failed for {}: {}", email, t.getMessage(), t))
@@ -66,7 +68,6 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
       .onFailure(WebApplicationException.class)
       .transform(GeneralUtils::extractExceptionFromWebAppException)
       .onFailure()
-      .recoverWithNull()
-      .replaceWithVoid();
+      .recoverWithNull();
   }
 }

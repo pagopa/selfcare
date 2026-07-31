@@ -358,7 +358,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().item(userClaims));
     when(userService.getUserInfoEmail(any())).thenReturn(Uni.createFrom().item("test@test.it"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+        .thenReturn(Uni.createFrom().item("requestId"));
 
     otpFlowService
         .resendOtp(otpUid)
@@ -555,7 +555,7 @@ public class OtpFlowServiceTest {
         .thenReturn(Uni.createFrom().item(userClaims));
     when(userService.getUserInfoEmail(any())).thenReturn(Uni.createFrom().item("test@test.it"));
     when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+        .thenReturn(Uni.createFrom().item("requestId"));
 
     otpFlowService
         .resendOtp(otpUid)
