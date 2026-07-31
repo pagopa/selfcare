@@ -43,7 +43,13 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   global policy map). This is a prerequisite for all other sub-tasks.
 - **Acceptance criteria:** Single documented mapping consumable by APIM, `auth`, and the `hub-spid-login`
   injection layer; extensible to a new tenant without code changes (SELC-6.2).
-- **Blockers/open questions:** Claim name/format still `TO BE DECIDED`.
+- **Status: implemented.** Claim name and format are decided and in production code:
+  `TenantConstants.TENANT_CLAIM = "tenant_id"`, values from the `TenantId` enum (`AR` for
+  `selfcare.pagopa.it`, `PNPG` for `imprese.notifichedigitali.it`), both in
+  `libs/selfcare-sdk-security` and mirrored in the Spring apps. The host→tenant mapping source of
+  truth is the APIM `tenant_ids` variable (sub-task 2). Adding a tenant still requires a new enum
+  constant, so SELC-6.2 ("extensible without code changes") is **only partly met** — a deliberate
+  trade-off: a closed set is what lets every filter reject an unknown tenant fail-closed.
 
 ### 2. APIM: resolve tenant from `Host` header and enforce `X-Tenant-Id`
 - **Maps to:** SELC-1, SELC-5
@@ -144,7 +150,9 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** All authenticated endpoints reject tenant-inconsistent requests; no endpoint
   authorizes on the header alone.
 - **Depends on:** Sub-tasks 2, 3, 4.
-- **Status: wired into `product` (proof-of-concept microservice) and verified end-to-end.** Filter itself
+- **Status: complete** — filter rolled out to all 6 Quarkus consumers of `selfcare-sdk-security` and
+  all 6 Spring Boot services with an inbound HTTP surface, and the outbound propagation sweep is done.
+  Originally wired into `product` as the proof-of-concept and verified end-to-end. Filter itself
   remains in `libs/selfcare-sdk-security` (tenant package), unit-tested (14 tests). The lib ships no
   Jandex index/`beans.xml`, so `TenantValidationFilter`/`TenantContext` are not CDI-discoverable by a
   consumer without indexing the dependency; added
@@ -460,8 +468,12 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 ---
 
 ## Open blockers to resolve before/at epic kickoff
-- Tenant claim name/format.
-- `hub-spid-login` claim-injection mechanism.
-- Final per-microservice data-isolation model (discriminator field vs. DB-per-tenant).
+- ~~Tenant claim name/format.~~ **Resolved:** `tenant_id`, values `AR`/`PNPG` (sub-task 1).
+- `hub-spid-login` claim-injection mechanism. **Still the one hard blocker**: until it lands, PNPG
+  session tokens carry no claim and rely on the filter's default-to-`PNPG` fallback, which cannot
+  distinguish a genuine PNPG session from a claim that was dropped.
+- ~~Final per-microservice data-isolation model (discriminator field vs. DB-per-tenant).~~
+  **Resolved:** both, on orthogonal axes — a `tenantId` discriminator everywhere, plus per-product
+  database routing driven by the product's `dataIsolation` config (sub-task 6).
 - Fine-grained authorization model (RBAC/ABAC/ReBAC), if needed beyond tenant scoping.
 - Rate-limit thresholds and replica bounds (pending APIM analytics).
