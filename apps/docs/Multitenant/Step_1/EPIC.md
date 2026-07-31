@@ -258,12 +258,15 @@ authorization model beyond tenant scoping.
   obtained before epic closure.
 - **Depends on:** Sub-tasks 2, 3, 5, 6, 7, 8.
 - **Status: partial, sign-off not requested (correctly — its dependencies are not all done).** Rejections are
-  logged at the boundary (`TenantValidationFilter` logs every mismatch, missing/duplicated header, and the
-  hub-spid-login default) and data-layer rejections raise typed exceptions carrying the tenant and the missing
-  dimension, without PII. Credential handling for the new tenant-mapping configuration is Key Vault-only by
-  construction: the sub-task 9 registry stores secret *names*, and the delivered env var contains no secret
-  value. Still to do: an explicit audit-log line on each data-layer fail-closed rejection (today they surface as
-  exceptions), and a log review for PII once sub-tasks 5, 7 and 8 add vault/storage/email paths.
+  logged at both layers: `TenantValidationFilter` logs every mismatch, missing/duplicated header and the
+  hub-spid-login default at the boundary, and `TenantDataIsolationRegistry` now logs each fail-closed refusal
+  at WARN before raising the typed exception. Logging inside the registry rather than at its call sites is
+  deliberate — a caller that recovers from the exception would otherwise silence a tenant-isolation failure.
+  The lines carry only the tenant name and the missing dimension, no PII and no secret value. Credential
+  handling for the new tenant-mapping configuration is Key Vault-only by construction: the sub-task 9 registry
+  stores secret *names*, and the delivered env var contains no secret value. Still to do: the same treatment
+  for the vault/storage/email paths once sub-tasks 5, 7 and 8 create them, a log review over those paths, and
+  the security sign-off itself.
 
 ---
 

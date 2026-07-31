@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Resolves the data-layer resources of an already-validated tenant (Step_1 SELC-8..SELC-11,
@@ -25,8 +27,16 @@ import java.util.function.Function;
  * <p>The tenant argument must be the tenant already validated upstream ({@link TenantContext},
  * populated by {@link TenantValidationFilter}); this class never derives a tenant itself
  * (SELC-8.5, SELC-9.5).
+ *
+ * <p>Every fail-closed refusal is logged at WARN before the exception is raised (Step_1/SECURITY.md,
+ * sub-task 11): a refusal means a request reached the data layer without a usable tenant mapping,
+ * which is a security-relevant event and must be visible even where the caller catches the
+ * exception. The log lines carry only the tenant name and the missing dimension — never a
+ * connection string, a secret value, or any user data.
  */
 public final class TenantDataIsolationRegistry {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(TenantDataIsolationRegistry.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
@@ -76,13 +86,11 @@ public final class TenantDataIsolationRegistry {
   /** Whole mapping of a tenant, or {@link UnresolvedTenantMappingException} if it has none. */
   public TenantDataMapping mappingFor(TenantId tenant) {
     if (tenant == null) {
-      throw new UnresolvedTenantMappingException(
-          "No tenant resolved for this operation; refusing to access tenant-scoped data");
+      throw refuse("No tenant resolved for this operation; refusing to access tenant-scoped data");
     }
     TenantDataMapping mapping = mappings.get(tenant);
     if (mapping == null) {
-      throw new UnresolvedTenantMappingException(
-          "Tenant " + tenant + " has no entry in the tenant data isolation registry");
+      throw refuse("Tenant " + tenant + " has no entry in the tenant data isolation registry");
     }
     return mapping;
   }
@@ -124,8 +132,7 @@ public final class TenantDataIsolationRegistry {
    */
   public String storageContainer(TenantId tenant, String baseContainerName) {
     if (baseContainerName == null || baseContainerName.isBlank()) {
-      throw new UnresolvedTenantMappingException(
-          "Cannot derive a tenant container from a blank base container name");
+      throw refuse("Cannot derive a tenant container from a blank base container name");
     }
     return baseContainerName + storageContainerSuffix(tenant);
   }
@@ -145,9 +152,19 @@ public final class TenantDataIsolationRegistry {
       TenantId tenant, Function<TenantDataMapping, String> dimension, String dimensionName) {
     String value = dimension.apply(mappingFor(tenant));
     if (value == null) {
-      throw new UnresolvedTenantMappingException(
+      throw refuse(
           "Tenant " + tenant + " has no " + dimensionName + " configured; refusing to fall back");
     }
     return value;
+  }
+
+  /**
+   * Records the refusal and builds the exception. Logging here rather than at the call sites is
+   * what guarantees the event is never lost: a caller that recovers from the exception — retrying,
+   * mapping it to a 500 — would otherwise silence a tenant-isolation failure.
+   */
+  private UnresolvedTenantMappingException refuse(String detail) {
+    LOGGER.warn("Tenant data isolation refused the operation: {}", detail);
+    return new UnresolvedTenantMappingException(detail);
   }
 }
