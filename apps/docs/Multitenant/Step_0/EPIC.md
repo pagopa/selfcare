@@ -163,6 +163,40 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   A 4th Spring Boot app, `registry-proxy-runner`, was evaluated and **excluded**: it is a
   scheduler/batch service with no REST controllers or inbound HTTP surface, so there is no
   authenticated request to enforce tenant consistency on.
+  **Coverage gap closed (follow-up review):** an audit against the actual repository found that the
+  "every Spring Boot app" claim above was wrong — three further Spring Boot services with a real
+  inbound HTTP surface had been missed because they use a multi-module Maven layout
+  (`app/`, `web/`, `core/`, `connector/`) rather than a top-level `src/`, so they did not show up in
+  the original `apps/*/src/main` scan: `onboarding-bff` (10 `@RestController`s), `institution-ms` (8)
+  and `registry-proxy` (18). All three authenticate via the same `selc-commons-web`
+  `SelfCareUser` principal, and `onboarding-bff` is already declared in APIM's `tenant_ids`
+  (sub-task 2) — so APIM was injecting `X-Tenant-Id` while the backend never validated it. The same
+  `security.tenant` package has now been added to each, under the package each app's component scan
+  actually covers (`it.pagopa.selfcare.onboarding.web.security.tenant`,
+  `it.pagopa.selfcare.mscore.web.security.tenant`,
+  `it.pagopa.selfcare.party.registry_proxy.web.security.tenant`), in the `web` module that already
+  owns the controllers and the `selc-commons-web` dependency.
+  **Issuer source differs in these three:** `onboarding-bff` pins `selc-commons 2.9.0`, whose
+  `SelfCareUser` has no `getIssuer()` accessor (`2.9.1`+ does). Rather than bumping a shared
+  dependency for an entire app, these three filters read the `iss` claim from the already
+  cryptographically verified JWT payload they must decode anyway for `tenant_id`. This is
+  version-independent and slightly stronger, since issuer and tenant claim are then guaranteed to
+  come from the same token. Each has 9 unit tests (the 8 original scenarios plus one asserting that
+  an authenticated token carrying no `iss` is not enforced rather than defaulted).
+  Verification: `onboarding-bff` full suite 513 tests green; `registry-proxy` full suite 420 green;
+  `institution-ms` targeted filter tests 9/9 green, but its **full suite cannot be validated
+  locally** — `connector/rest` fails to compile its tests with a MapStruct
+  `AooMapperImpl cannot be converted to AooMapper` error that **reproduces on a clean baseline with
+  all these changes stashed** (baseline stops even earlier, at 378 tests, with the `web` module
+  skipped). Pre-existing and unrelated to this work, but it must be fixed before `institution-ms`
+  can be fully verified in CI.
+  **Duplication rationale no longer holds — consolidation now recommended.** The original decision
+  to duplicate rather than share was explicitly argued on "a 3-consumer, single-purpose filter".
+  There are now **six** copies of a security-critical filter, in two slightly divergent variants
+  (issuer from `SelfCareUser` vs. from the token payload). A change to the validation logic must now
+  be applied six times and divergence is itself a security risk. Recommended follow-up: extract a
+  `libs/selfcare-sdk-security-spring` module (plain Spring/servlet, no Quarkus dependencies),
+  standardise on the token-derived issuer, and collapse all six copies onto it.
   **Duplication rationale:** no shared internal Spring library exists in this monorepo for these 4
   apps (they depend only on external `selc-commons-web`/`selc-starter-parent` artifacts published
   from another repo); creating a brand-new shared module was weighed against duplicating ~150 lines
