@@ -505,7 +505,7 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
 - **Acceptance criteria:** Both tenants served by one stack per environment; legacy stacks fully decommissioned;
   no security regression during the overlap period (`SECURITY.md` Deployment/CI-CD rules).
 - **Depends on:** Sub-tasks 2, 5, 6.
-- **Status: pattern established, `iam`/dev reference conversion written and `terraform validate`-clean;
+- **Status: pattern established; `iam`/dev and `product`/dev conversions written and `terraform validate`-clean;
   nothing applied, imported or wired into CI.**
   - **Inventory (`infra/resources/`, 24 app stacks).**
     - **13 apps are deployed twice** (`{dev,uat,prod}-ar` *and* `-pnpg`) and are the actual consolidation
@@ -567,6 +567,54 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
   - **Remaining: 12 of 13 apps × 3 environments (36 stacks), plus `iam` uat/prod.** Deliberately not attempted
     in one pass — each stateful app carries its own data migration, and a bulk conversion would produce a large
     unreviewable diff whose riskiest parts (the data merges) are invisible in it.
+  - **The stateless/stateful split turned out to be the wrong ordering criterion.** Two findings from converting
+    the second app contradict the "stateless = config-only and reversible" framing above, which is left in place
+    because it is what the inventory looked like before the stacks were read line by line:
+    1. **The two stacks are in different Container App Environments** (`selc-d-cae-002` /
+       `selc-d-container-app-002-rg` for AR versus `selc-d-pnpg-cae-cp` / `selc-d-container-app-rg` for PNPG),
+       with different private DNS domains. Consolidating any app means its PNPG callers must reach the AR
+       environment. That is a network prerequisite for *every* conversion, stateless included, and it fails as a
+       connection timeout in the caller rather than as an error in the converted stack.
+    2. **Callers are wired by private DNS name, so conversions are ordered by the call graph, not by statefulness.**
+       An app cannot be consolidated before the services it calls, because its `MS_*_URL` values point at
+       `-pnpg-`-prefixed container apps that must still exist. Derived from the `dev-ar` stacks:
+
+       | Layer | Apps | Calls |
+       |-------|------|-------|
+       | Leaves | `product`, `user-group-ms`, `user-cdc`, `product-cdc`, `delegation-cdc`, `user-group-cdc`, `webhook` | nothing internal |
+       | Tier 1 | `institution-ms`, `onboarding-ms`, `registry-proxy`, `user-ms`, `iam`, `onboarding-cdc`, `institution-send-mail-scheduler`, `document-ms` | leaves + each other |
+       | Tier 2 (entry points) | `dashboard-bff`, `onboarding-bff`, `external-api`, `api`, `onboarding-functions` | tier 1 |
+
+       The BFFs and gateways must therefore be converted **last**, not first — the opposite of what "stateless
+       first" would suggest. Note `iam`, the reference conversion, calls `institution-ms` and so is not itself
+       deployable first.
+  - **Config divergence measured per app** (distinct env-var *names* present in only one of the two `dev` stacks):
+    `external-api`, `iam`, `onboarding-functions`, `product`, `user-group-ms` = **0** (pure naming/DNS
+    conversions); `onboarding-bff` and `onboarding-cdc` = 1; `dashboard-bff` = 4; `institution-ms` = 4;
+    `onboarding-ms` = 6; `user-ms` = 8; `user-cdc` = 12; `registry-proxy` = 21. A non-zero count is
+    **application** work, not Terraform work: the flag has to become tenant-aware config or be reconciled to a
+    single value. `user-cdc` is the clearest case — `USER_CDC_SEND_EVENTS_WATCH_ENABLED` and
+    `USER_CDC_SEND_EVENTS_FD_WATCH_ENABLED` are set on AR only, so today PNPG emits no user events at all.
+    Consolidating it without a decision would silently start emitting PNPG events to AR consumers.
+  - **Second conversion: `infra/resources/product/dev/` (new), `terraform validate`-clean.** `product` is the
+    only app in scope that is simultaneously a call-graph **leaf**, **zero-divergence**, and **not exposed
+    through APIM** (internal-only, so no `service_url` and no frontend-visible change) — the smallest possible
+    end-to-end exercise of the runbook.
+    - The PNPG-only JVM DNS flags (`-Djava.net.preferIPv4Stack=true`, `networkaddress.cache.*`) are dropped
+      rather than parameterised: they were workarounds for the PNPG container app environment, which the unified
+      stack does not use.
+    - **The hard part is not Terraform — it is that two catalogues become one.** Because `product` is
+      deliberately excluded from tenant discrimination (sub-task 6: the catalogue is global platform
+      configuration), the merge *cannot* be done by tagging and copying documents. The two catalogues have
+      drifted independently, so every `productId` present in both with **different** configuration has no
+      automatic resolution: picking one silently changes behaviour for the tenant whose version lost, and that
+      change is invisible in the Terraform diff. `contractTemplates` has a unique index on
+      `(productId, name, version)`, so unresolved duplicates fail the import partway through and leave a
+      half-merged catalogue. `infra/resources/product/dev/README.md` requires the reconciliation to be produced
+      and signed off *before* the cutover window, not during it.
+    - `product-cdc` publishes the catalogue to blob storage for every consumer of
+      `libs/selfcare-onboarding-sdk-product`. It is `-ar`-only so it needs no consolidation, but it must be
+      re-pointed at the merged database in the same change or consumers keep serving the pre-merge snapshot.
 
 ### 8. Scale and noisy-neighbor protection
 - **Maps to:** ARCHITECTURE.md Scale expectations
