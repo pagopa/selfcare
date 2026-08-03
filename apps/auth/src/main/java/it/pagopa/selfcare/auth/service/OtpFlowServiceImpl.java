@@ -3,6 +3,7 @@ package it.pagopa.selfcare.auth.service;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
+import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.ConflictException;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -397,5 +399,21 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     .orElse(
                         Uni.createFrom()
                             .failure(new ResourceNotFoundException("Cannot find OtpFlow"))));
+  }
+
+  @Override
+  public Uni<OtpMailInfoResponse> getOtpMailInfo(String mailRequestId) {
+    return otpNotificationService
+      .getOtpMailInfo(mailRequestId)
+      .map(emailStatus -> new OtpMailInfoResponse(
+        emailStatus.getEmailId(),
+        emailStatus.getStatus().toString(),
+        emailStatus.getTo().getEmail(),
+        emailStatus.getAttempts(),
+        emailStatus.getHistory().stream()
+          .map(historyItem -> new OtpMailInfoResponse.MailStatusHistory(
+            historyItem.getStatus().toString(),
+            historyItem.getChangedAt()))
+          .toList()));
   }
 }

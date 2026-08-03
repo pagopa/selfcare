@@ -11,6 +11,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.ConflictException;
@@ -30,6 +31,10 @@ import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.openapi.quarkus.one_mail_json.model.EmailAddress;
+import org.openapi.quarkus.one_mail_json.model.EmailStatus;
+import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
+import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTOHistoryInner;
 
 @QuarkusTest
 public class OtpFlowServiceTest {
@@ -562,5 +567,74 @@ public class OtpFlowServiceTest {
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
+  }
+
+  @Test
+  void testGetOtpMailInfo_Success() {
+    String mailRequestId = "request-id";
+
+    EmailStatusItemResponseDTOHistoryInner history1 =
+      new EmailStatusItemResponseDTOHistoryInner();
+    history1.setStatus(EmailStatus.DELIVERED);
+    history1.setChangedAt(OffsetDateTime.now());
+
+    EmailStatusItemResponseDTOHistoryInner history2 =
+      new EmailStatusItemResponseDTOHistoryInner();
+    history2.setStatus(EmailStatus.QUEUED);
+    history2.setChangedAt(OffsetDateTime.now().minusMinutes(1));
+
+    EmailAddress emailAddress = new EmailAddress();
+    emailAddress.setEmail("test@test.com");
+
+    EmailStatusItemResponseDTO response =
+      EmailStatusItemResponseDTO.builder()
+        .emailId(mailRequestId)
+        .status(EmailStatus.DELIVERED)
+        .to(emailAddress)
+        .attempts(1)
+        .history(List.of(history1, history2))
+        .build();
+
+    when(otpNotificationService.getOtpMailInfo(mailRequestId))
+      .thenReturn(Uni.createFrom().item(response));
+
+    OtpMailInfoResponse result =
+      otpFlowService
+        .getOtpMailInfo(mailRequestId)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    Assertions.assertEquals(mailRequestId, result.getMailRequestId());
+    Assertions.assertEquals("Delivered", result.getStatus());
+    Assertions.assertEquals("test@test.com", result.getRecipient());
+    Assertions.assertEquals(1, result.getAttempts());
+
+    Assertions.assertEquals(2, result.getHistory().size());
+    Assertions.assertEquals(
+      "Delivered",
+      result.getHistory().get(0).getStatus());
+    Assertions.assertEquals(
+      history1.getChangedAt(),
+      result.getHistory().get(0).getChangedAt());
+
+    Assertions.assertEquals(
+      "Queued",
+      result.getHistory().get(1).getStatus());
+  }
+
+  @Test
+  void testGetOtpMailInfo_Failure() {
+    String mailRequestId = "request-id";
+
+    when(otpNotificationService.getOtpMailInfo(mailRequestId))
+      .thenReturn(Uni.createFrom().failure(new InternalException("OneMail error")));
+
+    otpFlowService
+      .getOtpMailInfo(mailRequestId)
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .assertFailedWith(InternalException.class, "OneMail error");
   }
 }
