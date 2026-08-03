@@ -84,7 +84,7 @@ resource "azurerm_role_assignment" "document_user_attachments_blob_identity_role
 # Private Endpoint + Private DNS integration for user-attachments storage
 ###############################################################################
 data "azurerm_subnet" "user_attachments_pep_snet" {
-  name                 = "${module.local.config.project}-user-attachments-snet"
+  name                 = "${module.local.config.project}-usrattach-snet"
   virtual_network_name = module.local.vnet_selc_name
   resource_group_name  = module.local.vnet_resource_group_name
 }
