@@ -79,7 +79,7 @@ jobs:
   #       TF_VAR_image_tag=sha-$(git rev-parse --short ${{ github.sha }})
   
   plan:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e08d8ce496df31036c9b04f42178c04947415cfc # main
     name: "[${{ inputs.env }}-${{ inputs.domain }}] ${{ inputs.app }} Core Release"
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit

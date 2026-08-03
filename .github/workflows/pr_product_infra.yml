@@ -25,7 +25,7 @@ on:
 
 jobs:
   code_review_dev_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e08d8ce496df31036c9b04f42178c04947415cfc # main
     name: "[DEV-AR] Product Infra Code Review"
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -40,7 +40,7 @@ jobs:
       override_labels: dev
 
   code_review_uat_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e08d8ce496df31036c9b04f42178c04947415cfc # main
     name: "[UAT-AR] Product Infra Code Review"
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -55,7 +55,7 @@ jobs:
       override_labels: uat
 
   code_review_prod_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e08d8ce496df31036c9b04f42178c04947415cfc # main
     name: "[PROD-AR] Product Infra Code Review"
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
