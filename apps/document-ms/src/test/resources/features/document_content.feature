@@ -213,3 +213,26 @@ Feature: Document content health
     When I send a POST request to "/v1/document-content/upload-user-attachment" with form data and multi-part file
     Then The status code is 409
 
+  Scenario: Delete user attachments soft-deletes all multi-instance uploads for an onboarding
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | onboardingId | onb-user-multi |
+    When I send a DELETE request to "/v1/document-content/{onboardingId}/user-attachments"
+    Then The status code is 200
+    And The response body contains the string "User attachments deleted successfully"
+
+  Scenario: Delete user attachments soft-deletes the single-instance upload for an onboarding
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | onboardingId | onb-user-single |
+    When I send a DELETE request to "/v1/document-content/{onboardingId}/user-attachments"
+    Then The status code is 200
+    And The response body contains the string "User attachments deleted successfully"
+
+  Scenario: Delete user attachments is a no-op when the onboarding has no attachments
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | onboardingId | onb-user-none |
+    When I send a DELETE request to "/v1/document-content/{onboardingId}/user-attachments"
+    Then The status code is 200
+    And The response body contains the string "No user attachments to delete"
