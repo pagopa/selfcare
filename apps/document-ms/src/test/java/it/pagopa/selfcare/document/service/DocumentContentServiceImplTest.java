@@ -1988,4 +1988,195 @@ class DocumentContentServiceImplTest {
                 .vatNumberGroup(false)
                 .build();
     }
+
+    // ============================================
+    // deleteUserAttachments
+    // ============================================
+
+
+    private Document buildUserAttachment(String id, String attachmentPath, String attachmentName) {
+        Document doc = new Document();
+        doc.setId(id);
+        doc.setOnboardingId(ONBOARDING_ID);
+        doc.setRootOnboardingId(ONBOARDING_ID);
+        doc.setProductId("prod-io");
+        doc.setType(DocumentType.ATTACHMENT);
+        doc.setStorageOrigin(StorageOrigin.USER);
+        doc.setAttachmentName(attachmentName);
+        doc.setAttachmentPath(attachmentPath);
+        return doc;
+    }
+
+    @Test
+    void deleteUserAttachments_shouldReturnNoop_whenNoAttachmentsFound() {
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.<Document>of()));
+
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertEquals("No user attachments to delete", result);
+        verify(azureBlobClient, never()).retrieveFile(anyString());
+        verify(documentRepository, never()).updateAttachmentPathById(anyString(), anyString());
+        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyList());
+        verify(telemetryService, never()).trackUserAttachmentsDeleteFailed(anyString(), anyString());
+    }
+
+    @Test
+    void deleteUserAttachments_shouldMoveEveryAttachment_andUpdateAttachmentPath() {
+        Document a1 = buildUserAttachment("doc-1", "parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf", "a1.pdf");
+        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/a2.pdf", "a2.pdf");
+
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(a1, a2)));
+
+        List<File> generatedFiles = new ArrayList<>();
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(inv -> {
+            File tmp = createTempPdf();
+            generatedFiles.add(tmp);
+            return tmp;
+        });
+        when(documentRepository.updateAttachmentPathById(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertEquals("User attachments deleted successfully: 2/2 [a1.pdf, a2.pdf]", result);
+
+        verify(azureBlobClient, times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, times(2)).removeFile(anyString());
+
+        verify(documentRepository).updateAttachmentPathById("doc-1",
+                "parties/deleted/" + ONBOARDING_ID + "/attachments/a1.pdf");
+        verify(documentRepository).updateAttachmentPathById("doc-2",
+                "parties/deleted/" + ONBOARDING_ID + "/attachments/a2.pdf");
+
+        // In-memory entity state kept coherent with the new path.
+        assertEquals("parties/deleted/" + ONBOARDING_ID + "/attachments/a1.pdf", a1.getAttachmentPath());
+        assertEquals("parties/deleted/" + ONBOARDING_ID + "/attachments/a2.pdf", a2.getAttachmentPath());
+
+        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, List.of("a1.pdf", "a2.pdf"));
+        verify(telemetryService, never()).trackUserAttachmentsDeleteFailed(anyString(), anyString());
+
+        for (File f : generatedFiles) {
+            assertFalse(f.exists(), "temporary file " + f.getName() + " should have been removed by the finally block");
+        }
+    }
+
+    @Test
+    void deleteUserAttachments_shouldSkipItem_whenAttachmentPathIsBlank() {
+        Document a1 = buildUserAttachment("doc-1", " ", "blank.pdf"); // blank
+        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/a2.pdf", "a2.pdf");
+
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(a1, a2)));
+
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(inv -> createTempPdf());
+        when(documentRepository.updateAttachmentPathById(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertEquals("User attachments deleted successfully: 1/2 [a2.pdf]", result);
+        verify(azureBlobClient, times(1)).retrieveFile(anyString());
+        verify(documentRepository, times(1)).updateAttachmentPathById(anyString(), anyString());
+        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, List.of("a2.pdf"));
+    }
+
+    @Test
+    void deleteUserAttachments_shouldSkipItem_whenAzureBlobNotFound() {
+        Document a1 = buildUserAttachment("doc-1", "parties/docs/" + ONBOARDING_ID + "/attachments/missing.pdf", "missing.pdf");
+        Document a2 = buildUserAttachment("doc-2", "parties/docs/" + ONBOARDING_ID + "/attachments/present.pdf", "present.pdf");
+
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(a1, a2)));
+
+        when(azureBlobClient.retrieveFile(a1.getAttachmentPath()))
+                .thenThrow(new SelfcareAzureStorageException("blob not found", "404"));
+        when(azureBlobClient.retrieveFile(a2.getAttachmentPath()))
+                .thenAnswer(inv -> createTempPdf());
+        when(documentRepository.updateAttachmentPathById(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(1L));
+
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertEquals("User attachments deleted successfully: 1/2 [present.pdf]", result);
+        verify(documentRepository, times(1)).updateAttachmentPathById(eq("doc-2"), anyString());
+        verify(documentRepository, never()).updateAttachmentPathById(eq("doc-1"), anyString());
+        verify(telemetryService).trackUserAttachmentsDeleted(ONBOARDING_ID, List.of("present.pdf"));
+    }
+
+    @Test
+    void deleteUserAttachments_shouldRollbackAzureMove_whenDbUpdateFailsConsistently() {
+        // Arrange: one user attachment, Azure move succeeds, Mongo update keeps failing → rollback is triggered.
+        Document a1 = buildUserAttachment("doc-1",
+                "parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf", "a1.pdf");
+
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentMsConfig.getDeletePath()).thenReturn("parties/deleted/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(List.of(a1)));
+
+        List<File> generatedFiles = new ArrayList<>();
+        when(azureBlobClient.retrieveFile(anyString())).thenAnswer(inv -> {
+            File tmp = createTempPdf();
+            generatedFiles.add(tmp);
+            return tmp;
+        });
+
+        // Persistent DB failure to exhaust the retry policy and trigger the rollback path.
+        when(documentRepository.updateAttachmentPathById(eq("doc-1"), anyString()))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Fatal DB Error")));
+
+        // Act
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        // Assert: outer flow recovers gracefully, failure is tracked, success telemetry is not emitted.
+        assertEquals("User attachments deletion skipped due to error", result);
+        verify(telemetryService).trackUserAttachmentsDeleteFailed(eq(ONBOARDING_ID), anyString());
+        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyList());
+
+        // Rollback contract: 1 initial move + 1 rollback move → 2 retrieve / upload / remove interactions on Azure.
+        verify(azureBlobClient, times(2)).retrieveFile(anyString());
+        verify(azureBlobClient, times(2)).uploadFilePath(anyString(), any(byte[].class));
+        verify(azureBlobClient, times(2)).removeFile(anyString());
+
+        // Rollback re-uploads back to the original path and removes the moved (deleted-path) blob.
+        verify(azureBlobClient).uploadFilePath(
+                eq("parties/docs/" + ONBOARDING_ID + "/attachments/a1.pdf"), any(byte[].class));
+        verify(azureBlobClient).removeFile(
+                eq("parties/deleted/" + ONBOARDING_ID + "/attachments/a1.pdf"));
+
+        // No temp files must be left behind by the rollback helper.
+        for (File f : generatedFiles) {
+            assertFalse(f.exists(),
+                    "temporary file " + f.getName() + " should have been removed by the rollback path");
+        }
+    }
+
+    @Test
+    void deleteUserAttachments_shouldRecoverGracefully_whenRepositoryFails() {
+        when(documentMsConfig.getContractPath()).thenReturn("parties/docs/");
+        when(documentRepository.findUserAttachmentsByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("db down")));
+
+        String result = documentContentService.deleteUserAttachments(ONBOARDING_ID)
+                .await().indefinitely();
+
+        assertEquals("User attachments deletion skipped due to error", result);
+        verify(telemetryService).trackUserAttachmentsDeleteFailed(eq(ONBOARDING_ID), anyString());
+        verify(telemetryService, never()).trackUserAttachmentsDeleted(anyString(), anyList());
+    }
 }
