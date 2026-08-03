@@ -54,6 +54,8 @@ public interface DocumentContentService {
 
     Uni<String> deleteContract(String onboardingId);
 
+    Uni<String> deleteUserAttachments(String onboardingId);
+
     Uni<Void> uploadAggregatesCsv(UploadAggregateCsvRequest request);
 
   Uni<String> uploadSignedContract(

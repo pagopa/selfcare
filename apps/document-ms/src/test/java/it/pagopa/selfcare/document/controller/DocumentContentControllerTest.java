@@ -936,6 +936,56 @@ class DocumentContentControllerTest {
                 .statusCode(500);
     }
 
+    // ============================================
+    // deleteUserAttachments
+    // ============================================
+
+    @Test
+    void deleteUserAttachments_shouldReturnOk_whenDeletionSuccessful() {
+        String onboardingId = "test-onboarding-123";
+        String expectedMessage = "User attachments deleted successfully: 3/3";
+
+        when(documentContentService.deleteUserAttachments(onboardingId))
+                .thenReturn(Uni.createFrom().item(expectedMessage));
+
+        given()
+                .when()
+                .delete(BASE_PATH + onboardingId + "/user-attachments")
+                .then()
+                .statusCode(200)
+                .body(equalTo(expectedMessage));
+    }
+
+    @Test
+    void deleteUserAttachments_shouldReturnOk_whenNoAttachmentsFound() {
+        String onboardingId = "test-onboarding-empty";
+        String expectedMessage = "No user attachments to delete";
+
+        when(documentContentService.deleteUserAttachments(onboardingId))
+                .thenReturn(Uni.createFrom().item(expectedMessage));
+
+        given()
+                .when()
+                .delete(BASE_PATH + onboardingId + "/user-attachments")
+                .then()
+                .statusCode(200)
+                .body(equalTo(expectedMessage));
+    }
+
+    @Test
+    void deleteUserAttachments_shouldReturnInternalServerError_whenServiceFails() {
+        String onboardingId = "test-onboarding-123";
+
+        when(documentContentService.deleteUserAttachments(onboardingId))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("Azure exploded")));
+
+        given()
+                .when()
+                .delete(BASE_PATH + onboardingId + "/user-attachments")
+                .then()
+                .statusCode(500);
+    }
+
     @Test
     void uploadSignedContract_Success() {
         // GIVEN: Il service risponde con successo

@@ -241,6 +241,25 @@ public class DocumentContentController {
     }
 
     @Operation(
+            summary = "Delete user attachments from Azure Blob Storage",
+            description = "Delete every user-uploaded attachment associated with the specified onboarding ID from Azure Blob Storage."
+    )
+    @APIResponses({
+            @APIResponse(responseCode = "200", description = "User attachments soft-deletion completed"),
+            @APIResponse(responseCode = "500", description = "Internal server error during deletion")
+    })
+    @DELETE
+    @Path("/{onboardingId}/user-attachments")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> deleteUserAttachments(
+            @NotBlank(message = "Path param onboardingId cannot be null or blank")
+            @PathParam("onboardingId") String onboardingId) {
+        log.info("Deleting user attachments for onboardingId: {}", sanitize(onboardingId));
+        return documentContentService.deleteUserAttachments(onboardingId)
+                .onItem().transform(result -> Response.ok(result).build());
+    }
+
+    @Operation(
             summary = "Upload aggregates CSV to Azure Blob Storage",
             description = "Receives the aggregates CSV data and stores it in Azure Blob Storage." +
                     " The request must contain productId, filename and filePath"
