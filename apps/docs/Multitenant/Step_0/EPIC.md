@@ -622,6 +622,43 @@ fine-grained authorization model design (tracked separately, currently `TO BE DE
        the moment traffic moves, and sub-task 4 has to land first.
     4. Any secret that genuinely differs per tenant must become a per-tenant env var resolved app-side, never
        a single collapsed value.
+       - **Concrete gap found while reviewing `onboarding-ms` (`infra/resources/onboarding-ms/dev-pnpg/onboarding.tf`):**
+         `MONGODB-CONNECTION-STRING` and `AZURE_STORAGE_ACCOUNT_NAME` are today declared with the *same* literal
+         name in the `-ar` and `-pnpg` stacks, each pointing at a different value only because the two stacks
+         are separate deployments. A single consolidated container app cannot carry two secrets/app settings
+         under one name, so every one of these flat, tenant-blind env vars must become **one env var per
+         tenant** before its owning stack is consolidated.
+       - **Recommended pattern — generalize the registry already built for sub-task 9 rather than inventing a
+         parallel mechanism:**
+         1. **Terraform:** derive the per-tenant secret/app-setting names from
+            `module.local.config.tenant_data_isolation` with a `for`/`merge` expression (one entry per tenant
+            key), instead of hand-writing a name per service:
+            ```hcl
+            secrets_names = merge([
+              for tenant, mapping in module.local.config.tenant_data_isolation : {
+                "MONGODB-CONNECTION-STRING-${tenant}" = mapping.cosmos_connection_string_secret_name
+              }
+            ]...)
+            ```
+            The registry already anticipated the Key Vault collision: `cosmos_connection_string_secret_name` is
+            `mongodb-connection-string` for AR but `mongodb-connection-string-pnpg` for PNPG specifically so
+            both can coexist in one vault post-consolidation. The storage account name needs no secret at all —
+            it is already derivable per tenant from `storage_account_infix`.
+         2. **Application code (the part Terraform alone cannot fix):** replace the single
+            `quarkus.mongodb.connection-string` / single blob-storage account-name property with a **per-tenant
+            client selected at request time by the already-resolved `TenantId`** (`TenantContext`), not a
+            request-time secret fetch from Key Vault (avoids adding Key Vault latency/dependency to the request
+            path, and there are only two known, fail-closed tenants):
+            - Mongo: Quarkus native *named clients* — `quarkus.mongodb.ar.connection-string` /
+              `quarkus.mongodb.pnpg.connection-string` — resolved to the right `ReactiveMongoClient` via
+              `@MongoClientName` at startup, keyed by `TenantId` (matches the database-per-tenant model already
+              chosen for SELC-8).
+            - Storage: an `EnumMap<TenantId, BlobServiceClient>` built once at startup from the per-tenant
+              account name/credentials, mirroring how `TenantDataIsolationRegistry.storageContainer(...)`
+              already derives the per-tenant container name.
+         - This is application work, not a Terraform-only change, and belongs to the app's own consolidation
+           conversion (sub-task 7), not to the shared registry infrastructure — tracked here as a prerequisite
+           so it is not rediscovered per app.
   - **Remaining: 12 of 13 apps × 3 environments (36 stacks), plus `iam` uat/prod.** Deliberately not attempted
     in one pass — each stateful app carries its own data migration, and a bulk conversion would produce a large
     unreviewable diff whose riskiest parts (the data merges) are invisible in it.
