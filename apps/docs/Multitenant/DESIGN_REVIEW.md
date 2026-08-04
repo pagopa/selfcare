@@ -744,6 +744,69 @@ toccata. Le query `tenantScoped(...)` restano comunque utili come difesa in prof
 di migrazione, ma diventano ridondanti — non più necessarie per l'isolamento — una volta che ogni pod parla
 con un solo Cosmos per tenant tramite questo factory.
 
+### Selezione dello storage account per tenant (Quarkus e Spring, stesso pattern)
+
+Verificato nel codice: ogni connector di storage oggi presente nel repository costruisce **un solo**
+`BlobServiceClient`/`BlobServiceAsyncClient`, una volta sola nel costruttore, da un'**unica** proprietà di
+connection-string/account-name — lo stesso gap già visto per Mongo, ma replicato indipendentemente in
+quattro classi: `AzureBlobClient` (`institution-ms`, Spring), `AzureBlobClient` (`dashboard-bff`, Spring),
+`ContractTemplateStorageImpl` (`product`, Quarkus) e la configurazione blob di `onboarding-ms`
+(`onboarding-ms.blob-storage.account-name-product`, Quarkus). Nessuna di queste ha mai avuto bisogno di
+selezionare un account diverso a runtime, perché finora ogni pod gira in uno stack `-ar` o `-pnpg` isolato.
+
+A differenza di Mongo, qui **non serve un meccanismo specifico per framework**: l'SDK Azure Storage
+(`com.azure.storage.blob`) è già usato in modo completamente manuale in tutte e quattro le classi — non c'è
+un layer applicativo (Panache, Spring Data) che intercetta le chiamate e va convinto a rieseguire una
+lookup. Basta un unico provider, identico in Quarkus e Spring a meno delle annotazioni, che costruisce gli N
+client all'avvio (uno per tenant, da `TenantDataIsolationRegistry.storageAccountInfix(tenant)` — la stessa
+fonte già usata per SELC-9.4) ed espone un metodo risolto ad ogni chiamata:
+
+```java
+@ApplicationScoped // Spring: @Component
+public class TenantAwareBlobServiceClientProvider {
+
+  private final EnumMap<TenantId, BlobServiceClient> clientsByTenant = new EnumMap<>(TenantId.class);
+  private final CurrentTenantProvider currentTenantProvider;
+
+  @Inject // Spring: costruttore unico, nessuna annotazione richiesta
+  public TenantAwareBlobServiceClientProvider(
+      TenantDataIsolationRegistry registry,
+      @ConfigProperty(name = "blobstorage.account-base-name") String baseAccountName, // Spring: @Value
+      @ConfigProperty(name = "blobstorage.managed-identity-client-id") String managedIdentityClientId,
+      CurrentTenantProvider currentTenantProvider) {
+    this.currentTenantProvider = currentTenantProvider;
+    for (TenantId tenant : TenantId.values()) {
+      String accountName = baseAccountName + registry.storageAccountInfix(tenant);
+      clientsByTenant.put(tenant, new BlobServiceClientBuilder()
+          .endpoint("https://" + accountName + ".blob.core.windows.net")
+          .credential(new DefaultAzureCredentialBuilder()
+              .managedIdentityClientId(managedIdentityClientId).build())
+          .buildClient());
+    }
+  }
+
+  public BlobServiceClient current() {
+    TenantId tenant = currentTenantProvider.currentTenantId()
+        .map(TenantId::valueOf)
+        .orElseThrow(UnresolvedTenantMappingException::new); // fail-closed, nessun default silenzioso
+    return clientsByTenant.get(tenant);
+  }
+}
+```
+
+I quattro connector esistenti cambiano nello stesso modo: sostituire il campo `BlobServiceClient` costruito
+nel costruttore con l'iniezione di `TenantAwareBlobServiceClientProvider`, e chiamare `.current()` all'inizio
+di ogni metodo (`getTemplateFile`, `uploadInstitutionLogo`, `upload`, ...) invece di leggere il campo fisso —
+mai una volta sola, per restare corretti con richieste AR/PNPG interlacciate sullo stesso processo. Per
+`ContractTemplateStorageImpl` (client asincrono) l'`EnumMap` contiene `BlobServiceAsyncClient` invece della
+variante sincrona; il resto del pattern è identico.
+
+Questo copre solo la selezione dell'**account**; il nome del **container**, dove un servizio condivide un
+solo account tra tenant (SELC-9.3), resta un problema diverso e già coperto da
+`TenantDataIsolationRegistry.storageContainer(tenant, baseContainerName)` — i due meccanismi non vanno
+combinati per lo stesso servizio, sono alternativi a seconda di quale modello di isolamento storage è stato
+scelto per quel servizio.
+
 ---
 
 # Business continuity & disaster recovery
