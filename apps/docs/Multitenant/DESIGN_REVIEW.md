@@ -673,6 +673,77 @@ Da non confondere con il modello discriminator-field già consegnato (`document-
 oggi, mantengono Cosmos **fisicamente separato per tenant**; una volta consolidato il database, il servizio
 dovrebbe migrare al modello discriminator-field invece di continuare a mantenere due client.
 
+### Equivalente per i microservizi Spring
+
+Tra i 6 servizi "stateful" del sub-task 7 (Cosmos in entrambi gli account AR e PNPG oggi), due sono Spring
+anziché Quarkus: `institution-ms` e `user-group-ms`. Entrambi implementano già lato codice il modello
+discriminator-field (query `tenantScoped(...)` — vedi `MongoCustomConnectorImpl` in `institution-ms` e
+`UserGroupServiceImpl.tenantScoped(...)` in `user-group-ms`), ma girano oggi contro **due Cosmos ancora
+separati**, uno per stack (`dev-ar`, `dev-pnpg` dichiarano ciascuno un proprio `module "cosmosdb"`): lo
+stesso gap di `onboarding-ms`, solo mascherato dal fatto che ogni pod oggi si connette a un solo account.
+
+Spring Data MongoDB non ha un `@MongoClientName` nativo, ma offre un punto di innesto equivalente e più
+centralizzato: `MongoTemplate.doGetDatabase()` delega a `MongoDatabaseUtils.getDatabase(mongoDbFactory, ...)`
+**a ogni chiamata** (verificato via bytecode, non è cacheato in un campo), quindi basta un
+`MongoDatabaseFactory` custom — lo stesso pattern di `AbstractRoutingDataSource` per JDBC, applicato a Mongo:
+
+```java
+public class TenantRoutingMongoDatabaseFactory implements MongoDatabaseFactory {
+
+  private final MongoDatabaseFactory arFactory;
+  private final MongoDatabaseFactory pnpgFactory;
+  private final CurrentTenantProvider currentTenantProvider;
+
+  @Override
+  public MongoDatabase getMongoDatabase() {
+    return delegate().getMongoDatabase();
+  }
+
+  @Override
+  public MongoDatabase getMongoDatabase(String dbName) {
+    return delegate().getMongoDatabase(dbName);
+  }
+
+  private MongoDatabaseFactory delegate() {
+    String tenant = currentTenantProvider.currentTenantId()
+        .orElseThrow(UnresolvedTenantMappingException::new); // fail-closed
+    return "PNPG".equals(tenant) ? pnpgFactory : arFactory;
+  }
+
+  // getExceptionTranslator(), getSession(...), withSession(...): delegare allo stesso modo
+}
+
+@Configuration
+public class TenantAwareMongoConfig {
+
+  @Bean @Primary
+  public MongoDatabaseFactory tenantRoutingMongoDatabaseFactory(
+      @Qualifier("arDbFactory") MongoDatabaseFactory ar,
+      @Qualifier("pnpgDbFactory") MongoDatabaseFactory pnpg,
+      CurrentTenantProvider currentTenantProvider) {
+    return new TenantRoutingMongoDatabaseFactory(ar, pnpg, currentTenantProvider);
+  }
+
+  @Bean("arDbFactory")
+  public MongoDatabaseFactory arDbFactory(@Value("${mongodb.ar.uri}") String uri) {
+    return new SimpleMongoClientDatabaseFactory(uri);
+  }
+
+  @Bean("pnpgDbFactory")
+  public MongoDatabaseFactory pnpgDbFactory(@Value("${mongodb.pnpg.uri}") String uri) {
+    return new SimpleMongoClientDatabaseFactory(uri);
+  }
+}
+```
+
+Il vantaggio rispetto a Quarkus/Panache: qui il dispatch è **centralizzato in un solo bean**, non va
+ripetuto per ogni repository. Il `MongoTemplate`/`MongoOperations` condiviso (iniettato in
+`MongoCustomConnectorImpl` per `institution-ms`, o dietro le `MongoRepository` auto-generate di
+`user-group-ms`) resta invariato: nessuna repository, custom o auto-generata da Spring Data, deve essere
+toccata. Le query `tenantScoped(...)` restano comunque utili come difesa in profondità durante la finestra
+di migrazione, ma diventano ridondanti — non più necessarie per l'isolamento — una volta che ogni pod parla
+con un solo Cosmos per tenant tramite questo factory.
+
 ---
 
 # Business continuity & disaster recovery
