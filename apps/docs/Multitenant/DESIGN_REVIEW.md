@@ -587,6 +587,49 @@ Entità logiche note (dettaglio completo in `Step_0/REQUIREMENTS.md` "Business o
 Non è ancora presente un formato Data Contract/JSON-Schema versionato per queste entità nel repository; si
 raccomanda di completarlo prima dell'implementazione, secondo la convenzione richiamata dal template DR.
 
+## Registro `tenant_data_isolation` e naming delle variabili per-tenant
+
+Il mapping dati per tenant sopra descritto (Cosmos DB, Storage, vault, email) è già implementato come
+sorgente unica di verità in `local.tenant_data_isolation`
+(`infra/resources/_modules/local-env/locals.tf`, Step_1/EPIC.md sub-task 9), consumato dai microservizi
+tramite un'unica variabile d'ambiente JSON (`SELFCARE_TENANT_DATA_ISOLATION`) e la classe
+`TenantDataIsolationRegistry` (`libs/selfcare-sdk-security`): ogni lookup è fail-closed e il tenant deve
+essere già stato validato a monte.
+
+**Gap identificato in fase di review** (`infra/resources/onboarding-ms/dev-pnpg/onboarding.tf`): oggi
+`MONGODB-CONNECTION-STRING` e `AZURE_STORAGE_ACCOUNT_NAME` sono dichiarate con lo **stesso nome letterale**
+negli stack `-ar` e `-pnpg`, ciascuna puntata a un valore diverso solo perché i due stack sono deployment
+separati. Nel momento in cui `infra/resources/<app>/{dev,uat,prod}-ar`/`-pnpg` confluiranno in un unico
+stack (Step_0/EPIC.md sub-task 7), una singola container app non può portare due secret/app setting sotto
+lo stesso nome: ogni variabile di questo tipo deve diventare **una variabile per tenant** prima che lo
+stack che la dichiara venga consolidato.
+
+Pattern raccomandato — generalizzare il registro già costruito per il sub-task 9 invece di introdurne uno
+parallelo:
+
+1. **Terraform**: derivare i nomi dei secret/app setting per tenant da `module.local.config.tenant_data_isolation`
+   con un'espressione `for`/`merge` (una voce per chiave tenant), anziché un nome scritto a mano per servizio.
+   Il registro anticipa già la collisione nel Key Vault: `cosmos_connection_string_secret_name` è
+   `mongodb-connection-string` per AR ma `mongodb-connection-string-pnpg` per PNPG, proprio perché entrambi
+   dovranno coesistere nello stesso vault post-consolidamento. Il nome dell'account di storage non richiede
+   nemmeno un secret: è già derivabile per tenant da `storage_account_infix`.
+2. **Codice applicativo** (parte che Terraform da solo non risolve): sostituire la singola proprietà
+   `quarkus.mongodb.connection-string` / il singolo account-name di storage con un **client selezionato per
+   tenant a runtime dal `TenantId` già risolto** (`TenantContext`), non con un fetch del secret da Key Vault
+   ad ogni richiesta (evita di aggiungere una dipendenza/latenza Key Vault nel percorso di richiesta, e i
+   tenant noti fail-closed sono solo due):
+   - Mongo: *named client* nativi di Quarkus (`quarkus.mongodb.ar.connection-string` /
+     `quarkus.mongodb.pnpg.connection-string`), risolti al `ReactiveMongoClient` corretto tramite
+     `@MongoClientName` all'avvio, indicizzati per `TenantId` (coerente col modello database-per-tenant già
+     scelto per SELC-8).
+   - Storage: una `EnumMap<TenantId, BlobServiceClient>` costruita una volta all'avvio dal nome
+     account/credenziali per tenant, sullo stesso principio con cui
+     `TenantDataIsolationRegistry.storageContainer(...)` deriva già il nome del container per tenant.
+
+Questo è lavoro applicativo, non solo Terraform, e appartiene alla conversione di consolidamento di ogni
+singola app (Step_0/EPIC.md sub-task 7), non al registro condiviso: è tracciato qui come prerequisito
+esplicito perché non venga riscoperto app per app.
+
 ---
 
 # Business continuity & disaster recovery
