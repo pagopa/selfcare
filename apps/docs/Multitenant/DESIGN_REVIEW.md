@@ -630,6 +630,49 @@ Questo è lavoro applicativo, non solo Terraform, e appartiene alla conversione 
 singola app (Step_0/EPIC.md sub-task 7), non al registro condiviso: è tracciato qui come prerequisito
 esplicito perché non venga riscoperto app per app.
 
+### Meccanismo di dispatch runtime per i named client Mongo
+
+Il tenant è già risolto **prima** che un repository venga invocato: `TenantValidationFilter` valorizza
+`TenantContext` (`@RequestScoped`) all'ingresso della request; ogni repository legge da lì tramite
+`CurrentTenantProvider.currentTenantId()`, mai dall'header grezzo (stesso principio già in uso nel modello
+discriminator-field di `document-ms`).
+
+Per selezionare il named client corretto a ogni chiamata, senza abbandonare il pattern Panache già in uso
+nel resto della codebase, il punto di innesto è l'override di `mongoDatabase()` (o `mongoCollection()`),
+esposto da `ReactivePanacheMongoRepositoryBase` come metodo `default` **sovrascrivibile**: Quarkus genera
+un'implementazione di default a build-time solo se il repository non ne fornisce una propria; se la
+sovrascrivi esplicitamente, la tua implementazione ha precedenza ed è invocata a **ogni** operazione
+(`find`, `persist`, `update`, ...), non una sola volta alla creazione del bean:
+
+```java
+@ApplicationScoped
+public class OnboardingRepository implements ReactivePanacheMongoRepositoryBase<Onboarding, String> {
+
+  @Inject @MongoClientName("ar")   ReactiveMongoClient arClient;
+  @Inject @MongoClientName("pnpg") ReactiveMongoClient pnpgClient;
+  @Inject CurrentTenantProvider currentTenantProvider;
+
+  @Override
+  public ReactiveMongoDatabase mongoDatabase() {
+    TenantId tenant = currentTenantProvider.currentTenantId()
+        .map(TenantId::valueOf)
+        .orElseThrow(UnresolvedTenantMappingException::new); // fail-closed, nessun default silenzioso
+    return (tenant == TenantId.PNPG ? pnpgClient : arClient).getDatabase("selcOnboarding");
+  }
+}
+```
+
+Poiché `mongoDatabase()` è rivalutato a ogni chiamata, un unico bean `@ApplicationScoped` (nessuna
+sottoclasse per tenant, nessuna repository factory) risolve correttamente il client anche con richieste
+AR/PNPG interlacciate sullo stesso processo. Verificato che `io.quarkus.mongodb.MongoClientName` è
+disponibile nella versione Quarkus effettivamente pinnata dal progetto (3.31.2), non solo nell'ultima
+disponibile in cache locale.
+
+Da non confondere con il modello discriminator-field già consegnato (`document-ms`, filtro `WHERE tenantId
+= ...` su un unico database): il named client è la soluzione per i soli servizi che, come `onboarding-ms`
+oggi, mantengono Cosmos **fisicamente separato per tenant**; una volta consolidato il database, il servizio
+dovrebbe migrare al modello discriminator-field invece di continuare a mantenere due client.
+
 ---
 
 # Business continuity & disaster recovery
