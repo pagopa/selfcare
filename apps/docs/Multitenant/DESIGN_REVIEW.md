@@ -145,8 +145,58 @@ Upstream: frontend React di `selfcare.pagopa.it` e `imprese.notifichedigitali.it
 esterno/black-box), Azure Cosmos DB, Azure Storage, Personal Data Vault (provider `TO BE DECIDED`), provider
 email/SMTP.
 
-*Diagramma da produrre con diagrams-as-code (vedi convenzione tecnica del repository); non ancora presente nei
-documenti sorgente — segnaposto.*
+```plantuml
+@startuml selfcare-multitenant-system-context
+!theme plain
+
+title Selfcare Multitenant - System Context
+
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam wrapWidth 220
+skinparam maxMessageSize 120
+
+actor "AR User" as ar_user
+actor "PNPG User" as pnpg_user
+
+cloud "AR Frontend\nselfcare.pagopa.it" as ar_frontend
+cloud "PNPG Frontend\nimprese.notifichedigitali.it" as pnpg_frontend
+
+cloud "OneIdentity\nExternal Identity Provider" as one_identity
+cloud "hub-spid-login\nExternal SPID token issuer" as hub_spid
+
+rectangle "Selfcare Multitenant Platform\n\nShared APIM, auth and backend microservices.\nResolves and validates the tenant identity,\nthen enforces tenant isolation fail-closed." as selfcare
+
+database "Azure Cosmos DB\nTenant-isolated data" as cosmos
+storage "Azure Storage\nTenant-isolated objects" as storage
+rectangle "Personal Data Vault\nTenant-isolated PII\nProvider: TO BE DECIDED" as vault
+cloud "Email / SMTP Provider\nTenant-specific sender domain" as email
+
+ar_user --> ar_frontend : Uses
+ar_frontend --> one_identity : Authenticates
+one_identity --> selfcare : Returns verified identity\nto the auth flow
+selfcare --> ar_frontend : Issues tenant-aware JWT
+ar_frontend --> selfcare : HTTPS requests\nwith JWT
+
+pnpg_user --> pnpg_frontend : Uses
+pnpg_frontend --> hub_spid : Authenticates via SPID
+hub_spid --> pnpg_frontend : Issues SPID JWT
+pnpg_frontend --> selfcare : HTTPS requests\nwith JWT
+
+selfcare --> cosmos : Reads and writes data\nusing validated tenant
+selfcare --> storage : Reads and writes objects\nusing validated tenant
+selfcare --> vault : Reads and writes PII\nusing validated tenant
+selfcare --> email : Sends email using\ntenant identity
+
+note bottom of selfcare
+  APIM never trusts a client-provided tenant header.
+  Unknown tenants and header/claim mismatches are rejected.
+  The temporary hub-spid-login fallback to PNPG is audited.
+end note
+
+@enduml
+```
 
 ### Diagramma delle componenti (Container Diagram)
 
@@ -165,8 +215,82 @@ Componenti applicative note:
 - **Personal Data Vault**: PII, selezione istanza per tenant (SELC-10); provider `TO BE DECIDED`.
 - **Email/SMTP provider**: invio tenant-aware (SELC-11); servizio noto: `institution-send-mail-scheduler`.
 
-*Diagramma grafico da produrre; contenuti sopra derivati da `Step_0/ARCHITECTURE.md` e
-`Step_1/ARCHITECTURE.md`.*
+```plantuml
+@startuml selfcare-multitenant-container-diagram
+!theme plain
+
+title Selfcare Multitenant - Container Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam wrapWidth 220
+skinparam maxMessageSize 120
+
+actor "AR User" as ar_user
+actor "PNPG User" as pnpg_user
+
+cloud "OneIdentity\nExternal Identity Provider" as one_identity
+cloud "hub-spid-login\nExternal SPID token issuer" as hub_spid
+rectangle "Personal Data Vault\nProvider: TO BE DECIDED" as vault
+cloud "Email / SMTP Provider" as email
+
+node "Frontend Applications" {
+  component "AR Frontend\nReact\nselfcare.pagopa.it" as ar_frontend
+  component "PNPG Frontend\nReact\nimprese.notifichedigitali.it" as pnpg_frontend
+}
+
+rectangle "Selfcare Multitenant Backend" {
+  component "Azure API Management\n\nTrusted ingress gateway.\nResolves tenant from request context,\noverwrites X-Tenant-Id and applies\ntenant-aware rate limiting." as apim
+
+  component "auth\nQuarkus\n\nCompletes the OneIdentity flow and\nissues JWTs with the tenant claim." as auth
+
+  component "SPID Tenant Claim Injection\nMechanism: TO BE DECIDED\n\nAdds the trusted PNPG tenant identity\nwithout weakening SPID validation." as spid_injector
+
+  component "Backend Microservices\nQuarkus / Mutiny - apps/*\n\nReconcile JWT claim and X-Tenant-Id,\nexecute business logic and enforce\ntenant-aware data access fail-closed." as backend
+
+  component "institution-send-mail-scheduler\nQuarkus\n\nSelects tenant-specific sender identity\nfor queued notifications." as scheduler
+
+  database "Azure Cosmos DB\nMongo API\n\nDiscriminator field or\ndatabase per tenant" as cosmos
+
+  storage "Azure Storage\n\nContainer or account\nper tenant" as storage
+}
+
+ar_user --> ar_frontend : Uses
+pnpg_user --> pnpg_frontend : Uses
+
+ar_frontend --> one_identity : Starts authentication
+one_identity --> auth : Returns verified identity
+auth --> ar_frontend : Returns tenant-aware JWT
+
+pnpg_frontend --> hub_spid : Starts SPID authentication
+hub_spid --> pnpg_frontend : Returns SPID JWT
+
+ar_frontend --> apim : HTTPS API requests\nwith JWT
+pnpg_frontend --> apim : HTTPS API requests\nwith JWT
+
+apim --> spid_injector : Routes eligible SPID tokens\nfor tenant claim injection
+spid_injector --> backend : JWT with trusted tenant claim\nand X-Tenant-Id
+apim --> backend : JWT and overwritten\nX-Tenant-Id
+
+backend --> cosmos : Tenant-scoped queries\nand writes
+backend --> storage : Tenant-scoped object\naccess
+backend --> vault : Tenant-scoped PII\naccess
+backend --> scheduler : Queues tenant-aware\nemail notifications
+scheduler --> email : Sends with tenant-specific\ndomain and credentials
+
+note bottom of apim
+  Unknown hosts, tenants and caller mappings are rejected.
+  Client-provided X-Tenant-Id values are never trusted.
+end note
+
+note bottom of backend
+  The validated tenant context is the only source used
+  to select Cosmos DB, Storage, vault and email resources.
+end note
+
+@enduml
+```
 
 ### Diagramma dell'architettura (Deployment Diagram)
 
@@ -177,7 +301,126 @@ app, Azure Key Vault (secret/cert storage), DNS pubblico/privato (`infra/core/_m
 condiviso per ambiente, con i due legacy dismessi post-validazione (`Step_0/ARCHITECTURE.md` "Deployment
 model").
 
-*Diagramma grafico da produrre.*
+```plantuml
+@startuml selfcare-multitenant-deployment-diagram
+!theme plain
+
+title Selfcare Multitenant - Deployment Diagram
+
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam wrapWidth 220
+skinparam maxMessageSize 120
+
+actor "AR User" as ar_user
+actor "PNPG User" as pnpg_user
+
+cloud "Public Internet" {
+  node "Public DNS" as public_dns {
+    artifact "selfcare.pagopa.it" as ar_dns
+    artifact "imprese.notifichedigitali.it" as pnpg_dns
+  }
+}
+
+cloud "Microsoft Azure - Environment: dev / uat / prod" as azure {
+  node "Frontend Hosting" as frontend_hosting {
+    artifact "AR React frontend" as ar_frontend
+    artifact "PNPG React frontend" as pnpg_frontend
+  }
+
+  node "Azure API Management" as apim {
+    component "AR API routes" as ar_routes
+    component "PNPG API routes" as pnpg_routes
+    component "Tenant resolution policies\nHost / subscription mapping\nX-Tenant-Id overwrite" as policies
+  }
+
+  node "Target Shared Stack" as target {
+    node "Azure Container Apps Environment" as cae {
+      component "auth" as auth
+      component "Shared backend microservices\napps/*" as backend
+      component "institution-send-mail-scheduler" as scheduler
+    }
+
+    node "Azure Key Vault" as key_vault {
+      artifact "JWT keys and certificates" as jwt_secrets
+      artifact "Cosmos, Storage and email secrets" as service_secrets
+    }
+
+    database "Azure Cosmos DB\nMongo API" as cosmos
+    storage "Azure Storage Accounts" as storage
+    node "Private DNS / Network Integration" as private_network
+  }
+
+  frame "Parallel-run migration only" as migration {
+    node "Legacy AR Stack\n*-ar" as legacy_ar {
+      component "AR Container Apps" as legacy_ar_apps
+      database "AR data resources" as legacy_ar_data
+    }
+
+    node "Legacy PNPG Stack\n*-pnpg" as legacy_pnpg {
+      component "PNPG Container Apps" as legacy_pnpg_apps
+      database "PNPG data resources" as legacy_pnpg_data
+    }
+  }
+}
+
+cloud "External Services" {
+  component "OneIdentity" as one_identity
+  component "hub-spid-login" as hub_spid
+  component "Personal Data Vault\nTO BE DECIDED" as vault
+  component "Email / SMTP Provider" as email
+}
+
+ar_user --> ar_dns : HTTPS
+pnpg_user --> pnpg_dns : HTTPS
+ar_dns --> ar_frontend : Resolves frontend endpoint
+pnpg_dns --> pnpg_frontend : Resolves frontend endpoint
+ar_frontend --> ar_routes : HTTPS API requests
+pnpg_frontend --> pnpg_routes : HTTPS API requests
+
+ar_routes --> policies
+pnpg_routes --> policies
+policies --> auth : OneIdentity login flow
+policies --> backend : Tenant-aware API traffic
+
+auth --> one_identity : Authentication
+pnpg_frontend --> hub_spid : SPID authentication
+hub_spid --> pnpg_frontend : Issues SPID JWT
+
+auth --> key_vault : Reads signing material
+backend --> key_vault : Reads service credentials
+scheduler --> key_vault : Reads tenant email credentials
+
+backend --> cosmos : Tenant-scoped data access
+backend --> storage : Tenant-scoped object access
+backend --> vault : Tenant-scoped PII access
+scheduler --> email : Tenant-specific sender
+
+cae --> private_network : Private connectivity
+private_network --> cosmos
+private_network --> storage
+private_network --> key_vault
+
+policies ..> legacy_ar_apps : Temporary rollback route
+policies ..> legacy_pnpg_apps : Temporary rollback route
+legacy_ar_apps --> legacy_ar_data
+legacy_pnpg_apps --> legacy_pnpg_data
+
+note bottom of migration
+  The shared stack runs beside both legacy stacks.
+  APIM performs the cutover; legacy resources remain available
+  until production validation succeeds, then are decommissioned.
+end note
+
+note bottom of target
+  One shared deployment exists per environment.
+  Tenant isolation is preserved in application policies,
+  data access, storage resolution, secrets and email identity.
+end note
+
+@enduml
+```
 
 ## Vista dinamica delle componenti
 
@@ -191,8 +434,134 @@ silenzioso (SELC-1.3); claim JWT assente per token non `hub-spid-login`, o misma
 (SELC-2.3); tenant non mappato a Cosmos DB/Storage/vault/dominio email → fail-closed, richiesta/operazione
 rigettata (SELC-8.4, SELC-9.4, SELC-10.2, SELC-11.2).
 
-*Diagrammi di sequenza da produrre con diagram-as-code, non ancora presenti nei documenti sorgente —
-segnaposto.*
+```plantuml
+@startuml selfcare-multitenant-dynamic-view
+!theme plain
+
+title Selfcare Multitenant - Dynamic Component View
+
+autonumber
+hide footbox
+skinparam shadowing false
+skinparam wrapWidth 220
+skinparam maxMessageSize 120
+
+actor User
+participant "AR / PNPG\nReact Frontend" as frontend
+participant "OneIdentity" as one_identity
+participant "auth" as auth
+participant "hub-spid-login" as hub_spid
+participant "SPID Tenant Claim Injector\nMechanism: TO BE DECIDED" as spid_injector
+participant "Azure API Management" as apim
+participant "Backend Microservice" as backend
+database "Azure Cosmos DB" as cosmos
+collections "Azure Storage" as storage
+participant "Personal Data Vault" as vault
+participant "Email Scheduler" as scheduler
+participant "Email / SMTP Provider" as email
+
+group UC-1 - Establish a tenant-aware authenticated session
+  User -> frontend : Selects the AR or PNPG service
+
+  alt AR authentication through OneIdentity
+    frontend -> auth : Starts login using the AR hostname
+    auth -> one_identity : Requests authentication
+    one_identity --> auth : Returns verified user identity
+    auth -> auth : Resolves AR tenant from trusted context
+    auth --> frontend : Returns signed JWT with tenant claim = AR
+  else PNPG authentication through SPID
+    frontend -> hub_spid : Starts SPID authentication
+    hub_spid --> spid_injector : Returns signed SPID JWT
+    spid_injector -> spid_injector : Validates the SPID token and\nassociates trusted PNPG identity
+    spid_injector --> frontend : Returns tenant-aware JWT
+  end
+end
+
+group UC-2 - Resolve and propagate tenant identity at ingress
+  User -> frontend : Performs an authenticated operation
+  frontend -> apim : HTTPS request with JWT\nand optional client X-Tenant-Id
+  apim -> apim : Resolves tenant from trusted host,\nsubscription and operation mapping
+
+  alt Tenant cannot be resolved
+    break Request rejected before reaching the backend
+      apim --> frontend : 403 - unknown tenant
+      frontend --> User : Displays access error
+    end
+  else Tenant resolved
+    apim -> apim : Overwrites X-Tenant-Id\nwith the trusted tenant
+    apim -> backend : JWT + trusted X-Tenant-Id
+  end
+end
+
+group UC-3 - Reconcile tenant identities and authorize processing
+  backend -> backend : Validates JWT signature and issuer
+  backend -> backend : Reconciles JWT tenant claim\nwith X-Tenant-Id
+
+  alt Claim is missing and issuer is hub-spid-login
+    backend -> backend : Applies audited temporary fallback\nto PNPG
+  else Claim/header mismatch or unsupported missing claim
+    break Request rejected before business processing
+      backend --> apim : 401/403 - tenant identity rejected
+      apim --> frontend : Error response
+      frontend --> User : Displays access error
+    end
+  else Tenant identity is consistent
+    backend -> backend : Creates validated tenant context
+  end
+end
+
+group UC-4 - Execute tenant-isolated business operations
+  alt Read or write domain data
+    backend -> cosmos : Query/write with tenant discriminator\nor tenant-specific database
+    cosmos --> backend : Tenant-scoped result
+  else Read or write documents
+    backend -> storage : Resolve tenant container/account\nand access object
+    storage --> backend : Tenant-scoped object/result
+  else Read or write personal data
+    backend -> vault : Resolve tenant vault instance\nand access PII
+    vault --> backend : Tenant-scoped PII/result
+  end
+
+  alt Tenant resource mapping exists
+    backend --> apim : Successful business response
+    apim --> frontend : Successful response
+    frontend --> User : Displays result
+  else Tenant resource mapping is missing
+    backend --> apim : Fail-closed error
+    apim --> frontend : Error response
+    frontend --> User : Displays operation error
+  end
+end
+
+group UC-5 - Send a tenant-aware email when required
+  opt Business operation produces an email notification
+    backend -> scheduler : Queues notification with validated tenant
+    scheduler -> scheduler : Selects tenant sender domain\nand credentials
+
+    alt Email tenant mapping exists
+      scheduler -> email : Sends message with tenant identity
+      email --> scheduler : Delivery result
+    else Email tenant mapping is missing
+      scheduler -> scheduler : Rejects delivery and emits audit event
+    end
+  end
+end
+
+@enduml
+```
+
+Il diagramma rappresenta questi casi d'uso dinamici:
+
+1. **Sessione autenticata tenant-aware** — l'utente accede tramite OneIdentity per AR oppure SPID per PNPG e
+   ottiene un JWT associato al tenant corretto.
+2. **Risoluzione tenant all'ingresso** — APIM deriva il tenant solo da informazioni fidate, sovrascrive
+   `X-Tenant-Id` e rigetta richieste non attribuibili a un tenant noto.
+3. **Enforcement nel backend** — il microservizio valida firma e issuer del JWT, riconcilia claim e header e
+   crea il contesto tenant; mismatch e claim mancanti non supportati vengono rifiutati.
+4. **Accesso isolato ai dati** — Cosmos DB, Azure Storage e Personal Data Vault sono selezionati o filtrati
+   esclusivamente tramite il tenant validato; una configurazione mancante produce un errore fail-closed.
+5. **Email tenant-aware** — la notifica mantiene il tenant fino allo scheduler, che seleziona dominio mittente
+   e credenziali corretti oppure blocca l'invio e genera un evento di audit.
 
 ---
 
