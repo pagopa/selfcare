@@ -45,7 +45,6 @@
 | <a name="module_storage"></a> [storage](#module\_storage) | ../_modules/storage | n/a |
 | <a name="module_storage_documents"></a> [storage\_documents](#module\_storage\_documents) | ../_modules/storage_accounts | n/a |
 | <a name="module_storage_user_attachments"></a> [storage\_user\_attachments](#module\_storage\_user\_attachments) | ../_modules/storage_accounts | n/a |
-| <a name="module_upload_file_logo"></a> [upload\_file\_logo](#module\_upload\_file\_logo) | ../_modules/upload_file | n/a |
 | <a name="module_user_managed_identity"></a> [user\_managed\_identity](#module\_user\_managed\_identity) | ../_modules/user_managed_identity | n/a |
 | <a name="module_vpn"></a> [vpn](#module\_vpn) | ../_modules/vpn | n/a |
 
@@ -68,7 +67,6 @@
 | [azurerm_user_assigned_identity.user_attachments_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [random_password.encryption_iv](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_password.encryption_key](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
-| [azurerm_key_vault_secret.selc_documents_storage_connection_string](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 
 ## Inputs
 

@@ -11,7 +11,9 @@ import org.eclipse.microprofile.context.ManagedExecutor;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -48,6 +50,8 @@ public class DocumentMsTelemetryService {
     static final String EVENT_ATTACHMENT_UPLOADED      = "DOCUMENT-MS-ATTACHMENT-UPLOADED";
     static final String EVENT_CONTRACT_DELETED         = "DOCUMENT-MS-CONTRACT-DELETED";
     static final String EVENT_CONTRACT_DELETE_FAILED   = "DOCUMENT-MS-CONTRACT-DELETE-FAILED";
+    static final String EVENT_USER_ATTACHMENTS_DELETED       = "DOCUMENT-MS-USER-ATTACHMENTS-DELETED";
+    static final String EVENT_USER_ATTACHMENTS_DELETE_FAILED = "DOCUMENT-MS-USER-ATTACHMENTS-DELETE-FAILED";
     static final String EVENT_AGGREGATES_CSV_UPLOADED  = "DOCUMENT-MS-AGGREGATES-CSV-UPLOADED";
     static final String EVENT_VISURA_SAVED             = "DOCUMENT-MS-VISURA-SAVED";
 
@@ -210,6 +214,39 @@ public class DocumentMsTelemetryService {
         props.put("errorMessage", errorMessage);
 
         track(EVENT_CONTRACT_DELETE_FAILED, props, new HashMap<>());
+    }
+
+    /**
+     * Tracks the soft-deletion (move to delete path) of every user-uploaded attachment
+     * associated with an onboarding.
+     *
+     * @param onboardingId    onboarding identifier
+     * @param attachmentNames list of attachment names successfully moved to the delete path
+     */
+    public void trackUserAttachmentsDeleted(String onboardingId, List<String> attachmentNames) {
+        List<String> safeNames = attachmentNames == null ? Collections.emptyList() : attachmentNames;
+        Map<String, String> props = new HashMap<>();
+        props.put("onboardingId", onboardingId);
+        props.put("attachmentNames", String.join(", ", safeNames));
+
+        Map<String, Double> metrics = new HashMap<>();
+        metrics.put("movedCount", (double) safeNames.size());
+
+        track(EVENT_USER_ATTACHMENTS_DELETED, props, metrics);
+    }
+
+    /**
+     * Tracks a failed user-attachments soft-deletion attempt.
+     *
+     * @param onboardingId onboarding identifier
+     * @param errorMessage error description
+     */
+    public void trackUserAttachmentsDeleteFailed(String onboardingId, String errorMessage) {
+        Map<String, String> props = new HashMap<>();
+        props.put("onboardingId", onboardingId);
+        props.put("errorMessage", errorMessage);
+
+        track(EVENT_USER_ATTACHMENTS_DELETE_FAILED, props, new HashMap<>());
     }
 
     /**

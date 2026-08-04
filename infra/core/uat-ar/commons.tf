@@ -581,11 +581,6 @@ module "storage_user_attachments" {
 
   private_dns_zone_resource_group_name = module.network.rg_vnet_name
 
-  # Generic knobs — semantics decided here in the caller, not in the module.
-  naming_config          = "user-attachments"
-  kv_secret_name         = "user-attachments-storage-connection-string"
-  lifecycle_prefix_match = ["parties/deleted"]
-
   # Soft-delete of blobs enabled so that Defender can soft-delete files
   # flagged as malicious (see module storage_account.tf precondition).
   blob_features = {
@@ -604,19 +599,15 @@ module "storage_user_attachments" {
     }
   }
 
-  # Lifecycle: conservative cleanup in UAT.
-  # Prefix scoped so it only targets blobs already "soft-deleted" by the
-  # application (document-ms moves them from "parties/docs/..." to
-  # "parties/deleted/..." via DocumentContentServiceImpl.deleteFileFromAzure,
-  # driven by application.properties → document-ms.blob-storage.path-deleted).
-  # Live user attachments under "parties/docs/..." are NEVER touched by this rule.
-  base_blob_tier_to_cool_after_days_since_modification_greater_than = 30
-  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 60
-  base_delete_after_days_since_creation_greater_than                = 90
-  snapshot_change_tier_to_cool_after_days_since_creation            = 30
-  snapshot_delete_after_days_since_creation_greater_than            = 90
-  version_change_tier_to_cool_after_days_since_creation             = 30
-  version_delete_after_days_since_creation                          = 90
+  base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
+  base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
+  base_delete_after_days_since_creation_greater_than                = 1
+
+  snapshot_change_tier_to_cool_after_days_since_creation            = 1
+  snapshot_delete_after_days_since_creation_greater_than            = 1
+
+  version_change_tier_to_cool_after_days_since_creation             = 1
+  version_delete_after_days_since_creation                          = 1
 
   # Defender for Storage
   defender_enabled                           = true
@@ -835,10 +826,10 @@ module "user_managed_identity" {
   eventhub_namespace_rg     = "${local.prefix}-${local.env_short}-event-rg"
 }
 
-module "upload_file_logo" {
-  source = "../_modules/upload_file"
+# module "upload_file_logo" {
+#   source = "../_modules/upload_file"
 
-  file_path                 = "${path.module}/../resources/logo.png"
-  container                 = module.storage_documents.storage_container_name
-  primary_connection_string = module.storage_documents.storage_account.primary_connection_string
-}
+#   file_path                 = "${path.module}/../resources/logo.png"
+#   container                 = module.storage_documents.storage_container_name
+#   primary_connection_string = module.storage_documents.storage_account.primary_connection_string
+# }

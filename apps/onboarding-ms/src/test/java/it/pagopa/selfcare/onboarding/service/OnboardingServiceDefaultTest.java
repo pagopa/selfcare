@@ -5376,6 +5376,59 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void onboarding_whenRequiredRecipientCodeAndRecipientCodePresent_shouldSucceed(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        // recipientCode present in billing
+        Billing billing = new Billing();
+        billing.setRecipientCode("REC123");
+        request.setBilling(billing);
+
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
+
+        // Product-ms flag: recipientCode is required for this product
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setRequiredRecipientCode(true);
+        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        productResponse.setProductId(request.getProductId());
+        productResponse.setFeatures(features);
+        asserter.execute(() -> when(productService.getProduct(request.getProductId()))
+                .thenReturn(Uni.createFrom().item(productResponse)));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_whenRequiredRecipientCodeAndRecipientCodeMissing_shouldThrowInvalidRequestException(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        // no billing / recipientCode set on purpose
+
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
+
+        // Product-ms flag: recipientCode is required but the request carries none
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setRequiredRecipientCode(true);
+        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        productResponse.setProductId(request.getProductId());
+        productResponse.setFeatures(features);
+        asserter.execute(() -> when(productService.getProduct(request.getProductId()))
+                .thenReturn(Uni.createFrom().item(productResponse)));
+
+        asserter.assertFailedWith(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                InvalidRequestException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
     void onboarding_whenAllowManagerAsDelegateWithSameTaxCodeAndDifferentEmail_shouldThrowInvalidRequestException(UniAsserter asserter) {
         String companyTaxCode = "12345678901";
 

@@ -21,11 +21,14 @@ import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.PDNDCachea
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.StorageAsyncService;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.TokenProviderPDND;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.TokenProviderVisura;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -66,6 +69,21 @@ class PDNDInfoCamereConnectorImplTest {
     private PDNDCacheableService pdndCacheableService;
     @Mock
     private ObjectMapper objectMapper;
+
+    private MockedStatic<DataEncryptionUtils> dataEncryptionUtilsMock;
+
+    @BeforeEach
+    void initStaticMocks() {
+        dataEncryptionUtilsMock = mockStatic(DataEncryptionUtils.class);
+    }
+
+    @AfterEach
+    void closeStaticMocks() {
+        if (dataEncryptionUtilsMock != null) {
+            dataEncryptionUtilsMock.close();
+            dataEncryptionUtilsMock = null;
+        }
+    }
 
     @Test
     void testRetrieveInstitutionsByDescription() {
@@ -250,7 +268,6 @@ class PDNDInfoCamereConnectorImplTest {
 
         String encTaxCode = "TEST-STRING";
 
-        mockStatic(DataEncryptionUtils.class);
         when(DataEncryptionUtils.encrypt(any())).thenReturn(encTaxCode);
 
         when(pdndCacheableService.getEncryptedPDNDImpresa(any())).thenReturn(encTaxCode);
