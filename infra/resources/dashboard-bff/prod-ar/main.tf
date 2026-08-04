@@ -193,9 +193,21 @@ locals {
 module "container_app_dashboard_bff" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = module.local.config.env_short
-  resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app
+  env_short           = module.local.config.env_short
+  resource_group_name = module.local.config.ca_resource_group_name
+  container_app = merge(module.local.config.container_app, {
+    scale_rules = concat(module.local.config.container_app.scale_rules, [
+      {
+        name = "http-scale-rule"
+        custom = {
+          type = "http"
+          metadata = {
+            concurrentRequests = "50"
+          }
+        }
+      }
+    ])
+  })
   container_app_name             = "selc-${module.local.config.env_short}-dashboard-backend"
   container_app_environment_name = module.local.config.container_app_environment_name
   image_name                     = "selfcare-dashboard-backend"
