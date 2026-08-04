@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.config;
 
 import com.microsoft.applicationinsights.TelemetryClient;
-import com.microsoft.applicationinsights.TelemetryConfiguration;
+import com.microsoft.applicationinsights.connectionstring.ConnectionString;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Singleton;
@@ -15,8 +15,7 @@ public class TelemetryClientProducer {
     public TelemetryClient telemetryClient(
             @ConfigProperty(name = "onboarding-functions.appinsights.connection-string")
             String appInsightsConnectionString) {
-        TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
-        telemetryConfiguration.setConnectionString(appInsightsConnectionString);
-        return new TelemetryClient(telemetryConfiguration);
+        ConnectionString.configure(appInsightsConnectionString);
+        return new TelemetryClient();
     }
 }

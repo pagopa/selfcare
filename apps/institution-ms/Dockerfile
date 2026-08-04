@@ -37,7 +37,7 @@ WORKDIR /app
 
 COPY --from=builder /src/apps/institution-ms/target/*.jar ./app.jar
 
-ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
+ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.7.8/applicationinsights-agent-3.7.8.jar ./applicationinsights-agent.jar
 RUN chmod 755 ./applicationinsights-agent.jar
 
 EXPOSE 8080
