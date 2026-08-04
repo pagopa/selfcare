@@ -408,7 +408,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       .map(emailStatus -> new OtpMailInfoResponse(
         emailStatus.getEmailId(),
         emailStatus.getStatus().toString(),
-        emailStatus.getTo().getEmail(),
+        OtpUtils.maskEmail(emailStatus.getTo().getEmail()),
         emailStatus.getAttempts(),
         emailStatus.getHistory().stream()
           .map(historyItem -> new OtpMailInfoResponse.MailStatusHistory(
