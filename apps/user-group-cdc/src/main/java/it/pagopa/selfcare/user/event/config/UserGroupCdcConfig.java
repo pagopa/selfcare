@@ -4,7 +4,7 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableClientBuilder;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.microsoft.applicationinsights.TelemetryClient;
-import com.microsoft.applicationinsights.TelemetryConfiguration;
+import com.microsoft.applicationinsights.connectionstring.ConnectionString;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -15,9 +15,8 @@ public class UserGroupCdcConfig {
 
     @ApplicationScoped
     public TelemetryClient telemetryClient(@ConfigProperty(name = "user-group-cdc.appinsights.connection-string") String appInsightsConnectionString) {
-        TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
-        telemetryConfiguration.setConnectionString(appInsightsConnectionString);
-        return new TelemetryClient(telemetryConfiguration);
+        ConnectionString.configure(appInsightsConnectionString);
+        return new TelemetryClient();
     }
 
     @ApplicationScoped

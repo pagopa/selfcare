@@ -102,7 +102,7 @@ locals {
     },
     {
       name  = "PAGOPA_SIGNATURE_SOURCE"
-      value = "namirial"
+      value = "disabled"
     },
     {
       name  = "STORAGE_CONTAINER_CONTRACT"

@@ -1810,6 +1810,9 @@
           },
           "enabled": {
             "type": "boolean"
+          },
+          "requiredRecipientCode": {
+            "type": "boolean"
           }
         }
       },
