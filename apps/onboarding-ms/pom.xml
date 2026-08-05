@@ -28,6 +28,7 @@
         <quarkus-openapi-generator.version>2.4.2</quarkus-openapi-generator.version>
         <commons-sdk-version>0.17.5</commons-sdk-version>
         <common-sdk-security-version>0.2.3</common-sdk-security-version>
+        <common-sdk-health-version>0.1.0</common-sdk-health-version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <owasp.encoder.version>1.4.0</owasp.encoder.version>
         <azure-core-http-okhttp.version>1.12.7</azure-core-http-okhttp.version>
@@ -285,6 +286,11 @@
                     <artifactId>azure-core-http-netty</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-health</artifactId>
+            <version>${common-sdk-health-version}</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
