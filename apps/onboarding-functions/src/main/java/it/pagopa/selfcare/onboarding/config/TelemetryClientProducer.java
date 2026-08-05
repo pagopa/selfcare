@@ -4,14 +4,12 @@ import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.connectionstring.ConnectionString;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
-import jakarta.inject.Singleton;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 public class TelemetryClientProducer {
 
     @Produces
-    @Singleton
     public TelemetryClient telemetryClient(
             @ConfigProperty(name = "onboarding-functions.appinsights.connection-string")
             String appInsightsConnectionString) {
