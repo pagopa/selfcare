@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.health;
 
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoDatabase;
+import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import org.bson.Document;
 import org.eclipse.microprofile.health.HealthCheckResponse;
@@ -16,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@QuarkusTest
 class OnboardingMongoReadinessCheckTest {
 
     private static final String DATABASE = "selcOnboarding";

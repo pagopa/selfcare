@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.health;
 
+import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@QuarkusTest
 class ProductBlobStorageReadinessCheckTest {
 
     private static final String ACCOUNT   = "account-name";
