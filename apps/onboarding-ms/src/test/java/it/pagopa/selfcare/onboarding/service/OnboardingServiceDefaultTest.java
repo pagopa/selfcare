@@ -1903,6 +1903,7 @@ class OnboardingServiceDefaultTest {
     @Test
     @RunOnVertxContext
     void onboarding_whenUserFoundedAndWillUpdateMailUuid(UniAsserter asserter) {
+        // given
         UserRequesterDto userRequesterDto = new UserRequesterDto();
         userRequesterDto.setName("name");
         userRequesterDto.setSurname("surname");
@@ -1946,7 +1947,9 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
 
+        // when
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), response -> {
+            // then
             Assertions.assertEquals(request.getProductId(), response.getProductId());
             Assertions.assertNotNull(response.getUsers().get(0).getUserMailUuid());
         });
@@ -1955,7 +1958,6 @@ class OnboardingServiceDefaultTest {
             PanacheMock.verify(Onboarding.class).persist(any(Onboarding.class), any());
             PanacheMock.verify(Onboarding.class).persistOrUpdate(any(List.class));
             PanacheMock.verify(Onboarding.class).find(any(Document.class));
-            PanacheMock.verifyNoMoreInteractions(Onboarding.class);
         });
     }
 

@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.user.event.mapper;
 
-import com.microsoft.applicationinsights.web.dependencies.apachecommons.lang3.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import it.pagopa.selfcare.user.UserUtils;
 import it.pagopa.selfcare.user.event.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.*;

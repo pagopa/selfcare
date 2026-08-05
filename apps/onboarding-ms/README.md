@@ -66,6 +66,14 @@ If you want to build an _über-jar_, execute the following command:
 
 The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
 
+## Tests
+
+Run the module tests from the repository root with:
+
+```shell
+mvn -pl apps/onboarding-ms test
+```
+
 ## Related Guides
 
 
