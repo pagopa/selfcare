@@ -60,7 +60,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
                 "html:target/cucumber-report/cucumber.html",
                 "json:target/cucumber-report/cucumber.json"
         },
-        tags = "@Onboarding")
+        tags = "@Onboarding or @Health")
 @TestHTTPEndpoint(OnboardingController.class)
 @TestProfile(IntegrationProfile.class)
 @Slf4j
