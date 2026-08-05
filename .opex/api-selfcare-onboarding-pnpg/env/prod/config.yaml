@@ -167,6 +167,10 @@ overrides:
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 5 # Default:
+      availability_threshold: 0.99
+      availability_evaluation_frequency: 10 
+      availability_evaluation_time_window: 30
+      availability_event_occurrences: 5
     /v2/institutions/company/onboarding:
       response_time_threshold: 5.2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
