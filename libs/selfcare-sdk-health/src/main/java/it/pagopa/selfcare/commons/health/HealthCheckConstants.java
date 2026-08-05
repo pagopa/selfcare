@@ -11,9 +11,7 @@ import java.time.Duration;
  */
 public final class HealthCheckConstants {
 
-    private HealthCheckConstants() {
-        // utility class
-    }
+    private HealthCheckConstants() {}
 
     /** Default per-check timeout applied to the probe {@code Uni} if the subclass does not override it. */
     public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(2);
