@@ -589,12 +589,16 @@ raccomanda di completarlo prima dell'implementazione, secondo la convenzione ric
 
 ## Registro `tenant_data_isolation` e naming delle variabili per-tenant
 
-Il mapping dati per tenant sopra descritto (Cosmos DB, Storage, vault, email) è già implementato come
-sorgente unica di verità in `local.tenant_data_isolation`
-(`infra/resources/_modules/local-env/locals.tf`, Step_1/EPIC.md sub-task 9), consumato dai microservizi
-tramite un'unica variabile d'ambiente JSON (`SELFCARE_TENANT_DATA_ISOLATION`) e la classe
-`TenantDataIsolationRegistry` (`libs/selfcare-sdk-security`): ogni lookup è fail-closed e il tenant deve
-essere già stato validato a monte.
+Il mapping dati per tenant sopra descritto (Cosmos DB, Storage, vault, email) è **proposto** come sorgente
+unica di verità in `local.tenant_data_isolation` (`infra/resources/_modules/local-env/locals.tf`,
+Step_1/EPIC.md sub-task 9), da consumare nei microservizi tramite un'unica variabile d'ambiente JSON
+(`SELFCARE_TENANT_DATA_ISOLATION`) e una classe `TenantDataIsolationRegistry`
+(`libs/selfcare-sdk-security`), con lookup fail-closed su un tenant già validato a monte.
+
+> **Stato reale (verificato).** Né `local.tenant_data_isolation` in Terraform né
+> `TenantDataIsolationRegistry` / `SELFCARE_TENANT_DATA_ISOLATION` in Java esistono oggi nel repository: un
+> grep sull'intero monorepo li trova solo in questi documenti. Vanno letti come **design proposto, non
+> implementato**; gli snippet più sotto sono stati riscritti per non dipenderne.
 
 **Gap identificato in fase di review** (`infra/resources/onboarding-ms/dev-pnpg/onboarding.tf`): oggi
 `MONGODB-CONNECTION-STRING` e `AZURE_STORAGE_ACCOUNT_NAME` sono dichiarate con lo **stesso nome letterale**
@@ -618,13 +622,12 @@ parallelo:
    tenant a runtime dal `TenantId` già risolto** (`TenantContext`), non con un fetch del secret da Key Vault
    ad ogni richiesta (evita di aggiungere una dipendenza/latenza Key Vault nel percorso di richiesta, e i
    tenant noti fail-closed sono solo due):
-   - Mongo: *named client* nativi di Quarkus (`quarkus.mongodb.ar.connection-string` /
-     `quarkus.mongodb.pnpg.connection-string`), risolti al `ReactiveMongoClient` corretto tramite
-     `@MongoClientName` all'avvio, indicizzati per `TenantId` (coerente col modello database-per-tenant già
-     scelto per SELC-8).
+   - Mongo: `MongoDatabaseResolver` nativo di Panache per il caso *database separati sullo stesso account*
+     (assetto target), oppure *named client* Quarkus (`quarkus.mongodb.ar.connection-string` /
+     `quarkus.mongodb.pnpg.connection-string`) risolti via `@MongoClientName` per il caso *account
+     fisicamente separati* — vedi la sezione di dispatch runtime più sotto per il dettaglio verificato.
    - Storage: una `EnumMap<TenantId, BlobServiceClient>` costruita una volta all'avvio dal nome
-     account/credenziali per tenant, sullo stesso principio con cui
-     `TenantDataIsolationRegistry.storageContainer(...)` deriva già il nome del container per tenant.
+     account/credenziali per tenant.
 
 Questo è lavoro applicativo, non solo Terraform, e appartiene alla conversione di consolidamento di ogni
 singola app (Step_0/EPIC.md sub-task 7), non al registro condiviso: è tracciato qui come prerequisito
@@ -637,36 +640,71 @@ Il tenant è già risolto **prima** che un repository venga invocato: `TenantVal
 `CurrentTenantProvider.currentTenantId()`, mai dall'header grezzo (stesso principio già in uso nel modello
 discriminator-field di `document-ms`).
 
-Per selezionare il named client corretto a ogni chiamata, senza abbandonare il pattern Panache già in uso
-nel resto della codebase, il punto di innesto è l'override di `mongoDatabase()` (o `mongoCollection()`),
-esposto da `ReactivePanacheMongoRepositoryBase` come metodo `default` **sovrascrivibile**: Quarkus genera
-un'implementazione di default a build-time solo se il repository non ne fornisce una propria; se la
-sovrascrivi esplicitamente, la tua implementazione ha precedenza ed è invocata a **ogni** operazione
-(`find`, `persist`, `update`, ...), non una sola volta alla creazione del bean:
+> **Correzione (verificata via bytecode).** Una precedente stesura di questa sezione proponeva di
+> sovrascrivere `mongoDatabase()` sul repository. **Quel meccanismo non funziona** e non va usato.
+> Nell'interfaccia `ReactivePanacheMongoRepositoryBase` i corpi di `find`, `findById`, `mongoCollection` e
+> `mongoDatabase` lanciano tutti `implementationInjectionMissing()`: sono segnaposto sostituiti a build-time
+> dall'enhancement Panache con chiamate **statiche** a `ReactiveMongoOperations`, che passano `entityClass`,
+> non `this`. La catena reale è `find(...)` → `ReactiveMongoOperations.mongoCollection(Class)` →
+> `mongoDatabase(Class)` → lettura dell'annotazione `@MongoEntity` → `mongoDatabase(MongoEntity)` →
+> `BeanUtils.clientFromArc(...)`. Un override di `mongoDatabase()` sul repository non viene quindi mai
+> invocato da `find`/`persist`/`update`: verrebbe eseguito solo se chiamato a mano, dando la falsa
+> impressione di isolamento.
+
+Il punto di innesto corretto e supportato è invece `io.quarkus.mongodb.panache.common.MongoDatabaseResolver`
+(interfaccia con un solo metodo `String resolve()`, presente sia in Quarkus 3.11.2 sia in 3.31.2). In
+`mongoDatabase(MongoEntity)` Panache usa `MongoEntity.database()` se valorizzata, **altrimenti** invoca
+`BeanUtils.getDatabaseNameFromResolver()`, che risolve il bean CDI a ogni chiamata. Nel monorepo nessuna
+entity valorizza `database=` né `clientName=` (tutte usano solo `collection=`), quindi il resolver è
+applicabile senza modificare le entity:
 
 ```java
 @ApplicationScoped
-public class OnboardingRepository implements ReactivePanacheMongoRepositoryBase<Onboarding, String> {
+public class TenantMongoDatabaseResolver implements MongoDatabaseResolver {
 
-  @Inject @MongoClientName("ar")   ReactiveMongoClient arClient;
-  @Inject @MongoClientName("pnpg") ReactiveMongoClient pnpgClient;
   @Inject CurrentTenantProvider currentTenantProvider;
 
   @Override
-  public ReactiveMongoDatabase mongoDatabase() {
-    TenantId tenant = currentTenantProvider.currentTenantId()
-        .map(TenantId::valueOf)
-        .orElseThrow(UnresolvedTenantMappingException::new); // fail-closed, nessun default silenzioso
-    return (tenant == TenantId.PNPG ? pnpgClient : arClient).getDatabase("selcOnboarding");
+  public String resolve() {
+    return currentTenantProvider.currentTenantId()
+        .flatMap(TenantId::fromValue)
+        .map(t -> t == TenantId.PNPG ? "selcOnboardingPnpg" : "selcOnboarding")
+        .orElseThrow(UnresolvedTenantException::new); // fail-closed, nessun default silenzioso
   }
 }
 ```
 
-Poiché `mongoDatabase()` è rivalutato a ogni chiamata, un unico bean `@ApplicationScoped` (nessuna
-sottoclasse per tenant, nessuna repository factory) risolve correttamente il client anche con richieste
-AR/PNPG interlacciate sullo stesso processo. Verificato che `io.quarkus.mongodb.MongoClientName` è
-disponibile nella versione Quarkus effettivamente pinnata dal progetto (3.31.2), non solo nell'ultima
-disponibile in cache locale.
+Poiché il resolver è interrogato a ogni operazione, un unico bean `@ApplicationScoped` (nessuna sottoclasse
+per tenant, nessuna repository factory) serve correttamente richieste AR/PNPG interlacciate sullo stesso
+processo, e **nessun repository va toccato**.
+
+**Limite da conoscere:** il resolver seleziona solo il *nome del database*; il `ReactiveMongoClient` resta
+quello risolto da `BeanUtils.clientFromArc(...)` a partire da `@MongoEntity.clientName` (valore statico di
+compilazione). Il resolver copre quindi il caso "database separati sullo stesso account Cosmos" — che è
+l'assetto target del consolidamento — ma **non** il caso "due account Cosmos fisicamente distinti". Per
+quest'ultimo, finché dura la migrazione, `@MongoClientName` va usato su un client iniettato e usato
+direttamente (fuori da Panache), oppure va mantenuto un deployment per account.
+Verificato che `io.quarkus.mongodb.MongoClientName` esiste in entrambe le versioni Quarkus in gioco ed è un
+`@Qualifier` con `@Target({FIELD, METHOD, PARAMETER, TYPE})` — quindi utilizzabile anche su parametri di
+costruttore. Nota: `onboarding-ms`, il servizio target principale, è su Quarkus **3.11.2** (non 3.31.2 come
+indicato in precedenza); `document-ms` è su 3.31.2.
+
+Configurazione corrispondente (`application.properties`), che sostituisce l'attuale coppia
+`quarkus.mongodb.connection-string` / `quarkus.mongodb.database`:
+
+```properties
+# database-per-tenant sullo stesso account: un solo client, nome DB dal resolver
+quarkus.mongodb.connection-string = ${MONGODB_CONNECTION_STRING}
+quarkus.mongodb.database          = ${MONGODB_DATABASE_NAME}   # fallback se il resolver non è presente
+
+# account-per-tenant (solo finestra di migrazione): named client
+quarkus.mongodb.ar.connection-string   = ${MONGODB_CONNECTION_STRING_AR}
+quarkus.mongodb.pnpg.connection-string = ${MONGODB_CONNECTION_STRING_PNPG}
+
+# storage per tenant
+selfcare.tenant.ar.storage-connection-string   = ${STORAGE_CONNECTION_STRING_AR}
+selfcare.tenant.pnpg.storage-connection-string = ${STORAGE_CONNECTION_STRING_PNPG}
+```
 
 Da non confondere con il modello discriminator-field già consegnato (`document-ms`, filtro `WHERE tenantId
 = ...` su un unico database): il named client è la soluzione per i soli servizi che, come `onboarding-ms`
@@ -694,6 +732,14 @@ public class TenantRoutingMongoDatabaseFactory implements MongoDatabaseFactory {
   private final MongoDatabaseFactory pnpgFactory;
   private final CurrentTenantProvider currentTenantProvider;
 
+  public TenantRoutingMongoDatabaseFactory(MongoDatabaseFactory arFactory,
+                                           MongoDatabaseFactory pnpgFactory,
+                                           CurrentTenantProvider currentTenantProvider) {
+    this.arFactory = arFactory;
+    this.pnpgFactory = pnpgFactory;
+    this.currentTenantProvider = currentTenantProvider;
+  }
+
   @Override
   public MongoDatabase getMongoDatabase() {
     return delegate().getMongoDatabase();
@@ -704,15 +750,37 @@ public class TenantRoutingMongoDatabaseFactory implements MongoDatabaseFactory {
     return delegate().getMongoDatabase(dbName);
   }
 
-  private MongoDatabaseFactory delegate() {
-    String tenant = currentTenantProvider.currentTenantId()
-        .orElseThrow(UnresolvedTenantMappingException::new); // fail-closed
-    return "PNPG".equals(tenant) ? pnpgFactory : arFactory;
+  @Override
+  public PersistenceExceptionTranslator getExceptionTranslator() {
+    return delegate().getExceptionTranslator();
   }
 
-  // getExceptionTranslator(), getSession(...), withSession(...): delegare allo stesso modo
-}
+  @Override
+  public ClientSession getSession(ClientSessionOptions options) {
+    return delegate().getSession(options);
+  }
 
+  @Override
+  public MongoDatabaseFactory withSession(ClientSession session) {
+    return delegate().withSession(session);
+  }
+
+  private MongoDatabaseFactory delegate() {
+    return currentTenantProvider.currentTenantId()
+        .flatMap(TenantId::fromValue)
+        .map(t -> t == TenantId.PNPG ? pnpgFactory : arFactory)
+        .orElseThrow(UnresolvedTenantException::new); // fail-closed
+  }
+}
+```
+
+I cinque metodi sopra sono **tutti e soli** i metodi astratti di `MongoDatabaseFactory` in
+spring-data-mongodb 4.3.0 (la versione portata da Spring Boot 3.3.0 via `selc-starter-parent`): verificato
+sul bytecode che `getCodecRegistry()`, `withSession(ClientSessionOptions)` e `isTransactionActive()` sono
+già `default` e non vanno implementati, mentre `getExceptionTranslator()`, `getSession(...)` e
+`withSession(ClientSession)` — omessi da una precedente stesura di questo snippet — sono obbligatori.
+
+```java
 @Configuration
 public class TenantAwareMongoConfig {
 
@@ -736,6 +804,14 @@ public class TenantAwareMongoConfig {
 }
 ```
 
+`SimpleMongoClientDatabaseFactory` espone i costruttori `(String connectionString)`,
+`(ConnectionString)` e `(MongoClient, String databaseName)` — verificati sul jar. I due servizi Spring
+interessati configurano oggi `spring.data.mongodb.uri` + `spring.data.mongodb.database`
+(`institution-ms/connector/dao/.../dao-config.properties`, `user-group-ms/.../core-config.properties`):
+quelle due proprietà vanno sostituite dalla coppia `mongodb.ar.uri` / `mongodb.pnpg.uri` sopra, altrimenti
+l'autoconfigurazione di Spring Boot continua a creare il proprio factory (che il `@Primary` scavalca, ma
+lasciandolo attivo si mantiene una connessione inutile).
+
 Il vantaggio rispetto a Quarkus/Panache: qui il dispatch è **centralizzato in un solo bean**, non va
 ripetuto per ogni repository. Il `MongoTemplate`/`MongoOperations` condiviso (iniettato in
 `MongoCustomConnectorImpl` per `institution-ms`, o dietro le `MongoRepository` auto-generate di
@@ -758,8 +834,7 @@ A differenza di Mongo, qui **non serve un meccanismo specifico per framework**: 
 (`com.azure.storage.blob`) è già usato in modo completamente manuale in tutte e quattro le classi — non c'è
 un layer applicativo (Panache, Spring Data) che intercetta le chiamate e va convinto a rieseguire una
 lookup. Basta un unico provider, identico in Quarkus e Spring a meno delle annotazioni, che costruisce gli N
-client all'avvio (uno per tenant, da `TenantDataIsolationRegistry.storageAccountInfix(tenant)` — la stessa
-fonte già usata per SELC-9.4) ed espone un metodo risolto ad ogni chiamata:
+client all'avvio (uno per tenant) ed espone un metodo risolto ad ogni chiamata:
 
 ```java
 @ApplicationScoped // Spring: @Component
@@ -770,42 +845,67 @@ public class TenantAwareBlobServiceClientProvider {
 
   @Inject // Spring: costruttore unico, nessuna annotazione richiesta
   public TenantAwareBlobServiceClientProvider(
-      TenantDataIsolationRegistry registry,
-      @ConfigProperty(name = "blobstorage.account-base-name") String baseAccountName, // Spring: @Value
-      @ConfigProperty(name = "blobstorage.managed-identity-client-id") String managedIdentityClientId,
+      Config config,                       // Spring: org.springframework.core.env.Environment
       CurrentTenantProvider currentTenantProvider) {
     this.currentTenantProvider = currentTenantProvider;
     for (TenantId tenant : TenantId.values()) {
-      String accountName = baseAccountName + registry.storageAccountInfix(tenant);
-      clientsByTenant.put(tenant, new BlobServiceClientBuilder()
-          .endpoint("https://" + accountName + ".blob.core.windows.net")
-          .credential(new DefaultAzureCredentialBuilder()
-              .managedIdentityClientId(managedIdentityClientId).build())
-          .buildClient());
+      String key = "selfcare.tenant." + tenant.name().toLowerCase() + ".storage-connection-string";
+      String connectionString = config.getOptionalValue(key, String.class)
+          .orElseThrow(() -> new IllegalStateException("Configurazione storage mancante: " + key));
+      clientsByTenant.put(tenant,
+          new BlobServiceClientBuilder().connectionString(connectionString).buildClient());
     }
   }
 
   public BlobServiceClient current() {
-    TenantId tenant = currentTenantProvider.currentTenantId()
-        .map(TenantId::valueOf)
-        .orElseThrow(UnresolvedTenantMappingException::new); // fail-closed, nessun default silenzioso
-    return clientsByTenant.get(tenant);
+    return currentTenantProvider.currentTenantId()
+        .flatMap(TenantId::fromValue)
+        .map(clientsByTenant::get)
+        .orElseThrow(UnresolvedTenantException::new); // fail-closed, nessun default silenzioso
   }
 }
 ```
+
+Il ciclo su `TenantId.values()` con `orElseThrow` fa fallire l'**avvio** del pod se un tenant non ha
+configurazione: aggiungere un terzo tenant senza configurarlo rompe al boot, non a runtime sulla prima
+richiesta di quel tenant.
+
+**Nota su managed identity.** Tutti i connector oggi in repository usano *connection string*, non managed
+identity — lo snippet sopra riflette lo stato attuale ed è quindi un drop-in. La variante con managed
+identity sostituisce le due righe di build con:
+
+```java
+      .endpoint("https://" + accountName + ".blob.core.windows.net")
+      .credential(new DefaultAzureCredentialBuilder()
+          .managedIdentityClientId(managedIdentityClientId).build())
+```
+
+(`DefaultAzureCredentialBuilder.managedIdentityClientId(String)` e
+`BlobServiceClientBuilder.credential(TokenCredential)` verificati sui jar). Richiede però
+`com.azure:azure-identity` sul classpath: oggi lo dichiara esplicitamente solo `dashboard-bff`; i servizi
+Quarkus passano da `io.quarkiverse.azureservices:quarkus-azure-storage-blob` e la dipendenza va aggiunta.
 
 I quattro connector esistenti cambiano nello stesso modo: sostituire il campo `BlobServiceClient` costruito
 nel costruttore con l'iniezione di `TenantAwareBlobServiceClientProvider`, e chiamare `.current()` all'inizio
 di ogni metodo (`getTemplateFile`, `uploadInstitutionLogo`, `upload`, ...) invece di leggere il campo fisso —
 mai una volta sola, per restare corretti con richieste AR/PNPG interlacciate sullo stesso processo. Per
-`ContractTemplateStorageImpl` (client asincrono) l'`EnumMap` contiene `BlobServiceAsyncClient` invece della
-variante sincrona; il resto del pattern è identico.
+`ContractTemplateStorageImpl` (client asincrono) l'`EnumMap` contiene `BlobServiceAsyncClient` e la build
+termina con `.buildAsyncClient()`; il resto del pattern è identico.
 
 Questo copre solo la selezione dell'**account**; il nome del **container**, dove un servizio condivide un
-solo account tra tenant (SELC-9.3), resta un problema diverso e già coperto da
-`TenantDataIsolationRegistry.storageContainer(tenant, baseContainerName)` — i due meccanismi non vanno
-combinati per lo stesso servizio, sono alternativi a seconda di quale modello di isolamento storage è stato
-scelto per quel servizio.
+solo account tra tenant (SELC-9.3), resta un problema diverso e si risolve suffissando il container col
+tenant nello stesso punto in cui oggi si legge la proprietà fissa — i due meccanismi non vanno combinati per
+lo stesso servizio, sono alternativi a seconda di quale modello di isolamento storage è stato scelto per quel
+servizio.
+
+> **Nota trasversale sugli snippet di questa sezione.** `TenantDataIsolationRegistry`,
+> `UnresolvedTenantMappingException` e la variabile Terraform `tenant_data_isolation`, citati in una
+> precedente stesura come "già implementati", **non esistono** nel codice né in Terraform (verificato con
+> grep sull'intero repository: comparivano solo in questi documenti). Gli snippet sono stati riscritti per
+> essere autonomi, leggendo la configurazione per tenant da chiavi ordinarie
+> (`selfcare.tenant.<ar|pnpg>.*`) e usando `TenantId.fromValue(String) → Optional<TenantId>` (fail-closed,
+> preferibile a `valueOf`) e un `UnresolvedTenantException` applicativo. Le firme usate sono verificate sui
+> jar effettivamente risolti, ma **non compilate**.
 
 ---
 
