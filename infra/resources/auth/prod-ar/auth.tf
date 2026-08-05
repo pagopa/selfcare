@@ -182,7 +182,7 @@ locals {
     },
     {
       name  = "ONE_MAIL_URL"
-      value = "https://onemail.pagopa.it"
+      value = "https://uat.onemail.pagopa.it"
     },
     {
       name = "MAIL_SENDER_ADDRESS"
