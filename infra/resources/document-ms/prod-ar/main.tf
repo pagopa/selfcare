@@ -80,40 +80,11 @@ resource "azurerm_role_assignment" "document_user_attachments_blob_identity_role
   principal_id         = data.azurerm_user_assigned_identity.document_storage_blob_identity.principal_id
 }
 
-###############################################################################
-# Private Endpoint + Private DNS integration for user-attachments storage
-###############################################################################
-data "azurerm_subnet" "user_attachments_pep_snet" {
-  name                 = "${module.local.config.project}-usrattach-snet"
-  virtual_network_name = module.local.vnet_selc_name
-  resource_group_name  = module.local.vnet_resource_group_name
-}
-
-data "azurerm_private_dns_zone" "privatelink_blob_core_windows_net" {
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = module.local.vnet_resource_group_name
-}
-
-resource "azurerm_private_endpoint" "user_attachments_blob_pep" {
-  name                = "sc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-usrattach-blob-pep-01"
-  location            = module.local.config.location
-  resource_group_name = data.azurerm_storage_account.user_attachments_storage.resource_group_name
-  subnet_id           = data.azurerm_subnet.user_attachments_pep_snet.id
-
-  private_service_connection {
-    name                           = "sc-${module.local.config.env_short}-${module.local.config.location_short}-${module.local.config.domain}-usrattach-blob-pep-01"
-    private_connection_resource_id = data.azurerm_storage_account.user_attachments_storage.id
-    is_manual_connection           = false
-    subresource_names              = ["blob"]
-  }
-
-  private_dns_zone_group {
-    name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.privatelink_blob_core_windows_net.id]
-  }
-
-  tags = module.local.config.tags
-}
+# NOTE: Subnet, Private Endpoint and Private DNS zone group for the
+# user-attachments storage account are managed by the storage_accounts module
+# invoked from infra/core/<env>-ar/commons.tf
+# (module.storage_user_attachments, app_name = "usrattach").
+# Do NOT redeclare them here to avoid ownership conflicts / tag drift.
 
 locals {
   app_settings_document_ms = [
@@ -131,7 +102,7 @@ locals {
     },
     {
       name  = "PAGOPA_SIGNATURE_SOURCE"
-      value = "namirial"
+      value = "disabled"
     },
     {
       name  = "STORAGE_CONTAINER_CONTRACT"
