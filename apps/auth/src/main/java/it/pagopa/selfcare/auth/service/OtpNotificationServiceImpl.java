@@ -2,10 +2,10 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.OneMailEmailsApi;
+import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -89,7 +89,7 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
         responses ->
           responses.stream()
             .findFirst()
-            .orElseThrow(() -> new NotFoundException("Mail status not found for requestId " + mailRequestId)));
+            .orElseThrow(() -> new ResourceNotFoundException("Mail status not found for requestId " + mailRequestId)));
   }
 
 }

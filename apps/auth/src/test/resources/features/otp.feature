@@ -208,3 +208,32 @@ Feature: Otp
     And The response body contains field "otpSessionUid"
     And An OTP flow should be created with status "PENDING" and mailRequestId "f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
     And The OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" has been updated to status "REJECTED"
+
+    ######################## BEGIN GET /otp/mail-info #########################
+
+  Scenario: Successfully get otp mail info
+    When I send a GET request to "otp/mail-info/f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
+    Then The status code is 200
+    And The response body contains:
+      | mailRequestId | 81650171-8048-4efc-8728-d3d54f1ee7ec |
+      | status        | Delivered                            |
+      | recipient     | test.test@test.it                    |
+      | attempts      | 1                                    |
+    And The response body contains the list "history" of size 3
+    And The response body contains:
+      | history[0].status | Delivered  |
+      | history[1].status | Dispatched |
+      | history[2].status | Queued     |
+
+  Scenario: Mail info not found
+    When I send a GET request to "otp/mail-info/not-found-request-id"
+    Then The status code is 404
+    And The response body contains:
+      | status | 404                                                        |
+      | detail | Mail status not found for requestId not-found-request-id   |
+
+  Scenario: OneMail internal server error retrieving mail info
+    When I send a GET request to "otp/mail-info/internal-error-request-id"
+    Then The status code is 500
+
+######################## END GET /otp/mail-info #########################
