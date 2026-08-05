@@ -23,7 +23,10 @@ public class HealthStep {
 
     @When("I call the readiness endpoint")
     public void i_call_the_readiness_endpoint() {
-        this.response = given().when().get(readinessPath);
+        // The Cucumber suite is annotated with @TestHTTPEndpoint(OnboardingController.class),
+        // which sets the RestAssured basePath to the controller's @Path. Reset it to "" so
+        // that we hit the absolute health endpoint (which lives outside the controller path).
+        this.response = given().basePath("").when().get(readinessPath);
     }
 
     @Then("the readiness HTTP status is {int}")
@@ -41,10 +44,8 @@ public class HealthStep {
         Map<String, Object> check = findCheck(name);
         assertThat(check)
                 .as("readiness check named '%s'", name)
-                .isNotNull();
-        assertThat(check.get("status"))
-                .as("status of check '%s'", name)
-                .isEqualTo(expectedStatus);
+                .isNotNull()
+                .containsEntry("status", expectedStatus);
     }
 
     @Then("the readiness check {string} data contains key {string}")

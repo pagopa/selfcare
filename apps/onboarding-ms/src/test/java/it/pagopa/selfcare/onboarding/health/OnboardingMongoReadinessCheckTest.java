@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class OnboardingMongoReadinessCheckTest {
@@ -24,8 +25,8 @@ class OnboardingMongoReadinessCheckTest {
 
     @BeforeEach
     void setUp() {
-        ReactiveMongoClient mongoClient = Mockito.mock(ReactiveMongoClient.class);
-        database    = Mockito.mock(ReactiveMongoDatabase.class);
+        ReactiveMongoClient mongoClient = mock(ReactiveMongoClient.class);
+        database    = mock(ReactiveMongoDatabase.class);
         when(mongoClient.getDatabase(DATABASE)).thenReturn(database);
         check = new OnboardingMongoReadinessCheck(mongoClient, DATABASE);
     }
@@ -65,4 +66,3 @@ class OnboardingMongoReadinessCheckTest {
                 .containsEntry("error",    "IllegalStateException: no primary");
     }
 }
-

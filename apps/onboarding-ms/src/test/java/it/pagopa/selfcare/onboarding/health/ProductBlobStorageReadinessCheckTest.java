@@ -4,19 +4,18 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class ProductBlobStorageReadinessCheckTest {
 
-    private static final String ACCOUNT   = "selcpweupnpgcheckoutst01";
+    private static final String ACCOUNT   = "account-name";
     private static final String CONTAINER = "product";
     private static final String CANARY    = "products.json";
 
@@ -25,7 +24,7 @@ class ProductBlobStorageReadinessCheckTest {
 
     @BeforeEach
     void setUp() {
-        blobClient = Mockito.mock(AzureBlobClientDefault.class);
+        blobClient = mock(AzureBlobClientDefault.class);
         check = new ProductBlobStorageReadinessCheck(blobClient, CONTAINER, Optional.of(ACCOUNT), CANARY);
     }
 
@@ -35,7 +34,7 @@ class ProductBlobStorageReadinessCheckTest {
 
     @Test
     void up_whenCanaryBlobIsReadable() {
-        when(blobClient.getProperties(eq(CANARY))).thenReturn(null); // getProperties may return non-null, value irrelevant
+        when(blobClient.getProperties(CANARY)).thenReturn(null); // getProperties may return non-null, value irrelevant
 
         HealthCheckResponse response = await();
 
@@ -58,7 +57,7 @@ class ProductBlobStorageReadinessCheckTest {
         // (for example: HTTP 403 due to an RBAC/Managed Identity misconfiguration on the
         // storage account). The readiness probe MUST turn DOWN so that the pod is removed
         // from the load balancer
-        when(blobClient.getProperties(eq(CANARY)))
+        when(blobClient.getProperties(CANARY))
                 .thenThrow(new RuntimeException("Status code 403, AuthorizationPermissionMismatch"));
 
         HealthCheckResponse response = await();
@@ -76,7 +75,7 @@ class ProductBlobStorageReadinessCheckTest {
 
     @Test
     void down_whenClientThrowsRuntimeException() {
-        when(blobClient.getProperties(eq(CANARY))).thenThrow(new RuntimeException("connection refused"));
+        when(blobClient.getProperties(CANARY)).thenThrow(new RuntimeException("connection refused"));
 
         HealthCheckResponse response = await();
 
@@ -93,7 +92,7 @@ class ProductBlobStorageReadinessCheckTest {
         // check must still work: account is only informational metadata.
         ProductBlobStorageReadinessCheck localCheck =
                 new ProductBlobStorageReadinessCheck(blobClient, CONTAINER, Optional.empty(), CANARY);
-        when(blobClient.getProperties(eq(CANARY))).thenReturn(null);
+        when(blobClient.getProperties(CANARY)).thenReturn(null);
 
         HealthCheckResponse response = localCheck.call().await().atMost(Duration.ofSeconds(5));
 
@@ -104,4 +103,3 @@ class ProductBlobStorageReadinessCheckTest {
                 .containsEntry("canaryBlob", CANARY);
     }
 }
-
