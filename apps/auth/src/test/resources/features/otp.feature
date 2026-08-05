@@ -212,6 +212,7 @@ Feature: Otp
     ######################## BEGIN GET /otp/mail-info #########################
 
   Scenario: Successfully get otp mail info
+    Given User login with username "r.balboa" and password "test"
     When I send a GET request to "otp/mail-info/f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
     Then The status code is 200
     And The response body contains:
@@ -226,6 +227,7 @@ Feature: Otp
       | history[2].status | Queued     |
 
   Scenario: Mail info not found
+    Given User login with username "r.balboa" and password "test"
     When I send a GET request to "otp/mail-info/not-found-request-id"
     Then The status code is 404
     And The response body contains:
@@ -233,6 +235,7 @@ Feature: Otp
       | detail | Mail status not found for requestId not-found-request-id   |
 
   Scenario: OneMail internal server error retrieving mail info
+    Given User login with username "r.balboa" and password "test"
     When I send a GET request to "otp/mail-info/internal-error-request-id"
     Then The status code is 500
 
