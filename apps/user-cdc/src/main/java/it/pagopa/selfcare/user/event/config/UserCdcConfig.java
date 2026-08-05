@@ -4,7 +4,7 @@ import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableClientBuilder;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.microsoft.applicationinsights.TelemetryClient;
-import com.microsoft.applicationinsights.TelemetryConfiguration;
+import com.microsoft.applicationinsights.connectionstring.ConnectionString;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -44,9 +44,8 @@ public class UserCdcConfig {
 
     @ApplicationScoped
     public TelemetryClient telemetryClient(@ConfigProperty(name = "user-cdc.appinsights.connection-string") String appInsightsConnectionString) {
-        TelemetryConfiguration telemetryConfiguration = TelemetryConfiguration.createDefault();
-        telemetryConfiguration.setConnectionString(appInsightsConnectionString);
-        return new TelemetryClient(telemetryConfiguration);
+        ConnectionString.configure(appInsightsConnectionString);
+        return new TelemetryClient();
     }
 
     @ApplicationScoped
