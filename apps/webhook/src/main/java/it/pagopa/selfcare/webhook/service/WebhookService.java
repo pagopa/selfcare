@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.webhook.service;
 
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.dto.NotificationRequest;
+import it.pagopa.selfcare.webhook.dto.NotificationResendResponse;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
@@ -17,6 +19,7 @@ import jakarta.inject.Inject;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 
 @Slf4j
 @ApplicationScoped
@@ -203,6 +206,119 @@ public class WebhookService {
         .collect()
         .asList()
         .replaceWithVoid();
+  }
+
+  /** Resend a single notification identified by its ID. */
+  public Uni<NotificationResendResponse> resendNotificationById(String notificationId) {
+    if (!ObjectId.isValid(notificationId)) {
+      return Uni.createFrom()
+          .failure(new IllegalArgumentException("Invalid notification ID: " + notificationId));
+    }
+    return notificationRepository
+        .findById(new ObjectId(notificationId))
+        .onItem()
+        .ifNull()
+        .failWith(
+            () -> new IllegalArgumentException("Notification not found: " + notificationId))
+        .onItem()
+        .transformToUni(this::resendAndPublish)
+        .map(notification -> toResendResponse(List.of(notification)));
+  }
+
+  /**
+   * Resend every notification matching the given status, optionally restricted to a single
+   * webhook.
+   */
+  public Uni<NotificationResendResponse> resendNotificationsByStatus(
+      WebhookNotification.NotificationStatus status, String webhookId) {
+    ObjectId webhookObjectId = null;
+    if (webhookId != null && !webhookId.isBlank()) {
+      if (!ObjectId.isValid(webhookId)) {
+        return Uni.createFrom()
+            .failure(new IllegalArgumentException("Invalid webhook ID: " + webhookId));
+      }
+      webhookObjectId = new ObjectId(webhookId);
+    }
+    return notificationRepository
+        .findByStatus(status, webhookObjectId)
+        .onItem()
+        .transformToUni(this::resendAll);
+  }
+
+  /** Resend every notification created within the given (inclusive) date-time range. */
+  public Uni<NotificationResendResponse> resendNotificationsByDateRange(
+      LocalDateTime from, LocalDateTime to) {
+    return notificationRepository
+        .findByCreatedAtRange(from, to)
+        .onItem()
+        .transformToUni(this::resendAll);
+  }
+
+  private Uni<NotificationResendResponse> resendAll(List<WebhookNotification> notifications) {
+    if (notifications.isEmpty()) {
+      return Uni.createFrom().item(toResendResponse(List.of()));
+    }
+    return Multi.createFrom()
+        .iterable(notifications)
+        .onItem()
+        .transformToUniAndMerge(this::resendAndPublish)
+        .collect()
+        .asList()
+        .map(this::toResendResponse);
+  }
+
+  /**
+   * Reset a notification to PENDING (with a fresh attempt count) and re-publish it to the
+   * Storage Queue, mirroring the initial send flow in {@link
+   * #sendNotification(NotificationRequest)}.
+   *
+   * <p>A failure while publishing is swallowed (after releasing the publishing lock): the
+   * notification has already been reset to PENDING with {@code busPublishedAt} left unset, so
+   * {@link WebhookNotificationOutboxService} will pick it up and retry the publish on its next
+   * scheduled run. This keeps a bulk resend from failing entirely because of one transient queue
+   * error.
+   */
+  private Uni<WebhookNotification> resendAndPublish(WebhookNotification notification) {
+    notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
+    notification.setAttemptCount(0);
+    notification.setLastError(null);
+    notification.setLastAttemptAt(null);
+    notification.setCompletedAt(null);
+    notification.setBusPublishedAt(null);
+    notification.setProcessing(false);
+    notification.setProcessingUntil(null);
+    notification.setPublishing(true);
+    notification.setPublishingUntil(LocalDateTime.now().plusMinutes(5));
+
+    return notificationRepository
+        .update(notification)
+        .invoke(n -> log.info("Resending notification with ID: {}", n.getId()))
+        .call(this::publishResentNotification);
+  }
+
+  private Uni<Void> publishResentNotification(WebhookNotification notification) {
+    return notificationPublisher
+        .publish(notification.getId().toHexString())
+        .call(ignored -> notificationRepository.markAsPublished(notification.getId()))
+        .onFailure()
+        .recoverWithUni(
+            error ->
+                notificationRepository
+                    .releasePublishingLock(notification.getId())
+                    .invoke(
+                        () ->
+                            log.error(
+                                "Unable to publish resent notification {}",
+                                notification.getId(),
+                                error))
+                    .replaceWithVoid());
+  }
+
+  private NotificationResendResponse toResendResponse(List<WebhookNotification> notifications) {
+    NotificationResendResponse response = new NotificationResendResponse();
+    response.setResentCount(notifications.size());
+    response.setNotificationIds(notifications.stream().map(n -> n.getId().toHexString()).toList());
+    return response;
   }
 
   private WebhookResponse toResponse(Webhook webhook) {
