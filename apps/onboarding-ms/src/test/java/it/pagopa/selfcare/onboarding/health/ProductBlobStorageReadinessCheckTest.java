@@ -48,7 +48,7 @@ class ProductBlobStorageReadinessCheckTest {
                 .containsEntry("component", "blob-storage")
                 .containsEntry("account",   ACCOUNT)
                 .containsEntry("container", CONTAINER)
-                .containsEntry("canaryBlob", CANARY)
+                .containsEntry("probeTarget", CANARY)
                 .containsKey("latencyMs")
                 .doesNotContainKey("error");
     }
@@ -69,7 +69,7 @@ class ProductBlobStorageReadinessCheckTest {
         assertThat(data)
                 .containsEntry("account",   ACCOUNT)
                 .containsEntry("container", CONTAINER)
-                .containsEntry("canaryBlob", CANARY)
+                .containsEntry("probeTarget", CANARY)
                 .hasEntrySatisfying("error", err -> assertThat(err.toString())
                         .contains("403")
                         .contains("AuthorizationPermissionMismatch"));
@@ -102,6 +102,6 @@ class ProductBlobStorageReadinessCheckTest {
         assertThat(response.getData().orElseThrow())
                 .containsEntry("account",   "n/a")
                 .containsEntry("container", CONTAINER)
-                .containsEntry("canaryBlob", CANARY);
+                .containsEntry("probeTarget", CANARY);
     }
 }

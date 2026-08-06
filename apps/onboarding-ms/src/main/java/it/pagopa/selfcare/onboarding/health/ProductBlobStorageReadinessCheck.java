@@ -50,7 +50,7 @@ public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadine
     }
 
     @Override
-    protected String canaryBlob() {
+    protected String probeTarget() {
         return canaryBlob;
     }
 
