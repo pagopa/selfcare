@@ -113,13 +113,13 @@ class AbstractAsyncReadinessCheckTest {
     }
 
     @Test
-    void blobBase_populatesComponentAccountContainerAndCanary() {
+    void blobBase_populatesComponentAccountContainerAndProbeTarget() {
         AbstractBlobStorageReadinessCheck blob = new AbstractBlobStorageReadinessCheck() {
-            @Override protected String checkName()  { return "blob-x"; }
-            @Override protected Uni<?> probe()      { return Uni.createFrom().item("ok"); }
-            @Override protected String account()    { return "myaccount"; }
-            @Override protected String container()  { return "mycontainer"; }
-            @Override protected String canaryBlob() { return "canary.json"; }
+            @Override protected String checkName()   { return "blob-x"; }
+            @Override protected Uni<?> probe()       { return Uni.createFrom().item("ok"); }
+            @Override protected String account()     { return "myaccount"; }
+            @Override protected String container()   { return "mycontainer"; }
+            @Override protected String probeTarget() { return "canary.json"; }
         };
 
         HealthCheckResponse response = await(blob);
@@ -130,7 +130,24 @@ class AbstractAsyncReadinessCheckTest {
                 .containsEntry("component", "blob-storage")
                 .containsEntry("account", "myaccount")
                 .containsEntry("container", "mycontainer")
-                .containsEntry("canaryBlob", "canary.json");
+                .containsEntry("probeTarget", "canary.json");
+    }
+
+    @Test
+    void blobBase_omitsProbeTargetKey_whenSubclassDoesNotOverride() {
+        AbstractBlobStorageReadinessCheck blob = new AbstractBlobStorageReadinessCheck() {
+            @Override protected String checkName()  { return "blob-y"; }
+            @Override protected Uni<?> probe()      { return Uni.createFrom().item("ok"); }
+            @Override protected String account()    { return "myaccount"; }
+            @Override protected String container()  { return "mycontainer"; }
+        };
+
+        HealthCheckResponse response = await(blob);
+
+        assertThat(response.getData().get())
+                .containsEntry("component", "blob-storage")
+                .containsEntry("container", "mycontainer")
+                .doesNotContainKey("probeTarget");
     }
 
     @Test
