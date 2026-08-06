@@ -31,10 +31,22 @@ public final class HealthCheckConstants {
     /** Data key: Azure Blob Storage container name. */
     public static final String DATA_KEY_BLOB_CONTAINER = "container";
 
-    /** Data key: canary blob path used for the readiness probe. */
-    public static final String DATA_KEY_BLOB_CANARY = "canaryBlob";
+    /**
+     * Data key: what the Blob Storage probe is actually targeting — a specific blob path,
+     * an unlikely-to-exist prefix used as a marker for list-based probes, or any other
+     * identifier chosen by the subclass. Only included in the payload when the check reports
+     * a non-blank value via {@code AbstractBlobStorageReadinessCheck.probeTarget()}.
+     */
+    public static final String DATA_KEY_BLOB_PROBE_TARGET = "probeTarget";
 
     /** Data key: MongoDB database name being pinged. */
     public static final String DATA_KEY_MONGO_DATABASE = "database";
+
+    /**
+     * Data key: MongoDB host(s) the pod is connected to (comma-joined {@code host:port} pairs).
+     * Only included in the payload when the check reports a non-blank value via
+     * {@link AbstractMongoReadinessCheck#host()}.
+     */
+    public static final String DATA_KEY_MONGO_HOST = "host";
 }
 

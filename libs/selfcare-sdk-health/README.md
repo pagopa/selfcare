@@ -24,8 +24,8 @@ Package `it.pagopa.selfcare.commons.health`:
 | Class | Purpose |
 |---|---|
 | `AbstractAsyncReadinessCheck` | Implements `AsyncHealthCheck` with per-check timeout, error data enrichment, and best-effort latency reporting. Subclasses provide `checkName()` + `probe()`. |
-| `AbstractBlobStorageReadinessCheck` | Convenience base for Azure Blob Storage. Auto-fills `data` with `account` / `container` / `canaryBlob`. |
-| `AbstractMongoReadinessCheck` | Convenience base for MongoDB `ping`-style checks. Auto-fills `data` with `database`. |
+| `AbstractBlobStorageReadinessCheck` | Convenience base for Azure Blob Storage. Auto-fills `data` with `account` / `container` and (optionally) `probeTarget` — a free-form marker of what the probe is actually calling (a specific blob path such as `products.json`, an unlikely-to-exist prefix such as `__healthcheck_probe__/` used for list-based probes, ...). |
+| `AbstractMongoReadinessCheck` | Convenience base for MongoDB `ping`-style checks. Auto-fills `data` with `database` and (optionally, since 0.2.0) `host` when the subclass overrides `host()`. Ships a `hostFromConnectionString(...)` static utility to parse standard `mongodb://` / `mongodb+srv://` URIs and strip credentials. |
 | `HealthCheckConstants` | Stable data-key names + default timeout (2s). |
 
 ## Getting started
@@ -36,7 +36,7 @@ Package `it.pagopa.selfcare.commons.health`:
 <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selfcare-sdk-health</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
@@ -69,15 +69,15 @@ public class ProductBlobReadinessCheck extends AbstractBlobStorageReadinessCheck
     @ConfigProperty(name = "onboarding-ms.blob-storage.account-name-product") String account;
     @ConfigProperty(name = "onboarding-ms.blob-storage.container-product")    String container;
 
-    @Override protected String checkName()  { return "blob-storage-product"; }
-    @Override protected String account()    { return account; }
-    @Override protected String container()  { return container; }
-    @Override protected String canaryBlob() { return "products.json"; }
+    @Override protected String checkName()   { return "blob-storage-product"; }
+    @Override protected String account()     { return account; }
+    @Override protected String container()   { return container; }
+    @Override protected String probeTarget() { return "products.json"; }
 
     @Override
     protected Uni<?> probe() {
         return Uni.createFrom()
-                .item(() -> client.getProperties(container(), canaryBlob()))
+                .item(() -> client.getProperties(container(), probeTarget()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 }
@@ -97,7 +97,7 @@ Successful response (UP):
     "component": "blob-storage",
     "account":   "selcpweupnpgcheckoutst01",
     "container": "product",
-    "canaryBlob": "products.json",
+    "probeTarget": "products.json",
     "latencyMs": "23"
   }
 }
@@ -112,7 +112,7 @@ Failure response (DOWN):
     "component": "blob-storage",
     "account":   "selcpweupnpgcheckoutst01",
     "container": "product",
-    "canaryBlob": "products.json",
+    "probeTarget": "products.json",
     "latencyMs": "134",
     "error":     "BlobStorageException: Status code 403, ..."
   }
