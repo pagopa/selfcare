@@ -9,6 +9,7 @@ import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
 import it.pagopa.selfcare.auth.controller.request.OtpVerifyRequest;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
 import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
+import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.ConflictException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.OtpForbiddenException;
@@ -18,8 +19,12 @@ import it.pagopa.selfcare.auth.service.OtpFlowService;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+import java.util.List;
+
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -256,5 +261,108 @@ class OtpControllerTest {
       .body("attempts", equalTo(1))
       .body("history.size()", equalTo(1))
       .body("history[0].status", equalTo("DELIVERED"));
+  }
+
+  @Test
+  void getOtpInfo_BadRequest() {
+    given()
+      .when()
+      .get("/info")
+      .then()
+      .statusCode(HttpStatus.SC_BAD_REQUEST);
+  }
+
+  @Test
+  void getOtpInfo_NotFound() {
+    when(otpFlowService.getOtpInfo(anyString(), any()))
+      .thenReturn(
+        Uni.createFrom()
+          .failure(new ResourceNotFoundException("Cannot find otp info")));
+
+    given()
+      .queryParam("userId", "userId")
+      .when()
+      .get("/info")
+      .then()
+      .statusCode(HttpStatus.SC_NOT_FOUND);
+  }
+
+  @Test
+  void getOtpInfo_InternalServerError() {
+    when(otpFlowService.getOtpInfo(anyString(), any()))
+      .thenReturn(
+        Uni.createFrom()
+          .failure(new InternalException("Internal server error")));
+
+    given()
+      .queryParam("userId", "userId")
+      .when()
+      .get("/info")
+      .then()
+      .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void getOtpInfo_Ok() {
+    List<OtpFlow> response = List.of(
+      new OtpFlow(
+        "uuid1",
+        "userId",
+        "otp-1",
+        OtpStatus.PENDING,
+        1,
+        OffsetDateTime.now().minusHours(1),
+        OffsetDateTime.now().minusMinutes(30),
+        OffsetDateTime.now().plusMinutes(5),
+        "requestId1"),
+      new OtpFlow(
+        "uuid2",
+        "userId",
+        "otp-2",
+        OtpStatus.COMPLETED,
+        2,
+        OffsetDateTime.now().minusHours(1),
+        OffsetDateTime.now().minusMinutes(30),
+        OffsetDateTime.now().plusMinutes(5),
+        "requestId2"));
+
+    when(otpFlowService.getOtpInfo(anyString(), any()))
+      .thenReturn(Uni.createFrom().item(response));
+
+    given()
+      .queryParam("userId", "userId")
+      .when()
+      .get("/info")
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("size()", equalTo(2))
+
+      .body("[0].uuid", equalTo("uuid1"))
+      .body("[0].userId", equalTo("userId"))
+      .body("[0].otp", equalTo("otp-1"))
+      .body("[0].status", equalTo("PENDING"))
+      .body("[0].attempts", equalTo(1))
+      .body("[0].mailRequestId", equalTo("requestId1"))
+
+      .body("[1].uuid", equalTo("uuid2"))
+      .body("[1].userId", equalTo("userId"))
+      .body("[1].otp", equalTo("otp-2"))
+      .body("[1].status", equalTo("COMPLETED"))
+      .body("[1].attempts", equalTo(2))
+      .body("[1].mailRequestId", equalTo("requestId2"));
+  }
+
+  @Test
+  void getOtpInfo_WithStatusFilter() {
+    when(otpFlowService.getOtpInfo(anyString(), org.mockito.ArgumentMatchers.eq(OtpStatus.PENDING)))
+      .thenReturn(Uni.createFrom().item(List.of()));
+
+    given()
+      .queryParam("userId", "userId")
+      .queryParam("status", "PENDING")
+      .when()
+      .get("/info")
+      .then()
+      .statusCode(HttpStatus.SC_OK);
   }
 }

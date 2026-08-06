@@ -240,3 +240,56 @@ Feature: Otp
     Then The status code is 500
 
 ######################## END GET /otp/mail-info #########################
+
+######################## BEGIN GET /otp/info #########################
+
+  @NoOtpFlows
+  Scenario: Successfully get otp info by userId
+    Given The following OTP flows exist:
+      | uuid                                 | userId                               | status    | attempts | mailRequestId                        |
+      | 8f2c7e91-4b6a-4d8e-9f21-7a3c5e8b1d42 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | PENDING   | 0        | 6e3f8a21-9c54-4b7d-a2f8-1d5e7c9b3a61 |
+      | 3a91d5f7-8c42-4e6b-b1f9-5d7a2c8e4f30 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | COMPLETED | 1        | b7c4e921-6d58-4a3f-8e12-9c5b7d2a4f60 |
+      | c5e8a214-7b39-4d6f-a821-3f9c5e7d2b48 | 1d8e3f90-6a42-4c71-b859-2e7d4a6f8c31 | REJECTED  | 5        | 9a2f6d81-4c73-5e9b-a214-7d8c3f6a5e20 |
+    And The following query params:
+      | userId | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
+    When I send a GET request to "otp/info"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains at path "" the following list of objects in any order:
+      | uuid                                 | userId                               | status    | mailRequestId                        |
+      | 8f2c7e91-4b6a-4d8e-9f21-7a3c5e8b1d42 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | PENDING   | 6e3f8a21-9c54-4b7d-a2f8-1d5e7c9b3a61 |
+      | 3a91d5f7-8c42-4e6b-b1f9-5d7a2c8e4f30 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | COMPLETED | b7c4e921-6d58-4a3f-8e12-9c5b7d2a4f60 |
+
+  @NoOtpFlows
+  Scenario: Successfully get otp info filtered by status
+    Given The following OTP flows exist:
+      | uuid                                 | userId                               | status    | attempts | mailRequestId                        |
+      | 8f2c7e91-4b6a-4d8e-9f21-7a3c5e8b1d42 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | PENDING   | 0        | 6e3f8a21-9c54-4b7d-a2f8-1d5e7c9b3a61 |
+      | 3a91d5f7-8c42-4e6b-b1f9-5d7a2c8e4f30 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | COMPLETED | 1        | b7c4e921-6d58-4a3f-8e12-9c5b7d2a4f60 |
+    And The following query params:
+      | userId | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
+      | status | PENDING                              |
+    When I send a GET request to "otp/info"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].uuid          | 8f2c7e91-4b6a-4d8e-9f21-7a3c5e8b1d42 |
+      | [0].userId        | 97a511a7-2acc-47b9-afed-2f3c65753b4a |
+      | [0].status        | PENDING                              |
+      | [0].attempts      | 0                                    |
+      | [0].mailRequestId | 6e3f8a21-9c54-4b7d-a2f8-1d5e7c9b3a61 |
+
+  @NoOtpFlows
+  Scenario: No otp info found for user
+    Given User login with username "r.balboa" and password "test"
+    When I send a GET request to "otp/info?userId=not-existing-user"
+    Then The status code is 200
+    And The response body contains the list "$" of size 0
+
+  @NoOtpFlows
+  Scenario: Bad request when userId is missing
+    Given User login with username "r.balboa" and password "test"
+    When I send a GET request to "otp/info"
+    Then The status code is 400
+
+######################## END GET /otp/info #########################

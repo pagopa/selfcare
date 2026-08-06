@@ -1,9 +1,11 @@
 package it.pagopa.selfcare.auth.integration_test.steps;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
@@ -57,6 +59,11 @@ public class AuthSteps {
   @Before(value = "@OidcOpenLimit", order = 10)
   public void setLimitOpen() {
     otpDailyLimit.setDailyLimit(-1);
+  }
+
+  @Before(value = "@NoOtpFlows")
+  public void deleteAllOtps() {
+    deleteAllOtpFlowsFromDatabase();
   }
 
   @After
@@ -294,6 +301,10 @@ public class AuthSteps {
             .indefinitely();
   }
 
+  private void deleteAllOtpFlowsFromDatabase() {
+    OtpFlow.deleteAll().await().indefinitely();
+  }
+
   @And("An OTP flow with uuid {string} does not exist")
   public void anOTPFlowWithUuidDoesNotExist(String uuid) {
     Long deletedCount = OtpFlow.delete("uuid", uuid).await().indefinitely();
@@ -302,6 +313,26 @@ public class AuthSteps {
     } else {
       log.info("No OTP flow found with UUID: {}", uuid);
     }
+  }
+
+  @Given("The following OTP flows exist:")
+  public void theFollowingOtpFlowsExist(DataTable dataTable) {
+    dataTable.asMaps().forEach(row -> {
+      OtpFlow otpFlow =
+        OtpFlow.builder()
+          .uuid(row.get("uuid"))
+          .userId(row.get("userId"))
+          .status(OtpStatus.valueOf(row.get("status")))
+          .attempts(Integer.parseInt(row.get("attempts")))
+          .mailRequestId(row.get("mailRequestId"))
+          .createdAt(OffsetDateTime.now().minusMinutes(10))
+          .updatedAt(OffsetDateTime.now().minusMinutes(5))
+          .expiresAt(OffsetDateTime.now().plusMinutes(5))
+          .otp("12345")
+          .build();
+
+      otpFlow.persist().await().indefinitely();
+    });
   }
 
 

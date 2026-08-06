@@ -637,4 +637,78 @@ public class OtpFlowServiceTest {
       .withSubscriber(UniAssertSubscriber.create())
       .assertFailedWith(InternalException.class, "OneMail error");
   }
+
+  @Test
+  void testGetOtpInfo_WithStatus() {
+    String userId = "userId";
+
+    List<OtpFlow> otpFlows = List.of(
+      OtpFlow.builder()
+        .uuid("uuid1")
+        .userId(userId)
+        .status(OtpStatus.PENDING)
+        .build(),
+      OtpFlow.builder()
+        .uuid("uuid2")
+        .userId(userId)
+        .status(OtpStatus.PENDING)
+        .build());
+
+    PanacheMock.mock(OtpFlow.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
+      Mockito.mock(ReactivePanacheQuery.class);
+
+    when(query.list()).thenReturn((Uni) Uni.createFrom().item(otpFlows));
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
+
+    List<OtpFlow> result =
+      otpFlowService
+        .getOtpInfo(userId, OtpStatus.PENDING)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    Assertions.assertEquals(2, result.size());
+    Assertions.assertEquals("uuid1", result.get(0).getUuid());
+    Assertions.assertEquals(OtpStatus.PENDING, result.get(0).getStatus());
+    Assertions.assertEquals("uuid2", result.get(1).getUuid());
+    Assertions.assertEquals(OtpStatus.PENDING, result.get(1).getStatus());
+  }
+
+  @Test
+  void testGetOtpInfo_WithoutStatus() {
+    String userId = "userId";
+
+    List<OtpFlow> otpFlows = List.of(
+      OtpFlow.builder()
+        .uuid("uuid1")
+        .userId(userId)
+        .status(OtpStatus.COMPLETED)
+        .build());
+
+    PanacheMock.mock(OtpFlow.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
+      Mockito.mock(ReactivePanacheQuery.class);
+
+    when(query.list()).thenReturn((Uni) Uni.createFrom().item(otpFlows));
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
+
+    List<OtpFlow> result =
+      otpFlowService
+        .getOtpInfo(userId, null)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    Assertions.assertEquals(1, result.size());
+    Assertions.assertEquals("uuid1", result.get(0).getUuid());
+    Assertions.assertEquals(userId, result.get(0).getUserId());
+    Assertions.assertEquals(OtpStatus.COMPLETED, result.get(0).getStatus());
+  }
 }

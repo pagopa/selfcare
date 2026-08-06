@@ -5,8 +5,11 @@ import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
+import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.model.otp.OtpInfo;
+
+import java.util.List;
 import java.util.Optional;
 
 public interface OtpFlowService {
@@ -22,5 +25,7 @@ public interface OtpFlowService {
   Uni<OidcExchangeOtpResponse> resendOtp(String otpUid);
 
   Uni<OtpMailInfoResponse> getOtpMailInfo(String mailRequestId);
+
+  Uni<List<OtpFlow>> getOtpInfo(String userId, OtpStatus status);
 
 }
