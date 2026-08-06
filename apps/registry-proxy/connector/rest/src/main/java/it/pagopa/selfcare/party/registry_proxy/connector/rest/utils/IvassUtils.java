@@ -3,6 +3,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest.utils;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.InsuranceCompany;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.exception.IvassFileParseException;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.IvassDataTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -61,17 +62,16 @@ public class IvassUtils {
     }
 
     public List<InsuranceCompany> readCsv(byte[] csv) {
-        List<IvassDataTemplate> companies = new ArrayList<>();
         try (Reader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(csv)))) {
             CsvToBean<IvassDataTemplate> csvToBean = new CsvToBeanBuilder<IvassDataTemplate>(reader)
                     .withType(IvassDataTemplate.class)
                     .withSeparator(';')
                     .build();
-            companies = csvToBean.parse();
+            return new ArrayList<>(csvToBean.parse());
         } catch (Exception e) {
-            log.error("Impossible to acquire data for IVASS. Error: {}", e.getMessage(), e);
+            log.error("Impossible to parse IVASS CSV file. The file may not be compliant with the expected format. Error: {}", e.getMessage(), e);
+            throw new IvassFileParseException("IVASS CSV file is not compliant with the expected format: " + e.getMessage(), e);
         }
-        return new ArrayList<>(companies);
     }
 
     public byte[] manageUTF8BOM(byte[] csv) {
