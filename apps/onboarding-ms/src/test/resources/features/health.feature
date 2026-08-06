@@ -15,6 +15,6 @@ Feature: Readiness health endpoint reports downstream dependencies status
   Scenario: Blob storage check exposes canary blob metadata for troubleshooting
     When I call the readiness endpoint
     Then the readiness check "blob-storage-product" data contains key "container"
-    And  the readiness check "blob-storage-product" data contains key "canaryBlob"
+    And  the readiness check "blob-storage-product" data contains key "probeTarget"
     And  the readiness check "blob-storage-product" data contains key "latencyMs"
 
