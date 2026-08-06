@@ -132,6 +132,7 @@ public class WebhookSteps {
     request.setProductId(productId);
     request.setTenantId(tenantId);
     request.setPayload(payload);
+    request.setTopic("SC-Contracts");
 
     response =
         given().contentType("application/json").body(request).when().post("/webhooks/notify");

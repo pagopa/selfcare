@@ -331,7 +331,7 @@
       },
       "NotificationRequest" : {
         "type" : "object",
-        "required" : [ "productId", "tenantId", "payload" ],
+        "required" : [ "productId", "tenantId", "payload", "topic" ],
         "properties" : {
           "productId" : {
             "type" : "string",
@@ -342,6 +342,10 @@
             "pattern" : "\\S"
           },
           "payload" : {
+            "type" : "string",
+            "pattern" : "\\S"
+          },
+          "topic" : {
             "type" : "string",
             "pattern" : "\\S"
           }
@@ -418,6 +422,12 @@
               "type" : "string"
             }
           },
+          "topics" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "retryPolicy" : {
             "$ref" : "#/components/schemas/RetryPolicyRequest"
           }
@@ -448,6 +458,12 @@
             }
           },
           "products" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "topics" : {
             "type" : "array",
             "items" : {
               "type" : "string"

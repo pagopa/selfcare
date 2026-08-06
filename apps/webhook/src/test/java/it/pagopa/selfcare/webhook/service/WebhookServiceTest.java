@@ -329,6 +329,7 @@ class WebhookServiceTest {
     request.setProductId(productId);
     request.setTenantId(TENANT_ID);
     request.setPayload("{}");
+    request.setTopic("SC-Contracts");
 
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
@@ -390,6 +391,100 @@ class WebhookServiceTest {
 
     // then
     verify(notificationRepository, never()).persist(any(WebhookNotification.class));
+  }
+
+  @Test
+  void sendNotification_shouldOnlyNotifyWebhooksSubscribedToTopic() {
+    // given
+    String productId = "prod-io";
+    NotificationRequest request = new NotificationRequest();
+    request.setProductId(productId);
+    request.setTenantId(TENANT_ID);
+    request.setPayload("{}");
+    request.setTopic("SC-User");
+
+    Webhook subscribedWebhook = new Webhook();
+    subscribedWebhook.setId(new ObjectId());
+    subscribedWebhook.setTenantId(TENANT_ID);
+    subscribedWebhook.setProducts(List.of(productId));
+    subscribedWebhook.setTopics(List.of("SC-Contracts", "SC-User"));
+    subscribedWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    Webhook notSubscribedWebhook = new Webhook();
+    notSubscribedWebhook.setId(new ObjectId());
+    notSubscribedWebhook.setTenantId(TENANT_ID);
+    notSubscribedWebhook.setProducts(List.of(productId));
+    notSubscribedWebhook.setTopics(List.of("SC-Delegate"));
+    notSubscribedWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    when(webhookRepository.findActiveWebhooksByProduct(productId, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(List.of(subscribedWebhook, notSubscribedWebhook)));
+    when(notificationRepository.persist(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification notification = invocation.getArgument(0);
+              notification.setId(new ObjectId());
+              return Uni.createFrom().item(notification);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        webhookService
+            .sendNotification(request)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.awaitItem();
+
+    // then
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository, times(1)).persist(captor.capture());
+    assertEquals(subscribedWebhook.getId(), captor.getValue().getWebhookId());
+    assertEquals("SC-User", captor.getValue().getTopic());
+  }
+
+  @Test
+  void sendNotification_shouldNotifyWebhooksWithoutTopicFilter_forAnyTopic() {
+    // given
+    String productId = "prod-io";
+    NotificationRequest request = new NotificationRequest();
+    request.setProductId(productId);
+    request.setTenantId(TENANT_ID);
+    request.setPayload("{}");
+    request.setTopic("SC-Delegate");
+
+    Webhook webhook = new Webhook();
+    webhook.setId(new ObjectId());
+    webhook.setTenantId(TENANT_ID);
+    webhook.setProducts(List.of(productId));
+    webhook.setTopics(null);
+    webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    when(webhookRepository.findActiveWebhooksByProduct(productId, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(List.of(webhook)));
+    when(notificationRepository.persist(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification notification = invocation.getArgument(0);
+              notification.setId(new ObjectId());
+              return Uni.createFrom().item(notification);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        webhookService
+            .sendNotification(request)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.awaitItem();
+
+    // then
+    verify(notificationRepository, times(1)).persist(any(WebhookNotification.class));
   }
 
   @Test

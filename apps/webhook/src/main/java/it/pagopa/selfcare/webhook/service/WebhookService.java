@@ -41,6 +41,7 @@ public class WebhookService {
     webhook.setProductId(Sanitizer.sanitizeString(request.getProductId()));
     webhook.setDescription("");
     webhook.setProducts(List.of(request.getProductId()));
+    webhook.setTopics(request.getTopics());
     webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
     webhook.setCreatedAt(LocalDateTime.now());
     webhook.setUpdatedAt(LocalDateTime.now());
@@ -105,6 +106,7 @@ public class WebhookService {
               webhook.setUrl(request.getUrl());
               webhook.setHttpMethod(request.getHttpMethod());
               webhook.setHeaders(DataEncryptionConfig.encrypt(request.getHeaders()));
+              webhook.setTopics(request.getTopics());
               webhook.setUpdatedAt(LocalDateTime.now());
 
               if (request.getRetryPolicy() != null) {
@@ -149,21 +151,39 @@ public class WebhookService {
         .replaceWith(true);
   }
 
+  /**
+   * A webhook receives a notification for a given topic if it has no topic filter configured
+   * (backward-compatible: subscribes to everything) or if its configured topics include the
+   * notification's topic.
+   */
+  private boolean isSubscribedToTopic(Webhook webhook, String topic) {
+    return webhook.getTopics() == null
+        || webhook.getTopics().isEmpty()
+        || webhook.getTopics().contains(topic);
+  }
+
   public Uni<Void> sendNotification(NotificationRequest request) {
+    String topic = Sanitizer.sanitizeString(request.getTopic());
     return webhookRepository
         .findActiveWebhooksByProduct(
             request.getProductId(), Sanitizer.sanitizeString(request.getTenantId()))
+        .map(
+            webhooks ->
+                webhooks.stream().filter(webhook -> isSubscribedToTopic(webhook, topic)).toList())
         .invoke(
             webhooks -> {
               if (webhooks.isEmpty()) {
                 log.warn(
-                    "No active webhooks found for product: {} and tenant: {}",
+                    "No active webhooks subscribed to topic: {} for product: {} and tenant: {}",
+                    topic,
                     Sanitizer.sanitizeString(request.getProductId()),
                     Sanitizer.sanitizeString(request.getTenantId()));
               } else {
                 log.info(
-                    "Found {} active webhook(s) for product: {} and tenant: {}",
+                    "Found {} active webhook(s) subscribed to topic: {} for product: {} and"
+                        + " tenant: {}",
                     webhooks.size(),
+                    topic,
                     Sanitizer.sanitizeString(request.getProductId()),
                     Sanitizer.sanitizeString(request.getTenantId()));
               }
@@ -177,6 +197,7 @@ public class WebhookService {
               notification.setWebhookId(webhook.getId());
               notification.setTenantId(webhook.getTenantId());
               notification.setPayload(DataEncryptionConfig.encrypt(request.getPayload()));
+              notification.setTopic(topic);
               notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
               notification.setAttemptCount(0);
               notification.setCreatedAt(LocalDateTime.now());
@@ -331,6 +352,7 @@ public class WebhookService {
     response.setHttpMethod(webhook.getHttpMethod());
     response.setHeaders(DataEncryptionConfig.decrypt(webhook.getHeaders()));
     response.setProducts(webhook.getProducts());
+    response.setTopics(webhook.getTopics());
     response.setStatus(webhook.getStatus().toString());
     response.setCreatedAt(webhook.getCreatedAt());
     response.setUpdatedAt(webhook.getUpdatedAt());

@@ -253,6 +253,7 @@ components:
       - productId
       - tenantId
       - payload
+      - topic
       properties:
         productId:
           type: string
@@ -261,6 +262,9 @@ components:
           type: string
           pattern: \S
         payload:
+          type: string
+          pattern: \S
+        topic:
           type: string
           pattern: \S
     NotificationStatus:
@@ -324,6 +328,10 @@ components:
           type: object
           additionalProperties:
             type: string
+        topics:
+          type: array
+          items:
+            type: string
         retryPolicy:
           $ref: "#/components/schemas/RetryPolicyRequest"
     WebhookResponse:
@@ -344,6 +352,10 @@ components:
           additionalProperties:
             type: string
         products:
+          type: array
+          items:
+            type: string
+        topics:
           type: array
           items:
             type: string
