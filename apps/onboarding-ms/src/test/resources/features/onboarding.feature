@@ -358,7 +358,7 @@ Feature: Onboarding collection
     Given I have a request object named "invalid_user_request"
     When I send a POST request for user to "/users" with this request
     Then the response status code should be 404
-    And the response should contain the text "Institution with taxCode 83001010616 origin IPA originId c_h423 subunitCode null not found"
+    And the response should contain the text "Onboarding for taxCode 83001010616, origin IPA, originId c_h423, productId prod-io, subunitCode null not found"
 
   Scenario: Can't perform user request for not existing onboarding
     Given I have a request object named "invalid_missing_onboarding_request"

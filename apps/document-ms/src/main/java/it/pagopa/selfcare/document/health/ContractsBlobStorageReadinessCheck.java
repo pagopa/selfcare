@@ -1,9 +1,11 @@
-package it.pagopa.selfcare.onboarding.health;
+package it.pagopa.selfcare.document.health;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
+import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.commons.health.AbstractBlobStorageReadinessCheck;
+import it.pagopa.selfcare.document.config.StorageRegistry;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -13,30 +15,28 @@ import java.util.Optional;
 
 @Readiness
 @ApplicationScoped
-public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadinessCheck {
+public class ContractsBlobStorageReadinessCheck extends AbstractBlobStorageReadinessCheck {
 
+    static final String READINESS_PROBE_PREFIX = "__healthcheck_probe__/";
     private static final String ACCOUNT_NOT_APPLICABLE = "n/a";
 
-    private final AzureBlobClientDefault blobClient;
+    private final AzureBlobClient blobClient;
     private final String container;
     private final String account;
-    private final String probeTarget;
 
     @Inject
-    public ProductBlobStorageReadinessCheck(
-            AzureBlobClientDefault productBlobClient,
-            @ConfigProperty(name = "onboarding-ms.blob-storage.container-product") String container,
-            @ConfigProperty(name = "onboarding-ms.blob-storage.account-name-product") Optional<String> account,
-            @ConfigProperty(name = "onboarding-ms.blob-storage.filepath-product") String probeTarget) {
-        this.blobClient = productBlobClient;
+    public ContractsBlobStorageReadinessCheck(
+            StorageRegistry storageRegistry,
+            @ConfigProperty(name = "document-ms.blob-storage.container-contracts") String container,
+            @ConfigProperty(name = "document-ms.blob-storage.account-name-contracts") Optional<String> account) {
+        this.blobClient = storageRegistry.clientFor(StorageOrigin.SYSTEM);
         this.container = container;
         this.account = account.filter(s -> !s.isBlank()).orElse(ACCOUNT_NOT_APPLICABLE);
-        this.probeTarget = probeTarget;
     }
 
     @Override
     protected String checkName() {
-        return "blob-storage-product";
+        return "blob-storage-contracts";
     }
 
     @Override
@@ -51,13 +51,13 @@ public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadine
 
     @Override
     protected String probeTarget() {
-        return probeTarget;
+        return READINESS_PROBE_PREFIX;
     }
 
     @Override
     protected Uni<?> probe() {
         return Uni.createFrom()
-                .item(() -> blobClient.getProperties(probeTarget))
+                .item(() -> blobClient.getFiles(READINESS_PROBE_PREFIX))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 }
