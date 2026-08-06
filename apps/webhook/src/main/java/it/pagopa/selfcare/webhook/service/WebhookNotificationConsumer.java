@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.webhook.service;
 
-import com.azure.core.credential.TokenCredential;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.azure.storage.queue.QueueClient;
 import com.azure.storage.queue.QueueClientBuilder;
@@ -10,6 +9,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.quarkus.scheduler.Scheduled;
 import io.quarkus.vertx.core.runtime.context.VertxContextSafetyToggle;
 import io.smallrye.common.vertx.VertxContext;
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.Context;
 import io.vertx.mutiny.core.Vertx;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
@@ -110,34 +110,57 @@ public class WebhookNotificationConsumer {
         .claimForProcessing(notificationId, 5)
         .onItem()
         .transformToUni(
-            notification -> {
-              if (notification == null) {
-                return io.smallrye.mutiny.Uni.createFrom().<WebhookNotification>nullItem();
-              }
-              return notificationService
-                  .processNotification(notification)
-                  .call(ignored -> notificationRepository.releaseProcessingLock(notification))
-                  .replaceWith(notification);
-            })
+            notification ->
+                notification == null
+                    ? shouldDiscardUnclaimedMessage(notificationId)
+                    : processClaimedNotification(notification))
         .subscribe()
         .with(
-            notification -> {
-              if (notification != null
-                  && notification.getStatus() == WebhookNotification.NotificationStatus.RETRY) {
+            shouldDelete -> {
+              if (Boolean.TRUE.equals(shouldDelete)) {
+                deleteMessage(message);
+              } else {
                 // Leave the message in the queue: it will become visible again once the
                 // visibility timeout expires, triggering a natural retry.
                 log.debug(
-                    "Leaving Storage Queue message {} for retry of notification {}",
+                    "Leaving Storage Queue message {} in queue for notification {}",
                     message.getMessageId(),
                     notificationId);
-              } else {
-                deleteMessage(message);
               }
             },
             error -> {
               log.error("Unable to process Storage Queue notification {}", notificationId, error);
               // Leave the message in the queue for retry after the visibility timeout expires.
             });
+  }
+
+  private Uni<Boolean> processClaimedNotification(WebhookNotification notification) {
+    return notificationService
+        .processNotification(notification)
+        // Release the lock regardless of success or failure: without this, a failure raised
+        // after the claim (e.g. an unexpected exception) would leave the lock held until it
+        // expires, delaying any retry.
+        .eventually(() -> notificationRepository.releaseProcessingLock(notification))
+        .onItem()
+        .transform(
+            ignored -> notification.getStatus() != WebhookNotification.NotificationStatus.RETRY);
+  }
+
+  private Uni<Boolean> shouldDiscardUnclaimedMessage(String notificationId) {
+    // claimForProcessing returned null: either the notification no longer exists / already
+    // reached a terminal status (safe to discard the message), or it is still locked by another
+    // in-flight attempt (still being processed, or abandoned mid-flight by a worker that crashed
+    // before releasing the lock). Deleting the message in the latter case would permanently lose
+    // the notification once the active lock eventually expires with nobody left to retry it, so
+    // only delete when the notification is genuinely missing or terminal.
+    return notificationRepository
+        .findById(new ObjectId(notificationId))
+        .onItem()
+        .transform(
+            existing ->
+                existing == null
+                    || existing.getStatus() == WebhookNotification.NotificationStatus.DELIVERED
+                    || existing.getStatus() == WebhookNotification.NotificationStatus.FAILED);
   }
 
   private void deleteMessage(QueueMessageItem message) {

@@ -247,11 +247,12 @@ class WebhookNotificationConsumerTest {
   }
 
   @Test
-  void processNotification_shouldDoNothingWhenNotificationIsNotClaimed() {
+  void processNotification_shouldDeleteMessageWhenUnclaimedNotificationIsMissing() {
     // given
     String notificationId = new ObjectId().toHexString();
     when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
         .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
 
     // when
     invokeProcessNotification(message, notificationId);
@@ -259,6 +260,47 @@ class WebhookNotificationConsumerTest {
     // then
     verify(notificationService, timeout(1000).times(0)).processNotification(any(WebhookNotification.class));
     verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+  }
+
+  @Test
+  void processNotification_shouldDeleteMessageWhenUnclaimedNotificationIsTerminal() {
+    // given
+    String notificationId = new ObjectId().toHexString();
+    WebhookNotification existing = new WebhookNotification();
+    existing.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().item(existing));
+
+    // when
+    invokeProcessNotification(message, notificationId);
+
+    // then
+    verify(notificationService, timeout(1000).times(0)).processNotification(any(WebhookNotification.class));
+    verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+  }
+
+  @Test
+  void processNotification_shouldNotDeleteMessageWhenUnclaimedNotificationIsStillLocked() {
+    // given
+    // claimForProcessing returned null because another attempt still holds the active lock
+    // (e.g. still being processed, or abandoned mid-flight before the lock could be released).
+    // The message must be kept in the queue so the notification is not lost forever.
+    String notificationId = new ObjectId().toHexString();
+    WebhookNotification existing = new WebhookNotification();
+    existing.setStatus(WebhookNotification.NotificationStatus.SENDING);
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().item(existing));
+
+    // when
+    invokeProcessNotification(message, notificationId);
+
+    // then
+    verify(notificationService, timeout(1000).times(0)).processNotification(any(WebhookNotification.class));
+    verify(client, never()).deleteMessage(any(), any());
   }
 
   @Test
@@ -323,7 +365,7 @@ class WebhookNotificationConsumerTest {
   }
 
   @Test
-  void processNotification_shouldNotDeleteMessageWhenProcessingFails() {
+  void processNotification_shouldReleaseLockAndNotDeleteMessageWhenProcessingFails() {
     // given
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
@@ -333,13 +375,17 @@ class WebhookNotificationConsumerTest {
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("delivery failed")));
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
 
     // when
     invokeProcessNotification(message, notification.getId().toHexString());
 
     // then
     verify(notificationService, timeout(1000)).processNotification(eq(notification));
-    verify(notificationRepository, never()).releaseProcessingLock(eq(notification));
+    // The lock must be released even when processing fails, otherwise the notification would
+    // remain locked until the lock expires with the message already gone from the queue.
+    verify(notificationRepository, timeout(1000)).releaseProcessingLock(eq(notification));
     verify(client, never()).deleteMessage(any(), any());
   }
 
