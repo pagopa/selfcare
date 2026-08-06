@@ -21,6 +21,8 @@ import static org.mockito.Mockito.when;
 class OnboardingMongoReadinessCheckTest {
 
     private static final String DATABASE = "selcOnboarding";
+    private static final String CONNECTION_STRING =
+            "mongodb://user:pwd@mongo-primary.uat.local:27017,mongo-secondary.uat.local:27017/selcOnboarding?replicaSet=rs0";
 
     private ReactiveMongoDatabase database;
     private OnboardingMongoReadinessCheck check;
@@ -30,7 +32,7 @@ class OnboardingMongoReadinessCheckTest {
         ReactiveMongoClient mongoClient = mock(ReactiveMongoClient.class);
         database    = mock(ReactiveMongoDatabase.class);
         when(mongoClient.getDatabase(DATABASE)).thenReturn(database);
-        check = new OnboardingMongoReadinessCheck(mongoClient, DATABASE);
+        check = new OnboardingMongoReadinessCheck(mongoClient, DATABASE, CONNECTION_STRING);
     }
 
     private HealthCheckResponse await() {
@@ -50,6 +52,7 @@ class OnboardingMongoReadinessCheckTest {
         assertThat(data)
                 .containsEntry("component", "mongodb")
                 .containsEntry("database",  DATABASE)
+                .containsEntry("host", "mongo-primary.uat.local:27017,mongo-secondary.uat.local:27017")
                 .containsKey("latencyMs")
                 .doesNotContainKey("error");
     }
@@ -65,6 +68,23 @@ class OnboardingMongoReadinessCheckTest {
         Map<String, Object> data = response.getData().orElseThrow();
         assertThat(data)
                 .containsEntry("database", DATABASE)
+                .containsEntry("host", "mongo-primary.uat.local:27017,mongo-secondary.uat.local:27017")
                 .containsEntry("error",    "IllegalStateException: no primary");
+    }
+
+    @Test
+    void host_isMarkedNotAvailable_whenConnectionStringIsInvalid() {
+        ReactiveMongoClient mongoClient = mock(ReactiveMongoClient.class);
+        when(mongoClient.getDatabase(DATABASE)).thenReturn(database);
+        OnboardingMongoReadinessCheck resilientCheck =
+                new OnboardingMongoReadinessCheck(mongoClient, DATABASE, "not-a-valid-connection-string");
+        when(database.runCommand(Mockito.any(Document.class)))
+                .thenReturn(Uni.createFrom().item(new Document("ok", 1.0)));
+
+        HealthCheckResponse response = resilientCheck.call().await().atMost(Duration.ofSeconds(5));
+
+        assertThat(response.getStatus()).isEqualTo(HealthCheckResponse.Status.UP);
+        assertThat(response.getData().orElseThrow())
+                .containsEntry("host", "n/a");
     }
 }
