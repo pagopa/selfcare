@@ -55,7 +55,7 @@ jobs:
   renew-certificate-dispatch:
     if: ${{ github.event_name == 'workflow_dispatch' }}
     needs: validate-dispatch-inputs
-    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@3448c24fd46deea4a4a8cc6a0902641c448d2fb3 # main
     secrets: inherit
     with:
       force_renewal: ${{ inputs.force_renewal }}
@@ -125,7 +125,7 @@ jobs:
           # - environment: prod
           #   api_prefix: pnpg
           #   target: selfcare
-    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@3448c24fd46deea4a4a8cc6a0902641c448d2fb3 # main
     secrets: inherit
     with:
       force_renewal: false

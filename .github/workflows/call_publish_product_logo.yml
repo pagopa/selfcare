@@ -45,7 +45,7 @@ jobs:
         fetch-depth: 0
 
     - name: Cloud Login
-      uses: pagopa/dx/actions/csp-login@main
+      uses: pagopa/dx/actions/csp-login@3448c24fd46deea4a4a8cc6a0902641c448d2fb3 # main
     
     # - name: Install azcopy
     #   run: |
