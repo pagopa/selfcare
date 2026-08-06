@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.health;
+package it.pagopa.selfcare.document.health;
 
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.smallrye.mutiny.Uni;
@@ -11,14 +11,14 @@ import org.eclipse.microprofile.health.Readiness;
 
 @Readiness
 @ApplicationScoped
-public class OnboardingMongoReadinessCheck extends AbstractMongoReadinessCheck {
+public class DocumentMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
     private final ReactiveMongoClient mongoClient;
     private final String databaseName;
     private final String host;
 
     @Inject
-    public OnboardingMongoReadinessCheck(
+    public DocumentMongoReadinessCheck(
             ReactiveMongoClient mongoClient,
             @ConfigProperty(name = "quarkus.mongodb.database") String databaseName,
             @ConfigProperty(name = "quarkus.mongodb.connection-string") String connectionString) {
@@ -29,7 +29,7 @@ public class OnboardingMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
     @Override
     protected String checkName() {
-        return "mongodb-onboarding";
+        return "mongodb-document";
     }
 
     @Override
