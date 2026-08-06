@@ -20,18 +20,18 @@ public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadine
     private final AzureBlobClientDefault blobClient;
     private final String container;
     private final String account;
-    private final String canaryBlob;
+    private final String probeTarget;
 
     @Inject
     public ProductBlobStorageReadinessCheck(
             AzureBlobClientDefault productBlobClient,
             @ConfigProperty(name = "onboarding-ms.blob-storage.container-product") String container,
             @ConfigProperty(name = "onboarding-ms.blob-storage.account-name-product") Optional<String> account,
-            @ConfigProperty(name = "onboarding-ms.blob-storage.filepath-product") String canaryBlob) {
+            @ConfigProperty(name = "onboarding-ms.blob-storage.filepath-product") String probeTarget) {
         this.blobClient = productBlobClient;
         this.container = container;
         this.account = account.filter(s -> !s.isBlank()).orElse(ACCOUNT_NOT_APPLICABLE);
-        this.canaryBlob = canaryBlob;
+        this.probeTarget = probeTarget;
     }
 
     @Override
@@ -50,17 +50,14 @@ public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadine
     }
 
     @Override
-    protected String canaryBlob() {
-        return canaryBlob;
+    protected String probeTarget() {
+        return probeTarget;
     }
 
     @Override
     protected Uni<?> probe() {
         return Uni.createFrom()
-                .item(() -> blobClient.getProperties(canaryBlob))
+                .item(() -> blobClient.getProperties(probeTarget))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 }
-
-
-
