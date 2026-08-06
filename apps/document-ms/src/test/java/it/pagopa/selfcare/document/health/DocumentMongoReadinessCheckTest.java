@@ -73,7 +73,7 @@ class DocumentMongoReadinessCheckTest {
     }
 
     @Test
-    void host_isMarkedNotAvailable_whenConnectionStringIsInvalid() {
+    void host_showsPlaceholder_whenConnectionStringIsUnparseable() {
         ReactiveMongoClient mongoClient = mock(ReactiveMongoClient.class);
         when(mongoClient.getDatabase(DATABASE)).thenReturn(database);
         DocumentMongoReadinessCheck resilientCheck =
@@ -85,6 +85,7 @@ class DocumentMongoReadinessCheckTest {
 
         assertThat(response.getStatus()).isEqualTo(HealthCheckResponse.Status.UP);
         assertThat(response.getData().orElseThrow())
+                .containsEntry("database", DATABASE)
                 .containsEntry("host", "n/a");
     }
 }

@@ -50,7 +50,7 @@ public class ContractsBlobStorageReadinessCheck extends AbstractBlobStorageReadi
     }
 
     @Override
-    protected String canaryBlob() {
+    protected String probeTarget() {
         return READINESS_PROBE_PREFIX;
     }
 
@@ -61,4 +61,3 @@ public class ContractsBlobStorageReadinessCheck extends AbstractBlobStorageReadi
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 }
-

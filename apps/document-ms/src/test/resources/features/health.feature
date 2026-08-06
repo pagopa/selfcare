@@ -16,9 +16,9 @@ Feature: Readiness health endpoint reports downstream dependencies status
   Scenario: Blob storage checks expose probe metadata for troubleshooting
     When I call the readiness endpoint
     Then the readiness check "blob-storage-contracts" data contains key "container"
-    And  the readiness check "blob-storage-contracts" data contains key "canaryBlob"
+    And  the readiness check "blob-storage-contracts" data contains key "probeTarget"
     And  the readiness check "blob-storage-contracts" data contains key "latencyMs"
     And  the readiness check "blob-storage-user-attachments" data contains key "container"
-    And  the readiness check "blob-storage-user-attachments" data contains key "canaryBlob"
+    And  the readiness check "blob-storage-user-attachments" data contains key "probeTarget"
     And  the readiness check "blob-storage-user-attachments" data contains key "latencyMs"
 

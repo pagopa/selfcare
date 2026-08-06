@@ -48,7 +48,7 @@ class UserAttachmentsBlobStorageReadinessCheckTest {
                 .containsEntry("component", "blob-storage")
                 .containsEntry("account", ACCOUNT)
                 .containsEntry("container", CONTAINER)
-                .containsEntry("canaryBlob", PROBE_PREFIX)
+                .containsEntry("probeTarget", PROBE_PREFIX)
                 .containsKey("latencyMs")
                 .doesNotContainKey("error");
     }
@@ -65,7 +65,7 @@ class UserAttachmentsBlobStorageReadinessCheckTest {
         assertThat(data)
                 .containsEntry("account", ACCOUNT)
                 .containsEntry("container", CONTAINER)
-                .containsEntry("canaryBlob", PROBE_PREFIX)
+                .containsEntry("probeTarget", PROBE_PREFIX)
                 .hasEntrySatisfying("error", err -> assertThat(err.toString())
                         .contains("403")
                         .contains("AuthorizationPermissionMismatch"));
@@ -96,6 +96,6 @@ class UserAttachmentsBlobStorageReadinessCheckTest {
         assertThat(response.getData().orElseThrow())
                 .containsEntry("account", "n/a")
                 .containsEntry("container", CONTAINER)
-                .containsEntry("canaryBlob", PROBE_PREFIX);
+                .containsEntry("probeTarget", PROBE_PREFIX);
     }
 }

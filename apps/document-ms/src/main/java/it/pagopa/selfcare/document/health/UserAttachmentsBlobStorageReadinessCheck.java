@@ -50,7 +50,7 @@ public class UserAttachmentsBlobStorageReadinessCheck extends AbstractBlobStorag
     }
 
     @Override
-    protected String canaryBlob() {
+    protected String probeTarget() {
         return READINESS_PROBE_PREFIX;
     }
 
