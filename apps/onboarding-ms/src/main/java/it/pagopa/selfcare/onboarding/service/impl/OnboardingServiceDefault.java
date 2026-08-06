@@ -9,6 +9,7 @@ import it.pagopa.selfcare.onboarding.controller.response.OnboardingGet;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingGetResponse;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingResponse;
 import it.pagopa.selfcare.onboarding.entity.CheckManagerResponse;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.registry.RegistryManager;
 import it.pagopa.selfcare.onboarding.entity.registry.RegistryResourceFactory;
@@ -168,9 +169,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                 });
     }
 
-    private it.pagopa.selfcare.onboarding.entity.Institution buildInstitutionFromUserRequest(OnboardingUserRequest request) {
-        it.pagopa.selfcare.onboarding.entity.Institution institution =
-                new it.pagopa.selfcare.onboarding.entity.Institution();
+    private Institution buildInstitutionFromUserRequest(OnboardingUserRequest request) {
+        Institution institution =
+                new Institution();
         institution.setTaxCode(request.getTaxCode());
         institution.setSubunitCode(request.getSubunitCode());
         institution.setInstitutionType(request.getInstitutionType());
