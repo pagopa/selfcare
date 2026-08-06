@@ -54,4 +54,4 @@ jobs:
           PR_NUMBER: "${{ inputs.pr_number }}"
           SOURCE_BRANCH: "${{ inputs.source_branch }}"
           TARGET_BRANCH: "${{ inputs.target_branch }}"
-        run: mvn --projects :test-coverage --also-make verify -P"$MODULE",report
+        run: mvn -U --projects :test-coverage --also-make verify -P"$MODULE",report
