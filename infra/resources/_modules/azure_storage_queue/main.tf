@@ -14,7 +14,7 @@ module "storage_account" {
     instance_number = var.environment.instance_number
   }
 
-  resource_group_name = var.resource_group_name
+  resource_group_name = "${var.environment.prefix}-${var.environment.env_short}-webhook-storage-rg"
 
   # Public access is disabled; the queue is reached through the private endpoint.
   subnet_pep_id                        = data.azurerm_subnet.private_endpoints.id

@@ -63,32 +63,7 @@ module "collection_webhook_notifications" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["webhookId"], unique = false },
-    # Backs the outbox lag query (filter on status + busPublishedAt, sort by createdAt).
-    # Cosmos DB for MongoDB rejects a sort that is not fully covered by an index, so this
-    # compound index is required and not just an optimisation.
-    { keys = ["status", "busPublishedAt", "createdAt"], unique = false },
-    # Backs the claim query in findAndLockPendingNotifications (status + processing lock).
-    { keys = ["status", "processing", "processingUntil"], unique = false }
-  ]
-}
-
-module "collection_webhook_notification_attempts" {
-  source = "../../_modules/cosmosdb_collection"
-
-  name                        = "webhookNotificationAttempts"
-  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = "selcWebhook"
-  # Same retention as the parent notification, otherwise attempts would grow unbounded.
-  default_ttl_seconds = 2592000
-
-  lock_enable = true
-
-  indexes = [
-    { keys = ["_id"], unique = true },
-    # Backs findByNotificationId, which filters on notificationId and sorts by attemptNumber.
-    { keys = ["notificationId", "attemptNumber"], unique = false }
+    { keys = ["webhookId"], unique = false }
   ]
 }
 
@@ -137,7 +112,7 @@ module "storage_queue" {
     instance_number = "01"
   }
 
-  resource_group_name                         = "${module.local.config.prefix}-${module.local.config.env_short}-webhook-storage-rg"
+  resource_group_name                         = module.local.config.ca_resource_group_name
   private_endpoint_subnet_name                = "${module.local.config.project}-private-endpoints-snet"
   virtual_network_name                        = module.local.vnet_selc_name
   virtual_network_resource_group_name         = module.local.vnet_resource_group_name

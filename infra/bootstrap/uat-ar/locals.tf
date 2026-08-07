@@ -213,7 +213,9 @@ locals {
       "Reader",
       "PagoPA IaC Reader",
       "Reader and Data Access",
-      "ContainerApp Reader"
+      "ContainerApp Reader",
+      "Storage Queue Data Contributor",
+      "Storage Blob Data Contributor"
     ]
     resource_groups = {
       "terraform-state-rg" = [
@@ -261,7 +263,8 @@ locals {
 
   environment_cd_roles = {
     subscription = [
-      "Contributor"
+      "Contributor",
+      "Storage Queue Data Contributor"
     ]
     resource_groups = {
       terraform-state-rg = [

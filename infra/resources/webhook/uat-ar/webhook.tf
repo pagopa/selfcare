@@ -108,7 +108,7 @@ module "storage_queue" {
     instance_number = "01"
   }
 
-  resource_group_name                         = "${module.local.config.prefix}-${module.local.config.env_short}-webhook-storage-rg"
+  resource_group_name                         = module.local.config.ca_resource_group_name
   private_endpoint_subnet_name                = "${module.local.config.project}-private-endpoints-snet"
   virtual_network_name                        = module.local.vnet_selc_name
   virtual_network_resource_group_name         = module.local.vnet_resource_group_name
