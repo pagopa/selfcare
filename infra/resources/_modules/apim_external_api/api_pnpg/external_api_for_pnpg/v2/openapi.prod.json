@@ -1801,17 +1801,11 @@
           "requiresParentOnboarding": {
             "type": "boolean"
           },
-          "allowSameUserManagerAndDelegate": {
-            "type": "boolean"
-          },
           "expirationDays": {
             "type": "integer",
             "format": "int32"
           },
           "enabled": {
-            "type": "boolean"
-          },
-          "requiredRecipientCode": {
             "type": "boolean"
           }
         }

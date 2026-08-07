@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -527,5 +528,36 @@ class DelegationServiceImplTest {
         assertEquals("prod-test", delegators.get(0).getInstitution().getOnboarding().get(0).getProductId());
         assertEquals("prod-test", delegates.get(0).getInstitution().getOnboarding().get(0).getProductId());
     }
+
+  @Test
+  void countDelegations_shouldReturnConnectorResult() {
+    // Given
+    OffsetDateTime from = OffsetDateTime.now().minusDays(1);
+    OffsetDateTime to = OffsetDateTime.now();
+
+    List<DelegationCount> expected = List.of(
+      new DelegationCount("prod-pagopa", 10L),
+      new DelegationCount("prod-io", 5L)
+    );
+
+    when(delegationConnector.countDelegations(from, to, "prod-pagopa"))
+      .thenReturn(expected);
+
+    // When
+    List<DelegationCount> result =
+      delegationServiceImpl.countDelegations(from, to, "prod-pagopa");
+
+    // Then
+    verify(delegationConnector).countDelegations(from, to, "prod-pagopa");
+
+    assertNotNull(result);
+    assertEquals(2, result.size());
+
+    assertEquals("prod-pagopa", result.get(0).getProductId());
+    assertEquals(10L, result.get(0).getCount());
+
+    assertEquals("prod-io", result.get(1).getProductId());
+    assertEquals(5L, result.get(1).getCount());
+  }
 
 }
