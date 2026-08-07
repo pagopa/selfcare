@@ -25,7 +25,7 @@ on:
 
 jobs:
   code_review_dev_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
     name: '[DEV-AR] Registry Proxy Runner Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -40,7 +40,7 @@ jobs:
       override_labels: dev
 
   code_review_uat_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
     name: '[UAT-AR] Registry Proxy Runner Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -55,7 +55,7 @@ jobs:
       override_labels: uat
 
   code_review_prod_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
     name: '[PROD-AR] Registry Proxy Runner Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
