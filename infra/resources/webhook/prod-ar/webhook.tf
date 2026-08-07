@@ -121,6 +121,7 @@ module "storage_queue" {
   log_analytics_workspace_name                = "${module.local.config.project}-law"
   log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
   subscription_id                             = module.local.subscription_id
+  location                                    = module.local.config.location
   queue_name                                  = "webhook-notifications"
   tags                                        = module.local.config.tags
 }

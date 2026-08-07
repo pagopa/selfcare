@@ -15,3 +15,7 @@ data "azurerm_resource_group" "webhook_storage_rg" {
 data "azuread_group" "adgroup_developers" {
   display_name = "${local.prefix}-${local.env_short}-adgroup-developers"
 }
+
+data "azuread_group" "adgroup_admin" {
+  display_name = "${local.prefix}-${local.env_short}-adgroup-admin"
+}
