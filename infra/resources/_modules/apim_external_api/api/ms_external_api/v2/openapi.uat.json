@@ -964,6 +964,15 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "includeTest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -2067,6 +2076,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -4695,6 +4713,10 @@
           "expiringDate": {
             "type": "string",
             "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -5286,11 +5308,17 @@
           "requiresParentOnboarding": {
             "type": "boolean"
           },
+          "allowSameUserManagerAndDelegate": {
+            "type": "boolean"
+          },
           "expirationDays": {
             "type": "integer",
             "format": "int32"
           },
           "enabled": {
+            "type": "boolean"
+          },
+          "requiredRecipientCode": {
             "type": "boolean"
           }
         }
@@ -5318,6 +5346,9 @@
             "items": {
               "$ref": "#/components/schemas/BackOfficeRole"
             }
+          },
+          "excludeRoleFromUserGroups": {
+            "type": "boolean"
           }
         }
       },
@@ -5613,6 +5644,9 @@
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
+          },
+          "storageOrigin": {
+            "$ref": "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -5632,6 +5666,13 @@
             }
           }
         }
+      },
+      "StorageOrigin": {
+        "enum": [
+          "SYSTEM",
+          "USER"
+        ],
+        "type": "string"
       },
       "ProductOriginResponse": {
         "type": "object",
@@ -5876,11 +5917,16 @@
         "type": "object",
         "required": [
           "url",
+          "tenantId",
           "productId",
           "httpMethod"
         ],
         "properties": {
           "url": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "tenantId": {
             "type": "string",
             "pattern": "\\S"
           },
@@ -6417,6 +6463,9 @@
         "title": "ProductRoleInfo",
         "type": "object",
         "properties": {
+          "multiroleAllowed": {
+            "type": "boolean"
+          },
           "skipUserCreation": {
             "type": "boolean"
           },
@@ -7282,7 +7331,8 @@
           "COMPLETED",
           "FAILED",
           "REJECTED",
-          "DELETED"
+          "DELETED",
+          "OVERRIDDEN"
         ],
         "type": "string"
       },
