@@ -186,3 +186,8 @@ overrides:
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 30 # Default:
       availability_threshold: 0.95
+    /v2/institutions/{institutionId}/contract:
+      response_time_threshold: 4
+      response_time_evaluation_frequency: 10 
+      response_time_evaluation_time_window: 30
+      response_time_event_occurrences: 5

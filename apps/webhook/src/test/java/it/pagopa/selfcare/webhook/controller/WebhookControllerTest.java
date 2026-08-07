@@ -212,6 +212,7 @@ class WebhookControllerTest {
     request.setProductId(PROD_TEST);
     request.setTenantId(TENANT_ID);
     request.setPayload("{\"event\":\"test\"}");
+    request.setTopic("SC-Contracts");
 
     Mockito.when(webhookService.sendNotification(any(NotificationRequest.class)))
         .thenReturn(Uni.createFrom().voidItem());
