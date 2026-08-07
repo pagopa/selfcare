@@ -19,6 +19,12 @@ public class Webhook {
   private String httpMethod;
   private Map<String, String> headers;
   private List<String> products;
+  /**
+   * Topics the consumer wants to receive notifications for (e.g. SC-Contracts, SC-User,
+   * SC-Delegate). When null or empty, the webhook receives notifications for every topic.
+   */
+  private List<String> topics;
+
   private WebhookStatus status;
   private RetryPolicy retryPolicy;
   private LocalDateTime createdAt;
