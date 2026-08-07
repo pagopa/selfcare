@@ -96,7 +96,7 @@ public class WebhookNotificationConsumer {
   }
 
   private void processMessage(QueueMessageItem message) {
-    String notificationId = message.getMessageText();
+    String notificationId = getMessageBody(message);
     if (!ObjectId.isValid(notificationId)) {
       log.error("Discarding Storage Queue message with invalid notification ID: {}", notificationId);
       deleteMessage(message);
@@ -170,10 +170,7 @@ public class WebhookNotificationConsumer {
               Duration delay = computeRetryDelay(retryPolicy, notification.getAttemptCount());
               try {
                 client.updateMessage(
-                    message.getMessageId(),
-                    message.getPopReceipt(),
-                    message.getMessageText(),
-                    delay);
+                    message.getMessageId(), message.getPopReceipt(), getMessageBody(message), delay);
               } catch (Exception e) {
                 log.warn(
                     "Unable to apply retry backoff to Storage Queue message {}: {}",
@@ -222,5 +219,14 @@ public class WebhookNotificationConsumer {
 
   private void deleteMessage(QueueMessageItem message) {
     client.deleteMessage(message.getMessageId(), message.getPopReceipt());
+  }
+
+  /**
+   * Reads the queue message content via the non-deprecated {@link QueueMessageItem#getBody()}
+   * (returns {@link com.azure.core.util.BinaryData}) instead of the deprecated {@code
+   * getMessageText()}.
+   */
+  private static String getMessageBody(QueueMessageItem message) {
+    return message.getBody() == null ? null : message.getBody().toString();
   }
 }

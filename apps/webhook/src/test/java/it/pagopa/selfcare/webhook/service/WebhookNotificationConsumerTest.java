@@ -218,7 +218,7 @@ class WebhookNotificationConsumerTest {
   void processMessage_shouldDiscardMessageWithInvalidNotificationId()
       throws ReflectiveOperationException {
     // given
-    when(message.getMessageText()).thenReturn("invalid-notification-id");
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("invalid-notification-id"));
 
     // when
     invokeProcessMessage(message);
@@ -235,7 +235,7 @@ class WebhookNotificationConsumerTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -324,7 +324,7 @@ class WebhookNotificationConsumerTest {
     retryPolicy.setBackoffMultiplier(2.0);
     webhook.setRetryPolicy(retryPolicy);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -363,7 +363,7 @@ class WebhookNotificationConsumerTest {
     retryPolicy.setBackoffMultiplier(2.0);
     webhook.setRetryPolicy(retryPolicy);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -392,7 +392,7 @@ class WebhookNotificationConsumerTest {
     notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
     notification.setAttemptCount(1);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -422,7 +422,7 @@ class WebhookNotificationConsumerTest {
     notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
     notification.setAttemptCount(1);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
