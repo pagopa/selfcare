@@ -53,7 +53,7 @@ public class WebhookNotificationConsumer {
   @ConfigProperty(name = "webhook.storage-queue.visibility-timeout-seconds", defaultValue = "300")
   int visibilityTimeoutSeconds;
 
-  private QueueClient client;
+  private volatile QueueClient client;
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
@@ -99,7 +99,9 @@ public class WebhookNotificationConsumer {
 
   private void processMessage(QueueMessageItem message) {
     String notificationId = getMessageBody(message);
-    if (!ObjectId.isValid(notificationId)) {
+    // ObjectId.isValid(null) throws IllegalArgumentException, which would escape processMessage,
+    // abort the rest of the poll batch and leave this poison message in the queue forever.
+    if (notificationId == null || !ObjectId.isValid(notificationId)) {
       log.error("Discarding Storage Queue message with invalid notification ID: {}", notificationId);
       metrics.recordDiscarded("invalid_notification_id");
       deleteMessage(message);

@@ -15,17 +15,17 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class WebhookOutboxReadinessCheckTest {
+class WebhookOutboxLagCheckTest {
 
-  private WebhookOutboxReadinessCheck newCheck(WebhookNotificationRepository repository) {
-    WebhookOutboxReadinessCheck check = new WebhookOutboxReadinessCheck();
+  private WebhookOutboxLagCheck newCheck(WebhookNotificationRepository repository) {
+    WebhookOutboxLagCheck check = new WebhookOutboxLagCheck();
     check.notificationRepository = repository;
     check.enabled = true;
     check.lagThresholdSeconds = 300L;
     return check;
   }
 
-  private HealthCheckResponse await(WebhookOutboxReadinessCheck check) {
+  private HealthCheckResponse await(WebhookOutboxLagCheck check) {
     return check.call().await().atMost(Duration.ofSeconds(5));
   }
 
@@ -33,7 +33,7 @@ class WebhookOutboxReadinessCheckTest {
   void up_whenDisabled_withoutQueryingRepository() {
     // given
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
-    WebhookOutboxReadinessCheck check = newCheck(repository);
+    WebhookOutboxLagCheck check = newCheck(repository);
     check.enabled = false;
 
     // when
@@ -49,7 +49,7 @@ class WebhookOutboxReadinessCheckTest {
     // given
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
     when(repository.findOldestUnpublishedNotification()).thenReturn(Uni.createFrom().nullItem());
-    WebhookOutboxReadinessCheck check = newCheck(repository);
+    WebhookOutboxLagCheck check = newCheck(repository);
 
     // when
     HealthCheckResponse response = await(check);
@@ -67,7 +67,7 @@ class WebhookOutboxReadinessCheckTest {
     notification.setCreatedAt(LocalDateTime.now().minusSeconds(10));
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
     when(repository.findOldestUnpublishedNotification()).thenReturn(Uni.createFrom().item(notification));
-    WebhookOutboxReadinessCheck check = newCheck(repository);
+    WebhookOutboxLagCheck check = newCheck(repository);
 
     // when
     HealthCheckResponse response = await(check);
@@ -83,7 +83,7 @@ class WebhookOutboxReadinessCheckTest {
     notification.setCreatedAt(LocalDateTime.now().minusSeconds(600));
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
     when(repository.findOldestUnpublishedNotification()).thenReturn(Uni.createFrom().item(notification));
-    WebhookOutboxReadinessCheck check = newCheck(repository);
+    WebhookOutboxLagCheck check = newCheck(repository);
 
     // when
     HealthCheckResponse response = await(check);
@@ -98,7 +98,7 @@ class WebhookOutboxReadinessCheckTest {
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
     when(repository.findOldestUnpublishedNotification())
         .thenReturn(Uni.createFrom().failure(new RuntimeException("mongo unreachable")));
-    WebhookOutboxReadinessCheck check = newCheck(repository);
+    WebhookOutboxLagCheck check = newCheck(repository);
 
     // when
     HealthCheckResponse response = await(check);

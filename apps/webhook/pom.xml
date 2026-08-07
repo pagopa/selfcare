@@ -145,9 +145,15 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
+    <!--
+      Only the OpenTelemetry API is used, not the Quarkus OTel extension: the application runs
+      with the Application Insights Java agent, which already installs an OpenTelemetry SDK and
+      registers it as GlobalOpenTelemetry. Adding quarkus-opentelemetry would register a second
+      SDK and conflict with the agent. Without an agent (dev/test) the API degrades to a no-op.
+    -->
     <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-opentelemetry</artifactId>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>

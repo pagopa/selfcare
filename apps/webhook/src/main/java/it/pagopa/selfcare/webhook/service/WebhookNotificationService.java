@@ -63,7 +63,7 @@ public class WebhookNotificationService {
   @ConfigProperty(name = "webhook.jwt.header-prefix", defaultValue = "Bearer ")
   String jwtHeaderPrefix;
 
-  private WebClient webClient;
+  private volatile WebClient webClient;
 
   /**
    * Eagerly creates the shared {@link WebClient} once, at application startup. CDI startup
@@ -177,55 +177,59 @@ public class WebhookNotificationService {
 
   private Uni<Void> sendHttpRequest(Webhook webhook, WebhookNotification notification) {
     long startNanos = System.nanoTime();
+    HttpRequest<Buffer> request;
     try {
-      URI uri = URI.create(webhook.getUrl());
-      int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
-      String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
-      if (uri.getRawQuery() != null && !uri.getRawQuery().isBlank()) {
-        path = path + "?" + uri.getRawQuery();
-      }
-
-      var request =
-          webClient
-              .request(
-                  HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()),
-                  port,
-                  uri.getHost(),
-                  path)
-              .ssl(uri.getScheme().equals("https"))
-              .timeout(readTimeout)
-              .putHeader("Content-Type", "application/json")
-              .putHeader("X-Webhook-Notification-Id", notification.getId().toHexString());
-
-      // Add custom headers
-      if (webhook.getHeaders() != null) {
-        DataEncryptionConfig.decrypt(webhook.getHeaders()).forEach(request::putHeader);
-      }
-
-      return webhookJwtService
-          .generateNotificationToken(webhook, notification)
-          .onItem()
-          .invoke(token -> request.putHeader(jwtHeaderName, jwtHeaderPrefix + token))
-          .onItem()
-          .transformToUni(token -> sendDecodedPayload(request, notification))
-          .onItem()
-          .transformToUni(
-              response -> {
-                metrics.recordDeliveryDuration(elapsedMs(startNanos));
-                return handleHttpResponse(webhook, notification, response);
-              })
-          .onFailure()
-          .recoverWithUni(
-              throwable -> {
-                metrics.recordDeliveryDuration(elapsedMs(startNanos));
-                return handleHttpError(webhook, notification, throwable);
-              });
-
+      request = buildRequest(webhook, notification);
     } catch (Exception e) {
       log.error("Error sending webhook notification: {} {}", notification.getId(), e.getMessage());
       metrics.recordDeliveryDuration(elapsedMs(startNanos));
       return handleHttpError(webhook, notification, e);
     }
+
+    HttpRequest<Buffer> preparedRequest = request;
+    return webhookJwtService
+        .generateNotificationToken(webhook, notification)
+        .onItem()
+        .invoke(token -> preparedRequest.putHeader(jwtHeaderName, jwtHeaderPrefix + token))
+        .onItem()
+        .transformToUni(token -> sendDecodedPayload(preparedRequest, notification))
+        // Both branches are handled in a single stage on purpose: attaching a generic
+        // .onFailure().recoverWithUni(...) *after* the response-handling stage would also catch
+        // failures raised by handleHttpResponse itself (e.g. the MongoDB update after a 2xx).
+        // That would record the delivery twice, then overwrite an already DELIVERED notification
+        // with RETRY/FAILED and append a duplicate attempt record for the same attempt number.
+        .onItemOrFailure()
+        .transformToUni(
+            (response, throwable) -> {
+              metrics.recordDeliveryDuration(elapsedMs(startNanos));
+              return throwable != null
+                  ? handleHttpError(webhook, notification, throwable)
+                  : handleHttpResponse(webhook, notification, response);
+            });
+  }
+
+  private HttpRequest<Buffer> buildRequest(Webhook webhook, WebhookNotification notification) {
+    URI uri = URI.create(webhook.getUrl());
+    int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
+    String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
+    if (uri.getRawQuery() != null && !uri.getRawQuery().isBlank()) {
+      path = path + "?" + uri.getRawQuery();
+    }
+
+    HttpRequest<Buffer> request =
+        webClient
+            .request(
+                HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()), port, uri.getHost(), path)
+            .ssl(uri.getScheme().equals("https"))
+            .timeout(readTimeout)
+            .putHeader("Content-Type", "application/json")
+            .putHeader("X-Webhook-Notification-Id", notification.getId().toHexString());
+
+    // Add custom headers
+    if (webhook.getHeaders() != null) {
+      DataEncryptionConfig.decrypt(webhook.getHeaders()).forEach(request::putHeader);
+    }
+    return request;
   }
 
   private static long elapsedMs(long startNanos) {

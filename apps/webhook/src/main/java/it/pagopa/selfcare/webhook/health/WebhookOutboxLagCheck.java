@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.webhook.health;
 
+import io.smallrye.health.api.HealthGroup;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.commons.health.AbstractAsyncReadinessCheck;
 import it.pagopa.selfcare.commons.health.HealthCheckConstants;
@@ -12,7 +13,6 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.health.Readiness;
 
 /**
  * Verifies that notifications are not piling up in the outbox (i.e. staying unpublished to the
@@ -23,10 +23,20 @@ import org.eclipse.microprofile.health.Readiness;
  *
  * <p>When {@code webhook.storage-queue.enabled} is {@code false}, the outbox is not in use, so the
  * check reports {@code UP} without querying MongoDB.
+ *
+ * <p>This check is deliberately <b>not</b> a {@code @Readiness} check: the outbox lag is a global
+ * condition, so a backlog would take every replica out of the load balancer at the same time, the
+ * REST API would answer {@code 503} and new webhook notifications could no longer be accepted —
+ * making the backlog worse. It is exposed as a non-gating diagnostics group on {@code
+ * /q/health/group/diagnostics} instead, and is meant to be alerted on together with the {@code
+ * webhook.notification.outbox.lag} metric.
  */
-@Readiness
+@HealthGroup(WebhookOutboxLagCheck.DIAGNOSTICS_GROUP)
 @ApplicationScoped
-public class WebhookOutboxReadinessCheck extends AbstractAsyncReadinessCheck {
+public class WebhookOutboxLagCheck extends AbstractAsyncReadinessCheck {
+
+  /** Non-gating health group: exposed on {@code /q/health/group/diagnostics}, not on the probe. */
+  public static final String DIAGNOSTICS_GROUP = "diagnostics";
 
   @Inject WebhookNotificationRepository notificationRepository;
 

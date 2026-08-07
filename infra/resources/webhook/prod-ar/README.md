@@ -22,6 +22,7 @@
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_apim_api"></a> [apim\_api](#module\_apim\_api) | ../../_modules/apim_api | n/a |
+| <a name="module_collection_webhook_notification_attempts"></a> [collection\_webhook\_notification\_attempts](#module\_collection\_webhook\_notification\_attempts) | ../../_modules/cosmosdb_collection | n/a |
 | <a name="module_collection_webhook_notifications"></a> [collection\_webhook\_notifications](#module\_collection\_webhook\_notifications) | ../../_modules/cosmosdb_collection | n/a |
 | <a name="module_collection_webhooks"></a> [collection\_webhooks](#module\_collection\_webhooks) | ../../_modules/cosmosdb_collection | n/a |
 | <a name="module_container_app_webhook_ms"></a> [container\_app\_webhook\_ms](#module\_container\_app\_webhook\_ms) | ../../_modules/container_app_microservice | n/a |

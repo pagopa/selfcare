@@ -1,12 +1,12 @@
 package it.pagopa.selfcare.webhook.metrics;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 
 /**
  * Central place for every metric emitted by the webhook notification pipeline (publish, claim,
@@ -15,9 +15,17 @@ import jakarta.inject.Inject;
  * lets the rest of the codebase depend on typed methods instead of building {@link Attributes} at
  * every call site; it also makes the recording calls trivially mockable/verifiable in unit tests
  * via {@code @InjectMock}.
+ *
+ * <p>The {@link Meter} is resolved from {@link GlobalOpenTelemetry} rather than injected from the
+ * Quarkus OpenTelemetry extension, because the application runs with the Application Insights Java
+ * agent: the agent installs the OpenTelemetry SDK and registers it globally, so instruments
+ * created here are exported to Application Insights. When no agent is attached (dev/test) the API
+ * falls back to a no-op implementation.
  */
 @ApplicationScoped
 public class WebhookMetrics {
+
+  private static final String INSTRUMENTATION_SCOPE = "it.pagopa.selfcare.webhook";
 
   private static final AttributeKey<String> OUTCOME = AttributeKey.stringKey("outcome");
   private static final AttributeKey<String> SOURCE = AttributeKey.stringKey("source");
@@ -26,13 +34,14 @@ public class WebhookMetrics {
   private final LongCounter publishCounter;
   private final DoubleHistogram publishDuration;
   private final LongCounter claimCounter;
+  private final LongCounter claimAttemptCounter;
   private final LongCounter deliveryCounter;
   private final DoubleHistogram deliveryDuration;
   private final LongCounter discardedCounter;
   private final DoubleHistogram outboxLag;
 
-  @Inject
-  public WebhookMetrics(Meter meter) {
+  public WebhookMetrics() {
+    Meter meter = GlobalOpenTelemetry.getMeter(INSTRUMENTATION_SCOPE);
     this.publishCounter =
         meter
             .counterBuilder("webhook.notification.publish")
@@ -51,6 +60,13 @@ public class WebhookMetrics {
             .setDescription(
                 "Number of webhook notifications claimed for processing or publishing")
             .setUnit("{notification}")
+            .build();
+    this.claimAttemptCounter =
+        meter
+            .counterBuilder("webhook.notification.claim.attempt")
+            .setDescription(
+                "Number of claim attempts, split by whether anything was actually claimed")
+            .setUnit("{attempt}")
             .build();
     this.deliveryCounter =
         meter
@@ -91,11 +107,17 @@ public class WebhookMetrics {
    * publishing). {@code source} identifies the claim path (e.g. {@code queue}, {@code outbox},
    * {@code batch}); {@code claimedCount} is the number of notifications actually claimed (0 when
    * nothing was available).
+   *
+   * <p>Two instruments are used on purpose: the volume counter cannot express an empty poll (it
+   * would be incremented by 0 and the series would stay flat), so a separate attempt counter
+   * tagged {@code claimed}/{@code empty} makes "the worker is polling but never claims" and "the
+   * worker stopped polling altogether" distinguishable.
    */
   public void recordClaim(String source, int claimedCount) {
-    claimCounter.add(
-        Math.max(claimedCount, 0),
-        Attributes.of(SOURCE, source, OUTCOME, claimedCount > 0 ? "claimed" : "empty"));
+    int claimed = Math.max(claimedCount, 0);
+    claimCounter.add(claimed, Attributes.of(SOURCE, source));
+    claimAttemptCounter.add(
+        1, Attributes.of(SOURCE, source, OUTCOME, claimed > 0 ? "claimed" : "empty"));
   }
 
   /** Records the terminal outcome of a delivery attempt: {@code delivered}, {@code retry}, or

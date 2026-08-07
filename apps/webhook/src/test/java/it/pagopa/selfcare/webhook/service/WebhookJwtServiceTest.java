@@ -5,9 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.JWTParser;
+import io.vertx.mutiny.core.Vertx;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import jakarta.inject.Inject;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,8 @@ class WebhookJwtServiceTest {
   @Inject WebhookJwtService webhookJwtService;
 
   @Inject JWTParser jwtParser;
+
+  @Inject Vertx vertx;
 
   @Test
   void generateNotificationToken_shouldIncludeWebhookClaims() throws Exception {
@@ -45,5 +50,48 @@ class WebhookJwtServiceTest {
     assertEquals(notificationId.toString(), parsedToken.getClaim("notification_id"));
     assertEquals(webhook.getTenantId(), parsedToken.getClaim("tenant_id"));
     assertEquals(notification.getTopic(), parsedToken.getClaim("topic"));
+  }
+
+  /**
+   * Regression guard: in production the very first call to this service happens on a Vert.x
+   * event-loop thread (the Storage Queue consumer dispatches delivery via {@code runOnContext}).
+   * Any blocking call on that path — such as awaiting the reactive key-parsing {@code Uni} inside
+   * {@code @PostConstruct} — throws {@code IllegalStateException: The current thread cannot be
+   * blocked}, which would break every webhook delivery.
+   */
+  @Test
+  void generateNotificationToken_shouldWorkWhenCalledFromEventLoopThread() throws Exception {
+    Webhook webhook = new Webhook();
+    webhook.setId(new ObjectId());
+    webhook.setProductId("prod-test");
+    webhook.setTenantId("TENANT");
+
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setTopic("TOPIC");
+
+    CompletableFuture<Object> outcome = new CompletableFuture<>();
+    vertx
+        .getDelegate()
+        .runOnContext(
+            v -> {
+              try {
+                outcome.complete(
+                    webhookJwtService.generateNotificationToken(webhook, notification));
+              } catch (Throwable t) {
+                outcome.complete(t);
+              }
+            });
+
+    Object result = outcome.get(20, TimeUnit.SECONDS);
+    if (result instanceof Throwable throwable) {
+      throw new AssertionError(
+          "Token generation must not block on the event loop, but it threw: " + throwable, throwable);
+    }
+
+    @SuppressWarnings("unchecked")
+    String token = ((io.smallrye.mutiny.Uni<String>) result).await().indefinitely();
+    assertNotNull(token);
+    assertEquals("prod-test", jwtParser.parseOnly(token).getSubject());
   }
 }

@@ -227,6 +227,35 @@ class WebhookNotificationServiceTest {
   }
 
   @Test
+  void processNotification_shouldNotDowngradeDeliveredNotification_whenPersistFailsAfter2xx() {
+    // Regression guard: a failure raised *after* a successful 2xx (here the MongoDB update) must
+    // not be re-routed into the failure handling path. Doing so would record the delivery twice,
+    // overwrite the already DELIVERED status with RETRY/FAILED and append a duplicate attempt
+    // record for the same attempt number.
+    Webhook webhook = createWebhook();
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("mongo unavailable")));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(200);
+
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitFailure();
+
+    assertEquals(WebhookNotification.NotificationStatus.DELIVERED, notification.getStatus());
+    verify(notificationAttemptRepository, times(1)).persist(any(WebhookNotificationAttempt.class));
+    verify(metrics, times(1)).recordDelivery("delivered");
+    verify(metrics, never()).recordDelivery("retry");
+    verify(metrics, never()).recordDelivery("failed");
+    verify(metrics, times(1)).recordDeliveryDuration(anyLong());
+  }
+
+  @Test
   void processNotification_shouldAppendAttemptHistory_acrossMultipleRetries() {
     // Simulates the same notification document being reprocessed twice (e.g. two consecutive
     // Storage Queue redeliveries), which is exactly the scenario where the notification's own

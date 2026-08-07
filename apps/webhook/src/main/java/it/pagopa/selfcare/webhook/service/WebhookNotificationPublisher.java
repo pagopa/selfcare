@@ -34,7 +34,7 @@ public class WebhookNotificationPublisher {
   @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
-  private QueueClient client;
+  private volatile QueueClient client;
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
