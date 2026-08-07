@@ -934,6 +934,24 @@
             }
           },
           {
+            "name": "statusUpdatedFromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "statusUpdatedToDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -2076,6 +2094,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -4704,6 +4731,14 @@
           "expiringDate": {
             "type": "string",
             "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusUpdatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -5295,11 +5330,17 @@
           "requiresParentOnboarding": {
             "type": "boolean"
           },
+          "allowSameUserManagerAndDelegate": {
+            "type": "boolean"
+          },
           "expirationDays": {
             "type": "integer",
             "format": "int32"
           },
           "enabled": {
+            "type": "boolean"
+          },
+          "requiredRecipientCode": {
             "type": "boolean"
           }
         }
@@ -5327,6 +5368,9 @@
             "items": {
               "$ref": "#/components/schemas/BackOfficeRole"
             }
+          },
+          "excludeRoleFromUserGroups": {
+            "type": "boolean"
           }
         }
       },
@@ -5895,11 +5939,16 @@
         "type": "object",
         "required": [
           "url",
+          "tenantId",
           "productId",
           "httpMethod"
         ],
         "properties": {
           "url": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "tenantId": {
             "type": "string",
             "pattern": "\\S"
           },
@@ -6436,6 +6485,9 @@
         "title": "ProductRoleInfo",
         "type": "object",
         "properties": {
+          "multiroleAllowed": {
+            "type": "boolean"
+          },
           "skipUserCreation": {
             "type": "boolean"
           },
@@ -7301,7 +7353,8 @@
           "COMPLETED",
           "FAILED",
           "REJECTED",
-          "DELETED"
+          "DELETED",
+          "OVERRIDDEN"
         ],
         "type": "string"
       },

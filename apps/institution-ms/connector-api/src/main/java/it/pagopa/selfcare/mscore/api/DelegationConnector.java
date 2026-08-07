@@ -33,4 +33,6 @@ public interface DelegationConnector {
 
     List<DelegationInstitution> findDelegates(String institutionId, String productId, DelegationType type, Long cursor, int size);
 
+    List<DelegationCount> countDelegations(OffsetDateTime from, OffsetDateTime to, String productId);
+
 }

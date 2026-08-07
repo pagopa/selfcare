@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.mscore.integration_test.steps;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
 import it.pagopa.selfcare.mscore.connector.dao.DelegationRepository;
@@ -17,7 +18,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class DelegationSteps {
@@ -36,6 +39,7 @@ public class DelegationSteps {
 
     private String mockInstitutionId1;
     private String mockInstitutionId2;
+    private List<String> mockDelegations  = new ArrayList<>();
     private String mockDelegationId;
 
     @After("@RemovePairOfMockInstitutionAfterScenario")
@@ -50,6 +54,12 @@ public class DelegationSteps {
             mongoTemplate.remove(new Query(Criteria.where("from").is(id1).and("to").is(id2)), DelegationEntity.class);
         }));
         Optional.ofNullable(mockDelegationId).ifPresent(delegationRepository::deleteById);
+    }
+
+    @After("@RemoveCreatedDelegationsAfterScenario")
+    public void removeCreatedDelegations() {
+      mockDelegations.forEach(delegationRepository::deleteById);
+      mockDelegations.clear();
     }
 
     @And("A pair of mock institutions with id {string},{string} and taxcode {string},{string} with subunitCode {string},{string} with an onboarding on product {string} and isTest {string}, {string}")
@@ -156,5 +166,36 @@ public class DelegationSteps {
         Assertions.assertEquals(DelegationState.ACTIVE, delegation.getStatus());
         Assertions.assertNull(delegation.getClosedAt());
     }
+
+  @And("The following mock delegations exist:")
+  public void createMockDelegations(DataTable dataTable) {
+    List<Map<String, String>> rows = dataTable.asMaps(String.class, String.class);
+
+    for (Map<String, String> row : rows) {
+      DelegationEntity delegation = new DelegationEntity();
+
+      delegation.setId(row.get("id"));
+      delegation.setCreatedAt(OffsetDateTime.parse(row.get("createdAt")));
+
+      delegation.setFrom(row.get("from"));
+      delegation.setTo(row.get("to"));
+
+      delegation.setInstitutionFromName(row.getOrDefault("institutionFromName", "From Institution"));
+      delegation.setInstitutionFromRootName(row.getOrDefault("institutionFromRootName", "From Root Institution"));
+      delegation.setInstitutionToName(row.getOrDefault("institutionToName", "To Institution"));
+
+      delegation.setFromTaxCode(row.get("fromTaxCode"));
+      delegation.setToTaxCode(row.get("toTaxCode"));
+      delegation.setFromType(row.get("fromType"));
+      delegation.setToType(row.get("toType"));
+
+      delegation.setProductId(row.get("productId"));
+      delegation.setType(DelegationType.valueOf(row.get("type")));
+      delegation.setStatus(DelegationState.valueOf(row.get("status")));
+
+      mockDelegations.add(delegationRepository.save(delegation).getId());
+    }
+
+  }
 
 }
