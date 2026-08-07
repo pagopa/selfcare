@@ -30,8 +30,8 @@ public class WebhookJwtService {
   private PrivateKey privateKey;
 
   /**
-   * The PEM-encoded private key never changes at runtime, but parsing/decoding it involves
-   * Base64 decoding and RSA key material generation on every call. Parse it once when the bean is
+   * The PEM-encoded private key never changes at runtime, but parsing/decoding it involves Base64
+   * decoding and RSA key material generation on every call. Parse it once when the bean is
    * constructed instead of on every notification delivery/retry.
    */
   @PostConstruct
@@ -53,6 +53,8 @@ public class WebhookJwtService {
                     .claim("jti", notification.getId().toString())
                     .claim("product_id", webhook.getProductId())
                     .claim("webhook_id", webhook.getId().toString())
+                    .claim("tenant_id", webhook.getTenantId())
+                    .claim("topic", notification.getTopic())
                     .claim("notification_id", notification.getId().toString())
                     .sign(privateKey));
   }

@@ -26,9 +26,11 @@ class WebhookJwtServiceTest {
     Webhook webhook = new Webhook();
     webhook.setId(webhookId);
     webhook.setProductId("prod-test");
+    webhook.setTenantId("TENANT");
 
     WebhookNotification notification = new WebhookNotification();
     notification.setId(notificationId);
+    notification.setTopic("TOPIC");
 
     String token =
         webhookJwtService.generateNotificationToken(webhook, notification).await().indefinitely();
@@ -41,5 +43,7 @@ class WebhookJwtServiceTest {
     assertEquals("prod-test", parsedToken.getClaim("product_id"));
     assertEquals(webhookId.toString(), parsedToken.getClaim("webhook_id"));
     assertEquals(notificationId.toString(), parsedToken.getClaim("notification_id"));
+    assertEquals(webhook.getTenantId(), parsedToken.getClaim("tenant_id"));
+    assertEquals(notification.getTopic(), parsedToken.getClaim("topic"));
   }
 }
