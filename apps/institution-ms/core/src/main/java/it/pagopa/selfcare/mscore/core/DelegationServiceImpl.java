@@ -9,10 +9,7 @@ import it.pagopa.selfcare.mscore.core.mapper.InstitutionMapper;
 import it.pagopa.selfcare.mscore.exception.MsCoreException;
 import it.pagopa.selfcare.mscore.exception.ResourceConflictException;
 import it.pagopa.selfcare.mscore.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.mscore.model.delegation.Delegation;
-import it.pagopa.selfcare.mscore.model.delegation.DelegationInstitution;
-import it.pagopa.selfcare.mscore.model.delegation.DelegationWithPagination;
-import it.pagopa.selfcare.mscore.model.delegation.GetDelegationParameters;
+import it.pagopa.selfcare.mscore.model.delegation.*;
 import it.pagopa.selfcare.mscore.model.institution.Institution;
 import it.pagopa.selfcare.mscore.model.institution.Onboarding;
 import lombok.extern.slf4j.Slf4j;
@@ -189,7 +186,12 @@ public class DelegationServiceImpl implements DelegationService {
         return removeOnboardingsFromDelegationInstitutions(delegates);
     }
 
-    /**
+  @Override
+  public List<DelegationCount> countDelegations(OffsetDateTime from, OffsetDateTime to, String productId) {
+    return delegationConnector.countDelegations(from, to, productId);
+  }
+
+  /**
      * Return only the delegations with onboardings where productId == delegationProductId
      *
      * @param delegations list of delegators or delegates
