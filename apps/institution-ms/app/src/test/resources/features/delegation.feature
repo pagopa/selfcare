@@ -858,3 +858,73 @@ Feature: Delegation
       | size      | 101         |
     When I send a GET request to "/delegations/delegates/{institutionId}"
     Then The status code is 400
+
+  # GET /delegations/count
+
+  @RemoveCreatedDelegationsAfterScenario
+  Scenario: Successfully get delegations count with from, to and productId
+    Given User login with username "j.doe" and password "test"
+    And The following mock delegations exist:
+      | id      | createdAt            | from | to  | fromTaxCode | toTaxCode | fromType | toType | productId   | type | status |
+      | del-001 | 2026-08-01T10:00:00Z | 123  | 456 | 112233      | 445566    | PA       | PT     | prod-pagopa | EA   | ACTIVE |
+      | del-002 | 2026-08-03T10:00:00Z | 123  | 456 | 112233      | 445566    | PA       | PT     | prod-pagopa | PT   | ACTIVE |
+      | del-003 | 2026-08-01T10:00:00Z | 123  | 456 | 112233      | 445566    | PA       | PT     | prod-io     | PT   | ACTIVE |
+    And The following query params:
+      | fromDate  | 2026-07-30T10:00:00Z |
+      | toDate    | 2026-08-02T10:00:00Z |
+      | productId | prod-pagopa          |
+    When I send a GET request to "/delegations/count"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains:
+      | [0].productId | prod-pagopa |
+      | [0].count     | 1           |
+
+  @RemoveCreatedDelegationsAfterScenario
+  Scenario: Successfully get delegations count without productId filter
+    Given User login with username "j.doe" and password "test"
+    And The following mock delegations exist:
+      | id      | createdAt            | from | to  | fromTaxCode | toTaxCode | fromType | toType | productId   | type | status |
+      | del-001 | 2026-08-01T10:00:00Z | 123  | 456 | 112233      | 445566    | PA       | PT     | prod-pagopa | EA   | ACTIVE |
+      | del-002 | 2026-08-05T10:00:00Z | 123  | 456 | 112233      | 445566    | PA       | PT     | prod-io     | PT   | ACTIVE |
+      | del-003 | 2026-08-07T10:00:00Z | 123  | 456 | 112233      | 445566    | PA       | PT     | prod-pagopa | EA   | ACTIVE |
+    And The following query params:
+      | fromDate | 2026-08-03T10:00:00Z |
+      | toDate   | 2026-08-08T10:00:00Z |
+    When I send a GET request to "/delegations/count"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains at path "" the following list of objects in any order:
+      | productId   |
+      | prod-io     |
+      | prod-pagopa |
+    And The response body contains:
+      | [0].count     | 1      |
+      | [1].count     | 1      |
+
+  Scenario: Successfully get zero delegations count when no delegation exists
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | fromDate | 2026-08-03T10:00:00Z |
+      | toDate   | 2026-08-06T10:00:00Z |
+    When I send a GET request to "/delegations/count"
+    Then The status code is 200
+    And The response body contains the list "" of size 0
+
+  Scenario: Bad request while getting delegations count without fromDate
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | toDate   | 2026-08-06T10:00:00Z |
+    When I send a GET request to "/delegations/count"
+    Then The status code is 400
+    And The response body contains:
+      | status | 400 |
+
+  Scenario: Bad request while getting delegations count without toDate
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | fromDate | 2026-08-03T10:00:00Z |
+    When I send a GET request to "/delegations/count"
+    Then The status code is 400
+    And The response body contains:
+      | status | 400 |

@@ -75,6 +75,7 @@ mvn versions:set -DnewVersion=0.1.2 --projects :selfcare-cucumber-sdk && mvn ver
 
 - **`selfcare-cucumber-sdk`** — BDD testing helpers integrating Testcontainers + REST Assured; used by all integration test suites
 - **`selfcare-sdk-security`** — JWT authentication and Quarkus security utilities shared across services
+- **`selfcare-sdk-health`** — Base classes for readiness health checks (Azure Blob Storage, MongoDB) exposed via SmallRye Health
 - **`selfcare-sdk-pom`** — Parent POM with shared dependency versions and plugin config
 - **`selfcare-onboarding-sdk-*`** — Onboarding-specific SDKs (common, crypto, azure-storage, product)
 - **`selfcare-user-sdk-*`** — User-specific SDKs (event, model, pom)
