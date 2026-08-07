@@ -13,6 +13,8 @@ import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.entity.WebhookNotificationAttempt;
+import it.pagopa.selfcare.webhook.repository.WebhookNotificationAttemptRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
@@ -33,6 +35,8 @@ public class WebhookNotificationService {
   @Inject WebhookRepository webhookRepository;
 
   @Inject WebhookNotificationRepository notificationRepository;
+
+  @Inject WebhookNotificationAttemptRepository notificationAttemptRepository;
 
   @Inject Vertx vertx;
 
@@ -216,16 +220,24 @@ public class WebhookNotificationService {
     int statusCode = response.statusCode();
 
     if (statusCode >= 200 && statusCode < 300) {
+      int attemptNumber = notification.getAttemptCount() + 1;
       notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
       notification.setCompletedAt(LocalDateTime.now());
       log.info(
           "Webhook notification delivered: {}, status: {}",
           notification.getId(),
           statusCode);
-      return notificationRepository.update(notification).replaceWithVoid();
+      return recordAttempt(
+              notification,
+              attemptNumber,
+              WebhookNotification.NotificationStatus.DELIVERED,
+              statusCode,
+              null)
+          .onItem()
+          .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     } else {
       String errorMessage = String.format("HTTP error %d: %s", statusCode, response.bodyAsString());
-      return handleFailure(webhook, notification, errorMessage);
+      return handleFailure(webhook, notification, errorMessage, statusCode);
     }
   }
 
@@ -236,32 +248,43 @@ public class WebhookNotificationService {
         "HTTP request failed for notification: {} {}",
         notification.getId(),
         throwable.getMessage());
-    return handleFailure(webhook, notification, errorMessage);
+    return handleFailure(webhook, notification, errorMessage, null);
   }
 
   private Uni<Void> handleFailure(
-      Webhook webhook, WebhookNotification notification, String errorMessage) {
-    notification.setAttemptCount(notification.getAttemptCount() + 1);
+      Webhook webhook, WebhookNotification notification, String errorMessage, Integer statusCode) {
+    int attemptNumber = notification.getAttemptCount() + 1;
+    notification.setAttemptCount(attemptNumber);
     notification.setLastError(errorMessage);
 
     int maxAttempts =
         webhook.getRetryPolicy() != null ? webhook.getRetryPolicy().getMaxAttempts() : 3;
 
-    if (notification.getAttemptCount() >= maxAttempts) {
-      return markNotificationAsFailed(notification, errorMessage).replaceWithVoid();
+    if (attemptNumber >= maxAttempts) {
+      return markNotificationAsFailed(notification, errorMessage, statusCode, attemptNumber)
+          .replaceWithVoid();
     } else {
       notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
       log.warn(
           "Webhook notification will be retried: {}, attempt: {}/{}",
           notification.getId(),
-          notification.getAttemptCount(),
+          attemptNumber,
           maxAttempts);
-      return notificationRepository.update(notification).replaceWithVoid();
+      return recordAttempt(
+              notification, attemptNumber, WebhookNotification.NotificationStatus.RETRY, statusCode, errorMessage)
+          .onItem()
+          .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     }
   }
 
   private Uni<WebhookNotification> markNotificationAsFailed(
       WebhookNotification notification, String errorMessage) {
+    return markNotificationAsFailed(
+        notification, errorMessage, null, notification.getAttemptCount() + 1);
+  }
+
+  private Uni<WebhookNotification> markNotificationAsFailed(
+      WebhookNotification notification, String errorMessage, Integer statusCode, int attemptNumber) {
     notification.setStatus(WebhookNotification.NotificationStatus.FAILED);
     notification.setLastError(errorMessage);
     notification.setCompletedAt(LocalDateTime.now());
@@ -269,6 +292,46 @@ public class WebhookNotificationService {
         "Webhook notification failed permanently: {}, error: {}",
         notification.getId(),
         errorMessage);
-    return notificationRepository.update(notification);
+    return recordAttempt(
+            notification, attemptNumber, WebhookNotification.NotificationStatus.FAILED, statusCode, errorMessage)
+        .onItem()
+        .transformToUni(ignored -> notificationRepository.update(notification));
+  }
+
+  /**
+   * Appends an immutable history record for the current delivery attempt instead of overwriting
+   * the notification's own {@code lastError}/{@code lastAttemptAt} fields. This preserves the
+   * full retry history even though the parent {@link WebhookNotification} document is reused and
+   * mutated across every retry. Failing to persist the history entry does not interrupt the main
+   * delivery flow: the error is logged and the attempt record is returned as-is.
+   */
+  private Uni<WebhookNotificationAttempt> recordAttempt(
+      WebhookNotification notification,
+      int attemptNumber,
+      WebhookNotification.NotificationStatus outcome,
+      Integer statusCode,
+      String errorMessage) {
+    WebhookNotificationAttempt attempt = new WebhookNotificationAttempt();
+    attempt.setNotificationId(notification.getId());
+    attempt.setWebhookId(notification.getWebhookId());
+    attempt.setAttemptNumber(attemptNumber);
+    attempt.setOutcome(outcome);
+    attempt.setStatusCode(statusCode);
+    attempt.setErrorMessage(errorMessage);
+    attempt.setStartedAt(
+        notification.getLastAttemptAt() != null ? notification.getLastAttemptAt() : LocalDateTime.now());
+    attempt.setFinishedAt(LocalDateTime.now());
+    return notificationAttemptRepository
+        .persist(attempt)
+        .onFailure()
+        .recoverWithItem(
+            error -> {
+              log.error(
+                  "Unable to persist delivery attempt history for notification {} (attempt {})",
+                  notification.getId(),
+                  attemptNumber,
+                  error);
+              return attempt;
+            });
   }
 }
