@@ -16,6 +16,7 @@ import io.vertx.mutiny.ext.web.client.WebClient;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.entity.WebhookNotificationAttempt;
+import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationAttemptRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
@@ -27,6 +28,7 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -40,6 +42,8 @@ public class WebhookNotificationService {
   @Inject WebhookNotificationRepository notificationRepository;
 
   @Inject WebhookNotificationAttemptRepository notificationAttemptRepository;
+
+  @Inject WebhookMetrics metrics;
 
   @Inject Vertx vertx;
 
@@ -87,6 +91,8 @@ public class WebhookNotificationService {
     // Lock notifications for 5 minutes - if processing takes longer, lock expires
     return notificationRepository
         .findAndLockPendingNotifications(100, 5)
+        .onItem()
+        .invoke(notifications -> metrics.recordClaim("batch", notifications.size()))
         .onItem()
         .transformToUni(
             notifications -> {
@@ -170,6 +176,7 @@ public class WebhookNotificationService {
   }
 
   private Uni<Void> sendHttpRequest(Webhook webhook, WebhookNotification notification) {
+    long startNanos = System.nanoTime();
     try {
       URI uri = URI.create(webhook.getUrl());
       int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
@@ -202,14 +209,27 @@ public class WebhookNotificationService {
           .onItem()
           .transformToUni(token -> sendDecodedPayload(request, notification))
           .onItem()
-          .transformToUni(response -> handleHttpResponse(webhook, notification, response))
+          .transformToUni(
+              response -> {
+                metrics.recordDeliveryDuration(elapsedMs(startNanos));
+                return handleHttpResponse(webhook, notification, response);
+              })
           .onFailure()
-          .recoverWithUni(throwable -> handleHttpError(webhook, notification, throwable));
+          .recoverWithUni(
+              throwable -> {
+                metrics.recordDeliveryDuration(elapsedMs(startNanos));
+                return handleHttpError(webhook, notification, throwable);
+              });
 
     } catch (Exception e) {
       log.error("Error sending webhook notification: {} {}", notification.getId(), e.getMessage());
+      metrics.recordDeliveryDuration(elapsedMs(startNanos));
       return handleHttpError(webhook, notification, e);
     }
+  }
+
+  private static long elapsedMs(long startNanos) {
+    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
   }
 
   private Uni<HttpResponse<Buffer>> sendDecodedPayload(
@@ -239,6 +259,7 @@ public class WebhookNotificationService {
           "Webhook notification delivered: {}, status: {}",
           notification.getId(),
           statusCode);
+      metrics.recordDelivery("delivered");
       return recordAttempt(
               notification,
               attemptNumber,
@@ -282,6 +303,7 @@ public class WebhookNotificationService {
           notification.getId(),
           attemptNumber,
           maxAttempts);
+      metrics.recordDelivery("retry");
       return recordAttempt(
               notification, attemptNumber, WebhookNotification.NotificationStatus.RETRY, statusCode, errorMessage)
           .onItem()
@@ -304,6 +326,7 @@ public class WebhookNotificationService {
         "Webhook notification failed permanently: {}, error: {}",
         notification.getId(),
         errorMessage);
+    metrics.recordDelivery("failed");
     return recordAttempt(
             notification, attemptNumber, WebhookNotification.NotificationStatus.FAILED, statusCode, errorMessage)
         .onItem()

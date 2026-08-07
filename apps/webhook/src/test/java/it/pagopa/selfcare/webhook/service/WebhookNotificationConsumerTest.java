@@ -47,6 +47,8 @@ class WebhookNotificationConsumerTest {
 
   @InjectMock WebhookRepository webhookRepository;
 
+  @InjectMock it.pagopa.selfcare.webhook.metrics.WebhookMetrics metrics;
+
   @Inject Vertx vertx;
 
   private QueueMessageItem message;
@@ -226,6 +228,7 @@ class WebhookNotificationConsumerTest {
     // then
     verify(client).deleteMessage("message-id", "pop-receipt");
     verify(notificationService, never()).processNotification(any(WebhookNotification.class));
+    verify(metrics).recordDiscarded("invalid_notification_id");
   }
 
   @Test
@@ -249,6 +252,7 @@ class WebhookNotificationConsumerTest {
     // then
     verify(notificationService, timeout(1000)).processNotification(notification);
     verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+    verify(metrics, timeout(1000)).recordClaim("queue", 1);
   }
 
   @Test

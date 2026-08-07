@@ -14,6 +14,7 @@ import io.vertx.core.Context;
 import io.vertx.mutiny.core.Vertx;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -32,6 +33,7 @@ public class WebhookNotificationConsumer {
   @Inject WebhookNotificationService notificationService;
   @Inject WebhookRepository webhookRepository;
   @Inject Vertx vertx;
+  @Inject WebhookMetrics metrics;
 
   @ConfigProperty(name = "webhook.storage-queue.enabled", defaultValue = "false")
   boolean enabled;
@@ -99,6 +101,7 @@ public class WebhookNotificationConsumer {
     String notificationId = getMessageBody(message);
     if (!ObjectId.isValid(notificationId)) {
       log.error("Discarding Storage Queue message with invalid notification ID: {}", notificationId);
+      metrics.recordDiscarded("invalid_notification_id");
       deleteMessage(message);
       return;
     }
@@ -111,6 +114,8 @@ public class WebhookNotificationConsumer {
   private void processNotification(QueueMessageItem message, String notificationId) {
     notificationRepository
         .claimForProcessing(notificationId, 5)
+        .onItem()
+        .invoke(notification -> metrics.recordClaim("queue", notification != null ? 1 : 0))
         .onItem()
         .transformToUni(
             notification ->
@@ -214,7 +219,14 @@ public class WebhookNotificationConsumer {
             existing ->
                 existing == null
                     || existing.getStatus() == WebhookNotification.NotificationStatus.DELIVERED
-                    || existing.getStatus() == WebhookNotification.NotificationStatus.FAILED);
+                    || existing.getStatus() == WebhookNotification.NotificationStatus.FAILED)
+        .onItem()
+        .invoke(
+            shouldDiscard -> {
+              if (Boolean.TRUE.equals(shouldDiscard)) {
+                metrics.recordDiscarded("notification_missing_or_terminal");
+              }
+            });
   }
 
   private void deleteMessage(QueueMessageItem message) {
@@ -228,5 +240,11 @@ public class WebhookNotificationConsumer {
    */
   private static String getMessageBody(QueueMessageItem message) {
     return message.getBody() == null ? null : message.getBody().toString();
+  }
+
+  /** Exposes the underlying Storage Queue client for the readiness probe. Returns {@code null}
+   * when the Storage Queue integration is disabled or not yet initialized. */
+  public QueueClient getClient() {
+    return client;
   }
 }

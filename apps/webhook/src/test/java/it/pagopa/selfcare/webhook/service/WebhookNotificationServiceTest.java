@@ -44,6 +44,8 @@ class WebhookNotificationServiceTest {
 
   @InjectMock WebhookJwtService webhookJwtService;
 
+  @InjectMock it.pagopa.selfcare.webhook.metrics.WebhookMetrics metrics;
+
   Vertx vertx;
 
   private WebClient webClient;
@@ -105,6 +107,8 @@ class WebhookNotificationServiceTest {
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
     verify(httpRequest)
         .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
+    verify(metrics).recordDelivery("delivered");
+    verify(metrics).recordDeliveryDuration(anyLong());
   }
 
   @Test
@@ -190,6 +194,8 @@ class WebhookNotificationServiceTest {
     assertEquals(1, captured.getAttemptCount());
     org.junit.jupiter.api.Assertions.assertTrue(
         captured.getLastError().contains("Connection refused"));
+    verify(metrics).recordDelivery("retry");
+    verify(metrics).recordDeliveryDuration(anyLong());
   }
 
   @Test
@@ -287,6 +293,7 @@ class WebhookNotificationServiceTest {
 
     assertEquals(WebhookNotification.NotificationStatus.FAILED, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
+    verify(metrics).recordDelivery("failed");
   }
 
   @Test
@@ -393,6 +400,7 @@ class WebhookNotificationServiceTest {
 
     verify(notificationRepository).findAndLockPendingNotifications(anyInt(), anyInt());
     verify(notificationRepository).releaseProcessingLock(any());
+    verify(metrics).recordClaim("batch", 1);
   }
 
   private Webhook createWebhook() {

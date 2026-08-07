@@ -34,6 +34,7 @@
     <selfcare-onboarding-sdk.version>0.17.5</selfcare-onboarding-sdk.version>
     <azure-identity.version>1.18.4</azure-identity.version>
     <azure-storage-queue.version>12.25.0</azure-storage-queue.version>
+    <common-sdk-health-version>0.2.0</common-sdk-health-version>
   </properties>
 
   <dependencyManagement>
@@ -143,6 +144,15 @@
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-opentelemetry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-health</artifactId>
+      <version>${common-sdk-health-version}</version>
     </dependency>
 
     <!-- Lombok & MapStruct -->
