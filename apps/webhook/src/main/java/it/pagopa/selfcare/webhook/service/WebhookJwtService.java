@@ -5,7 +5,9 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.util.Pkcs8Utils;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
+import java.security.PrivateKey;
 import java.time.Duration;
 import java.time.Instant;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -25,11 +27,23 @@ public class WebhookJwtService {
   @ConfigProperty(name = "webhook.jwt.duration-minutes", defaultValue = "5")
   long durationMinutes;
 
+  private PrivateKey privateKey;
+
+  /**
+   * The PEM-encoded private key never changes at runtime, but parsing/decoding it involves
+   * Base64 decoding and RSA key material generation on every call. Parse it once when the bean is
+   * constructed instead of on every notification delivery/retry.
+   */
+  @PostConstruct
+  void init() {
+    this.privateKey = Pkcs8Utils.extractRSAPrivateKeyFromPem(privateKeyPem).await().indefinitely();
+  }
+
   public Uni<String> generateNotificationToken(Webhook webhook, WebhookNotification notification) {
     Instant now = Instant.now();
-    return Pkcs8Utils.extractRSAPrivateKeyFromPem(privateKeyPem)
-        .map(
-            privateKey ->
+    return Uni.createFrom()
+        .item(
+            () ->
                 Jwt.claims()
                     .issuer(issuer)
                     .audience(audience)
