@@ -3,6 +3,8 @@ package it.pagopa.selfcare.webhook.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -19,6 +21,7 @@ import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.net.URI;
 import java.time.LocalDateTime;
@@ -58,19 +61,29 @@ public class WebhookNotificationService {
 
   private WebClient webClient;
 
-  public void init() {
-    if (webClient == null) {
-      WebClientOptions options =
-          new WebClientOptions()
-              .setConnectTimeout(connectTimeout)
-              .setIdleTimeout(readTimeout)
-              .setFollowRedirects(true);
-      this.webClient = WebClient.create(vertx, options);
+  /**
+   * Eagerly creates the shared {@link WebClient} once, at application startup. CDI startup
+   * observers run single-threaded before any request is processed, so this avoids the previous
+   * lazy, unsynchronized {@code init()} check-then-act pattern that could race under concurrent
+   * notification processing and create (and leak) multiple clients/connection pools.
+   */
+  void onStart(@Observes StartupEvent event) {
+    WebClientOptions options =
+        new WebClientOptions()
+            .setConnectTimeout(connectTimeout)
+            .setIdleTimeout(readTimeout)
+            .setFollowRedirects(true);
+    this.webClient = WebClient.create(vertx, options);
+  }
+
+  /** Releases the underlying HTTP connection pool on shutdown. */
+  void onStop(@Observes ShutdownEvent event) {
+    if (webClient != null) {
+      webClient.close();
     }
   }
 
   public Uni<Void> processFailedNotifications() {
-    init();
     // Lock notifications for 5 minutes - if processing takes longer, lock expires
     return notificationRepository
         .findAndLockPendingNotifications(100, 5)
@@ -158,7 +171,6 @@ public class WebhookNotificationService {
 
   private Uni<Void> sendHttpRequest(Webhook webhook, WebhookNotification notification) {
     try {
-      init();
       URI uri = URI.create(webhook.getUrl());
       int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
       String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
