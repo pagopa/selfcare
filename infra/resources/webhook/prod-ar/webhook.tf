@@ -196,6 +196,43 @@ module "container_app_webhook_ms" {
 }
 
 ###############################################################################
+# Synthetic monitoring
+###############################################################################
+
+data "azurerm_container_app_environment" "webhook" {
+  name                = module.local.config.container_app_environment_name
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
+data "azurerm_monitor_action_group" "email" {
+  name                = "PagoPA"
+  resource_group_name = "${module.local.config.project}-monitor-rg"
+}
+
+data "azurerm_monitor_action_group" "slack" {
+  name                = "SlackPagoPA"
+  resource_group_name = "${module.local.config.project}-monitor-rg"
+}
+
+module "webhook_synthetic_monitoring" {
+  source = "../../_modules/application_insights_synthetic_monitoring"
+
+  prefix                       = "${module.local.config.project}-webhook"
+  location                     = module.local.config.location
+  resource_group_name          = "${module.local.config.project}-monitor-rg"
+  container_app_environment_id = data.azurerm_container_app_environment.webhook.id
+  application_insight_name     = "${module.local.config.project}-appinsights"
+  application_insight_rg_name  = "${module.local.config.project}-monitor-rg"
+  application_insights_action_group_ids = [
+    data.azurerm_monitor_action_group.email.id,
+    data.azurerm_monitor_action_group.slack.id
+  ]
+
+  diagnostics_url = "https://${local.webhook_container_app_name}.${module.local.config.private_dns_name_domain}/q/health/group/diagnostics"
+  tags            = module.local.config.tags
+}
+
+###############################################################################
 # APIM
 ###############################################################################
 

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.webhook.health;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import io.smallrye.health.api.HealthGroup;
 import it.pagopa.selfcare.commons.health.AbstractAsyncReadinessCheck;
 import it.pagopa.selfcare.commons.health.HealthCheckConstants;
 import it.pagopa.selfcare.webhook.service.WebhookNotificationConsumer;
@@ -10,7 +11,6 @@ import jakarta.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.health.Readiness;
 
 /**
  * Verifies that the Azure Storage Queue used for webhook notification delivery is actually
@@ -19,10 +19,14 @@ import org.eclipse.microprofile.health.Readiness;
  *
  * <p>When {@code webhook.storage-queue.enabled} is {@code false}, the queue integration is not
  * used at all, so the check reports {@code UP} without touching any client.
+ *
+ * <p>This check is deliberately exposed in the non-gating diagnostics group. Queue availability is
+ * a global condition and the outbox allows notification ingestion to continue while delivery is
+ * temporarily unavailable, so it must not remove every replica from the load balancer.
  */
-@Readiness
+@HealthGroup(WebhookOutboxLagCheck.DIAGNOSTICS_GROUP)
 @ApplicationScoped
-public class WebhookStorageQueueReadinessCheck extends AbstractAsyncReadinessCheck {
+public class WebhookStorageQueueHealthCheck extends AbstractAsyncReadinessCheck {
 
   @Inject WebhookNotificationConsumer consumer;
 

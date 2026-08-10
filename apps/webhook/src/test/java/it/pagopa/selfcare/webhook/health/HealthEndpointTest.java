@@ -11,10 +11,10 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Guards the health check wiring: the outbox lag check reports a <b>global</b> condition, so it
- * must stay out of the readiness probe (otherwise a backlog would make every replica unready at
- * once and the API would start answering 503) and must be reachable on the non-gating {@code
- * diagnostics} group instead.
+ * Guards the health check wiring: the outbox lag and Storage Queue checks report <b>global</b>
+ * conditions, so they must stay out of the readiness probe (otherwise every replica would become
+ * unready at once and the API would start answering 503) and must be reachable on the non-gating
+ * {@code diagnostics} group instead.
  */
 @QuarkusTest
 @TestProfile(HealthEndpointTest.NoMongoHealthProfile.class)
@@ -33,6 +33,7 @@ class HealthEndpointTest {
   }
 
   private static final String OUTBOX_CHECK = "webhook-outbox-lag";
+  private static final String STORAGE_QUEUE_CHECK = "storage-queue-webhook-notifications";
 
   @Test
   void readinessShouldNotIncludeOutboxLagCheck() {
@@ -41,7 +42,8 @@ class HealthEndpointTest {
         .get("/q/health/ready")
         .then()
         .statusCode(200)
-        .body("checks.name", not(hasItem(OUTBOX_CHECK)));
+        .body("checks.name", not(hasItem(OUTBOX_CHECK)))
+        .body("checks.name", not(hasItem(STORAGE_QUEUE_CHECK)));
   }
 
   @Test
@@ -51,6 +53,7 @@ class HealthEndpointTest {
         .get("/q/health/group/" + WebhookOutboxLagCheck.DIAGNOSTICS_GROUP)
         .then()
         .statusCode(200)
-        .body("checks.name", hasItem(OUTBOX_CHECK));
+        .body("checks.name", hasItem(OUTBOX_CHECK))
+        .body("checks.name", hasItem(STORAGE_QUEUE_CHECK));
   }
 }

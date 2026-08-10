@@ -14,17 +14,17 @@ import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-class WebhookStorageQueueReadinessCheckTest {
+class WebhookStorageQueueHealthCheckTest {
 
-  private WebhookStorageQueueReadinessCheck newCheck(WebhookNotificationConsumer consumer) {
-    WebhookStorageQueueReadinessCheck check = new WebhookStorageQueueReadinessCheck();
+  private WebhookStorageQueueHealthCheck newCheck(WebhookNotificationConsumer consumer) {
+    WebhookStorageQueueHealthCheck check = new WebhookStorageQueueHealthCheck();
     check.consumer = consumer;
     check.enabled = true;
     check.queue = "webhook-notifications";
     return check;
   }
 
-  private HealthCheckResponse await(WebhookStorageQueueReadinessCheck check) {
+  private HealthCheckResponse await(WebhookStorageQueueHealthCheck check) {
     return check.call().await().atMost(Duration.ofSeconds(5));
   }
 
@@ -32,7 +32,7 @@ class WebhookStorageQueueReadinessCheckTest {
   void up_whenDisabled_withoutTouchingClient() {
     // given
     WebhookNotificationConsumer consumer = mock(WebhookNotificationConsumer.class);
-    WebhookStorageQueueReadinessCheck check = newCheck(consumer);
+    WebhookStorageQueueHealthCheck check = newCheck(consumer);
     check.enabled = false;
 
     // when
@@ -50,7 +50,7 @@ class WebhookStorageQueueReadinessCheckTest {
     QueueClient client = mock(QueueClient.class);
     when(consumer.getClient()).thenReturn(client);
     when(client.getProperties()).thenReturn(mock(QueueProperties.class));
-    WebhookStorageQueueReadinessCheck check = newCheck(consumer);
+    WebhookStorageQueueHealthCheck check = newCheck(consumer);
 
     // when
     HealthCheckResponse response = await(check);
@@ -68,7 +68,7 @@ class WebhookStorageQueueReadinessCheckTest {
     // given
     WebhookNotificationConsumer consumer = mock(WebhookNotificationConsumer.class);
     when(consumer.getClient()).thenReturn(null);
-    WebhookStorageQueueReadinessCheck check = newCheck(consumer);
+    WebhookStorageQueueHealthCheck check = newCheck(consumer);
 
     // when
     HealthCheckResponse response = await(check);
@@ -84,7 +84,7 @@ class WebhookStorageQueueReadinessCheckTest {
     QueueClient client = mock(QueueClient.class);
     when(consumer.getClient()).thenReturn(client);
     when(client.getProperties()).thenThrow(new RuntimeException("queue unreachable"));
-    WebhookStorageQueueReadinessCheck check = newCheck(consumer);
+    WebhookStorageQueueHealthCheck check = newCheck(consumer);
 
     // when
     HealthCheckResponse response = await(check);

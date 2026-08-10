@@ -213,9 +213,7 @@ locals {
       "Reader",
       "PagoPA IaC Reader",
       "Reader and Data Access",
-      "ContainerApp Reader",
-      "Storage Queue Data Contributor",
-      "Storage Blob Data Contributor"
+      "ContainerApp Reader"
     ]
     resource_groups = {
       "terraform-state-rg" = [
@@ -251,6 +249,9 @@ locals {
       ],
       "selc-${local.env_short}-contracts-storage-rg" = [
         "Storage Blob Data Contributor"
+      ],
+      "selc-${local.env_short}-webhook-storage-rg" = [
+        "Storage Queue Data Contributor"
       ],
       "selc-${local.env_short}-onboarding-fn-rg" = [
         "Storage Account Key Operator Service Role"
