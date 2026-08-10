@@ -34,6 +34,9 @@ public class WebhookNotificationPublisher {
   @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
+  @ConfigProperty(name = "webhook.storage-queue.auto-create", defaultValue = "false")
+  boolean autoCreate;
+
   private volatile QueueClient client;
 
   void start(@Observes StartupEvent event) {
@@ -41,7 +44,23 @@ public class WebhookNotificationPublisher {
       return;
     }
     client = buildClientBuilder().buildClient();
-    client.createIfNotExists();
+    ensureQueueExists();
+  }
+
+  /**
+   * Creates the queue only when explicitly enabled (local/emulator setups). In the cloud the queue
+   * is provisioned by Terraform and the managed identity only holds message level roles, so the
+   * create call would fail with a 403 and abort the whole application startup.
+   */
+  private void ensureQueueExists() {
+    if (!autoCreate) {
+      return;
+    }
+    try {
+      client.createIfNotExists();
+    } catch (RuntimeException e) {
+      log.warn("Unable to auto-create Storage Queue {}: {}", queue, e.getMessage());
+    }
   }
 
   QueueClientBuilder buildClientBuilder() {

@@ -92,6 +92,7 @@ class WebhookNotificationConsumerTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
     consumer.enabled = true;
+    consumer.autoCreate = true;
     doReturn(clientBuilder).when(consumer).buildClientBuilder();
     when(clientBuilder.buildClient()).thenReturn(client);
 
@@ -100,6 +101,38 @@ class WebhookNotificationConsumerTest {
 
     // then
     verify(client).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotCreateQueueWhenAutoCreateIsDisabled() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
+    consumer.enabled = true;
+    consumer.autoCreate = false;
+    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+
+    // when
+    consumer.start(null);
+
+    // then
+    verify(client, never()).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotFailWhenQueueCreationIsUnauthorized() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
+    consumer.enabled = true;
+    consumer.autoCreate = true;
+    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+    doThrow(mock(QueueStorageException.class)).when(client).createIfNotExists();
+
+    // when / then
+    assertDoesNotThrow(() -> consumer.start(null));
   }
 
   @Test
@@ -176,6 +209,7 @@ class WebhookNotificationConsumerTest {
         .when(client)
         .receiveMessages(eq(32), eq(Duration.ofSeconds(300)), isNull(), isNull());
     consumer().enabled = true;
+    consumer().autoCreate = true;
 
     // when
     consumer().poll();

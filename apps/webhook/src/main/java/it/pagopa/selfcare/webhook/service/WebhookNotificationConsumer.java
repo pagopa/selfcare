@@ -47,6 +47,9 @@ public class WebhookNotificationConsumer {
   @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
+  @ConfigProperty(name = "webhook.storage-queue.auto-create", defaultValue = "false")
+  boolean autoCreate;
+
   @ConfigProperty(name = "webhook.storage-queue.max-messages-per-poll", defaultValue = "32")
   int maxMessagesPerPoll;
 
@@ -60,7 +63,23 @@ public class WebhookNotificationConsumer {
       return;
     }
     client = buildClientBuilder().buildClient();
-    client.createIfNotExists();
+    ensureQueueExists();
+  }
+
+  /**
+   * Creates the queue only when explicitly enabled (local/emulator setups). In the cloud the queue
+   * is provisioned by Terraform and the managed identity only holds message level roles, so the
+   * create call would fail with a 403 and abort the whole application startup.
+   */
+  private void ensureQueueExists() {
+    if (!autoCreate) {
+      return;
+    }
+    try {
+      client.createIfNotExists();
+    } catch (RuntimeException e) {
+      log.warn("Unable to auto-create Storage Queue {}: {}", queue, e.getMessage());
+    }
   }
 
   QueueClientBuilder buildClientBuilder() {
@@ -88,7 +107,7 @@ public class WebhookNotificationConsumer {
         // The queue may not be fully provisioned yet right after startup (e.g. local
         // emulator): recreate it and retry on the next poll instead of failing loudly.
         log.warn("Storage Queue {} not found yet, attempting to recreate it", queue);
-        client.createIfNotExists();
+        ensureQueueExists();
       } else {
         log.error("Storage Queue polling error: {}", e.getMessage(), e);
       }

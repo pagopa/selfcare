@@ -131,6 +131,7 @@ class WebhookNotificationPublisherTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     publisher = spy(publisher);
     publisher.enabled = true;
+    publisher.autoCreate = true;
     doReturn(clientBuilder).when(publisher).buildClientBuilder();
     when(clientBuilder.buildClient()).thenReturn(client);
 
@@ -139,6 +140,23 @@ class WebhookNotificationPublisherTest {
 
     // then
     verify(client).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotCreateQueueWhenAutoCreateIsDisabled() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    publisher = spy(publisher);
+    publisher.enabled = true;
+    publisher.autoCreate = false;
+    doReturn(clientBuilder).when(publisher).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+
+    // when
+    publisher.start(null);
+
+    // then
+    verify(client, never()).createIfNotExists();
   }
 
   @Test
