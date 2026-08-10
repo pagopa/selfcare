@@ -152,7 +152,8 @@ locals {
       "Reader",
       "PagoPA IaC Reader",
       "Reader and Data Access",
-      "ContainerApp Reader"
+      "ContainerApp Reader",
+      "Storage Queue Data Contributor"
     ]
     resource_groups = {
       "terraform-state-rg" = [
@@ -200,7 +201,8 @@ locals {
 
   environment_cd_roles = {
     subscription = [
-      "Contributor"
+      "Contributor",
+      "Storage Queue Data Contributor"
     ]
     resource_groups = {
       terraform-state-rg = [
@@ -209,7 +211,7 @@ locals {
       "selc-${local.env_short}-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
-      "selc-${local.env_short}-cosmosdb-mongodb-rg" : [
+      "selc-${local.env_short}-cosmosdb-mongodb-rg" = [
         "PagoPA Resource Lock Contributor"
       ],
       "selc-${local.env_short}-documents-storage-rg" = [
