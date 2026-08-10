@@ -242,18 +242,24 @@ data "azurerm_monitor_action_group" "slack" {
 module "webhook_synthetic_monitoring" {
   source = "../../_modules/application_insights_synthetic_monitoring"
 
-  prefix                       = "${module.local.config.project}-webhook"
-  location                     = module.local.config.location
-  resource_group_name          = "${module.local.config.project}-monitor-rg"
-  container_app_environment_id = data.azurerm_container_app_environment.webhook.id
-  application_insight_name     = "${module.local.config.project}-appinsights"
-  application_insight_rg_name  = "${module.local.config.project}-monitor-rg"
+  prefix                              = "${module.local.config.project_location}-webhook"
+  location                            = module.local.config.location
+  resource_group_name                 = module.local.config.ca_resource_group_name
+  container_app_environment_id        = data.azurerm_container_app_environment.webhook.id
+  user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
+  user_assigned_identity_client_id    = data.azurerm_user_assigned_identity.cae_identity.client_id
+  user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
+  storage_account_name                = "${replace(module.local.config.project_location, "-", "")}synthmon"
+  storage_account_resource_group_name = "${module.local.config.project_location}-synthetic-monitoring-rg"
+  image_tag                           = var.image_tag
+  application_insight_name            = "${module.local.config.project}-appinsights"
+  application_insight_rg_name         = "${module.local.config.project}-monitor-rg"
   application_insights_action_group_ids = [
     data.azurerm_monitor_action_group.email.id,
     data.azurerm_monitor_action_group.slack.id
   ]
 
-  diagnostics_url = "https://${local.webhook_container_app_name}.${module.local.config.private_dns_name_domain}/q/health/group/diagnostics"
+  diagnostics_url = "https://${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}/q/health/group/diagnostics"
   tags            = module.local.config.tags
 }
 

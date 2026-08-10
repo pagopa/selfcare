@@ -18,9 +18,39 @@ variable "container_app_environment_id" {
   description = "Container Apps Environment used to run the private synthetic probe."
 }
 
+variable "user_assigned_identity_id" {
+  type        = string
+  description = "User-assigned managed identity attached to the monitoring job."
+}
+
+variable "user_assigned_identity_client_id" {
+  type        = string
+  description = "Client ID selected by DefaultAzureCredential."
+}
+
+variable "user_assigned_identity_principal_id" {
+  type        = string
+  description = "Principal ID granted read access to the monitoring table."
+}
+
+variable "storage_account_name" {
+  type        = string
+  description = "Shared synthetic monitoring Storage Account created by the core stack."
+}
+
+variable "storage_account_resource_group_name" {
+  type        = string
+  description = "Resource group containing the shared synthetic monitoring Storage Account."
+}
+
+variable "image_tag" {
+  type        = string
+  description = "Webhook image tag containing the managed-identity synthetic probe."
+}
+
 variable "application_insight_name" {
   type        = string
-  description = "Application Insights component receiving availability telemetry."
+  description = "Application Insights component receiving synthetic health metrics."
 }
 
 variable "application_insight_rg_name" {
@@ -30,7 +60,7 @@ variable "application_insight_rg_name" {
 
 variable "application_insights_action_group_ids" {
   type        = list(string)
-  description = "Action groups notified by the availability alerts."
+  description = "Action groups notified by the synthetic health alert."
 }
 
 variable "diagnostics_url" {

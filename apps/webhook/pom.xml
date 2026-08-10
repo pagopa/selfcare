@@ -33,6 +33,7 @@
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.17.5</selfcare-onboarding-sdk.version>
     <azure-identity.version>1.18.4</azure-identity.version>
+    <azure-data-tables.version>12.5.8</azure-data-tables.version>
     <azure-storage-queue.version>12.25.0</azure-storage-queue.version>
     <common-sdk-health-version>0.2.0</common-sdk-health-version>
   </properties>
@@ -184,6 +185,11 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
       <version>${azure-identity.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-data-tables</artifactId>
+      <version>${azure-data-tables.version}</version>
     </dependency>
     <dependency>
       <groupId>com.azure</groupId>
