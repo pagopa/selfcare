@@ -19,5 +19,7 @@ module "identity_cd" {
   environment_cd_roles    = local.environment_cd_roles
   environment_cd_roles_ms = local.environment_cd_roles_ms
 
-  depends_on = [azurerm_resource_group.identity_rg]
+  depends_on = [
+    azurerm_resource_group.identity_rg
+  ]
 }

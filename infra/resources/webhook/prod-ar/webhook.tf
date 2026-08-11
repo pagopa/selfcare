@@ -67,7 +67,32 @@ module "collection_webhook_notifications" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["webhookId"], unique = false }
+    { keys = ["webhookId"], unique = false },
+    # Backs the outbox lag query (filter on status + busPublishedAt, sort by createdAt).
+    # Cosmos DB for MongoDB rejects a sort that is not fully covered by an index, so this
+    # compound index is required and not just an optimisation.
+    { keys = ["status", "busPublishedAt", "createdAt"], unique = false },
+    # Backs the claim query in findAndLockPendingNotifications (status + processing lock).
+    { keys = ["status", "processing", "processingUntil"], unique = false }
+  ]
+}
+
+module "collection_webhook_notification_attempts" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "webhookNotificationAttempts"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = "selcWebhook"
+  # Same retention as the parent notification, otherwise attempts would grow unbounded.
+  default_ttl_seconds = 2592000
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    # Backs findByNotificationId, which filters on notificationId and sorts by attemptNumber.
+    { keys = ["notificationId", "attemptNumber"], unique = false }
   ]
 }
 
@@ -79,7 +104,7 @@ module "storage_queue" {
   source = "../../_modules/azure_storage_queue"
 
   environment = {
-    prefix          = "selc"
+    prefix          = module.local.config.prefix
     env_short       = module.local.config.env_short
     location        = module.local.config.location
     location_short  = module.local.config.location_short
@@ -96,6 +121,7 @@ module "storage_queue" {
   log_analytics_workspace_name                = "${module.local.config.project}-law"
   log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
   subscription_id                             = module.local.subscription_id
+  location                                    = module.local.config.location
   queue_name                                  = "webhook-notifications"
   tags                                        = module.local.config.tags
 }
@@ -167,6 +193,49 @@ module "container_app_webhook_ms" {
   key_vault_name                 = module.local.config.key_vault_name
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
+}
+
+###############################################################################
+# Synthetic monitoring
+###############################################################################
+
+data "azurerm_container_app_environment" "webhook" {
+  name                = module.local.config.container_app_environment_name
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
+data "azurerm_monitor_action_group" "email" {
+  name                = "PagoPA"
+  resource_group_name = "${module.local.config.project}-monitor-rg"
+}
+
+data "azurerm_monitor_action_group" "slack" {
+  name                = "SlackPagoPA"
+  resource_group_name = "${module.local.config.project}-monitor-rg"
+}
+
+module "webhook_synthetic_monitoring" {
+  source = "../../_modules/application_insights_synthetic_monitoring"
+
+  prefix                              = "${module.local.config.project}-webhook"
+  location                            = module.local.config.location
+  resource_group_name                 = "${module.local.config.project}-monitor-rg"
+  container_app_environment_id        = data.azurerm_container_app_environment.webhook.id
+  user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
+  user_assigned_identity_client_id    = data.azurerm_user_assigned_identity.cae_identity.client_id
+  user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
+  storage_account_name                = "${replace(module.local.config.project_location, "-", "")}synthmon"
+  storage_account_resource_group_name = "${module.local.config.project}-synthetic-monitoring-rg"
+  image_tag                           = var.image_tag
+  application_insight_name            = "${module.local.config.project}-appinsights"
+  application_insight_rg_name         = "${module.local.config.project}-monitor-rg"
+  application_insights_action_group_ids = [
+    data.azurerm_monitor_action_group.email.id,
+    data.azurerm_monitor_action_group.slack.id
+  ]
+
+  diagnostics_url = "https://${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}/q/health/group/diagnostics"
+  tags            = module.local.config.tags
 }
 
 ###############################################################################

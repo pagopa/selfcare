@@ -7,15 +7,20 @@ import com.azure.storage.queue.QueueClientBuilder;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
+import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @ApplicationScoped
 public class WebhookNotificationPublisher {
+
+  @Inject WebhookMetrics metrics;
 
   @ConfigProperty(name = "webhook.storage-queue.enabled", defaultValue = "false")
   boolean enabled;
@@ -29,14 +34,33 @@ public class WebhookNotificationPublisher {
   @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
-  private QueueClient client;
+  @ConfigProperty(name = "webhook.storage-queue.auto-create", defaultValue = "false")
+  boolean autoCreate;
+
+  private volatile QueueClient client;
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
       return;
     }
     client = buildClientBuilder().buildClient();
-    client.createIfNotExists();
+    ensureQueueExists();
+  }
+
+  /**
+   * Creates the queue only when explicitly enabled (local/emulator setups). In the cloud the queue
+   * is provisioned by Terraform and the managed identity only holds message level roles, so the
+   * create call would fail with a 403 and abort the whole application startup.
+   */
+  private void ensureQueueExists() {
+    if (!autoCreate) {
+      return;
+    }
+    try {
+      client.createIfNotExists();
+    } catch (RuntimeException e) {
+      log.warn("Unable to auto-create Storage Queue {}: {}", queue, e.getMessage());
+    }
   }
 
   QueueClientBuilder buildClientBuilder() {
@@ -58,6 +82,7 @@ public class WebhookNotificationPublisher {
     if (!enabled) {
       return Uni.createFrom().voidItem();
     }
+    long startNanos = System.nanoTime();
     return Uni.createFrom()
         .item(
             () -> {
@@ -66,6 +91,14 @@ public class WebhookNotificationPublisher {
               return true;
             })
         .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+        .onItemOrFailure()
+        .invoke(
+            (ignored, failure) ->
+                metrics.recordPublish(failure == null, elapsedMs(startNanos)))
         .replaceWithVoid();
+  }
+
+  private static long elapsedMs(long startNanos) {
+    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
   }
 }

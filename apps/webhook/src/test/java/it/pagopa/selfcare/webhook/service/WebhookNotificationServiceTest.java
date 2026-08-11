@@ -17,6 +17,8 @@ import io.vertx.mutiny.ext.web.client.WebClient;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.entity.WebhookNotificationAttempt;
+import it.pagopa.selfcare.webhook.repository.WebhookNotificationAttemptRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import it.pagopa.selfcare.webhook.util.DataEncryptionConfig;
@@ -38,7 +40,11 @@ class WebhookNotificationServiceTest {
 
   @InjectMock WebhookNotificationRepository notificationRepository;
 
+  @InjectMock WebhookNotificationAttemptRepository notificationAttemptRepository;
+
   @InjectMock WebhookJwtService webhookJwtService;
+
+  @InjectMock it.pagopa.selfcare.webhook.metrics.WebhookMetrics metrics;
 
   Vertx vertx;
 
@@ -59,6 +65,12 @@ class WebhookNotificationServiceTest {
     when(webhookJwtService.generateNotificationToken(
             any(Webhook.class), any(WebhookNotification.class)))
         .thenReturn(Uni.createFrom().item("signed-token"));
+    when(notificationAttemptRepository.persist(any(WebhookNotificationAttempt.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotificationAttempt attempt = invocation.getArgument(0);
+              return Uni.createFrom().item(attempt);
+            });
 
     Object serviceInstance = io.quarkus.arc.ClientProxy.unwrap(notificationService);
     Field field = WebhookNotificationService.class.getDeclaredField("webClient");
@@ -95,6 +107,8 @@ class WebhookNotificationServiceTest {
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
     verify(httpRequest)
         .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
+    verify(metrics).recordDelivery("delivered");
+    verify(metrics).recordDeliveryDuration(anyLong());
   }
 
   @Test
@@ -180,6 +194,105 @@ class WebhookNotificationServiceTest {
     assertEquals(1, captured.getAttemptCount());
     org.junit.jupiter.api.Assertions.assertTrue(
         captured.getLastError().contains("Connection refused"));
+    verify(metrics).recordDelivery("retry");
+    verify(metrics).recordDeliveryDuration(anyLong());
+  }
+
+  @Test
+  void processNotification_shouldRecordAttemptHistory_onSuccess() {
+    Webhook webhook = createWebhook();
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(200);
+
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitItem();
+
+    ArgumentCaptor<WebhookNotificationAttempt> captor =
+        ArgumentCaptor.forClass(WebhookNotificationAttempt.class);
+    verify(notificationAttemptRepository).persist(captor.capture());
+    WebhookNotificationAttempt attempt = captor.getValue();
+
+    assertEquals(notification.getId(), attempt.getNotificationId());
+    assertEquals(1, attempt.getAttemptNumber());
+    assertEquals(WebhookNotification.NotificationStatus.DELIVERED, attempt.getOutcome());
+    assertEquals(200, attempt.getStatusCode());
+    assertNotNull(attempt.getFinishedAt());
+  }
+
+  @Test
+  void processNotification_shouldNotDowngradeDeliveredNotification_whenPersistFailsAfter2xx() {
+    // Regression guard: a failure raised *after* a successful 2xx (here the MongoDB update) must
+    // not be re-routed into the failure handling path. Doing so would record the delivery twice,
+    // overwrite the already DELIVERED status with RETRY/FAILED and append a duplicate attempt
+    // record for the same attempt number.
+    Webhook webhook = createWebhook();
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("mongo unavailable")));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(200);
+
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitFailure();
+
+    assertEquals(WebhookNotification.NotificationStatus.DELIVERED, notification.getStatus());
+    verify(notificationAttemptRepository, times(1)).persist(any(WebhookNotificationAttempt.class));
+    verify(metrics, times(1)).recordDelivery("delivered");
+    verify(metrics, never()).recordDelivery("retry");
+    verify(metrics, never()).recordDelivery("failed");
+    verify(metrics, times(1)).recordDeliveryDuration(anyLong());
+  }
+
+  @Test
+  void processNotification_shouldAppendAttemptHistory_acrossMultipleRetries() {
+    // Simulates the same notification document being reprocessed twice (e.g. two consecutive
+    // Storage Queue redeliveries), which is exactly the scenario where the notification's own
+    // lastError/lastAttemptAt fields get overwritten on every retry.
+    Webhook webhook = createWebhook();
+    webhook.getRetryPolicy().setMaxAttempts(5);
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any()))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("Connection refused")))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("Timeout")));
+
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitItem();
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitItem();
+
+    ArgumentCaptor<WebhookNotificationAttempt> captor =
+        ArgumentCaptor.forClass(WebhookNotificationAttempt.class);
+    verify(notificationAttemptRepository, org.mockito.Mockito.times(2)).persist(captor.capture());
+    List<WebhookNotificationAttempt> attempts = captor.getAllValues();
+
+    // Both attempts are persisted as distinct, immutable records: the second retry does not
+    // erase the first one's error/outcome, unlike the notification document itself.
+    assertEquals(1, attempts.get(0).getAttemptNumber());
+    org.junit.jupiter.api.Assertions.assertTrue(
+        attempts.get(0).getErrorMessage().contains("Connection refused"));
+    assertEquals(2, attempts.get(1).getAttemptNumber());
+    org.junit.jupiter.api.Assertions.assertTrue(attempts.get(1).getErrorMessage().contains("Timeout"));
   }
 
   @Test
@@ -209,6 +322,7 @@ class WebhookNotificationServiceTest {
 
     assertEquals(WebhookNotification.NotificationStatus.FAILED, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
+    verify(metrics).recordDelivery("failed");
   }
 
   @Test
@@ -315,6 +429,7 @@ class WebhookNotificationServiceTest {
 
     verify(notificationRepository).findAndLockPendingNotifications(anyInt(), anyInt());
     verify(notificationRepository).releaseProcessingLock(any());
+    verify(metrics).recordClaim("batch", 1);
   }
 
   private Webhook createWebhook() {

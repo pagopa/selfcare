@@ -14,8 +14,8 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.71.0 |
-| <a name="provider_github"></a> [github](#provider\_github) | 6.12.1 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
+| <a name="provider_github"></a> [github](#provider\_github) | 6.13.0 |
 
 ## Modules
 

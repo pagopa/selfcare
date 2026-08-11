@@ -11,6 +11,12 @@ import org.bson.types.ObjectId;
 @MongoEntity(collection = "webhooks")
 public class Webhook {
 
+  /**
+   * Wildcard value that can be stored in {@link #products} to subscribe a webhook to every product
+   * of its tenant, so that newly created products are covered without updating the configuration.
+   */
+  public static final String ALL_PRODUCTS = "*";
+
   private ObjectId id;
   private String tenantId;
   private String productId;

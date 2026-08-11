@@ -14,6 +14,7 @@ import io.vertx.core.Context;
 import io.vertx.mutiny.core.Vertx;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -32,6 +33,7 @@ public class WebhookNotificationConsumer {
   @Inject WebhookNotificationService notificationService;
   @Inject WebhookRepository webhookRepository;
   @Inject Vertx vertx;
+  @Inject WebhookMetrics metrics;
 
   @ConfigProperty(name = "webhook.storage-queue.enabled", defaultValue = "false")
   boolean enabled;
@@ -45,20 +47,39 @@ public class WebhookNotificationConsumer {
   @ConfigProperty(name = "webhook.storage-queue.connection-string", defaultValue = "none")
   String connectionString;
 
+  @ConfigProperty(name = "webhook.storage-queue.auto-create", defaultValue = "false")
+  boolean autoCreate;
+
   @ConfigProperty(name = "webhook.storage-queue.max-messages-per-poll", defaultValue = "32")
   int maxMessagesPerPoll;
 
   @ConfigProperty(name = "webhook.storage-queue.visibility-timeout-seconds", defaultValue = "300")
   int visibilityTimeoutSeconds;
 
-  private QueueClient client;
+  private volatile QueueClient client;
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
       return;
     }
     client = buildClientBuilder().buildClient();
-    client.createIfNotExists();
+    ensureQueueExists();
+  }
+
+  /**
+   * Creates the queue only when explicitly enabled (local/emulator setups). In the cloud the queue
+   * is provisioned by Terraform and the managed identity only holds message level roles, so the
+   * create call would fail with a 403 and abort the whole application startup.
+   */
+  private void ensureQueueExists() {
+    if (!autoCreate) {
+      return;
+    }
+    try {
+      client.createIfNotExists();
+    } catch (RuntimeException e) {
+      log.warn("Unable to auto-create Storage Queue {}: {}", queue, e.getMessage());
+    }
   }
 
   QueueClientBuilder buildClientBuilder() {
@@ -86,7 +107,7 @@ public class WebhookNotificationConsumer {
         // The queue may not be fully provisioned yet right after startup (e.g. local
         // emulator): recreate it and retry on the next poll instead of failing loudly.
         log.warn("Storage Queue {} not found yet, attempting to recreate it", queue);
-        client.createIfNotExists();
+        ensureQueueExists();
       } else {
         log.error("Storage Queue polling error: {}", e.getMessage(), e);
       }
@@ -96,9 +117,12 @@ public class WebhookNotificationConsumer {
   }
 
   private void processMessage(QueueMessageItem message) {
-    String notificationId = message.getMessageText();
-    if (!ObjectId.isValid(notificationId)) {
+    String notificationId = getMessageBody(message);
+    // ObjectId.isValid(null) throws IllegalArgumentException, which would escape processMessage,
+    // abort the rest of the poll batch and leave this poison message in the queue forever.
+    if (notificationId == null || !ObjectId.isValid(notificationId)) {
       log.error("Discarding Storage Queue message with invalid notification ID: {}", notificationId);
+      metrics.recordDiscarded("invalid_notification_id");
       deleteMessage(message);
       return;
     }
@@ -111,6 +135,8 @@ public class WebhookNotificationConsumer {
   private void processNotification(QueueMessageItem message, String notificationId) {
     notificationRepository
         .claimForProcessing(notificationId, 5)
+        .onItem()
+        .invoke(notification -> metrics.recordClaim("queue", notification != null ? 1 : 0))
         .onItem()
         .transformToUni(
             notification ->
@@ -170,10 +196,7 @@ public class WebhookNotificationConsumer {
               Duration delay = computeRetryDelay(retryPolicy, notification.getAttemptCount());
               try {
                 client.updateMessage(
-                    message.getMessageId(),
-                    message.getPopReceipt(),
-                    message.getMessageText(),
-                    delay);
+                    message.getMessageId(), message.getPopReceipt(), getMessageBody(message), delay);
               } catch (Exception e) {
                 log.warn(
                     "Unable to apply retry backoff to Storage Queue message {}: {}",
@@ -217,10 +240,32 @@ public class WebhookNotificationConsumer {
             existing ->
                 existing == null
                     || existing.getStatus() == WebhookNotification.NotificationStatus.DELIVERED
-                    || existing.getStatus() == WebhookNotification.NotificationStatus.FAILED);
+                    || existing.getStatus() == WebhookNotification.NotificationStatus.FAILED)
+        .onItem()
+        .invoke(
+            shouldDiscard -> {
+              if (Boolean.TRUE.equals(shouldDiscard)) {
+                metrics.recordDiscarded("notification_missing_or_terminal");
+              }
+            });
   }
 
   private void deleteMessage(QueueMessageItem message) {
     client.deleteMessage(message.getMessageId(), message.getPopReceipt());
+  }
+
+  /**
+   * Reads the queue message content via the non-deprecated {@link QueueMessageItem#getBody()}
+   * (returns {@link com.azure.core.util.BinaryData}) instead of the deprecated {@code
+   * getMessageText()}.
+   */
+  private static String getMessageBody(QueueMessageItem message) {
+    return message.getBody() == null ? null : message.getBody().toString();
+  }
+
+  /** Exposes the underlying Storage Queue client for the readiness probe. Returns {@code null}
+   * when the Storage Queue integration is disabled or not yet initialized. */
+  public QueueClient getClient() {
+    return client;
   }
 }
