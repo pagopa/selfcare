@@ -217,9 +217,9 @@ data "azurerm_monitor_action_group" "slack" {
 module "webhook_synthetic_monitoring" {
   source = "../../_modules/application_insights_synthetic_monitoring"
 
-  prefix                              = "${module.local.config.project}-webhook"
+  prefix                              = "${module.local.config.project_location}-webhook"
   location                            = module.local.config.location
-  resource_group_name                 = "${module.local.config.project}-monitor-rg"
+  resource_group_name                 = module.local.config.ca_resource_group_name
   container_app_environment_id        = data.azurerm_container_app_environment.webhook.id
   user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
   user_assigned_identity_client_id    = data.azurerm_user_assigned_identity.cae_identity.client_id
