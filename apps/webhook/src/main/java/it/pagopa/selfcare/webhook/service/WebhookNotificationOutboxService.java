@@ -9,7 +9,8 @@ import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
@@ -69,7 +70,10 @@ public class WebhookNotificationOutboxService {
     if (notification.getCreatedAt() == null) {
       return;
     }
-    long lagMs = Duration.between(notification.getCreatedAt(), LocalDateTime.now()).toMillis();
+    long lagMs =
+        Duration.between(
+                notification.getCreatedAt().atZone(ZoneOffset.UTC).toInstant(), Instant.now())
+            .toMillis();
     metrics.recordOutboxLag(Math.max(lagMs, 0));
   }
 }

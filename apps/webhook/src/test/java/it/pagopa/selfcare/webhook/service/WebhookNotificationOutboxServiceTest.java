@@ -15,6 +15,7 @@ import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import jakarta.inject.Inject;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,7 +80,7 @@ class WebhookNotificationOutboxServiceTest {
   void publishUnpublishedNotifications_shouldPublishAndMarkNotificationAsPublished() {
     // given
     WebhookNotification notification = notification();
-    notification.setCreatedAt(LocalDateTime.now().minusSeconds(5));
+    notification.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(5));
     when(notificationRepository.claimUnpublishedNotifications(100, 5))
         .thenReturn(Uni.createFrom().item(List.of(notification)));
     when(publisher.publish(notification.getId().toHexString())).thenReturn(Uni.createFrom().voidItem());

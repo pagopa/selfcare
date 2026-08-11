@@ -10,6 +10,7 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.Test;
@@ -64,7 +65,7 @@ class WebhookOutboxLagCheckTest {
   void up_whenOldestUnpublishedNotificationIsWithinThreshold() {
     // given
     WebhookNotification notification = new WebhookNotification();
-    notification.setCreatedAt(LocalDateTime.now().minusSeconds(10));
+    notification.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(10));
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
     when(repository.findOldestUnpublishedNotification()).thenReturn(Uni.createFrom().item(notification));
     WebhookOutboxLagCheck check = newCheck(repository);
@@ -80,7 +81,7 @@ class WebhookOutboxLagCheckTest {
   void down_whenOldestUnpublishedNotificationExceedsThreshold() {
     // given
     WebhookNotification notification = new WebhookNotification();
-    notification.setCreatedAt(LocalDateTime.now().minusSeconds(600));
+    notification.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(600));
     WebhookNotificationRepository repository = mock(WebhookNotificationRepository.class);
     when(repository.findOldestUnpublishedNotification()).thenReturn(Uni.createFrom().item(notification));
     WebhookOutboxLagCheck check = newCheck(repository);

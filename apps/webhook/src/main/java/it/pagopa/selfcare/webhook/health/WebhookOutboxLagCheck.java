@@ -9,7 +9,8 @@ import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.Duration;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -75,7 +76,9 @@ public class WebhookOutboxLagCheck extends AbstractAsyncReadinessCheck {
       return Uni.createFrom().voidItem();
     }
     long ageSeconds =
-        Duration.between(oldestUnpublished.getCreatedAt(), LocalDateTime.now()).getSeconds();
+        Duration.between(
+                oldestUnpublished.getCreatedAt().atZone(ZoneOffset.UTC).toInstant(), Instant.now())
+            .getSeconds();
     if (ageSeconds > lagThresholdSeconds) {
       return Uni.createFrom()
           .failure(
