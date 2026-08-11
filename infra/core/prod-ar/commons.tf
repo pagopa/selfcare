@@ -138,6 +138,8 @@ module "synthetic_monitoring_storage" {
   virtual_network_name                = module.network.vnet_name
   virtual_network_resource_group_name = module.network.rg_vnet_name
   tags                                = local.tags
+
+  depends_on = [azurerm_resource_group.synthetic_monitoring]
 }
 
 ###############################################################################
