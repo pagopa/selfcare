@@ -3,15 +3,20 @@ locals {
 }
 
 resource "azurerm_storage_account" "this" {
-  name                            = local.storage_account_name
-  resource_group_name             = var.resource_group_name
-  location                        = var.location
-  account_tier                    = "Standard"
-  account_replication_type        = "ZRS"
-  account_kind                    = "StorageV2"
-  min_tls_version                 = "TLS1_2"
-  public_network_access_enabled   = false
-  shared_access_key_enabled       = false
+  name                          = local.storage_account_name
+  resource_group_name           = var.resource_group_name
+  location                      = var.location
+  account_tier                  = "Standard"
+  account_replication_type      = "ZRS"
+  account_kind                  = "StorageV2"
+  min_tls_version               = "TLS1_2"
+  public_network_access_enabled = false
+  # The AzureRM provider manages Table data-plane resources (table and entities) with Shared Key
+  # only: the Set Table ACL operation does not support Entra ID, so `storage_use_azuread` is
+  # ignored and Terraform fails with a 403 when shared keys are disabled.
+  # Keys stay enabled for Terraform, while `default_to_oauth_authentication` keeps Entra ID as the
+  # default and the synthetic monitoring job always authenticates with its managed identity.
+  shared_access_key_enabled       = true
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false
 

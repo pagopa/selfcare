@@ -19,3 +19,7 @@ data "azuread_group" "adgroup_developers" {
 data "azuread_group" "adgroup_admin" {
   display_name = "${local.prefix}-${local.env_short}-adgroup-admin"
 }
+
+data "azurerm_resource_group" "synthetic_monitoring_storage_rg" {
+  name = "${local.prefix}-${local.env_short}-synthetic-monitoring-rg"
+}

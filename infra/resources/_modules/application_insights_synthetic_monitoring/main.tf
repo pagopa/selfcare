@@ -14,8 +14,8 @@ data "azurerm_storage_account" "this" {
 }
 
 resource "azurerm_storage_table" "configuration" {
-  name                 = "monitoringconfiguration"
-  storage_account_name = data.azurerm_storage_account.this.name
+  name               = "monitoringconfiguration"
+  storage_account_id = data.azurerm_storage_account.this.id
 }
 
 resource "azurerm_storage_table_entity" "diagnostics" {
@@ -32,7 +32,7 @@ resource "azurerm_storage_table_entity" "diagnostics" {
 }
 
 resource "azurerm_container_app_job" "this" {
-  name                         = "${var.prefix}-monitoring-app-job"
+  name                         = "${var.prefix}-synthmon-caj"
   resource_group_name          = var.resource_group_name
   location                     = var.location
   container_app_environment_id = var.container_app_environment_id

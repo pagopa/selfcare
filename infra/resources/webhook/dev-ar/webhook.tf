@@ -250,7 +250,7 @@ module "webhook_synthetic_monitoring" {
   user_assigned_identity_client_id    = data.azurerm_user_assigned_identity.cae_identity.client_id
   user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
   storage_account_name                = "${replace(module.local.config.project_location, "-", "")}synthmon"
-  storage_account_resource_group_name = "${module.local.config.project_location}-synthetic-monitoring-rg"
+  storage_account_resource_group_name = "${module.local.config.project}-synthetic-monitoring-rg"
   image_tag                           = var.image_tag
   application_insight_name            = "${module.local.config.project}-appinsights"
   application_insight_rg_name         = "${module.local.config.project}-monitor-rg"

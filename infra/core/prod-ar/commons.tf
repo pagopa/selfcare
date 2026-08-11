@@ -121,12 +121,18 @@ module "log_analytics" {
   law_daily_quota_gb    = local.law_daily_quota_gb
 }
 
+resource "azurerm_resource_group" "synthetic_monitoring" {
+  name     = "${local.project}-synthetic-monitoring-rg"
+  location = local.location
+  tags     = local.tags
+}
+
 module "synthetic_monitoring_storage" {
   source = "../_modules/synthetic_monitoring_storage"
 
-  project                             = "${local.prefix}-${local.env_short}-${local.location_short}"
+  project                             = "${local.project}-${local.location_short}"
   location                            = local.location
-  resource_group_name                 = "${local.prefix}-${local.env_short}-synthetic-monitoring-rg"
+  resource_group_name                 = "${local.project}-synthetic-monitoring-rg"
   private_endpoint_subnet_id          = module.network.private_endpoints_subnet_id
   virtual_network_id                  = module.network.vnet_id
   virtual_network_name                = module.network.vnet_name

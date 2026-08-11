@@ -37,3 +37,14 @@ resource "azurerm_role_assignment" "queue_contributor_admin" {
   principal_id         = data.azuread_group.adgroup_admin.object_id
 }
 
+resource "azurerm_role_assignment" "synthetic_monitoring_developers" {
+  scope                = data.azurerm_resource_group.synthetic_monitoring_storage_rg.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = data.azuread_group.adgroup_developers.object_id
+}
+
+resource "azurerm_role_assignment" "synthetic_monitoring_admin" {
+  scope                = data.azurerm_resource_group.synthetic_monitoring_storage_rg.id
+  role_definition_name = "Storage Table Data Contributor"
+  principal_id         = data.azuread_group.adgroup_admin.object_id
+}
