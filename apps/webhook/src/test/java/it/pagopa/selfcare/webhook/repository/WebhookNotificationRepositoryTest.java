@@ -423,11 +423,79 @@ class WebhookNotificationRepositoryTest {
     assertEquals(inRange.getId(), notifications.get(0).getId());
   }
 
+  @Test
+  void findOldestUnpublishedNotification_shouldReturnOldestPendingUnpublishedNotification() {
+    LocalDateTime now = LocalDateTime.now();
+    WebhookNotification oldest = persistUnpublishedNotificationWithCreatedAt(now.minusHours(2));
+    persistUnpublishedNotificationWithCreatedAt(now.minusHours(1));
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.PENDING,
+        false,
+        null,
+        false,
+        null,
+        now.minusHours(3));
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.RETRY,
+        false,
+        null,
+        false,
+        null,
+        null);
+
+    WebhookNotification notification =
+        webhookNotificationRepository.findOldestUnpublishedNotification().await().indefinitely();
+
+    assertNotNull(notification);
+    assertEquals(oldest.getId(), notification.getId());
+  }
+
+  @Test
+  void findOldestUnpublishedNotification_shouldReturnNullWhenNoEligibleNotificationExists() {
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.PENDING,
+        false,
+        null,
+        false,
+        null,
+        LocalDateTime.now());
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.RETRY,
+        false,
+        null,
+        false,
+        null,
+        null);
+
+    WebhookNotification notification =
+        webhookNotificationRepository.findOldestUnpublishedNotification().await().indefinitely();
+
+    assertNull(notification);
+  }
+
   private WebhookNotification persistNotificationWithCreatedAt(LocalDateTime createdAt) {
     WebhookNotification notification =
         persistNotification(
             new ObjectId(),
             WebhookNotification.NotificationStatus.FAILED,
+            false,
+            null,
+            false,
+            null,
+            null);
+    notification.setCreatedAt(createdAt);
+    return webhookNotificationRepository.update(notification).await().indefinitely();
+  }
+
+  private WebhookNotification persistUnpublishedNotificationWithCreatedAt(LocalDateTime createdAt) {
+    WebhookNotification notification =
+        persistNotification(
+            new ObjectId(),
+            WebhookNotification.NotificationStatus.PENDING,
             false,
             null,
             false,

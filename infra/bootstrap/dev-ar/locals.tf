@@ -189,6 +189,12 @@ locals {
       "selc-${local.env_short}-contracts-storage-rg" = [
         "Storage Blob Data Contributor"
       ],
+      "selc-${local.env_short}-webhook-storage-rg" = [
+        "Storage Queue Data Contributor"
+      ],
+      "selc-${local.env_short}-synthetic-monitoring-rg" = [
+        "Storage Table Data Contributor"
+      ],
       "selc-${local.env_short}-onboarding-fn-rg" = [
         "Storage Account Key Operator Service Role"
       ],
@@ -200,7 +206,8 @@ locals {
 
   environment_cd_roles = {
     subscription = [
-      "Contributor"
+      "Contributor",
+      "Storage Queue Data Contributor"
     ]
     resource_groups = {
       terraform-state-rg = [
@@ -209,7 +216,7 @@ locals {
       "selc-${local.env_short}-aks-rg" = [
         "Azure Kubernetes Service Cluster Admin Role"
       ],
-      "selc-${local.env_short}-cosmosdb-mongodb-rg" : [
+      "selc-${local.env_short}-cosmosdb-mongodb-rg" = [
         "PagoPA Resource Lock Contributor"
       ],
       "selc-${local.env_short}-documents-storage-rg" = [
@@ -220,6 +227,9 @@ locals {
       ],
       "selc-${local.env_short}-logs-storage-rg" = [
         "Storage Blob Data Contributor"
+      ],
+      "selc-${local.env_short}-synthetic-monitoring-rg" = [
+        "Storage Table Data Contributor"
       ],
       "selc-${local.env_short}-checkout-fe-rg" = [
         "Storage Blob Data Contributor", "Storage Account Key Operator Service Role", "CDN Endpoint Contributor"

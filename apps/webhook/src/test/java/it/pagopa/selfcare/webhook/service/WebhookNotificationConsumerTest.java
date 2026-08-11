@@ -47,6 +47,8 @@ class WebhookNotificationConsumerTest {
 
   @InjectMock WebhookRepository webhookRepository;
 
+  @InjectMock it.pagopa.selfcare.webhook.metrics.WebhookMetrics metrics;
+
   @Inject Vertx vertx;
 
   private QueueMessageItem message;
@@ -90,6 +92,7 @@ class WebhookNotificationConsumerTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
     consumer.enabled = true;
+    consumer.autoCreate = true;
     doReturn(clientBuilder).when(consumer).buildClientBuilder();
     when(clientBuilder.buildClient()).thenReturn(client);
 
@@ -98,6 +101,38 @@ class WebhookNotificationConsumerTest {
 
     // then
     verify(client).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotCreateQueueWhenAutoCreateIsDisabled() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
+    consumer.enabled = true;
+    consumer.autoCreate = false;
+    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+
+    // when
+    consumer.start(null);
+
+    // then
+    verify(client, never()).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotFailWhenQueueCreationIsUnauthorized() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
+    consumer.enabled = true;
+    consumer.autoCreate = true;
+    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+    doThrow(mock(QueueStorageException.class)).when(client).createIfNotExists();
+
+    // when / then
+    assertDoesNotThrow(() -> consumer.start(null));
   }
 
   @Test
@@ -174,6 +209,7 @@ class WebhookNotificationConsumerTest {
         .when(client)
         .receiveMessages(eq(32), eq(Duration.ofSeconds(300)), isNull(), isNull());
     consumer().enabled = true;
+    consumer().autoCreate = true;
 
     // when
     consumer().poll();
@@ -218,7 +254,7 @@ class WebhookNotificationConsumerTest {
   void processMessage_shouldDiscardMessageWithInvalidNotificationId()
       throws ReflectiveOperationException {
     // given
-    when(message.getMessageText()).thenReturn("invalid-notification-id");
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("invalid-notification-id"));
 
     // when
     invokeProcessMessage(message);
@@ -226,6 +262,7 @@ class WebhookNotificationConsumerTest {
     // then
     verify(client).deleteMessage("message-id", "pop-receipt");
     verify(notificationService, never()).processNotification(any(WebhookNotification.class));
+    verify(metrics).recordDiscarded("invalid_notification_id");
   }
 
   @Test
@@ -235,7 +272,7 @@ class WebhookNotificationConsumerTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -249,6 +286,7 @@ class WebhookNotificationConsumerTest {
     // then
     verify(notificationService, timeout(1000)).processNotification(notification);
     verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+    verify(metrics, timeout(1000)).recordClaim("queue", 1);
   }
 
   @Test
@@ -324,7 +362,7 @@ class WebhookNotificationConsumerTest {
     retryPolicy.setBackoffMultiplier(2.0);
     webhook.setRetryPolicy(retryPolicy);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -363,7 +401,7 @@ class WebhookNotificationConsumerTest {
     retryPolicy.setBackoffMultiplier(2.0);
     webhook.setRetryPolicy(retryPolicy);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -392,7 +430,7 @@ class WebhookNotificationConsumerTest {
     notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
     notification.setAttemptCount(1);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -422,7 +460,7 @@ class WebhookNotificationConsumerTest {
     notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
     notification.setAttemptCount(1);
 
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))

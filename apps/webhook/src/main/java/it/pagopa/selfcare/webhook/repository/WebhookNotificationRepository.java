@@ -161,6 +161,18 @@ public class WebhookNotificationRepository
         .asList();
   }
 
+  /**
+   * Oldest notification still waiting to be published to the Storage Queue (status PENDING,
+   * never published). Used by the outbox readiness check to detect a growing publish lag.
+   */
+  public Uni<WebhookNotification> findOldestUnpublishedNotification() {
+    Document query =
+        new Document("status", WebhookNotification.NotificationStatus.PENDING.name())
+            .append("busPublishedAt", null);
+    Document sort = new Document("createdAt", 1);
+    return find(query, sort).firstResult();
+  }
+
   public Uni<List<WebhookNotification>> findByWebhookId(String webhookId) {
     return list("webhookId", new ObjectId(webhookId));
   }

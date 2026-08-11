@@ -24,11 +24,16 @@ public class WebhookRepository implements ReactivePanacheMongoRepository<Webhook
     return find("tenantId", Sort.descending("createdAt"), tenantId).page(page, size).list();
   }
 
+  /**
+   * Returns the active webhooks of a tenant that are subscribed to the given product, either
+   * explicitly or through the {@link Webhook#ALL_PRODUCTS} wildcard.
+   */
   public Uni<List<Webhook>> findActiveWebhooksByProduct(String productId, String tenantId) {
     Document query =
         new Document()
             .append("status", Webhook.WebhookStatus.ACTIVE)
-            .append("products", productId)
+            .append(
+                "products", new Document("$in", List.of(productId, Webhook.ALL_PRODUCTS)))
             .append("tenantId", tenantId);
     return find(query).list();
   }

@@ -11,6 +11,12 @@ variable "environment" {
   description = "Naming inputs for the Storage Account hosting the webhook queue."
 }
 
+variable "location" {
+  type        = string
+  default     = "westeurope"
+  description = "Location of the resource group hosting the Storage Account."
+}
+
 variable "resource_group_name" {
   type        = string
   description = "Resource group where the storage account and Container Apps Environment identity reside."
