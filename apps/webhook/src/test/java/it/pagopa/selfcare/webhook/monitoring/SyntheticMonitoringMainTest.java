@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.webhook.monitoring;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.azure.data.tables.models.TableEntity;
 import com.sun.net.httpserver.HttpServer;
@@ -8,6 +9,7 @@ import java.net.InetSocketAddress;
 import java.net.http.HttpClient;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,6 +35,18 @@ class SyntheticMonitoringMainTest {
   }
 
   @Test
+  void parseExpectedCodes_shouldSupportAnEmptyArray() {
+    assertThat(SyntheticMonitoringMain.parseExpectedCodes("[]")).isEmpty();
+  }
+
+  @Test
+  void parseExpectedCodes_shouldRejectNonArrayValues() {
+    assertThatThrownBy(() -> SyntheticMonitoringMain.parseExpectedCodes("\"200\""))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("expectedCodes must be a JSON array");
+  }
+
+  @Test
   void execute_shouldReturnSuccessForExpectedStatus() throws Exception {
     TableEntity check = checkForStatus(204, "[\"200-299\"]");
 
@@ -54,6 +68,71 @@ class SyntheticMonitoringMainTest {
     assertThat(result.errorMessage()).isEqualTo("Unexpected HTTP status 503");
   }
 
+  @Test
+  void execute_shouldUseGetWhenMethodIsNotConfigured() throws Exception {
+    AtomicReference<String> requestMethod = new AtomicReference<>();
+    server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext(
+    "/diagnostics",
+    exchange -> {
+      requestMethod.set(exchange.getRequestMethod());
+      exchange.sendResponseHeaders(200, -1);
+      exchange.close();
+    });
+    server.start();
+    TableEntity check =
+    check(
+        "http://localhost:" + server.getAddress().getPort() + "/diagnostics",
+        "[\"200\"]",
+        Map.of());
+
+    SyntheticMonitoringMain.CheckResult result =
+    SyntheticMonitoringMain.execute(HttpClient.newHttpClient(), check);
+
+    assertThat(result.success()).isTrue();
+    assertThat(requestMethod).hasValue("GET");
+  }
+
+  @Test
+  void execute_shouldReturnFailureWhenTheRequestTimesOut() throws Exception {
+    server = HttpServer.create(new InetSocketAddress(0), 0);
+    server.createContext(
+    "/diagnostics",
+    exchange -> {
+      try {
+        Thread.sleep(100);
+        exchange.sendResponseHeaders(200, -1);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } finally {
+        exchange.close();
+      }
+    });
+    server.start();
+    TableEntity check =
+    check(
+        "http://localhost:" + server.getAddress().getPort() + "/diagnostics",
+        "[\"200\"]",
+        Map.of("durationLimit", "1"));
+
+    SyntheticMonitoringMain.CheckResult result =
+    SyntheticMonitoringMain.execute(HttpClient.newHttpClient(), check);
+
+    assertThat(result.success()).isFalse();
+    assertThat(result.errorMessage()).isNotBlank();
+  }
+
+  @Test
+  void execute_shouldRejectMissingRequiredProperties() {
+    TableEntity check =
+    new TableEntity("webhook-diagnostics", "private")
+        .setProperties(Map.of("url", "https://example.com"));
+
+    assertThatThrownBy(() -> SyntheticMonitoringMain.execute(HttpClient.newHttpClient(), check))
+    .isInstanceOf(IllegalStateException.class)
+    .hasMessage("Missing required monitoring property: expectedCodes");
+  }
+
   private TableEntity checkForStatus(int status, String expectedCodes) throws Exception {
     server = HttpServer.create(new InetSocketAddress(0), 0);
     server.createContext(
@@ -64,16 +143,17 @@ class SyntheticMonitoringMainTest {
         });
     server.start();
 
-    return new TableEntity("webhook-diagnostics", "private")
-        .setProperties(
-            Map.of(
-                "url",
-                "http://localhost:" + server.getAddress().getPort() + "/diagnostics",
-                "method",
-                "GET",
-                "expectedCodes",
-                expectedCodes,
-                "durationLimit",
-                "1000"));
+    return check(
+        "http://localhost:" + server.getAddress().getPort() + "/diagnostics",
+        expectedCodes,
+        Map.of("method", "GET", "durationLimit", "1000"));
+  }
+
+  private TableEntity check(
+      String url, String expectedCodes, Map<String, Object> additionalProperties) {
+    Map<String, Object> properties = new java.util.HashMap<>(additionalProperties);
+    properties.put("url", url);
+    properties.put("expectedCodes", expectedCodes);
+    return new TableEntity("webhook-diagnostics", "private").setProperties(properties);
   }
 }
