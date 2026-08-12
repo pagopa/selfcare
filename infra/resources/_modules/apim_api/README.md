@@ -38,6 +38,7 @@ No requirements.
 | <a name="input_external_domain"></a> [external\_domain](#input\_external\_domain) | Domain for delegation | `string` | `"pagopa.it"` | no |
 | <a name="input_openapi_path"></a> [openapi\_path](#input\_openapi\_path) | Path to the OpenAPI specification file. | `string` | n/a | yes |
 | <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | The private DNS name of the API in the API Management instance. | `string` | n/a | yes |
+| <a name="input_tenant_ids"></a> [tenant\_ids](#input\_tenant\_ids) | Allowed frontend origins and their canonical tenant identifiers. | <pre>list(object({<br/>    id     = string<br/>    origin = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

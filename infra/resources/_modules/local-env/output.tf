@@ -13,6 +13,7 @@ output "config" {
     external_domain                = local.external_domain
     apim_name                      = local.apim_name
     apim_rg                        = local.apim_rg
+    tenant_ids                     = local.tenant_frontend_origins[local.env]
     project                        = local.project
     project_location               = local.project_location
     mongo_db                       = local.mongo_db

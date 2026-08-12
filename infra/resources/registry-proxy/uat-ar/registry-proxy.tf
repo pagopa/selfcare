@@ -33,6 +33,7 @@ module "apim_api_registry_proxy" {
   dns_zone_prefix     = module.local.config.dns_zone_prefix
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
+  tenant_ids          = module.local.config.tenant_ids
 }
 
 

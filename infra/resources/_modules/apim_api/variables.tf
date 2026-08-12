@@ -52,6 +52,27 @@ variable "openapi_path" {
   description = "Path to the OpenAPI specification file."
 }
 
+variable "tenant_ids" {
+  type = list(object({
+    id     = string
+    origin = string
+  }))
+  description = "Allowed frontend origins and their canonical tenant identifiers."
+
+  validation {
+    condition     = length(var.tenant_ids) > 0 && length(distinct([for tenant in var.tenant_ids : lower(tenant.origin)])) == length(var.tenant_ids)
+    error_message = "tenant_ids must contain at least one unique origin."
+  }
+
+  validation {
+    condition = alltrue([
+      for tenant in var.tenant_ids :
+      can(regex("^https://[^/]+$", tenant.origin)) && can(regex("^[A-Z][A-Z0-9_]*$", tenant.id))
+    ])
+    error_message = "Each tenant origin must be an HTTPS origin without a path and each tenant id must be uppercase."
+  }
+}
+
 variable "api_operation_policies" {
   type = list(object({
     operation_id = string

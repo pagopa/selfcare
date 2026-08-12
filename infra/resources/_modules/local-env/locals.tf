@@ -32,6 +32,28 @@ locals {
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
+  tenant_frontend_origins = {
+    dev = [
+      { id = "AR", origin = "http://localhost:3000" },
+      { id = "AR", origin = "https://dev.selfcare.pagopa.it" },
+      { id = "AR", origin = "https://api.dev.selfcare.pagopa.it" },
+      { id = "PNPG", origin = "https://pnpg.dev.selfcare.pagopa.it" },
+      { id = "PNPG", origin = "https://api-pnpg.dev.selfcare.pagopa.it" }
+    ]
+    uat = [
+      { id = "AR", origin = "https://uat.selfcare.pagopa.it" },
+      { id = "AR", origin = "https://api.uat.selfcare.pagopa.it" },
+      { id = "PNPG", origin = "https://imprese.uat.notifichedigitali.it" },
+      { id = "PNPG", origin = "https://api-pnpg.uat.selfcare.pagopa.it" }
+    ]
+    prod = [
+      { id = "AR", origin = "https://selfcare.pagopa.it" },
+      { id = "AR", origin = "https://api.selfcare.pagopa.it" },
+      { id = "PNPG", origin = "https://imprese.notifichedigitali.it" },
+      { id = "PNPG", origin = "https://api-pnpg.selfcare.pagopa.it" }
+    ]
+  }
+
   # CosmosDB resource group and account names differ between ar and pnpg
   mongo_db = local.domain == "pnpg" ? {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-rg"
