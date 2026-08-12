@@ -13,6 +13,7 @@ import java.util.Optional;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.bson.codecs.pojo.annotations.BsonId;
+import org.eclipse.microprofile.config.ConfigProvider;
 
 /**
  * Entity representing user claims and permissions.
@@ -79,7 +80,7 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
    * <p><b>Migration phase:</b> the predicate matches the current tenant <em>or</em> documents with
    * no tenant at all. Documents written before the discriminator existed carry none, and a strict
    * equality would make every one of them invisible to both tenants. Once the backfill has tagged
-   * every document the {@code or tenantId is null} branch MUST be dropped.
+   * every document {@code selfcare.tenant.strict-data-isolation} drops that branch.
    *
    * <p>When no tenant is resolvable the query is left unscoped rather than made unsatisfiable. That
    * is the pre-multitenant behaviour for callers outside an active request and is a migration-phase
@@ -91,7 +92,24 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
       return query;
     }
     params.add(tenantId.get());
-    return query + " and (tenantId = ?" + params.size() + " or tenantId is null)";
+    return strictTenantIsolation()
+        ? query + " and tenantId = ?" + params.size()
+        : query + " and (tenantId = ?" + params.size() + " or tenantId is null)";
+  }
+
+  /**
+   * Whether untagged documents are still treated as belonging to the current tenant.
+   *
+   * <p>Configuration rather than a code constant because the backfill runs at a different time in
+   * each environment; see {@code Step_1/EPIC.md} sub-tasks 2 and 10. Read through the static config
+   * API for the same reason the tenant provider is read through {@code CDI.current()}: this
+   * predicate is built from a static context. Defaults to the lenient behaviour, and both the flag
+   * and the {@code or tenantId is null} branch must be deleted once every environment runs strict.
+   */
+  private static boolean strictTenantIsolation() {
+    return ConfigProvider.getConfig()
+        .getOptionalValue("selfcare.tenant.strict-data-isolation", Boolean.class)
+        .orElse(false);
   }
 
   private static Object[] args(List<Object> params) {

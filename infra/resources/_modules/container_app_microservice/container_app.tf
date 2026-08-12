@@ -59,7 +59,7 @@ resource "azurerm_container_app" "container_app" {
 
       # Environment variables from app_settings
       dynamic "env" {
-        for_each = var.app_settings
+        for_each = local.app_settings
         content {
           name  = env.value.name
           value = env.value.value

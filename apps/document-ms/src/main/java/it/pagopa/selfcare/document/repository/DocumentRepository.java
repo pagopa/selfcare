@@ -8,6 +8,7 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.CurrentTenantProvider;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -40,15 +41,31 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
     CurrentTenantProvider currentTenantProvider;
 
     /**
+     * Whether untagged documents are still treated as belonging to the current tenant.
+     *
+     * <p>It is configuration rather than a code constant because the backfill runs at a different
+     * time in each environment: a hardcoded switch would mean the strict build cannot be promoted
+     * to PROD until PROD has been backfilled, holding back every unrelated change behind a data
+     * migration. As a flag, each environment turns isolation strict the moment its own
+     * {@code --verify} comes back clean, and can revert without a deployment.
+     *
+     * <p>It defaults to the lenient behaviour so that deploying this change alone changes nothing.
+     * It is temporary: once every environment runs strict, the flag and the {@code or tenantId is
+     * null} branch must both be deleted (Step_1/EPIC.md sub-tasks 2 and 10).
+     */
+    @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+    boolean strictTenantIsolation;
+
+    /**
      * Appends the tenant predicate to a positional-parameter query, adding the tenant as the next
      * positional argument.
      *
      * <p><b>Migration phase:</b> the predicate matches the current tenant <em>or</em> documents with
      * no tenant at all. Documents written before the discriminator existed carry none, and a strict
      * equality would make every one of them invisible to both tenants - turning existing reads into
-     * blanket "not found" the moment this shipped. Once the backfill has tagged every document the
-     * {@code or tenantId is null} branch MUST be dropped, at which point the filter becomes strictly
-     * fail-closed.
+     * blanket "not found" the moment this shipped. Once the backfill has tagged every document
+     * {@code selfcare.tenant.strict-data-isolation} drops that branch, at which point the filter
+     * becomes strictly fail-closed.
      *
      * <p>When no tenant is resolvable the query is left unscoped rather than made unsatisfiable.
      * That is the pre-multitenant behaviour and it keeps callers that legitimately run outside a
@@ -60,7 +77,9 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
             return query;
         }
         params.add(tenantId.get());
-        return query + " and (tenantId = ?" + params.size() + " or tenantId is null)";
+        return strictTenantIsolation
+                ? query + " and tenantId = ?" + params.size()
+                : query + " and (tenantId = ?" + params.size() + " or tenantId is null)";
     }
 
     private static Object[] args(List<Object> params) {
@@ -129,6 +148,12 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
             return count(
                 "{ 'onboardingId': ?1, 'type': ?2, 'storageOrigin': ?3, 'attachmentName': { '$regex': ?4 } }",
                 onboardingId, ATTACHMENT.name(), USER.name(), nameRegex);
+        }
+        if (strictTenantIsolation) {
+            return count(
+                "{ 'onboardingId': ?1, 'type': ?2, 'storageOrigin': ?3, 'attachmentName': { '$regex': ?4 },"
+                    + " 'tenantId': ?5 }",
+                onboardingId, ATTACHMENT.name(), USER.name(), nameRegex, tenantId.get());
         }
         return count(
             "{ 'onboardingId': ?1, 'type': ?2, 'storageOrigin': ?3, 'attachmentName': { '$regex': ?4 },"

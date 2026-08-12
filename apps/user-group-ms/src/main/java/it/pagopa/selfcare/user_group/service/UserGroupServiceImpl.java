@@ -55,17 +55,29 @@ public class UserGroupServiceImpl implements UserGroupService {
     private final MongoTemplate mongoTemplate;
     private final AuditorAware<String> auditorAware;
     private final CurrentTenantProvider currentTenantProvider;
+
+    /**
+     * Whether untagged documents are still treated as belonging to the current tenant.
+     *
+     * <p>Configuration rather than a code constant because the backfill runs at a different time in
+     * each environment, so the strict build must be promotable before every environment has been
+     * migrated (Step_1/EPIC.md sub-tasks 2 and 10). Defaults to the lenient behaviour; both the flag
+     * and the {@code tenantId is null} branch must be deleted once every environment runs strict.
+     */
+    private final boolean strictTenantIsolation;
     private static final String COULD_NOT_UPDATE_MESSAGE = "Couldn't update resource";
 
     @Autowired
     UserGroupServiceImpl(@Value("${user-group.allowed.sorting.parameters}") String[] allowedSortingParams,
                          UserGroupRepository repository, MongoTemplate mongoTemplate, AuditorAware<String> auditorAware,
-                         CurrentTenantProvider currentTenantProvider) {
+                         CurrentTenantProvider currentTenantProvider,
+                         @Value("${selfcare.tenant.strict-data-isolation:false}") boolean strictTenantIsolation) {
         this.allowedSortingParams = Arrays.asList(allowedSortingParams);
         this.repository = repository;
         this.mongoTemplate = mongoTemplate;
         this.auditorAware = auditorAware;
         this.currentTenantProvider = currentTenantProvider;
+        this.strictTenantIsolation = strictTenantIsolation;
     }
 
     @Override
@@ -475,7 +487,8 @@ public class UserGroupServiceImpl implements UserGroupService {
      * Applies tenant scoping to every MongoDB query issued by this service's data-access
      * chokepoint. During the migration, legacy documents without {@code tenantId} must stay visible
      * to avoid converting all existing reads into "not found"; the {@code tenantId is null} branch
-     * MUST be dropped once the backfill has tagged all user groups.
+     * is dropped by {@code selfcare.tenant.strict-data-isolation} once the backfill has tagged all
+     * user groups.
      *
      * <p>If no request tenant is resolvable (scheduled work, async threads, startup tasks), queries
      * are deliberately left unscoped as a migration-phase concession preserving pre-multitenant
@@ -483,9 +496,11 @@ public class UserGroupServiceImpl implements UserGroupService {
      */
     private Query tenantScoped(Query query) {
         currentTenantId()
-                .ifPresent(tenantId -> query.addCriteria(new Criteria().orOperator(
-                        Criteria.where(UserGroupEntity.Fields.tenantId).is(tenantId),
-                        Criteria.where(UserGroupEntity.Fields.tenantId).is(null))));
+                .ifPresent(tenantId -> query.addCriteria(strictTenantIsolation
+                        ? Criteria.where(UserGroupEntity.Fields.tenantId).is(tenantId)
+                        : new Criteria().orOperator(
+                                Criteria.where(UserGroupEntity.Fields.tenantId).is(tenantId),
+                                Criteria.where(UserGroupEntity.Fields.tenantId).is(null))));
         return query;
     }
 

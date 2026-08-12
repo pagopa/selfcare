@@ -31,12 +31,12 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
 }
 
 data "azurerm_user_assigned_identity" "users_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
 data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
@@ -182,17 +182,20 @@ locals {
   ]
 
   secrets_names_user_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                                     = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"                          = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                              = "user-registry-api-key"
-    "AWS-SES-ACCESS-KEY-ID"                              = "aws-ses-access-key-id"
-    "AWS-SES-SECRET-ACCESS-KEY"                          = "aws-ses-secret-access-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
+    "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
   }
 }
 
 module "container_app_user_ms" {
   source = "../../_modules/container_app_microservice"
+
+  tenant_data_isolation_json   = module.local.config.tenant_data_isolation_json
+  strict_tenant_data_isolation = module.local.config.strict_tenant_data_isolation
 
   env_short                      = module.local.config.env_short
   resource_group_name            = module.local.config.ca_resource_group_name

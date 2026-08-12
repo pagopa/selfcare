@@ -20,6 +20,7 @@ import org.bson.Document;
 import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -46,6 +47,17 @@ public class QueryUtils {
     CurrentTenantProvider currentTenantProvider;
 
     /**
+     * Whether untagged documents are still treated as belonging to the current tenant.
+     *
+     * <p>Configuration rather than a code constant because the backfill runs at a different time in
+     * each environment, so the strict build must be promotable before every environment has been
+     * migrated (Step_1/EPIC.md sub-tasks 2 and 10). Defaults to the lenient behaviour; both the flag
+     * and the {@code tenantId is null} branch must be deleted once every environment runs strict.
+     */
+    @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+    boolean strictTenantIsolation;
+
+    /**
      * Restricts a query to the tenant validated for the current request.
      *
      * <p>Applied here, in the single place every filter-map-driven query is assembled, rather than at
@@ -55,8 +67,9 @@ public class QueryUtils {
      * <p><b>Migration phase:</b> the predicate matches the current tenant <em>or</em> documents with no
      * tenant at all. Records written before the discriminator existed carry none, and strict equality
      * would make every one of them invisible - turning existing reads into blanket "not found" the
-     * moment this shipped. Once the backfill has tagged every document the {@code tenantId is null}
-     * branch MUST be dropped, at which point the filter becomes strictly fail-closed.
+     * moment this shipped. Once the backfill has tagged every document {@code
+     * selfcare.tenant.strict-data-isolation} drops that branch, at which point the filter becomes
+     * strictly fail-closed.
      *
      * <p>When no tenant is resolvable - a call made outside an active request, such as the event
      * consumers and schedulers in this service - the query is left unscoped rather than made
@@ -66,9 +79,11 @@ public class QueryUtils {
     private void addTenantFilter(List<Bson> bsonList) {
         Optional<String> tenantId = currentTenantProvider.currentTenantId();
         tenantId.ifPresent(tenant -> bsonList.add(
-                Filters.or(
-                        Filters.eq(TENANT_ID_FIELD, tenant),
-                        Filters.eq(TENANT_ID_FIELD, null))));
+                strictTenantIsolation
+                        ? Filters.eq(TENANT_ID_FIELD, tenant)
+                        : Filters.or(
+                                Filters.eq(TENANT_ID_FIELD, tenant),
+                                Filters.eq(TENANT_ID_FIELD, null))));
     }
 
     /**
