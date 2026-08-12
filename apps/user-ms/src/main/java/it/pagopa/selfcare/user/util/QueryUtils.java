@@ -4,12 +4,14 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
+import it.pagopa.selfcare.user.conf.CurrentTenantProvider;
 import it.pagopa.selfcare.user.constant.SortEnum;
 import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
 import it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.bson.BsonDocument;
@@ -24,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
@@ -32,6 +35,41 @@ import static java.util.stream.Collectors.groupingBy;
 @RequiredArgsConstructor(access = AccessLevel.NONE)
 @ApplicationScoped
 public class QueryUtils {
+
+    /**
+     * Field carrying the owning tenant on {@code userInstitutions} and {@code userInfo}
+     * (Step_0 sub-task 6).
+     */
+    private static final String TENANT_ID_FIELD = "tenantId";
+
+    @Inject
+    CurrentTenantProvider currentTenantProvider;
+
+    /**
+     * Restricts a query to the tenant validated for the current request.
+     *
+     * <p>Applied here, in the single place every filter-map-driven query is assembled, rather than at
+     * each call site: with a per-call-site opt-in, one forgotten call site is a cross-tenant read, and
+     * every query added later would start out unscoped.
+     *
+     * <p><b>Migration phase:</b> the predicate matches the current tenant <em>or</em> documents with no
+     * tenant at all. Records written before the discriminator existed carry none, and strict equality
+     * would make every one of them invisible - turning existing reads into blanket "not found" the
+     * moment this shipped. Once the backfill has tagged every document the {@code tenantId is null}
+     * branch MUST be dropped, at which point the filter becomes strictly fail-closed.
+     *
+     * <p>When no tenant is resolvable - a call made outside an active request, such as the event
+     * consumers and schedulers in this service - the query is left unscoped rather than made
+     * unsatisfiable. That is the pre-multitenant behaviour; it is a migration-phase concession, not a
+     * security boundary.
+     */
+    private void addTenantFilter(List<Bson> bsonList) {
+        Optional<String> tenantId = currentTenantProvider.currentTenantId();
+        tenantId.ifPresent(tenant -> bsonList.add(
+                Filters.or(
+                        Filters.eq(TENANT_ID_FIELD, tenant),
+                        Filters.eq(TENANT_ID_FIELD, null))));
+    }
 
     /**
      * The buildUpdateDocument function takes a map of parameters and constructs an update document
@@ -55,15 +93,19 @@ public class QueryUtils {
      * the query document. If there are multiple entries in the map, then they are combined using logical ANDs.
      */
     public Document buildQueryDocument(Map<String, Object> parameters, String collection) {
-        if (!parameters.isEmpty()) {
-            return bsonToDocument(Filters.and(constructBsonFilter(parameters, collection)));
-        } else {
-            return new Document();
-        }
+        List<Bson> bsonList = parameters.isEmpty()
+                ? new ArrayList<>()
+                : new ArrayList<>(constructBsonFilter(parameters, collection));
+        addTenantFilter(bsonList);
+        // An unfiltered, untenanted query must stay an empty document: Filters.and() of nothing is
+        // not a valid Mongo query.
+        return bsonList.isEmpty() ? new Document() : bsonToDocument(Filters.and(bsonList));
     }
-    public Document buildQueryDocumentByDate(Map<String, Object> parameters, String collection, OffsetDateTime fromDate) {
-            return bsonToDocument(Filters.and(constructBsonWithDateFilter(parameters, collection, fromDate)));
 
+    public Document buildQueryDocumentByDate(Map<String, Object> parameters, String collection, OffsetDateTime fromDate) {
+        List<Bson> bsonList = new ArrayList<>(constructBsonWithDateFilter(parameters, collection, fromDate));
+        addTenantFilter(bsonList);
+        return bsonList.isEmpty() ? new Document() : bsonToDocument(Filters.and(bsonList));
     }
 
     /**

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 public class OtpUtils {
@@ -64,7 +65,8 @@ public class OtpUtils {
    * @param sameIdp: A boolean indicating if a user has changed its IdP since last login
    * @return a Boolean indicating if this user requires a brand new OtpFlow
    */
-  public static Uni<Boolean> isNewOtpFlowRequired(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isNewOtpFlowRequired(
+      OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit, Supplier<Uni<Long>> otpCountTodayDistinctUsers) {
 
     if (Boolean.FALSE.equals(sameIdp)) {
       boolean isPendingAndNotExpired = lastOtpFlow.getStatus().equals(OtpStatus.PENDING) && lastOtpFlow.getExpiresAt().isAfter(OffsetDateTime.now());
@@ -80,10 +82,11 @@ public class OtpUtils {
       return Uni.createFrom().item(true);
     }
 
-    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, limit);
+    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, limit, otpCountTodayDistinctUsers);
   }
 
-  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(OtpFlow lastOtpFlow, Integer limit) {
+  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(
+      OtpFlow lastOtpFlow, Integer limit, Supplier<Uni<Long>> otpCountTodayDistinctUsers) {
 
       boolean isCompleted = lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED);
       boolean isOlderThanSixMonths = lastOtpFlow.getCreatedAt().isBefore(OffsetDateTime.now().minusMonths(6));
@@ -92,17 +95,18 @@ public class OtpUtils {
         return Uni.createFrom().item(false);
       }
 
-      return isPeriodicOtpRequired(limit);
+      return isPeriodicOtpRequired(limit, otpCountTodayDistinctUsers);
     }
 
-  public static Uni<Boolean> isOtpRequiredWithMissingOtpFlow(Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isOtpRequiredWithMissingOtpFlow(
+      Boolean sameIdp, Integer limit, Supplier<Uni<Long>> otpCountTodayDistinctUsers) {
     if (Boolean.FALSE.equals(sameIdp)) {
       return Uni.createFrom().item(true);
     }
-    return isPeriodicOtpRequired(limit);
+    return isPeriodicOtpRequired(limit, otpCountTodayDistinctUsers);
   }
 
-  public static Uni<Boolean> isPeriodicOtpRequired(Integer limit) {
+  public static Uni<Boolean> isPeriodicOtpRequired(Integer limit, Supplier<Uni<Long>> otpCountTodayDistinctUsers) {
     if (limit == 0) {
       return Uni.createFrom().item(false);
     }
@@ -111,26 +115,11 @@ public class OtpUtils {
       return Uni.createFrom().item(true);
     }
 
-    return otpCountTodayDistinctUsers()
+    return otpCountTodayDistinctUsers.get()
             .map(count ->{
               log.info("OTP count is: {}", count);
               return count < limit;
             });
-  }
-
-  private static Uni<Long> otpCountTodayDistinctUsers() {
-
-    OffsetDateTime now = OffsetDateTime.now();
-    OffsetDateTime startOfDay = now.toLocalDate()
-            .atStartOfDay()
-            .atOffset(now.getOffset());
-
-    return OtpFlow.<OtpFlow>find("createdAt >= ?1", startOfDay.toInstant())
-            .list()
-            .map(list -> list.stream()
-                    .map(OtpFlow::getUserId)
-                    .distinct()
-                    .count());
   }
 
 }

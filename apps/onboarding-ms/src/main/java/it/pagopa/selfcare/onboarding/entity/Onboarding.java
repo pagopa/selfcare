@@ -51,6 +51,13 @@ public class Onboarding extends ReactivePanacheMongoEntityBase {
 
     private UserRequester userRequester;
 
+    /**
+     * Tenant that owns this onboarding (SELC-7.2). Written from the validated request tenant, so a
+     * shared database can be filtered per tenant. Null on documents created before the multitenant
+     * rollout; see OnboardingTenantFilter for how those are handled during migration.
+     */
+    private String tenantId;
+
     @BsonIgnore
     private Boolean skipVerifyLegal;
 }

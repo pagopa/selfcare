@@ -59,6 +59,7 @@ class InstitutionSendMailScheduledServiceImplTest {
         final String institutionId = "institutionId";
         final List<String> productIds = List.of("prod-1", "prod-2");
         final String digitalAddress = "test@test.com";
+        final String tenantId = "AR";
 
         PanacheMock.mock(MailNotification.class);
         ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
@@ -66,7 +67,7 @@ class InstitutionSendMailScheduledServiceImplTest {
         when(query.page(0, querySize)).thenReturn(query);
         when(query.hasNextPage()).thenReturn(Uni.createFrom().item(false));
         when(query.firstResult()).thenReturn(Uni.createFrom().item(getMailNotification(institutionId, digitalAddress,
-                productIds, 1, Instant.now().minus(60, ChronoUnit.DAYS), Instant.now().minus(60, ChronoUnit.DAYS))));
+                productIds, 1, Instant.now().minus(60, ChronoUnit.DAYS), Instant.now().minus(60, ChronoUnit.DAYS), tenantId)));
 
         final Product product1 = new Product();
         product1.setTitle("product-title-1");
@@ -92,6 +93,7 @@ class InstitutionSendMailScheduledServiceImplTest {
 
         final Map<String, String> expectedMailParameters = getExpectedMailParameters(
                 institutionId,
+                tenantId,
                 "Utenti aggiunti questo mese: <ul><li>2 utenti per il prodotto product-title-1</li><li>1 utenti per il prodotto product-title-2</li></ul>",
                 "Utenti rimossi questo mese: <ul><li>1 utenti per il prodotto product-title-1</li></ul>"
         );
@@ -225,6 +227,11 @@ class InstitutionSendMailScheduledServiceImplTest {
 
     private MailNotification getMailNotification(String institutionId, String digitalAddress, List<String> productIds,
                                                  Integer moduleDayOfTheEpoch, Instant createdAt, Instant updatedAt) {
+        return getMailNotification(institutionId, digitalAddress, productIds, moduleDayOfTheEpoch, createdAt, updatedAt, null);
+    }
+
+    private MailNotification getMailNotification(String institutionId, String digitalAddress, List<String> productIds,
+                                                 Integer moduleDayOfTheEpoch, Instant createdAt, Instant updatedAt, String tenantId) {
         final MailNotification mailNotification = new MailNotification();
         mailNotification.setInstitutionId(institutionId);
         mailNotification.setDigitalAddress(digitalAddress);
@@ -232,6 +239,7 @@ class InstitutionSendMailScheduledServiceImplTest {
         mailNotification.setModuleDayOfTheEpoch(moduleDayOfTheEpoch);
         mailNotification.setCreatedAt(createdAt);
         mailNotification.setUpdatedAt(updatedAt);
+        mailNotification.setTenantId(tenantId);
         return mailNotification;
     }
 
@@ -252,9 +260,10 @@ class InstitutionSendMailScheduledServiceImplTest {
         return response;
     }
 
-    private Map<String, String> getExpectedMailParameters(String institutionId, String addedUsersList, String removedUsersList) {
+    private Map<String, String> getExpectedMailParameters(String institutionId, String tenantId, String addedUsersList, String removedUsersList) {
         final Map<String, String> expectedMailParameters = new HashMap<>();
         expectedMailParameters.put("id_institution", institutionId);
+        expectedMailParameters.put("tenant_id", tenantId);
         expectedMailParameters.put("added_users_list", addedUsersList);
         expectedMailParameters.put("removed_users_list", removedUsersList);
         return expectedMailParameters;

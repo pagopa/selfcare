@@ -27,6 +27,9 @@ public class InstitutionServiceDefault implements InstitutionService {
     @Inject
     private final InstitutionApi institutionApi;
 
+    @Inject
+    QueryUtils queryUtils;
+
     public InstitutionServiceDefault(@RestClient InstitutionApi institutionApi) {
         this.institutionApi = institutionApi;
     }
@@ -58,7 +61,7 @@ public class InstitutionServiceDefault implements InstitutionService {
         }
         Map<String, Object> queryParameterMap = new HashMap<>();
         queryParameterMap.put(INSTITUTION_ID, institutionIds);
-        Document query = QueryUtils.buildQuery(queryParameterMap);
+        Document query = queryUtils.buildQuery(queryParameterMap);
         return getDistinctOnboardings(query).onItem().transform(onboarding -> {
             InstitutionResponse institutionResponse = new InstitutionResponse();
             institutionResponse.setId(onboarding.getInstitution().getId());

@@ -19,6 +19,7 @@ import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.document.service.CurrentTenantProvider;
 import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
@@ -51,6 +52,9 @@ public class DocumentServiceImpl implements DocumentService {
     @Inject
     SignatureService signatureService;
 
+    @Inject
+    CurrentTenantProvider currentTenantProvider;
+
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
                                DocumentMsTelemetryService telemetryService,
                                StorageRegistry storageRegistry,
@@ -64,7 +68,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Uni<Document> getDocumentById(String documentId) {
-        return documentRepository.findById(documentId)
+        return documentRepository.findDocumentById(documentId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
     }
 
@@ -293,6 +297,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setRootOnboardingId(request.getOnboardingId());
         document.setType(INSTITUTION);
         document.setStorageOrigin(StorageOrigin.SYSTEM);
+        applyCurrentTenant(document);
 
         return documentRepository.persist(document)
                 .replaceWith(document)
@@ -315,6 +320,24 @@ public class DocumentServiceImpl implements DocumentService {
                 });
     }
 
+    /**
+     * Step_1 SELC-8.2: tags the document with the tenant already validated for the current request.
+     *
+     * <p>Service-to-service callers now forward the tenant ({@code onboarding-ms} propagates the
+     * validated tenant, {@code onboarding-functions} mints a token carrying it), so in practice every
+     * new document is tagged. A document is still stored untagged rather than rejected when no tenant
+     * is resolvable, because untagged documents remain readable by every tenant during the migration
+     * phase; refusing the write instead would turn a propagation gap into data loss. Tightening this
+     * to fail-closed requires the backfill to land first.
+     */
+    private void applyCurrentTenant(Document document) {
+        currentTenantProvider.currentTenantId().ifPresentOrElse(
+                document::setTenantId,
+                () -> log.warn("No tenant resolved while persisting document for onboardingId={}; "
+                        + "document will be stored untagged (Step_1 SELC-8 migration phase)",
+                        sanitize(document.getOnboardingId())));
+    }
+
     private Document buildDocument(DocumentBuilderRequest request, String digest) {
         log.debug("Creating Document for onboarding {} ...", sanitize(request.getOnboardingId()));
 
@@ -332,6 +355,7 @@ public class DocumentServiceImpl implements DocumentService {
         document.setCreatedAt(LocalDateTime.now());
         document.setUpdatedAt(LocalDateTime.now());
         document.setStorageOrigin(StorageOrigin.SYSTEM);
+        applyCurrentTenant(document);
         setContractFileName(request, document);
 
         switch (request.getDocumentType()) {

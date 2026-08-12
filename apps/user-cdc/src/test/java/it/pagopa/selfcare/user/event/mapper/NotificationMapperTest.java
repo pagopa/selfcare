@@ -1,9 +1,14 @@
 package it.pagopa.selfcare.user.event.mapper;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.user.event.entity.UserInstitution;
+import it.pagopa.selfcare.user.event.model.TenantAwareFdUserNotificationToSend;
+import it.pagopa.selfcare.user.event.model.TenantAwareUserNotificationToSend;
+import it.pagopa.selfcare.user.model.NotificationUserType;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserToNotify;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.user_registry_json.model.*;
 
@@ -15,6 +20,52 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 class NotificationMapperTest {
+
+    @Test
+    void toUserNotificationToSend_shouldCarryTenantIdFromUserInstitution() {
+        UserInstitution userInstitution = tenantAwareUserInstitution("PNPG");
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("prod-pn");
+        onboardedProduct.setProductRole("Admin");
+
+        TenantAwareUserNotificationToSend result = new NotificationMapperImpl()
+                .toUserNotificationToSend(userInstitution, onboardedProduct, getUserResource());
+
+        assertEquals("PNPG", result.getTenantId());
+    }
+
+    @Test
+    void toUserNotificationToSend_shouldLeaveTenantIdNullForLegacyRecords() {
+        UserInstitution userInstitution = tenantAwareUserInstitution(null);
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("prod-pn");
+
+        TenantAwareUserNotificationToSend result = new NotificationMapperImpl()
+                .toUserNotificationToSend(userInstitution, onboardedProduct, getUserResource());
+
+        assertNull(result.getTenantId());
+    }
+
+    @Test
+    void toFdUserNotificationToSend_shouldCarryTenantIdFromUserInstitution() {
+        UserInstitution userInstitution = tenantAwareUserInstitution("SELFCARE");
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId("prod-pn");
+
+        TenantAwareFdUserNotificationToSend result = new NotificationMapperImpl()
+                .toFdUserNotificationToSend(userInstitution, onboardedProduct, getUserResource(), NotificationUserType.ACTIVE_USER);
+
+        assertEquals("SELFCARE", result.getTenantId());
+    }
+
+    private UserInstitution tenantAwareUserInstitution(String tenantId) {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(new ObjectId());
+        userInstitution.setUserId("userId");
+        userInstitution.setInstitutionId("institutionId");
+        userInstitution.setTenantId(tenantId);
+        return userInstitution;
+    }
 
     @Test
     void mapUser_withValidData_shouldMapFieldsCorrectly() {

@@ -20,7 +20,8 @@
                     name = (string)context.Subscription.Name;
                 }
 
-                var payload = new { name, exp, uid, aud, iss , iat};
+                var tenant_id = "AR";
+                var payload = new { name, exp, uid, aud, iss, iat, tenant_id };
                 var jwtPayloadBase64UrlEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload))).Replace("/", "_").Replace("+", "-"). Replace("=", "");
 
                 // 3) Construct the Base64Url-encoded signature
@@ -40,6 +41,9 @@
         </set-header>
         <set-header name="Authorization" exists-action="override">
             <value>@((string)context.Variables["jwt"])</value>
+        </set-header>
+        <set-header name="X-Tenant-Id" exists-action="override">
+            <value>AR</value>
         </set-header>
         <set-backend-service base-url="${MS_BACKEND_URL}"/>
     </inbound>

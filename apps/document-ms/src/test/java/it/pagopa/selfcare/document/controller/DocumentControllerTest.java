@@ -3,6 +3,8 @@ package it.pagopa.selfcare.document.controller;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.security.TestSecurity;
+import io.quarkus.test.security.jwt.Claim;
+import io.quarkus.test.security.jwt.JwtSecurity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
@@ -14,6 +16,7 @@ import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
+import it.pagopa.selfcare.security.tenant.TenantConstants;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -43,6 +46,12 @@ class DocumentControllerTest {
   @InjectMock DocumentMapper documentMapper;
 
   @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(
+      claims = {
+        @Claim(key = "iss", value = "PAGOPA"),
+        @Claim(key = TenantConstants.TENANT_CLAIM, value = "AR")
+      })
   void getDocumentByOnboardingId_shouldReturnDocument_whenFound() {
     Document document = new Document();
     document.setId(DOCUMENT_ID);
@@ -56,6 +65,7 @@ class DocumentControllerTest {
     when(documentMapper.toResponse(document)).thenReturn(response);
 
     given()
+        .header(TenantConstants.TENANT_HEADER, "AR")
         .when()
         .get("/v1/documents/onboarding/" + ONBOARDING_ID)
         .then()
@@ -295,11 +305,18 @@ class DocumentControllerTest {
   }
 
   @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(
+      claims = {
+        @Claim(key = "iss", value = "PAGOPA"),
+        @Claim(key = TenantConstants.TENANT_CLAIM, value = "AR")
+      })
   void getDocumentByOnboardingId_shouldReturnInternalServerError_whenServiceFails() {
     when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
+        .header(TenantConstants.TENANT_HEADER, "AR")
         .when()
         .get("/v1/documents/onboarding/" + ONBOARDING_ID)
         .then()

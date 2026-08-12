@@ -47,24 +47,24 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
+                        "fiscalNumber",
                         "TINIT-FISCALCODE",
                         "name",
                         "name",
-                        "family_name",
+                        "familyName",
                         "Doe")));
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(userClaims));
 
-    when(otpFlowService.handleOtpFlow(userClaims))
+    when(otpFlowService.handleOtpFlow(userClaims, "AR"))
         .thenReturn(Uni.createFrom().item(Optional.empty()));
 
     when(sessionService.generateSessionToken(userClaims))
         .thenReturn(Uni.createFrom().item("sessionToken"));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
@@ -81,17 +81,17 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
+                        "fiscalNumber",
                         "TINIT-FISCALCODE",
                         "name",
                         "name",
-                        "family_name",
+                        "familyName",
                         "Doe")));
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(userClaims));
 
-    when(otpFlowService.handleOtpFlow(any()))
+    when(otpFlowService.handleOtpFlow(any(), anyString()))
         .thenReturn(
             Uni.createFrom()
                 .item(
@@ -103,7 +103,7 @@ public class OidcServiceTest {
 
     var response =
         oidcService
-            .exchange("authCode", "redirectUri")
+            .exchange("authCode", "redirectUri", "AR")
             .subscribe()
             .withSubscriber(UniAssertSubscriber.create())
             .assertCompleted()
@@ -119,7 +119,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -134,7 +134,7 @@ public class OidcServiceTest {
             Uni.createFrom().failure(new WebApplicationException(Response.status(403).build())));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -149,7 +149,7 @@ public class OidcServiceTest {
             Uni.createFrom().failure(new WebApplicationException(Response.status(404).build())));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -165,7 +165,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception("Error")));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -188,7 +188,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -209,11 +209,11 @@ public class OidcServiceTest {
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().fiscalCode("").build()));
-    when(otpFlowService.handleOtpFlow(any(UserClaims.class)))
+    when(otpFlowService.handleOtpFlow(any(UserClaims.class), anyString()))
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
@@ -238,7 +238,7 @@ public class OidcServiceTest {
         .thenReturn(Uni.createFrom().failure(new Exception(exceptionDesc)));
 
     oidcService
-        .exchange("authCode", "redirectUri")
+        .exchange("authCode", "redirectUri", "AR")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()

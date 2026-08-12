@@ -55,4 +55,7 @@ public class Product {
 
   private List<ManagingInstitution> managingInstitutions;
 
+  /** Declares whether this product's data lives in the shared database or a dedicated one. */
+  private DataIsolationConfig dataIsolation;
+
 }

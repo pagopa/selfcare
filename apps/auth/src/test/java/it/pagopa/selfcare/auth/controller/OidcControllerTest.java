@@ -28,12 +28,13 @@ class OidcControllerTest {
   void exchangeWithAuthCode() {
     JsonObject request =
         Json.createObjectBuilder().add("code", "code").add("redirectUri", "redirect").build();
-    when(oidcService.exchange(anyString(), anyString()))
+    when(oidcService.exchange(anyString(), anyString(), anyString()))
         .thenReturn(
             Uni.createFrom()
                 .item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
     given()
         .body(request.toString())
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/exchange")
@@ -46,12 +47,13 @@ class OidcControllerTest {
   void badRequestWithMalformedInput() {
     JsonObject jsonObject = Json.createObjectBuilder().add("code", "code").build();
 
-    when(oidcService.exchange(anyString(), anyString()))
+    when(oidcService.exchange(anyString(), anyString(), anyString()))
         .thenReturn(
             Uni.createFrom()
                 .item(OidcExchangeTokenResponse.builder().sessionToken("token").build()));
     given()
         .body(jsonObject.toString())
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/exchange")
@@ -67,10 +69,11 @@ class OidcControllerTest {
             .add("redirectUri", "redirect")
             .build();
 
-    when(oidcService.exchange(anyString(), anyString()))
+    when(oidcService.exchange(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new ForbiddenException("Forbidden")));
     given()
         .body(request.toString())
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/exchange")
@@ -86,10 +89,11 @@ class OidcControllerTest {
             .add("redirectUri", "redirect")
             .build();
 
-    when(oidcService.exchange(anyString(), anyString()))
+    when(oidcService.exchange(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Not Found")));
     given()
         .body(request.toString())
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/exchange")
@@ -105,10 +109,11 @@ class OidcControllerTest {
             .add("redirectUri", "redirect")
             .build();
 
-    when(oidcService.exchange(anyString(), anyString()))
+    when(oidcService.exchange(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new InternalException("Internal error")));
     given()
         .body(request.toString())
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/exchange")

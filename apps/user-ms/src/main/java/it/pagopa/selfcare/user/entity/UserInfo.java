@@ -19,4 +19,10 @@ public class UserInfo extends ReactivePanacheMongoEntityBase {
     private String userId;
     private List<UserInstitutionRole> institutions;
 
+    /**
+     * Tenant that owns this record (Step_0 sub-task 6). Null on documents written before the
+     * discriminator existed; those stay visible to both tenants until the backfill has run.
+     */
+    private String tenantId;
+
 }

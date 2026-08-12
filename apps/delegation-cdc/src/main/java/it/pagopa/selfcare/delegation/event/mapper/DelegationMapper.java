@@ -28,6 +28,7 @@ public interface DelegationMapper {
         @Mapping(target = "updatedAt", source = "delegationPT.updatedAt")
         @Mapping(target = "closedAt", source = "delegationPT.closedAt")
         @Mapping(target = "isTest", source = "delegationPT.isTest")
+        @Mapping(target = "tenantId", source = "delegationPT.tenantId")
         DelegationsEntity toDelegationAggregatePT(DelegationsEntity delegationAggregate, DelegationsEntity delegationPT);
 
         @Mapping(target = "eventType", expression = "java(toEventType(delegationEntity.getUpdatedAt(), delegationEntity.getClosedAt()))")

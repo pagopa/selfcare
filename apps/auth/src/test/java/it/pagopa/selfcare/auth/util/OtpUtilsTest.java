@@ -54,61 +54,61 @@ public class OtpUtilsTest {
   @Test
   void completedAndSameIdp_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void completedAndDifferentIdp_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, false, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, false, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void expiredStatus_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.EXPIRED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void rejectedStatus_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.REJECTED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void pendingAndNotExpired_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.PENDING, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void pendingAndExpired_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.PENDING, OffsetDateTime.now().minusMinutes(1), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void completedAndExpired_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().minusMinutes(1), OffsetDateTime.now());
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void completed3monthsAgo_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now().minusMonths(3));
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void completed7monthsAgo_ShouldNotRequireNewOtp_PeriodicOTPNotActive() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now().minusMonths(7));
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void completed7monthsAgo_ShouldRequireNewOtp_PeriodicOTPActive() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now().minusMonths(7));
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, -1).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, -1, count(0)).await().indefinitely());
   }
 
   @Test
@@ -137,7 +137,7 @@ public class OtpUtilsTest {
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 3)
+    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 3, count(2))
             .await()
             .indefinitely();
 
@@ -165,7 +165,7 @@ public class OtpUtilsTest {
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 2)
+    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 2, count(2))
             .await()
             .indefinitely();
 
@@ -174,12 +174,12 @@ public class OtpUtilsTest {
 
   @Test
   void isOtpRequiredWithMissingOtpFlow_DifferentIdp_ShouldRequireOtp() {
-    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(false, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(false, 0, count(0)).await().indefinitely());
   }
 
   @Test
   void isOtpRequiredWithMissingOtpFlow_SameIdp_PeriodicOtpNotActive_ShouldNotRequireOtp() {
-    Assertions.assertFalse(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 0, count(0)).await().indefinitely());
   }
 
   @Test
@@ -202,7 +202,7 @@ public class OtpUtilsTest {
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 3)
+    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 3, count(2))
             .await()
             .indefinitely();
 
@@ -229,7 +229,7 @@ public class OtpUtilsTest {
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 2)
+    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 2, count(2))
             .await()
             .indefinitely();
 
@@ -239,9 +239,13 @@ public class OtpUtilsTest {
 
   @Test
   void isOtpRequiredWithMissingOtpFlow_SameIdp_PeriodicOtpActive_ShouldRequireOtp() {
-    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, -1).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, -1, count(0)).await().indefinitely());
   }
 
+
+  private static java.util.function.Supplier<Uni<Long>> count(long count) {
+    return () -> Uni.createFrom().item(count);
+  }
 
     private OtpFlow createOtpFlow(OtpStatus status, OffsetDateTime expiresAt, OffsetDateTime createdAt) {
       return OtpFlow.builder().status(status).expiresAt(expiresAt).createdAt(createdAt).build();

@@ -345,10 +345,19 @@ public class CompletionServiceImpl implements CompletionService {
     @Override
     public void rejectOutdatedOnboardings(Onboarding onboarding) {
         LocalDateTime now = LocalDateTime.now();
-        onboardingRepository
-                .update("status = ?1 and updatedAt = ?2 ", REJECTED, now)
-                .where("productId = ?1 and institution.origin = ?2 and institution.originId = ?3 and _id != ?4 and status = PENDING or status = TOBEVALIDATED",
-                        onboarding.getProductId(), onboarding.getInstitution().getOrigin(), onboarding.getInstitution().getOriginId(), onboarding.getId());
+        Document query = new Document()
+                .append("productId", onboarding.getProductId())
+                .append("institution.origin", onboarding.getInstitution().getOrigin().name())
+                .append("institution.originId", onboarding.getInstitution().getOriginId())
+                .append("_id", new Document("$ne", onboarding.getId()))
+                .append("status", new Document("$in", List.of(
+                        OnboardingStatus.PENDING.name(), OnboardingStatus.TOBEVALIDATED.name())));
+        addTenantFilter(query, onboarding.getTenantId());
+
+        Document update = new Document("$set", new Document()
+                .append("status", OnboardingStatus.REJECTED.name())
+                .append("updatedAt", now));
+        onboardingRepository.mongoCollection().updateMany(query, update);
     }
 
     @Override
@@ -372,12 +381,21 @@ public class CompletionServiceImpl implements CompletionService {
         if (StringUtils.isNotBlank(institution.getSubunitCode())) {
             query.append("institution.subunitCode", institution.getSubunitCode());
         }
+        addTenantFilter(query, onboarding.getTenantId());
 
         Document update = new Document("$set", new Document()
                 .append("status", OnboardingStatus.OVERRIDDEN.name())
                 .append("updatedAt", now));
 
         onboardingRepository.mongoCollection().updateMany(query, update);
+    }
+
+    private void addTenantFilter(Document query, String tenantId) {
+        if (StringUtils.isNotBlank(tenantId)) {
+            query.append("$or", List.of(
+                    new Document("tenantId", tenantId),
+                    new Document("tenantId", null)));
+        }
     }
 
     @Override

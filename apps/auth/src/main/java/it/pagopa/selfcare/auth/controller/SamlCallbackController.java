@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import it.pagopa.selfcare.auth.service.SAMLService;
+import it.pagopa.selfcare.auth.util.TenantHeaderUtils;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Context;
@@ -106,9 +107,10 @@ public class SamlCallbackController {
                                   .entity("SAMLResponse is required.")
                                   .build());
                   case VALID -> {
+                    String tenantId = TenantHeaderUtils.resolveTenantId(requestContext);
                     try {
                       yield samlService
-                          .generateSessionToken(samlResponse)
+                          .generateSessionToken(samlResponse, tenantId)
                           .onItem()
                           .transform(samlService::getLoginSuccessUrl)
                           .onItem()

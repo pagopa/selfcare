@@ -21,6 +21,7 @@ public class MailNotification extends ReactivePanacheMongoEntity {
     public static final String FIELD_DIGITAL_ADDRESS = "digitalAddress";
     public static final String FIELD_CREATED_AT = "createdAt";
     public static final String FIELD_UPDATED_AT = "updatedAt";
+    public static final String FIELD_TENANT_ID = "tenantId";
 
     private ObjectId id;
     private Integer moduleDayOfTheEpoch;
@@ -29,5 +30,10 @@ public class MailNotification extends ReactivePanacheMongoEntity {
     private String digitalAddress;
     private Instant createdAt;
     private Instant updatedAt;
+    /**
+     * Tenant that owns this scheduled notification. Null on legacy records written before the
+     * discriminator existed; the scheduler intentionally still processes those during migration.
+     */
+    private String tenantId;
 
 }

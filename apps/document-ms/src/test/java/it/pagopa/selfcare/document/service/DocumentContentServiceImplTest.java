@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -70,12 +71,14 @@ class DocumentContentServiceImplTest {
     @InjectMock DocumentMsConfig documentMsConfig;
     @InjectMock DocumentMsTelemetryService telemetryService;
     @InjectMock StorageRegistry storageRegistry;
+    @InjectMock it.pagopa.selfcare.document.service.CurrentTenantProvider currentTenantProvider;
     @Inject DocumentContentService documentContentService;
 
     @BeforeEach
     void setupStorageRegistry() {
         reset(azureBlobClient);
         when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
+        when(currentTenantProvider.currentTenantId()).thenReturn(Optional.of("AR"));
     }
 
     // ---- retrieveContract ----
@@ -657,7 +660,8 @@ class DocumentContentServiceImplTest {
         assertDoesNotThrow(() -> documentContentService.uploadUserAttachment(request, formItem)
                 .await().indefinitely());
 
-        verify(documentRepository).persist(any(Document.class));
+        verify(documentRepository).persist(argThat((Document document) ->
+                "AR".equals(document.getTenantId())));
         verify(azureBlobClient).uploadFile(anyString(), eq("statuto.pdf"), any(byte[].class));
         verify(documentRepository).updateAttachmentPathById(anyString(),
                 eq("/parties/docs/" + ONBOARDING_ID + "/attachments/statuto.pdf"));
@@ -724,7 +728,8 @@ class DocumentContentServiceImplTest {
 
         verify(azureBlobClient).uploadFile(anyString(), eq("attestazione-gsp-2.pdf"), any(byte[].class));
         verify(documentRepository).persist(argThat((Document doc) ->
-          "attestazione-gsp-2.pdf".equals(doc.getAttachmentName())));
+          "attestazione-gsp-2.pdf".equals(doc.getAttachmentName())
+                  && "AR".equals(doc.getTenantId())));
     }
 
     @Test

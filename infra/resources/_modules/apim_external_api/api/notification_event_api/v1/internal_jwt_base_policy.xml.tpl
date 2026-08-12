@@ -18,7 +18,8 @@
 
                 var aud = "${API_DOMAIN}";
                 var iss = "SPID";
-                var payload = new { exp, uid, aud, iss };
+                var tenant_id = "AR";
+                var payload = new { exp, uid, aud, iss, tenant_id };
                 var jwtPayloadBase64UrlEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload))).Replace("/", "_").Replace("+", "-"). Replace("=", "");
 
                 // 3) Construct the Base64Url-encoded signature
@@ -38,6 +39,9 @@
         </set-header>
         <set-header name="X-Client-Ip" exists-action="override">
             <value>@(context.Request.IpAddress)</value>
+        </set-header>
+        <set-header name="X-Tenant-Id" exists-action="override">
+            <value>AR</value>
         </set-header>
     </inbound>
     <backend>

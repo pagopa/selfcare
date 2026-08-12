@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.user.event.repository;
 
+import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
@@ -26,13 +27,14 @@ import static java.util.function.Predicate.not;
 @ApplicationScoped
 public class UserInstitutionRepository {
     private static final List<OnboardedProductState> VALID_PRODUCT_STATE = List.of(OnboardedProductState.ACTIVE, OnboardedProductState.PENDING, OnboardedProductState.TOBEVALIDATED);
+    private static final String TENANT_ID_FIELD = "tenantId";
 
     private final UserMapper userMapper;
     private final CloningMapper cloningMapper;
 
     public Uni<Void> updateUser(UserInstitution userInstitution) {
         Optional<OnboardedProductState> optStateToSet = retrieveStatusForGivenInstitution(userInstitution.getProducts());
-        return UserInfo.findByIdOptional(userInstitution.getUserId())
+        return findUserInfoByUserId(userInstitution)
                 .onItem().transformToUni(opt -> opt
                         .map(entityBase -> {
                             // Check if user has a record with valid state and role to enter inside dashboard,
@@ -72,6 +74,7 @@ public class UserInstitutionRepository {
         UserInfo userInfo = new UserInfo();
         userInfo.setUserId(userInstitution.getUserId());
         userInfo.setInstitutions(List.of(institutionRole));
+        userInfo.setTenantId(userInstitution.getTenantId());
 
         // flow of new user must persist userInfo, if already exists it must be failed
         return UserInfo.persist(userInfo)
@@ -96,6 +99,7 @@ public class UserInstitutionRepository {
                         } else {
                             log.info("deleteInstitutionOrAllUserInfo removing institution {} for userId {}",
                                     userInstitution.getInstitutionId(), userInstitution.getUserId());
+                            stampTenantIfMissing(userInfo, userInstitution.getTenantId());
                             return UserInfo.persistOrUpdate(userInfo);
                         }
                     }
@@ -114,15 +118,19 @@ public class UserInstitutionRepository {
                     return userInfo.getInstitutions().stream()
                             .filter(userInstitutionRole -> userInstitution.getInstitutionId().equalsIgnoreCase(userInstitutionRole.getInstitutionId()))
                             .findAny()
-                            .map(userInstitutionRole -> updateUserInstitutionRole(userInstitution.getUserId(), userInstitution.getInstitutionId(), institutionRoleAsDocument))
-                            .orElse(addUserInstitutionRole(userInstitution.getUserId(), institutionRoleAsDocument));
+                            .map(userInstitutionRole -> updateUserInstitutionRole(userInstitution.getUserId(), userInstitution.getInstitutionId(), institutionRoleAsDocument,
+                                    tenantToSetIfMissing(userInfo, userInstitution)))
+                            .orElse(addUserInstitutionRole(userInstitution.getUserId(), institutionRoleAsDocument,
+                                    tenantToSetIfMissing(userInfo, userInstitution)));
 
                 })
                 .replaceWithVoid();
     }
 
-    private Uni<Long> updateUserInstitutionRole(String userId, String institutionId, Document institution){
-        Document updateAddToSet = new Document("$set", new Document("institutions.$", institution));
+    private Uni<Long> updateUserInstitutionRole(String userId, String institutionId, Document institution, String tenantIdToSet){
+        Document setDocument = new Document("institutions.$", institution);
+        Optional.ofNullable(tenantIdToSet).ifPresent(tenant -> setDocument.append(TENANT_ID_FIELD, tenant));
+        Document updateAddToSet = new Document("$set", setDocument);
         Document filter = new Document("_id", userId)
                 .append("institutions.institutionId", institutionId);
 
@@ -131,8 +139,10 @@ public class UserInstitutionRepository {
                 .where(filter);
     }
 
-    private Uni<Long> addUserInstitutionRole(String userId, Document institution){
+    private Uni<Long> addUserInstitutionRole(String userId, Document institution, String tenantIdToSet){
         Document updateAddToSet = new Document("$addToSet", new Document("institutions", institution));
+        Optional.ofNullable(tenantIdToSet)
+                .ifPresent(tenant -> updateAddToSet.append("$set", new Document(TENANT_ID_FIELD, tenant)));
 
         return UserInfo
                 .update(updateAddToSet)
@@ -178,7 +188,7 @@ public class UserInstitutionRepository {
         assert parentProduct.getToAddOnAggregates() != null; // The toAddOnAggregates is required on the parent
         final String userIdField = UserInstitution.Fields.userId.name();
         final String institutionIdField = UserInstitution.Fields.institutionId.name();
-        return UserInstitution.find(userIdField + " = ?1 and " + institutionIdField + " = ?2", parentUser.getUserId(), aggregateId)
+        return findAggregateUserInstitution(parentUser, aggregateId, userIdField, institutionIdField)
                 .firstResultOptional().onItem().transformToUni(userInstitution -> userInstitution.map(u -> {
                     // Update existing user institution
                     log.info("propagateUserToAggregate: Updating existing UserInstitution with roleId {} for userId {} and aggregateId {}",
@@ -189,6 +199,7 @@ public class UserInstitutionRepository {
                     user.setUserMailUpdatedAt(parentUser.getUserMailUpdatedAt());
                     user.setInstitutionRootName(parentUser.getInstitutionDescription());
                     user.setInstitutionDescription(aggregateDescription);
+                    stampTenantIfMissing(user, parentUser.getTenantId());
                     // Find existing product by roleId, or create a new one if not found
                     final OnboardedProduct product = user.getProducts().stream().filter(p -> parentProduct.getRoleId().equals(p.getRoleId())).findFirst()
                             .orElseGet(() -> {
@@ -220,10 +231,59 @@ public class UserInstitutionRepository {
                     user.setUserId(parentUser.getUserId());
                     user.setUserMailUuid(parentUser.getUserMailUuid());
                     user.setUserMailUpdatedAt(parentUser.getUserMailUpdatedAt());
+                    user.setTenantId(parentUser.getTenantId());
                     return UserInstitution.persist(user).onItem().transformToUni(v ->
                             Uni.createFrom().item(user));
                 }));
     }
 
-}
+    private Uni<Optional<ReactivePanacheMongoEntityBase>> findUserInfoByUserId(UserInstitution userInstitution) {
+        if (userInstitution.getTenantId() == null || userInstitution.getTenantId().isBlank()) {
+            // Migration phase: legacy CDC events may carry no tenant, so keep the pre-multitenant
+            // unscoped lookup instead of creating an unsatisfiable query. This is not a security boundary.
+            return UserInfo.findByIdOptional(userInstitution.getUserId());
+        }
+        Document query = tenantScopedQuery(new Document("_id", userInstitution.getUserId()), userInstitution.getTenantId());
+        return UserInfo.find(query).firstResultOptional();
+    }
 
+    private ReactivePanacheQuery<ReactivePanacheMongoEntityBase> findAggregateUserInstitution(UserInstitution parentUser, String aggregateId,
+                                                                                             String userIdField, String institutionIdField) {
+        if (parentUser.getTenantId() == null || parentUser.getTenantId().isBlank()) {
+            // Migration phase: legacy CDC events may carry no tenant, so keep the pre-multitenant
+            // unscoped lookup instead of creating an unsatisfiable query. This is not a security boundary.
+            return UserInstitution.find(userIdField + " = ?1 and " + institutionIdField + " = ?2", parentUser.getUserId(), aggregateId);
+        }
+        Document query = tenantScopedQuery(new Document(userIdField, parentUser.getUserId())
+                .append(institutionIdField, aggregateId), parentUser.getTenantId());
+        return UserInstitution.find(query);
+    }
+
+    private Document tenantScopedQuery(Document query, String tenantId) {
+        if (tenantId == null || tenantId.isBlank()) {
+            // Migration phase: legacy CDC events may carry no tenant, so keep the pre-multitenant
+            // unscoped lookup instead of creating an unsatisfiable query. This is not a security boundary.
+            return query;
+        }
+        // Migration phase: tenantId == null keeps pre-backfill documents visible. Drop the null
+        // branch once every source and mirror collection has been backfilled.
+        return query.append("$or", List.of(new Document(TENANT_ID_FIELD, tenantId), new Document(TENANT_ID_FIELD, null)));
+    }
+
+    private static String tenantToSetIfMissing(UserInfo userInfo, UserInstitution userInstitution) {
+        return userInfo.getTenantId() == null ? userInstitution.getTenantId() : null;
+    }
+
+    private static void stampTenantIfMissing(UserInfo userInfo, String tenantId) {
+        if (userInfo.getTenantId() == null) {
+            userInfo.setTenantId(tenantId);
+        }
+    }
+
+    private static void stampTenantIfMissing(UserInstitution userInstitution, String tenantId) {
+        if (userInstitution.getTenantId() == null) {
+            userInstitution.setTenantId(tenantId);
+        }
+    }
+
+}

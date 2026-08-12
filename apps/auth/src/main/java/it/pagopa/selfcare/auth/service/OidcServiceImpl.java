@@ -55,7 +55,7 @@ public class OidcServiceImpl implements OidcService {
   @RestClient @Inject DefaultApi tokenApi;
 
   @Override
-  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri) {
+  public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri, String tenantId) {
     CreateRequestTokenMultipartForm formData = new CreateRequestTokenMultipartForm();
     formData.code = authCode;
     formData.grantType = AUTH_CODE_GRANT_TYPE;
@@ -98,10 +98,15 @@ public class OidcServiceImpl implements OidcService {
                         failure ->
                             new InternalException(
                                 "Cannot patch user on Personal Data Vault:" + failure.toString())))
+        .map(
+            userClaims -> {
+              userClaims.setTenantId(tenantId);
+              return userClaims;
+            })
         .chain(
             userClaims ->
                 otpFlowService
-                    .handleOtpFlow(userClaims)
+                    .handleOtpFlow(userClaims, tenantId)
                     .onFailure()
                     .transform(
                         failure ->

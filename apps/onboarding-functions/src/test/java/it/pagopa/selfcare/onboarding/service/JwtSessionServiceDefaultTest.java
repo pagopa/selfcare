@@ -61,7 +61,7 @@ class JwtSessionServiceDefaultTest {
         userResource.setName(certifiedField);
         userResource.setFamilyName(certifiedField);
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(userResource);
-        String jwt = tokenService.createJwt(userId);
+        String jwt = tokenService.createJwt(userId, "AR");
         assertTrue(Objects.nonNull(jwt));
     }
 
@@ -75,7 +75,7 @@ class JwtSessionServiceDefaultTest {
         userResource.setName(certifiedField);
         userResource.setFamilyName(certifiedField);
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenThrow(new ResourceNotFoundException("An error occurred", "Code"));
-        String jwt = tokenService.createJwt(userId);
+        String jwt = tokenService.createJwt(userId, "AR");
         assertTrue(Objects.isNull(jwt));
     }
 

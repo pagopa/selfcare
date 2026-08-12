@@ -206,7 +206,7 @@ public class SAMLServiceTest {
         .thenReturn(Uni.createFrom().item(userClaimsApi));
 
     // Act: Call the service method
-    Uni<String> resultUni = samlService.generateSessionToken(FAKE_SAML_RESPONSE);
+    Uni<String> resultUni = samlService.generateSessionToken(FAKE_SAML_RESPONSE, "AR");
 
     // Assert: Check that the result is true and the validator was called correctly
     String result = resultUni.await().indefinitely();
@@ -255,7 +255,7 @@ public class SAMLServiceTest {
         assertThrows(
             RuntimeException.class,
             () -> {
-              samlService.generateSessionToken(FAKE_SAML_RESPONSE).await().indefinitely();
+              samlService.generateSessionToken(FAKE_SAML_RESPONSE, "AR").await().indefinitely();
             });
 
     assertEquals(

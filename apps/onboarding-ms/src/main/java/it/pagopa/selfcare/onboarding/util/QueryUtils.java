@@ -7,10 +7,13 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.conf.CurrentTenantProvider;
 import it.pagopa.selfcare.onboarding.controller.request.ApproveRequest;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonRequest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -23,10 +26,13 @@ import org.bson.codecs.DecoderContext;
 import org.bson.codecs.DocumentCodec;
 import org.bson.conversions.Bson;
 
+@ApplicationScoped
 public class QueryUtils {
 
-  private QueryUtils() {
-  }
+  private static final String TENANT_ID_FIELD = "tenantId";
+
+  @Inject
+  CurrentTenantProvider currentTenantProvider;
 
   public static class FieldNames {
     private FieldNames() {
@@ -44,12 +50,51 @@ public class QueryUtils {
     public static final String USER_ID = "users._id";
   }
 
-  public static Document buildQuery(Map<String, Object> parameters) {
-    if (!parameters.isEmpty()) {
-      return bsonToDocument(Filters.and(constructBsonFilter(parameters)));
-    } else {
-      return new Document();
+  /**
+   * Builds the Mongo query document and appends the tenant predicate in the shared filter-map
+   * chokepoint, so new callers cannot accidentally query onboardings across tenants.
+   */
+  public Document buildQuery(Map<String, Object> parameters) {
+    List<Bson> filters = parameters.isEmpty()
+      ? new ArrayList<>()
+      : new ArrayList<>(constructBsonFilter(parameters));
+    addTenantFilter(filters);
+    return filters.isEmpty() ? new Document() : bsonToDocument(Filters.and(filters));
+  }
+
+  /**
+   * Adds the tenant predicate to native Mongo {@link Document} queries that bypass {@link
+   * #buildQuery(Map)}, such as id lookups and updates.
+   */
+  public Document tenantScoped(Document query) {
+    if (currentTenantId().isEmpty()) {
+      return Objects.nonNull(query) ? query : new Document();
     }
+    List<Bson> filters = new ArrayList<>();
+    if (Objects.nonNull(query) && !query.isEmpty()) {
+      filters.add(query);
+    }
+    addTenantFilter(filters);
+    return filters.isEmpty() ? new Document() : bsonToDocument(Filters.and(filters));
+  }
+
+  /**
+   * Migration phase: match documents owned by the current tenant or legacy untagged documents. The
+   * {@code tenantId == null} branch MUST be dropped once the backfill has tagged old records.
+   *
+   * <p>When no tenant is resolvable (scheduler/event consumer/startup code outside an active
+   * request), the query is left unscoped. This preserves pre-multitenant behaviour during migration;
+   * it is not a security boundary.
+   */
+  private void addTenantFilter(List<Bson> filters) {
+    currentTenantId()
+      .ifPresent(tenantId -> filters.add(Filters.or(
+        Filters.eq(TENANT_ID_FIELD, tenantId),
+        Filters.eq(TENANT_ID_FIELD, null))));
+  }
+
+  public Optional<String> currentTenantId() {
+    return currentTenantProvider.currentTenantId();
   }
 
   /**

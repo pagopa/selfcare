@@ -59,6 +59,9 @@ class DocumentServiceImplTest {
     @InjectMock
     StorageRegistry storageRegistry;
 
+    @InjectMock
+    it.pagopa.selfcare.document.service.CurrentTenantProvider currentTenantProvider;
+
     @BeforeEach
     void setupStorageRegistry() {
         reset(azureBlobClient);
@@ -70,7 +73,7 @@ class DocumentServiceImplTest {
     @Test
     void getDocumentById_shouldReturnDocument() {
         Document doc = buildDocument();
-        when(documentRepository.findById(anyString()))
+        when(documentRepository.findDocumentById(anyString()))
                 .thenReturn(Uni.createFrom().item(doc));
 
         Document result = documentService.getDocumentById(DOCUMENT_ID)
@@ -82,7 +85,7 @@ class DocumentServiceImplTest {
 
     @Test
     void getDocumentById_shouldThrowResourceNotFoundWhenDocumentIsNull() {
-        when(documentRepository.findById(anyString()))
+        when(documentRepository.findDocumentById(anyString()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         var awaiter = documentService.getDocumentById(DOCUMENT_ID).await();
@@ -575,6 +578,56 @@ class DocumentServiceImplTest {
         // The result must be a different document than the previous one (new record created)
         assertNotEquals(previousDoc.getId(), result.getId());
         verify(documentRepository).persist(any(Document.class));
+    }
+
+    // ---- tenant tagging on persist (Step_1 SELC-8.2) ----
+
+    @Test
+    void persistDocumentForImport_shouldTagDocumentWithCurrentTenant() {
+        when(currentTenantProvider.currentTenantId()).thenReturn(java.util.Optional.of("PNPG"));
+
+        OnboardingDocumentRequest request = new OnboardingDocumentRequest();
+        request.setOnboardingId(ONBOARDING_ID);
+        request.setProductId("prod-io");
+        request.setContractFilePath("/path/to/contract.pdf");
+        request.setContractFileName("contract.pdf");
+        request.setContractCreatedAt(LocalDateTime.now());
+        request.setTemplatePath("/templates/template.pdf");
+        request.setTemplateVersion("1.0");
+
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(new Document()));
+
+        documentService.persistDocumentForImport(request).await().indefinitely();
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Document.class);
+        verify(documentRepository).persist(captor.capture());
+        assertEquals("PNPG", captor.getValue().getTenantId());
+    }
+
+    @Test
+    void persistDocumentForImport_shouldLeaveTenantUntaggedWhenNoTenantResolved() {
+        // Service-to-service write paths do not propagate the tenant yet: the document must be
+        // stored untagged rather than failing or being mislabelled (Step_1 SELC-8 migration phase).
+        when(currentTenantProvider.currentTenantId()).thenReturn(java.util.Optional.empty());
+
+        OnboardingDocumentRequest request = new OnboardingDocumentRequest();
+        request.setOnboardingId(ONBOARDING_ID);
+        request.setProductId("prod-io");
+        request.setContractFilePath("/path/to/contract.pdf");
+        request.setContractFileName("contract.pdf");
+        request.setContractCreatedAt(LocalDateTime.now());
+        request.setTemplatePath("/templates/template.pdf");
+        request.setTemplateVersion("1.0");
+
+        when(documentRepository.persist(any(Document.class)))
+                .thenReturn(Uni.createFrom().item(new Document()));
+
+        documentService.persistDocumentForImport(request).await().indefinitely();
+
+        var captor = org.mockito.ArgumentCaptor.forClass(Document.class);
+        verify(documentRepository).persist(captor.capture());
+        assertNull(captor.getValue().getTenantId());
     }
 
     // ---- persistDocumentForImport ----

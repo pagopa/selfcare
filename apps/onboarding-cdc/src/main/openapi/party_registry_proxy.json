@@ -1532,6 +1532,9 @@
           "deletedAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "tenantId" : {
+            "type" : "string"
           }
         }
       },

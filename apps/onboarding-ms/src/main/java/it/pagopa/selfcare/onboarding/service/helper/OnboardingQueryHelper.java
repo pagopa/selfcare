@@ -38,24 +38,54 @@ public class OnboardingQueryHelper {
     @Inject
     OnboardingPersistenceHelper persistenceHelper;
 
+    @Inject
+    QueryUtils queryUtils;
+
     // -------------------------------------------------------------------------
     // Recupero onboarding
     // -------------------------------------------------------------------------
 
     public Uni<Onboarding> retrieveOnboarding(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
+        // Migration-phase concession for code outside an active request: keep the pre-tenant
+        // unscoped lookup rather than making schedulers/event consumers fail closed.
+        if (queryUtils.currentTenantId().isEmpty()) {
+            return Onboarding.findByIdOptional(onboardingId)
+                    .onItem().transformToUni(opt ->
+                            opt.map(Onboarding.class::cast)
+                                    .map(o -> Uni.createFrom().item(o))
+                                    .orElse(Uni.createFrom().failure(
+                                            new InvalidRequestException(
+                                                    String.format("Onboarding with id '%s' not found", onboardingId)))));
+        }
+        return Onboarding.find(queryUtils.tenantScoped(new Document("_id", onboardingId)))
+                .firstResult()
                 .onItem().transformToUni(opt ->
-                        opt.map(Onboarding.class::cast)
-                                .map(o -> Uni.createFrom().item(o))
-                                .orElse(Uni.createFrom().failure(
+                        Objects.nonNull(opt)
+                                ? Uni.createFrom().item((Onboarding) opt)
+                                : Uni.createFrom().failure(
                                         new InvalidRequestException(
-                                                String.format("Onboarding with id '%s' not found", onboardingId)))));
+                                                String.format("Onboarding with id '%s' not found", onboardingId))));
     }
 
     public Uni<Onboarding> retrieveOnboardingAndCheckIfExpired(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
+        // Migration-phase concession for code outside an active request; see QueryUtils.
+        if (queryUtils.currentTenantId().isEmpty()) {
+            return Onboarding.findByIdOptional(onboardingId)
+                    .onItem().transformToUni(opt ->
+                            opt.map(Onboarding.class::cast)
+                                    .filter(o -> OnboardingStatus.TOBEVALIDATED.equals(o.getStatus())
+                                            || !isOnboardingExpired(o.getExpiringDate()))
+                                    .map(o -> Uni.createFrom().item(o))
+                                    .orElse(Uni.createFrom().failure(
+                                            new InvalidRequestException(
+                                                    String.format(ONBOARDING_EXPIRED.getMessage(), onboardingId),
+                                                    ONBOARDING_EXPIRED.getCode()))));
+        }
+        return Onboarding.find(queryUtils.tenantScoped(new Document("_id", onboardingId)))
+                .firstResult()
                 .onItem().transformToUni(opt ->
-                        opt.map(Onboarding.class::cast)
+                        Optional.ofNullable(opt)
+                                .map(Onboarding.class::cast)
                                 .filter(o -> OnboardingStatus.TOBEVALIDATED.equals(o.getStatus())
                                         || !isOnboardingExpired(o.getExpiringDate()))
                                 .map(o -> Uni.createFrom().item(o))
@@ -114,32 +144,43 @@ public class OnboardingQueryHelper {
     // Aggiornamenti stato onboarding
     // -------------------------------------------------------------------------
 
-    public static Uni<Long> updateReasonForRejectAndUpdateStatus(String onboardingId, ReasonRequest reasonForReject) {
+    public Uni<Long> updateReasonForRejectAndUpdateStatus(String onboardingId, ReasonRequest reasonForReject) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingReject(
                 reasonForReject, OnboardingStatus.REJECTED.name());
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }
 
-    public static Uni<Long> updateApproverUserUuid(String onboardingId, ApproveRequest approveRequest) {
+    public Uni<Long> updateApproverUserUuid(String onboardingId, ApproveRequest approveRequest) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingApprove(approveRequest);
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }
 
-    public static Uni<Long> updateOnboardingStatus(String id, Map<String, Object> queryParameter) {
+    public Uni<Long> updateOnboardingStatus(String id, Map<String, Object> queryParameter) {
         Document query = QueryUtils.buildUpdateDocument(queryParameter);
         return performUpdate(id, query);
     }
 
-    public static Uni<Long> updateOnboardingValues(String onboardingId, Onboarding onboarding) {
+    public Uni<Long> updateOnboardingValues(String onboardingId, Onboarding onboarding) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingUpdate(onboarding);
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }
 
-    private static Uni<Long> performUpdate(String id, Document query) {
-        return Onboarding.update(query).where("_id", id)
+    private Uni<Long> performUpdate(String id, Document query) {
+        // Migration-phase concession for code outside an active request; see QueryUtils.
+        if (queryUtils.currentTenantId().isEmpty()) {
+            return Onboarding.update(query).where("_id", id)
+                    .onItem().transformToUni(count -> {
+                        if (count == 0) {
+                            return Uni.createFrom().failure(new InvalidRequestException(
+                                    String.format(ONBOARDING_NOT_FOUND_OR_ALREADY_DELETED.getMessage(), id)));
+                        }
+                        return Uni.createFrom().item(count);
+                    });
+        }
+        return Onboarding.update(query).where(queryUtils.tenantScoped(new Document("_id", id)))
                 .onItem().transformToUni(count -> {
                     if (count == 0) {
                         return Uni.createFrom().failure(new InvalidRequestException(
@@ -168,7 +209,4 @@ public class OnboardingQueryHelper {
         return QueryUtils.buildSortDocument(Onboarding.Fields.createdAt.name(), SortEnum.DESC);
     }
 }
-
-
-
 

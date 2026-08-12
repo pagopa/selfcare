@@ -62,6 +62,9 @@ public class Product {
      */
     private List<ManagingInstitution> managingInstitutions;
 
+    /** Declares whether this product's data lives in the shared database or a dedicated one. */
+    private DataIsolationConfig dataIsolation;
+
     public String getId() {
         return id;
     }
@@ -545,5 +548,23 @@ public class Product {
 
     public void setManagingInstitutions(List<ManagingInstitution> managingInstitutions) {
         this.managingInstitutions = managingInstitutions;
+    }
+
+    public DataIsolationConfig getDataIsolation() {
+        return dataIsolation;
+    }
+
+    public void setDataIsolation(DataIsolationConfig dataIsolation) {
+        this.dataIsolation = dataIsolation;
+    }
+
+    /**
+     * Resolves this product's database isolation model, treating an unconfigured product as SHARED
+     * so consumers never have to null-check before routing.
+     */
+    public DatabaseIsolationModel resolveDatabaseIsolationModel() {
+        return dataIsolation == null
+                ? DatabaseIsolationModel.SHARED
+                : dataIsolation.resolveDatabaseModel();
     }
 }

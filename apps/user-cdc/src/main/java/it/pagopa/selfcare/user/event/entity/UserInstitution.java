@@ -26,5 +26,10 @@ public class UserInstitution extends ReactivePanacheMongoEntity {
     private List<OnboardedProduct> products = new ArrayList<>();
     private String userMailUuid;
     private OffsetDateTime userMailUpdatedAt;
+    /**
+     * Tenant read from the source userInstitution document and propagated to mirror records/events.
+     * Null is accepted for legacy change events emitted before the discriminator backfill.
+     */
+    private String tenantId;
 
 }

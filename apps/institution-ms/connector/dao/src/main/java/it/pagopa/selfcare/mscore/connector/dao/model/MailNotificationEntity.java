@@ -17,7 +17,7 @@ import java.util.Set;
 @NoArgsConstructor
 @Document("MailNotification")
 @Sharded(shardKey = {"id"})
-public class MailNotificationEntity {
+public class MailNotificationEntity implements TenantOwnedEntity {
 
     public static final String FIELD_ID = "id";
     public static final String FIELD_INSTITUTION_ID = "institutionId";
@@ -29,6 +29,7 @@ public class MailNotificationEntity {
 
     @BsonId
     private ObjectId id;
+    private String tenantId;
 
     @NotNull
     @Indexed(unique = true)

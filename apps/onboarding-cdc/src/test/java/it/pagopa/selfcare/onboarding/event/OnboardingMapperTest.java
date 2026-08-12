@@ -47,6 +47,7 @@ class OnboardingMapperTest {
         Onboarding onboarding = new Onboarding();
         onboarding.id = "onboarding-id";
         onboarding.setInstitution(institution);
+        onboarding.setTenantId("AR");
 
         // when
         org.openapi.quarkus.party_registry_proxy_json.model.OnboardingIndexResource result = mapper.toIndexResource(onboarding);
@@ -58,6 +59,7 @@ class OnboardingMapperTest {
         assertEquals(institution.getDescription(), result.getDescription());
         assertEquals(institution.getTaxCode(), result.getTaxCode());
         assertEquals(institution.getSubunitCode(), result.getSubunitCode());
+        assertEquals(onboarding.getTenantId(), result.getTenantId());
     }
 
     @Test
@@ -84,12 +86,14 @@ class OnboardingMapperTest {
         onboarding.id = "onboarding-id";
         onboarding.setProductId("product-id");
         onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setTenantId("PNPG");
 
         // when
         org.openapi.quarkus.onboarding_functions_json.model.Onboarding result = mapper.toEntity(onboarding);
 
         // then
         assertNotNull(result);
+        assertEquals(onboarding.getTenantId(), result.getTenantId());
     }
 
     @Test

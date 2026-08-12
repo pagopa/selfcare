@@ -48,6 +48,13 @@ public class Onboarding {
 
     private String referenceOnboardingId;
 
+    /**
+     * Tenant owning this onboarding, carried over from onboarding-ms through the orchestration
+     * payload. It is what lets an activity call tenant-enforcing services on behalf of the right
+     * tenant, since a background activity has no incoming request to read it from.
+     */
+    private String tenantId;
+
     @Override
     public String toString() {
         return "Onboarding{" +

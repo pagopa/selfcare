@@ -31,5 +31,11 @@ public class Token extends ReactivePanacheMongoEntityBase {
     private LocalDateTime deletedAt;
     private LocalDateTime activatedAt;
 
+    /**
+     * Tenant that owns this token, mirroring {@link Onboarding#getTenantId()} so token lookups can
+     * be tenant-scoped without joining back to the onboarding. Null on pre-multitenant documents.
+     */
+    private String tenantId;
+
 }
 

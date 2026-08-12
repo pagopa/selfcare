@@ -35,6 +35,7 @@ class OtpControllerTest {
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/verify")
@@ -47,12 +48,13 @@ class OtpControllerTest {
     OtpVerifyRequest request = new OtpVerifyRequest();
     request.setOtp("123456");
     request.setOtpUuid("uuid");
-    when(otpFlowService.verifyOtp(anyString(), anyString()))
+    when(otpFlowService.verifyOtp(anyString(), anyString(), anyString()))
         .thenReturn(
             Uni.createFrom().failure(new ResourceNotFoundException("Cannot find Otp Flow")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/verify")
@@ -68,11 +70,12 @@ class OtpControllerTest {
     OtpForbiddenException wrongCodeException =
         new OtpForbiddenException(
             "Wrong Otp Code", OtpForbiddenCode.CODE_001, 1, OtpStatus.PENDING);
-    when(otpFlowService.verifyOtp(anyString(), anyString()))
+    when(otpFlowService.verifyOtp(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(wrongCodeException));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/verify")
@@ -90,11 +93,12 @@ class OtpControllerTest {
     OtpForbiddenException wrongCodeException =
         new OtpForbiddenException(
             "Max Attempts reached", OtpForbiddenCode.CODE_002, 0, OtpStatus.REJECTED);
-    when(otpFlowService.verifyOtp(anyString(), anyString()))
+    when(otpFlowService.verifyOtp(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(wrongCodeException));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/verify")
@@ -109,11 +113,12 @@ class OtpControllerTest {
     OtpVerifyRequest request = new OtpVerifyRequest();
     request.setOtp("123456");
     request.setOtpUuid("uuid");
-    when(otpFlowService.verifyOtp(anyString(), anyString()))
+    when(otpFlowService.verifyOtp(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/verify")
@@ -126,11 +131,12 @@ class OtpControllerTest {
     OtpVerifyRequest request = new OtpVerifyRequest();
     request.setOtp("123456");
     request.setOtpUuid("uuid");
-    when(otpFlowService.verifyOtp(anyString(), anyString()))
+    when(otpFlowService.verifyOtp(anyString(), anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/verify")
@@ -144,6 +150,7 @@ class OtpControllerTest {
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")
@@ -155,12 +162,13 @@ class OtpControllerTest {
   void resendOtp_NotFound() {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
-    when(otpFlowService.resendOtp(anyString()))
+    when(otpFlowService.resendOtp(anyString(), anyString()))
         .thenReturn(
             Uni.createFrom().failure(new ResourceNotFoundException("Cannot find Otp Flow")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")
@@ -172,11 +180,12 @@ class OtpControllerTest {
   void resendOtp_Conflict() {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
-    when(otpFlowService.resendOtp(anyString()))
+    when(otpFlowService.resendOtp(anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new ConflictException("Conflict")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")
@@ -188,11 +197,12 @@ class OtpControllerTest {
   void resendOtp_InternalServerError() {
     OtpResendRequest request = new OtpResendRequest();
     request.setOtpUuid("uuid");
-    when(otpFlowService.resendOtp(anyString()))
+    when(otpFlowService.resendOtp(anyString(), anyString()))
         .thenReturn(Uni.createFrom().failure(new InternalException("Internal server error")));
 
     given()
         .body(request)
+        .header("X-Tenant-Id", "AR")
         .when()
         .contentType(ContentType.JSON)
         .post("/resend")

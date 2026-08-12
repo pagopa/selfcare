@@ -34,6 +34,7 @@ public class InstitutionSendMailScheduledServiceImpl implements InstitutionSendM
     private static final String ID_INSTITUTION_PLACEHOLDER = "id_institution";
     private static final String ADDED_USERS_LIST_PLACEHOLDER = "added_users_list";
     private static final String REMOVED_USERS_LIST_PLACEHOLDER = "removed_users_list";
+    private static final String TENANT_ID_PLACEHOLDER = "tenant_id";
 
     private final MailServiceImpl mailService;
     private final String templateMail;
@@ -81,6 +82,9 @@ public class InstitutionSendMailScheduledServiceImpl implements InstitutionSendM
     }
 
     public Uni<Boolean> runQueryAndSendNotification(Long moduleDayOfTheEpoch, int page) {
+        // Migration phase: this scheduler is a cross-tenant batch worker with no request tenant, so
+        // the query intentionally remains unscoped. This is not a security boundary; each record
+        // carries its own tenantId for downstream attribution.
         var mailNotificationPage = MailNotification.find(MailNotification.FIELD_MODULE_DAY_OF_THE_EPOCH + "=?1", moduleDayOfTheEpoch)
                 .page(page, querySize);
 
@@ -125,7 +129,7 @@ public class InstitutionSendMailScheduledServiceImpl implements InstitutionSendM
         return getInstitutionUsers(mailNotification.getInstitutionId(), mailNotification.getProductIds()).onItem().transformToUni(institutionUsers -> {
             final Map<String, Integer> addedUsersCount = getAddedUsersCount(institutionUsers);
             final Map<String, Integer> removedUsersCount = getRemovedUsersCount(institutionUsers);
-            final Map<String, String> mailParameters = getMailParameters(mailNotification.getInstitutionId(), addedUsersCount, removedUsersCount);
+            final Map<String, String> mailParameters = getMailParameters(mailNotification.getInstitutionId(), mailNotification.getTenantId(), addedUsersCount, removedUsersCount);
             final String template = sendFirstMail(dayDifference) ? templateMailFirstNotification : templateMail;
             return mailService.sendMail(List.of(mailNotification.getDigitalAddress()), template, mailParameters, null)
                     .onItem().invoke(() -> log.info(String.format("Mail sent for institution %s", mailNotification.getInstitutionId())))
@@ -134,9 +138,10 @@ public class InstitutionSendMailScheduledServiceImpl implements InstitutionSendM
         });
     }
 
-    private Map<String, String> getMailParameters(String institutionId, Map<String, Integer> addedUsersCount, Map<String, Integer> removedUsersCount) {
+    private Map<String, String> getMailParameters(String institutionId, String tenantId, Map<String, Integer> addedUsersCount, Map<String, Integer> removedUsersCount) {
         Map<String, String> mailParameters = new HashMap<>();
         mailParameters.put(ID_INSTITUTION_PLACEHOLDER, institutionId);
+        Optional.ofNullable(tenantId).ifPresent(tenant -> mailParameters.put(TENANT_ID_PLACEHOLDER, tenant));
         final String addedUsersListPlaceholder = addedUsersCount.isEmpty() ? "" : getUsersListPlaceholder("Utenti aggiunti questo mese: ", addedUsersCount);
         mailParameters.put(ADDED_USERS_LIST_PLACEHOLDER, addedUsersListPlaceholder);
         final String removedUsersListPlaceholder = removedUsersCount.isEmpty() ? "" : getUsersListPlaceholder("Utenti rimossi questo mese: ", removedUsersCount);

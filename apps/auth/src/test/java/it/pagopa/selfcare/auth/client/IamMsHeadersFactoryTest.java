@@ -103,4 +103,38 @@ class IamMsHeadersFactoryTest {
     assertEquals(1, result.size());
     assertEquals("Bearer " + testToken, result.getFirst("Authorization"));
   }
+
+  @Test
+  void testUpdate_SendsTenantHeaderMatchingTheTokenTenant() {
+    when(tokenContext.getToken()).thenReturn("test-token-123");
+    when(tokenContext.getTenantId()).thenReturn("AR");
+
+    MultivaluedMap<String, String> result =
+        headersFactory.update(new MultivaluedHashMap<>(), new MultivaluedHashMap<>());
+
+    assertEquals("AR", result.getFirst("X-Tenant-Id"));
+  }
+
+  @Test
+  void testUpdate_OmitsTenantHeaderWhenTheTokenCarriesNoTenant() {
+    // iam reconciles the header against the token claim: a header with no matching claim would be
+    // rejected as a mismatch, which is worse than an absent header.
+    when(tokenContext.getToken()).thenReturn("test-token-123");
+    when(tokenContext.getTenantId()).thenReturn(null);
+
+    MultivaluedMap<String, String> result =
+        headersFactory.update(new MultivaluedHashMap<>(), new MultivaluedHashMap<>());
+
+    assertFalse(result.containsKey("X-Tenant-Id"));
+  }
+
+  @Test
+  void testUpdate_OmitsTenantHeaderWhenThereIsNoToken() {
+    when(tokenContext.getToken()).thenReturn(null);
+
+    MultivaluedMap<String, String> result =
+        headersFactory.update(new MultivaluedHashMap<>(), new MultivaluedHashMap<>());
+
+    assertFalse(result.containsKey("X-Tenant-Id"));
+  }
 }

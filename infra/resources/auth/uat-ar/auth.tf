@@ -65,6 +65,14 @@ module "apim_api_auth" {
       XML
     }
   ]
+  tenant_ids                = module.local.config.tenant_ids
+  local_development_origins = module.local.config.local_development_origins
+  # SAML ACS: the IdP posts the assertion to loginSaml straight from the browser, so the request
+  # arrives with the IdP's Origin/Referer, not a tenant frontend's. auth/OneIdentity serves the AR
+  # tenant only (PNPG logs in through hub-spid-login), so AR is the correct, and only valid,
+  # resolution for those requests. Without this the API-level policy would 403 the login callback.
+  default_tenant_id            = "AR"
+  default_tenant_operation_ids = ["loginSaml"]
 }
 
 ###############################################################################

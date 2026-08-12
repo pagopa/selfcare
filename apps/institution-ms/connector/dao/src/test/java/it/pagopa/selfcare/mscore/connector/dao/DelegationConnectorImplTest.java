@@ -13,6 +13,7 @@ import it.pagopa.selfcare.mscore.exception.MsCoreException;
 import it.pagopa.selfcare.mscore.model.delegation.*;
 import it.pagopa.selfcare.mscore.model.institution.Institution;
 import org.bson.Document;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,8 +65,16 @@ class DelegationConnectorImplTest {
     @Mock
     private MongoTemplate mongoTemplate;
 
+    @Mock
+    private TenantDataIsolation tenantDataIsolation;
+
     @Spy
     private DelegationEntityMapper delegationMapper = new DelegationEntityMapperImpl();
+
+    @BeforeEach
+    void setUp() {
+        lenient().when(tenantDataIsolation.currentTenantCriteria()).thenReturn(Optional.empty());
+    }
 
     @Test
     void testSaveDelegation() {
@@ -97,7 +106,7 @@ class DelegationConnectorImplTest {
         delegation.setType(DelegationType.PT);
         delegation.setProductId("prod");
         delegation.setStatus(DelegationState.DELETED);
-        when(delegationRepository.findByFromAndToAndProductIdAndTypeAndStatus(any(), any(), any(), any(), any())).thenReturn(Optional.of(new DelegationEntity()));
+        when(delegationRepository.find(any(), eq(DelegationEntity.class))).thenReturn(List.of(new DelegationEntity()));
         boolean response = delegationConnectorImpl.checkIfExistsWithStatus(delegation, DelegationState.DELETED);
         assertTrue(response);
 
@@ -200,14 +209,14 @@ class DelegationConnectorImplTest {
 
     @Test
     void checkIfDelegationsAreActive_true() {
-        when(delegationRepository.findByToAndStatus(anyString(), any())).thenReturn(Optional.of(List.of(new DelegationEntity())));
+        when(delegationRepository.find(any(), eq(DelegationEntity.class))).thenReturn(List.of(new DelegationEntity()));
         boolean response = delegationConnectorImpl.checkIfDelegationsAreActive("id");
         assertTrue(response);
     }
 
     @Test
     void checkIfDelegationsAreActive_false() {
-        when(delegationRepository.findByToAndStatus(anyString(), any())).thenReturn(Optional.of(Collections.emptyList()));
+        when(delegationRepository.find(any(), eq(DelegationEntity.class))).thenReturn(Collections.emptyList());
         boolean response = delegationConnectorImpl.checkIfDelegationsAreActive("id");
         assertFalse(response);
     }
@@ -326,7 +335,7 @@ class DelegationConnectorImplTest {
                 .find(any(), any(), any());
 
         doReturn(1L)
-                .when(mongoTemplate)
+                .when(delegationRepository)
                 .count(any(), eq(DelegationEntity.class));
 
         DelegationWithPagination response = delegationConnectorImpl.findAndCount(createDelegationParameters(delegationEntity.getFrom(),

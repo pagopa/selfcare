@@ -23,5 +23,10 @@ public class UserInfo extends ReactivePanacheMongoEntityBase {
     private String userId;
 
     private List<UserInstitutionRole> institutions = new ArrayList<>();
+    /**
+     * Tenant owning this userInfo mirror document. Null remains valid during migration for records
+     * written before the discriminator existed.
+     */
+    private String tenantId;
 
 }

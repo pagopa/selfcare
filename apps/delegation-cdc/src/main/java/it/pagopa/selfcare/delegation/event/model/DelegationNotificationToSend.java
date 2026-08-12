@@ -27,5 +27,6 @@ public class DelegationNotificationToSend {
     private String closedAt;
     private Boolean isTest;
     private EventType eventType;
+    private String tenantId;
 
 }

@@ -12,6 +12,8 @@ import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
+import it.pagopa.selfcare.security.tenant.TenantContext;
+import it.pagopa.selfcare.security.tenant.TenantId;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -37,6 +39,9 @@ public class DocumentController {
   @Inject
   SecurityIdentity securityIdentity;
 
+  @Inject
+  TenantContext tenantContext;
+
   private final DocumentService documentService;
   private final DocumentMapper documentMapper;
 
@@ -58,6 +63,7 @@ public class DocumentController {
     @Path("/onboarding/{onboardingId}")
     public Uni<DocumentResponse> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
         log.info("Getting document for onboardingId: {}", sanitize(onboardingId));
+        requireTenant();
         return documentService.getDocumentByOnboardingId(onboardingId)
                 .map(documentMapper::toResponse);
     }
@@ -70,8 +76,24 @@ public class DocumentController {
     @Path("/{id}")
     public Uni<DocumentResponse> getDocumentById(@PathParam(value = "id") String id) {
         log.info("Getting document for documentId: {}", sanitize(id));
+        requireTenant();
         return documentService.getDocumentById(id)
                 .map(documentMapper::toResponse);
+    }
+
+    /**
+     * Fails closed if, unexpectedly, no tenant was resolved for an authenticated request.
+     *
+     * <p>The scoping itself is applied by {@code DocumentRepository}, which reads the same validated
+     * tenant. This check is defence in depth: without it, a request that somehow reached the
+     * controller with no tenant would be served with an unscoped query during the migration phase,
+     * silently returning another tenant's untagged documents instead of being refused.
+     */
+    private void requireTenant() {
+        TenantId tenant = tenantContext.getTenant();
+        if (tenant == null) {
+            throw new jakarta.ws.rs.ForbiddenException("No validated tenant resolved for this request");
+        }
     }
 
     @Operation(

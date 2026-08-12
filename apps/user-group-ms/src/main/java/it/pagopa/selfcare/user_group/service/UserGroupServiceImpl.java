@@ -11,6 +11,7 @@ import it.pagopa.selfcare.user_group.model.CriteriaBuilder;
 import it.pagopa.selfcare.user_group.model.UserGroupEntity;
 import it.pagopa.selfcare.user_group.model.UserGroupFilter;
 import it.pagopa.selfcare.user_group.model.UserGroupStatus;
+import it.pagopa.selfcare.user_group.security.tenant.CurrentTenantProvider;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -53,15 +54,18 @@ public class UserGroupServiceImpl implements UserGroupService {
     private final UserGroupRepository repository;
     private final MongoTemplate mongoTemplate;
     private final AuditorAware<String> auditorAware;
+    private final CurrentTenantProvider currentTenantProvider;
     private static final String COULD_NOT_UPDATE_MESSAGE = "Couldn't update resource";
 
     @Autowired
     UserGroupServiceImpl(@Value("${user-group.allowed.sorting.parameters}") String[] allowedSortingParams,
-                         UserGroupRepository repository, MongoTemplate mongoTemplate, AuditorAware<String> auditorAware) {
+                         UserGroupRepository repository, MongoTemplate mongoTemplate, AuditorAware<String> auditorAware,
+                         CurrentTenantProvider currentTenantProvider) {
         this.allowedSortingParams = Arrays.asList(allowedSortingParams);
         this.repository = repository;
         this.mongoTemplate = mongoTemplate;
         this.auditorAware = auditorAware;
+        this.currentTenantProvider = currentTenantProvider;
     }
 
     @Override
@@ -100,16 +104,16 @@ public class UserGroupServiceImpl implements UserGroupService {
         Assert.notNull(userGroupOperations.getParentInstitutionId(), USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE);
         Assert.notNull(userGroupOperations.getMembers(), MEMBERS_REQUIRED);
 
-        Query query = new Query(Criteria.where(UserGroupEntity.Fields.institutionId).is(userGroupOperations.getInstitutionId())
+        Query query = tenantScoped(new Query(Criteria.where(UserGroupEntity.Fields.institutionId).is(userGroupOperations.getInstitutionId())
                 .and(UserGroupEntity.Fields.productId).is(userGroupOperations.getProductId())
                 .and(UserGroupEntity.Fields.parentInstitutionId).is(userGroupOperations.getParentInstitutionId())
-                .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED)));
+                .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED))));
 
-        Update update = new Update()
+        Update update = stampTenant(new Update()
                 .setOnInsert(UserGroupEntity.Fields.name, ENTE_AGGREGATORE_PLACEHOLDER + userGroupOperations.getName())
                 .setOnInsert(UserGroupEntity.Fields.description, userGroupOperations.getDescription())
                 .setOnInsert(UserGroupEntity.Fields.status, UserGroupStatus.ACTIVE)
-                .addToSet(UserGroupEntity.Fields.members).each(userGroupOperations.getMembers());
+                .addToSet(UserGroupEntity.Fields.members).each(userGroupOperations.getMembers()));
 
         FindAndModifyOptions options = FindAndModifyOptions.options()
                 .upsert(true);
@@ -242,7 +246,9 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.debug("insert entity = {}", group);
         UserGroupEntity insert;
         try {
-            insert = repository.insert(new UserGroupEntity(group));
+            UserGroupEntity entity = new UserGroupEntity(group);
+            stampTenantIfUnset(entity);
+            insert = repository.insert(entity);
         } catch (DuplicateKeyException e) {
             throw new ResourceAlreadyExistsException("Failed _id or unique index constraint.", e);
         }
@@ -256,11 +262,11 @@ public class UserGroupServiceImpl implements UserGroupService {
         Assert.notNull(groupName, GROUP_NAME_REQUIRED);
         Assert.isTrue(!groupName.startsWith(ENTE_AGGREGATORE_PLACEHOLDER), GROUP_NAME_FORBIDDEN);
 
-        Query query = new Query(
+        Query query = tenantScoped(new Query(
                 Criteria.where(UserGroupEntity.Fields.institutionId).is(institutionId)
                         .and(UserGroupEntity.Fields.productId).is(productId)
                         .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED))
-        );
+        ));
 
         List<UserGroupEntity> foundGroups = mongoTemplate.find(query, UserGroupEntity.class);
 
@@ -273,8 +279,8 @@ public class UserGroupServiceImpl implements UserGroupService {
         }    }
 
     private Query createActiveGroupQuery(String id) {
-        return Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)
-                .and(UserGroupEntity.Fields.status).is(UserGroupStatus.ACTIVE));
+        return tenantScoped(Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)
+                .and(UserGroupEntity.Fields.status).is(UserGroupStatus.ACTIVE)));
     }
 
     private void insertMember(String id, String memberId) {
@@ -282,9 +288,9 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.debug("insertMember id = {}, memberId = {}", Encode.forJava(id), memberId);
         UpdateResult updateResult = mongoTemplate.updateFirst(
                 createActiveGroupQuery(id),
-                new Update().push(UserGroupEntity.Fields.members, memberId)
+                stampTenant(new Update().push(UserGroupEntity.Fields.members, memberId)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt)),
                 UserGroupEntity.class);
         if (updateResult.getModifiedCount() == 0) {
             throw new ResourceUpdateException(COULD_NOT_UPDATE_MESSAGE);
@@ -316,10 +322,10 @@ public class UserGroupServiceImpl implements UserGroupService {
 
         UpdateResult updateResult = mongoTemplate.updateFirst(
                 createActiveGroupQuery(id),
-                new Update()
+                stampTenant(new Update()
                         .pullAll(UserGroupEntity.Fields.members, userIdsAsStrings)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt)),
                 UserGroupEntity.class);
 
         if (updateResult.getModifiedCount() == 0) {
@@ -336,9 +342,9 @@ public class UserGroupServiceImpl implements UserGroupService {
 
         UpdateResult updateResult = mongoTemplate.updateFirst(
                 createActiveGroupQuery(id),
-                new Update().pull(UserGroupEntity.Fields.members, memberId)
+                stampTenant(new Update().pull(UserGroupEntity.Fields.members, memberId)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt)),
                 UserGroupEntity.class);
         if (updateResult.getModifiedCount() == 0) {
             throw new ResourceUpdateException(COULD_NOT_UPDATE_MESSAGE);
@@ -352,12 +358,12 @@ public class UserGroupServiceImpl implements UserGroupService {
                 Encode.forJava(memberId), Encode.forJava(institutionId), Encode.forJava(productId));
 
         UpdateResult updateResult = mongoTemplate.updateMulti(
-                Query.query(Criteria.where(UserGroupEntity.Fields.members).is(memberId)
+                tenantScoped(Query.query(Criteria.where(UserGroupEntity.Fields.members).is(memberId)
                         .and(UserGroupEntity.Fields.institutionId).is(institutionId)
-                        .and(UserGroupEntity.Fields.productId).is(productId)),
-                new Update().pull(UserGroupEntity.Fields.members, memberId)
+                        .and(UserGroupEntity.Fields.productId).is(productId))),
+                stampTenant(new Update().pull(UserGroupEntity.Fields.members, memberId)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt)),
                 UserGroupEntity.class);
         if (updateResult.getModifiedCount() == 0) {
             log.warn("No user to delete from UserGroup");
@@ -368,7 +374,12 @@ public class UserGroupServiceImpl implements UserGroupService {
     private Optional<UserGroupOperations> findById(String id) {
         log.trace("findById start");
         log.debug("findById id = {} ", Encode.forJava(id));
-        Optional<UserGroupOperations> result = repository.findById(id).map(Function.identity());
+        Optional<UserGroupOperations> result = currentTenantId().isEmpty()
+                ? repository.findById(id).map(Function.identity())
+                : Optional.ofNullable(mongoTemplate.findOne(
+                        tenantScoped(Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id))),
+                        UserGroupEntity.class))
+                        .map(Function.identity());
         log.debug("findById result = {}", result);
         log.trace("findById end");
 
@@ -386,7 +397,8 @@ public class UserGroupServiceImpl implements UserGroupService {
         if (Optional.ofNullable(filter.getStatus()).map(List::size).orElse(0) == 1 && !StringUtils.hasText(filter.getUserId()) && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
             throw new ValidationException("At least one of productId, institutionId and userId must be provided with status filter");
         }
-        Query query = new Query(constructCriteria(filter));
+        Criteria criteria = constructCriteria(filter);
+        Query query = tenantScoped(criteria.getCriteriaObject().isEmpty() ? new Query() : new Query(criteria));
         long count = this.mongoTemplate.count(query, UserGroupEntity.class);
         List<UserGroupOperations> userGroupOperations = new ArrayList<>(mongoTemplate.find(query.with(pageable), UserGroupEntity.class));
         final Page<UserGroupOperations> result = PageableExecutionUtils.getPage(userGroupOperations, pageable, () -> count);
@@ -432,10 +444,10 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.trace("updateUserById start");
         log.debug("updateUserById id = {}, status = {}", Encode.forJava(id), status);
         UpdateResult updateResult = mongoTemplate.updateFirst(
-                Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)),
-                Update.update(UserGroupEntity.Fields.status, status)
+                tenantScoped(Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id))),
+                stampTenant(Update.update(UserGroupEntity.Fields.status, status)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
-                        .currentDate(UserGroupEntity.Fields.modifiedAt),
+                        .currentDate(UserGroupEntity.Fields.modifiedAt)),
                 UserGroupEntity.class);
         if (updateResult.getMatchedCount() == 0) {
             throw new ResourceNotFoundException();
@@ -448,12 +460,48 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.debug("save entity = {}", group);
         UserGroupEntity result;
         try {
-            result = repository.save(new UserGroupEntity(group));
+            UserGroupEntity entity = new UserGroupEntity(group);
+            stampTenantIfUnset(entity);
+            result = repository.save(entity);
         } catch (DuplicateKeyException e) {
             throw new ResourceAlreadyExistsException("Failed _id or unique index constraint.", e);
         }
         log.debug("save result = {}", result);
         log.trace("save end");
         return result;
+    }
+
+    /**
+     * Applies tenant scoping to every MongoDB query issued by this service's data-access
+     * chokepoint. During the migration, legacy documents without {@code tenantId} must stay visible
+     * to avoid converting all existing reads into "not found"; the {@code tenantId is null} branch
+     * MUST be dropped once the backfill has tagged all user groups.
+     *
+     * <p>If no request tenant is resolvable (scheduled work, async threads, startup tasks), queries
+     * are deliberately left unscoped as a migration-phase concession preserving pre-multitenant
+     * behaviour. This is not a security boundary.
+     */
+    private Query tenantScoped(Query query) {
+        currentTenantId()
+                .ifPresent(tenantId -> query.addCriteria(new Criteria().orOperator(
+                        Criteria.where(UserGroupEntity.Fields.tenantId).is(tenantId),
+                        Criteria.where(UserGroupEntity.Fields.tenantId).is(null))));
+        return query;
+    }
+
+    private Update stampTenant(Update update) {
+        currentTenantId()
+                .ifPresent(tenantId -> update.set(UserGroupEntity.Fields.tenantId, tenantId));
+        return update;
+    }
+
+    private void stampTenantIfUnset(UserGroupEntity entity) {
+        if (entity.getTenantId() == null) {
+            currentTenantId().ifPresent(entity::setTenantId);
+        }
+    }
+
+    private Optional<String> currentTenantId() {
+        return Optional.ofNullable(currentTenantProvider.currentTenantId()).orElse(Optional.empty());
     }
 }

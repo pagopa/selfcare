@@ -254,5 +254,11 @@ module "apim_api" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/webhook/src/main/docs/openapi.json"
 
-  api_operation_policies = []
+  api_operation_policies    = []
+  tenant_ids                = module.local.config.tenant_ids
+  local_development_origins = module.local.config.local_development_origins
+  # external/webhook is a server-to-server integration surface: partner systems call it without an
+  # Origin or Referer header. Only the AR tenant exposes it today. Revisit when PNPG onboards to
+  # webhooks - at that point tenancy must come from the authenticated caller, not from a default.
+  default_tenant_id = "AR"
 }

@@ -19,51 +19,60 @@ import org.springframework.util.StringUtils;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MongoCustomConnectorImpl implements MongoCustomConnector {
+public class MongoCustomConnectorImpl<T, ID> implements MongoCustomConnector<T, ID> {
     private static final String INSTITUTION_ID = "institutionId";
     private static final String INSTITUTIONS = "institutions";
     private static final String ENTITY_ID = "_id";
     private static final String BINDINGS = "$bindings";
     private final MongoOperations mongoOperations;
+    private final TenantDataIsolation tenantDataIsolation;
 
-    public MongoCustomConnectorImpl(MongoOperations mongoOperations) {
+    public MongoCustomConnectorImpl(MongoOperations mongoOperations, TenantDataIsolation tenantDataIsolation) {
         this.mongoOperations = mongoOperations;
+        this.tenantDataIsolation = tenantDataIsolation;
     }
 
+    @Override
+    public <S extends T> S save(S entity) {
+        return mongoOperations.save(tenantDataIsolation.stampTenantForSave(entity));
+    }
 
     @Override
     public <O> boolean exists(Query query, Class<O> outputType) {
-        return mongoOperations.exists(query, outputType);
+        return mongoOperations.exists(tenantDataIsolation.tenantScoped(query, outputType), outputType);
     }
 
     @Override
     public <O> Long count(Query query, Class<O> outputType) {
-        return mongoOperations.count(query, outputType);
+        return mongoOperations.count(tenantDataIsolation.tenantScoped(query, outputType), outputType);
     }
 
     @Override
     public <O> List<O> find(Query query, Class<O> outputType) {
-        return mongoOperations.find(query, outputType);
+        return mongoOperations.find(tenantDataIsolation.tenantScoped(query, outputType), outputType);
     }
 
     @Override
     public <O> Page<O> find(Query query, Pageable pageable, Class<O> outputType) {
-        long count = mongoOperations.count(query, outputType);
+        Query scopedQuery = tenantDataIsolation.tenantScoped(query, outputType);
+        long count = mongoOperations.count(scopedQuery, outputType);
         List<O> list = new ArrayList<>();
         if (count > 0) {
-            list = mongoOperations.find(query.with(pageable), outputType);
+            list = mongoOperations.find(scopedQuery.with(pageable), outputType);
         }
         return new PageImpl<>(list, pageable, count);
     }
 
     @Override
     public <O> O findAndModify(Query query, UpdateDefinition updateDefinition, FindAndModifyOptions findAndModifyOptions, Class<O> outputType) {
-        return mongoOperations.findAndModify(query, updateDefinition, findAndModifyOptions, outputType);
+        Query scopedQuery = tenantDataIsolation.tenantScoped(query, outputType);
+        tenantDataIsolation.stampTenantForUpdate(updateDefinition, outputType);
+        return mongoOperations.findAndModify(scopedQuery, updateDefinition, findAndModifyOptions, outputType);
     }
 
     @Override
     public <O> O findAndRemove(Query query, Class<O> outputType) {
-        return mongoOperations.findAndRemove(query, outputType);
+        return mongoOperations.findAndRemove(tenantDataIsolation.tenantScoped(query, outputType), outputType);
     }
 
     @Override
@@ -77,6 +86,7 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
                 .connectFrom(INSTITUTION_ID)
                 .connectTo(ENTITY_ID)
                 .maxDepth(2);
+        restrictInstitutionLookup(filter, graphLookupInstitution);
         //Output a new document for each product in bindings
         UnwindOperation unwindProducts = Aggregation.unwind(BINDINGS + ".products");
         //remove document with product status not in filter
@@ -89,7 +99,6 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
             MatchOperation matchInstitutionId = checkIfInstitutionIdIsPresent(filter);
             aggregation = Aggregation.newAggregation(matchUserId, unwindBindings,  graphLookupInstitution.as(INSTITUTIONS), matchInstitutionId, unwindProducts, matchProductStatus, matchInstitutionExist);
         } else if (StringUtils.hasText(filter.getExternalId())) {
-            checkIfExternalIdIsPresent(filter, graphLookupInstitution);
             aggregation = Aggregation.newAggregation(matchUserId, unwindBindings, graphLookupInstitution.as(INSTITUTIONS), unwindProducts, matchProductStatus, matchInstitutionExist);
         } else {
             aggregation = Aggregation.newAggregation(matchUserId, unwindBindings, graphLookupInstitution.as(INSTITUTIONS), unwindProducts, matchProductStatus, matchInstitutionExist);
@@ -101,17 +110,28 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
         return Aggregation.match(Criteria.where("bindings." + INSTITUTION_ID).is(filter.getInstitutionId()));
     }
 
-    private void checkIfExternalIdIsPresent(UserInstitutionFilter filter, GraphLookupOperation.GraphLookupOperationBuilder graphLookupOperation) {
-        graphLookupOperation.restrict(Criteria.where("externalId").is(filter.getExternalId()));
+    private void restrictInstitutionLookup(UserInstitutionFilter filter, GraphLookupOperation.GraphLookupOperationBuilder graphLookupOperation) {
+        List<Criteria> restrictions = new ArrayList<>();
+        if (StringUtils.hasText(filter.getExternalId())) {
+            restrictions.add(Criteria.where("externalId").is(filter.getExternalId()));
+        }
+        tenantDataIsolation.currentTenantCriteria().ifPresent(restrictions::add);
+        if (!restrictions.isEmpty()) {
+            graphLookupOperation.restrict(new Criteria().andOperator(restrictions));
+        }
     }
 
     @Override
     public <O> UpdateResult updateMulti(Query query, UpdateDefinition updateDefinition, Class<O> outputType){
-        return mongoOperations.updateMulti(query, updateDefinition, outputType);
+        Query scopedQuery = tenantDataIsolation.tenantScoped(query, outputType);
+        tenantDataIsolation.stampTenantForUpdate(updateDefinition, outputType);
+        return mongoOperations.updateMulti(scopedQuery, updateDefinition, outputType);
     }
 
     @Override
     public <O> UpdateResult upsert(Query query, UpdateDefinition updateDefinition, Class<O> outputType) {
-        return mongoOperations.upsert(query, updateDefinition, outputType);
+        Query scopedQuery = tenantDataIsolation.tenantScoped(query, outputType);
+        tenantDataIsolation.stampTenantForUpdate(updateDefinition, outputType);
+        return mongoOperations.upsert(scopedQuery, updateDefinition, outputType);
     }
 }
