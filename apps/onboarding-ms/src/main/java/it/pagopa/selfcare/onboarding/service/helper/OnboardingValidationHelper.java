@@ -14,6 +14,7 @@ import it.pagopa.selfcare.onboarding.common.ProductId;
 import it.pagopa.selfcare.onboarding.controller.request.AggregateInstitutionRequest;
 import it.pagopa.selfcare.onboarding.controller.request.UserRequest;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingResponse;
+import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.registry.RegistryResourceFactory;
@@ -222,6 +223,45 @@ public class OnboardingValidationHelper {
             return Uni.createFrom().failure(new InvalidRequestException(
                     String.format(MANAGER_AND_DELEGATE_SAME_USER.getMessage(), productId),
                     MANAGER_AND_DELEGATE_SAME_USER.getCode()));
+        }
+        return Uni.createFrom().voidItem();
+    }
+
+    /**
+     * Verifies that a recipient code is provided when the product requires it.
+     *
+     * <p>If the product feature {@code features.requiredRecipientCode} is {@code true}, the
+     * {@code billing.recipientCode} of the request must be present (non blank); otherwise the
+     * validation fails with a {@link InvalidRequestException} (HTTP 400) and a custom message.
+     * When the flag is {@code false} or not set, the check is simply skipped.
+     *
+     * @param onboarding the onboarding request carrying the billing information
+     * @param product    the product configuration
+     * @return a {@link Uni} that fails with {@link InvalidRequestException} when the recipient
+     *         code is required but missing, completes with {@code void} otherwise
+     */
+    public Uni<Void> verifyRequiredRecipientCode(Onboarding onboarding, ProductResponse product) {
+        String productId = product != null ? product.getProductId() : null;
+
+        boolean requiredRecipientCode = Optional.ofNullable(product)
+                .map(ProductResponse::getFeatures)
+                .map(Features::getRequiredRecipientCode)
+                .orElse(Boolean.FALSE);
+
+        if (!requiredRecipientCode) {
+            return Uni.createFrom().voidItem();
+        }
+
+        String recipientCode = Optional.ofNullable(onboarding)
+                .map(Onboarding::getBilling)
+                .map(Billing::getRecipientCode)
+                .orElse(null);
+
+        if (StringUtils.isBlank(recipientCode)) {
+            log.warn("Recipient code is required but missing for productId={}", productId);
+            return Uni.createFrom().failure(new InvalidRequestException(
+                    String.format(RECIPIENT_CODE_REQUIRED.getMessage(), productId),
+                    RECIPIENT_CODE_REQUIRED.getCode()));
         }
         return Uni.createFrom().voidItem();
     }

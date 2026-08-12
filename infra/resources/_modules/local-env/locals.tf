@@ -25,8 +25,9 @@ locals {
   # ============================================================
   # Derived values
   # ============================================================
-  pnpg_suffix = "${local.location_short}-${local.domain}"
-  project     = "${local.prefix}-${local.env_short}"
+  pnpg_suffix      = "${local.location_short}-${local.domain}"
+  project          = "${local.prefix}-${local.env_short}"
+  project_location = "${local.prefix}-${local.env_short}-${local.location_short}"
 
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"

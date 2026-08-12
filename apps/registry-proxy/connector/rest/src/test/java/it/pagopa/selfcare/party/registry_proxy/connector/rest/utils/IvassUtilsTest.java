@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.utils;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.InsuranceCompany;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.exception.IvassFileParseException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -68,15 +69,11 @@ class IvassUtilsTest {
     }
 
     @Test
-    void readCsv_shouldReturnEmptyList_whenCsvIsInvalid() throws IOException {
+    void readCsv_shouldThrowIvassFileParseException_whenCsvIsInvalid() throws IOException {
         ClassPathResource resource = new ClassPathResource("ivass-open-data-malformed.csv");
         byte[] csvBytes = java.nio.file.Files.readAllBytes(resource.getFile().toPath());
 
-        List<InsuranceCompany> result = ivassUtil.readCsv(csvBytes);
-
-        // Assert that the result is not null and is empty
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
+        assertThrows(IvassFileParseException.class, () -> ivassUtil.readCsv(csvBytes));
     }
 
     @Test

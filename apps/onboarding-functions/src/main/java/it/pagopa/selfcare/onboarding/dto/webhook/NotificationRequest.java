@@ -8,5 +8,6 @@ import lombok.Data;
 public class NotificationRequest {
   private String productId;
   private String payload;
+  private String topic;
   private String tenantId;
 }

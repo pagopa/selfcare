@@ -3,6 +3,7 @@ package it.pagopa.selfcare.document.repository;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
 import io.quarkus.panache.common.Sort;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.CurrentTenantProvider;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -106,6 +107,11 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
         List<Object> params = new ArrayList<>(List.of(onboardingId, ATTACHMENT.name()));
         String query = tenantScoped("onboardingId = ?1 and type = ?2", params);
         return find(query, args(params)).list();
+    }
+
+    public Uni<List<Document>> findUserAttachmentsByOnboardingId(String onboardingId) {
+        return find("onboardingId = ?1 and type = ?2 and storageOrigin = ?3",
+                onboardingId, ATTACHMENT.name(), StorageOrigin.USER).list();
     }
 
     /**

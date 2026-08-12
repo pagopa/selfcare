@@ -26,7 +26,7 @@ jobs:
           VERSION=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-  release_product:
+  release_product_ar:
     needs: prepare
     uses: ./.github/workflows/call_release_app.yml
     with:
@@ -38,9 +38,21 @@ jobs:
       POM: pom.xml
     secrets: inherit
 
+  release_product_pnpg:
+    needs: prepare
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: pnpg
+      app: product
+      APP_PATH: apps/product
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
   update_prod_variable:
     name: "Update PROD Version Variable"
-    needs: [prepare, release_product]
+    needs: [prepare, release_product_ar, release_product_pnpg]
     if: inputs.env == 'prod'
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:

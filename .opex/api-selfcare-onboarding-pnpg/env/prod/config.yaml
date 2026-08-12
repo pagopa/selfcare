@@ -122,6 +122,11 @@ overrides:
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 5 # Default: 
+    /v2/institutions/{onboardingId}:
+      response_time_threshold: 1.2 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 5 # Default: 
     /v2/tokens/{onboardingId}:
       response_time_threshold: 2.2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
@@ -153,17 +158,26 @@ overrides:
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 5 # Default:
     /v2/institutions/onboarding/users/pg:
-      response_time_threshold: 3
+      response_time_threshold: 4
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 5 # Default:
     /v2/institutions/company/verify-manager:
-      response_time_threshold: 2
+      response_time_threshold: 2.4
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 5 # Default:
+      availability_threshold: 0.99
+      availability_evaluation_frequency: 10 
+      availability_evaluation_time_window: 30
+      availability_event_occurrences: 5
     /v2/institutions/company/onboarding:
-      response_time_threshold: 4.5 # Default: 1
+      response_time_threshold: 5.2 # Default: 1
       response_time_evaluation_frequency: 10 # Default: 10
       response_time_evaluation_time_window: 30 # Default: 20
       response_time_event_occurrences: 5 # Default: 
+    /v2/institutions/onboarding/active:
+      response_time_threshold: 1.1 # Default: 1
+      response_time_evaluation_frequency: 10 # Default: 10
+      response_time_evaluation_time_window: 30 # Default: 20
+      response_time_event_occurrences: 3 # Default: 

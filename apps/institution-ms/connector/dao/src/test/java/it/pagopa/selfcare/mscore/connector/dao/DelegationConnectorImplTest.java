@@ -513,4 +513,68 @@ class DelegationConnectorImplTest {
         assertEquals(100, result2.getPageInfo().getPageSize());
     }
 
+  @Test
+  void countDelegations_shouldReturnCountsByProduct() {
+    OffsetDateTime from = OffsetDateTime.now().minusDays(1);
+    OffsetDateTime to = OffsetDateTime.now();
+
+    List<DelegationCount> expected = List.of(
+      new DelegationCount("prod-pagopa", 10L),
+      new DelegationCount("prod-io", 5L)
+    );
+
+    AggregationResults<DelegationCount> aggregationResults =
+      new AggregationResults<>(expected, new Document());
+
+    when(mongoTemplate.aggregate(
+      any(Aggregation.class),
+      eq("Delegations"),
+      eq(DelegationCount.class)))
+      .thenReturn(aggregationResults);
+
+    List<DelegationCount> result =
+      delegationConnectorImpl.countDelegations(from, to, "prod-pagopa");
+
+    verify(mongoTemplate).aggregate(
+      any(Aggregation.class),
+      eq("Delegations"),
+      eq(DelegationCount.class));
+
+    assertEquals(2, result.size());
+
+    assertEquals("prod-pagopa", result.get(0).getProductId());
+    assertEquals(10L, result.get(0).getCount());
+
+    assertEquals("prod-io", result.get(1).getProductId());
+    assertEquals(5L, result.get(1).getCount());
+  }
+
+  @Test
+  void countDelegations_shouldReturnCountsForAllProductsWhenProductIdIsNull() {
+    OffsetDateTime from = OffsetDateTime.now().minusDays(1);
+    OffsetDateTime to = OffsetDateTime.now();
+
+    List<DelegationCount> expected = List.of(
+      new DelegationCount("prod-pagopa", 10L),
+      new DelegationCount("prod-io", 5L),
+      new DelegationCount("prod-pn", 2L)
+    );
+
+    when(mongoTemplate.aggregate(
+      any(Aggregation.class),
+      eq("Delegations"),
+      eq(DelegationCount.class)))
+      .thenReturn(new AggregationResults<>(expected, new Document()));
+
+    List<DelegationCount> result =
+      delegationConnectorImpl.countDelegations(from, to, null);
+
+    verify(mongoTemplate).aggregate(
+      any(Aggregation.class),
+      eq("Delegations"),
+      eq(DelegationCount.class));
+
+    assertEquals(expected, result);
+  }
+
 }

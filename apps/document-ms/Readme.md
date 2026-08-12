@@ -55,21 +55,22 @@ Multiple endpoints are available, each designed for a specific use case:
 
 ### Document content
 
-| Method | Path | Description |
-| --- | --- | --- |
-| `POST` | `/v1/document-content/contract` | Generates a contract PDF. |
-| `POST` | `/v1/document-content/attachment` | Generates an attachment PDF. |
-| `POST` | `/v1/document-content/{onboardingId}/upload-signed-contract` | Verifies and uploads a signed contract. |
-| `POST` | `/v1/document-content/upload-attachment` | Verifies, signs and uploads a system-managed attachment. |
-| `POST` | `/v1/document-content/upload-user-attachment` | Uploads a PDF attachment to user storage. |
-| `GET` | `/v1/document-content/{onboardingId}/contract` | Downloads the unsigned contract. |
-| `GET` | `/v1/document-content/{onboardingId}/contract-signed` | Downloads the signed contract. |
-| `GET` | `/v1/document-content/{onboardingId}/attachment` | Downloads an attachment by filename. |
-| `GET` | `/v1/document-content/{onboardingId}/template-attachment` | Downloads an attachment template. |
-| `DELETE` | `/v1/document-content/contract` | Deletes a contract from storage. |
-| `POST` | `/v1/document-content/visura` | Stores a Visura document. |
-| `POST` | `/v1/document-content/aggregates-csv` | Uploads an aggregates CSV file. |
-| `GET` | `/v1/document-content/aggregates-csv/{onboardingId}/products/{productId}` | Downloads the aggregates CSV for an onboarding and product. |
+| Method | Path | Description                                                                                                                                                          |
+| --- | --- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `POST` | `/v1/document-content/contract` | Generates a contract PDF.                                                                                                                                            |
+| `POST` | `/v1/document-content/attachment` | Generates an attachment PDF.                                                                                                                                         |
+| `POST` | `/v1/document-content/{onboardingId}/upload-signed-contract` | Verifies and uploads a signed contract.                                                                                                                              |
+| `POST` | `/v1/document-content/upload-attachment` | Verifies, signs and uploads a system-managed attachment.                                                                                                             |
+| `POST` | `/v1/document-content/upload-user-attachment` | Uploads a PDF attachment to user storage.                                                                                                                            |
+| `GET` | `/v1/document-content/{onboardingId}/contract` | Downloads the unsigned contract.                                                                                                                                     |
+| `GET` | `/v1/document-content/{onboardingId}/contract-signed` | Downloads the signed contract.                                                                                                                                       |
+| `GET` | `/v1/document-content/{onboardingId}/attachment` | Downloads an attachment by filename.                                                                                                                                 |
+| `GET` | `/v1/document-content/{onboardingId}/template-attachment` | Downloads an attachment template.                                                                                                                                    |
+| `DELETE` | `/v1/document-content/contract` | Deletes a contract from storage.                                                                                                                                     |
+| `DELETE` | `/v1/document-content/{onboardingId}/user-attachments` | Deletes all user-uploaded attachments associated with an onboarding. |
+| `POST` | `/v1/document-content/visura` | Stores a Visura document.                                                                                                                                            |
+| `POST` | `/v1/document-content/aggregates-csv` | Uploads an aggregates CSV file.                                                                                                                                      |
+| `GET` | `/v1/document-content/aggregates-csv/{onboardingId}/products/{productId}` | Downloads the aggregates CSV for an onboarding and product.                                                                                                          |
 
 ### Signature verification
 

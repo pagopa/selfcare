@@ -5,6 +5,8 @@ tags:
   description: System information
 - name: Webhook
   description: API for webhook configuration management
+- name: Webhook Notification
+  description: API for resending webhook notifications
 - name: external-v2
 - name: internal-v1
 paths:
@@ -81,6 +83,74 @@ paths:
             application/json: {}
         "400":
           description: Bad Request
+  /webhooks/notifications/resend:
+    post:
+      summary: Resend notifications by status
+      description: Reset every notification matching the given status (optionally
+        restricted to a single webhook) to PENDING and re-publish them for delivery
+      operationId: resendNotificationsByStatus
+      tags:
+      - internal-v1
+      parameters:
+      - name: status
+        in: query
+        schema:
+          allOf:
+          - $ref: "#/components/schemas/NotificationStatus"
+          - default: FAILED
+      - name: webhookId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /webhooks/notifications/resend/date-range:
+    post:
+      summary: Resend notifications created within a date range
+      description: Reset every notification created between the given ISO-8601 date-times
+        (e.g. 2024-01-01T00:00:00) to PENDING and re-publish them for delivery
+      operationId: resendNotificationsByDateRange
+      tags:
+      - internal-v1
+      parameters:
+      - name: from
+        in: query
+        schema:
+          type: string
+          pattern: \S
+        required: true
+      - name: to
+        in: query
+        schema:
+          type: string
+          pattern: \S
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /webhooks/notifications/{notificationId}/resend:
+    post:
+      summary: Resend a notification by ID
+      description: Reset a single notification to PENDING and re-publish it for delivery
+      operationId: resendNotificationById
+      tags:
+      - internal-v1
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
   /webhooks/notify:
     post:
       summary: Send notification
@@ -183,6 +253,7 @@ components:
       - productId
       - tenantId
       - payload
+      - topic
       properties:
         productId:
           type: string
@@ -193,6 +264,17 @@ components:
         payload:
           type: string
           pattern: \S
+        topic:
+          type: string
+          pattern: \S
+    NotificationStatus:
+      type: string
+      enum:
+      - PENDING
+      - SENDING
+      - DELIVERED
+      - FAILED
+      - RETRY
     RetryPolicyRequest:
       type: object
       properties:
@@ -246,6 +328,10 @@ components:
           type: object
           additionalProperties:
             type: string
+        topics:
+          type: array
+          items:
+            type: string
         retryPolicy:
           $ref: "#/components/schemas/RetryPolicyRequest"
     WebhookResponse:
@@ -266,6 +352,10 @@ components:
           additionalProperties:
             type: string
         products:
+          type: array
+          items:
+            type: string
+        topics:
           type: array
           items:
             type: string

@@ -13,3 +13,12 @@ output "product_storage_blob_identity_client_id" {
   description = "Client ID of the user-assigned identity with Storage Blob Data Contributor role"
 }
 
+output "onboarding_functions_host_storage_identity_id" {
+  value       = azurerm_user_assigned_identity.onboarding_functions_host_storage_identity.id
+  description = "ID of the managed identity for the onboarding Functions host storage"
+}
+
+output "onboarding_functions_host_storage_identity_client_id" {
+  value       = azurerm_user_assigned_identity.onboarding_functions_host_storage_identity.client_id
+  description = "Client ID of the managed identity for the onboarding Functions host storage"
+}

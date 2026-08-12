@@ -22,8 +22,11 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.vertx.mutiny.core.Vertx;
+import it.pagopa.selfcare.webhook.entity.RetryPolicy;
+import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
+import it.pagopa.selfcare.webhook.repository.WebhookRepository;
 import jakarta.inject.Inject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -41,6 +44,10 @@ class WebhookNotificationConsumerTest {
   @InjectMock WebhookNotificationRepository notificationRepository;
 
   @InjectMock WebhookNotificationService notificationService;
+
+  @InjectMock WebhookRepository webhookRepository;
+
+  @InjectMock it.pagopa.selfcare.webhook.metrics.WebhookMetrics metrics;
 
   @Inject Vertx vertx;
 
@@ -85,6 +92,7 @@ class WebhookNotificationConsumerTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
     consumer.enabled = true;
+    consumer.autoCreate = true;
     doReturn(clientBuilder).when(consumer).buildClientBuilder();
     when(clientBuilder.buildClient()).thenReturn(client);
 
@@ -93,6 +101,38 @@ class WebhookNotificationConsumerTest {
 
     // then
     verify(client).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotCreateQueueWhenAutoCreateIsDisabled() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
+    consumer.enabled = true;
+    consumer.autoCreate = false;
+    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+
+    // when
+    consumer.start(null);
+
+    // then
+    verify(client, never()).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotFailWhenQueueCreationIsUnauthorized() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
+    consumer.enabled = true;
+    consumer.autoCreate = true;
+    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+    doThrow(mock(QueueStorageException.class)).when(client).createIfNotExists();
+
+    // when / then
+    assertDoesNotThrow(() -> consumer.start(null));
   }
 
   @Test
@@ -169,6 +209,7 @@ class WebhookNotificationConsumerTest {
         .when(client)
         .receiveMessages(eq(32), eq(Duration.ofSeconds(300)), isNull(), isNull());
     consumer().enabled = true;
+    consumer().autoCreate = true;
 
     // when
     consumer().poll();
@@ -213,7 +254,7 @@ class WebhookNotificationConsumerTest {
   void processMessage_shouldDiscardMessageWithInvalidNotificationId()
       throws ReflectiveOperationException {
     // given
-    when(message.getMessageText()).thenReturn("invalid-notification-id");
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("invalid-notification-id"));
 
     // when
     invokeProcessMessage(message);
@@ -221,6 +262,7 @@ class WebhookNotificationConsumerTest {
     // then
     verify(client).deleteMessage("message-id", "pop-receipt");
     verify(notificationService, never()).processNotification(any(WebhookNotification.class));
+    verify(metrics).recordDiscarded("invalid_notification_id");
   }
 
   @Test
@@ -230,7 +272,7 @@ class WebhookNotificationConsumerTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
-    when(message.getMessageText()).thenReturn(notification.getId().toHexString());
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
@@ -244,14 +286,16 @@ class WebhookNotificationConsumerTest {
     // then
     verify(notificationService, timeout(1000)).processNotification(notification);
     verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+    verify(metrics, timeout(1000)).recordClaim("queue", 1);
   }
 
   @Test
-  void processNotification_shouldDoNothingWhenNotificationIsNotClaimed() {
+  void processNotification_shouldDeleteMessageWhenUnclaimedNotificationIsMissing() {
     // given
     String notificationId = new ObjectId().toHexString();
     when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
         .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
 
     // when
     invokeProcessNotification(message, notificationId);
@@ -262,18 +306,71 @@ class WebhookNotificationConsumerTest {
   }
 
   @Test
-  void processNotification_shouldNotDeleteMessageWhenStatusIsRetry() {
+  void processNotification_shouldDeleteMessageWhenUnclaimedNotificationIsTerminal() {
+    // given
+    String notificationId = new ObjectId().toHexString();
+    WebhookNotification existing = new WebhookNotification();
+    existing.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().item(existing));
+
+    // when
+    invokeProcessNotification(message, notificationId);
+
+    // then
+    verify(notificationService, timeout(1000).times(0)).processNotification(any(WebhookNotification.class));
+    verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+  }
+
+  @Test
+  void processNotification_shouldNotDeleteMessageWhenUnclaimedNotificationIsStillLocked() {
+    // given
+    // claimForProcessing returned null because another attempt still holds the active lock
+    // (e.g. still being processed, or abandoned mid-flight before the lock could be released).
+    // The message must be kept in the queue so the notification is not lost forever.
+    String notificationId = new ObjectId().toHexString();
+    WebhookNotification existing = new WebhookNotification();
+    existing.setStatus(WebhookNotification.NotificationStatus.SENDING);
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+        .thenReturn(Uni.createFrom().nullItem());
+    when(notificationRepository.findById(any(ObjectId.class)))
+        .thenReturn(Uni.createFrom().item(existing));
+
+    // when
+    invokeProcessNotification(message, notificationId);
+
+    // then
+    verify(notificationService, timeout(1000).times(0)).processNotification(any(WebhookNotification.class));
+    verify(client, never()).deleteMessage(any(), any());
+  }
+
+  @Test
+  void processNotification_shouldApplyRetryBackoffAndNotDeleteMessageWhenStatusIsRetry() {
     // given
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
+    notification.setWebhookId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
+    notification.setAttemptCount(1);
 
+    Webhook webhook = new Webhook();
+    RetryPolicy retryPolicy = new RetryPolicy();
+    retryPolicy.setInitialDelayMs(1000L);
+    retryPolicy.setMaxDelayMs(10000L);
+    retryPolicy.setBackoffMultiplier(2.0);
+    webhook.setRetryPolicy(retryPolicy);
+
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
     when(notificationRepository.releaseProcessingLock(eq(notification)))
         .thenReturn(Uni.createFrom().item(notification));
+    when(webhookRepository.findById(eq(notification.getWebhookId())))
+        .thenReturn(Uni.createFrom().item(webhook));
 
     // when
     invokeProcessNotification(message, notification.getId().toHexString());
@@ -281,6 +378,105 @@ class WebhookNotificationConsumerTest {
     // then
     verify(notificationService, timeout(1000)).processNotification(eq(notification));
     verify(notificationRepository, timeout(1000)).releaseProcessingLock(eq(notification));
+    // attempt 1 => delay = initialDelayMs * multiplier^0 = 1000ms
+    verify(client, timeout(1000))
+        .updateMessage(
+            "message-id", "pop-receipt", notification.getId().toHexString(), Duration.ofMillis(1000));
+    verify(client, never()).deleteMessage(any(), any());
+  }
+
+  @Test
+  void processNotification_shouldCapRetryBackoffAtMaxDelay() {
+    // given
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setWebhookId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
+    notification.setAttemptCount(5);
+
+    Webhook webhook = new Webhook();
+    RetryPolicy retryPolicy = new RetryPolicy();
+    retryPolicy.setInitialDelayMs(1000L);
+    retryPolicy.setMaxDelayMs(10000L);
+    retryPolicy.setBackoffMultiplier(2.0);
+    webhook.setRetryPolicy(retryPolicy);
+
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationService.processNotification(eq(notification)))
+        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(webhookRepository.findById(eq(notification.getWebhookId())))
+        .thenReturn(Uni.createFrom().item(webhook));
+
+    // when
+    invokeProcessNotification(message, notification.getId().toHexString());
+
+    // then
+    // attempt 5 => uncapped delay = 1000 * 2^4 = 16000ms, capped to maxDelayMs = 10000ms
+    verify(client, timeout(1000))
+        .updateMessage(
+            "message-id", "pop-receipt", notification.getId().toHexString(), Duration.ofMillis(10000));
+  }
+
+  @Test
+  void processNotification_shouldUseDefaultRetryPolicyWhenWebhookIsMissing() {
+    // given
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setWebhookId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
+    notification.setAttemptCount(1);
+
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationService.processNotification(eq(notification)))
+        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(webhookRepository.findById(eq(notification.getWebhookId())))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    invokeProcessNotification(message, notification.getId().toHexString());
+
+    // then
+    // default policy: initialDelayMs=1000, multiplier=2.0 => attempt 1 delay = 1000ms
+    verify(client, timeout(1000))
+        .updateMessage(
+            "message-id", "pop-receipt", notification.getId().toHexString(), Duration.ofMillis(1000));
+    verify(client, never()).deleteMessage(any(), any());
+  }
+
+  @Test
+  void processNotification_shouldFallBackToDefaultDelayWhenWebhookLookupFails() {
+    // given
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setWebhookId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.RETRY);
+    notification.setAttemptCount(1);
+
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationService.processNotification(eq(notification)))
+        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(webhookRepository.findById(eq(notification.getWebhookId())))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("db unavailable")));
+
+    // when
+    invokeProcessNotification(message, notification.getId().toHexString());
+
+    // then
+    verify(client, timeout(1000))
+        .updateMessage(
+            "message-id", "pop-receipt", notification.getId().toHexString(), Duration.ofMillis(1000));
     verify(client, never()).deleteMessage(any(), any());
   }
 
@@ -323,7 +519,7 @@ class WebhookNotificationConsumerTest {
   }
 
   @Test
-  void processNotification_shouldNotDeleteMessageWhenProcessingFails() {
+  void processNotification_shouldReleaseLockAndNotDeleteMessageWhenProcessingFails() {
     // given
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
@@ -333,13 +529,17 @@ class WebhookNotificationConsumerTest {
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("delivery failed")));
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
 
     // when
     invokeProcessNotification(message, notification.getId().toHexString());
 
     // then
     verify(notificationService, timeout(1000)).processNotification(eq(notification));
-    verify(notificationRepository, never()).releaseProcessingLock(eq(notification));
+    // The lock must be released even when processing fails, otherwise the notification would
+    // remain locked until the lock expires with the message already gone from the queue.
+    verify(notificationRepository, timeout(1000)).releaseProcessingLock(eq(notification));
     verify(client, never()).deleteMessage(any(), any());
   }
 

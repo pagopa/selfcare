@@ -5,13 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.mscore.constant.DelegationType;
 import it.pagopa.selfcare.mscore.core.DelegationService;
 import it.pagopa.selfcare.mscore.model.delegation.Delegation;
+import it.pagopa.selfcare.mscore.model.delegation.DelegationCount;
 import it.pagopa.selfcare.mscore.model.delegation.DelegationInstitution;
 import it.pagopa.selfcare.mscore.model.institution.Institution;
 import it.pagopa.selfcare.mscore.model.institution.Onboarding;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationInstitutionResponse;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationRequest;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationRequestFromTaxcode;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationResponse;
+import it.pagopa.selfcare.mscore.web.model.delegation.*;
 import it.pagopa.selfcare.mscore.web.model.mapper.*;
 import it.pagopa.selfcare.mscore.web.util.SpringContext;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -37,6 +35,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -495,5 +494,43 @@ class DelegationControllerTest {
                 .perform(requestBuilder1)
                 .andExpect(MockMvcResultMatchers.status().isBadRequest());
     }
+
+  @Test
+  void countDelegations_shouldReturnCountForProduct() throws Exception {
+
+    OffsetDateTime from = OffsetDateTime.parse("2026-01-01T00:00:00Z");
+    OffsetDateTime to = OffsetDateTime.parse("2026-01-31T23:59:59Z");
+
+    DelegationCount count = new DelegationCount("prod-pagopa", 12L);
+
+    when(delegationService.countDelegations(eq(from), eq(to), eq("prod-pagopa")))
+      .thenReturn(List.of(count));
+
+    MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
+      .get("/delegations/count")
+      .param("fromDate", from.toString())
+      .param("toDate", to.toString())
+      .param("productId", "prod-pagopa");
+
+    MvcResult mvcResult = MockMvcBuilders.standaloneSetup(delegationController)
+      .build()
+      .perform(requestBuilder)
+      .andExpect(MockMvcResultMatchers.status().isOk())
+      .andExpect(MockMvcResultMatchers.content().contentType("application/json"))
+      .andReturn();
+
+    List<DelegationCountResult> response = objectMapper.readValue(
+      mvcResult.getResponse().getContentAsString(),
+      new TypeReference<>() {});
+
+    DelegationCountResult result = new DelegationCountResult("prod-pagopa", 12L);
+    List<DelegationCountResult> expected = List.of(result);
+
+    assertEquals(1, response.size());
+    assertEquals(expected.get(0).getProductId(), response.get(0).getProductId());
+    assertEquals(expected.get(0).getCount(), response.get(0).getCount());
+
+    verify(delegationService).countDelegations(from, to, "prod-pagopa");
+  }
 
 }

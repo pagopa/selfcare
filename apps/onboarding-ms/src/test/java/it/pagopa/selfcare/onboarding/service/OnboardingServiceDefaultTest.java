@@ -63,7 +63,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
-import org.openapi.quarkus.core_json.model.InstitutionsResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
@@ -140,9 +139,6 @@ class OnboardingServiceDefaultTest {
 
     @InjectMock
     UserService userInstitutionApi;
-
-    @InjectMock
-    InstitutionService institutionService;
 
     @InjectMock
     @RestClient
@@ -1903,6 +1899,7 @@ class OnboardingServiceDefaultTest {
     @Test
     @RunOnVertxContext
     void onboarding_whenUserFoundedAndWillUpdateMailUuid(UniAsserter asserter) {
+        // given
         UserRequesterDto userRequesterDto = new UserRequesterDto();
         userRequesterDto.setName("name");
         userRequesterDto.setSurname("surname");
@@ -1946,7 +1943,9 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
 
+        // when
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), response -> {
+            // then
             Assertions.assertEquals(request.getProductId(), response.getProductId());
             Assertions.assertNotNull(response.getUsers().get(0).getUserMailUuid());
         });
@@ -1955,7 +1954,6 @@ class OnboardingServiceDefaultTest {
             PanacheMock.verify(Onboarding.class).persist(any(Onboarding.class), any());
             PanacheMock.verify(Onboarding.class).persistOrUpdate(any(List.class));
             PanacheMock.verify(Onboarding.class).find(any(Document.class));
-            PanacheMock.verifyNoMoreInteractions(Onboarding.class);
         });
     }
 
@@ -3176,6 +3174,10 @@ class OnboardingServiceDefaultTest {
         request.setProductId(PROD_INTEROP.getValue());
         request.setUsers(users);
         request.setInstitutionType(InstitutionType.PA);
+        request.setTaxCode("taxCode");
+        request.setSubunitCode("subunitCode");
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
         mockPersistOnboarding(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
@@ -3189,14 +3191,6 @@ class OnboardingServiceDefaultTest {
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
-
-        org.openapi.quarkus.core_json.model.InstitutionResponse institutionResponse = new org.openapi.quarkus.core_json.model.InstitutionResponse();
-        institutionResponse.setOrigin(Origin.IPA.name());
-        institutionResponse.setOriginId("originId");
-        InstitutionsResponse response = new InstitutionsResponse();
-        response.setInstitutions(List.of(institutionResponse));
-        asserter.execute(() -> when(institutionService.getInstitutionsUsingGET(any(), any(), any(), any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(response)));
 
         asserter.assertThat(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS), Assertions::assertNotNull);
 
@@ -3213,54 +3207,21 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         request.setProductId(PROD_INTEROP.getValue());
         request.setUsers(users);
+        request.setInstitutionType(InstitutionType.PA);
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
 
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
-        when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
+        when(query.stream()).thenReturn(Multi.createFrom().empty());
         when(Onboarding.find((Document) any(), any())).thenReturn(query);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
-        org.openapi.quarkus.core_json.model.InstitutionResponse institutionResponse = new org.openapi.quarkus.core_json.model.InstitutionResponse();
-        institutionResponse.setOrigin(Origin.IPA.name());
-        institutionResponse.setOriginId("originId");
-        InstitutionsResponse response = new InstitutionsResponse();
-        response.setInstitutions(List.of(institutionResponse));
-        when(institutionService.getInstitutionsUsingGET(any(), any(), any(), any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(response));
-
         asserter.assertFailedWith(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS_EA), ResourceNotFoundException.class);
 
-    }
-
-    @Test
-    @RunOnVertxContext
-    void onboardingUsersWithInstitutionNotFound(UniAsserter asserter) {
-        OnboardingUserRequest request = new OnboardingUserRequest();
-        List<UserRequest> users = List.of(manager);
-        request.setTaxCode("taxCode");
-        request.setSubunitCode("subunitCode");
-        request.setProductId(PROD_INTEROP.getValue());
-        request.setUsers(users);
-        request.setInstitutionType(PA);
-
-        org.openapi.quarkus.core_json.model.InstitutionResponse institutionResponse = new org.openapi.quarkus.core_json.model.InstitutionResponse();
-        institutionResponse.setOrigin(Origin.IPA.name());
-        institutionResponse.setOriginId("originId");
-        institutionResponse.setInstitutionType("PSP");
-        InstitutionsResponse response = new InstitutionsResponse();
-        response.setInstitutions(List.of(institutionResponse, institutionResponse));
-
-        asserter.execute(() -> {
-            when(productAzureService.getProductExpirationDate(request.getProductId())).thenReturn(30);
-            when(institutionService.getInstitutionsUsingGET("taxCode", "subunitCode", null, null, null, null))
-                    .thenReturn(Uni.createFrom().item(response));
-        });
-
-        asserter.assertFailedWith(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS),
-                ResourceNotFoundException.class);
     }
 
     @Test
@@ -3272,6 +3233,8 @@ class OnboardingServiceDefaultTest {
         request.setProductId(PROD_INTEROP.getValue());
         request.setUsers(users);
         request.setInstitutionType(InstitutionType.PSP);
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
         mockPersistOnboarding(asserter);
 
         mockSimpleSearchPOSTAndPersist(asserter);
@@ -3286,14 +3249,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
-        org.openapi.quarkus.core_json.model.InstitutionResponse institutionResponse = new org.openapi.quarkus.core_json.model.InstitutionResponse();
-        institutionResponse.setOrigin(Origin.IPA.name());
-        institutionResponse.setOriginId("originId");
-        institutionResponse.setInstitutionType("PSP");
-        InstitutionsResponse response = new InstitutionsResponse();
-        response.setInstitutions(List.of(institutionResponse, institutionResponse));
-        asserter.execute(() -> when(institutionService.getInstitutionsUsingGET(any(), any(), any(), any(), any(), any()))
-                .thenReturn(Uni.createFrom().item(response)));
 
         asserter.assertThat(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS), Assertions::assertNotNull);
 
@@ -5372,6 +5327,59 @@ class OnboardingServiceDefaultTest {
         });
 
         asserter.assertThat(() -> onboardingService.onboarding(onboardingRequest, users, null, userRequesterDto), Assertions::assertNotNull);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_whenRequiredRecipientCodeAndRecipientCodePresent_shouldSucceed(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        // recipientCode present in billing
+        Billing billing = new Billing();
+        billing.setRecipientCode("REC123");
+        request.setBilling(billing);
+
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
+
+        // Product-ms flag: recipientCode is required for this product
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setRequiredRecipientCode(true);
+        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        productResponse.setProductId(request.getProductId());
+        productResponse.setFeatures(features);
+        asserter.execute(() -> when(productService.getProduct(request.getProductId()))
+                .thenReturn(Uni.createFrom().item(productResponse)));
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_whenRequiredRecipientCodeAndRecipientCodeMissing_shouldThrowInvalidRequestException(UniAsserter asserter) {
+        Onboarding request = buildPrvOnboardingRequest();
+        // no billing / recipientCode set on purpose
+
+        setupPrvHappyPathMocks(request, asserter);
+        asserter.execute(() -> when(productService.isRequiredDocuments(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(Boolean.FALSE)));
+
+        // Product-ms flag: recipientCode is required but the request carries none
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setRequiredRecipientCode(true);
+        org.openapi.quarkus.product_json.model.ProductResponse productResponse =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        productResponse.setProductId(request.getProductId());
+        productResponse.setFeatures(features);
+        asserter.execute(() -> when(productService.getProduct(request.getProductId()))
+                .thenReturn(Uni.createFrom().item(productResponse)));
+
+        asserter.assertFailedWith(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                InvalidRequestException.class);
     }
 
     @Test

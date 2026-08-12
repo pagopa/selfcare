@@ -285,4 +285,30 @@ public class DelegationConnectorImpl implements DelegationConnector {
         return criterias;
     }
 
+  @Override
+  public List<DelegationCount> countDelegations(OffsetDateTime from, OffsetDateTime to, String productId) {
+
+    Criteria criteria = Criteria.where(DelegationEntity.Fields.createdAt.name())
+      .gte(from)
+      .lte(to);
+
+    if (productId != null) {
+      criteria.and(DelegationEntity.Fields.productId.name()).is(productId);
+    }
+
+    MatchOperation match = Aggregation.match(criteria);
+
+    GroupOperation group = Aggregation.group(DelegationEntity.Fields.productId.name())
+      .count().as("delegationCount");
+
+    ProjectionOperation project = Aggregation.project()
+      .and("_id").as("productId")
+      .and("delegationCount").as("count")
+      .andExclude("_id");
+
+    Aggregation aggregation = Aggregation.newAggregation(match, group, project);
+
+    return mongoTemplate.aggregate(aggregation, COLLECTION_DELEGATIONS, DelegationCount.class).getMappedResults();
+  }
+
 }

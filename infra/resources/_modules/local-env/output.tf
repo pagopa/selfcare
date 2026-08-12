@@ -14,6 +14,7 @@ output "config" {
     apim_name                      = local.apim_name
     apim_rg                        = local.apim_rg
     project                        = local.project
+    project_location               = local.project_location
     mongo_db                       = local.mongo_db
     container_app_environment_name = local.container_app_environment_name
     ca_resource_group_name         = local.ca_resource_group_name

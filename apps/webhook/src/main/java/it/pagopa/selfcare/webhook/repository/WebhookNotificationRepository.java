@@ -161,7 +161,39 @@ public class WebhookNotificationRepository
         .asList();
   }
 
+  /**
+   * Oldest notification still waiting to be published to the Storage Queue (status PENDING,
+   * never published). Used by the outbox readiness check to detect a growing publish lag.
+   */
+  public Uni<WebhookNotification> findOldestUnpublishedNotification() {
+    Document query =
+        new Document("status", WebhookNotification.NotificationStatus.PENDING.name())
+            .append("busPublishedAt", null);
+    Document sort = new Document("createdAt", 1);
+    return find(query, sort).firstResult();
+  }
+
   public Uni<List<WebhookNotification>> findByWebhookId(String webhookId) {
     return list("webhookId", new ObjectId(webhookId));
+  }
+
+  /**
+   * Find notifications matching the given status, optionally restricted to a specific webhook.
+   * Used to bulk-resend notifications (e.g. all FAILED notifications for a given webhook).
+   */
+  public Uni<List<WebhookNotification>> findByStatus(
+      WebhookNotification.NotificationStatus status, ObjectId webhookId) {
+    Document query = new Document("status", status.name());
+    if (webhookId != null) {
+      query.append("webhookId", webhookId);
+    }
+    return find(query).list();
+  }
+
+  /** Find notifications created within the given (inclusive) date-time range. */
+  public Uni<List<WebhookNotification>> findByCreatedAtRange(
+      LocalDateTime from, LocalDateTime to) {
+    Document query = new Document("createdAt", new Document("$gte", from).append("$lte", to));
+    return find(query).list();
   }
 }

@@ -121,6 +121,27 @@ module "log_analytics" {
   law_daily_quota_gb    = local.law_daily_quota_gb
 }
 
+resource "azurerm_resource_group" "synthetic_monitoring" {
+  name     = "${local.project}-synthetic-monitoring-rg"
+  location = local.location
+  tags     = local.tags
+}
+
+module "synthetic_monitoring_storage" {
+  source = "../_modules/synthetic_monitoring_storage"
+
+  project                             = "${local.project}-${local.location_short}"
+  location                            = local.location
+  resource_group_name                 = "${local.project}-synthetic-monitoring-rg"
+  private_endpoint_subnet_id          = module.network.private_endpoints_subnet_id
+  virtual_network_id                  = module.network.vnet_id
+  virtual_network_name                = module.network.vnet_name
+  virtual_network_resource_group_name = module.network.rg_vnet_name
+  tags                                = local.tags
+
+  depends_on = [azurerm_resource_group.synthetic_monitoring]
+}
+
 ###############################################################################
 # cdn (Front Door — migrated from CDN Classic)
 ###############################################################################
@@ -774,19 +795,15 @@ module "storage_user_attachments" {
     }
   }
 
-  # Lifecycle: aggressive cleanup in DEV to avoid storage cost accumulation.
-  # Prefix scoped so it only targets blobs already "soft-deleted" by the
-  # application (document-ms moves them from "parties/docs/..." to
-  # "parties/deleted/..." via DocumentContentServiceImpl.deleteFileFromAzure,
-  # driven by application.properties → document-ms.blob-storage.path-deleted).
-  # Live user attachments under "parties/docs/..." are NEVER touched by this rule.
   base_blob_tier_to_cool_after_days_since_modification_greater_than = 1
   base_blob_tier_to_cold_after_days_since_creation_greater_than     = 1
   base_delete_after_days_since_creation_greater_than                = 1
-  snapshot_change_tier_to_cool_after_days_since_creation            = 1
-  snapshot_delete_after_days_since_creation_greater_than            = 1
-  version_change_tier_to_cool_after_days_since_creation             = 1
-  version_delete_after_days_since_creation                          = 1
+
+  snapshot_change_tier_to_cool_after_days_since_creation = 1
+  snapshot_delete_after_days_since_creation_greater_than = 1
+
+  version_change_tier_to_cool_after_days_since_creation = 1
+  version_delete_after_days_since_creation              = 1
 
   # Defender for Storage
   defender_enabled                           = true
@@ -858,16 +875,17 @@ module "apim" {
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location                = local.location
-  env_short               = local.env_short
-  domain                  = local.app_domain
-  tags                    = local.tags
-  product_storage_name    = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  product_storage_rg      = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-  documents_storage_name  = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
-  documents_storage_rg    = "${local.prefix}-${local.env_short}-documents-storage-rg"
-  web_storage_name        = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
-  web_storage_rg          = "${local.prefix}-${local.env_short}-checkout-fe-rg"
-  eventhub_namespace_name = "${local.prefix}-${local.env_short}-eventhub-ns"
-  eventhub_namespace_rg   = "${local.prefix}-${local.env_short}-event-rg"
+  location                  = local.location
+  env_short                 = local.env_short
+  domain                    = local.app_domain
+  tags                      = local.tags
+  product_storage_name      = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  product_storage_rg        = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  documents_storage_name    = "${local.prefix_short}${local.env_short}${local.location_short}${local.app_domain}documentsst01"
+  documents_storage_rg      = "${local.prefix}-${local.env_short}-documents-storage-rg"
+  web_storage_name          = "${local.prefix}${local.env_short}${local.location_short}${local.app_domain}checkoutst01"
+  web_storage_rg            = "${local.prefix}-${local.env_short}-checkout-fe-rg"
+  onboarding_functions_name = "${local.prefix}-${local.env_short}-onboarding-fn"
+  eventhub_namespace_name   = "${local.prefix}-${local.env_short}-eventhub-ns"
+  eventhub_namespace_rg     = "${local.prefix}-${local.env_short}-event-rg"
 }

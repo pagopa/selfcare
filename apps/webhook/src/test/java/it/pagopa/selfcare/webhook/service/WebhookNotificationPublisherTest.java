@@ -2,6 +2,8 @@ package it.pagopa.selfcare.webhook.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -12,8 +14,10 @@ import static org.mockito.Mockito.when;
 
 import com.azure.storage.queue.QueueClient;
 import com.azure.storage.queue.QueueClientBuilder;
+import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import jakarta.inject.Inject;
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +27,8 @@ import org.junit.jupiter.api.Test;
 class WebhookNotificationPublisherTest {
 
   @Inject WebhookNotificationPublisher webhookNotificationPublisher;
+
+  @InjectMock WebhookMetrics metrics;
 
   private WebhookNotificationPublisher publisher;
   private QueueClient client;
@@ -63,6 +69,7 @@ class WebhookNotificationPublisherTest {
     // then
     subscriber.awaitItem();
     verify(client).sendMessage(notificationId);
+    verify(metrics).recordPublish(eq(true), anyLong());
   }
 
   @Test
@@ -92,6 +99,7 @@ class WebhookNotificationPublisherTest {
 
     // then
     subscriber.awaitFailure().assertFailedWith(RuntimeException.class, "Storage Queue is unavailable");
+    verify(metrics).recordPublish(eq(false), anyLong());
   }
 
   @Test
@@ -123,6 +131,7 @@ class WebhookNotificationPublisherTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     publisher = spy(publisher);
     publisher.enabled = true;
+    publisher.autoCreate = true;
     doReturn(clientBuilder).when(publisher).buildClientBuilder();
     when(clientBuilder.buildClient()).thenReturn(client);
 
@@ -131,6 +140,23 @@ class WebhookNotificationPublisherTest {
 
     // then
     verify(client).createIfNotExists();
+  }
+
+  @Test
+  void start_shouldNotCreateQueueWhenAutoCreateIsDisabled() {
+    // given
+    QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
+    publisher = spy(publisher);
+    publisher.enabled = true;
+    publisher.autoCreate = false;
+    doReturn(clientBuilder).when(publisher).buildClientBuilder();
+    when(clientBuilder.buildClient()).thenReturn(client);
+
+    // when
+    publisher.start(null);
+
+    // then
+    verify(client, never()).createIfNotExists();
   }
 
   @Test
