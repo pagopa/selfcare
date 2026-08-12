@@ -77,6 +77,27 @@ variable "tenant_ids" {
   }
 }
 
+variable "default_tenant_id" {
+  type        = string
+  default     = null
+  nullable    = true
+  description = "Tenant used only for the explicitly allowed operations when caller origin cannot be resolved."
+
+  validation {
+    condition = (
+      var.default_tenant_id == null
+      || contains([for tenant in var.tenant_ids : tenant.id], var.default_tenant_id)
+    )
+    error_message = "default_tenant_id must be null or reference a tenant declared in tenant_ids."
+  }
+}
+
+variable "default_tenant_operation_ids" {
+  type        = list(string)
+  default     = []
+  description = "Operation IDs allowed to use default_tenant_id when caller origin cannot be resolved."
+}
+
 variable "api_operation_policies" {
   type = list(object({
     operation_id = string

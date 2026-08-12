@@ -33,6 +33,8 @@ No requirements.
 | <a name="input_apim_name"></a> [apim\_name](#input\_apim\_name) | The name of the API Management instance. | `string` | n/a | yes |
 | <a name="input_apim_rg"></a> [apim\_rg](#input\_apim\_rg) | The name of the resource group in which the API Management instance exists. | `string` | n/a | yes |
 | <a name="input_base_path"></a> [base\_path](#input\_base\_path) | The base path of the API in the API Management instance. | `string` | n/a | yes |
+| <a name="input_default_tenant_id"></a> [default\_tenant\_id](#input\_default\_tenant\_id) | Tenant used only for the explicitly allowed operations when caller origin cannot be resolved. | `string` | `null` | no |
+| <a name="input_default_tenant_operation_ids"></a> [default\_tenant\_operation\_ids](#input\_default\_tenant\_operation\_ids) | Operation IDs allowed to use default\_tenant\_id when caller origin cannot be resolved. | `list(string)` | `[]` | no |
 | <a name="input_display_name"></a> [display\_name](#input\_display\_name) | The display name of the API in the API Management instance. | `string` | n/a | yes |
 | <a name="input_dns_zone_prefix"></a> [dns\_zone\_prefix](#input\_dns\_zone\_prefix) | The dns subdomain. | `string` | `"selfcare"` | no |
 | <a name="input_external_domain"></a> [external\_domain](#input\_external\_domain) | Domain for delegation | `string` | `"pagopa.it"` | no |

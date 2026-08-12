@@ -31,6 +31,10 @@ module "apim_api_auth" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
   tenant_ids          = module.local.config.tenant_ids
+  default_tenant_id   = "AR"
+  default_tenant_operation_ids = [
+    "loginSaml"
+  ]
 
   api_operation_policies = [{
     operation_id = "loginSaml"
@@ -186,8 +190,8 @@ locals {
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "ONE_IDENTITY_CLIENT_ID"                = "oneidentity-client-id"
-    "ONE_IDENTITY_CLIENT_SECRET"            = "oneidentity-client-secret"
+    "TENANT_AR_ONE_IDENTITY_CLIENT_ID"      = "oneidentity-client-id"
+    "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
     "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
     "INTERNAL-API-KEY"                      = "internal-api-key"

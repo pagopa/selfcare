@@ -13,6 +13,11 @@ locals {
 
   # The JSON is embedded in an APIM policy XML attribute.
   tenant_origins_policy_json = replace(jsonencode(local.tenant_origins), "\"", "&quot;")
+  default_tenant_operation_ids_policy_json = replace(
+    jsonencode(var.default_tenant_operation_ids),
+    "\"",
+    "&quot;"
+  )
 }
 
 module "apim_api" {
@@ -69,14 +74,19 @@ module "apim_api" {
         <set-variable name="tenantId" value="@{
             var caller = context.Request.Headers.GetValueOrDefault(&quot;Origin&quot;, context.Request.Headers.GetValueOrDefault(&quot;Referer&quot;, &quot;&quot;));
             Uri callerUri;
-            if (!Uri.TryCreate(caller, UriKind.Absolute, out callerUri)) {
-                return string.Empty;
-            }
-
-            var origin = callerUri.GetLeftPart(UriPartial.Authority).ToLowerInvariant();
             var tenantOrigins = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, string>>(&quot;${local.tenant_origins_policy_json}&quot;);
             string tenantId;
-            return tenantOrigins.TryGetValue(origin, out tenantId) ? tenantId : string.Empty;
+            if (Uri.TryCreate(caller, UriKind.Absolute, out callerUri)
+                &amp;&amp; tenantOrigins.TryGetValue(callerUri.GetLeftPart(UriPartial.Authority).ToLowerInvariant(), out tenantId)) {
+                return tenantId;
+            }
+
+            var defaultTenantId = &quot;${coalesce(var.default_tenant_id, "")}&quot;;
+            var defaultTenantOperationIds = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.HashSet<string>>(&quot;${local.default_tenant_operation_ids_policy_json}&quot;);
+            var operationId = context.Operation == null ? string.Empty : context.Operation.Id;
+            return defaultTenantId != string.Empty &amp;&amp; defaultTenantOperationIds.Contains(operationId)
+                ? defaultTenantId
+                : string.Empty;
         }" />
         <choose>
             <when condition="@((string)context.Variables[&quot;tenantId&quot;] == string.Empty)">

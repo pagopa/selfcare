@@ -8,6 +8,8 @@ import static org.mockito.Mockito.when;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
@@ -20,6 +22,8 @@ import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.service.OtpFlowService;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
@@ -27,6 +31,17 @@ import org.junit.jupiter.api.Test;
 class OtpControllerTest {
 
   @InjectMock private OtpFlowService otpFlowService;
+
+  @BeforeEach
+  void setUpTenantHeader() {
+    RestAssured.requestSpecification =
+        new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
+  }
+
+  @AfterEach
+  void resetRequestSpecification() {
+    RestAssured.requestSpecification = null;
+  }
 
   @Test
   void verifyOtp_BadRequest() {

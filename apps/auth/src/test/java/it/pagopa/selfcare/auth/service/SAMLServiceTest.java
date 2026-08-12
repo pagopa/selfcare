@@ -11,6 +11,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.IamMsApi;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.SamlValidator;
@@ -21,6 +22,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.iam_json.model.SaveUserRequest;
 import org.w3c.dom.Document;
@@ -32,8 +34,14 @@ public class SAMLServiceTest {
   @Inject SAMLService samlService;
 
   @InjectMock SessionService sessionService;
+  @InjectMock AuthTenantContext tenantContext;
 
   @RestClient @InjectMock IamMsApi iamApi;
+
+  @BeforeEach
+  void setUpTenant() {
+    when(tenantContext.getTenantId()).thenReturn("AR");
+  }
 
   public static final String TEST_SAML =
       """
