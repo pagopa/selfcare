@@ -122,6 +122,10 @@ locals {
       value = "auth-ms"
     },
     {
+      name  = "TENANT_REGISTRY_JSON"
+      value = jsonencode(module.local.config.tenant_registry)
+    },
+    {
       name  = "SHARED_ACCESS_KEY_NAME"
       value = "selfcare-wo"
     },

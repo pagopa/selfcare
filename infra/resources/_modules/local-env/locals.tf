@@ -32,27 +32,66 @@ locals {
   apim_name = "selc-${local.env_short}-apim-v2"
   apim_rg   = "selc-${local.env_short}-api-v2-rg"
 
-  tenant_frontend_origins = {
-    dev = [
-      { id = "AR", origin = "http://localhost:3000" },
-      { id = "AR", origin = "https://dev.selfcare.pagopa.it" },
-      { id = "AR", origin = "https://api.dev.selfcare.pagopa.it" },
-      { id = "PNPG", origin = "https://pnpg.dev.selfcare.pagopa.it" },
-      { id = "PNPG", origin = "https://api-pnpg.dev.selfcare.pagopa.it" }
-    ]
-    uat = [
-      { id = "AR", origin = "https://uat.selfcare.pagopa.it" },
-      { id = "AR", origin = "https://api.uat.selfcare.pagopa.it" },
-      { id = "PNPG", origin = "https://imprese.uat.notifichedigitali.it" },
-      { id = "PNPG", origin = "https://api-pnpg.uat.selfcare.pagopa.it" }
-    ]
-    prod = [
-      { id = "AR", origin = "https://selfcare.pagopa.it" },
-      { id = "AR", origin = "https://api.selfcare.pagopa.it" },
-      { id = "PNPG", origin = "https://imprese.notifichedigitali.it" },
-      { id = "PNPG", origin = "https://api-pnpg.selfcare.pagopa.it" }
-    ]
+  tenant_registries = {
+    dev = {
+      AR = {
+        frontend_uri            = "https://dev.selfcare.pagopa.it"
+        api_uri                 = "https://api.dev.selfcare.pagopa.it"
+        allowed_origins         = ["http://localhost:3000", "https://dev.selfcare.pagopa.it", "https://api.dev.selfcare.pagopa.it"]
+        authentication_provider = "ONE_IDENTITY"
+        auth_enabled            = true
+      }
+      PNPG = {
+        frontend_uri            = "https://pnpg.dev.selfcare.pagopa.it"
+        api_uri                 = "https://api-pnpg.dev.selfcare.pagopa.it"
+        allowed_origins         = ["https://pnpg.dev.selfcare.pagopa.it", "https://api-pnpg.dev.selfcare.pagopa.it"]
+        authentication_provider = "HUB_SPID_LOGIN"
+        auth_enabled            = false
+      }
+    }
+    uat = {
+      AR = {
+        frontend_uri            = "https://uat.selfcare.pagopa.it"
+        api_uri                 = "https://api.uat.selfcare.pagopa.it"
+        allowed_origins         = ["https://uat.selfcare.pagopa.it", "https://api.uat.selfcare.pagopa.it"]
+        authentication_provider = "ONE_IDENTITY"
+        auth_enabled            = true
+      }
+      PNPG = {
+        frontend_uri            = "https://imprese.uat.notifichedigitali.it"
+        api_uri                 = "https://api-pnpg.uat.selfcare.pagopa.it"
+        allowed_origins         = ["https://imprese.uat.notifichedigitali.it", "https://api-pnpg.uat.selfcare.pagopa.it"]
+        authentication_provider = "HUB_SPID_LOGIN"
+        auth_enabled            = false
+      }
+    }
+    prod = {
+      AR = {
+        frontend_uri            = "https://selfcare.pagopa.it"
+        api_uri                 = "https://api.selfcare.pagopa.it"
+        allowed_origins         = ["https://selfcare.pagopa.it", "https://api.selfcare.pagopa.it"]
+        authentication_provider = "ONE_IDENTITY"
+        auth_enabled            = true
+      }
+      PNPG = {
+        frontend_uri            = "https://imprese.notifichedigitali.it"
+        api_uri                 = "https://api-pnpg.selfcare.pagopa.it"
+        allowed_origins         = ["https://imprese.notifichedigitali.it", "https://api-pnpg.selfcare.pagopa.it"]
+        authentication_provider = "HUB_SPID_LOGIN"
+        auth_enabled            = false
+      }
+    }
   }
+
+  tenant_registry = local.tenant_registries[local.env]
+  tenant_ids = flatten([
+    for tenant_id, tenant in local.tenant_registry : [
+      for origin in tenant.allowed_origins : {
+        id     = tenant_id
+        origin = origin
+      }
+    ]
+  ])
 
   # CosmosDB resource group and account names differ between ar and pnpg
   mongo_db = local.domain == "pnpg" ? {

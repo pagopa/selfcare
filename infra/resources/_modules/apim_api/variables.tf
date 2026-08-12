@@ -67,9 +67,13 @@ variable "tenant_ids" {
   validation {
     condition = alltrue([
       for tenant in var.tenant_ids :
-      can(regex("^https://[^/]+$", tenant.origin)) && can(regex("^[A-Z][A-Z0-9_]*$", tenant.id))
+      (
+        can(regex("^https://[^/]+$", tenant.origin)) ||
+        can(regex("^http://localhost(:[0-9]+)?$", tenant.origin))
+      ) &&
+      can(regex("^[A-Z][A-Z0-9_]*$", tenant.id))
     ])
-    error_message = "Each tenant origin must be an HTTPS origin without a path and each tenant id must be uppercase."
+    error_message = "Each tenant origin must be HTTPS without a path (HTTP is allowed only for localhost) and each tenant id must be uppercase."
   }
 }
 

@@ -61,3 +61,12 @@ No modules.
 | <a name="output_vnet_resource_group_name"></a> [vnet\_resource\_group\_name](#output\_vnet\_resource\_group\_name) | n/a |
 | <a name="output_vnet_selc_name"></a> [vnet\_selc\_name](#output\_vnet\_selc\_name) | n/a |
 <!-- END_TF_DOCS -->
+
+## Tenant registry
+
+`config.tenant_registry` is the environment-specific source of truth for tenant
+URLs, allowed origins and authentication ownership. `config.tenant_ids` is the
+APIM-compatible projection of that registry.
+
+The registry contains routing metadata only. Tenant credentials and secrets
+must remain in Key Vault.
