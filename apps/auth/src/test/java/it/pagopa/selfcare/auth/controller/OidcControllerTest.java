@@ -181,4 +181,22 @@ class OidcControllerTest {
 
     verifyNoInteractions(oidcService);
   }
+
+  @Test
+  void tenantRejectionResponseDoesNotLeakInternalDetails() {
+    RestAssured.requestSpecification = null;
+    JsonObject request =
+        Json.createObjectBuilder().add("code", "code").add("redirectUri", "redirect").build();
+
+    given()
+        .header("X-Tenant-Id", "OTHER")
+        .body(request.toString())
+        .contentType(ContentType.JSON)
+        .post("/exchange")
+        .then()
+        .statusCode(400)
+        .contentType("application/problem+json")
+        .body("detail", equalTo("Invalid tenant context"))
+        .body("title", equalTo("Bad Request"));
+  }
 }

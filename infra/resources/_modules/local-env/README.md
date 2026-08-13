@@ -65,8 +65,17 @@ No modules.
 ## Tenant registry
 
 `config.tenant_registry` is the environment-specific source of truth for tenant
-URLs, allowed origins and authentication ownership. `config.tenant_ids` is the
-APIM-compatible projection of that registry.
+URLs, allowed origins and authentication ownership. It has two
+APIM-compatible projections:
+
+- `config.tenant_ids` maps each tenant to its frontend origin and is used to
+  build the CORS allow-list.
+- `config.tenant_hosts` maps each tenant to the APIM gateway hostname derived
+  from its `api_uri`, and is used to resolve the tenant of an incoming request.
+  The hostname is bound to DNS and to the TLS certificate, so — unlike `Origin`
+  or `Referer` — it cannot be chosen by the caller. Any gateway hostname that
+  serves a tenant-enforced API must appear here, otherwise requests arriving on
+  it are rejected with 403.
 
 The registry contains routing metadata only. Tenant credentials and secrets
 must remain in Key Vault.

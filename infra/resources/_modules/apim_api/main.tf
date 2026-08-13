@@ -54,54 +54,45 @@ module "apim_api" {
                 <method>OPTIONS</method>
             </allowed-methods>
             <allowed-headers>
-                <header>*</header>
+%{for header in var.allowed_headers~}
+                <header>${header}</header>
+%{endfor~}
             </allowed-headers>
         </cors>
-        <set-variable name="tenantId" value="@{
-            var caller = context.Request.Headers.GetValueOrDefault("Origin", context.Request.Headers.GetValueOrDefault("Referer", ""));
-            string origin = string.Empty;
-
-            if (!string.IsNullOrWhiteSpace(caller)) 
-            {
-                try 
-                {
-                    var uri = new Uri(caller);
-                    origin = uri.Scheme + "://" + uri.Authority;
-                    origin = origin.ToLowerInvariant();
-                } 
-                catch 
-                {
-                }
+%{if var.tenant_enforcement_enabled~}
+        <set-variable name="tenantId" value='@{
+            var host = context.Request.OriginalUrl.Host;
+            if (string.IsNullOrWhiteSpace(host)) {
+                return string.Empty;
             }
-%{for tenant in var.tenant_ids~}
-            if (origin == "${lower(tenant.origin)}") {
+            host = host.ToLowerInvariant();
+%{for tenant in var.tenant_hosts~}
+            if (host == "${lower(tenant.host)}") {
                 return "${tenant.id}";
             }
 %{endfor~}
-
-            var defaultTenantId = "${coalesce(var.default_tenant_id, "")}";
-            var operationId = context.Operation == null ? string.Empty : context.Operation.Id;
-%{for operation_id in var.default_tenant_operation_ids~}
-            if (defaultTenantId != string.Empty && operationId == "${operation_id}") {
-                return defaultTenantId;
-            }
-%{endfor~}
             return string.Empty;
-        }" />
+        }' />
         <choose>
             <when condition='@((string)context.Variables["tenantId"] == string.Empty)'>
+                <trace source="tenant-audit" severity="error">
+                    <message>@("event=tenant_request_rejected reason=unknown_host operation=" + (context.Operation == null ? "unknown" : context.Operation.Id))</message>
+                </trace>
                 <return-response>
                     <set-status code="403" reason="Forbidden" />
                     <set-header name="Content-Type" exists-action="override">
                         <value>application/problem+json</value>
                     </set-header>
-                    <set-body>{"title":"Unknown tenant origin","status":403}</set-body>
+                    <set-body>{"title":"Forbidden","status":403,"detail":"Invalid tenant context"}</set-body>
                 </return-response>
             </when>
         </choose>
         <set-header name="X-Tenant-Id" exists-action="override">
             <value>@((string)context.Variables["tenantId"])</value>
         </set-header>
+%{else~}
+        <set-header name="X-Tenant-Id" exists-action="delete" />
+%{endif~}
         <base />
     </inbound>
     <backend>

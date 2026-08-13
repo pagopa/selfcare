@@ -21,15 +21,9 @@ public class CustomClientResponseLoggingFilter implements ResteasyReactiveClient
   public void filter(
       ResteasyReactiveClientRequestContext requestContext, ClientResponseContext responseContext) {
     String endpoint = requestContext.getUri().getPath();
-    String query = requestContext.getUri().getQuery();
     String method = requestContext.getMethod();
     int status = responseContext.getStatus();
-    log.info(
-        "Response: method: {}, endpoint: {}, query: {}, status [{}]",
-        method,
-        endpoint,
-        query,
-        status);
+    log.info("event=outbound_response method={} endpoint={} status={}", method, endpoint, status);
     MDC.clear();
   }
 }

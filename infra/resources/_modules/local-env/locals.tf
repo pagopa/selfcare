@@ -93,6 +93,16 @@ locals {
     ]
   ])
 
+  # Tenant identity is derived from the APIM hostname the request arrives on.
+  # Unlike Origin/Referer, the hostname is bound to DNS and the TLS certificate,
+  # so a caller cannot choose which tenant it is attributed to.
+  tenant_hosts = [
+    for tenant_id, tenant in local.tenant_registry : {
+      id   = tenant_id
+      host = regex("^https?://([^/:]+)", tenant.api_uri)[0]
+    }
+  ]
+
   # CosmosDB resource group and account names differ between ar and pnpg
   mongo_db = local.domain == "pnpg" ? {
     mongodb_rg_name               = "${local.prefix}-${local.env_short}-${local.pnpg_suffix}-cosmosdb-mongodb-rg"

@@ -93,6 +93,9 @@ class OtpControllerTest {
         .post("/verify")
         .then()
         .statusCode(HttpStatus.SC_FORBIDDEN)
+        .contentType("application/problem+json")
+        .body("title", equalTo("Forbidden"))
+        .body("detail", equalTo("OTP verification failed"))
         .body("otpForbiddenCode", equalTo(wrongCodeException.getCode().name()))
         .body("remainingAttempts", equalTo(wrongCodeException.getRemainingAttempts()));
   }
@@ -115,6 +118,9 @@ class OtpControllerTest {
         .post("/verify")
         .then()
         .statusCode(HttpStatus.SC_FORBIDDEN)
+        .contentType("application/problem+json")
+        .body("title", equalTo("Forbidden"))
+        .body("detail", equalTo("OTP verification failed"))
         .body("otpForbiddenCode", equalTo(wrongCodeException.getCode().name()))
         .body("remainingAttempts", equalTo(wrongCodeException.getRemainingAttempts()));
   }

@@ -27,19 +27,20 @@ No requirements.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_allowed_headers"></a> [allowed\_headers](#input\_allowed\_headers) | CORS allowed request headers. Defaults to '*' to preserve existing frontend behaviour. | `list(string)` | <pre>[<br/>  "*"<br/>]</pre> | no |
 | <a name="input_api_dns_zone_prefix"></a> [api\_dns\_zone\_prefix](#input\_api\_dns\_zone\_prefix) | The dns subdomain. | `string` | `"api.selfcare"` | no |
 | <a name="input_api_name"></a> [api\_name](#input\_api\_name) | The name of the API in the API Management instance. | `string` | n/a | yes |
 | <a name="input_api_operation_policies"></a> [api\_operation\_policies](#input\_api\_operation\_policies) | List of api policy for given operation. | <pre>list(object({<br/>    operation_id = string<br/>    xml_content  = string<br/>    }<br/>  ))</pre> | `[]` | no |
 | <a name="input_apim_name"></a> [apim\_name](#input\_apim\_name) | The name of the API Management instance. | `string` | n/a | yes |
 | <a name="input_apim_rg"></a> [apim\_rg](#input\_apim\_rg) | The name of the resource group in which the API Management instance exists. | `string` | n/a | yes |
 | <a name="input_base_path"></a> [base\_path](#input\_base\_path) | The base path of the API in the API Management instance. | `string` | n/a | yes |
-| <a name="input_default_tenant_id"></a> [default\_tenant\_id](#input\_default\_tenant\_id) | Tenant used only for the explicitly allowed operations when caller origin cannot be resolved. | `string` | `null` | no |
-| <a name="input_default_tenant_operation_ids"></a> [default\_tenant\_operation\_ids](#input\_default\_tenant\_operation\_ids) | Operation IDs allowed to use default\_tenant\_id when caller origin cannot be resolved. | `list(string)` | `[]` | no |
 | <a name="input_display_name"></a> [display\_name](#input\_display\_name) | The display name of the API in the API Management instance. | `string` | n/a | yes |
 | <a name="input_dns_zone_prefix"></a> [dns\_zone\_prefix](#input\_dns\_zone\_prefix) | The dns subdomain. | `string` | `"selfcare"` | no |
 | <a name="input_external_domain"></a> [external\_domain](#input\_external\_domain) | Domain for delegation | `string` | `"pagopa.it"` | no |
 | <a name="input_openapi_path"></a> [openapi\_path](#input\_openapi\_path) | Path to the OpenAPI specification file. | `string` | n/a | yes |
 | <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | The private DNS name of the API in the API Management instance. | `string` | n/a | yes |
+| <a name="input_tenant_enforcement_enabled"></a> [tenant\_enforcement\_enabled](#input\_tenant\_enforcement\_enabled) | Enables the fail-closed tenant gate: the tenant is resolved from the APIM hostname the request<br/>arrived on and requests that cannot be attributed to a tenant are rejected with 403.<br/>Enable it only on APIs whose backend consumes the X-Tenant-Id header, and make sure every<br/>gateway hostname serving the API is listed in tenant\_hosts.<br/>When disabled, any caller-supplied X-Tenant-Id is stripped. | `bool` | `false` | no |
+| <a name="input_tenant_hosts"></a> [tenant\_hosts](#input\_tenant\_hosts) | Mapping between the APIM gateway hostname a request arrives on and the canonical tenant id.<br/>The hostname is bound to DNS and the TLS certificate, so unlike Origin/Referer it cannot be<br/>chosen by the caller. Required when tenant\_enforcement\_enabled is true. | <pre>list(object({<br/>    id   = string<br/>    host = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_tenant_ids"></a> [tenant\_ids](#input\_tenant\_ids) | Allowed frontend origins and their canonical tenant identifiers. | <pre>list(object({<br/>    id     = string<br/>    origin = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs

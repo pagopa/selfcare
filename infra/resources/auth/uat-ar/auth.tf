@@ -20,20 +20,25 @@ module "local" {
 ###############################################################################
 
 module "apim_api_auth" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-api-auth"
-  display_name        = "Auth API"
-  base_path           = "auth"
-  private_dns_name    = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
-  tenant_ids          = module.local.config.tenant_ids
-  default_tenant_id   = "AR"
-  default_tenant_operation_ids = [
-    "loginSaml"
+  source                     = "../../_modules/apim_api"
+  apim_name                  = module.local.config.apim_name
+  apim_rg                    = module.local.config.apim_rg
+  api_name                   = "selc-${module.local.config.env_short}-api-auth"
+  display_name               = "Auth API"
+  base_path                  = "auth"
+  private_dns_name           = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix            = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
+  openapi_path               = "../../../../apps/auth/src/main/docs/openapi.json"
+  tenant_ids                 = module.local.config.tenant_ids
+  tenant_hosts               = module.local.config.tenant_hosts
+  tenant_enforcement_enabled = true
+  allowed_headers = [
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "traceparent",
+    "tracestate"
   ]
 
   api_operation_policies = [{
@@ -43,16 +48,19 @@ module "apim_api_auth" {
           <inbound>
               <cors allow-credentials="true">
                   <allowed-origins>
-                      <origin>https://${module.local.config.dns_zone_prefix}.${module.local.config.external_domain}</origin>
-                      <origin>https://${module.local.config.api_dns_zone_prefix}.${module.local.config.external_domain}</origin>
-                      <origin>http://localhost:3000</origin>
+%{for tenant in module.local.config.tenant_ids~}
+                      <origin>${tenant.origin}</origin>
+%{endfor~}
                       <origin>https://accounts.google.com</origin>
                   </allowed-origins>
                   <allowed-methods>
                       <method>POST</method>
                   </allowed-methods>
                   <allowed-headers>
-                      <header>*</header>
+                      <header>Content-Type</header>
+                      <header>Accept</header>
+                      <header>traceparent</header>
+                      <header>tracestate</header>
                   </allowed-headers>
               </cors>
               <base />

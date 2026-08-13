@@ -37,6 +37,17 @@ components:
     OtpForbidden:
       type: object
       properties:
+        detail:
+          type: string
+        instance:
+          type: string
+        status:
+          type: integer
+          format: int32
+        title:
+          type: string
+        type:
+          type: string
         otpForbiddenCode:
           $ref: "#/components/schemas/OtpForbiddenCode"
         remainingAttempts:

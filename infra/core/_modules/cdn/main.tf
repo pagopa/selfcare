@@ -444,7 +444,17 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors" {
     response_header_action {
       header_action = "Append"
       header_name   = "Content-Security-Policy"
-      value         = format("frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.%s.%s *.qualtrics.com;", var.dns_zone_prefix, var.external_domain)
+      value         = format("base-uri 'self'; frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.%s.%s *.qualtrics.com;", var.dns_zone_prefix, var.external_domain)
+    }
+    response_header_action {
+      header_action = "Overwrite"
+      header_name   = "X-Frame-Options"
+      value         = "DENY"
+    }
+    response_header_action {
+      header_action = "Overwrite"
+      header_name   = "Referrer-Policy"
+      value         = "strict-origin-when-cross-origin"
     }
   }
 }
@@ -541,7 +551,7 @@ resource "azurerm_cdn_frontdoor_rule" "csp_frame_ancestors_ar" {
     response_header_action {
       header_action = "Append"
       header_name   = "Content-Security-Policy"
-      value         = "frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain} *.qualtrics.com;"
+      value         = "base-uri 'self'; frame-ancestors 'none'; object-src 'none'; frame-src 'self' *.${var.dns_zone_prefix_ar}.${var.external_domain} *.qualtrics.com;"
     }
   }
 }
@@ -575,5 +585,4 @@ resource "azurerm_key_vault_secret" "selc_web_storage_blob_connection_string" {
   key_vault_id = var.key_vault_id
   depends_on   = [module.cdn_storage_account]
 }
-
 

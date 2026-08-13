@@ -4,8 +4,6 @@ import it.pagopa.selfcare.auth.controller.response.OtpForbidden;
 import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.exception.*;
 import jakarta.ws.rs.core.Response;
-import org.apache.http.HttpStatus;
-import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,96 +13,90 @@ public class ExceptionHandler {
   public static final String SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER =
       "Something has gone wrong in the server";
   public static final String FORBIDDEN = "Forbidden";
-  public static final String SAML = "Saml";
   public static final String CONFLICT = "Conflict";
-  public static final String PREFIX_LOGGER = "{}: {}";
+  public static final String INVALID_REQUEST = "Invalid request";
+  public static final String RESOURCE_NOT_FOUND = "Resource not found";
   private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
 
   @ServerExceptionMapper
-  public RestResponse<String> toResponse(InvalidRequestException exception) {
-    LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-    return RestResponse.status(Response.Status.BAD_REQUEST, exception.getMessage());
+  public Response toResponse(InvalidRequestException exception) {
+    logHandledException(Response.Status.BAD_REQUEST, exception);
+    return problem(Response.Status.BAD_REQUEST, INVALID_REQUEST);
   }
 
   @ServerExceptionMapper
-  public RestResponse<String> toResponse(Exception exception) {
-    LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-    return RestResponse.status(
-        Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
+  public Response toResponse(Exception exception) {
+    LOGGER.error(
+        "event=request_failed status=500 exception={}", exception.getClass().getSimpleName(),
+        exception);
+    return problem(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
   }
 
   @ServerExceptionMapper
   public Response toResponse(ResourceNotFoundException exception) {
-    LOGGER.warn(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-    Problem problem =
-        new Problem(
-            exception.getMessage(), null, HttpStatus.SC_NOT_FOUND, exception.getMessage(), null);
-    return Response.status(Response.Status.NOT_FOUND).entity(problem).build();
+    logHandledException(Response.Status.NOT_FOUND, exception);
+    return problem(Response.Status.NOT_FOUND, RESOURCE_NOT_FOUND);
   }
 
   @ServerExceptionMapper
   public Response toResponse(ForbiddenException exception) {
-    LOGGER.warn(PREFIX_LOGGER, FORBIDDEN, exception.getMessage());
-    Problem problem =
-        new Problem(
-            exception.getMessage(), null, HttpStatus.SC_FORBIDDEN, exception.getMessage(), null);
-    return Response.status(Response.Status.FORBIDDEN).entity(problem).build();
+    logHandledException(Response.Status.FORBIDDEN, exception);
+    return problem(Response.Status.FORBIDDEN, FORBIDDEN);
   }
 
   @ServerExceptionMapper
   public Response toResponse(InternalException exception) {
-    LOGGER.error(PREFIX_LOGGER, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER, exception.getMessage());
-    Problem problem =
-        new Problem(
-            exception.getMessage(),
-            null,
-            HttpStatus.SC_INTERNAL_SERVER_ERROR,
-            exception.getMessage(),
-            null);
-    return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
+    logHandledException(Response.Status.INTERNAL_SERVER_ERROR, exception);
+    return problem(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
   }
 
   @ServerExceptionMapper
   public Response toResponse(ConflictException exception) {
-    LOGGER.error(PREFIX_LOGGER, CONFLICT, exception.getMessage());
-    Problem problem =
-        new Problem(
-            exception.getMessage(), null, HttpStatus.SC_CONFLICT, exception.getMessage(), null);
-    return Response.status(Response.Status.CONFLICT).entity(problem).build();
+    logHandledException(Response.Status.CONFLICT, exception);
+    return problem(Response.Status.CONFLICT, CONFLICT);
   }
 
   @ServerExceptionMapper
   public Response toResponse(OtpForbiddenException exception) {
-    LOGGER.error(PREFIX_LOGGER, FORBIDDEN, exception.getMessage());
+    logHandledException(Response.Status.FORBIDDEN, exception);
     OtpForbidden otpForbidden =
         OtpForbidden.builder()
+            .title(FORBIDDEN)
+            .status(Response.Status.FORBIDDEN.getStatusCode())
+            .detail("OTP verification failed")
             .otpForbiddenCode(exception.getCode())
             .remainingAttempts(exception.getRemainingAttempts())
             .otpStatus(exception.getOtpStatus())
             .build();
 
-    return Response.status(Response.Status.FORBIDDEN).entity(otpForbidden).build();
+    return Response.status(Response.Status.FORBIDDEN)
+        .type("application/problem+json")
+        .entity(otpForbidden)
+        .build();
   }
 
   @ServerExceptionMapper
   public Response toResponse(UnimplementedException exception) {
-    LOGGER.error(PREFIX_LOGGER, "Unimplemented endpoint", exception.getMessage());
-    Problem problem =
-        new Problem(
-            exception.getMessage(),
-            null,
-            HttpStatus.SC_NOT_IMPLEMENTED,
-            exception.getMessage(),
-            null);
-    return Response.status(Response.Status.NOT_IMPLEMENTED).entity(problem).build();
+    logHandledException(Response.Status.NOT_IMPLEMENTED, exception);
+    return problem(Response.Status.NOT_IMPLEMENTED, "Not implemented");
   }
 
   @ServerExceptionMapper
   public Response toResponse(SamlSignatureException exception) {
-    LOGGER.error(PREFIX_LOGGER, SAML, exception.getMessage());
+    logHandledException(Response.Status.BAD_REQUEST, exception);
+    return problem(Response.Status.BAD_REQUEST, "Invalid SAML response");
+  }
+
+  private void logHandledException(Response.Status status, Exception exception) {
+    LOGGER.warn(
+        "event=request_rejected status={} exception={}",
+        status.getStatusCode(),
+        exception.getClass().getSimpleName());
+  }
+
+  private Response problem(Response.Status status, String detail) {
     Problem problem =
-        new Problem(
-            exception.getMessage(), null, HttpStatus.SC_BAD_REQUEST, exception.getMessage(), null);
-    return Response.status(Response.Status.BAD_REQUEST).entity(problem).build();
+        new Problem(detail, null, status.getStatusCode(), status.getReasonPhrase(), null);
+    return Response.status(status).type("application/problem+json").entity(problem).build();
   }
 }
