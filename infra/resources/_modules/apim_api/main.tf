@@ -6,20 +6,6 @@ resource "azurerm_api_management_api_version_set" "apim_api_version_set" {
   versioning_scheme   = "Segment"
 }
 
-locals {
-  tenant_origins = {
-    for tenant in var.tenant_ids : lower(tenant.origin) => tenant.id
-  }
-
-  # The JSON is embedded in an APIM policy XML attribute.
-  tenant_origins_policy_json = replace(jsonencode(local.tenant_origins), "\"", "&quot;")
-  default_tenant_operation_ids_policy_json = replace(
-    jsonencode(var.default_tenant_operation_ids),
-    "\"",
-    "&quot;"
-  )
-}
-
 module "apim_api" {
   source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v9.4.0"
   name                = var.api_name
@@ -72,24 +58,38 @@ module "apim_api" {
             </allowed-headers>
         </cors>
         <set-variable name="tenantId" value="@{
-            var caller = context.Request.Headers.GetValueOrDefault(&quot;Origin&quot;, context.Request.Headers.GetValueOrDefault(&quot;Referer&quot;, &quot;&quot;));
-            Uri callerUri;
-            var tenantOrigins = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.Dictionary<string, string>>(&quot;${local.tenant_origins_policy_json}&quot;);
-            string tenantId;
-            if (Uri.TryCreate(caller, UriKind.Absolute, out callerUri)
-                &amp;&amp; tenantOrigins.TryGetValue(callerUri.GetLeftPart(UriPartial.Authority).ToLowerInvariant(), out tenantId)) {
-                return tenantId;
-            }
+            var caller = context.Request.Headers.GetValueOrDefault("Origin", context.Request.Headers.GetValueOrDefault("Referer", ""));
+            string origin = string.Empty;
 
-            var defaultTenantId = &quot;${coalesce(var.default_tenant_id, "")}&quot;;
-            var defaultTenantOperationIds = Newtonsoft.Json.JsonConvert.DeserializeObject<System.Collections.Generic.HashSet<string>>(&quot;${local.default_tenant_operation_ids_policy_json}&quot;);
+            if (!string.IsNullOrWhiteSpace(caller)) 
+            {
+                try 
+                {
+                    var uri = new Uri(caller);
+                    origin = uri.Scheme + "://" + uri.Authority;
+                    origin = origin.ToLowerInvariant();
+                } 
+                catch 
+                {
+                }
+            }
+%{for tenant in var.tenant_ids~}
+            if (origin == "${lower(tenant.origin)}") {
+                return "${tenant.id}";
+            }
+%{endfor~}
+
+            var defaultTenantId = "${coalesce(var.default_tenant_id, "")}";
             var operationId = context.Operation == null ? string.Empty : context.Operation.Id;
-            return defaultTenantId != string.Empty &amp;&amp; defaultTenantOperationIds.Contains(operationId)
-                ? defaultTenantId
-                : string.Empty;
+%{for operation_id in var.default_tenant_operation_ids~}
+            if (defaultTenantId != string.Empty && operationId == "${operation_id}") {
+                return defaultTenantId;
+            }
+%{endfor~}
+            return string.Empty;
         }" />
         <choose>
-            <when condition="@((string)context.Variables[&quot;tenantId&quot;] == string.Empty)">
+            <when condition='@((string)context.Variables["tenantId"] == string.Empty)'>
                 <return-response>
                     <set-status code="403" reason="Forbidden" />
                     <set-header name="Content-Type" exists-action="override">
@@ -100,7 +100,7 @@ module "apim_api" {
             </when>
         </choose>
         <set-header name="X-Tenant-Id" exists-action="override">
-            <value>@((string)context.Variables[&quot;tenantId&quot;])</value>
+            <value>@((string)context.Variables["tenantId"])</value>
         </set-header>
         <base />
     </inbound>

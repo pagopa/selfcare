@@ -46,6 +46,7 @@ module "apim_api_auth" {
                   <allowed-origins>
                       <origin>https://${module.local.config.dns_zone_prefix}.${module.local.config.external_domain}</origin>
                       <origin>https://${module.local.config.api_dns_zone_prefix}.${module.local.config.external_domain}</origin>
+                      <origin>http://localhost:8080</origin>
                       <origin>http://localhost:3000</origin>
                       <origin>https://accounts.google.com</origin>
                   </allowed-origins>

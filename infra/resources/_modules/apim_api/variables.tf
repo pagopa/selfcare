@@ -96,6 +96,14 @@ variable "default_tenant_operation_ids" {
   type        = list(string)
   default     = []
   description = "Operation IDs allowed to use default_tenant_id when caller origin cannot be resolved."
+
+  validation {
+    condition = alltrue([
+      for operation_id in var.default_tenant_operation_ids :
+      can(regex("^[A-Za-z0-9._-]+$", operation_id))
+    ])
+    error_message = "default_tenant_operation_ids may contain only letters, digits, dots, underscores and hyphens."
+  }
 }
 
 variable "api_operation_policies" {
