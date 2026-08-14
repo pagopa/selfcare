@@ -3,6 +3,7 @@ package it.pagopa.selfcare.auth.conf;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.quarkus.runtime.Startup;
 import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.otp.OtpBetaUser;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
@@ -14,6 +15,7 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @ApplicationScoped
+@Startup
 public class FeatureFlagConfig {
 
   @ApplicationScoped
