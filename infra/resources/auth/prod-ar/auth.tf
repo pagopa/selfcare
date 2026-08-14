@@ -201,13 +201,13 @@ locals {
 
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
     "TENANT_AR_ONE_IDENTITY_CLIENT_ID"      = "oneidentity-client-id"
     "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
     "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
-    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
-    "INTERNAL-API-KEY"                      = "internal-api-key"
-    "INTERNAL-MS-USER-API-KEY"              = "internal-ms-user-api-key"
+    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "INTERNAL_API_KEY"                      = "internal-api-key"
+    "INTERNAL_MS_USER_API_KEY"              = "internal-ms-user-api-key"
     "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
     "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
     "SAML_IDP_METADATA"                     = "saml-idp-metadata"

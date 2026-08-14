@@ -3,18 +3,17 @@ package it.pagopa.selfcare.auth.integration_test;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Scanner;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 @Slf4j
 @CucumberOptions(
@@ -41,7 +40,7 @@ public class CucumberSuite extends CucumberQuarkusTest {
       }
       String publicKey =
           new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
-      System.setProperty("JWT-PUBLIC-KEY", publicKey);
+      System.setProperty("JWT_PUBLIC_KEY", publicKey);
     }
 
     // By default, quarkus starts the ms on port 8081
