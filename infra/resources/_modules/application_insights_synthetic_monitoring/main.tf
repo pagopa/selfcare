@@ -74,7 +74,7 @@ resource "azurerm_container_app_job" "this" {
       }
       env {
         name  = "OTEL_METRIC_EXPORT_INTERVAL"
-        value = "5000"
+        value = "300000"
       }
       env {
         name  = "METRIC_EXPORT_WAIT_MS"
