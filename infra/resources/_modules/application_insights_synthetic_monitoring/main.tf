@@ -54,8 +54,8 @@ resource "azurerm_container_app_job" "this" {
     container {
       name    = "synthetic-monitoring"
       image   = "ghcr.io/pagopa/selfcare-webhook-ms:${local.sanitized_image_tag}"
-      cpu     = 0.25
-      memory  = "0.5Gi"
+      cpu     = 1.0
+      memory  = "2.0Gi"
       command = ["java"]
       args = [
         "-javaagent:/app/applicationinsights-agent.jar",

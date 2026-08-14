@@ -158,6 +158,7 @@ locals {
         scheme = "HTTP"
       }
       timeoutSeconds      = 5
+      periodSeconds       = 30
       type                = "Liveness"
       failureThreshold    = 3
       initialDelaySeconds = 1
@@ -169,6 +170,7 @@ locals {
         scheme = "HTTP"
       }
       timeoutSeconds      = 5
+      periodSeconds       = 30
       type                = "Readiness"
       failureThreshold    = 30
       initialDelaySeconds = 3
@@ -180,6 +182,7 @@ locals {
         scheme = "HTTP"
       }
       timeoutSeconds      = 5
+      periodSeconds       = 30
       failureThreshold    = 5
       type                = "Startup"
       initialDelaySeconds = 5

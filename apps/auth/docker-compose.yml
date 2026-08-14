@@ -1,4 +1,3 @@
-version: '3.8'
 services:
 
   mongodb:
@@ -21,9 +20,11 @@ services:
       - develop-network
 
   azure-cli:
+    image: auth-azure-cli:test-env
     build:
       context: "../../."
       dockerfile: "apps/auth/src/test/resources/Dockerfile-azure-cli"
+    pull_policy: missing
     depends_on:
       - azurite
     networks:
