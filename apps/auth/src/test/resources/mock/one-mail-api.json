@@ -1,0 +1,149 @@
+[
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/onemail-mock/v1/emails/send/high",
+      "queryStringParameters": {
+        "dryRun": [
+          "false"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "from": {
+            "email": "test@test.it"
+          },
+          "to": {
+            "email": "j.doe@regionelazio.forced.it"
+          },
+          "templateContent": {
+            "templateId": "selfcare_user_otp",
+            "templateAttributes": {
+              "name": "John"
+            }
+          }
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "requestId": "8c8e0d92-7e44-4fd0-8d8d-8d6c7c4b9b11"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/onemail-mock/v1/emails/send/high",
+      "queryStringParameters": {
+        "dryRun": [
+          "false"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "from": {
+            "email": "test@test.it"
+          },
+          "to": {
+            "email": "r.balboa@regionelazio.forced.it"
+          },
+          "templateContent": {
+            "templateId": "selfcare_user_otp",
+            "templateAttributes": {
+              "name": "rocky"
+            }
+          }
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "requestId": "0d3d7d5e-4c72-49b8-a6d5-51d7b0a7f2cb"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/onemail-mock/v1/emails/send/high",
+      "queryStringParameters": {
+        "dryRun": [
+          "false"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "from": {
+            "email": "test@test.it"
+          },
+          "to": {
+            "email": "r.balboa@regionelazio.it"
+          },
+          "templateContent": {
+            "templateId": "selfcare_user_otp"
+          }
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 202,
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": {
+        "requestId": "f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/onemail-mock/v1/emails/send/high",
+      "queryStringParameters": {
+        "dryRun": [
+          "false"
+        ]
+      },
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "from": {
+            "email": "test@test.it"
+          },
+          "to": {
+            "email": "unknown@regionelazio.it"
+          },
+          "templateContent": {
+            "templateId": "selfcare_user_otp"
+          }
+        }
+      }
+    },
+    "httpResponse": {
+      "statusCode": 500,
+      "body": "Unexpected mail recipient or request"
+    }
+  }
+]

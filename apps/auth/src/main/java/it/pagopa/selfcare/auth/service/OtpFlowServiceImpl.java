@@ -124,9 +124,17 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
     return OtpUtils.isNewOtpFlowRequired(
                     otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+      .invoke(isRequired ->
+        log.info(
+          "isNewOtpFlowRequired={} for otpFlow uuid={}, status={}, expiresAt={}, sameIdp={}",
+          isRequired,
+          otpFlow.getUuid(),
+          otpFlow.getStatus(),
+          otpFlow.getExpiresAt(),
+          userClaims.getSameIdp()))
             .chain(isRequired ->
                     isRequired
-                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
                             .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                             : checkPendingOtpFlow(otpFlow, institutionalEmail));
   }
@@ -147,7 +155,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     otpLimitConfig.getDailyLimit())
             .chain(isRequired ->
                     isRequired
-                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
                             .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                             : Uni.createFrom().item(Optional.empty()));
   }
@@ -160,7 +168,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
    * @param email the user's institutional email
    * @return a new Otp Flow
    */
-  private Uni<OtpFlow> createAndSendOtp(String userId, String email) {
+  private Uni<OtpFlow> createAndSendOtp(String userId, String email, String name) {
     return Uni.createFrom()
         .item(OtpUtils::generateOTP)
         .chain(
@@ -168,11 +176,32 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                 createNewOtpFlow(userId, otp)
                     .onFailure(WebApplicationException.class)
                     .transform(GeneralUtils::extractExceptionFromWebAppException)
-                    .chain(
-                        otpFlow ->
-                            otpNotificationService
-                                .sendOtpEmail(userId, email, otp)
-                                .replaceWith(otpFlow)));
+                  .chain(
+                    otpFlow ->
+                      otpNotificationService
+                        .sendOtpEmail(userId, email, otp, name)
+                        .chain(requestId -> {
+                          if (requestId == null) {
+                            return Uni.createFrom().item(otpFlow);
+                          }
+                          return updateOtpFlowRequestId(
+                            otpFlow.getUuid(), requestId)
+                            .onFailure()
+                            .recoverWithItem(0L)
+                            .map(
+                              ignored -> {
+                                otpFlow.setMailRequestId(requestId);
+                                return otpFlow;
+                              });
+                        })));
+  }
+
+  private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId) {
+    return OtpFlow.update(
+        "{ '$set': { 'mailRequestId': ?1, 'updatedAt': ?2 } }",
+        requestId,
+        Date.from(OffsetDateTime.now().toInstant()))
+      .where("uuid", uuid);
   }
 
   @Override
@@ -327,7 +356,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                             maybeUserEmail
                                 .map(
                                     institutionalEmail ->
-                                        createAndSendOtp(userClaims.getUid(), institutionalEmail)
+                                        createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
                                             .chain(
                                                 createdOtpFlow ->
                                                     // Fire & Forget update old otp flow status

@@ -75,8 +75,9 @@ Feature: Oidc with periodic OTP flow above daily limit
       | requiresOtpFlow    | true                             |
       | maskedEmail        | r*.b****a@regionelazio.forced.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "0d3d7d5e-4c72-49b8-a6d5-51d7b0a7f2cb"
 
+  @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP (sameIdp false) and expired previous OTP flow found
     Given User login with username "j.doe" and password "test"
     And OTP feature flag is set to "BETA"
@@ -91,14 +92,16 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "EXPIRED" and attempts 1
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The response body contains:
       | requiresOtpFlow    | true                          |
       | maskedEmail        | j*.d*e@regionelazio.forced.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "8c8e0d92-7e44-4fd0-8d8d-8d6c7c4b9b11"
 
+  @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP (sameIdp true) and expired previous OTP flow found
     Given User login with username "j.doe" and password "test"
     And OTP feature flag is set to "BETA"
@@ -114,13 +117,14 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "EXPIRED" and attempts 1
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The response body contains:
       | requiresOtpFlow    | true                          |
       | maskedEmail        | j*.d*e@regionelazio.forced.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "8c8e0d92-7e44-4fd0-8d8d-8d6c7c4b9b11"
 
   @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP (sameIdp false) and REJECTED previous OTP flow found
@@ -144,7 +148,7 @@ Feature: Oidc with periodic OTP flow above daily limit
       | requiresOtpFlow    | true                          |
       | maskedEmail        | j*.d*e@regionelazio.forced.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "8c8e0d92-7e44-4fd0-8d8d-8d6c7c4b9b11"
 
   @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP (sameIdp true) and REJECTED previous OTP flow found
@@ -168,7 +172,7 @@ Feature: Oidc with periodic OTP flow above daily limit
       | requiresOtpFlow    | true                          |
       | maskedEmail        | j*.d*e@regionelazio.forced.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "8c8e0d92-7e44-4fd0-8d8d-8d6c7c4b9b11"
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled (sameIdp true) and previous OTP flow was completed 3 months ago
     Given User login with username "j.doe" and password "test"
@@ -182,7 +186,7 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was COMPLETED 3 months ago
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" for user "35a78332-d038-4bfa-8e85-2cba7f6b7ccc" was COMPLETED 3 months ago
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The session token claims contains:
@@ -203,7 +207,7 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was COMPLETED 7 months ago
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" for user "35a78332-d038-4bfa-8e85-2cba7f6b7ccc" was COMPLETED 7 months ago
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The session token claims contains:
@@ -234,7 +238,7 @@ Feature: Oidc with periodic OTP flow above daily limit
       | requiresOtpFlow    | true                          |
       | maskedEmail        | j*.d*e@regionelazio.forced.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "8c8e0d92-7e44-4fd0-8d8d-8d6c7c4b9b11"
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", user in beta list, forced OTP disabled (sameIdp true) and previous valid pending OTP flow found
     Given User login with username "j.doe" and password "test"
@@ -296,6 +300,7 @@ Feature: Oidc with periodic OTP flow above daily limit
       | family_name      | Balboa              |
       | iss              | SPID                |
 
+  @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "ALL", sameIdp true and expired previous OTP flow found
     Given User login with username "j.doe" and password "test"
     And OTP feature flag is set to "ALL"
@@ -306,13 +311,14 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" already exists with status "EXPIRED" and attempts 1
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The response body contains:
       | requiresOtpFlow    | true                      |
       | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
 
   @RemoveOtpFlow
   Scenario: Successful OIDC exchange with OTP feature flag set to "ALL", sameIdp true and REJECTED previous OTP flow found
@@ -332,7 +338,7 @@ Feature: Oidc with periodic OTP flow above daily limit
       | requiresOtpFlow    | true                      |
       | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
 
   Scenario: Successful OIDC exchange with OTP feature flag set to "ALL", sameIdp true and previous OTP flow was completed 3 months ago
     Given User login with username "j.doe" and password "test"
@@ -344,7 +350,7 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was COMPLETED 3 months ago
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" for user "35a78332-d038-4bfa-8e85-2cba7f6b7ccc" was COMPLETED 3 months ago
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The session token claims contains:
@@ -362,7 +368,7 @@ Feature: Oidc with periodic OTP flow above daily limit
           "redirectUri": "https://example.com/callback"
       }
       """
-    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" was COMPLETED 7 months ago
+    And An OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" for user "35a78332-d038-4bfa-8e85-2cba7f6b7ccc" was COMPLETED 7 months ago
     When I send a POST request to "oidc/exchange"
     Then The status code is 200
     And The session token claims contains:
