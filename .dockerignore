@@ -1,3 +1,27 @@
+.claude
+.vscode
+.idea
+*.tar.gz
+
+# Ignora la cartella di Git
+.git/
+.github
+
+# Ignora le dipendenze locali (esempio Node o Python)
+node_modules/
+venv/
+env/
+
+# Ignora le cartelle di build compilate in locale
+target/
+build/
+dist/
+out/
+
+# Ignora i file di log e i database locali
+*.log
+*.sqlite3
+
 .DS_Store
 **/.DS_Store
 **/.terraform/
