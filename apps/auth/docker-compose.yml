@@ -20,7 +20,6 @@ services:
       - develop-network
 
   azure-cli:
-    image: auth-azure-cli:test-env
     build:
       context: "../../."
       dockerfile: "apps/auth/src/test/resources/Dockerfile-azure-cli"

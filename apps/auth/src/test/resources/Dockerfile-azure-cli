@@ -1,5 +1,5 @@
 # Primo stage: usiamo un'immagine con git per clonare il repository
-FROM bitnami/git AS git-stage
+FROM bitnami/git@sha256:39cfadda7f52efd82655b71bfe5aecac4c7d64e7f8a581d8d49715f665293a7a AS git-stage
 WORKDIR /repo
 RUN git clone https://github.com/pagopa/selfcare.git
 
