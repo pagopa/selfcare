@@ -1,0 +1,11 @@
+.git
+.github
+.claude
+.vscode
+.idea
+node_modules
+dist
+build
+*.log
+*.sql
+*.tar.gz
