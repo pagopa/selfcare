@@ -4,7 +4,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - "./src/test/resources/db:/docker-entrypoint-initdb.d"
+      - "./db:/docker-entrypoint-initdb.d"
     networks:
       - develop-network
 
@@ -12,25 +12,23 @@ services:
     image: mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37
     ports:
       - "10000:10000"
-    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
+    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence --skipApiVersionCheck"
     environment:
       - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
     networks:
       - develop-network
 
   azure-cli:
-    image: docker.io/library/local-azure-cli-test
-    build:
-      context: "src/test/resources/"
-      dockerfile: "Dockerfile-azure-cli"
-    pull_policy: build
+    image: mcr.microsoft.com/azure-cli:latest
     depends_on:
       - azurite
     networks:
       - develop-network
     volumes:
-      - "./src/test/resources/blobStorageInit/initAzurite.sh:/initAzurite.sh"
-      - "./src/test/resources/blobStorageInit/products.json:/workspace/products.json"
+      - "./blobStorageInit/initAzurite.sh:/initAzurite.sh"
+      - "./blobStorageInit/products.json:/workspace/products.json"
+      - "../../../../../infra/core/resources:/workspace/resources/resources"
+    command: ["/bin/sh", "-c", "/initAzurite.sh"]
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
 
@@ -44,7 +42,7 @@ services:
       - MOCKSERVER_ENABLE_CORS_FOR_API="true"
       - MOCKSERVER_ENABLE_CORS_FOR_ALL_RESPONSES="true"
     volumes:
-      - "./src/test/resources/mock:/config"
+      - "./mock:/config"
     networks:
       - develop-network
 
@@ -54,7 +52,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - "./src/test/resources/userenv"
+      - "./userenv"
     networks:
       - develop-network
     depends_on:
@@ -71,7 +69,7 @@ services:
     ports:
       - "8083:8083"
     env_file:
-      - "./src/test/resources/institutionenv"
+      - "./institutionenv"
     networks:
       - develop-network
     depends_on:
@@ -88,7 +86,7 @@ services:
     ports:
       - "8085:8085"
     env_file:
-      - "./src/test/resources/iamenv"
+      - "./iamenv"
     networks:
       - develop-network
     depends_on:
@@ -99,4 +97,4 @@ services:
 
 networks:
   develop-network:
-    name: selfcare-develop-network
+    name: selfcare-auth-develop-network

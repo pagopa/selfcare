@@ -52,12 +52,12 @@ public class CucumberSuite extends CucumberQuarkusTest {
         .build();
 
     composeContainer =
-        new ComposeContainer(new File("docker-compose.yml"))
+        new ComposeContainer(new File("src/test/resources/docker-compose.yml"))
             .withLocalCompose(true)
             .withPull(true)
             .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .waitingFor("userms", Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("userms", Wait.forLogMessage(".*Listening on:.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("iamms", Wait.forLogMessage(".*Listening on:.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
