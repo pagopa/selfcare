@@ -3,6 +3,7 @@ package it.pagopa.selfcare.auth.integration_test;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +47,9 @@ public class CucumberSuite extends CucumberQuarkusTest {
     // By default, quarkus starts the ms on port 8081
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
+    RestAssured.requestSpecification = new RequestSpecBuilder()
+        .addHeader("X-Tenant-Id", "AR")
+        .build();
 
     composeContainer =
         new ComposeContainer(new File("docker-compose.yml"))
