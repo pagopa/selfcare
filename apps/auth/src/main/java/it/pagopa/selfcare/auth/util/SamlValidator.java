@@ -47,7 +47,7 @@ public class SamlValidator {
     return createAsyncValidationPipeline(interval, fromBase64(idpCert))
         .apply(samlResponse)
         .onItem()
-        .invoke(result -> log.info("SAML validation completed with result: {}", result));
+        .invoke(result -> log.info("event=saml_validation_completed attributes={}", result.size()));
   }
 
   private Function<String, Boolean> createValidationPipeline(long interval, String idpCertContent)
@@ -284,27 +284,21 @@ public class SamlValidator {
     }
   }
 
-  private CertificateDocument validateCertificateSafe(CertificateDocument certDoc)
-      throws Exception {
+  private CertificateDocument validateCertificateSafe(CertificateDocument certDoc) {
     try {
       validateCertificate(certDoc.certificate());
     } catch (Exception e) {
+      log.error(
+          "event=saml_certificate_invalid reason={} message={}",
+          e.getClass().getSimpleName(),
+          e.getMessage());
       throw new SamlSignatureException("Certificate validation failed");
     }
     return certDoc;
   }
 
   private Uni<CertificateDocument> validateCertificateAsync(CertificateDocument certDoc) {
-    return Uni.createFrom()
-        .item(
-            () -> {
-              try {
-                validateCertificate(certDoc.certificate());
-              } catch (Exception e) {
-                log.error("ValidateCertificate error: " + e.getMessage());
-              }
-              return certDoc;
-            });
+    return Uni.createFrom().item(() -> validateCertificateSafe(certDoc));
   }
 
   boolean validateSignature(Document doc, PublicKey publicKey) throws Exception {

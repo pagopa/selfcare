@@ -4,6 +4,7 @@ import static it.pagopa.selfcare.auth.util.SamlValidator.INTERNAL_ID;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.IamMsApi;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.context.TokenContext;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import it.pagopa.selfcare.auth.model.UserClaims;
@@ -64,6 +65,8 @@ public class SAMLServiceImpl implements SAMLService {
 
   @Inject TokenContext tokenContext;
 
+  @Inject AuthTenantContext tenantContext;
+
   @RestClient @Inject IamMsApi iamApi;
 
   @Override
@@ -87,7 +90,12 @@ public class SAMLServiceImpl implements SAMLService {
                     .onItem()
                     .transform(token -> tokenContext.setToken(token))
                     .onItem()
-                    .transformToUni(token -> saveUser(userClaims.getEmail())))
+                    .transformToUni(
+                        token ->
+                            saveUser(userClaims.getEmail())
+                                .invoke(
+                                    savedUserClaims ->
+                                        savedUserClaims.setTenantId(userClaims.getTenantId()))))
         .onItem()
         .transformToUni(sessionService::generateSessionTokenInternal)
         .onFailure()
@@ -98,6 +106,7 @@ public class SAMLServiceImpl implements SAMLService {
     UserClaims userClaims = new UserClaims();
     userClaims.setUid(attributes.get(INTERNAL_ID));
     userClaims.setEmail(attributes.get(INTERNAL_ID));
+    userClaims.setTenantId(tenantContext.getTenantId());
     return Uni.createFrom().item(userClaims);
   }
 

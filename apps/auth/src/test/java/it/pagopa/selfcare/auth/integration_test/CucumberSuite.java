@@ -3,18 +3,18 @@ package it.pagopa.selfcare.auth.integration_test;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.restassured.RestAssured;
-import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
+import io.restassured.builder.RequestSpecBuilder;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Scanner;
+import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
 
 @Slf4j
 @CucumberOptions(
@@ -41,20 +41,23 @@ public class CucumberSuite extends CucumberQuarkusTest {
       }
       String publicKey =
           new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
-      System.setProperty("JWT-PUBLIC-KEY", publicKey);
+      System.setProperty("JWT_PUBLIC_KEY", publicKey);
     }
 
     // By default, quarkus starts the ms on port 8081
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
+    RestAssured.requestSpecification = new RequestSpecBuilder()
+        .addHeader("X-Tenant-Id", "AR")
+        .build();
 
     composeContainer =
-        new ComposeContainer(new File("docker-compose.yml"))
+        new ComposeContainer(new File("src/test/resources/docker-compose.yml"))
             .withLocalCompose(true)
             .withPull(true)
             .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .waitingFor("userms", Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("userms", Wait.forLogMessage(".*Listening on:.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
+            .waitingFor("iamms", Wait.forLogMessage(".*Listening on:.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
