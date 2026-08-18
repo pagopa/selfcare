@@ -99,27 +99,25 @@ public class UserPermissionsRepository {
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
-            .ifPresent(pid -> {
-              pipeline.add(Aggregates.match(
+        .ifPresent(
+            pid -> {
+              pipeline.add(
+                  Aggregates.match(
                       Filters.or(
-                              Filters.eq("productRoles.productId", pid),
-                              Filters.eq("productRoles.productId", "ALL"))));
+                          Filters.eq("productRoles.productId", pid),
+                          Filters.eq("productRoles.productId", "ALL"))));
 
               // priority when productId corresponds
               pipeline.add(
-                      Aggregates.addFields(
-                              new Field<>("isAll", new Document("$eq", Arrays.asList("$productRoles.productId", "ALL")))));
+                  Aggregates.addFields(
+                      new Field<>(
+                          "isAll",
+                          new Document("$eq", Arrays.asList("$productRoles.productId", "ALL")))));
               pipeline.add(Aggregates.sort(Sorts.ascending("isAll")));
               pipeline.add(Aggregates.limit(1));
             });
     Optional.ofNullable(tenantId)
-        .ifPresent(
-            tid ->
-                pipeline.add(
-                    Aggregates.match(
-                        Filters.or(
-                            Filters.eq("productRoles.tenantId", tid),
-                            Filters.exists("productRoles.tenantId", false)))));
+        .ifPresent(tid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.tenantId", tid))));
 
     List<Bson> pipelinePost =
         Arrays.asList(
@@ -157,13 +155,7 @@ public class UserPermissionsRepository {
         .ifPresent(
             pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
     Optional.ofNullable(tenantId)
-        .ifPresent(
-            tid ->
-                pipeline.add(
-                    Aggregates.match(
-                        Filters.or(
-                            Filters.eq("productRoles.tenantId", tid),
-                            Filters.exists("productRoles.tenantId", false)))));
+        .ifPresent(tid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.tenantId", tid))));
 
     List<Bson> pipelinePost =
         Arrays.asList(

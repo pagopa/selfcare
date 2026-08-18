@@ -75,28 +75,38 @@ public class UserClaims extends ReactivePanacheMongoEntityBase {
     return find("email", email).firstResult().map(entity -> (UserClaims) entity);
   }
 
-  public static Uni<UserClaims> findByUidAndProductId(String uid, String productId) {
+  public static Uni<UserClaims> findByUidProductIdTenantId(
+      String uid, String productId, String tenantId) {
     return Optional.ofNullable(productId)
         .map(
             pid ->
-                find("_id = ?1 and productRoles.productId = ?2", uid, pid)
+                find(
+                        "_id = ?1 and productRoles.productId = ?2 and productRoles.tenantId = ?3",
+                        uid,
+                        pid,
+                        tenantId)
                     .firstResult()
                     .map(entity -> (UserClaims) entity)
                     .onItem()
                     .ifNull()
                     .switchTo(
                         () ->
-                            find("_id = ?1 and productRoles.productId = ?2", uid, "ALL")
+                            find(
+                                    "_id = ?1 and productRoles.productId = ?2 and productRoles.tenantId = ?3",
+                                    uid,
+                                    "ALL",
+                                    tenantId)
                                 .firstResult()
                                 .map(entity -> (UserClaims) entity)))
         .orElseGet(() -> findByUid(uid));
   }
 
-  public static Uni<List<UserClaims>> findByProductId(String productId) {
+  public static Uni<List<UserClaims>> findByProductIdAndTenantId(
+      String productId, String tenantId) {
     return Optional.ofNullable(productId)
         .map(
             pid ->
-                find("productRoles.productId = ?1", pid)
+                find("productRoles.productId = ?1 and productRoles.tenantId = ?3", pid, tenantId)
                     .list()
                     .map(list -> list.stream().map(entity -> (UserClaims) entity).toList()))
         .orElseGet(() -> Uni.createFrom().item(List.of()));

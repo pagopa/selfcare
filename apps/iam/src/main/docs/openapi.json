@@ -68,6 +68,9 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "name" : {
             "type" : "string"
           },

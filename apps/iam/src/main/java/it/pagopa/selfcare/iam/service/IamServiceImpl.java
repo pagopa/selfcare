@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.iam.service;
 
+import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
+
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
@@ -14,6 +16,8 @@ import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import it.pagopa.selfcare.iam.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.time.Duration;
+import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,11 +25,6 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.institution_openapi_json.api.InstitutionApi;
 import org.openapi.quarkus.institution_openapi_json.model.InstitutionResponse;
 import org.owasp.encoder.Encode;
-
-import java.time.Duration;
-import java.util.*;
-
-import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
 
 @Slf4j
 @ApplicationScoped
@@ -84,8 +83,14 @@ public class IamServiceImpl implements IamService {
                                 email ->
                                     UserClaims.builder()
                                         .email(DataEncryptionConfig.encrypt(req.getEmail()))
-                                        .name(Optional.ofNullable(req.getName()).map(DataEncryptionConfig::encrypt).orElse(null))
-                                        .familyName(Optional.ofNullable(req.getFamilyName()).map(DataEncryptionConfig::encrypt).orElse(null))
+                                        .name(
+                                            Optional.ofNullable(req.getName())
+                                                .map(DataEncryptionConfig::encrypt)
+                                                .orElse(null))
+                                        .familyName(
+                                            Optional.ofNullable(req.getFamilyName())
+                                                .map(DataEncryptionConfig::encrypt)
+                                                .orElse(null))
                                         .productRoles(
                                             setFilteredProductRoles(
                                                 req.getProductRoles(), productId, tenantId))
@@ -124,7 +129,9 @@ public class IamServiceImpl implements IamService {
                                                                   .filter(
                                                                       pr ->
                                                                           pr.getProductId()
-                                                                              .equals(pid))
+                                                                                  .equals(pid)
+                                                                              && matchesTenantId(
+                                                                                  pr, tenantId))
                                                                   .findFirst())
                                                       .ifPresent(
                                                           newProductRole -> {
@@ -138,7 +145,9 @@ public class IamServiceImpl implements IamService {
                                                                 .filter(
                                                                     epr ->
                                                                         epr.getProductId()
-                                                                            .equals(pid))
+                                                                                .equals(pid)
+                                                                            && matchesTenantId(
+                                                                                epr, tenantId))
                                                                 .findFirst()
                                                                 .ifPresentOrElse(
                                                                     existingProductRole -> {
@@ -170,9 +179,13 @@ public class IamServiceImpl implements IamService {
                                                                   currentRoles.removeIf(
                                                                       cr ->
                                                                           cr.getProductId()
-                                                                              .equals(
+                                                                                  .equals(
+                                                                                      newRole
+                                                                                          .getProductId())
+                                                                              && matchesTenantId(
+                                                                                  cr,
                                                                                   newRole
-                                                                                      .getProductId()));
+                                                                                      .getTenantId()));
                                                                   currentRoles.add(newRole);
                                                                 });
 
@@ -210,7 +223,7 @@ public class IamServiceImpl implements IamService {
    */
   @Override
   public Uni<UserClaims> getUser(String userId, String productId, String tenantId) {
-    return UserClaims.findByUidAndProductId(userId, productId)
+    return UserClaims.findByUidProductIdTenantId(userId, productId, tenantId)
         .onItem()
         .ifNotNull()
         .transform(
@@ -265,7 +278,7 @@ public class IamServiceImpl implements IamService {
    */
   @Override
   public Uni<List<UserClaims>> getUsers(String productId, String tenantId) {
-    return UserClaims.findByProductId(productId)
+    return UserClaims.findByProductIdAndTenantId(productId, tenantId)
         .map(
             users -> {
               if (users == null || users.isEmpty()) {
@@ -297,20 +310,30 @@ public class IamServiceImpl implements IamService {
   public Uni<ProductRolePermissionsList> getProductRolePermissionsList(
       String userId, String productId, String tenantId) {
     return getUser(userId, productId, tenantId)
-      .onItem().transform(userClaims -> ProductRolePermissionsList.builder()
-        .userId(userId)
-        .productId(productId)
-        .name(userClaims.getName())
-        .familyName(userClaims.getFamilyName())
-        .email(userClaims.getEmail())
-        .build())
-      .onFailure().recoverWithItem(new ProductRolePermissionsList())
-      .onItem().transformToUni(permissions -> userPermissionsRepository
-        .getUserProductRolePermissionsList(userId, productId, tenantId)
-        .onItem().transform(l -> {
-          permissions.setItems(l);
-          return permissions;
-        }));
+        .onItem()
+        .transform(
+            userClaims ->
+                ProductRolePermissionsList.builder()
+                    .userId(userId)
+                    .productId(productId)
+                    .tenantId(tenantId)
+                    .name(userClaims.getName())
+                    .familyName(userClaims.getFamilyName())
+                    .email(userClaims.getEmail())
+                    .build())
+        .onFailure()
+        .recoverWithItem(ProductRolePermissionsList.builder().tenantId(tenantId).build())
+        .onItem()
+        .transformToUni(
+            permissions ->
+                userPermissionsRepository
+                    .getUserProductRolePermissionsList(userId, productId, tenantId)
+                    .onItem()
+                    .transform(
+                        l -> {
+                          permissions.setItems(l);
+                          return permissions;
+                        }));
   }
 
   /**
@@ -344,7 +367,10 @@ public class IamServiceImpl implements IamService {
                     .map(
                         pid -> {
                           return roles.stream()
-                              .filter(pr -> pr.getProductId().equals(pid))
+                              .filter(
+                                  pr ->
+                                      pr.getProductId().equals(pid)
+                                          && matchesTenantId(pr, tenantId))
                               .toList();
                         })
                     .orElse(roles))
@@ -359,7 +385,8 @@ public class IamServiceImpl implements IamService {
    * @param tenantId the tenant ID to default missing product roles' tenantId to
    * @return the list of product roles, with tenantId defaulted where missing
    */
-  private List<ProductRoles> applyDefaultTenantId(List<ProductRoles> productRoles, String tenantId) {
+  private List<ProductRoles> applyDefaultTenantId(
+      List<ProductRoles> productRoles, String tenantId) {
     if (tenantId == null) {
       return productRoles;
     }
@@ -389,7 +416,12 @@ public class IamServiceImpl implements IamService {
                     .map(
                         pid -> {
                           List<ProductRoles> exact =
-                              roles.stream().filter(pr -> pr.getProductId().equals(pid)).toList();
+                              roles.stream()
+                                  .filter(
+                                      pr ->
+                                          pr.getProductId().equals(pid)
+                                              && matchesTenantId(pr, tenantId))
+                                  .toList();
                           return exact.isEmpty()
                               ? roles.stream()
                                   .filter(pr -> PRODUCT_ALL.equals(pr.getProductId()))
@@ -410,12 +442,13 @@ public class IamServiceImpl implements IamService {
    * @return a list of filtered ProductRoles
    */
   private List<ProductRoles> filterByTenantId(List<ProductRoles> productRoles, String tenantId) {
-    if (tenantId == null) {
-      return productRoles;
-    }
-    return productRoles.stream()
-        .filter(pr -> pr.getTenantId() == null || tenantId.equals(pr.getTenantId()))
-        .toList();
+    return productRoles.stream().filter(pr -> matchesTenantId(pr, tenantId)).toList();
+  }
+
+  private boolean matchesTenantId(ProductRoles productRole, String tenantId) {
+    return tenantId == null
+        || productRole.getTenantId() == null
+        || tenantId.equals(productRole.getTenantId());
   }
 
   /**

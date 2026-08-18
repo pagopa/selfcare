@@ -17,6 +17,7 @@ import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRole;
+import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.model.Role;
 import it.pagopa.selfcare.iam.service.IamServiceImpl;
@@ -304,6 +305,31 @@ public class IamControllerTest {
         .get("/users/search")
         .then()
         .statusCode(404);
+  }
+
+  @Test
+  void getProductRolePermissionsList_shouldReturnTenantId() {
+    String uid = "user-123";
+    String productId = "product-A";
+
+    ProductRolePermissionsList response =
+        ProductRolePermissionsList.builder()
+            .userId(uid)
+            .productId(productId)
+            .tenantId("AR")
+            .build();
+
+    Mockito.when(iamService.getProductRolePermissionsList(uid, productId, "AR"))
+        .thenReturn(Uni.createFrom().item(response));
+
+    given()
+        .accept(ContentType.JSON)
+        .queryParam("productId", productId)
+        .when()
+        .get("/users/role/permissions/{uid}", uid)
+        .then()
+        .statusCode(200)
+        .body("tenantId", equalTo("AR"));
   }
 
   @Test
