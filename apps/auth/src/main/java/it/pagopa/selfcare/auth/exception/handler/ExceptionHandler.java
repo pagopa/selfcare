@@ -21,7 +21,7 @@ public class ExceptionHandler {
   @ServerExceptionMapper
   public Response toResponse(InvalidRequestException exception) {
     logHandledException(Response.Status.BAD_REQUEST, exception);
-    return problem(Response.Status.BAD_REQUEST, INVALID_REQUEST);
+    return problem(Response.Status.BAD_REQUEST, exception.getMessage());
   }
 
   @ServerExceptionMapper
@@ -35,25 +35,25 @@ public class ExceptionHandler {
   @ServerExceptionMapper
   public Response toResponse(ResourceNotFoundException exception) {
     logHandledException(Response.Status.NOT_FOUND, exception);
-    return problem(Response.Status.NOT_FOUND, RESOURCE_NOT_FOUND);
+    return problem(Response.Status.NOT_FOUND, exception.getMessage());
   }
 
   @ServerExceptionMapper
   public Response toResponse(ForbiddenException exception) {
     logHandledException(Response.Status.FORBIDDEN, exception);
-    return problem(Response.Status.FORBIDDEN, FORBIDDEN);
+    return problem(Response.Status.FORBIDDEN, exception.getMessage());
   }
 
   @ServerExceptionMapper
   public Response toResponse(InternalException exception) {
     logHandledException(Response.Status.INTERNAL_SERVER_ERROR, exception);
-    return problem(Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
+    return problem(Response.Status.INTERNAL_SERVER_ERROR, exception.getMessage());
   }
 
   @ServerExceptionMapper
   public Response toResponse(ConflictException exception) {
     logHandledException(Response.Status.CONFLICT, exception);
-    return problem(Response.Status.CONFLICT, CONFLICT);
+    return problem(Response.Status.CONFLICT, exception.getMessage());
   }
 
   @ServerExceptionMapper
