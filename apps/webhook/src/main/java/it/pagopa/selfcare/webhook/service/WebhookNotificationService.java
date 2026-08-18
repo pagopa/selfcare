@@ -75,6 +75,7 @@ public class WebhookNotificationService {
     WebClientOptions options =
         new WebClientOptions()
             .setConnectTimeout(connectTimeout)
+            .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
             .setIdleTimeout(readTimeout)
             .setFollowRedirects(true);
     this.webClient = WebClient.create(vertx, options);
