@@ -57,11 +57,13 @@ public class IamServiceImpl implements IamService {
    *
    * @param saveUserRequest the request containing user details and product roles
    * @param productId optional product ID to filter roles for a specific product
+   * @param tenantId the tenant ID to associate with product roles missing one (default "AR")
    * @return a Uni containing the saved or updated UserClaims
    * @throws InvalidRequestException if the request or email is null/blank
    */
   @Override
-  public Uni<UserClaims> saveUser(SaveUserRequest saveUserRequest, final String productId) {
+  public Uni<UserClaims> saveUser(
+      SaveUserRequest saveUserRequest, final String productId, final String tenantId) {
     return Uni.createFrom()
         .item(saveUserRequest)
         .onItem()
@@ -86,7 +88,7 @@ public class IamServiceImpl implements IamService {
                                         .familyName(Optional.ofNullable(req.getFamilyName()).map(DataEncryptionConfig::encrypt).orElse(null))
                                         .productRoles(
                                             setFilteredProductRoles(
-                                                req.getProductRoles(), productId))
+                                                req.getProductRoles(), productId, tenantId))
                                         .build()))
                     .onItem()
                     .ifNull()
@@ -139,11 +141,15 @@ public class IamServiceImpl implements IamService {
                                                                             .equals(pid))
                                                                 .findFirst()
                                                                 .ifPresentOrElse(
-                                                                    existingProductRole ->
-                                                                        existingProductRole
-                                                                            .setRoles(
-                                                                                newProductRole
-                                                                                    .getRoles()),
+                                                                    existingProductRole -> {
+                                                                      existingProductRole.setRoles(
+                                                                          newProductRole
+                                                                              .getRoles());
+                                                                      existingProductRole
+                                                                          .setTenantId(
+                                                                              newProductRole
+                                                                                  .getTenantId());
+                                                                    },
                                                                     () ->
                                                                         mutableRoles.add(
                                                                             newProductRole));
@@ -198,18 +204,19 @@ public class IamServiceImpl implements IamService {
    *
    * @param userId the ID of the user
    * @param productId the ID of the product
+   * @param tenantId the ID of the tenant
    * @return a Uni containing the UserClaims if found
    * @throws ResourceNotFoundException if the user is not found
    */
   @Override
-  public Uni<UserClaims> getUser(String userId, String productId) {
+  public Uni<UserClaims> getUser(String userId, String productId, String tenantId) {
     return UserClaims.findByUidAndProductId(userId, productId)
         .onItem()
         .ifNotNull()
         .transform(
             userClaims -> {
               userClaims.setProductRoles(
-                  getFilteredProductRoles(userClaims.getProductRoles(), productId));
+                  getFilteredProductRoles(userClaims.getProductRoles(), productId, tenantId));
               return decryptUser(userClaims);
             })
         .onItem()
@@ -222,18 +229,19 @@ public class IamServiceImpl implements IamService {
    *
    * @param email the email of the user
    * @param productId the ID of the product (optional)
+   * @param tenantId the ID of the tenant
    * @return a Uni containing the UserClaims if found and matching criteria
    * @throws ResourceNotFoundException if the user is not found or doesn't have the required product
    */
   @Override
-  public Uni<UserClaims> getUserByEmail(String email, String productId) {
+  public Uni<UserClaims> getUserByEmail(String email, String productId, String tenantId) {
     return UserClaims.findByEmail(DataEncryptionConfig.encrypt(email))
         .onItem()
         .ifNotNull()
         .transformToUni(
             user -> {
               List<ProductRoles> filteredRoles =
-                  getFilteredProductRoles(user.getProductRoles(), productId);
+                  getFilteredProductRoles(user.getProductRoles(), productId, tenantId);
 
               if (filteredRoles.isEmpty()) {
                 return Uni.createFrom().nullItem();
@@ -251,11 +259,12 @@ public class IamServiceImpl implements IamService {
    * Retrieves all users by their product ID.
    *
    * @param productId the ID of the product
+   * @param tenantId the ID of the tenant
    * @return a Uni containing the UserClaims if found
    * @throws ResourceNotFoundException if the user is not found
    */
   @Override
-  public Uni<List<UserClaims>> getUsers(String productId) {
+  public Uni<List<UserClaims>> getUsers(String productId, String tenantId) {
     return UserClaims.findByProductId(productId)
         .map(
             users -> {
@@ -266,7 +275,7 @@ public class IamServiceImpl implements IamService {
                   .map(
                       user -> {
                         user.setProductRoles(
-                            getFilteredProductRoles(user.getProductRoles(), productId));
+                            getFilteredProductRoles(user.getProductRoles(), productId, tenantId));
                         return decryptUser(user);
                       })
                   .toList();
@@ -281,11 +290,13 @@ public class IamServiceImpl implements IamService {
    *
    * @param userId the ID of the user
    * @param productId the ID of the product
+   * @param tenantId the ID of the tenant
    * @return a Uni containing a ProductRolePermissionsList if found
    */
   @Override
-  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(String userId, String productId) {
-    return getUser(userId, productId)
+  public Uni<ProductRolePermissionsList> getProductRolePermissionsList(
+      String userId, String productId, String tenantId) {
+    return getUser(userId, productId, tenantId)
       .onItem().transform(userClaims -> ProductRolePermissionsList.builder()
         .userId(userId)
         .productId(productId)
@@ -295,7 +306,7 @@ public class IamServiceImpl implements IamService {
         .build())
       .onFailure().recoverWithItem(new ProductRolePermissionsList())
       .onItem().transformToUni(permissions -> userPermissionsRepository
-        .getUserProductRolePermissionsList(userId, productId)
+        .getUserProductRolePermissionsList(userId, productId, tenantId)
         .onItem().transform(l -> {
           permissions.setItems(l);
           return permissions;
@@ -307,22 +318,25 @@ public class IamServiceImpl implements IamService {
    *
    * @param userId the ID of the user
    * @param productId the ID of the product
+   * @param tenantId the ID of the tenant
    * @return a Uni containing a List of ProductRole if found
    */
   @Override
-  public Uni<List<ProductRole>> getProductRoles(String userId, String productId) {
-    return userPermissionsRepository.getUserProductRoles(userId, productId);
+  public Uni<List<ProductRole>> getProductRoles(String userId, String productId, String tenantId) {
+    return userPermissionsRepository.getUserProductRoles(userId, productId, tenantId);
   }
 
   /**
-   * Filters the product roles for a specific product ID.
+   * Filters the product roles for a specific product ID and assigns the given tenant ID to any
+   * product role that doesn't already specify one.
    *
    * @param productRoles the list of product roles
    * @param productId the ID of the product
+   * @param tenantId the tenant ID to default missing product roles' tenantId to
    * @return a list of filtered ProductRoles
    */
   public List<ProductRoles> setFilteredProductRoles(
-      List<ProductRoles> productRoles, String productId) {
+      List<ProductRoles> productRoles, String productId, String tenantId) {
     return Optional.ofNullable(productRoles)
         .map(
             roles ->
@@ -334,18 +348,40 @@ public class IamServiceImpl implements IamService {
                               .toList();
                         })
                     .orElse(roles))
+        .map(roles -> applyDefaultTenantId(roles, tenantId))
         .orElse(List.of());
   }
 
   /**
-   * Filters the product roles for a specific product ID.
+   * Assigns the given tenant ID to any product role that doesn't already specify one.
+   *
+   * @param productRoles the list of product roles
+   * @param tenantId the tenant ID to default missing product roles' tenantId to
+   * @return the list of product roles, with tenantId defaulted where missing
+   */
+  private List<ProductRoles> applyDefaultTenantId(List<ProductRoles> productRoles, String tenantId) {
+    if (tenantId == null) {
+      return productRoles;
+    }
+    productRoles.forEach(
+        pr -> {
+          if (pr.getTenantId() == null) {
+            pr.setTenantId(tenantId);
+          }
+        });
+    return productRoles;
+  }
+
+  /**
+   * Filters the product roles for a specific product ID and tenant ID.
    *
    * @param productRoles the list of product roles
    * @param productId the ID of the product
+   * @param tenantId the ID of the tenant
    * @return a list of filtered ProductRoles
    */
   public List<ProductRoles> getFilteredProductRoles(
-      List<ProductRoles> productRoles, String productId) {
+      List<ProductRoles> productRoles, String productId, String tenantId) {
     return Optional.ofNullable(productRoles)
         .map(
             roles ->
@@ -361,7 +397,25 @@ public class IamServiceImpl implements IamService {
                               : exact;
                         })
                     .orElse(roles))
+        .map(roles -> filterByTenantId(roles, tenantId))
         .orElse(List.of());
+  }
+
+  /**
+   * Filters the product roles matching the given tenant ID. Product roles with no tenantId set are
+   * kept regardless of the requested tenant, for backward compatibility with legacy records.
+   *
+   * @param productRoles the list of product roles
+   * @param tenantId the ID of the tenant
+   * @return a list of filtered ProductRoles
+   */
+  private List<ProductRoles> filterByTenantId(List<ProductRoles> productRoles, String tenantId) {
+    if (tenantId == null) {
+      return productRoles;
+    }
+    return productRoles.stream()
+        .filter(pr -> pr.getTenantId() == null || tenantId.equals(pr.getTenantId()))
+        .toList();
   }
 
   /**
@@ -371,14 +425,17 @@ public class IamServiceImpl implements IamService {
    * @param permission the permission to check
    * @param productId the ID of the product
    * @param institutionId the ID of the institution
+   * @param tenantId the ID of the tenant
    * @return a Uni containing true if the user has the permission, false otherwise
    */
   @Override
   public Uni<Boolean> hasPermission(
-      String userId, String permission, String productId, String institutionId) {
+      String userId, String permission, String productId, String institutionId, String tenantId) {
     return getInstitutionProducts(institutionId, productId)
         .chain(
-            products -> userPermissionsRepository.getUserPermissions(userId, permission, products))
+            products ->
+                userPermissionsRepository.getUserPermissions(
+                    userId, permission, products, tenantId))
         .map(userPermissions -> userPermissions.getPermissions().contains(permission))
         .onFailure(ResourceNotFoundException.class)
         .recoverWithItem(ex -> false);

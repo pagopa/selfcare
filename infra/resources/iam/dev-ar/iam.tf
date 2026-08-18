@@ -33,6 +33,7 @@ module "apim_api" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/iam/src/main/docs/openapi.json"
   tenant_ids          = module.local.config.tenant_ids
+  tenant_hosts        = module.local.config.tenant_hosts
 
   api_operation_policies = []
 }

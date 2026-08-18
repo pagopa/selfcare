@@ -1,7 +1,8 @@
 services:
 
   mongodb:
-    image: mongo:latest@sha256:bf5995bcccb65725aa81fd92e68449323c94b96bf1c1fa9f7acbc2a8ad518114
+    platform: linux/amd64
+    image: mongo@sha256:406a4fdca9fc763443268f000218d3849ef8996f66ed9e92ba0b501b446ab822
     ports:
       - '27017:27017'
     volumes:
@@ -21,9 +22,7 @@ services:
     command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence"
 
   azure-cli:
-    build:
-      context: "src/test/resources/"
-      dockerfile: "Dockerfile-azure-cli"
+    image: mcr.microsoft.com/azure-cli:latest
     depends_on:
       - azurite
     volumes:
@@ -78,7 +77,7 @@ services:
 
 networks:
   developer-network:
-    name: selfcare-develop-network
+    name: selfcare-iam-develop-network
 
 secrets:
   maven_settings:

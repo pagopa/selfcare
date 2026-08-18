@@ -26,6 +26,7 @@ import org.bson.codecs.pojo.annotations.BsonId;
  *   "productRoles": [
  *     {
  *       "productId": "product1",
+ *       "tenantId": "AR",
  *       "roles": ["admin"]
  *     }
  *   ]

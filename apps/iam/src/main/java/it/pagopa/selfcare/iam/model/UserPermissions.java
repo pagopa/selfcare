@@ -14,5 +14,6 @@ public class UserPermissions {
   private String email;
   private String uid;
   private String productId;
+  private String tenantId;
   private List<String> permissions;
 }

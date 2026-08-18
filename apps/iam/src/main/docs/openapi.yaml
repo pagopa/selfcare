@@ -29,6 +29,8 @@ components:
       properties:
         productId:
           type: string
+        tenantId:
+          type: string
         role:
           type: string
         group:
@@ -58,6 +60,8 @@ components:
       type: object
       properties:
         productId:
+          type: string
+        tenantId:
           type: string
         roles:
           type: array
@@ -143,6 +147,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       requestBody:
         content:
           application/json:
@@ -185,6 +194,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       responses:
         "200":
           description: OK
@@ -237,6 +251,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       responses:
         "200":
           description: OK
@@ -273,6 +292,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       responses:
         "200":
           description: OK
@@ -322,6 +346,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       responses:
         "200":
           description: OK
@@ -379,6 +408,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       responses:
         "200":
           description: OK
@@ -429,6 +463,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          type: string
+          default: AR
       responses:
         "200":
           description: OK

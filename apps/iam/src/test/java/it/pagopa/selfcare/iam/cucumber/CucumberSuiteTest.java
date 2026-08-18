@@ -57,7 +57,7 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
             .waitingFor("userms", Wait.forLogMessage(".*Listening on:.*\\n", 1))
             .waitingFor(
                 "institutionms",
-                Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1)
+                Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1)
                     .withStartupTimeout(Duration.ofMinutes(5)))
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
