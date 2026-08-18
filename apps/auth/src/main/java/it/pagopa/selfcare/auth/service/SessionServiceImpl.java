@@ -19,6 +19,7 @@ public class SessionServiceImpl implements SessionService {
 
   private static final String SPID_LEVEL_L2 = "https://www.spid.gov.it/SpidL2";
   private static final String ISSUER = "SPID";
+  private static final String TENANT_CLAIM = "tenant_id";
 
   @ConfigProperty(name = "jwt.session.duration")
   Integer sessionDuration;
@@ -41,6 +42,7 @@ public class SessionServiceImpl implements SessionService {
                     .claim("name", userClaims.getName())
                     .claim("family_name", userClaims.getFamilyName())
                     .claim("uid", userClaims.getUid())
+                    .claim(TENANT_CLAIM, userClaims.getTenantId())
                     .claim("spid_level", SPID_LEVEL_L2)
                     .issuer(ISSUER)
                     .audience(audience)
@@ -59,6 +61,7 @@ public class SessionServiceImpl implements SessionService {
                 Jwt.claims()
                     .claim("uid", userClaims.getUid())
                     .claim("email", userClaims.getEmail())
+                    .claim(TENANT_CLAIM, userClaims.getTenantId())
                     .issuer("PAGOPA")
                     .audience(audience)
                     .issuedAt(Instant.now())
