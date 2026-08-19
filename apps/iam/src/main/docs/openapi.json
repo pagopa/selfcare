@@ -42,6 +42,9 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "role" : {
             "type" : "string"
           },
@@ -65,6 +68,9 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "name" : {
             "type" : "string"
           },
@@ -86,6 +92,9 @@
         "type" : "object",
         "properties" : {
           "productId" : {
+            "type" : "string"
+          },
+          "tenantId" : {
             "type" : "string"
           },
           "roles" : {
@@ -208,6 +217,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
+          }
         } ],
         "requestBody" : {
           "content" : {
@@ -271,6 +287,13 @@
           "in" : "query",
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
           }
         } ],
         "responses" : {
@@ -348,6 +371,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -399,6 +429,13 @@
           "in" : "query",
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
           }
         } ],
         "responses" : {
@@ -472,6 +509,13 @@
           "in" : "query",
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
           }
         } ],
         "responses" : {
@@ -559,6 +603,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -631,6 +682,13 @@
           "in" : "query",
           "schema" : {
             "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "type" : "string",
+            "default" : "AR"
           }
         } ],
         "responses" : {

@@ -11,25 +11,25 @@ Feature: User Permissions
       | read:users  |
       | write:users |
       | admin       |
-    When I check if user "d8880750-906a-4c43-8d48-983693fe24a4" has permission "read:users" for product "product-A"
+    When I check if user "d8880750-906a-4c43-8d48-983693fe24a4" has permission "read:users" for product "product-A" and tenant "tenant-A"
     Then the permission check should return true
 
   Scenario: User does not have required permission
     Given a user with UID "a0530f76-3454-418c-9d65-eb3162075495" has the following permissions for product "product-A":
       | read:users |
-    When I check if user "a0530f76-3454-418c-9d65-eb3162075495" has permission "delete:users" for product "product-A"
+    When I check if user "a0530f76-3454-418c-9d65-eb3162075495" has permission "delete:users" for product "product-A" and tenant "tenant-A"
     Then the permission check should return false
 
   Scenario: User with empty permissions
     Given a user with UID "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae" has no permissions for product "product-A"
-    When I check if user "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae" has permission "read:users" for product "product-A"
+    When I check if user "042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae" has permission "read:users" for product "product-A" and tenant "tenant-A"
     Then the permission check should return false
 
   Scenario Outline: Check multiple permissions
     Given a user with UID "a0530f76-3454-418c-9d65-eb3162075495" has the following permissions for product "product-B":
       | read:users  |
       | write:users |
-    When I check if user "a0530f76-3454-418c-9d65-eb3162075495" has permission "<permission>" for product "product-B"
+    When I check if user "a0530f76-3454-418c-9d65-eb3162075495" has permission "<permission>" for product "product-B" and tenant "tenant-A"
     Then the permission check should return <result>
 
     Examples:
@@ -43,7 +43,7 @@ Feature: User Permissions
     Given a user with UID "d8880750-906a-4c43-8d48-983693fe24a4" has the following permissions for product "product-A":
       | read:users  |
       | write:users |
-    When I check if user "d8880750-906a-4c43-8d48-983693fe24a4" has permission "<permission>" for product "product-A"
+    When I check if user "d8880750-906a-4c43-8d48-983693fe24a4" has permission "<permission>" for product "product-A" and tenant "tenant-A"
     Then the permission check should return <result>
 
     Examples:
@@ -55,7 +55,7 @@ Feature: User Permissions
 
   Scenario: Check permission with institution filter
     Given a user with UID "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permissions for product "product-A" and institution "inst-001"
-    When I check if user "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permission "read:users" for product "product-A" and institution "inst-001"
+    When I check if user "72d4984f-d2bc-4584-a6a7-dd63068b7f48" has permission "read:users" for product "product-A" and tenant "tenant-A" on institution "inst-001"
     Then the permission check should return true
 
   Scenario: Check positive permission with institution filter and custom permission
@@ -63,6 +63,7 @@ Feature: User Permissions
     And The following query params:
       | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
       | productId     | product-B                            |
+      | tenantId      | tenant-A                             |
     And The following path params:
       | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
       | permission | write:users                          |
@@ -75,6 +76,7 @@ Feature: User Permissions
     And The following query params:
       | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |
       | productId     | product-A                            |
+      | tenantId      | tenant-A                             |
     And The following path params:
       | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
       | permission | write:users                          |
@@ -98,6 +100,7 @@ Feature: User Permissions
     Given User login with username "user-002" and password "test"
     And The following query params:
       | institutionId | cdd3d4bb-bae3-4187-af16-53ec40358267 |  |
+      | tenantId      | tenant-A                             |  |
     And The following path params:
       | userId     | a0530f76-3454-418c-9d65-eb3162075495 |
       | permission | read:users                           |
@@ -128,6 +131,7 @@ Feature: User Permissions
     Given User login with username "user-002" and password "test"
     And The following query params:
       | productId | product-C |
+      | tenantId  | tenant-A  |
     And The following path params:
       | userId | 042b311a-7b99-4eaa-8c7d-9e5b5f6bb9ae |
     When I send a GET request to "/iam/users/{userId}/roles"
