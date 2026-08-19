@@ -36,6 +36,8 @@ import org.mockito.Mockito;
 import org.openapi.quarkus.internal_json.model.*;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
+import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
+import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -80,6 +82,10 @@ public class UserInstitutionCdcServiceTest {
     @InjectMock
     EventHubFdRestClient eventHubFdRestClient;
 
+    @RestClient
+    @InjectMock
+    WebhookApi webhookApi;
+
     @InjectMock
     UserInstitutionRepository userInstitutionRepository;
 
@@ -96,12 +102,60 @@ public class UserInstitutionCdcServiceTest {
         UserResource userResource = dummyUserResource();
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
                 .thenReturn(Uni.createFrom().item(userResource));
+        when(eventHubRestClient.sendMessage(any(UserNotificationToSend.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any(NotificationRequest.class)))
+                .thenReturn(Uni.createFrom().item(Response.accepted().build()));
 
         userInstitutionCdcService.consumerToSendScUserEvent(document);
         verify(userRegistryApi, times(1)).
                 findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId());
-        verify(eventHubRestClient, times(2)).
+        verify(eventHubRestClient, timeout(2000).times(2)).
                 sendMessage(any(UserNotificationToSend.class));
+        verify(webhookApi, timeout(2000).times(2)).
+                sendNotification(any(NotificationRequest.class));
+    }
+
+    @Test
+    void consumerToSendScUserEvent_whenWebhookFails_shouldStillComplete() {
+        UserInstitution userInstitution = dummyUserInstitution(false, null);
+        ChangeStreamDocument<UserInstitution> document = Mockito.mock(ChangeStreamDocument.class);
+        when(document.getFullDocument()).thenReturn(userInstitution);
+        when(document.getDocumentKey()).thenReturn(new BsonDocument());
+
+        UserResource userResource = dummyUserResource();
+        when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST_WITHOUT_FISCAL_CODE, userInstitution.getUserId()))
+                .thenReturn(Uni.createFrom().item(userResource));
+        when(eventHubRestClient.sendMessage(any(UserNotificationToSend.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any(NotificationRequest.class)))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("webhook down")));
+
+        userInstitutionCdcService.consumerToSendScUserEvent(document);
+        verify(eventHubRestClient, timeout(2000).times(2)).
+                sendMessage(any(UserNotificationToSend.class));
+        verify(webhookApi, timeout(2000).times(2)).
+                sendNotification(any(NotificationRequest.class));
+    }
+
+    @Test
+    void sendWebhookNotification_shouldMapRequest() {
+        UserNotificationToSend notification = new UserNotificationToSend();
+        notification.setId("userId");
+        notification.setProductId("prod-io");
+        when(webhookApi.sendNotification(any(NotificationRequest.class)))
+                .thenReturn(Uni.createFrom().item(Response.accepted().build()));
+
+        UserNotificationToSend result = userInstitutionCdcService.sendWebhookNotification(notification)
+                .await().indefinitely();
+
+        ArgumentCaptor<NotificationRequest> requestCaptor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(webhookApi).sendNotification(requestCaptor.capture());
+        Assertions.assertEquals(notification, result);
+        Assertions.assertEquals("prod-io", requestCaptor.getValue().getProductId());
+        Assertions.assertEquals("AR", requestCaptor.getValue().getTenantId());
+        Assertions.assertEquals("SC-User", requestCaptor.getValue().getTopic());
+        Assertions.assertTrue(requestCaptor.getValue().getPayload().contains("\"id\":\"userId\""));
     }
 
     @Test
@@ -263,10 +317,15 @@ public class UserInstitutionCdcServiceTest {
 
         when(document.getFullDocument()).thenReturn(userInstitution);
         when(document.getDocumentKey()).thenReturn(new BsonDocument());
+        when(eventHubRestClient.sendMessage(any(UserNotificationToSend.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any(NotificationRequest.class)))
+                .thenReturn(Uni.createFrom().item(Response.accepted().build()));
 
         userInstitutionCdcService.propagateDocumentToConsumers(document, publisher);
         verify(eventHubFdRestClient, times(0)).sendMessage(any(FdUserNotificationToSend.class));
-        verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(eventHubRestClient, timeout(2000).times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(webhookApi, timeout(2000).times(1)).sendNotification(any(NotificationRequest.class));
         verify(userInstitutionRepository, times(1)).updateUser(any());
     }
 
@@ -290,10 +349,17 @@ public class UserInstitutionCdcServiceTest {
 
         when(document.getFullDocument()).thenReturn(userInstitution);
         when(document.getDocumentKey()).thenReturn(new BsonDocument());
+        when(eventHubRestClient.sendMessage(any(UserNotificationToSend.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(eventHubFdRestClient.sendMessage(any(FdUserNotificationToSend.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any(NotificationRequest.class)))
+                .thenReturn(Uni.createFrom().item(Response.accepted().build()));
 
         userInstitutionCdcService.propagateDocumentToConsumers(document, publisher);
-        verify(eventHubFdRestClient, times(1)).sendMessage(any(FdUserNotificationToSend.class));
-        verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(eventHubFdRestClient, timeout(2000).times(1)).sendMessage(any(FdUserNotificationToSend.class));
+        verify(eventHubRestClient, timeout(2000).times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(webhookApi, timeout(2000).times(1)).sendNotification(any(NotificationRequest.class));
         verify(userInstitutionRepository, times(1)).updateUser(any());
     }
 
@@ -319,10 +385,15 @@ public class UserInstitutionCdcServiceTest {
 
         when(document.getFullDocument()).thenReturn(userInstitution);
         when(document.getDocumentKey()).thenReturn(new BsonDocument());
+        when(eventHubRestClient.sendMessage(any(UserNotificationToSend.class)))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any(NotificationRequest.class)))
+                .thenReturn(Uni.createFrom().item(Response.accepted().build()));
 
         userInstitutionCdcService.propagateDocumentToConsumers(document, publisher);
         verify(eventHubFdRestClient, times(0)).sendMessage(any(FdUserNotificationToSend.class));
-        verify(eventHubRestClient, times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(eventHubRestClient, timeout(2000).times(1)).sendMessage(any(UserNotificationToSend.class));
+        verify(webhookApi, timeout(2000).times(1)).sendNotification(any(NotificationRequest.class));
         verify(userInstitutionRepository, times(1)).updateUser(any());
     }
 
