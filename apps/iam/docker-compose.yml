@@ -1,15 +1,19 @@
 services:
 
   mongodb:
-    image: mongo:latest@sha256:bf5995bcccb65725aa81fd92e68449323c94b96bf1c1fa9f7acbc2a8ad518114
+    platform: linux/amd64
+    image: mongo@sha256:406a4fdca9fc763443268f000218d3849ef8996f66ed9e92ba0b501b446ab822
     ports:
       - '27017:27017'
     volumes:
       - "./src/test/resources/db:/docker-entrypoint-initdb.d"
     networks:
       - developer-network
+
+  # https://mcr.microsoft.com/en-us/artifact/mar/azure-storage/azurite/tags
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37
+    platform: linux/amd64
+    image: mcr.microsoft.com/azure-storage/azurite@sha256:d5bb99496dc82ef0e34401ced6726d2f5d8fcbdf48670ba067ee3b394884cc3a
     ports:
       - "10000:10000"
       - "10001:10001"
@@ -18,12 +22,11 @@ services:
       - developer-network
     environment:
       - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
-    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence"
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence --skipApiVersionCheck"
 
+  # https://mcr.microsoft.com/en-us/artifact/mar/azure-cli/tags
   azure-cli:
-    build:
-      context: "src/test/resources/"
-      dockerfile: "Dockerfile-azure-cli"
+    image: mcr.microsoft.com/azure-cli@sha256:d483c14775d67577de4b2887aaef6d88f5a5371a151ad59872be91602cd89635
     depends_on:
       - azurite
     volumes:
@@ -33,6 +36,7 @@ services:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:
       - developer-network
+    command: [ "/bin/sh", "-c", "/init_azurite.sh" ]
 
   mock-server:
     platform: linux/amd64
@@ -50,7 +54,7 @@ services:
 
   institutionms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:3a350260028708ab24b90e844413cfcfa20815c5eceb6da29a0dfd5895fdde17
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest
     ports:
       - "8082:8082"
     networks:
@@ -58,13 +62,16 @@ services:
     env_file:
       - ./src/test/resources/test-institution-ms.env
     depends_on:
-      - mongodb
-      - mock-server
-      - azure-cli
+      mongodb:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
+      mock-server:
+        condition: service_started
 
   userms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:598b488a44be661792187b94bad56594e437e5636f1287408b247de2b817fbe9
+    image: ghcr.io/pagopa/selfcare-user-ms:latest
     ports:
       - "8087:8087"
     env_file:
@@ -72,13 +79,16 @@ services:
     networks:
       - developer-network
     depends_on:
-      - mongodb
-      - mock-server
-      - azure-cli
+      mongodb:
+        condition: service_started
+      azure-cli:
+        condition: service_completed_successfully
+      mock-server:
+        condition: service_started
 
 networks:
   developer-network:
-    name: selfcare-develop-network
+    name: selfcare-iam-develop-network
 
 secrets:
   maven_settings:
