@@ -49,7 +49,9 @@ public class IamControllerTest {
     response.setName("john");
     response.setEmail("john@example.com");
 
-    Mockito.when(iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.anyString(), Mockito.anyString()))
+    Mockito.when(
+            iamService.saveUser(
+                Mockito.any(SaveUserRequest.class), Mockito.anyString(), Mockito.anyString()))
         .thenReturn(Uni.createFrom().item(response));
     //
     given()
@@ -67,7 +69,10 @@ public class IamControllerTest {
     request.setEmail(null);
 
     Mockito.when(
-            iamService.saveUser(Mockito.any(SaveUserRequest.class), Mockito.nullable(String.class), Mockito.anyString()))
+            iamService.saveUser(
+                Mockito.any(SaveUserRequest.class),
+                Mockito.nullable(String.class),
+                Mockito.anyString()))
         .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Email cannot be null")));
 
     given()
@@ -235,7 +240,8 @@ public class IamControllerTest {
     UserClaims u2 = new UserClaims();
     u2.setUid("u2");
 
-    Mockito.when(iamService.getUsers(productId, "AR")).thenReturn(Uni.createFrom().item(List.of(u1, u2)));
+    Mockito.when(iamService.getUsers(productId, "AR"))
+        .thenReturn(Uni.createFrom().item(List.of(u1, u2)));
 
     given()
         .accept(ContentType.JSON)
@@ -255,7 +261,8 @@ public class IamControllerTest {
     UserClaims u2 = new UserClaims();
     u2.setUid("u2");
 
-    Mockito.when(iamService.getUsers(productId, "AR")).thenReturn(Uni.createFrom().item(List.of(u1, u2)));
+    Mockito.when(iamService.getUsers(productId, "AR"))
+        .thenReturn(Uni.createFrom().item(List.of(u1, u2)));
 
     given()
         .accept(ContentType.JSON)

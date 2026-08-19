@@ -117,7 +117,13 @@ public class UserPermissionsRepository {
               pipeline.add(Aggregates.limit(1));
             });
     Optional.ofNullable(tenantId)
-        .ifPresent(tid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.tenantId", tid))));
+        .ifPresent(
+            tid ->
+                pipeline.add(
+                    Aggregates.match(
+                        Filters.or(
+                            Filters.eq("productRoles.tenantId", tid),
+                            Filters.exists("productRoles.tenantId", false)))));
 
     List<Bson> pipelinePost =
         Arrays.asList(
@@ -155,7 +161,13 @@ public class UserPermissionsRepository {
         .ifPresent(
             pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
     Optional.ofNullable(tenantId)
-        .ifPresent(tid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.tenantId", tid))));
+        .ifPresent(
+            tid ->
+                pipeline.add(
+                    Aggregates.match(
+                        Filters.or(
+                            Filters.eq("productRoles.tenantId", tid),
+                            Filters.exists("productRoles.tenantId", false)))));
 
     List<Bson> pipelinePost =
         Arrays.asList(
