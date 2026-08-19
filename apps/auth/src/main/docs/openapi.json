@@ -1,5 +1,5 @@
 {
-  "openapi" : "3.1.0",
+  "openapi" : "3.0.3",
   "tags" : [ {
     "name" : "OIDC"
   }, {
@@ -24,16 +24,16 @@
         }
       },
       "OidcExchangeRequest" : {
-        "type" : "object",
         "required" : [ "code", "redirectUri" ],
+        "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           },
           "redirectUri" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           }
         }
       },
@@ -58,8 +58,8 @@
             "type" : "string"
           },
           "status" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "title" : {
             "type" : "string"
@@ -71,8 +71,8 @@
             "$ref" : "#/components/schemas/OtpForbiddenCode"
           },
           "remainingAttempts" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "otpStatus" : {
             "$ref" : "#/components/schemas/OtpStatus"
@@ -80,34 +80,34 @@
         }
       },
       "OtpForbiddenCode" : {
-        "type" : "string",
-        "enum" : [ "CODE_001", "CODE_002" ]
+        "enum" : [ "CODE_001", "CODE_002" ],
+        "type" : "string"
       },
       "OtpResendRequest" : {
-        "type" : "object",
         "required" : [ "otpUuid" ],
+        "type" : "object",
         "properties" : {
           "otpUuid" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           }
         }
       },
       "OtpStatus" : {
-        "type" : "string",
-        "enum" : [ "PENDING", "EXPIRED", "REJECTED", "COMPLETED" ]
+        "enum" : [ "PENDING", "EXPIRED", "REJECTED", "COMPLETED" ],
+        "type" : "string"
       },
       "OtpVerifyRequest" : {
-        "type" : "object",
         "required" : [ "otpUuid", "otp" ],
+        "type" : "object",
         "properties" : {
           "otpUuid" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           },
           "otp" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           }
         }
       },
@@ -121,8 +121,8 @@
             "type" : "string"
           },
           "status" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "title" : {
             "type" : "string"

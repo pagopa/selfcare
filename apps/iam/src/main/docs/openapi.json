@@ -1,5 +1,5 @@
 {
-  "openapi" : "3.1.0",
+  "openapi" : "3.0.3",
   "tags" : [ {
     "name" : "IAM"
   }, {
@@ -25,8 +25,8 @@
             "type" : "string"
           },
           "status" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "title" : {
             "type" : "string"
@@ -106,12 +106,12 @@
         }
       },
       "SaveUserRequest" : {
-        "type" : "object",
         "required" : [ "email" ],
+        "type" : "object",
         "properties" : {
           "email" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           },
           "uid" : {
             "type" : "string"
@@ -221,8 +221,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -292,8 +292,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -375,8 +375,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -434,8 +434,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -514,8 +514,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -607,8 +607,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -687,8 +687,8 @@
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "type" : "string",
-            "default" : "AR"
+            "default" : "AR",
+            "type" : "string"
           }
         } ],
         "responses" : {
