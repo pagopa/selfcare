@@ -26,10 +26,13 @@ import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import jakarta.ws.rs.core.Response;
 import org.openapi.quarkus.user_registry_json.model.EmailCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
+import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
+import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -41,6 +44,7 @@ import java.util.UUID;
 import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
 import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -55,6 +59,10 @@ class UserNotificationServiceImplTest {
     @InjectMock
     @RestClient
     private EventHubRestClient eventHubRestClient;
+
+    @InjectMock
+    @RestClient
+    private WebhookApi webhookApi;
 
     @InjectMock
     TelemetryClient telemetryClient;
@@ -317,10 +325,51 @@ class UserNotificationServiceImplTest {
         ).subscribe().withSubscriber(UniAssertSubscriber.create());
         subscriber.assertCompleted();
         verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
+        verifyNoInteractions(webhookApi);
         ArgumentCaptor<Map<String, Double>> metricsName = ArgumentCaptor.forClass(Map.class);
         verify(telemetryClient, times(1)).trackEvent(eq(EVENT_USER_MS_NAME), any(), metricsName.capture());
         assertEquals(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, metricsName.getValue().keySet().stream().findFirst().orElse(null));
 
+    }
+
+    @Test
+    void testSendUserNotification() {
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setId("userId");
+        userNotificationToSend.setProductId("prod-io");
+
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any())).thenReturn(Uni.createFrom().item(Response.accepted().build()));
+
+        UniAssertSubscriber<UserNotificationToSend> subscriber = userNotificationService.sendUserNotification(
+                userNotificationToSend
+        ).subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+
+        verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
+        ArgumentCaptor<NotificationRequest> requestCaptor = ArgumentCaptor.forClass(NotificationRequest.class);
+        verify(webhookApi, times(1)).sendNotification(requestCaptor.capture());
+        assertEquals("prod-io", requestCaptor.getValue().getProductId());
+        assertEquals("AR", requestCaptor.getValue().getTenantId());
+        assertEquals("SC-User", requestCaptor.getValue().getTopic());
+        assertTrue(requestCaptor.getValue().getPayload().contains("\"id\":\"userId\""));
+    }
+
+    @Test
+    void testSendUserNotification_whenWebhookFails_shouldStillComplete() {
+        UserNotificationToSend userNotificationToSend = new UserNotificationToSend();
+        userNotificationToSend.setId("userId");
+        userNotificationToSend.setProductId("prod-io");
+
+        when(eventHubRestClient.sendMessage(any())).thenReturn(Uni.createFrom().voidItem());
+        when(webhookApi.sendNotification(any())).thenReturn(Uni.createFrom().failure(new RuntimeException("webhook down")));
+
+        UniAssertSubscriber<UserNotificationToSend> subscriber = userNotificationService.sendUserNotification(
+                userNotificationToSend
+        ).subscribe().withSubscriber(UniAssertSubscriber.create());
+        subscriber.assertCompleted();
+        verify(eventHubRestClient, times(1)).sendMessage(userNotificationToSend);
+        verify(webhookApi, times(1)).sendNotification(any());
     }
     @Test
     void testSendCreateUserNotification() throws IOException {

@@ -1425,7 +1425,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendUserNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         // Call the method
@@ -1495,7 +1495,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendUserNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         // Call the method
@@ -1534,7 +1534,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendUserNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         // Call the method
@@ -1699,7 +1699,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendUserNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
         UniAssertSubscriber<String> subscriber = userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -1741,7 +1741,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendUserNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
         UniAssertSubscriber<String> subscriber = userService.createUserByUserId(addUserRoleDto, "userId", loggedUser)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -1780,7 +1780,7 @@ class UserServiceTest {
         when(productService.getProduct(any())).thenReturn(product);
         when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
         when(userUtils.buildUsersNotificationResponse(any(), any())).thenReturn(List.of(userNotificationToSend));
-        when(userNotificationService.sendKafkaNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
+        when(userNotificationService.sendUserNotification(any())).thenReturn(Uni.createFrom().item(userNotificationToSend));
 
 
         userService.createUserByUserId(addUserRoleDto, userResource.getId().toString(), loggedUser)
