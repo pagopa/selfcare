@@ -39,12 +39,12 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
 }
 
 data "azurerm_user_assigned_identity" "users_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
 data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
@@ -120,12 +120,20 @@ locals {
       value = "https://api.dev.selfcare.pagopa.it/external/internal/v1"
     },
     {
-      name = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.users_eventhub_sender_identity.client_id
     },
     {
-      name = "EVENTHUBFD_SENDER_MANAGED_IDENTITY_CLIENT_ID"
+      name  = "EVENTHUBFD_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.client_id
+    },
+    {
+      name  = "WEBHOOK_URL"
+      value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "USER_CDC_WEBHOOK_ENABLED"
+      value = true
     }
   ]
 
