@@ -14,6 +14,7 @@ module "local" {
   container_app_environment_name = "selc-p-cae-002"
   ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_max_replicas     = 5
+  container_app_min_replicas     = 2
   container_app_desired_replicas = "3"
   container_app_cpu              = 1.25
   container_app_memory           = "2.5Gi"
@@ -137,7 +138,7 @@ locals {
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -Xmx800m -XX:MaxDirectMemorySize=256m -XX:MaxMetaspaceSize=256m -Dio.netty.leakDetection.level=advanced"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
