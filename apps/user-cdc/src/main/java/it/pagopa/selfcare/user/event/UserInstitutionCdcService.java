@@ -3,6 +3,8 @@ package it.pagopa.selfcare.user.event;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableServiceException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -34,6 +36,7 @@ import it.pagopa.selfcare.user.model.FdUserNotificationToSend;
 import it.pagopa.selfcare.user.model.NotificationUserType;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
+import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -48,6 +51,8 @@ import org.openapi.quarkus.internal_json.model.AddMembersToUserGroupDto;
 import org.openapi.quarkus.internal_json.model.DelegationResponse;
 import org.openapi.quarkus.internal_json.model.DeleteMembersFromUserGroupDto;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
+import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
+import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -118,6 +123,22 @@ public class UserInstitutionCdcService {
     @RestClient
     @Inject
     EventHubFdRestClient eventHubFdRestClient;
+
+    @RestClient
+    @Inject
+    WebhookApi webhookApi;
+
+    @Inject
+    ObjectMapper objectMapper;
+
+    @ConfigProperty(name = "user-cdc.webhook.enabled")
+    boolean webhookEnabled;
+
+    @ConfigProperty(name = "user-cdc.webhook.tenant-id")
+    String webhookTenantId;
+
+    @ConfigProperty(name = "user-cdc.webhook.topic")
+    String webhookTopic;
 
     private final NotificationMapper notificationMapper;
 
@@ -292,8 +313,10 @@ public class UserInstitutionCdcService {
                         .onItem().transformToUniAndMerge(userNotificationToSend -> eventHubRestClient.sendMessage(userNotificationToSend)
                                 .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff)).atMost(maxRetry)
                                 .onItem().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS, 1D)))
-                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D))))
-                        .toUni()
+                                .onFailure().invoke(() -> telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInput(userNotificationToSend)), Map.of(EVENTS_USER_INSTITUTION_PRODUCT_FAILURE, 1D)))
+                                .onItem().transformToUni(unused -> sendWebhookNotification(userNotificationToSend)))
+                        .collect().asList()
+                        .replaceWithVoid()
                 )
                 .subscribe().with(
                         result -> {
@@ -306,6 +329,43 @@ public class UserInstitutionCdcService {
                         });
     }
 
+    public Uni<UserNotificationToSend> sendWebhookNotification(UserNotificationToSend userNotificationToSend) {
+        if (!webhookEnabled) {
+            return Uni.createFrom().item(userNotificationToSend);
+        }
+
+        NotificationRequest notificationRequest;
+        try {
+            notificationRequest =
+                    NotificationRequest.builder()
+                            .productId(userNotificationToSend.getProductId())
+                            .tenantId(webhookTenantId)
+                            .payload(objectMapper.writeValueAsString(userNotificationToSend))
+                            .topic(webhookTopic)
+                            .build();
+        } catch (JsonProcessingException e) {
+            log.warn(
+                    "error during serialize webhook notification for id {}: {} ",
+                    userNotificationToSend.getId(),
+                    e.getMessage(),
+                    e);
+            return Uni.createFrom().item(userNotificationToSend);
+        }
+
+        return webhookApi
+                .sendNotification(notificationRequest)
+                .onFailure()
+                .invoke(
+                        throwable ->
+                                log.warn(
+                                        "error during send webhook notification for id {}: {} ",
+                                        userNotificationToSend.getId(),
+                                        throwable.getMessage(),
+                                        throwable))
+                .onFailure()
+                .recoverWithNull()
+                .replaceWith(userNotificationToSend);
+    }
 
     /**
      *

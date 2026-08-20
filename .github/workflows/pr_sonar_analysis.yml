@@ -90,21 +90,30 @@ jobs:
               MODULES["libs/${BASH_REMATCH[1]}"]=1
             elif [[ "$file" == "pom.xml" || "$file" == test-coverage/* || "$file" == .github/workflows/pr_sonar_analysis.yml || "$file" == .github/workflows/call_code_review.yml ]]; then
               FULL_ANALYSIS=true
-            else
-              FULL_ANALYSIS=true
             fi
           done <<< "$CHANGED_FILES"
 
-          if [[ "$FULL_ANALYSIS" == "true" || "${#MODULES[@]}" -eq 0 ]]; then
+          if [[ "$FULL_ANALYSIS" == "true" ]]; then
             echo "mode=full" >> "$GITHUB_OUTPUT"
             echo "projects=" >> "$GITHUB_OUTPUT"
+          elif [[ "${#MODULES[@]}" -eq 0 ]]; then
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+            echo "projects=" >> "$GITHUB_OUTPUT"
           else
-            PROJECTS=$(printf '%s\n' "${!MODULES[@]}" | sort | paste -sd, -)
+            # Expand each detected aggregator to include ALL its sub-modules (pom.xml files).
+            # Necessary because Maven's --projects on an aggregator (packaging=pom) does NOT
+            # pull in its child modules (--also-make follows <dependency>, not parent-child).
+            EXPANDED=$(
+              for mod in "${!MODULES[@]}"; do
+                find "$mod" -name pom.xml -not -path '*/target/*' -not -path '*/node_modules/*' -exec dirname {} \;
+              done | sort -u | paste -sd, -
+            )
             echo "mode=partial" >> "$GITHUB_OUTPUT"
-            echo "projects=$PROJECTS" >> "$GITHUB_OUTPUT"
+            echo "projects=$EXPANDED" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build modules with coverage
+        if: steps.scope.outputs.mode != 'skip'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -124,12 +133,15 @@ jobs:
           fi
 
       - name: Set up JDK 21 for Sonar
+        if: steps.scope.outputs.mode != 'skip'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+          overwrite-settings: false
 
       - name: Analyze with SonarCloud
+        if: steps.scope.outputs.mode != 'skip'
         shell: bash
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -138,6 +150,7 @@ jobs:
           JACOCO_PATHS=$(find "$PWD" -path '*/target/*jacoco*/jacoco.xml' -not -path '*/test-coverage/*' | tr '\n' ',' | sed 's/,$//')
 
           SONAR_ARGS=(
+            org.sonarsource.scanner.maven:sonar-maven-plugin:5.1.0.4751:sonar
             -Dsonar.host.url=https://sonarcloud.io
             -Dsonar.organization=pagopa
             -Dsonar.projectKey=pagopa_selfcare
@@ -156,4 +169,8 @@ jobs:
             )
           fi
 
-          mvn -T 1C -B -ntp sonar:sonar "${SONAR_ARGS[@]}"
+          if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
+            mvn -T 1C -B -ntp --projects "${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
+          else
+            mvn -T 1C -B -ntp "${SONAR_ARGS[@]}"
+          fi
