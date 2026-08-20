@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.functions;
 
 import static it.pagopa.selfcare.onboarding.functions.CommonFunctions.FORMAT_LOGGER_ONBOARDING_STRING;
 import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_TOKEN_CONTRACT_ACTIVITY_NAME;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_USER_ATTACHMENTS_ACTIVITY_NAME;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -58,6 +59,30 @@ public class DocumentFunctions {
       .info(() -> String.format("Deleting contract for onboardingId=%s", onboardingId));
     try (Response response = documentService.deleteContract(onboardingId)) {
       ensureSuccessfulDocumentResponse(response, "delete contract", onboardingId);
+    }
+  }
+
+  /**
+   * Soft-deletes every user-uploaded attachment (storageOrigin=USER) associated with the given
+   * onboarding by moving the underlying blobs to deleted storage on the
+   * dedicated user-attachments storage account.
+   */
+  @FunctionName(DELETE_USER_ATTACHMENTS_ACTIVITY_NAME)
+  public void deleteUserAttachments(
+      @DurableActivityTrigger(name = "filtersString") String filtersString,
+      final ExecutionContext context) throws JsonProcessingException {
+
+    context
+        .getLogger()
+        .info(() -> String.format(FORMAT_LOGGER_INSTITUTION_STRING, DELETE_USER_ATTACHMENTS_ACTIVITY_NAME, filtersString));
+
+    EntityFilter entityFilter = objectMapper.readValue(filtersString, EntityFilter.class);
+    String onboardingId = entityFilter.getValue();
+    context
+        .getLogger()
+        .info(() -> String.format("Deleting user attachments for onboardingId=%s", onboardingId));
+    try (Response response = documentService.deleteUserAttachments(onboardingId)) {
+      ensureSuccessfulDocumentResponse(response, "delete user attachments", onboardingId);
     }
   }
 
