@@ -24,7 +24,7 @@ public class WebhookRequest {
   private Map<String, String> headers;
 
   /**
-   * Topics the consumer wants to receive notifications for (e.g. SC-Contracts, SC-User,
+   * Topics the consumer wants to receive notifications for (e.g. SC-Contracts, SC-Users,
    * SC-Delegate). When null or empty, notifications for every topic are sent.
    */
   private List<String> topics;

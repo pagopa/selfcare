@@ -362,7 +362,8 @@ class WebhookServiceTest {
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
     verify(notificationRepository).persist(captor.capture());
     assertNotEquals(request.getPayload(), captor.getValue().getPayload());
-    assertEquals(request.getPayload(), DataEncryptionConfig.decrypt(captor.getValue().getPayload()));
+    assertEquals(
+        request.getPayload(), DataEncryptionConfig.decrypt(captor.getValue().getPayload()));
     assertEquals(TENANT_ID, captor.getValue().getTenantId());
     assertEquals(WebhookNotification.NotificationStatus.PENDING, captor.getValue().getStatus());
     verify(notificationPublisher).publish(captor.getValue().getId().toHexString());
@@ -401,13 +402,13 @@ class WebhookServiceTest {
     request.setProductId(productId);
     request.setTenantId(TENANT_ID);
     request.setPayload("{}");
-    request.setTopic("SC-User");
+    request.setTopic("SC-Users");
 
     Webhook subscribedWebhook = new Webhook();
     subscribedWebhook.setId(new ObjectId());
     subscribedWebhook.setTenantId(TENANT_ID);
     subscribedWebhook.setProducts(List.of(productId));
-    subscribedWebhook.setTopics(List.of("SC-Contracts", "SC-User"));
+    subscribedWebhook.setTopics(List.of("SC-Contracts", "SC-Users"));
     subscribedWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
 
     Webhook notSubscribedWebhook = new Webhook();
@@ -442,7 +443,7 @@ class WebhookServiceTest {
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
     verify(notificationRepository, times(1)).persist(captor.capture());
     assertEquals(subscribedWebhook.getId(), captor.getValue().getWebhookId());
-    assertEquals("SC-User", captor.getValue().getTopic());
+    assertEquals("SC-Users", captor.getValue().getTopic());
   }
 
   @Test
@@ -575,7 +576,8 @@ class WebhookServiceTest {
     second.setStatus(WebhookNotification.NotificationStatus.FAILED);
     second.setAttemptCount(3);
 
-    when(notificationRepository.findByStatus(WebhookNotification.NotificationStatus.FAILED, webhookId))
+    when(notificationRepository.findByStatus(
+            WebhookNotification.NotificationStatus.FAILED, webhookId))
         .thenReturn(Uni.createFrom().item(List.of(first, second)));
     when(notificationRepository.update(any(WebhookNotification.class)))
         .thenAnswer(
