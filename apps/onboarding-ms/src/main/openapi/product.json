@@ -212,7 +212,7 @@
       "Instant" : {
         "type" : "string",
         "format" : "date-time",
-        "examples" : [ "2022-03-10T16:15:50Z" ]
+        "example" : "2022-03-10T16:15:50Z"
       },
       "InstitutionType" : {
         "type" : "string",
