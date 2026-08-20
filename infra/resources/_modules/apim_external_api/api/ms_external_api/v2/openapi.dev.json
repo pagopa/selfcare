@@ -2130,6 +2130,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "default": "AR",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -2212,6 +2220,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "default": "AR",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2271,6 +2287,14 @@
             "name": "productId",
             "in": "query",
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "default": "AR",
               "type": "string"
             }
           }
@@ -2355,6 +2379,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "default": "AR",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2435,6 +2467,14 @@
             "name": "productId",
             "in": "query",
             "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "default": "AR",
               "type": "string"
             }
           }
@@ -5965,6 +6005,12 @@
               "type": "string"
             }
           },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "retryPolicy": {
             "$ref": "#/components/schemas/RetryPolicyRequest"
           }
@@ -6023,6 +6069,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "roles": {
             "type": "array",
             "items": {
@@ -6041,8 +6090,8 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "title": {
             "type": "string"
@@ -6053,14 +6102,14 @@
         }
       },
       "SaveUserRequest": {
-        "type": "object",
         "required": [
           "email"
         ],
+        "type": "object",
         "properties": {
           "email": {
-            "type": "string",
-            "minLength": 1
+            "minLength": 1,
+            "type": "string"
           },
           "uid": {
             "type": "string"
@@ -6088,6 +6137,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -6109,6 +6161,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string"
           },
           "role": {
@@ -7397,6 +7452,17 @@
       }
     },
     "securitySchemes": {
+      "SecurityScheme": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Authentication"
+      },
+      "bearerAuth1": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
       "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",
