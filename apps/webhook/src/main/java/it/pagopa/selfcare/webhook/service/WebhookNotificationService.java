@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
@@ -26,7 +27,6 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +57,17 @@ public class WebhookNotificationService {
   @ConfigProperty(name = "webhook.timeout.read", defaultValue = "10000")
   int readTimeout;
 
+  @ConfigProperty(name = "webhook.http.max-pool-size", defaultValue = "10")
+  int maxPoolSize;
+
+  @ConfigProperty(name = "webhook.http.max-wait-queue-size", defaultValue = "50")
+  int maxWaitQueueSize;
+
+  @ConfigProperty(name = "webhook.http.max-concurrent-deliveries", defaultValue = "10")
+  int maxConcurrentDeliveries;
+
+  static final int MAX_ERROR_BODY_CHARS = 512;
+
   @ConfigProperty(name = "webhook.jwt.header-name", defaultValue = "Authorization")
   String jwtHeaderName;
 
@@ -77,6 +88,9 @@ public class WebhookNotificationService {
             .setConnectTimeout(connectTimeout)
             .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
             .setIdleTimeout(readTimeout)
+            .setMaxPoolSize(maxPoolSize)
+            .setMaxWaitQueueSize(maxWaitQueueSize)
+            .setKeepAlive(true)
             .setFollowRedirects(true);
     this.webClient = WebClient.create(vertx, options);
   }
@@ -101,30 +115,33 @@ public class WebhookNotificationService {
                 return Uni.createFrom().voidItem();
               }
               log.info("Processing {} pending notifications", notifications.size());
-              List<Uni<Void>> processes =
-                  notifications.stream()
-                      .map(
-                          notification ->
-                              processNotification(notification)
-                                  .onFailure()
-                                  .recoverWithUni(
-                                      error -> {
-                                        log.error(
-                                            "Error processing notification {} {}",
-                                            notification.getId(),
-                                            error.getMessage());
-                                        return notificationRepository
-                                            .releaseProcessingLock(notification)
-                                            .replaceWithVoid();
-                                      })
-                                  .onItem()
-                                  .transformToUni(
-                                      v ->
-                                          notificationRepository
-                                              .releaseProcessingLock(notification)
-                                              .replaceWithVoid()))
-                      .toList();
-              return Uni.join().all(processes).andFailFast().replaceWithVoid();
+              return Multi.createFrom()
+                  .iterable(notifications)
+                  .onItem()
+                  .transformToUni(
+                      notification ->
+                          processNotification(notification)
+                              .onFailure()
+                              .recoverWithUni(
+                                  error -> {
+                                    log.error(
+                                        "Error processing notification {} {}",
+                                        notification.getId(),
+                                        error.getMessage());
+                                    return notificationRepository
+                                        .releaseProcessingLock(notification)
+                                        .replaceWithVoid();
+                                  })
+                              .onItem()
+                              .transformToUni(
+                                  v ->
+                                      notificationRepository
+                                          .releaseProcessingLock(notification)
+                                          .replaceWithVoid()))
+                  .merge(maxConcurrentDeliveries)
+                  .collect()
+                  .asList()
+                  .replaceWithVoid();
             });
   }
 
@@ -237,6 +254,16 @@ public class WebhookNotificationService {
     return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
   }
 
+  static String truncateErrorBody(String body) {
+    if (body == null || body.isBlank()) {
+      return "";
+    }
+    if (body.length() <= MAX_ERROR_BODY_CHARS) {
+      return body;
+    }
+    return body.substring(0, MAX_ERROR_BODY_CHARS) + "...(truncated)";
+  }
+
   private Uni<HttpResponse<Buffer>> sendDecodedPayload(
       HttpRequest<Buffer> request, WebhookNotification notification) {
     try {
@@ -274,7 +301,8 @@ public class WebhookNotificationService {
           .onItem()
           .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     } else {
-      String errorMessage = String.format("HTTP error %d: %s", statusCode, response.bodyAsString());
+      String errorMessage =
+          String.format("HTTP error %d: %s", statusCode, truncateErrorBody(response.bodyAsString()));
       return handleFailure(webhook, notification, errorMessage, statusCode);
     }
   }

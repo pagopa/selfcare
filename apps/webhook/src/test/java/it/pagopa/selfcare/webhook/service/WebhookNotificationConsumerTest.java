@@ -71,6 +71,8 @@ class WebhookNotificationConsumerTest {
     vertxField.set(serviceInstance, vertx);
     consumer().maxMessagesPerPoll = 32;
     consumer().visibilityTimeoutSeconds = 300;
+    consumer().maxInFlight = 32;
+    consumer().inFlight.set(0);
   }
 
   @Test
@@ -198,6 +200,32 @@ class WebhookNotificationConsumerTest {
     // then
     // then
     verify(client).receiveMessages(32, Duration.ofSeconds(300), null, null);
+  }
+
+  @Test
+  void poll_shouldSkipWhenAtInFlightCapacity() {
+    consumer().enabled = true;
+    consumer().maxInFlight = 32;
+    consumer().inFlight.set(32);
+
+    consumer().poll();
+
+    verify(client, never()).receiveMessages(any(), any(Duration.class), isNull(), isNull());
+  }
+
+  @Test
+  void poll_shouldReceiveOnlyRemainingInFlightCapacity() {
+    PagedIterable<QueueMessageItem> messages = mock(PagedIterable.class);
+    when(messages.iterator()).thenReturn(Collections.emptyIterator());
+    when(client.receiveMessages(eq(4), eq(Duration.ofSeconds(300)), isNull(), isNull()))
+        .thenReturn(messages);
+    consumer().enabled = true;
+    consumer().maxInFlight = 32;
+    consumer().inFlight.set(28);
+
+    consumer().poll();
+
+    verify(client).receiveMessages(4, Duration.ofSeconds(300), null, null);
   }
 
   @Test

@@ -21,6 +21,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -56,7 +57,11 @@ public class WebhookNotificationConsumer {
   @ConfigProperty(name = "webhook.storage-queue.visibility-timeout-seconds", defaultValue = "300")
   int visibilityTimeoutSeconds;
 
+  @ConfigProperty(name = "webhook.storage-queue.max-in-flight", defaultValue = "32")
+  int maxInFlight;
+
   private volatile QueueClient client;
+  final AtomicInteger inFlight = new AtomicInteger();
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
@@ -97,10 +102,19 @@ public class WebhookNotificationConsumer {
     if (!enabled || client == null) {
       return;
     }
+    int available = maxInFlight - inFlight.get();
+    if (available <= 0) {
+      log.debug(
+          "Skipping Storage Queue poll, {} deliveries already in flight (max {})",
+          inFlight.get(),
+          maxInFlight);
+      return;
+    }
+    int toReceive = Math.min(maxMessagesPerPoll, available);
     try {
       client
           .receiveMessages(
-              maxMessagesPerPoll, Duration.ofSeconds(visibilityTimeoutSeconds), null, null)
+              toReceive, Duration.ofSeconds(visibilityTimeoutSeconds), null, null)
           .forEach(this::processMessage);
     } catch (QueueStorageException e) {
       if (e.getStatusCode() == 404) {
@@ -133,6 +147,7 @@ public class WebhookNotificationConsumer {
   }
 
   private void processNotification(QueueMessageItem message, String notificationId) {
+    inFlight.incrementAndGet();
     notificationRepository
         .claimForProcessing(notificationId, 5)
         .onItem()
@@ -146,6 +161,7 @@ public class WebhookNotificationConsumer {
         .subscribe()
         .with(
             shouldDelete -> {
+              inFlight.decrementAndGet();
               if (Boolean.TRUE.equals(shouldDelete)) {
                 deleteMessage(message);
               } else {
@@ -159,6 +175,7 @@ public class WebhookNotificationConsumer {
               }
             },
             error -> {
+              inFlight.decrementAndGet();
               log.error("Unable to process Storage Queue notification {}", notificationId, error);
               // Leave the message in the queue for retry after the visibility timeout expires.
             });

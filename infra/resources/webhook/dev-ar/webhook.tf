@@ -268,18 +268,18 @@ module "webhook_synthetic_monitoring" {
 ###############################################################################
 
 module "apim_api" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-api-webhook"
-  display_name        = "Webhook API"
-  base_path           = "external/webhook"
-  private_dns_name    = "${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/webhook/src/main/docs/openapi.json"
-  tenant_ids          = module.local.config.tenant_ids
-
+  source                 = "../../_modules/apim_api"
+  apim_name              = module.local.config.apim_name
+  apim_rg                = module.local.config.apim_rg
+  api_name               = "selc-${module.local.config.env_short}-api-webhook"
+  display_name           = "Webhook API"
+  base_path              = "external/webhook"
+  private_dns_name       = "${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix        = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix    = module.local.config.api_dns_zone_prefix
+  openapi_path           = "../../../../apps/webhook/src/main/docs/openapi.json"
+  tenant_ids             = module.local.config.tenant_ids
+  tenant_hosts           = module.local.config.tenant_hosts
   api_operation_policies = []
 }
 

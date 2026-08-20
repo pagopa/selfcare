@@ -169,6 +169,37 @@ class WebhookNotificationServiceTest {
   }
 
   @Test
+  void processNotification_shouldTruncateOversizedHttpErrorBody() {
+    Webhook webhook = createWebhook();
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(500);
+    when(httpResponse.bodyAsString()).thenReturn("x".repeat(2000));
+
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitItem();
+
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository, atLeastOnce()).update(captor.capture());
+    String lastError = captor.getValue().getLastError();
+    assertEquals(WebhookNotification.NotificationStatus.RETRY, captor.getValue().getStatus());
+    org.junit.jupiter.api.Assertions.assertTrue(lastError.startsWith("HTTP error 500: "));
+    org.junit.jupiter.api.Assertions.assertTrue(lastError.endsWith("...(truncated)"));
+    org.junit.jupiter.api.Assertions.assertTrue(
+        lastError.length()
+            < "HTTP error 500: ".length()
+                + WebhookNotificationService.MAX_ERROR_BODY_CHARS
+                + "...(truncated)".length()
+                + 1);
+  }
+
+  @Test
   void processNotification_shouldRetry_whenHttpError() {
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());

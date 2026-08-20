@@ -14,6 +14,7 @@ module "local" {
   container_app_environment_name = "selc-p-cae-002"
   ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_max_replicas     = 5
+  container_app_min_replicas     = 2
   container_app_desired_replicas = "3"
   container_app_cpu              = 1.25
   container_app_memory           = "2.5Gi"
@@ -137,7 +138,7 @@ locals {
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=50.0 -XX:MaxDirectMemorySize=1G"
+      value = "-javaagent:applicationinsights-agent.jar -Xmx800m -XX:MaxDirectMemorySize=256m -XX:MaxMetaspaceSize=256m -Dio.netty.leakDetection.level=advanced"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -243,17 +244,17 @@ module "webhook_synthetic_monitoring" {
 ###############################################################################
 
 module "apim_api" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-api-webhook"
-  display_name        = "Webhook API"
-  base_path           = "external/webhook"
-  private_dns_name    = "${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/webhook/src/main/docs/openapi.json"
-  tenant_ids          = module.local.config.tenant_ids
-
+  source                 = "../../_modules/apim_api"
+  apim_name              = module.local.config.apim_name
+  apim_rg                = module.local.config.apim_rg
+  api_name               = "selc-${module.local.config.env_short}-api-webhook"
+  display_name           = "Webhook API"
+  base_path              = "external/webhook"
+  private_dns_name       = "${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix        = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix    = module.local.config.api_dns_zone_prefix
+  openapi_path           = "../../../../apps/webhook/src/main/docs/openapi.json"
+  tenant_ids             = module.local.config.tenant_ids
+  tenant_hosts           = module.local.config.tenant_hosts
   api_operation_policies = []
 }
