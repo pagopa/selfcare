@@ -2112,6 +2112,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
+            }
           }
         ],
         "requestBody": {
@@ -2194,6 +2202,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
+            }
           }
         ],
         "responses": {
@@ -2254,6 +2270,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
             }
           }
         ],
@@ -2337,6 +2361,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
+            }
           }
         ],
         "responses": {
@@ -2418,6 +2450,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
             }
           }
         ],
@@ -5943,6 +5983,12 @@
               "type": "string"
             }
           },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "retryPolicy": {
             "$ref": "#/components/schemas/RetryPolicyRequest"
           }
@@ -5999,6 +6045,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string"
           },
           "roles": {
@@ -6066,6 +6115,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -6087,6 +6139,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string"
           },
           "role": {
@@ -7375,6 +7430,17 @@
       }
     },
     "securitySchemes": {
+      "SecurityScheme": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Authentication"
+      },
+      "bearerAuth1": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
       "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",
