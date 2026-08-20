@@ -11,6 +11,7 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -49,16 +50,19 @@ class WebhookNotificationServiceTest {
   Vertx vertx;
 
   private WebClient webClient;
-  private HttpRequest<Buffer> httpRequest;
-  private HttpResponse<Buffer> httpResponse;
+  private HttpRequest<Buffer> rawHttpRequest;
+  private HttpRequest<Void> httpRequest;
+  private HttpResponse<Void> httpResponse;
 
   @BeforeEach
   void setUp() throws IllegalAccessException, NoSuchFieldException {
     webClient = mock(WebClient.class);
+    rawHttpRequest = mock(HttpRequest.class);
     httpRequest = mock(HttpRequest.class);
     httpResponse = mock(HttpResponse.class);
 
-    when(webClient.request(any(), anyInt(), anyString(), anyString())).thenReturn(httpRequest);
+    when(webClient.request(any(), anyInt(), anyString(), anyString())).thenReturn(rawHttpRequest);
+    when(rawHttpRequest.as(BodyCodec.none())).thenReturn(httpRequest);
     when(httpRequest.ssl(anyBoolean())).thenReturn(httpRequest);
     when(httpRequest.timeout(anyLong())).thenReturn(httpRequest);
     when(httpRequest.putHeader(anyString(), anyString())).thenReturn(httpRequest);
@@ -105,6 +109,7 @@ class WebhookNotificationServiceTest {
     assertEquals(WebhookNotification.NotificationStatus.DELIVERED, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
+    verify(rawHttpRequest).as(any());
     verify(httpRequest)
         .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
     verify(metrics).recordDelivery("delivered");
@@ -169,7 +174,7 @@ class WebhookNotificationServiceTest {
   }
 
   @Test
-  void processNotification_shouldTruncateOversizedHttpErrorBody() {
+  void processNotification_shouldDiscardHttpErrorBody() {
     Webhook webhook = createWebhook();
     WebhookNotification notification = createNotification(webhook.getId());
 
@@ -177,7 +182,6 @@ class WebhookNotificationServiceTest {
         .thenReturn(Uni.createFrom().item(notification));
     when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
     when(httpResponse.statusCode()).thenReturn(500);
-    when(httpResponse.bodyAsString()).thenReturn("x".repeat(2000));
 
     notificationService
         .processNotification(notification, webhook)
@@ -189,14 +193,8 @@ class WebhookNotificationServiceTest {
     verify(notificationRepository, atLeastOnce()).update(captor.capture());
     String lastError = captor.getValue().getLastError();
     assertEquals(WebhookNotification.NotificationStatus.RETRY, captor.getValue().getStatus());
-    org.junit.jupiter.api.Assertions.assertTrue(lastError.startsWith("HTTP error 500: "));
-    org.junit.jupiter.api.Assertions.assertTrue(lastError.endsWith("...(truncated)"));
-    org.junit.jupiter.api.Assertions.assertTrue(
-        lastError.length()
-            < "HTTP error 500: ".length()
-                + WebhookNotificationService.MAX_ERROR_BODY_CHARS
-                + "...(truncated)".length()
-                + 1);
+    assertEquals("HTTP error 500", lastError);
+    verify(httpResponse, never()).bodyAsString();
   }
 
   @Test

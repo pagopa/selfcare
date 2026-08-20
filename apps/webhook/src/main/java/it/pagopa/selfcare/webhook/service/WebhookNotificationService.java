@@ -10,7 +10,7 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.core.buffer.Buffer;
+import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
@@ -65,8 +65,6 @@ public class WebhookNotificationService {
 
   @ConfigProperty(name = "webhook.http.max-concurrent-deliveries", defaultValue = "10")
   int maxConcurrentDeliveries;
-
-  static final int MAX_ERROR_BODY_CHARS = 512;
 
   @ConfigProperty(name = "webhook.jwt.header-name", defaultValue = "Authorization")
   String jwtHeaderName;
@@ -195,7 +193,7 @@ public class WebhookNotificationService {
 
   private Uni<Void> sendHttpRequest(Webhook webhook, WebhookNotification notification) {
     long startNanos = System.nanoTime();
-    HttpRequest<Buffer> request;
+    HttpRequest<Void> request;
     try {
       request = buildRequest(webhook, notification);
     } catch (Exception e) {
@@ -204,7 +202,7 @@ public class WebhookNotificationService {
       return handleHttpError(webhook, notification, e);
     }
 
-    HttpRequest<Buffer> preparedRequest = request;
+    HttpRequest<Void> preparedRequest = request;
     return webhookJwtService
         .generateNotificationToken(webhook, notification)
         .onItem()
@@ -226,7 +224,7 @@ public class WebhookNotificationService {
             });
   }
 
-  private HttpRequest<Buffer> buildRequest(Webhook webhook, WebhookNotification notification) {
+  private HttpRequest<Void> buildRequest(Webhook webhook, WebhookNotification notification) {
     URI uri = URI.create(webhook.getUrl());
     int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
     String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
@@ -234,10 +232,13 @@ public class WebhookNotificationService {
       path = path + "?" + uri.getRawQuery();
     }
 
-    HttpRequest<Buffer> request =
+    HttpRequest<Void> request =
         webClient
             .request(
                 HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()), port, uri.getHost(), path)
+            // Webhook responses are not part of the delivery contract. Discard each response
+            // chunk as it arrives instead of buffering an untrusted response body in memory.
+            .as(BodyCodec.none())
             .ssl(uri.getScheme().equals("https"))
             .timeout(readTimeout)
             .putHeader("Content-Type", "application/json")
@@ -254,18 +255,8 @@ public class WebhookNotificationService {
     return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
   }
 
-  static String truncateErrorBody(String body) {
-    if (body == null || body.isBlank()) {
-      return "";
-    }
-    if (body.length() <= MAX_ERROR_BODY_CHARS) {
-      return body;
-    }
-    return body.substring(0, MAX_ERROR_BODY_CHARS) + "...(truncated)";
-  }
-
-  private Uni<HttpResponse<Buffer>> sendDecodedPayload(
-      HttpRequest<Buffer> request, WebhookNotification notification) {
+  private Uni<HttpResponse<Void>> sendDecodedPayload(
+      HttpRequest<Void> request, WebhookNotification notification) {
     try {
       return request.sendJson(decodePayload(notification));
     } catch (JsonProcessingException e) {
@@ -280,7 +271,7 @@ public class WebhookNotificationService {
   }
 
   private Uni<Void> handleHttpResponse(
-      Webhook webhook, WebhookNotification notification, HttpResponse<Buffer> response) {
+      Webhook webhook, WebhookNotification notification, HttpResponse<Void> response) {
     int statusCode = response.statusCode();
 
     if (statusCode >= 200 && statusCode < 300) {
@@ -301,8 +292,7 @@ public class WebhookNotificationService {
           .onItem()
           .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     } else {
-      String errorMessage =
-          String.format("HTTP error %d: %s", statusCode, truncateErrorBody(response.bodyAsString()));
+      String errorMessage = String.format("HTTP error %d", statusCode);
       return handleFailure(webhook, notification, errorMessage, statusCode);
     }
   }

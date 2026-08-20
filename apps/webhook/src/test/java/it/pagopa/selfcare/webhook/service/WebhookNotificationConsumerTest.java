@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.webhook.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -32,6 +33,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.concurrent.Semaphore;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -72,7 +74,7 @@ class WebhookNotificationConsumerTest {
     consumer().maxMessagesPerPoll = 32;
     consumer().visibilityTimeoutSeconds = 300;
     consumer().maxInFlight = 32;
-    consumer().inFlight.set(0);
+    consumer().inFlight = new Semaphore(32);
   }
 
   @Test
@@ -206,7 +208,7 @@ class WebhookNotificationConsumerTest {
   void poll_shouldSkipWhenAtInFlightCapacity() {
     consumer().enabled = true;
     consumer().maxInFlight = 32;
-    consumer().inFlight.set(32);
+    consumer().inFlight.drainPermits();
 
     consumer().poll();
 
@@ -221,7 +223,7 @@ class WebhookNotificationConsumerTest {
         .thenReturn(messages);
     consumer().enabled = true;
     consumer().maxInFlight = 32;
-    consumer().inFlight.set(28);
+    consumer().inFlight.acquireUninterruptibly(28);
 
     consumer().poll();
 
@@ -315,6 +317,20 @@ class WebhookNotificationConsumerTest {
     verify(notificationService, timeout(1000)).processNotification(notification);
     verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
     verify(metrics, timeout(1000)).recordClaim("queue", 1);
+  }
+
+  @Test
+  void processMessage_shouldNotDispatchWhenInFlightCapacityIsExhausted()
+      throws ReflectiveOperationException {
+    String notificationId = new ObjectId().toHexString();
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notificationId));
+    consumer().inFlight.drainPermits();
+
+    invokeProcessMessage(message);
+
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(5));
+    verify(notificationService, never()).processNotification(any(WebhookNotification.class));
+    verify(client, never()).deleteMessage(any(), any());
   }
 
   @Test
@@ -572,6 +588,7 @@ class WebhookNotificationConsumerTest {
   }
 
   private void invokeProcessNotification(QueueMessageItem message, String notificationId) {
+    assertTrue(consumer().inFlight.tryAcquire());
     assertDoesNotThrow(
         () -> {
           Method method =

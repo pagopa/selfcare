@@ -17,11 +17,12 @@ import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Semaphore;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -61,7 +62,15 @@ public class WebhookNotificationConsumer {
   int maxInFlight;
 
   private volatile QueueClient client;
-  final AtomicInteger inFlight = new AtomicInteger();
+  Semaphore inFlight;
+
+  @PostConstruct
+  void initConcurrencyLimit() {
+    if (maxInFlight <= 0) {
+      throw new IllegalStateException("webhook.storage-queue.max-in-flight must be greater than 0");
+    }
+    inFlight = new Semaphore(maxInFlight);
+  }
 
   void start(@Observes StartupEvent event) {
     if (!enabled) {
@@ -102,11 +111,11 @@ public class WebhookNotificationConsumer {
     if (!enabled || client == null) {
       return;
     }
-    int available = maxInFlight - inFlight.get();
+    int available = inFlight.availablePermits();
     if (available <= 0) {
       log.debug(
           "Skipping Storage Queue poll, {} deliveries already in flight (max {})",
-          inFlight.get(),
+          maxInFlight - inFlight.availablePermits(),
           maxInFlight);
       return;
     }
@@ -143,42 +152,58 @@ public class WebhookNotificationConsumer {
 
     Context processingContext = VertxContext.getOrCreateDuplicatedContext(vertx.getDelegate());
     VertxContextSafetyToggle.setContextSafe(processingContext, true);
-    processingContext.runOnContext(ignored -> processNotification(message, notificationId));
+    if (!inFlight.tryAcquire()) {
+      log.debug(
+          "Leaving Storage Queue message {} unprocessed because the in-flight limit ({}) was reached",
+          message.getMessageId(),
+          maxInFlight);
+      return;
+    }
+    try {
+      processingContext.runOnContext(ignored -> processNotification(message, notificationId));
+    } catch (RuntimeException e) {
+      inFlight.release();
+      throw e;
+    }
   }
 
   private void processNotification(QueueMessageItem message, String notificationId) {
-    inFlight.incrementAndGet();
-    notificationRepository
-        .claimForProcessing(notificationId, 5)
-        .onItem()
-        .invoke(notification -> metrics.recordClaim("queue", notification != null ? 1 : 0))
-        .onItem()
-        .transformToUni(
-            notification ->
-                notification == null
-                    ? shouldDiscardUnclaimedMessage(notificationId)
-                    : processClaimedNotification(notification, message))
-        .subscribe()
-        .with(
-            shouldDelete -> {
-              inFlight.decrementAndGet();
-              if (Boolean.TRUE.equals(shouldDelete)) {
-                deleteMessage(message);
-              } else {
-                // Leave the message in the queue: its visibility has been (re)scheduled
-                // according to the webhook's retry policy, or it will fall back to the default
-                // visibility timeout, triggering a natural retry.
-                log.debug(
-                    "Leaving Storage Queue message {} in queue for notification {}",
-                    message.getMessageId(),
-                    notificationId);
-              }
-            },
-            error -> {
-              inFlight.decrementAndGet();
-              log.error("Unable to process Storage Queue notification {}", notificationId, error);
-              // Leave the message in the queue for retry after the visibility timeout expires.
-            });
+    try {
+      notificationRepository
+          .claimForProcessing(notificationId, 5)
+          .onItem()
+          .invoke(notification -> metrics.recordClaim("queue", notification != null ? 1 : 0))
+          .onItem()
+          .transformToUni(
+              notification ->
+                  notification == null
+                      ? shouldDiscardUnclaimedMessage(notificationId)
+                      : processClaimedNotification(notification, message))
+          .subscribe()
+          .with(
+              shouldDelete -> {
+                inFlight.release();
+                if (Boolean.TRUE.equals(shouldDelete)) {
+                  deleteMessage(message);
+                } else {
+                  // Leave the message in the queue: its visibility has been (re)scheduled
+                  // according to the webhook's retry policy, or it will fall back to the default
+                  // visibility timeout, triggering a natural retry.
+                  log.debug(
+                      "Leaving Storage Queue message {} in queue for notification {}",
+                      message.getMessageId(),
+                      notificationId);
+                }
+              },
+              error -> {
+                inFlight.release();
+                log.error("Unable to process Storage Queue notification {}", notificationId, error);
+                // Leave the message in the queue for retry after the visibility timeout expires.
+              });
+    } catch (RuntimeException e) {
+      inFlight.release();
+      throw e;
+    }
   }
 
   private Uni<Boolean> processClaimedNotification(
