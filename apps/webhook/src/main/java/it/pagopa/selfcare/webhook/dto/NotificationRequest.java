@@ -16,9 +16,9 @@ public class NotificationRequest {
   private String payload;
 
   /**
-   * Topic of the notification (e.g. SC-Contracts, SC-User, SC-Delegate). Only webhooks whose
-   * configured topics include this value (or that have no topic filter configured) will receive
-   * the notification.
+   * Topic of the notification (e.g. SC-Contracts, SC-Users, SC-Delegate). Only webhooks whose
+   * configured topics include this value (or that have no topic filter configured) will receive the
+   * notification.
    */
   @NotBlank(message = "Topic is required")
   private String topic;

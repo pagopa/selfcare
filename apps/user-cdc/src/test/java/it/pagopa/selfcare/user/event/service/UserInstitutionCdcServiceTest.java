@@ -1,5 +1,9 @@
 package it.pagopa.selfcare.user.event.service;
 
+import static it.pagopa.selfcare.user.event.UserInstitutionCdcService.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
+import static it.pagopa.selfcare.user.model.NotificationUserType.*;
+import static org.mockito.Mockito.*;
+
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -26,6 +30,13 @@ import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.bson.BsonDocument;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -38,18 +49,6 @@ import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
 import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import static it.pagopa.selfcare.user.event.UserInstitutionCdcService.USERS_FIELD_LIST_WITHOUT_FISCAL_CODE;
-import static it.pagopa.selfcare.user.model.NotificationUserType.*;
-import static org.mockito.Mockito.*;
 
 @QuarkusTest
 @QuarkusTestResource(MongoTestResource.class)
@@ -154,7 +153,7 @@ public class UserInstitutionCdcServiceTest {
         Assertions.assertEquals(notification, result);
         Assertions.assertEquals("prod-io", requestCaptor.getValue().getProductId());
         Assertions.assertEquals("AR", requestCaptor.getValue().getTenantId());
-        Assertions.assertEquals("SC-User", requestCaptor.getValue().getTopic());
+        Assertions.assertEquals("SC-Users", requestCaptor.getValue().getTopic());
         Assertions.assertTrue(requestCaptor.getValue().getPayload().contains("\"id\":\"userId\""));
     }
 
