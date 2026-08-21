@@ -87,6 +87,8 @@ class WebhookNotificationConsumerTest {
     consumer().visibilityTimeoutSeconds = 300;
     consumer().maxInFlight = 32;
     consumer().maxDequeueCount = 5;
+    consumer().maxBatchesPerPoll = 4;
+    consumer().processingLockMarginSeconds = 60;
     consumer().queue = "webhook-notifications";
     consumer().poisonQueue = java.util.Optional.empty();
     consumer().inFlight = new Semaphore(32);
@@ -324,7 +326,7 @@ class WebhookNotificationConsumerTest {
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -349,7 +351,7 @@ class WebhookNotificationConsumerTest {
 
     invokeProcessMessage(message);
 
-    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(5));
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(6));
     verify(notificationService, never()).processNotification(any(WebhookNotification.class));
     verify(client, never()).deleteMessage(any(), any());
     // The message must become visible again immediately instead of staying hidden for the whole
@@ -369,7 +371,7 @@ class WebhookNotificationConsumerTest {
 
     assertDoesNotThrow(() -> invokeProcessMessage(message));
 
-    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(5));
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(6));
   }
 
   @Test
@@ -381,7 +383,7 @@ class WebhookNotificationConsumerTest {
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
     when(message.getBody())
         .thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -402,7 +404,7 @@ class WebhookNotificationConsumerTest {
   void processNotification_shouldDeleteMessageWhenUnclaimedNotificationIsMissing() {
     // given
     String notificationId = new ObjectId().toHexString();
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().nullItem());
     when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
 
@@ -420,7 +422,7 @@ class WebhookNotificationConsumerTest {
     String notificationId = new ObjectId().toHexString();
     WebhookNotification existing = new WebhookNotification();
     existing.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().nullItem());
     when(notificationRepository.findById(any(ObjectId.class)))
         .thenReturn(Uni.createFrom().item(existing));
@@ -442,7 +444,7 @@ class WebhookNotificationConsumerTest {
     String notificationId = new ObjectId().toHexString();
     WebhookNotification existing = new WebhookNotification();
     existing.setStatus(WebhookNotification.NotificationStatus.SENDING);
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().nullItem());
     when(notificationRepository.findById(any(ObjectId.class)))
         .thenReturn(Uni.createFrom().item(existing));
@@ -472,7 +474,7 @@ class WebhookNotificationConsumerTest {
     webhook.setRetryPolicy(retryPolicy);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -511,7 +513,7 @@ class WebhookNotificationConsumerTest {
     webhook.setRetryPolicy(retryPolicy);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -540,7 +542,7 @@ class WebhookNotificationConsumerTest {
     notification.setAttemptCount(1);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -570,7 +572,7 @@ class WebhookNotificationConsumerTest {
     notification.setAttemptCount(1);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -596,7 +598,7 @@ class WebhookNotificationConsumerTest {
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
 
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -616,7 +618,7 @@ class WebhookNotificationConsumerTest {
   void processNotification_shouldNotDeleteMessageWhenClaimFails() {
     // given
     String notificationId = new ObjectId().toHexString();
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("claim failed")));
 
     // when
@@ -634,7 +636,7 @@ class WebhookNotificationConsumerTest {
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
 
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("delivery failed")));
@@ -671,7 +673,7 @@ class WebhookNotificationConsumerTest {
     verify(notificationRepository, timeout(1000))
         .markAsPermanentlyFailed(any(ObjectId.class), anyString());
     verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
-    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(5));
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(6));
     verify(metrics, timeout(1000)).recordDiscarded("max_dequeue_count");
     await(() -> consumer().inFlight.availablePermits() == 32);
     assertEquals(32, consumer().inFlight.availablePermits());
@@ -707,7 +709,7 @@ class WebhookNotificationConsumerTest {
     when(message.getBody())
         .thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
     when(message.getDequeueCount()).thenReturn(5L);
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -732,7 +734,7 @@ class WebhookNotificationConsumerTest {
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
     when(message.getBody())
         .thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -757,6 +759,72 @@ class WebhookNotificationConsumerTest {
     assertFalse(
         deleteThread.get().contains("vert.x-eventloop"),
         "blocking Storage Queue delete ran on the event loop: " + deleteThread.get());
+  }
+
+  @Test
+  void poll_shouldKeepDrainingWhileTheQueueReturnsFullBatches() {
+    // given a backlog: a single tick must not be capped at one batch, otherwise throughput would
+    // be limited to max-messages-per-poll / poll-interval regardless of the free capacity.
+    consumer().enabled = true;
+    consumer().maxMessagesPerPoll = 2;
+    consumer().maxBatchesPerPoll = 3;
+    QueueMessageItem invalid = mock(QueueMessageItem.class);
+    when(invalid.getMessageId()).thenReturn("invalid-id");
+    when(invalid.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("not-an-objectid"));
+    when(client.receiveMessages(eq(2), eq(Duration.ofSeconds(300)), isNull(), isNull()))
+        .thenAnswer(invocation -> pagedIterable(invalid, invalid))
+        .thenAnswer(invocation -> pagedIterable(invalid, invalid))
+        .thenAnswer(invocation -> pagedIterable(invalid));
+
+    // when
+    consumer().poll();
+
+    // then the third batch is partial, so the poll stops without using the last allowed batch
+    verify(client, times(3)).receiveMessages(2, Duration.ofSeconds(300), null, null);
+  }
+
+  @Test
+  void poll_shouldStopDrainingAtTheBatchLimit() {
+    // given a queue that always returns full batches: the scheduler worker thread must not be
+    // held indefinitely.
+    consumer().enabled = true;
+    consumer().maxMessagesPerPoll = 2;
+    consumer().maxBatchesPerPoll = 2;
+    QueueMessageItem invalid = mock(QueueMessageItem.class);
+    when(invalid.getMessageId()).thenReturn("invalid-id");
+    when(invalid.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("not-an-objectid"));
+    when(client.receiveMessages(eq(2), eq(Duration.ofSeconds(300)), isNull(), isNull()))
+        .thenAnswer(invocation -> pagedIterable(invalid, invalid));
+
+    // when
+    consumer().poll();
+
+    // then
+    verify(client, times(2)).receiveMessages(2, Duration.ofSeconds(300), null, null);
+  }
+
+  @Test
+  void processingLockMinutes_shouldAlwaysOutlastTheVisibilityTimeout() {
+    // The lock must survive longer than the message invisibility, otherwise a redelivered message
+    // could be claimed while the previous attempt is still delivering, sending the webhook twice.
+    consumer().visibilityTimeoutSeconds = 300;
+    consumer().processingLockMarginSeconds = 60;
+    assertEquals(6, consumer().processingLockMinutes());
+
+    consumer().visibilityTimeoutSeconds = 60;
+    consumer().processingLockMarginSeconds = 60;
+    assertEquals(2, consumer().processingLockMinutes());
+
+    consumer().visibilityTimeoutSeconds = 10;
+    consumer().processingLockMarginSeconds = 0;
+    assertEquals(1, consumer().processingLockMinutes());
+  }
+
+  @SuppressWarnings("unchecked")
+  private PagedIterable<QueueMessageItem> pagedIterable(QueueMessageItem... items) {
+    PagedIterable<QueueMessageItem> messages = mock(PagedIterable.class);
+    when(messages.iterator()).thenReturn(java.util.Arrays.asList(items).iterator());
+    return messages;
   }
 
   private void invokeProcessNotification(QueueMessageItem message, String notificationId) {

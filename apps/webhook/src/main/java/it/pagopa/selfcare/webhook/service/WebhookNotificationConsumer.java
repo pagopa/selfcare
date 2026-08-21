@@ -59,8 +59,26 @@ public class WebhookNotificationConsumer {
   @ConfigProperty(name = "webhook.storage-queue.max-messages-per-poll", defaultValue = "32")
   int maxMessagesPerPoll;
 
+  /**
+   * A single tick keeps draining the queue while it returns full batches, instead of delivering at
+   * most {@code max-messages-per-poll} messages per interval (32 every 5s would cap a replica at
+   * ~6 messages/s regardless of the available capacity). Bounded so that a long backlog cannot
+   * hold the scheduler worker thread indefinitely.
+   */
+  @ConfigProperty(name = "webhook.storage-queue.max-batches-per-poll", defaultValue = "4")
+  int maxBatchesPerPoll;
+
   @ConfigProperty(name = "webhook.storage-queue.visibility-timeout-seconds", defaultValue = "300")
   int visibilityTimeoutSeconds;
+
+  /**
+   * Extra time the MongoDB processing lock is held on top of the message visibility timeout. The
+   * lock must outlive the invisibility window: were they equal (or the lock shorter), a delivery
+   * slower than the visibility timeout would let the redelivered message be claimed by another
+   * replica while the first one is still in flight, sending the webhook twice.
+   */
+  @ConfigProperty(name = "webhook.storage-queue.processing-lock-margin-seconds", defaultValue = "60")
+  int processingLockMarginSeconds;
 
   @ConfigProperty(name = "webhook.storage-queue.max-in-flight", defaultValue = "32")
   int maxInFlight;
@@ -87,7 +105,23 @@ public class WebhookNotificationConsumer {
     if (maxInFlight <= 0) {
       throw new IllegalStateException("webhook.storage-queue.max-in-flight must be greater than 0");
     }
+    if (maxMessagesPerPoll > maxInFlight) {
+      log.warn(
+          "webhook.storage-queue.max-messages-per-poll ({}) exceeds max-in-flight ({}): each poll"
+              + " is capped at the free capacity anyway, the extra value has no effect",
+          maxMessagesPerPoll,
+          maxInFlight);
+    }
     inFlight = new Semaphore(maxInFlight);
+  }
+
+  /**
+   * Duration of the MongoDB processing lock, always longer than the message visibility timeout so
+   * that a redelivered message cannot be claimed while the previous attempt is still in flight.
+   */
+  int processingLockMinutes() {
+    return (int)
+        Math.max(1, Math.ceil((visibilityTimeoutSeconds + processingLockMarginSeconds) / 60.0));
   }
 
   void start(@Observes StartupEvent event) {
@@ -162,20 +196,23 @@ public class WebhookNotificationConsumer {
     if (!enabled || client == null) {
       return;
     }
-    int available = inFlight.availablePermits();
-    if (available <= 0) {
-      log.debug(
-          "Skipping Storage Queue poll, {} deliveries already in flight (max {})",
-          maxInFlight - inFlight.availablePermits(),
-          maxInFlight);
-      return;
-    }
-    int toReceive = Math.min(maxMessagesPerPoll, available);
     try {
-      client
-          .receiveMessages(
-              toReceive, Duration.ofSeconds(visibilityTimeoutSeconds), null, null)
-          .forEach(this::processMessage);
+      for (int batch = 0; batch < maxBatchesPerPoll; batch++) {
+        int available = inFlight.availablePermits();
+        if (available <= 0) {
+          log.debug(
+              "Stopping Storage Queue poll, {} deliveries already in flight (max {})",
+              maxInFlight - available,
+              maxInFlight);
+          return;
+        }
+        int toReceive = Math.min(maxMessagesPerPoll, available);
+        if (receiveAndDispatch(toReceive) < toReceive) {
+          // Fewer messages than requested means the queue is drained: stop here and let the next
+          // tick pick up whatever arrives in the meantime.
+          return;
+        }
+      }
     } catch (QueueStorageException e) {
       if (e.getStatusCode() == 404) {
         // The queue may not be fully provisioned yet right after startup (e.g. local
@@ -189,6 +226,16 @@ public class WebhookNotificationConsumer {
     } catch (Exception e) {
       log.error("Storage Queue polling error: {}", e.getMessage(), e);
     }
+  }
+
+  private int receiveAndDispatch(int toReceive) {
+    int received = 0;
+    for (QueueMessageItem message :
+        client.receiveMessages(toReceive, Duration.ofSeconds(visibilityTimeoutSeconds), null, null)) {
+      received++;
+      processMessage(message);
+    }
+    return received;
   }
 
   private void processMessage(QueueMessageItem message) {
@@ -281,7 +328,7 @@ public class WebhookNotificationConsumer {
       return moveToPoisonQueue(message, notificationId);
     }
     return notificationRepository
-        .claimForProcessing(notificationId, 5)
+        .claimForProcessing(notificationId, processingLockMinutes())
         .onItem()
         .invoke(notification -> metrics.recordClaim("queue", notification != null ? 1 : 0))
         .onItem()
