@@ -112,7 +112,7 @@ jobs:
             REPO_PASSWORD=${{ secrets.GITHUB_TOKEN }}
 
   plan:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra Plan"
     needs: [prepare]
     secrets: inherit
@@ -203,7 +203,7 @@ jobs:
   #         retention-days: 1
 
   release:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: "[${{ inputs.environment }}-${{ inputs.domain }}] ${{ inputs.app }} Infra release"
     needs: [prepare, build_push_docker, plan]
     secrets: inherit
@@ -294,7 +294,7 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
 
       - name: Extract environment short
         id: extract_env_short

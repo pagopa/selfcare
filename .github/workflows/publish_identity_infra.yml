@@ -25,7 +25,7 @@ on:
 
 jobs:
   release_dev_ar:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: '[Dev] Identity Bootstrap Infra Release (AR)'
     if: ${{ ((startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev') }}
     secrets: inherit
@@ -39,7 +39,7 @@ jobs:
       override_labels: ${{ inputs.env }}
     
   release_uat_ar:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: '[UAT] Identity Bootstrap Infra Release (AR)'
     if: ${{ ((startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat') }}
     secrets: inherit
@@ -53,7 +53,7 @@ jobs:
       override_labels: ${{ inputs.env }}
 
   release_prod_ar:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: '[Prod] Identity Bootstrap Infra Release (AR)'
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
