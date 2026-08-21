@@ -209,7 +209,8 @@ public class WebhookNotificationService {
         .onItem()
         .invoke(token -> preparedRequest.putHeader(jwtHeaderName, jwtHeaderPrefix + token))
         .onItem()
-        .transformToUni(token -> sendDecodedPayload(preparedRequest, notification))
+        .transformToUni(
+            token -> sendDecodedPayload(preparedRequest, webhook.getProductId(), notification))
         // Both branches are handled in a single stage on purpose: attaching a generic
         // .onFailure().recoverWithUni(...) *after* the response-handling stage would also catch
         // failures raised by handleHttpResponse itself (e.g. the MongoDB update after a 2xx).
@@ -236,7 +237,10 @@ public class WebhookNotificationService {
     HttpRequest<Void> request =
         webClient
             .request(
-                HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()), port, uri.getHost(), path)
+                HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()),
+                port,
+                uri.getHost(),
+                path)
             // Webhook responses are not part of the delivery contract. Discard each response
             // chunk as it arrives instead of buffering an untrusted response body in memory.
             .as(BodyCodec.none())
@@ -257,13 +261,12 @@ public class WebhookNotificationService {
   }
 
   private Uni<HttpResponse<Void>> sendDecodedPayload(
-      HttpRequest<Void> request, WebhookNotification notification) {
+      HttpRequest<Void> request, String productId, WebhookNotification notification) {
     try {
       Map<String, Object> body = new HashMap<>();
+      body.put("tenantId", notification.getTenantId());
+      body.put("productId", productId);
       body.put("topic", notification.getTopic());
-      body.put(
-          "webhookId",
-          notification.getWebhookId() != null ? notification.getWebhookId().toHexString() : null);
       body.put("payload", decodePayload(notification));
       return request.sendJson(body);
     } catch (JsonProcessingException e) {
@@ -285,10 +288,7 @@ public class WebhookNotificationService {
       int attemptNumber = notification.getAttemptCount() + 1;
       notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
       notification.setCompletedAt(LocalDateTime.now());
-      log.info(
-          "Webhook notification delivered: {}, status: {}",
-          notification.getId(),
-          statusCode);
+      log.info("Webhook notification delivered: {}, status: {}", notification.getId(), statusCode);
       metrics.recordDelivery("delivered");
       return recordAttempt(
               notification,
@@ -335,7 +335,11 @@ public class WebhookNotificationService {
           maxAttempts);
       metrics.recordDelivery("retry");
       return recordAttempt(
-              notification, attemptNumber, WebhookNotification.NotificationStatus.RETRY, statusCode, errorMessage)
+              notification,
+              attemptNumber,
+              WebhookNotification.NotificationStatus.RETRY,
+              statusCode,
+              errorMessage)
           .onItem()
           .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     }
@@ -348,7 +352,10 @@ public class WebhookNotificationService {
   }
 
   private Uni<WebhookNotification> markNotificationAsFailed(
-      WebhookNotification notification, String errorMessage, Integer statusCode, int attemptNumber) {
+      WebhookNotification notification,
+      String errorMessage,
+      Integer statusCode,
+      int attemptNumber) {
     notification.setStatus(WebhookNotification.NotificationStatus.FAILED);
     notification.setLastError(errorMessage);
     notification.setCompletedAt(LocalDateTime.now());
@@ -358,17 +365,21 @@ public class WebhookNotificationService {
         errorMessage);
     metrics.recordDelivery("failed");
     return recordAttempt(
-            notification, attemptNumber, WebhookNotification.NotificationStatus.FAILED, statusCode, errorMessage)
+            notification,
+            attemptNumber,
+            WebhookNotification.NotificationStatus.FAILED,
+            statusCode,
+            errorMessage)
         .onItem()
         .transformToUni(ignored -> notificationRepository.update(notification));
   }
 
   /**
-   * Appends an immutable history record for the current delivery attempt instead of overwriting
-   * the notification's own {@code lastError}/{@code lastAttemptAt} fields. This preserves the
-   * full retry history even though the parent {@link WebhookNotification} document is reused and
-   * mutated across every retry. Failing to persist the history entry does not interrupt the main
-   * delivery flow: the error is logged and the attempt record is returned as-is.
+   * Appends an immutable history record for the current delivery attempt instead of overwriting the
+   * notification's own {@code lastError}/{@code lastAttemptAt} fields. This preserves the full
+   * retry history even though the parent {@link WebhookNotification} document is reused and mutated
+   * across every retry. Failing to persist the history entry does not interrupt the main delivery
+   * flow: the error is logged and the attempt record is returned as-is.
    */
   private Uni<WebhookNotificationAttempt> recordAttempt(
       WebhookNotification notification,
@@ -384,7 +395,9 @@ public class WebhookNotificationService {
     attempt.setStatusCode(statusCode);
     attempt.setErrorMessage(errorMessage);
     attempt.setStartedAt(
-        notification.getLastAttemptAt() != null ? notification.getLastAttemptAt() : LocalDateTime.now());
+        notification.getLastAttemptAt() != null
+            ? notification.getLastAttemptAt()
+            : LocalDateTime.now());
     attempt.setFinishedAt(LocalDateTime.now());
     return notificationAttemptRepository
         .persist(attempt)

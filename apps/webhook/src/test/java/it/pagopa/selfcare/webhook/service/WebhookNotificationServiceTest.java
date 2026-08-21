@@ -86,6 +86,7 @@ class WebhookNotificationServiceTest {
   void processNotification_shouldSendSuccessfully() {
     // given
     Webhook webhook = createWebhook();
+    webhook.setProductId("ProductId");
     WebhookNotification notification = createNotification(webhook.getId());
 
     when(notificationRepository.update(any(WebhookNotification.class)))
@@ -116,7 +117,8 @@ class WebhookNotificationServiceTest {
                 body ->
                     body instanceof Map<?, ?> map
                         && "SC-Users".equals(map.get("topic"))
-                        && notification.getWebhookId().toHexString().equals(map.get("webhookId"))
+                        && notification.getTenantId().equals(map.get("tenantId"))
+                        && webhook.getProductId().equals(map.get("productId"))
                         && map.get("payload") instanceof Map<?, ?> payload
                         && payload.isEmpty()));
     verify(metrics).recordDelivery("delivered");
@@ -328,7 +330,8 @@ class WebhookNotificationServiceTest {
     org.junit.jupiter.api.Assertions.assertTrue(
         attempts.get(0).getErrorMessage().contains("Connection refused"));
     assertEquals(2, attempts.get(1).getAttemptNumber());
-    org.junit.jupiter.api.Assertions.assertTrue(attempts.get(1).getErrorMessage().contains("Timeout"));
+    org.junit.jupiter.api.Assertions.assertTrue(
+        attempts.get(1).getErrorMessage().contains("Timeout"));
   }
 
   @Test
