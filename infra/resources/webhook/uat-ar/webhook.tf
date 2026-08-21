@@ -135,7 +135,7 @@ locals {
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=50.0 -XX:MaxDirectMemorySize=1G"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=40.0 -XX:MaxDirectMemorySize=256m -XX:MaxMetaspaceSize=192m -XX:+ExitOnOutOfMemoryError"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -156,6 +156,10 @@ locals {
     {
       name  = "WEBHOOK_STORAGE_QUEUE_NAME"
       value = module.storage_queue.queue_name
+    },
+    {
+      name  = "WEBHOOK_STORAGE_QUEUE_POISON_QUEUE"
+      value = module.storage_queue.poison_queue_name
     },
     {
       name  = "AZURE_CLIENT_ID"
@@ -252,6 +256,7 @@ module "apim_api" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/webhook/src/main/docs/openapi.json"
   tenant_ids          = module.local.config.tenant_ids
+  tenant_hosts        = module.local.config.tenant_hosts
 
   api_operation_policies = []
 }

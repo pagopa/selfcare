@@ -99,15 +99,15 @@ locals {
 module "container_app_onboarding_cdc" {
   source = "../../_modules/container_app_microservice"
 
-  env_short                      = module.local.config.env_short
-  resource_group_name            = module.local.config.ca_resource_group_name
-  container_app                  = module.local.config.container_app
-  container_app_name             = "selc-${module.local.config.env_short}-pnpg-onboarding-cdc"
-  container_app_environment_name = module.local.config.container_app_environment_name
-  image_name                     = "selfcare-onboarding-cdc"
-  image_tag                      = var.image_tag
-  app_settings                   = local.onboarding_cdc_app_settings
-  secrets_names                  = local.onboarding_cdc_secrets_names
+  env_short                             = module.local.config.env_short
+  resource_group_name                   = module.local.config.ca_resource_group_name
+  container_app                         = module.local.config.container_app
+  container_app_name                    = "selc-${module.local.config.env_short}-pnpg-onboarding-cdc"
+  container_app_environment_name        = module.local.config.container_app_environment_name
+  image_name                            = "selfcare-onboarding-cdc"
+  image_tag                             = var.image_tag
+  app_settings                          = local.onboarding_cdc_app_settings
+  secrets_names                         = local.onboarding_cdc_secrets_names
   workload_profile_name                 = null
   key_vault_resource_group_name         = module.local.config.key_vault_resource_group_name
   key_vault_name                        = module.local.config.key_vault_name

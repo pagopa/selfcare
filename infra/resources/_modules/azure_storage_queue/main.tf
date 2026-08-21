@@ -30,7 +30,7 @@ module "storage_account" {
     queue = true
   }
 
-  queues = [var.queue_name]
+  queues = [var.queue_name, local.poison_queue_name]
 
   diagnostic_settings = {
     enabled                    = true

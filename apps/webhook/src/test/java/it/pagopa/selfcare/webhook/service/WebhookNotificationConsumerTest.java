@@ -1,15 +1,22 @@
 package it.pagopa.selfcare.webhook.service;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +39,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -53,6 +62,7 @@ class WebhookNotificationConsumerTest {
 
   private QueueMessageItem message;
   private QueueClient client;
+  private QueueClient poisonClient;
   private Object serviceInstance;
 
   @BeforeEach
@@ -63,14 +73,25 @@ class WebhookNotificationConsumerTest {
     serviceInstance = io.quarkus.arc.ClientProxy.unwrap(webhookNotificationConsumer);
 
     client = mock(QueueClient.class);
+    poisonClient = mock(QueueClient.class);
     Field field = WebhookNotificationConsumer.class.getDeclaredField("client");
     field.setAccessible(true);
     field.set(serviceInstance, client);
+    Field poisonField = WebhookNotificationConsumer.class.getDeclaredField("poisonClient");
+    poisonField.setAccessible(true);
+    poisonField.set(serviceInstance, poisonClient);
     Field vertxField = WebhookNotificationConsumer.class.getDeclaredField("vertx");
     vertxField.setAccessible(true);
     vertxField.set(serviceInstance, vertx);
     consumer().maxMessagesPerPoll = 32;
     consumer().visibilityTimeoutSeconds = 300;
+    consumer().maxInFlight = 32;
+    consumer().maxDequeueCount = 5;
+    consumer().maxBatchesPerPoll = 4;
+    consumer().processingLockMarginSeconds = 60;
+    consumer().queue = "webhook-notifications";
+    consumer().poisonQueue = java.util.Optional.empty();
+    consumer().inFlight = new Semaphore(32);
   }
 
   @Test
@@ -92,15 +113,17 @@ class WebhookNotificationConsumerTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
     consumer.enabled = true;
+    consumer.queue = "webhook-notifications";
+    consumer.poisonQueue = java.util.Optional.empty();
     consumer.autoCreate = true;
-    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    doReturn(clientBuilder).when(consumer).buildClientBuilder(anyString());
     when(clientBuilder.buildClient()).thenReturn(client);
 
     // when
     consumer.start(null);
 
     // then
-    verify(client).createIfNotExists();
+    verify(client, times(2)).createIfNotExists();
   }
 
   @Test
@@ -109,8 +132,10 @@ class WebhookNotificationConsumerTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
     consumer.enabled = true;
+    consumer.queue = "webhook-notifications";
+    consumer.poisonQueue = java.util.Optional.empty();
     consumer.autoCreate = false;
-    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    doReturn(clientBuilder).when(consumer).buildClientBuilder(anyString());
     when(clientBuilder.buildClient()).thenReturn(client);
 
     // when
@@ -126,8 +151,10 @@ class WebhookNotificationConsumerTest {
     QueueClientBuilder clientBuilder = mock(QueueClientBuilder.class);
     WebhookNotificationConsumer consumer = spy(new WebhookNotificationConsumer());
     consumer.enabled = true;
+    consumer.queue = "webhook-notifications";
+    consumer.poisonQueue = java.util.Optional.empty();
     consumer.autoCreate = true;
-    doReturn(clientBuilder).when(consumer).buildClientBuilder();
+    doReturn(clientBuilder).when(consumer).buildClientBuilder(anyString());
     when(clientBuilder.buildClient()).thenReturn(client);
     doThrow(mock(QueueStorageException.class)).when(client).createIfNotExists();
 
@@ -143,7 +170,7 @@ class WebhookNotificationConsumerTest {
     consumer().queue = "webhook-notifications";
 
     // when
-    assertDoesNotThrow(() -> consumer().buildClientBuilder());
+    assertDoesNotThrow(() -> consumer().buildClientBuilder("webhook-notifications"));
   }
 
   @Test
@@ -154,7 +181,7 @@ class WebhookNotificationConsumerTest {
     consumer().queue = "webhook-notifications";
 
     // when
-    assertDoesNotThrow(() -> consumer().buildClientBuilder());
+    assertDoesNotThrow(() -> consumer().buildClientBuilder("webhook-notifications"));
   }
 
   @Test
@@ -198,6 +225,32 @@ class WebhookNotificationConsumerTest {
     // then
     // then
     verify(client).receiveMessages(32, Duration.ofSeconds(300), null, null);
+  }
+
+  @Test
+  void poll_shouldSkipWhenAtInFlightCapacity() {
+    consumer().enabled = true;
+    consumer().maxInFlight = 32;
+    consumer().inFlight.drainPermits();
+
+    consumer().poll();
+
+    verify(client, never()).receiveMessages(any(), any(Duration.class), isNull(), isNull());
+  }
+
+  @Test
+  void poll_shouldReceiveOnlyRemainingInFlightCapacity() {
+    PagedIterable<QueueMessageItem> messages = mock(PagedIterable.class);
+    when(messages.iterator()).thenReturn(Collections.emptyIterator());
+    when(client.receiveMessages(eq(4), eq(Duration.ofSeconds(300)), isNull(), isNull()))
+        .thenReturn(messages);
+    consumer().enabled = true;
+    consumer().maxInFlight = 32;
+    consumer().inFlight.acquireUninterruptibly(28);
+
+    consumer().poll();
+
+    verify(client).receiveMessages(4, Duration.ofSeconds(300), null, null);
   }
 
   @Test
@@ -273,7 +326,7 @@ class WebhookNotificationConsumerTest {
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -290,10 +343,68 @@ class WebhookNotificationConsumerTest {
   }
 
   @Test
+  void processMessage_shouldNotDispatchWhenInFlightCapacityIsExhausted()
+      throws ReflectiveOperationException {
+    String notificationId = new ObjectId().toHexString();
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notificationId));
+    consumer().inFlight.drainPermits();
+
+    invokeProcessMessage(message);
+
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(6));
+    verify(notificationService, never()).processNotification(any(WebhookNotification.class));
+    verify(client, never()).deleteMessage(any(), any());
+    // The message must become visible again immediately instead of staying hidden for the whole
+    // visibility timeout while capacity is freed within seconds.
+    verify(client).updateMessage("message-id", "pop-receipt", null, Duration.ZERO);
+  }
+
+  @Test
+  void processMessage_shouldNotFailWhenResettingVisibilityOfSkippedMessageFails()
+      throws ReflectiveOperationException {
+    String notificationId = new ObjectId().toHexString();
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notificationId));
+    consumer().inFlight.drainPermits();
+    doThrow(new RuntimeException("storage unavailable"))
+        .when(client)
+        .updateMessage(any(), any(), isNull(), any(Duration.class));
+
+    assertDoesNotThrow(() -> invokeProcessMessage(message));
+
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(6));
+  }
+
+  @Test
+  void processMessage_shouldReleaseInFlightPermitOnlyOnce() throws ReflectiveOperationException {
+    // given a message whose delete throws inside the subscription callback, the permit must not
+    // be given back twice: an inflated semaphore would silently break the concurrency limit.
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
+    when(message.getBody())
+        .thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationService.processNotification(eq(notification)))
+        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
+    doThrow(new RuntimeException("delete failed")).when(client).deleteMessage(any(), any());
+
+    // when
+    invokeProcessMessage(message);
+
+    // then
+    verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+    await(() -> consumer().inFlight.availablePermits() == 32);
+    assertEquals(32, consumer().inFlight.availablePermits());
+  }
+
+  @Test
   void processNotification_shouldDeleteMessageWhenUnclaimedNotificationIsMissing() {
     // given
     String notificationId = new ObjectId().toHexString();
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().nullItem());
     when(notificationRepository.findById(any(ObjectId.class))).thenReturn(Uni.createFrom().nullItem());
 
@@ -311,7 +422,7 @@ class WebhookNotificationConsumerTest {
     String notificationId = new ObjectId().toHexString();
     WebhookNotification existing = new WebhookNotification();
     existing.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().nullItem());
     when(notificationRepository.findById(any(ObjectId.class)))
         .thenReturn(Uni.createFrom().item(existing));
@@ -333,7 +444,7 @@ class WebhookNotificationConsumerTest {
     String notificationId = new ObjectId().toHexString();
     WebhookNotification existing = new WebhookNotification();
     existing.setStatus(WebhookNotification.NotificationStatus.SENDING);
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().nullItem());
     when(notificationRepository.findById(any(ObjectId.class)))
         .thenReturn(Uni.createFrom().item(existing));
@@ -363,7 +474,7 @@ class WebhookNotificationConsumerTest {
     webhook.setRetryPolicy(retryPolicy);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -402,7 +513,7 @@ class WebhookNotificationConsumerTest {
     webhook.setRetryPolicy(retryPolicy);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -431,7 +542,7 @@ class WebhookNotificationConsumerTest {
     notification.setAttemptCount(1);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -461,7 +572,7 @@ class WebhookNotificationConsumerTest {
     notification.setAttemptCount(1);
 
     when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -487,7 +598,7 @@ class WebhookNotificationConsumerTest {
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
 
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().voidItem());
@@ -507,7 +618,7 @@ class WebhookNotificationConsumerTest {
   void processNotification_shouldNotDeleteMessageWhenClaimFails() {
     // given
     String notificationId = new ObjectId().toHexString();
-    when(notificationRepository.claimForProcessing(eq(notificationId), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notificationId), eq(6)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("claim failed")));
 
     // when
@@ -525,7 +636,7 @@ class WebhookNotificationConsumerTest {
     notification.setId(new ObjectId());
     notification.setStatus(WebhookNotification.NotificationStatus.SENDING);
 
-    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(5)))
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
         .thenReturn(Uni.createFrom().item(notification));
     when(notificationService.processNotification(eq(notification)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("delivery failed")));
@@ -543,19 +654,208 @@ class WebhookNotificationConsumerTest {
     verify(client, never()).deleteMessage(any(), any());
   }
 
+  @Test
+  void processMessage_shouldMoveMessageToPoisonQueueWhenDequeueCountIsExceeded()
+      throws ReflectiveOperationException {
+    // given a message that kept failing: Storage Queues have no native dead-lettering, so it
+    // would otherwise be redelivered until its TTL expires, burning in-flight capacity.
+    String notificationId = new ObjectId().toHexString();
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notificationId));
+    when(message.getDequeueCount()).thenReturn(6L);
+    when(notificationRepository.markAsPermanentlyFailed(any(ObjectId.class), anyString()))
+        .thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    invokeProcessMessage(message);
+
+    // then
+    verify(poisonClient, timeout(1000)).sendMessage(notificationId);
+    verify(notificationRepository, timeout(1000))
+        .markAsPermanentlyFailed(any(ObjectId.class), anyString());
+    verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+    verify(notificationRepository, never()).claimForProcessing(eq(notificationId), eq(6));
+    verify(metrics, timeout(1000)).recordDiscarded("max_dequeue_count");
+    await(() -> consumer().inFlight.availablePermits() == 32);
+    assertEquals(32, consumer().inFlight.availablePermits());
+  }
+
+  @Test
+  void processMessage_shouldKeepMessageWhenPoisonQueueSendFails()
+      throws ReflectiveOperationException {
+    // given the copy to the poison queue fails: the message must stay in the delivery queue
+    // instead of being lost.
+    String notificationId = new ObjectId().toHexString();
+    when(message.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString(notificationId));
+    when(message.getDequeueCount()).thenReturn(6L);
+    doThrow(new RuntimeException("poison queue unavailable")).when(poisonClient).sendMessage(anyString());
+
+    // when
+    invokeProcessMessage(message);
+
+    // then
+    await(() -> consumer().inFlight.availablePermits() == 32);
+    verify(client, never()).deleteMessage(any(), any());
+    verify(notificationRepository, never()).markAsPermanentlyFailed(any(ObjectId.class), anyString());
+    assertEquals(32, consumer().inFlight.availablePermits());
+  }
+
+  @Test
+  void processMessage_shouldStillProcessMessageAtTheDequeueCountThreshold()
+      throws ReflectiveOperationException {
+    // given the dequeue count is exactly at the limit: the message deserves its last attempt.
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
+    when(message.getBody())
+        .thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
+    when(message.getDequeueCount()).thenReturn(5L);
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationService.processNotification(eq(notification)))
+        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
+
+    // when
+    invokeProcessMessage(message);
+
+    // then
+    verify(notificationService, timeout(1000)).processNotification(notification);
+    verify(poisonClient, never()).sendMessage(anyString());
+  }
+
+  @Test
+  void processMessage_shouldNotBlockTheEventLoopWithStorageQueueCalls()
+      throws ReflectiveOperationException {
+    // given the delete is executed at the tail of the reactive pipeline: it must run on a worker
+    // thread, never on the Vert.x event loop the delivery is dispatched on.
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
+    when(message.getBody())
+        .thenReturn(com.azure.core.util.BinaryData.fromString(notification.getId().toHexString()));
+    when(notificationRepository.claimForProcessing(eq(notification.getId().toHexString()), eq(6)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationService.processNotification(eq(notification)))
+        .thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.releaseProcessingLock(eq(notification)))
+        .thenReturn(Uni.createFrom().item(notification));
+    java.util.concurrent.atomic.AtomicReference<String> deleteThread =
+        new java.util.concurrent.atomic.AtomicReference<>();
+    doAnswer(
+            invocation -> {
+              deleteThread.set(Thread.currentThread().getName());
+              return null;
+            })
+        .when(client)
+        .deleteMessage(any(), any());
+
+    // when
+    invokeProcessMessage(message);
+
+    // then
+    verify(client, timeout(1000)).deleteMessage("message-id", "pop-receipt");
+    assertNotNull(deleteThread.get());
+    assertFalse(
+        deleteThread.get().contains("vert.x-eventloop"),
+        "blocking Storage Queue delete ran on the event loop: " + deleteThread.get());
+  }
+
+  @Test
+  void poll_shouldKeepDrainingWhileTheQueueReturnsFullBatches() {
+    // given a backlog: a single tick must not be capped at one batch, otherwise throughput would
+    // be limited to max-messages-per-poll / poll-interval regardless of the free capacity.
+    consumer().enabled = true;
+    consumer().maxMessagesPerPoll = 2;
+    consumer().maxBatchesPerPoll = 3;
+    QueueMessageItem invalid = mock(QueueMessageItem.class);
+    when(invalid.getMessageId()).thenReturn("invalid-id");
+    when(invalid.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("not-an-objectid"));
+    when(client.receiveMessages(eq(2), eq(Duration.ofSeconds(300)), isNull(), isNull()))
+        .thenAnswer(invocation -> pagedIterable(invalid, invalid))
+        .thenAnswer(invocation -> pagedIterable(invalid, invalid))
+        .thenAnswer(invocation -> pagedIterable(invalid));
+
+    // when
+    consumer().poll();
+
+    // then the third batch is partial, so the poll stops without using the last allowed batch
+    verify(client, times(3)).receiveMessages(2, Duration.ofSeconds(300), null, null);
+  }
+
+  @Test
+  void poll_shouldStopDrainingAtTheBatchLimit() {
+    // given a queue that always returns full batches: the scheduler worker thread must not be
+    // held indefinitely.
+    consumer().enabled = true;
+    consumer().maxMessagesPerPoll = 2;
+    consumer().maxBatchesPerPoll = 2;
+    QueueMessageItem invalid = mock(QueueMessageItem.class);
+    when(invalid.getMessageId()).thenReturn("invalid-id");
+    when(invalid.getBody()).thenReturn(com.azure.core.util.BinaryData.fromString("not-an-objectid"));
+    when(client.receiveMessages(eq(2), eq(Duration.ofSeconds(300)), isNull(), isNull()))
+        .thenAnswer(invocation -> pagedIterable(invalid, invalid));
+
+    // when
+    consumer().poll();
+
+    // then
+    verify(client, times(2)).receiveMessages(2, Duration.ofSeconds(300), null, null);
+  }
+
+  @Test
+  void processingLockMinutes_shouldAlwaysOutlastTheVisibilityTimeout() {
+    // The lock must survive longer than the message invisibility, otherwise a redelivered message
+    // could be claimed while the previous attempt is still delivering, sending the webhook twice.
+    consumer().visibilityTimeoutSeconds = 300;
+    consumer().processingLockMarginSeconds = 60;
+    assertEquals(6, consumer().processingLockMinutes());
+
+    consumer().visibilityTimeoutSeconds = 60;
+    consumer().processingLockMarginSeconds = 60;
+    assertEquals(2, consumer().processingLockMinutes());
+
+    consumer().visibilityTimeoutSeconds = 10;
+    consumer().processingLockMarginSeconds = 0;
+    assertEquals(1, consumer().processingLockMinutes());
+  }
+
+  @SuppressWarnings("unchecked")
+  private PagedIterable<QueueMessageItem> pagedIterable(QueueMessageItem... items) {
+    PagedIterable<QueueMessageItem> messages = mock(PagedIterable.class);
+    when(messages.iterator()).thenReturn(java.util.Arrays.asList(items).iterator());
+    return messages;
+  }
+
   private void invokeProcessNotification(QueueMessageItem message, String notificationId) {
+    assertTrue(consumer().inFlight.tryAcquire());
     assertDoesNotThrow(
         () -> {
           Method method =
               WebhookNotificationConsumer.class.getDeclaredMethod(
-                  "processNotification", QueueMessageItem.class, String.class);
+                  "processNotification",
+                  QueueMessageItem.class,
+                  String.class,
+                  AtomicBoolean.class);
           method.setAccessible(true);
-          method.invoke(serviceInstance, message, notificationId);
+          method.invoke(serviceInstance, message, notificationId, new AtomicBoolean(false));
         });
   }
 
   private WebhookNotificationConsumer consumer() {
     return (WebhookNotificationConsumer) serviceInstance;
+  }
+
+  private void await(java.util.function.BooleanSupplier condition) {
+    long deadline = System.currentTimeMillis() + 1000;
+    while (System.currentTimeMillis() < deadline && !condition.getAsBoolean()) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        return;
+      }
+    }
   }
 
   private void setClient(QueueClient client) throws ReflectiveOperationException {

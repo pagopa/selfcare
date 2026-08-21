@@ -19,6 +19,13 @@ module "roles" {
       queue_name           = var.queue_name
       role                 = "reader"
       description          = "Allows webhook to consume delivery notifications."
+    },
+    {
+      storage_account_name = module.storage_account.name
+      resource_group_name  = azurerm_resource_group.this.name
+      queue_name           = local.poison_queue_name
+      role                 = "writer"
+      description          = "Allows webhook to park undeliverable messages in the poison queue."
     }
   ]
 }

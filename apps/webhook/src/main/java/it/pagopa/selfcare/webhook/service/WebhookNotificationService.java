@@ -5,14 +5,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.entity.WebhookNotificationAttempt;
@@ -26,7 +27,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -57,6 +58,15 @@ public class WebhookNotificationService {
   @ConfigProperty(name = "webhook.timeout.read", defaultValue = "10000")
   int readTimeout;
 
+  @ConfigProperty(name = "webhook.http.max-pool-size", defaultValue = "10")
+  int maxPoolSize;
+
+  @ConfigProperty(name = "webhook.http.max-wait-queue-size", defaultValue = "50")
+  int maxWaitQueueSize;
+
+  @ConfigProperty(name = "webhook.http.max-concurrent-deliveries", defaultValue = "10")
+  int maxConcurrentDeliveries;
+
   @ConfigProperty(name = "webhook.jwt.header-name", defaultValue = "Authorization")
   String jwtHeaderName;
 
@@ -77,6 +87,9 @@ public class WebhookNotificationService {
             .setConnectTimeout(connectTimeout)
             .setIdleTimeoutUnit(TimeUnit.MILLISECONDS)
             .setIdleTimeout(readTimeout)
+            .setMaxPoolSize(maxPoolSize)
+            .setMaxWaitQueueSize(maxWaitQueueSize)
+            .setKeepAlive(true)
             .setFollowRedirects(true);
     this.webClient = WebClient.create(vertx, options);
   }
@@ -101,30 +114,33 @@ public class WebhookNotificationService {
                 return Uni.createFrom().voidItem();
               }
               log.info("Processing {} pending notifications", notifications.size());
-              List<Uni<Void>> processes =
-                  notifications.stream()
-                      .map(
-                          notification ->
-                              processNotification(notification)
-                                  .onFailure()
-                                  .recoverWithUni(
-                                      error -> {
-                                        log.error(
-                                            "Error processing notification {} {}",
-                                            notification.getId(),
-                                            error.getMessage());
-                                        return notificationRepository
-                                            .releaseProcessingLock(notification)
-                                            .replaceWithVoid();
-                                      })
-                                  .onItem()
-                                  .transformToUni(
-                                      v ->
-                                          notificationRepository
-                                              .releaseProcessingLock(notification)
-                                              .replaceWithVoid()))
-                      .toList();
-              return Uni.join().all(processes).andFailFast().replaceWithVoid();
+              return Multi.createFrom()
+                  .iterable(notifications)
+                  .onItem()
+                  .transformToUni(
+                      notification ->
+                          processNotification(notification)
+                              .onFailure()
+                              .recoverWithUni(
+                                  error -> {
+                                    log.error(
+                                        "Error processing notification {} {}",
+                                        notification.getId(),
+                                        error.getMessage());
+                                    return notificationRepository
+                                        .releaseProcessingLock(notification)
+                                        .replaceWithVoid();
+                                  })
+                              .onItem()
+                              .transformToUni(
+                                  v ->
+                                      notificationRepository
+                                          .releaseProcessingLock(notification)
+                                          .replaceWithVoid()))
+                  .merge(maxConcurrentDeliveries)
+                  .collect()
+                  .asList()
+                  .replaceWithVoid();
             });
   }
 
@@ -178,7 +194,7 @@ public class WebhookNotificationService {
 
   private Uni<Void> sendHttpRequest(Webhook webhook, WebhookNotification notification) {
     long startNanos = System.nanoTime();
-    HttpRequest<Buffer> request;
+    HttpRequest<Void> request;
     try {
       request = buildRequest(webhook, notification);
     } catch (Exception e) {
@@ -187,13 +203,14 @@ public class WebhookNotificationService {
       return handleHttpError(webhook, notification, e);
     }
 
-    HttpRequest<Buffer> preparedRequest = request;
+    HttpRequest<Void> preparedRequest = request;
     return webhookJwtService
         .generateNotificationToken(webhook, notification)
         .onItem()
         .invoke(token -> preparedRequest.putHeader(jwtHeaderName, jwtHeaderPrefix + token))
         .onItem()
-        .transformToUni(token -> sendDecodedPayload(preparedRequest, notification))
+        .transformToUni(
+            token -> sendDecodedPayload(preparedRequest, webhook.getProductId(), notification))
         // Both branches are handled in a single stage on purpose: attaching a generic
         // .onFailure().recoverWithUni(...) *after* the response-handling stage would also catch
         // failures raised by handleHttpResponse itself (e.g. the MongoDB update after a 2xx).
@@ -209,7 +226,7 @@ public class WebhookNotificationService {
             });
   }
 
-  private HttpRequest<Buffer> buildRequest(Webhook webhook, WebhookNotification notification) {
+  private HttpRequest<Void> buildRequest(Webhook webhook, WebhookNotification notification) {
     URI uri = URI.create(webhook.getUrl());
     int port = uri.getPort() != -1 ? uri.getPort() : (uri.getScheme().equals("https") ? 443 : 80);
     String path = uri.getPath().isEmpty() ? "/" : uri.getPath();
@@ -217,10 +234,16 @@ public class WebhookNotificationService {
       path = path + "?" + uri.getRawQuery();
     }
 
-    HttpRequest<Buffer> request =
+    HttpRequest<Void> request =
         webClient
             .request(
-                HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()), port, uri.getHost(), path)
+                HttpMethod.valueOf(webhook.getHttpMethod().toUpperCase()),
+                port,
+                uri.getHost(),
+                path)
+            // Webhook responses are not part of the delivery contract. Discard each response
+            // chunk as it arrives instead of buffering an untrusted response body in memory.
+            .as(BodyCodec.none())
             .ssl(uri.getScheme().equals("https"))
             .timeout(readTimeout)
             .putHeader("Content-Type", "application/json")
@@ -237,10 +260,15 @@ public class WebhookNotificationService {
     return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
   }
 
-  private Uni<HttpResponse<Buffer>> sendDecodedPayload(
-      HttpRequest<Buffer> request, WebhookNotification notification) {
+  private Uni<HttpResponse<Void>> sendDecodedPayload(
+      HttpRequest<Void> request, String productId, WebhookNotification notification) {
     try {
-      return request.sendJson(decodePayload(notification));
+      Map<String, Object> body = new HashMap<>();
+      body.put("tenantId", notification.getTenantId());
+      body.put("productId", productId);
+      body.put("topic", notification.getTopic());
+      body.put("payload", decodePayload(notification));
+      return request.sendJson(body);
     } catch (JsonProcessingException e) {
       return Uni.createFrom().failure(e);
     }
@@ -253,17 +281,14 @@ public class WebhookNotificationService {
   }
 
   private Uni<Void> handleHttpResponse(
-      Webhook webhook, WebhookNotification notification, HttpResponse<Buffer> response) {
+      Webhook webhook, WebhookNotification notification, HttpResponse<Void> response) {
     int statusCode = response.statusCode();
 
     if (statusCode >= 200 && statusCode < 300) {
       int attemptNumber = notification.getAttemptCount() + 1;
       notification.setStatus(WebhookNotification.NotificationStatus.DELIVERED);
       notification.setCompletedAt(LocalDateTime.now());
-      log.info(
-          "Webhook notification delivered: {}, status: {}",
-          notification.getId(),
-          statusCode);
+      log.info("Webhook notification delivered: {}, status: {}", notification.getId(), statusCode);
       metrics.recordDelivery("delivered");
       return recordAttempt(
               notification,
@@ -274,7 +299,7 @@ public class WebhookNotificationService {
           .onItem()
           .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     } else {
-      String errorMessage = String.format("HTTP error %d: %s", statusCode, response.bodyAsString());
+      String errorMessage = String.format("HTTP error %d", statusCode);
       return handleFailure(webhook, notification, errorMessage, statusCode);
     }
   }
@@ -310,7 +335,11 @@ public class WebhookNotificationService {
           maxAttempts);
       metrics.recordDelivery("retry");
       return recordAttempt(
-              notification, attemptNumber, WebhookNotification.NotificationStatus.RETRY, statusCode, errorMessage)
+              notification,
+              attemptNumber,
+              WebhookNotification.NotificationStatus.RETRY,
+              statusCode,
+              errorMessage)
           .onItem()
           .transformToUni(ignored -> notificationRepository.update(notification).replaceWithVoid());
     }
@@ -323,7 +352,10 @@ public class WebhookNotificationService {
   }
 
   private Uni<WebhookNotification> markNotificationAsFailed(
-      WebhookNotification notification, String errorMessage, Integer statusCode, int attemptNumber) {
+      WebhookNotification notification,
+      String errorMessage,
+      Integer statusCode,
+      int attemptNumber) {
     notification.setStatus(WebhookNotification.NotificationStatus.FAILED);
     notification.setLastError(errorMessage);
     notification.setCompletedAt(LocalDateTime.now());
@@ -333,17 +365,21 @@ public class WebhookNotificationService {
         errorMessage);
     metrics.recordDelivery("failed");
     return recordAttempt(
-            notification, attemptNumber, WebhookNotification.NotificationStatus.FAILED, statusCode, errorMessage)
+            notification,
+            attemptNumber,
+            WebhookNotification.NotificationStatus.FAILED,
+            statusCode,
+            errorMessage)
         .onItem()
         .transformToUni(ignored -> notificationRepository.update(notification));
   }
 
   /**
-   * Appends an immutable history record for the current delivery attempt instead of overwriting
-   * the notification's own {@code lastError}/{@code lastAttemptAt} fields. This preserves the
-   * full retry history even though the parent {@link WebhookNotification} document is reused and
-   * mutated across every retry. Failing to persist the history entry does not interrupt the main
-   * delivery flow: the error is logged and the attempt record is returned as-is.
+   * Appends an immutable history record for the current delivery attempt instead of overwriting the
+   * notification's own {@code lastError}/{@code lastAttemptAt} fields. This preserves the full
+   * retry history even though the parent {@link WebhookNotification} document is reused and mutated
+   * across every retry. Failing to persist the history entry does not interrupt the main delivery
+   * flow: the error is logged and the attempt record is returned as-is.
    */
   private Uni<WebhookNotificationAttempt> recordAttempt(
       WebhookNotification notification,
@@ -359,7 +395,9 @@ public class WebhookNotificationService {
     attempt.setStatusCode(statusCode);
     attempt.setErrorMessage(errorMessage);
     attempt.setStartedAt(
-        notification.getLastAttemptAt() != null ? notification.getLastAttemptAt() : LocalDateTime.now());
+        notification.getLastAttemptAt() != null
+            ? notification.getLastAttemptAt()
+            : LocalDateTime.now());
     attempt.setFinishedAt(LocalDateTime.now());
     return notificationAttemptRepository
         .persist(attempt)
