@@ -11,10 +11,10 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import io.vertx.mutiny.core.Vertx;
 import io.vertx.mutiny.core.buffer.Buffer;
-import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
@@ -111,7 +111,14 @@ class WebhookNotificationServiceTest {
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
     verify(rawHttpRequest).as(any());
     verify(httpRequest)
-        .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
+        .sendJson(
+            argThat(
+                body ->
+                    body instanceof Map<?, ?> map
+                        && "SC-Users".equals(map.get("topic"))
+                        && notification.getWebhookId().toHexString().equals(map.get("webhookId"))
+                        && map.get("payload") instanceof Map<?, ?> payload
+                        && payload.isEmpty()));
     verify(metrics).recordDelivery("delivered");
     verify(metrics).recordDeliveryDuration(anyLong());
   }
@@ -483,6 +490,8 @@ class WebhookNotificationServiceTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setWebhookId(webhookId);
+    notification.setTenantId("tenant-1");
+    notification.setTopic("SC-Users");
     notification.setPayload(DataEncryptionConfig.encrypt("{}"));
     notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
     notification.setAttemptCount(0);

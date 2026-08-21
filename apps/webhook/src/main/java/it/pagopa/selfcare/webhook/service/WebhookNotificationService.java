@@ -10,10 +10,10 @@ import io.smallrye.mutiny.Uni;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.client.WebClientOptions;
 import io.vertx.mutiny.core.Vertx;
-import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
 import it.pagopa.selfcare.webhook.entity.WebhookNotificationAttempt;
@@ -27,6 +27,7 @@ import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -258,7 +259,13 @@ public class WebhookNotificationService {
   private Uni<HttpResponse<Void>> sendDecodedPayload(
       HttpRequest<Void> request, WebhookNotification notification) {
     try {
-      return request.sendJson(decodePayload(notification));
+      Map<String, Object> body = new HashMap<>();
+      body.put("topic", notification.getTopic());
+      body.put(
+          "webhookId",
+          notification.getWebhookId() != null ? notification.getWebhookId().toHexString() : null);
+      body.put("payload", decodePayload(notification));
+      return request.sendJson(body);
     } catch (JsonProcessingException e) {
       return Uni.createFrom().failure(e);
     }
