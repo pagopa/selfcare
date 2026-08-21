@@ -138,7 +138,7 @@ locals {
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar -Xmx800m -XX:MaxDirectMemorySize=256m -XX:MaxMetaspaceSize=256m -Dio.netty.leakDetection.level=advanced"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=45.0 -XX:MaxDirectMemorySize=384m -XX:MaxMetaspaceSize=256m -XX:+ExitOnOutOfMemoryError"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
