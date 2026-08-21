@@ -94,7 +94,7 @@ public class WebhookNotificationConsumer {
 
   /** Defaults to {@code <queue>-poison}, the naming convention used by Azure Functions. */
   @ConfigProperty(name = "webhook.storage-queue.poison-queue")
-  Optional<String> poisonQueue;
+  Optional<String> poisonQueue = Optional.empty();
 
   private volatile QueueClient client;
   private volatile QueueClient poisonClient;
@@ -135,9 +135,7 @@ public class WebhookNotificationConsumer {
   }
 
   String poisonQueueName() {
-    return poisonQueue == null
-        ? queue + "-poison"
-        : poisonQueue.filter(name -> !name.isBlank()).orElseGet(() -> queue + "-poison");
+    return poisonQueue.filter(name -> !name.isBlank()).orElseGet(() -> queue + "-poison");
   }
 
   /**
