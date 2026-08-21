@@ -16,8 +16,8 @@ module "local" {
   container_app_max_replicas     = 5
   container_app_min_replicas     = 2
   container_app_desired_replicas = "3"
-  container_app_cpu              = 1.25
-  container_app_memory           = "2.5Gi"
+  container_app_cpu              = 1.5
+  container_app_memory           = "3Gi"
 }
 
 data "azurerm_user_assigned_identity" "cae_identity" {
