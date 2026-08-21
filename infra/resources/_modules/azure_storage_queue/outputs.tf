@@ -12,3 +12,8 @@ output "queue_name" {
   value       = var.queue_name
   description = "Webhook delivery queue name."
 }
+
+output "poison_queue_name" {
+  value       = local.poison_queue_name
+  description = "Queue collecting webhook messages that exceeded the maximum dequeue count."
+}

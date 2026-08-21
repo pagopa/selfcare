@@ -158,6 +158,10 @@ locals {
       value = module.storage_queue.queue_name
     },
     {
+      name  = "WEBHOOK_STORAGE_QUEUE_POISON_QUEUE"
+      value = module.storage_queue.poison_queue_name
+    },
+    {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.cae_identity.client_id
     }

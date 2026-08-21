@@ -109,8 +109,31 @@ public class WebhookNotificationRepository
             query, update, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
   }
 
-  public Uni<Void> markAsPublished(ObjectId notificationId) {
+  /**
+   * Marks a notification as permanently failed without going through the delivery pipeline. Used
+   * when its queue message is moved to the poison queue: the message is gone, so nothing would
+   * ever move the notification out of PENDING/RETRY again and it would stay pending forever. The
+   * status filter keeps the update idempotent and prevents overwriting an already terminal state.
+   */
+  public Uni<Void> markAsPermanentlyFailed(ObjectId notificationId, String errorMessage) {
     return mongoCollection()
+        .updateOne(
+            Filters.and(
+                Filters.eq("_id", notificationId),
+                Filters.nin(
+                    "status",
+                    WebhookNotification.NotificationStatus.DELIVERED.name(),
+                    WebhookNotification.NotificationStatus.FAILED.name())),
+            Updates.combine(
+                Updates.set("status", WebhookNotification.NotificationStatus.FAILED.name()),
+                Updates.set("lastError", errorMessage),
+                Updates.set("completedAt", LocalDateTime.now()),
+                Updates.set("processing", false),
+                Updates.unset("processingUntil")))
+        .replaceWithVoid();
+  }
+
+  public Uni<Void> markAsPublished(ObjectId notificationId) {    return mongoCollection()
         .updateOne(
             Filters.eq("_id", notificationId),
             Updates.combine(

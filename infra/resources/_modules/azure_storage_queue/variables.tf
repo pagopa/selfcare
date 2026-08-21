@@ -67,6 +67,12 @@ variable "queue_name" {
   description = "Name of the queue used for webhook delivery notifications."
 }
 
+variable "poison_queue_name" {
+  type        = string
+  default     = null
+  description = "Queue collecting messages that exceeded the maximum dequeue count. Azure Storage Queues have no native dead-lettering, so the application moves them here. Defaults to <queue_name>-poison."
+}
+
 variable "tags" {
   type        = map(string)
   description = "Tags applied to the Storage Account."
