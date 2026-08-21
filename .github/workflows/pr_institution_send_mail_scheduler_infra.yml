@@ -25,7 +25,7 @@ on:
 
 jobs:
   code_review_dev_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: '[DEV-AR] Institution SendMailScheduler Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -40,7 +40,7 @@ jobs:
       override_labels: dev
 
   code_review_uat_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: '[UAT-AR] Institution SendMailScheduler Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -55,7 +55,7 @@ jobs:
       override_labels: uat
 
   code_review_prod_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@e8fea7c190c031e6079c38e5cd204269d9ed4a6b # main
     name: '[PROD-AR] Institution SendMailScheduler Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
