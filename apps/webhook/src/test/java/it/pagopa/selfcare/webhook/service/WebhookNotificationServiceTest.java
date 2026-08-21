@@ -14,6 +14,7 @@ import io.vertx.mutiny.core.buffer.Buffer;
 import io.vertx.mutiny.ext.web.client.HttpRequest;
 import io.vertx.mutiny.ext.web.client.HttpResponse;
 import io.vertx.mutiny.ext.web.client.WebClient;
+import io.vertx.mutiny.ext.web.codec.BodyCodec;
 import it.pagopa.selfcare.webhook.entity.RetryPolicy;
 import it.pagopa.selfcare.webhook.entity.Webhook;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
@@ -49,16 +50,19 @@ class WebhookNotificationServiceTest {
   Vertx vertx;
 
   private WebClient webClient;
-  private HttpRequest<Buffer> httpRequest;
-  private HttpResponse<Buffer> httpResponse;
+  private HttpRequest<Buffer> rawHttpRequest;
+  private HttpRequest<Void> httpRequest;
+  private HttpResponse<Void> httpResponse;
 
   @BeforeEach
   void setUp() throws IllegalAccessException, NoSuchFieldException {
     webClient = mock(WebClient.class);
+    rawHttpRequest = mock(HttpRequest.class);
     httpRequest = mock(HttpRequest.class);
     httpResponse = mock(HttpResponse.class);
 
-    when(webClient.request(any(), anyInt(), anyString(), anyString())).thenReturn(httpRequest);
+    when(webClient.request(any(), anyInt(), anyString(), anyString())).thenReturn(rawHttpRequest);
+    when(rawHttpRequest.as(BodyCodec.none())).thenReturn(httpRequest);
     when(httpRequest.ssl(anyBoolean())).thenReturn(httpRequest);
     when(httpRequest.timeout(anyLong())).thenReturn(httpRequest);
     when(httpRequest.putHeader(anyString(), anyString())).thenReturn(httpRequest);
@@ -82,6 +86,7 @@ class WebhookNotificationServiceTest {
   void processNotification_shouldSendSuccessfully() {
     // given
     Webhook webhook = createWebhook();
+    webhook.setProductId("ProductId");
     WebhookNotification notification = createNotification(webhook.getId());
 
     when(notificationRepository.update(any(WebhookNotification.class)))
@@ -105,8 +110,17 @@ class WebhookNotificationServiceTest {
     assertEquals(WebhookNotification.NotificationStatus.DELIVERED, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
+    verify(rawHttpRequest).as(any());
     verify(httpRequest)
-        .sendJson(argThat(payload -> payload instanceof Map<?, ?> map && map.isEmpty()));
+        .sendJson(
+            argThat(
+                body ->
+                    body instanceof Map<?, ?> map
+                        && "SC-Users".equals(map.get("topic"))
+                        && notification.getTenantId().equals(map.get("tenantId"))
+                        && webhook.getProductId().equals(map.get("productId"))
+                        && map.get("payload") instanceof Map<?, ?> payload
+                        && payload.isEmpty()));
     verify(metrics).recordDelivery("delivered");
     verify(metrics).recordDeliveryDuration(anyLong());
   }
@@ -166,6 +180,30 @@ class WebhookNotificationServiceTest {
     // then
     verify(httpRequest).putHeader("x-functions-key", "function-secret");
     verify(httpRequest).putHeader("x-custom-header", "custom-value");
+  }
+
+  @Test
+  void processNotification_shouldDiscardHttpErrorBody() {
+    Webhook webhook = createWebhook();
+    WebhookNotification notification = createNotification(webhook.getId());
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(500);
+
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitItem();
+
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository, atLeastOnce()).update(captor.capture());
+    String lastError = captor.getValue().getLastError();
+    assertEquals(WebhookNotification.NotificationStatus.RETRY, captor.getValue().getStatus());
+    assertEquals("HTTP error 500", lastError);
+    verify(httpResponse, never()).bodyAsString();
   }
 
   @Test
@@ -292,7 +330,8 @@ class WebhookNotificationServiceTest {
     org.junit.jupiter.api.Assertions.assertTrue(
         attempts.get(0).getErrorMessage().contains("Connection refused"));
     assertEquals(2, attempts.get(1).getAttemptNumber());
-    org.junit.jupiter.api.Assertions.assertTrue(attempts.get(1).getErrorMessage().contains("Timeout"));
+    org.junit.jupiter.api.Assertions.assertTrue(
+        attempts.get(1).getErrorMessage().contains("Timeout"));
   }
 
   @Test
@@ -454,6 +493,8 @@ class WebhookNotificationServiceTest {
     WebhookNotification notification = new WebhookNotification();
     notification.setId(new ObjectId());
     notification.setWebhookId(webhookId);
+    notification.setTenantId("tenant-1");
+    notification.setTopic("SC-Users");
     notification.setPayload(DataEncryptionConfig.encrypt("{}"));
     notification.setStatus(WebhookNotification.NotificationStatus.PENDING);
     notification.setAttemptCount(0);

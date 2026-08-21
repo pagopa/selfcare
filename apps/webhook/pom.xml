@@ -27,7 +27,8 @@
     <quarkus.platform.version>3.31.2</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
-    <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
+    <quarkus-openapi-generator.version>2.16.0
+    </quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
     <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
@@ -40,6 +41,19 @@
 
   <dependencyManagement>
     <dependencies>
+      <!--
+        Quarkus 3.31.2 pins mongodb-driver 5.6.2. 5.6.4/5.6.5 restore correct Netty ByteBuf
+        ref-counting (JAVA-6107) and stop reactive cursors from holding pool connections
+        across empty getMore loops. Stay on 5.6.x for compatibility with the Quarkus Mongo
+        extension. First import wins over the BOM below.
+      -->
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-bom</artifactId>
+        <version>5.6.5</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -318,7 +332,8 @@
         <version>${surefire-plugin.version}</version>
         <configuration>
           <systemPropertyVariables>
-            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+            <java.util.logging.manager>org.jboss.logmanager.LogManager
+            </java.util.logging.manager>
             <maven.home>${maven.home}</maven.home>
           </systemPropertyVariables>
           <excludes>
@@ -337,7 +352,8 @@
             </goals>
             <configuration>
               <systemPropertyVariables>
-                <native.image.path>${project.build.directory}/${project.build.finalName}-runner
+                <native.image.path>
+                  ${project.build.directory}/${project.build.finalName}-runner
                 </native.image.path>
                 <java.util.logging.manager>org.jboss.logmanager.LogManager
                 </java.util.logging.manager>

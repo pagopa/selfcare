@@ -1,8 +1,3 @@
 {
-  "github_repository": {
-    "hash": "3a1f15200abe00a3f24528fa02979e9bda7a28690ee9c8215153f8de2561c825",
-    "version": "1.3.1",
-    "name": "github_environment_bootstrap",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/github-environment-bootstrap/github/1.3.1"
-  }
+  "github_repository": "d27a77ae17bdbe61342baa30016e4df59852cd7b226568f7c3da5c72f14ee3df"
 }
