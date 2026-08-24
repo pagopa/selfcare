@@ -174,9 +174,17 @@ jobs:
             # project (session.getTopLevelProject()), otherwise it fails with "Maven session does
             # not declare a top level project". --also-make only pulls in <dependency> upstreams,
             # not aggregator ancestors, so modules whose <parent> is resolved externally (e.g.
-            # selfcare-commons, parented on selc-starter-parent) would leave the root project out
-            # of the reactor. Explicitly including "." (the repo root) guarantees it is always present.
-            mvn -T 1C -B -ntp --projects ".,${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
+            # selfcare-commons, parented on selc-starter-parent) would leave the root/libs project
+            # out of the reactor and be reported as orphaned. Explicitly include the repo root and
+            # any affected top-level aggregators to keep a valid Maven module tree for Sonar.
+            SONAR_PROJECTS=".,${{ steps.scope.outputs.projects }}"
+            if [[ "${{ steps.scope.outputs.projects }}" == *"apps/"* ]]; then
+              SONAR_PROJECTS="apps,$SONAR_PROJECTS"
+            fi
+            if [[ "${{ steps.scope.outputs.projects }}" == *"libs/"* ]]; then
+              SONAR_PROJECTS="libs,$SONAR_PROJECTS"
+            fi
+            mvn -T 1C -B -ntp --projects "$SONAR_PROJECTS" --also-make "${SONAR_ARGS[@]}"
           else
             mvn -T 1C -B -ntp "${SONAR_ARGS[@]}"
           fi
