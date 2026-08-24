@@ -250,6 +250,17 @@
         <module>external-api</module>
       </modules>
     </profile>
+    <profile>
+      <id>institution-cdc</id>
+      <activation>
+        <file>
+          <exists>institution-cdc/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>institution-cdc</module>
+      </modules>
+    </profile>
   </profiles>
 
 </project>
