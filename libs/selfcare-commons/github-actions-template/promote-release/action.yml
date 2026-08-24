@@ -1,0 +1,46 @@
+name: Promote Release
+description: 'Promote a release from UAT to PROD'
+
+inputs:
+  github_path_token:
+    type: string
+    required: true
+    description: 'Github token'
+  release_version:
+    type: string
+    required: true
+    description: 'Release version'
+  repository_name:
+    type: string
+    required: true
+    description: 'Repository name'
+
+runs:
+  using: "composite" 
+  steps:
+
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      name: Checkout
+      with:
+        ref: releases/${{ inputs.release_version }}
+        fetch-depth: 0
+
+    - name: Promote Repository Release
+      shell: bash
+      run: |
+        gh release edit v${{ inputs.release_version }} \
+          --target releases/${{ inputs.release_version }} \
+          --prerelease=false \
+          --latest \
+          --verify-tag
+      env:
+        GH_TOKEN: ${{ github.token }}
+
+    - name: Set Release PROD Variables
+      shell: bash
+      run: |
+        gh variable set CURRENT_PROD_VERSION \
+          --body "${{ inputs.release_version }}" \
+          --repo "${{ inputs.repository_name }}"
+      env:
+        GH_TOKEN: ${{ inputs.github_path_token }}

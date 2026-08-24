@@ -1,0 +1,65 @@
+on:
+  workflow_call:
+    inputs:
+      pr_number:
+        type: string
+        required: true
+      source_branch:
+        type: string
+        required: true
+      target_branch:
+        type: string
+        required: true
+      sonar_key:
+        type: string
+        required: true
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+
+  code_review:
+    name: 'Build & Analysis'
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: read
+
+    steps:
+
+      - name: Setup Maven Action
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4 # v1.11.0
+        with:
+          checkout-fetch-depth: 0
+          java-version: 17
+          java-distribution: 'temurin'
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      # Selfcare-onboarding
+      - uses: s4u/maven-settings-action@7802f6aec16c9098b4798ad1f1d8ac75198194bd # v3.0.0
+        with:
+          servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Build
+        run: |
+          mvn -f ./pom.xml \
+            -B \
+            clean org.jacoco:jacoco-maven-plugin:prepare-agent \
+            verify org.jacoco:jacoco-maven-plugin:report org.jacoco:jacoco-maven-plugin:report-aggregate
+
+      - name: Analysis
+        run: |
+          xmlReportPaths=$(find "$(pwd)" -path '*jacoco.xml' | sed 's/.*/&/' | tr '\n' ',');
+
+          mvn -f pom.xml -B verify sonar:sonar \
+            -Dsonar.coverage.jacoco.xmlReportPaths=$xmlReportPaths \
+            -Dsonar.organization=pagopa \
+            -Dsonar.projectKey=${{ inputs.sonar_key }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.pullrequest.key=${{ inputs.pr_number }} \
+            -Dsonar.pullrequest.branch=${{ inputs.source_branch }} \
+            -Dsonar.pullrequest.base=refs/remotes/origin/${{ inputs.target_branch }} \
+            -Dsonar.exclusions='**/enums/**, **/model/**, **/constant/**, **/*Constant*, **/*Config.java, **/*Scheduler.java, **/*Application.java, **/src/test/**, **/Dummy*.java'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

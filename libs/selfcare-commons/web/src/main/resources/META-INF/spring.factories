@@ -1,0 +1,1 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=it.pagopa.selfcare.commons.web.config.AuthoritiesRetrieverAutoconfiguration
