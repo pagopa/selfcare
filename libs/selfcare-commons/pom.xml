@@ -25,6 +25,16 @@
   <name>selc-commons</name>
   <description>Self Care Commons</description>
 
+  <properties>
+    <!-- Aligned with the other libs/* aggregators: shared libraries are excluded from the
+         monorepo SonarCloud analysis. This is also required for a valid Sonar module tree:
+         libs/pom.xml is itself sonar-skipped, so the scanner never descends into its children.
+         Without this flag selc-commons (whose parent is resolved from the repository instead
+         of libs/pom.xml, hence it does not inherit the property) would be unreachable from the
+         root project and the analysis would fail with "selc-commons is orphan". -->
+    <sonar.skip>true</sonar.skip>
+  </properties>
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -96,11 +106,6 @@
             </goals>
           </execution>
         </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.sonarsource.scanner.maven</groupId>
-        <artifactId>sonar-maven-plugin</artifactId>
-        <version>4.0.0.4121</version>
       </plugin>
     </plugins>
   </build>
