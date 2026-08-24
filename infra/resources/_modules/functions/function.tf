@@ -50,6 +50,9 @@ module "selc_onboarding_fn" {
   tags = var.tags
 }
 
+# The host storage managed identity and its RBAC assignments are centrally
+# managed by infra/core/_modules/user_managed_identity.
+
 resource "azurerm_key_vault_access_policy" "fn_keyvault_access_policy" {
   key_vault_id = var.key_vault_id
   tenant_id    = var.tenant_id

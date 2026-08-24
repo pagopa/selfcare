@@ -27,17 +27,33 @@
     <quarkus.platform.version>3.31.2</quarkus.platform.version>
     <skipITs>true</skipITs>
     <surefire-plugin.version>3.5.4</surefire-plugin.version>
-    <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
+    <quarkus-openapi-generator.version>2.16.0
+    </quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
     <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
     <security-sdk.version>0.2.3</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.17.5</selfcare-onboarding-sdk.version>
     <azure-identity.version>1.18.4</azure-identity.version>
+    <azure-data-tables.version>12.5.8</azure-data-tables.version>
     <azure-storage-queue.version>12.25.0</azure-storage-queue.version>
+    <common-sdk-health-version>0.2.0</common-sdk-health-version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <!--
+        Quarkus 3.31.2 pins mongodb-driver 5.6.2. 5.6.4/5.6.5 restore correct Netty ByteBuf
+        ref-counting (JAVA-6107) and stop reactive cursors from holding pool connections
+        across empty getMore loops. Stay on 5.6.x for compatibility with the Quarkus Mongo
+        extension. First import wins over the BOM below.
+      -->
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongodb-driver-bom</artifactId>
+        <version>5.6.5</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
@@ -144,6 +160,21 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-openapi</artifactId>
     </dependency>
+    <!--
+      Only the OpenTelemetry API is used, not the Quarkus OTel extension: the application runs
+      with the Application Insights Java agent, which already installs an OpenTelemetry SDK and
+      registers it as GlobalOpenTelemetry. Adding quarkus-opentelemetry would register a second
+      SDK and conflict with the agent. Without an agent (dev/test) the API degrades to a no-op.
+    -->
+    <dependency>
+      <groupId>io.opentelemetry</groupId>
+      <artifactId>opentelemetry-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-health</artifactId>
+      <version>${common-sdk-health-version}</version>
+    </dependency>
 
     <!-- Lombok & MapStruct -->
     <dependency>
@@ -168,6 +199,11 @@
       <groupId>com.azure</groupId>
       <artifactId>azure-identity</artifactId>
       <version>${azure-identity.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.azure</groupId>
+      <artifactId>azure-data-tables</artifactId>
+      <version>${azure-data-tables.version}</version>
     </dependency>
     <dependency>
       <groupId>com.azure</groupId>
@@ -296,7 +332,8 @@
         <version>${surefire-plugin.version}</version>
         <configuration>
           <systemPropertyVariables>
-            <java.util.logging.manager>org.jboss.logmanager.LogManager</java.util.logging.manager>
+            <java.util.logging.manager>org.jboss.logmanager.LogManager
+            </java.util.logging.manager>
             <maven.home>${maven.home}</maven.home>
           </systemPropertyVariables>
           <excludes>
@@ -315,7 +352,8 @@
             </goals>
             <configuration>
               <systemPropertyVariables>
-                <native.image.path>${project.build.directory}/${project.build.finalName}-runner
+                <native.image.path>
+                  ${project.build.directory}/${project.build.finalName}-runner
                 </native.image.path>
                 <java.util.logging.manager>org.jboss.logmanager.LogManager
                 </java.util.logging.manager>

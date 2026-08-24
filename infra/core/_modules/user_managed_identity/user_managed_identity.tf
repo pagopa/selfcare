@@ -6,6 +6,9 @@ locals {
     "selfcare-fd",
     "sc-users"
   ]) : toset([])
+
+  onboarding_functions_host_storage_name = replace(format("%s-sa", var.onboarding_functions_name), "-", "")
+  onboarding_functions_host_storage_rg   = format("%s-rg", var.onboarding_functions_name)
 }
 
 resource "azurerm_resource_group" "user_managed_identity_rg" {
@@ -118,6 +121,41 @@ resource "azurerm_role_assignment" "web_storage_blob_identity_role_assignment" {
   scope                = data.azurerm_storage_account.web_storage.id
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.web_storage_blob_identity.principal_id
+}
+
+###############################################################################
+# Onboarding Functions Host Storage Managed Identity
+###############################################################################
+
+data "azurerm_storage_account" "onboarding_functions_host_storage" {
+  name                = local.onboarding_functions_host_storage_name
+  resource_group_name = local.onboarding_functions_host_storage_rg
+}
+
+resource "azurerm_user_assigned_identity" "onboarding_functions_host_storage_identity" {
+  name                = "${var.prefix}-${var.env_short}-${var.domain}-onboarding-functions-host-storage-managed-identity"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.user_managed_identity_rg.name
+  tags                = var.tags
+}
+
+resource "azurerm_management_lock" "onboarding_functions_host_storage_identity_lock" {
+  name       = azurerm_user_assigned_identity.onboarding_functions_host_storage_identity.name
+  scope      = azurerm_user_assigned_identity.onboarding_functions_host_storage_identity.id
+  lock_level = "CanNotDelete"
+  notes      = "Lock for the Onboarding Functions host storage Managed Identity"
+}
+
+resource "azurerm_role_assignment" "onboarding_functions_host_storage_data_access" {
+  for_each = toset([
+    "Storage Blob Data Owner",
+    "Storage Queue Data Contributor",
+    "Storage Table Data Contributor",
+  ])
+
+  scope                = data.azurerm_storage_account.onboarding_functions_host_storage.id
+  role_definition_name = each.value
+  principal_id         = azurerm_user_assigned_identity.onboarding_functions_host_storage_identity.principal_id
 }
 
 ###############################################################################

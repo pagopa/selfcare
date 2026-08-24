@@ -49,8 +49,20 @@ public class OnboardingMsConfig {
     }
 
     @ApplicationScoped
-    public ProductService productService() {
-        AzureBlobClientDefault azureBlobClient = connectionStringProduct
+    public ProductService productService(AzureBlobClientDefault productBlobClient) {
+        return new ProductServiceCacheable(productBlobClient, filepathProduct);
+    }
+
+    /**
+     * Producer of the {@link AzureBlobClientDefault} used to read the product catalog from Azure
+     * Blob Storage. Exposed as a CDI bean so that both {@link #productService(AzureBlobClientDefault)}
+     * and the readiness health check
+     * ({@code it.pagopa.selfcare.onboarding.health.ProductBlobStorageReadinessCheck}) share the
+     * same instance (single connection pool, single Managed Identity token cache).
+     */
+    @ApplicationScoped
+    public AzureBlobClientDefault productBlobClient() {
+        return connectionStringProduct
                 .filter(connectionString -> !connectionString.isBlank())
                 .map(connectionString -> {
                     log.info("Configuring ProductService with Azure Blob connection string: container={}, filepath={}",
@@ -58,8 +70,6 @@ public class OnboardingMsConfig {
                     return new AzureBlobClientDefault(connectionString, containerProduct);
                 })
                 .orElseGet(this::azureBlobClientWithManagedIdentity);
-
-        return new ProductServiceCacheable(azureBlobClient, filepathProduct);
     }
 
     private AzureBlobClientDefault azureBlobClientWithManagedIdentity() {

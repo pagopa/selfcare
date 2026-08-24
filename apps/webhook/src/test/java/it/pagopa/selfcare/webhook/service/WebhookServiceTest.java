@@ -329,6 +329,7 @@ class WebhookServiceTest {
     request.setProductId(productId);
     request.setTenantId(TENANT_ID);
     request.setPayload("{}");
+    request.setTopic("SC-Contracts");
 
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
@@ -361,7 +362,8 @@ class WebhookServiceTest {
     ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
     verify(notificationRepository).persist(captor.capture());
     assertNotEquals(request.getPayload(), captor.getValue().getPayload());
-    assertEquals(request.getPayload(), DataEncryptionConfig.decrypt(captor.getValue().getPayload()));
+    assertEquals(
+        request.getPayload(), DataEncryptionConfig.decrypt(captor.getValue().getPayload()));
     assertEquals(TENANT_ID, captor.getValue().getTenantId());
     assertEquals(WebhookNotification.NotificationStatus.PENDING, captor.getValue().getStatus());
     verify(notificationPublisher).publish(captor.getValue().getId().toHexString());
@@ -390,5 +392,324 @@ class WebhookServiceTest {
 
     // then
     verify(notificationRepository, never()).persist(any(WebhookNotification.class));
+  }
+
+  @Test
+  void sendNotification_shouldOnlyNotifyWebhooksSubscribedToTopic() {
+    // given
+    String productId = "prod-io";
+    NotificationRequest request = new NotificationRequest();
+    request.setProductId(productId);
+    request.setTenantId(TENANT_ID);
+    request.setPayload("{}");
+    request.setTopic("SC-Users");
+
+    Webhook subscribedWebhook = new Webhook();
+    subscribedWebhook.setId(new ObjectId());
+    subscribedWebhook.setTenantId(TENANT_ID);
+    subscribedWebhook.setProducts(List.of(productId));
+    subscribedWebhook.setTopics(List.of("SC-Contracts", "SC-Users"));
+    subscribedWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    Webhook notSubscribedWebhook = new Webhook();
+    notSubscribedWebhook.setId(new ObjectId());
+    notSubscribedWebhook.setTenantId(TENANT_ID);
+    notSubscribedWebhook.setProducts(List.of(productId));
+    notSubscribedWebhook.setTopics(List.of("SC-Delegate"));
+    notSubscribedWebhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    when(webhookRepository.findActiveWebhooksByProduct(productId, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(List.of(subscribedWebhook, notSubscribedWebhook)));
+    when(notificationRepository.persist(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification notification = invocation.getArgument(0);
+              notification.setId(new ObjectId());
+              return Uni.createFrom().item(notification);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        webhookService
+            .sendNotification(request)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.awaitItem();
+
+    // then
+    ArgumentCaptor<WebhookNotification> captor = ArgumentCaptor.forClass(WebhookNotification.class);
+    verify(notificationRepository, times(1)).persist(captor.capture());
+    assertEquals(subscribedWebhook.getId(), captor.getValue().getWebhookId());
+    assertEquals("SC-Users", captor.getValue().getTopic());
+  }
+
+  @Test
+  void sendNotification_shouldNotifyWebhooksWithoutTopicFilter_forAnyTopic() {
+    // given
+    String productId = "prod-io";
+    NotificationRequest request = new NotificationRequest();
+    request.setProductId(productId);
+    request.setTenantId(TENANT_ID);
+    request.setPayload("{}");
+    request.setTopic("SC-Delegate");
+
+    Webhook webhook = new Webhook();
+    webhook.setId(new ObjectId());
+    webhook.setTenantId(TENANT_ID);
+    webhook.setProducts(List.of(productId));
+    webhook.setTopics(null);
+    webhook.setStatus(Webhook.WebhookStatus.ACTIVE);
+
+    when(webhookRepository.findActiveWebhooksByProduct(productId, TENANT_ID))
+        .thenReturn(Uni.createFrom().item(List.of(webhook)));
+    when(notificationRepository.persist(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification notification = invocation.getArgument(0);
+              notification.setId(new ObjectId());
+              return Uni.createFrom().item(notification);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<Void> subscriber =
+        webhookService
+            .sendNotification(request)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    subscriber.awaitItem();
+
+    // then
+    verify(notificationRepository, times(1)).persist(any(WebhookNotification.class));
+  }
+
+  @Test
+  void resendNotificationById_shouldResetAndPublishNotification() {
+    // given
+    ObjectId notificationId = new ObjectId();
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(notificationId);
+    notification.setWebhookId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.FAILED);
+    notification.setAttemptCount(3);
+    notification.setLastError("boom");
+    notification.setCompletedAt(java.time.LocalDateTime.now());
+
+    when(notificationRepository.findById(eq(notificationId)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification updated = invocation.getArgument(0);
+              return Uni.createFrom().item(updated);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationById(notificationId.toHexString())
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    it.pagopa.selfcare.webhook.dto.NotificationResendResponse response =
+        subscriber.awaitItem().getItem();
+    assertEquals(1, response.getResentCount());
+    assertEquals(List.of(notificationId.toHexString()), response.getNotificationIds());
+    assertEquals(WebhookNotification.NotificationStatus.PENDING, notification.getStatus());
+    assertEquals(0, notification.getAttemptCount());
+    assertNull(notification.getLastError());
+    assertNull(notification.getCompletedAt());
+    verify(notificationPublisher).publish(notificationId.toHexString());
+    verify(notificationRepository).markAsPublished(notificationId);
+  }
+
+  @Test
+  void resendNotificationById_shouldFail_whenNotificationIsNotFound() {
+    // given
+    ObjectId notificationId = new ObjectId();
+    when(notificationRepository.findById(eq(notificationId)))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationById(notificationId.toHexString())
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitFailure().assertFailedWith(IllegalArgumentException.class);
+  }
+
+  @Test
+  void resendNotificationById_shouldFail_whenIdIsInvalid() {
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationById("not-an-object-id")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitFailure().assertFailedWith(IllegalArgumentException.class);
+    verify(notificationRepository, never()).findById(any(ObjectId.class));
+  }
+
+  @Test
+  void resendNotificationsByStatus_shouldResendAllMatchingNotifications() {
+    // given
+    ObjectId webhookId = new ObjectId();
+    WebhookNotification first = new WebhookNotification();
+    first.setId(new ObjectId());
+    first.setStatus(WebhookNotification.NotificationStatus.FAILED);
+    first.setAttemptCount(2);
+    WebhookNotification second = new WebhookNotification();
+    second.setId(new ObjectId());
+    second.setStatus(WebhookNotification.NotificationStatus.FAILED);
+    second.setAttemptCount(3);
+
+    when(notificationRepository.findByStatus(
+            WebhookNotification.NotificationStatus.FAILED, webhookId))
+        .thenReturn(Uni.createFrom().item(List.of(first, second)));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification updated = invocation.getArgument(0);
+              return Uni.createFrom().item(updated);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationsByStatus(
+                WebhookNotification.NotificationStatus.FAILED, webhookId.toHexString())
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    it.pagopa.selfcare.webhook.dto.NotificationResendResponse response =
+        subscriber.awaitItem().getItem();
+    assertEquals(2, response.getResentCount());
+    assertEquals(WebhookNotification.NotificationStatus.PENDING, first.getStatus());
+    assertEquals(WebhookNotification.NotificationStatus.PENDING, second.getStatus());
+    verify(notificationPublisher, times(2)).publish(anyString());
+  }
+
+  @Test
+  void resendNotificationsByStatus_shouldReturnEmptyResponse_whenNoneMatch() {
+    // given
+    when(notificationRepository.findByStatus(WebhookNotification.NotificationStatus.FAILED, null))
+        .thenReturn(Uni.createFrom().item(Collections.emptyList()));
+
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationsByStatus(WebhookNotification.NotificationStatus.FAILED, null)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    it.pagopa.selfcare.webhook.dto.NotificationResendResponse response =
+        subscriber.awaitItem().getItem();
+    assertEquals(0, response.getResentCount());
+    assertTrue(response.getNotificationIds().isEmpty());
+    verify(notificationPublisher, never()).publish(anyString());
+  }
+
+  @Test
+  void resendNotificationsByStatus_shouldFail_whenWebhookIdIsInvalid() {
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationsByStatus(
+                WebhookNotification.NotificationStatus.FAILED, "not-an-object-id")
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    subscriber.awaitFailure().assertFailedWith(IllegalArgumentException.class);
+    verify(notificationRepository, never())
+        .findByStatus(any(WebhookNotification.NotificationStatus.class), any());
+  }
+
+  @Test
+  void resendNotificationsByDateRange_shouldResendAllNotificationsInRange() {
+    // given
+    java.time.LocalDateTime from = java.time.LocalDateTime.now().minusDays(1);
+    java.time.LocalDateTime to = java.time.LocalDateTime.now();
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(new ObjectId());
+    notification.setStatus(WebhookNotification.NotificationStatus.FAILED);
+
+    when(notificationRepository.findByCreatedAtRange(from, to))
+        .thenReturn(Uni.createFrom().item(List.of(notification)));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification updated = invocation.getArgument(0);
+              return Uni.createFrom().item(updated);
+            });
+    when(notificationPublisher.publish(anyString())).thenReturn(Uni.createFrom().voidItem());
+    when(notificationRepository.markAsPublished(any())).thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationsByDateRange(from, to)
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    it.pagopa.selfcare.webhook.dto.NotificationResendResponse response =
+        subscriber.awaitItem().getItem();
+    assertEquals(1, response.getResentCount());
+    verify(notificationRepository).findByCreatedAtRange(from, to);
+  }
+
+  @Test
+  void resendNotificationById_shouldStillSucceed_whenPublishFails() {
+    // given
+    ObjectId notificationId = new ObjectId();
+    WebhookNotification notification = new WebhookNotification();
+    notification.setId(notificationId);
+    notification.setStatus(WebhookNotification.NotificationStatus.FAILED);
+
+    when(notificationRepository.findById(eq(notificationId)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenAnswer(
+            invocation -> {
+              WebhookNotification updated = invocation.getArgument(0);
+              return Uni.createFrom().item(updated);
+            });
+    when(notificationPublisher.publish(anyString()))
+        .thenReturn(Uni.createFrom().failure(new RuntimeException("queue unavailable")));
+    when(notificationRepository.releasePublishingLock(any()))
+        .thenReturn(Uni.createFrom().voidItem());
+
+    // when
+    UniAssertSubscriber<it.pagopa.selfcare.webhook.dto.NotificationResendResponse> subscriber =
+        webhookService
+            .resendNotificationById(notificationId.toHexString())
+            .subscribe()
+            .withSubscriber(UniAssertSubscriber.create());
+
+    // then
+    // the resend still succeeds (notification reset to PENDING) even if the immediate publish
+    // fails: WebhookNotificationOutboxService will retry the publish on its next scheduled run
+    it.pagopa.selfcare.webhook.dto.NotificationResendResponse response =
+        subscriber.awaitItem().getItem();
+    assertEquals(1, response.getResentCount());
+    verify(notificationRepository).releasePublishingLock(notificationId);
   }
 }

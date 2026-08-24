@@ -15,6 +15,7 @@ public class UserClaims {
   private String name;
   private String familyName;
   private String email;
+  private String tenantId;
   private Boolean sameIdp = Boolean.TRUE;
   private Boolean test = Boolean.FALSE;
 }

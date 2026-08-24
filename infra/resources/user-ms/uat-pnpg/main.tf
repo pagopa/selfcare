@@ -142,6 +142,14 @@ locals {
       value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
+      name  = "WEBHOOK_URL"
+      value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "USER_MS_WEBHOOK_ENABLED"
+      value = false
+    },
+    {
       name  = "BLOB-STORAGE-PRODUCT-ACCOUNT-NAME"
       value = data.azurerm_storage_account.product_storage.name
     },

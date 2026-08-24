@@ -663,6 +663,92 @@
         ]
       }
     },
+    "/delegations/count": {
+      "get": {
+        "tags": [
+          "Delegation"
+        ],
+        "summary": "Returns the number of delegations created in a certain period of time, optionally filtered by productId",
+        "description": "Returns the number of delegations created in a certain period of time, optionally filtered by productId",
+        "operationId": "countDelegationsUsingGET",
+        "parameters": [
+          {
+            "name": "fromDate",
+            "in": "query",
+            "description": "Start date/time (inclusive)",
+            "required": true,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "toDate",
+            "in": "query",
+            "description": "End date/time (inclusive)",
+            "required": true,
+            "style": "form",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "productId",
+            "in": "query",
+            "description": "Product's unique identifier",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DelegationCountResult"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
     "/delegations/{delegationId}": {
       "delete": {
         "tags": [
@@ -1092,6 +1178,24 @@
           },
           {
             "name": "createdToDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "statusUpdatedFromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "statusUpdatedToDate",
             "in": "query",
             "required": false,
             "schema": {
@@ -3025,6 +3129,19 @@
           }
         }
       },
+      "DelegationCountResult": {
+        "title": "DelegationCountResult",
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "UserProductResponse": {
         "type": "object",
         "properties": {
@@ -3317,6 +3434,10 @@
             "format": "date-time"
           },
           "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusUpdatedAt": {
             "type": "string",
             "format": "date-time"
           }
@@ -5040,6 +5161,17 @@
       }
     },
     "securitySchemes": {
+      "SecurityScheme": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Authentication"
+      },
+      "bearerAuth1": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
       "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",

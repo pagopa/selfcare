@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.conf.TenantRegistry;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeResponse;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeTokenResponse;
@@ -46,16 +48,17 @@ public class OidcServiceImpl implements OidcService {
   @ConfigProperty(name = "auth-ms.retry")
   Integer maxRetry;
 
-  @ConfigProperty(name = "one-identity.client-id")
-  String oiClientId;
+  private final TenantRegistry tenantRegistry;
 
-  @ConfigProperty(name = "one-identity.client-secret")
-  String oiClientSecret;
+  private final AuthTenantContext tenantContext;
 
   @RestClient @Inject DefaultApi tokenApi;
 
   @Override
   public Uni<OidcExchangeResponse> exchange(String authCode, String redirectUri) {
+    String tenantId = tenantContext.getTenantId();
+    TenantRegistry.OneIdentityCredentials credentials =
+        tenantRegistry.oneIdentityCredentials(tenantId);
     CreateRequestTokenMultipartForm formData = new CreateRequestTokenMultipartForm();
     formData.code = authCode;
     formData.grantType = AUTH_CODE_GRANT_TYPE;
@@ -67,8 +70,8 @@ public class OidcServiceImpl implements OidcService {
                 .encodeToString(
                     String.join(
                             ":",
-                            URLEncoder.encode(oiClientId, StandardCharsets.UTF_8),
-                            URLEncoder.encode(oiClientSecret, StandardCharsets.UTF_8))
+                            URLEncoder.encode(credentials.clientId(), StandardCharsets.UTF_8),
+                            URLEncoder.encode(credentials.clientSecret(), StandardCharsets.UTF_8))
                         .getBytes()))
         .onFailure(GeneralUtils::checkIfIsRetryableException)
         .retry()
@@ -97,7 +100,8 @@ public class OidcServiceImpl implements OidcService {
                     .transform(
                         failure ->
                             new InternalException(
-                                "Cannot patch user on Personal Data Vault:" + failure.toString())))
+                                "Cannot patch user on Personal Data Vault:" + failure.toString()))
+                    .invoke(userClaims -> userClaims.setTenantId(tenantId)))
         .chain(
             userClaims ->
                 otpFlowService

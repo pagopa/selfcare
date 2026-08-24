@@ -6,7 +6,6 @@ resource "azurerm_api_management_api_version_set" "apim_api_version_set" {
   versioning_scheme   = "Segment"
 }
 
-
 module "apim_api" {
   source              = "github.com/pagopa/terraform-azurerm-v4.git//api_management_api?ref=v9.4.0"
   name                = var.api_name
@@ -42,9 +41,9 @@ module "apim_api" {
     <inbound>
         <cors allow-credentials="true">
             <allowed-origins>
-                <origin>https://${var.dns_zone_prefix}.${var.external_domain}</origin>
-                <origin>https://${var.api_dns_zone_prefix}.${var.external_domain}</origin>
-                <origin>http://localhost:3000</origin>
+%{for tenant in var.tenant_ids~}
+                <origin>${tenant.origin}</origin>
+%{endfor~}
             </allowed-origins>
             <allowed-methods>
                 <method>GET</method>
@@ -55,9 +54,45 @@ module "apim_api" {
                 <method>OPTIONS</method>
             </allowed-methods>
             <allowed-headers>
-                <header>*</header>
+%{for header in var.allowed_headers~}
+                <header>${header}</header>
+%{endfor~}
             </allowed-headers>
         </cors>
+%{if var.tenant_enforcement_enabled~}
+        <set-variable name="tenantId" value='@{
+            var host = context.Request.OriginalUrl.Host;
+            if (string.IsNullOrWhiteSpace(host)) {
+                return string.Empty;
+            }
+            host = host.ToLowerInvariant();
+%{for tenant in var.tenant_hosts~}
+            if (host == "${lower(tenant.host)}") {
+                return "${tenant.id}";
+            }
+%{endfor~}
+            return string.Empty;
+        }' />
+        <choose>
+            <when condition='@((string)context.Variables["tenantId"] == string.Empty)'>
+                <trace source="tenant-audit" severity="error">
+                    <message>@("event=tenant_request_rejected reason=unknown_host operation=" + (context.Operation == null ? "unknown" : context.Operation.Id))</message>
+                </trace>
+                <return-response>
+                    <set-status code="403" reason="Forbidden" />
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/problem+json</value>
+                    </set-header>
+                    <set-body>{"title":"Forbidden","status":403,"detail":"Invalid tenant context"}</set-body>
+                </return-response>
+            </when>
+        </choose>
+        <set-header name="X-Tenant-Id" exists-action="override">
+            <value>@((string)context.Variables["tenantId"])</value>
+        </set-header>
+%{else~}
+        <set-header name="X-Tenant-Id" exists-action="delete" />
+%{endif~}
         <base />
     </inbound>
     <backend>

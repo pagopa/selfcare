@@ -322,6 +322,189 @@ class WebhookNotificationRepositoryTest {
     assertTrue(notifications.stream().allMatch(n -> webhookId.equals(n.getWebhookId())));
   }
 
+  @Test
+  void findByStatus_shouldReturnOnlyNotificationsWithGivenStatus() {
+    // given
+    ObjectId webhookId = new ObjectId();
+    WebhookNotification failed =
+        persistNotification(
+            webhookId,
+            WebhookNotification.NotificationStatus.FAILED,
+            false,
+            null,
+            false,
+            null,
+            null);
+    persistNotification(
+        webhookId,
+        WebhookNotification.NotificationStatus.DELIVERED,
+        false,
+        null,
+        false,
+        null,
+        null);
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.FAILED,
+        false,
+        null,
+        false,
+        null,
+        null);
+
+    // when
+    List<WebhookNotification> notifications =
+        webhookNotificationRepository
+            .findByStatus(WebhookNotification.NotificationStatus.FAILED, webhookId)
+            .await()
+            .indefinitely();
+
+    // then
+    assertEquals(1, notifications.size());
+    assertEquals(failed.getId(), notifications.get(0).getId());
+  }
+
+  @Test
+  void findByStatus_shouldReturnAllNotificationsWithGivenStatusWhenWebhookIdIsNull() {
+    // given
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.FAILED,
+        false,
+        null,
+        false,
+        null,
+        null);
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.FAILED,
+        false,
+        null,
+        false,
+        null,
+        null);
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.DELIVERED,
+        false,
+        null,
+        false,
+        null,
+        null);
+
+    // when
+    List<WebhookNotification> notifications =
+        webhookNotificationRepository
+            .findByStatus(WebhookNotification.NotificationStatus.FAILED, null)
+            .await()
+            .indefinitely();
+
+    // then
+    assertEquals(2, notifications.size());
+  }
+
+  @Test
+  void findByCreatedAtRange_shouldReturnOnlyNotificationsWithinRange() {
+    // given
+    LocalDateTime now = LocalDateTime.now();
+    WebhookNotification inRange = persistNotificationWithCreatedAt(now.minusHours(1));
+    persistNotificationWithCreatedAt(now.minusDays(5));
+    persistNotificationWithCreatedAt(now.plusDays(5));
+
+    // when
+    List<WebhookNotification> notifications =
+        webhookNotificationRepository
+            .findByCreatedAtRange(now.minusDays(1), now.plusDays(1))
+            .await()
+            .indefinitely();
+
+    // then
+    assertEquals(1, notifications.size());
+    assertEquals(inRange.getId(), notifications.get(0).getId());
+  }
+
+  @Test
+  void findOldestUnpublishedNotification_shouldReturnOldestPendingUnpublishedNotification() {
+    LocalDateTime now = LocalDateTime.now();
+    WebhookNotification oldest = persistUnpublishedNotificationWithCreatedAt(now.minusHours(2));
+    persistUnpublishedNotificationWithCreatedAt(now.minusHours(1));
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.PENDING,
+        false,
+        null,
+        false,
+        null,
+        now.minusHours(3));
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.RETRY,
+        false,
+        null,
+        false,
+        null,
+        null);
+
+    WebhookNotification notification =
+        webhookNotificationRepository.findOldestUnpublishedNotification().await().indefinitely();
+
+    assertNotNull(notification);
+    assertEquals(oldest.getId(), notification.getId());
+  }
+
+  @Test
+  void findOldestUnpublishedNotification_shouldReturnNullWhenNoEligibleNotificationExists() {
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.PENDING,
+        false,
+        null,
+        false,
+        null,
+        LocalDateTime.now());
+    persistNotification(
+        new ObjectId(),
+        WebhookNotification.NotificationStatus.RETRY,
+        false,
+        null,
+        false,
+        null,
+        null);
+
+    WebhookNotification notification =
+        webhookNotificationRepository.findOldestUnpublishedNotification().await().indefinitely();
+
+    assertNull(notification);
+  }
+
+  private WebhookNotification persistNotificationWithCreatedAt(LocalDateTime createdAt) {
+    WebhookNotification notification =
+        persistNotification(
+            new ObjectId(),
+            WebhookNotification.NotificationStatus.FAILED,
+            false,
+            null,
+            false,
+            null,
+            null);
+    notification.setCreatedAt(createdAt);
+    return webhookNotificationRepository.update(notification).await().indefinitely();
+  }
+
+  private WebhookNotification persistUnpublishedNotificationWithCreatedAt(LocalDateTime createdAt) {
+    WebhookNotification notification =
+        persistNotification(
+            new ObjectId(),
+            WebhookNotification.NotificationStatus.PENDING,
+            false,
+            null,
+            false,
+            null,
+            null);
+    notification.setCreatedAt(createdAt);
+    return webhookNotificationRepository.update(notification).await().indefinitely();
+  }
+
   private WebhookNotification persistNotification(
       ObjectId webhookId,
       WebhookNotification.NotificationStatus status,

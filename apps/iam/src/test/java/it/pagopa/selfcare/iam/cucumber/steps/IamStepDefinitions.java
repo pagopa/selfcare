@@ -32,6 +32,7 @@ public class IamStepDefinitions {
   public ProductRolePermissions defineProductRolePermissions(Map<String, String> row) {
     return ProductRolePermissions.builder()
         .productId(row.get("productId"))
+        .tenantId(row.get("tenantId"))
         .role(row.get("role"))
         .permissions(Arrays.asList(row.get("permissions").split(",")))
         .build();
@@ -262,11 +263,13 @@ public class IamStepDefinitions {
   public void iRequestTheUserProductRolePermissionsListWithUID(Map<String, String> params) {
     String uid = params.get("uid");
     String productId = params.get("productId");
+    String tenantId = params.get("tenantId");
 
     response =
         given()
             .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
             .queryParam("productId", productId)
+            .queryParam("tenantId", tenantId)
             .when()
             .get("/iam/users/role/permissions/" + uid)
             .then()
@@ -365,6 +368,7 @@ public class IamStepDefinitions {
               .anyMatch(
                   actual ->
                       actual.getProductId().equals(expected.getProductId())
+                          && actual.getTenantId().equals(expected.getTenantId())
                           && actual.getRole().equals(expected.getRole())
                           && actual.getPermissions().containsAll(expected.getPermissions()));
       assertTrue(found, "Expected product role permissions not found: " + expected);
@@ -438,8 +442,7 @@ public class IamStepDefinitions {
   @Then("the user should have no product role permissions")
   public void theUserShouldHaveNoProductRolePermissions() {
 
-    ProductRolePermissionsList result =
-            response.as(ProductRolePermissionsList.class);
+    ProductRolePermissionsList result = response.as(ProductRolePermissionsList.class);
 
     assertNotNull(result);
     assertNotNull(result.getItems());
