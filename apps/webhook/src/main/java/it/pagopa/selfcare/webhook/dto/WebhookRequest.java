@@ -2,6 +2,7 @@ package it.pagopa.selfcare.webhook.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 
@@ -21,6 +22,12 @@ public class WebhookRequest {
   private String httpMethod;
 
   private Map<String, String> headers;
+
+  /**
+   * Topics the consumer wants to receive notifications for (e.g. SC-Contracts, SC-Users,
+   * SC-Delegate). When null or empty, notifications for every topic are sent.
+   */
+  private List<String> topics;
 
   private RetryPolicyRequest retryPolicy;
 

@@ -992,7 +992,7 @@ public class UserServiceImpl implements UserService {
 
     private Multi<UserNotificationToSend> buildAndSendKafkaNotifications(UserInstitution userInstitution, UserResource userResource){
         return Multi.createFrom().iterable(userUtils.buildUsersNotificationResponse(userInstitution, userResource))
-                .onItem().transformToUniAndMerge(userNotificationService::sendKafkaNotification);
+                .onItem().transformToUniAndMerge(userNotificationService::sendUserNotification);
     }
 
 

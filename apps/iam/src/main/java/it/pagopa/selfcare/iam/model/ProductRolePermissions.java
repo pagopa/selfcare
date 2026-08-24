@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductRolePermissions {
   private String productId;
+  private String tenantId;
   private String role;
   private String group;
   private List<String> permissions;

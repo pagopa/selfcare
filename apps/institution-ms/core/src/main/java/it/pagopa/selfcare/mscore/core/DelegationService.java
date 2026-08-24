@@ -5,6 +5,7 @@ import it.pagopa.selfcare.mscore.constant.DelegationType;
 import it.pagopa.selfcare.mscore.constant.Order;
 import it.pagopa.selfcare.mscore.model.delegation.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,5 +26,8 @@ public interface DelegationService {
     List<DelegationInstitution> getDelegators(String institutionId, String productId, DelegationType type, Long cursor, int size);
 
     List<DelegationInstitution> getDelegates(String institutionId, String productId, DelegationType type, Long cursor, int size);
+
+    List<DelegationCount> countDelegations(OffsetDateTime from, OffsetDateTime to, String productId);
+
 
 }

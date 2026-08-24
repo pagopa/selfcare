@@ -9,6 +9,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.controller.request.AggregateInstitutionRequest;
 import it.pagopa.selfcare.onboarding.controller.request.UserRequest;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
@@ -24,7 +25,6 @@ import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
 
 /**
  * Helper che gestisce la persistenza degli onboarding e
@@ -105,6 +105,17 @@ public class OnboardingPersistenceHelper {
      * il referenceOnboardingId, il billing e il previousManagerId.
      */
     public Uni<Onboarding> addReferencedOnboardingId(Onboarding onboarding) {
+        return addReferencedOnboardingId(onboarding, false);
+    }
+
+    /**
+     * Come {@link #addReferencedOnboardingId(Onboarding)}, ma se {@code inheritReferencedInstitution}
+     * è {@code true} eredita anche l'istituzione dall'onboarding referenziato (mantenendo
+     * l'institutionType eventualmente specificato nella richiesta corrente). Utile per i flussi in
+     * cui l'istituzione non viene fornita a partire da un servizio esterno ma è già presente
+     * sull'onboarding precedente.
+     */
+    public Uni<Onboarding> addReferencedOnboardingId(Onboarding onboarding, boolean inheritReferencedInstitution) {
         final String taxCode = onboarding.getInstitution().getTaxCode();
         final String origin = onboarding.getInstitution().getOrigin().name();
         final String originId = onboarding.getInstitution().getOriginId();
@@ -118,13 +129,15 @@ public class OnboardingPersistenceHelper {
                                 String.format("User not found on PDV for taxCode %s", taxCode)));
                     }
                     String resolvedOriginId = UserRegistryHelper.isPersonalFiscalCode(taxCode) ? resolvedTaxCode : originId;
-                    return doAddReferencedOnboardingId(onboarding, resolvedTaxCode, subunitCode, origin, resolvedOriginId, productId);
+                    return doAddReferencedOnboardingId(onboarding, resolvedTaxCode, subunitCode, origin,
+                            resolvedOriginId, productId, inheritReferencedInstitution);
                 });
     }
 
     private Uni<Onboarding> doAddReferencedOnboardingId(Onboarding onboarding, String taxCode,
                                                          String subunitCode, String origin,
-                                                         String originId, String productId) {
+                                                         String originId, String productId,
+                                                         boolean inheritReferencedInstitution) {
         Multi<Onboarding> onboardings = getOnboardingByFilters(taxCode, subunitCode, origin, originId, productId);
 
         Uni<Onboarding> current = onboardings
@@ -136,6 +149,9 @@ public class OnboardingPersistenceHelper {
                 .invoke(prev -> {
                     onboarding.setReferenceOnboardingId(prev.getId());
                     onboarding.setBilling(prev.getBilling());
+                    if (inheritReferencedInstitution) {
+                        inheritInstitutionFromReferenced(onboarding, prev);
+                    }
                 });
 
         return current
@@ -147,6 +163,22 @@ public class OnboardingPersistenceHelper {
                     onboarding.setPreviousManagerId(prevManagerId);
                 })
                 .replaceWith(onboarding);
+    }
+
+    /**
+     * Copia sull'onboarding corrente l'istituzione dell'onboarding referenziato, preservando
+     * l'institutionType eventualmente valorizzato sulla richiesta corrente.
+     */
+    private static void inheritInstitutionFromReferenced(Onboarding onboarding, Onboarding referenced) {
+        Institution referencedInstitution = referenced.getInstitution();
+        if (Objects.isNull(referencedInstitution)) {
+            return;
+        }
+        Institution requestedInstitution = onboarding.getInstitution();
+        if (Objects.nonNull(requestedInstitution) && Objects.nonNull(requestedInstitution.getInstitutionType())) {
+            referencedInstitution.setInstitutionType(requestedInstitution.getInstitutionType());
+        }
+        onboarding.setInstitution(referencedInstitution);
     }
 
     // -------------------------------------------------------------------------

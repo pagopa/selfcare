@@ -1,5 +1,5 @@
 ---
-openapi: 3.1.0
+openapi: 3.0.3
 tags:
 - name: IAM
 - name: external-v2
@@ -18,8 +18,8 @@ components:
         instance:
           type: string
         status:
-          type: integer
           format: int32
+          type: integer
         title:
           type: string
         type:
@@ -28,6 +28,8 @@ components:
       type: object
       properties:
         productId:
+          type: string
+        tenantId:
           type: string
         role:
           type: string
@@ -44,6 +46,8 @@ components:
           type: string
         productId:
           type: string
+        tenantId:
+          type: string
         name:
           type: string
         familyName:
@@ -59,18 +63,20 @@ components:
       properties:
         productId:
           type: string
+        tenantId:
+          type: string
         roles:
           type: array
           items:
             type: string
     SaveUserRequest:
-      type: object
       required:
       - email
+      type: object
       properties:
         email:
-          type: string
           minLength: 1
+          type: string
         uid:
           type: string
         name:
@@ -143,6 +149,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
+          type: string
       requestBody:
         content:
           application/json:
@@ -184,6 +195,11 @@ paths:
       - name: productId
         in: query
         schema:
+          type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
           type: string
       responses:
         "200":
@@ -237,6 +253,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
+          type: string
       responses:
         "200":
           description: OK
@@ -272,6 +293,11 @@ paths:
       - name: productId
         in: query
         schema:
+          type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
           type: string
       responses:
         "200":
@@ -321,6 +347,11 @@ paths:
       - name: productId
         in: query
         schema:
+          type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
           type: string
       responses:
         "200":
@@ -379,6 +410,11 @@ paths:
         in: query
         schema:
           type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
+          type: string
       responses:
         "200":
           description: OK
@@ -428,6 +464,11 @@ paths:
       - name: productId
         in: query
         schema:
+          type: string
+      - name: tenantId
+        in: query
+        schema:
+          default: AR
           type: string
       responses:
         "200":

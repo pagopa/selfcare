@@ -431,14 +431,15 @@ resource "azurerm_key_vault_access_policy" "container_app_environment_workload_p
 module "user_managed_identity" {
   source = "../_modules/user_managed_identity"
 
-  location               = local.location
-  env_short              = local.env_short
-  domain                 = local.app_domain
-  tags                   = local.tags
-  product_storage_name   = module.cdn.storage_name
-  product_storage_rg     = module.cdn.checkout_fe_rg_name
-  documents_storage_name = module.cdn.storage_name
-  documents_storage_rg   = module.cdn.checkout_fe_rg_name
-  web_storage_name       = module.cdn.storage_name
-  web_storage_rg         = module.cdn.checkout_fe_rg_name
+  location                  = local.location
+  env_short                 = local.env_short
+  domain                    = local.app_domain
+  tags                      = local.tags
+  product_storage_name      = module.cdn.storage_name
+  product_storage_rg        = module.cdn.checkout_fe_rg_name
+  documents_storage_name    = module.cdn.storage_name
+  documents_storage_rg      = module.cdn.checkout_fe_rg_name
+  web_storage_name          = module.cdn.storage_name
+  web_storage_rg            = module.cdn.checkout_fe_rg_name
+  onboarding_functions_name = "${local.prefix}-${local.env_short}-${local.app_domain}-onboarding-fn"
 }

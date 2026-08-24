@@ -10,6 +10,7 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.service.IamService;
+import it.pagopa.selfcare.iam.util.GeneralUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -106,9 +107,11 @@ public class IamController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> users(
-      @Valid SaveUserRequest saveUserRequest, @QueryParam("productId") String productId) {
+      @Valid SaveUserRequest saveUserRequest,
+      @QueryParam("productId") String productId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
     return iamService
-        .saveUser(saveUserRequest, productId)
+        .saveUser(saveUserRequest, productId, tenantId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -163,9 +166,11 @@ public class IamController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> getUser(
-      @PathParam("uid") String userId, @QueryParam("productId") String productId) {
+      @PathParam("uid") String userId,
+      @QueryParam("productId") String productId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
     return iamService
-        .getUser(userId, productId)
+        .getUser(userId, productId, tenantId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -218,9 +223,11 @@ public class IamController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> getUserByEmail(
-      @QueryParam("email") String email, @QueryParam("productId") String productId) {
+      @QueryParam("email") String email,
+      @QueryParam("productId") String productId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
     return iamService
-        .getUserByEmail(email, productId)
+        .getUserByEmail(email, productId, tenantId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -264,8 +271,13 @@ public class IamController {
   @Path(value = "/users")
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  public Uni<Response> getUsers(@QueryParam("productId") String productId) {
-    return iamService.getUsers(productId).onItem().transform(user -> Response.ok(user).build());
+  public Uni<Response> getUsers(
+      @QueryParam("productId") String productId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+    return iamService
+        .getUsers(productId, tenantId)
+        .onItem()
+        .transform(user -> Response.ok(user).build());
   }
 
   /**
@@ -303,9 +315,11 @@ public class IamController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> getProductRolePermissionsList(
-      @PathParam("uid") String userId, @QueryParam("productId") String productId) {
+      @PathParam("uid") String userId,
+      @QueryParam("productId") String productId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
     return iamService
-        .getProductRolePermissionsList(userId, productId)
+        .getProductRolePermissionsList(userId, productId, tenantId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -359,9 +373,11 @@ public class IamController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> getProductRoles(
-      @PathParam("uid") String userId, @QueryParam("productId") String productId) {
+      @PathParam("uid") String userId,
+      @QueryParam("productId") String productId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
     return iamService
-        .getProductRoles(userId, productId)
+        .getProductRoles(userId, productId, tenantId)
         .onItem()
         .transform(roles -> Response.ok(roles).build());
   }
@@ -418,9 +434,10 @@ public class IamController {
       @PathParam("uid") String userId,
       @PathParam("permission") String permission,
       @QueryParam("productId") String productId,
-      @QueryParam("institutionId") String institutionId) {
+      @QueryParam("institutionId") String institutionId,
+      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
     return iamService
-        .hasPermission(userId, permission, productId, institutionId)
+        .hasPermission(userId, permission, productId, institutionId, tenantId)
         .onItem()
         .transform(hasPermission -> Response.ok(new PermissionResponse(hasPermission)).build());
   }

@@ -1632,13 +1632,13 @@
         }
       },
       "ProductStatus": {
-        "type": "string",
         "enum": [
           "TESTING",
           "ACTIVE",
           "DELETED",
           "SUSPEND"
-        ]
+        ],
+        "type": "string"
       },
       "Problem3": {
         "type": "object",
@@ -1650,8 +1650,8 @@
             "type": "string"
           },
           "status": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "title": {
             "type": "string"
@@ -1662,14 +1662,14 @@
         }
       },
       "ProductCreateRequest": {
-        "type": "object",
         "required": [
           "productId"
         ],
+        "type": "object",
         "properties": {
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
           },
           "parentId": {
             "type": "string"
@@ -1805,10 +1805,13 @@
             "type": "boolean"
           },
           "expirationDays": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "enabled": {
+            "type": "boolean"
+          },
+          "requiredRecipientCode": {
             "type": "boolean"
           }
         }
@@ -1843,7 +1846,6 @@
         }
       },
       "InstitutionType1": {
-        "type": "string",
         "enum": [
           "PA",
           "PG",
@@ -1860,7 +1862,8 @@
           "GPU",
           "SCEC",
           "DEFAULT"
-        ]
+        ],
+        "type": "string"
       },
       "BackOfficeRole": {
         "type": "object",
@@ -1910,8 +1913,8 @@
             "type": "string"
           },
           "order": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "generated": {
             "type": "boolean"
@@ -1934,23 +1937,22 @@
         }
       },
       "OnboardingType": {
-        "type": "string",
         "enum": [
           "INSTITUTION",
           "INSTITUTION_AGGREGATOR",
           "USER",
           "USER_AGGREGATOR"
-        ]
+        ],
+        "type": "string"
       },
       "ContractType": {
-        "type": "string",
         "enum": [
           "CONTRACT",
           "ATTACHMENT"
-        ]
+        ],
+        "type": "string"
       },
       "WorkflowType": {
-        "type": "string",
         "enum": [
           "CONTRACT_REGISTRATION",
           "CONTRACT_WITH_COUNTERSIGNATURE",
@@ -1968,7 +1970,8 @@
           "CONFIRMATION_AGGREGATOR",
           "USERS_PG",
           "USERS_EA"
-        ]
+        ],
+        "type": "string"
       },
       "OriginEntry": {
         "type": "object",
@@ -1985,7 +1988,6 @@
         }
       },
       "Origin1": {
-        "type": "string",
         "enum": [
           "IPA",
           "SELC",
@@ -1994,7 +1996,8 @@
           "INFOCAMERE",
           "IVASS",
           "PDND_INFOCAMERE"
-        ]
+        ],
+        "type": "string"
       },
       "EmailTemplateConfig": {
         "type": "object",
@@ -2017,7 +2020,6 @@
         }
       },
       "OnboardingStatus1": {
-        "type": "string",
         "enum": [
           "REQUEST",
           "TOBEVALIDATED",
@@ -2026,7 +2028,8 @@
           "FAILED",
           "REJECTED",
           "DELETED"
-        ]
+        ],
+        "type": "string"
       },
       "BackOfficeEnvironmentConfiguration": {
         "type": "object",
@@ -2049,8 +2052,8 @@
         "type": "object",
         "properties": {
           "requiredSignatures": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "skipSignerIdentityCheck": {
             "type": "boolean"
@@ -2067,8 +2070,8 @@
         "type": "object",
         "properties": {
           "order": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "label": {
             "type": "string"
@@ -2091,8 +2094,8 @@
             "type": "string"
           },
           "signingStep": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           }
         }
       },
@@ -2129,8 +2132,8 @@
             "type": "string"
           },
           "maxDocumentsRequired": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
@@ -2158,11 +2161,11 @@
         }
       },
       "StorageOrigin": {
-        "type": "string",
         "enum": [
           "SYSTEM",
           "USER"
-        ]
+        ],
+        "type": "string"
       },
       "ProductOriginResponse": {
         "type": "object",
@@ -2176,14 +2179,14 @@
         }
       },
       "ProductPatchRequest": {
-        "type": "object",
         "required": [
           "productId"
         ],
+        "type": "object",
         "properties": {
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
           },
           "parentId": {
             "type": "string"
@@ -2278,14 +2281,14 @@
         }
       },
       "ProductResponse": {
-        "type": "object",
         "required": [
           "productId"
         ],
+        "type": "object",
         "properties": {
           "productId": {
-            "type": "string",
-            "pattern": "\\S"
+            "pattern": "\\S",
+            "type": "string"
           },
           "parentId": {
             "type": "string"
@@ -2384,8 +2387,8 @@
             "type": "string"
           },
           "version": {
-            "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "type": "integer"
           },
           "metadata": {
             "$ref": "#/components/schemas/ProductMetadata"
@@ -2404,11 +2407,9 @@
         }
       },
       "Instant": {
-        "type": "string",
         "format": "date-time",
-        "examples": [
-          "2022-03-10T16:15:50Z"
-        ]
+        "type": "string",
+        "example": "2022-03-10T16:15:50Z"
       },
       "UserInstitutionResource": {
         "title": "UserInstitutionResource",
@@ -3006,6 +3007,12 @@
       }
     },
     "securitySchemes": {
+      "SecurityScheme": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Authentication"
+      },
       "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",

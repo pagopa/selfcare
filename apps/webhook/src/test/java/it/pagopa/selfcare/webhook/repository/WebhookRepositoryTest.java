@@ -88,6 +88,51 @@ class WebhookRepositoryTest {
   }
 
   @Test
+  void findActiveWebhooksByProduct_shouldMatchAllProductsWildcard() {
+    // given
+    Webhook wildcardWebhook =
+        persistWebhook(
+            SELC,
+            "prod-pagopa",
+            List.of(Webhook.ALL_PRODUCTS),
+            Webhook.WebhookStatus.ACTIVE,
+            LocalDateTime.now());
+    Webhook explicitWebhook =
+        persistWebhook(SELC, PRODUCT_ID, Webhook.WebhookStatus.ACTIVE, LocalDateTime.now());
+    persistWebhook(
+        PNPG,
+        "prod-pagopa",
+        List.of(Webhook.ALL_PRODUCTS),
+        Webhook.WebhookStatus.ACTIVE,
+        LocalDateTime.now());
+    persistWebhook(
+        SELC,
+        "prod-pagopa",
+        List.of(Webhook.ALL_PRODUCTS),
+        Webhook.WebhookStatus.INACTIVE,
+        LocalDateTime.now());
+
+    // when
+    List<Webhook> webhooks =
+        webhookRepository
+            .findActiveWebhooksByProduct("prod-brand-new", SELC)
+            .await()
+            .indefinitely();
+    List<Webhook> knownProductWebhooks =
+        webhookRepository.findActiveWebhooksByProduct(PRODUCT_ID, SELC).await().indefinitely();
+
+    // then
+    assertEquals(1, webhooks.size());
+    assertEquals(wildcardWebhook.getId(), webhooks.get(0).getId());
+    assertEquals(2, knownProductWebhooks.size());
+    assertTrue(
+        knownProductWebhooks.stream()
+            .map(Webhook::getId)
+            .toList()
+            .containsAll(List.of(wildcardWebhook.getId(), explicitWebhook.getId())));
+  }
+
+  @Test
   void findWebhookByProduct_shouldReturnWebhookForTenant() {
     // given
     Webhook expected =
@@ -126,11 +171,20 @@ class WebhookRepositoryTest {
 
   private Webhook persistWebhook(
       String tenantId, String productId, Webhook.WebhookStatus status, LocalDateTime createdAt) {
+    return persistWebhook(tenantId, productId, List.of(productId), status, createdAt);
+  }
+
+  private Webhook persistWebhook(
+      String tenantId,
+      String productId,
+      List<String> products,
+      Webhook.WebhookStatus status,
+      LocalDateTime createdAt) {
     Webhook webhook = new Webhook();
     webhook.setId(new ObjectId());
     webhook.setTenantId(tenantId);
     webhook.setProductId(productId);
-    webhook.setProducts(List.of(productId));
+    webhook.setProducts(products);
     webhook.setStatus(status);
     webhook.setCreatedAt(createdAt);
     webhook.setUrl("https://example.com/webhook");

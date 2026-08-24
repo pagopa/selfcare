@@ -59,6 +59,11 @@ variable "web_storage_rg" {
   description = "Resource group name for the web storage"
 }
 
+variable "onboarding_functions_name" {
+  type        = string
+  description = "Name of the onboarding Function App whose host storage requires a managed identity"
+}
+
 variable "eventhub_namespace_name" {
   type        = string
   description = "Name of the Event Hub namespace"

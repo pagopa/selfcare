@@ -5,6 +5,12 @@ on:
   schedule:
     - cron: "00 08 * * *" # Run at 08:00 every day
 
+permissions:
+  contents: read
+  packages: read
+  id-token: write
+  actions: read
+  
 jobs:
   drift_detection_dev_ar:
     uses: ./.github/workflows/infra_drift_detection.yml
@@ -21,7 +27,7 @@ jobs:
       use_private_agent: true
       use_labels: true
       override_labels: "dev"
-  
+
   drift_detection_dev_pnpg:
     uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - DEV PNPG
@@ -53,7 +59,7 @@ jobs:
       use_private_agent: true
       use_labels: true
       override_labels: "uat"
-  
+
   drift_detection_uat_pnpg:
     uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - UAT PNPG
@@ -85,7 +91,7 @@ jobs:
       use_private_agent: true
       use_labels: true
       override_labels: "prod"
-  
+
   drift_detection_prod_pnpg:
     uses: ./.github/workflows/infra_drift_detection.yml
     name: Drift Detection - PROD PNPG

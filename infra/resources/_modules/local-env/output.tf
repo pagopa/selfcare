@@ -13,7 +13,11 @@ output "config" {
     external_domain                = local.external_domain
     apim_name                      = local.apim_name
     apim_rg                        = local.apim_rg
+    tenant_registry                = local.tenant_registry
+    tenant_ids                     = local.tenant_ids
+    tenant_hosts                   = local.tenant_hosts
     project                        = local.project
+    project_location               = local.project_location
     mongo_db                       = local.mongo_db
     container_app_environment_name = local.container_app_environment_name
     ca_resource_group_name         = local.ca_resource_group_name

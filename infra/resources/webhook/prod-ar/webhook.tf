@@ -14,9 +14,10 @@ module "local" {
   container_app_environment_name = "selc-p-cae-002"
   ca_resource_group_name         = "selc-p-container-app-002-rg"
   container_app_max_replicas     = 5
+  container_app_min_replicas     = 2
   container_app_desired_replicas = "3"
-  container_app_cpu              = 1.25
-  container_app_memory           = "2.5Gi"
+  container_app_cpu              = 1.5
+  container_app_memory           = "3.0Gi"
 }
 
 data "azurerm_user_assigned_identity" "cae_identity" {
@@ -67,7 +68,32 @@ module "collection_webhook_notifications" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["webhookId"], unique = false }
+    { keys = ["webhookId"], unique = false },
+    # Backs the outbox lag query (filter on status + busPublishedAt, sort by createdAt).
+    # Cosmos DB for MongoDB rejects a sort that is not fully covered by an index, so this
+    # compound index is required and not just an optimisation.
+    { keys = ["status", "busPublishedAt", "createdAt"], unique = false },
+    # Backs the claim query in findAndLockPendingNotifications (status + processing lock).
+    { keys = ["status", "processing", "processingUntil"], unique = false }
+  ]
+}
+
+module "collection_webhook_notification_attempts" {
+  source = "../../_modules/cosmosdb_collection"
+
+  name                        = "webhookNotificationAttempts"
+  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
+  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+  database_name               = "selcWebhook"
+  # Same retention as the parent notification, otherwise attempts would grow unbounded.
+  default_ttl_seconds = 2592000
+
+  lock_enable = true
+
+  indexes = [
+    { keys = ["_id"], unique = true },
+    # Backs findByNotificationId, which filters on notificationId and sorts by attemptNumber.
+    { keys = ["notificationId", "attemptNumber"], unique = false }
   ]
 }
 
@@ -79,7 +105,7 @@ module "storage_queue" {
   source = "../../_modules/azure_storage_queue"
 
   environment = {
-    prefix          = "selc"
+    prefix          = module.local.config.prefix
     env_short       = module.local.config.env_short
     location        = module.local.config.location
     location_short  = module.local.config.location_short
@@ -96,6 +122,7 @@ module "storage_queue" {
   log_analytics_workspace_name                = "${module.local.config.project}-law"
   log_analytics_workspace_resource_group_name = "${module.local.config.project}-monitor-rg"
   subscription_id                             = module.local.subscription_id
+  location                                    = module.local.config.location
   queue_name                                  = "webhook-notifications"
   tags                                        = module.local.config.tags
 }
@@ -111,7 +138,7 @@ locals {
   app_settings_webhook_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
-      value = "-javaagent:applicationinsights-agent.jar"
+      value = "-javaagent:applicationinsights-agent.jar -XX:MaxRAMPercentage=45.0 -XX:MaxDirectMemorySize=384m -XX:MaxMetaspaceSize=256m -XX:+ExitOnOutOfMemoryError"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -132,6 +159,10 @@ locals {
     {
       name  = "WEBHOOK_STORAGE_QUEUE_NAME"
       value = module.storage_queue.queue_name
+    },
+    {
+      name  = "WEBHOOK_STORAGE_QUEUE_POISON_QUEUE"
+      value = module.storage_queue.poison_queue_name
     },
     {
       name  = "AZURE_CLIENT_ID"
@@ -170,20 +201,64 @@ module "container_app_webhook_ms" {
 }
 
 ###############################################################################
+# Synthetic monitoring
+###############################################################################
+
+data "azurerm_container_app_environment" "webhook" {
+  name                = module.local.config.container_app_environment_name
+  resource_group_name = module.local.config.ca_resource_group_name
+}
+
+data "azurerm_monitor_action_group" "email" {
+  name                = "PagoPA"
+  resource_group_name = "${module.local.config.project}-monitor-rg"
+}
+
+data "azurerm_monitor_action_group" "slack" {
+  name                = "SlackPagoPA"
+  resource_group_name = "${module.local.config.project}-monitor-rg"
+}
+
+module "webhook_synthetic_monitoring" {
+  source = "../../_modules/application_insights_synthetic_monitoring"
+
+  prefix                              = "${module.local.config.project_location}-webhook"
+  location                            = module.local.config.location
+  resource_group_name                 = module.local.config.ca_resource_group_name
+  container_app_environment_id        = data.azurerm_container_app_environment.webhook.id
+  user_assigned_identity_id           = data.azurerm_user_assigned_identity.cae_identity.id
+  user_assigned_identity_client_id    = data.azurerm_user_assigned_identity.cae_identity.client_id
+  user_assigned_identity_principal_id = data.azurerm_user_assigned_identity.cae_identity.principal_id
+  storage_account_name                = "${replace(module.local.config.project_location, "-", "")}synthmon"
+  storage_account_resource_group_name = "${module.local.config.project}-synthetic-monitoring-rg"
+  image_tag                           = var.image_tag
+  application_insight_name            = "${module.local.config.project}-appinsights"
+  application_insight_rg_name         = "${module.local.config.project}-monitor-rg"
+  application_insights_action_group_ids = [
+    data.azurerm_monitor_action_group.email.id,
+    data.azurerm_monitor_action_group.slack.id
+  ]
+
+  diagnostics_url = "https://${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}/q/health/group/diagnostics"
+  tags            = module.local.config.tags
+}
+
+###############################################################################
 # APIM
 ###############################################################################
 
 module "apim_api" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-api-webhook"
-  display_name        = "Webhook API"
-  base_path           = "external/webhook"
-  private_dns_name    = "${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/webhook/src/main/docs/openapi.json"
-
+  source                 = "../../_modules/apim_api"
+  apim_name              = module.local.config.apim_name
+  apim_rg                = module.local.config.apim_rg
+  api_name               = "selc-${module.local.config.env_short}-api-webhook"
+  display_name           = "Webhook API"
+  base_path              = "external/webhook"
+  private_dns_name       = "${local.webhook_container_app_name}-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix        = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix    = module.local.config.api_dns_zone_prefix
+  openapi_path           = "../../../../apps/webhook/src/main/docs/openapi.json"
+  tenant_ids             = module.local.config.tenant_ids
+  tenant_hosts           = module.local.config.tenant_hosts
   api_operation_policies = []
 }

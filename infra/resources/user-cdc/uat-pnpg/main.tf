@@ -68,7 +68,15 @@ locals {
     {
       name  = "STORAGE_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
-    }
+    },
+    {
+      name  = "WEBHOOK_URL"
+      value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "USER_CDC_WEBHOOK_ENABLED"
+      value = false
+    },
   ]
 
   secrets_names_user_cdc = {

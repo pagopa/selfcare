@@ -41,6 +41,10 @@
       "name": "Product"
     },
     {
+      "name": "Webhook",
+      "description": "API for webhook configuration management"
+    },
+    {
       "name": "IAM"
     },
     {
@@ -1908,16 +1912,8 @@
         "summary": "Create a new webhook",
         "description": "Create a new webhook configuration",
         "operationId": "createWebhook",
-        "tags": [],
-        "parameters": [
-          {
-            "name": "requesterProductId",
-            "required": true,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
+        "tags": [
+          "Webhook"
         ],
         "requestBody": {
           "content": {
@@ -1947,20 +1943,14 @@
         "summary": "Update webhook",
         "description": "Update an existing webhook configuration",
         "operationId": "updateWebhookbyProductId",
-        "tags": [],
+        "tags": [
+          "Webhook"
+        ],
         "parameters": [
           {
             "name": "productId",
             "in": "path",
             "required": true,
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "requesterProductId",
-            "required": true,
-            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -1992,7 +1982,9 @@
         "summary": "Get webhook by ID",
         "description": "Retrieve a specific webhook configuration",
         "operationId": "getWebhookbyProductId",
-        "tags": [],
+        "tags": [
+          "Webhook"
+        ],
         "parameters": [
           {
             "name": "productId",
@@ -2003,12 +1995,13 @@
             }
           },
           {
-            "name": "requesterProductId",
-            "required": true,
+            "name": "tenantId",
             "in": "query",
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -5047,6 +5040,9 @@
             "items": {
               "$ref": "#/components/schemas/BackOfficeRole"
             }
+          },
+          "excludeRoleFromUserGroups": {
+            "type": "boolean"
           }
         }
       },
@@ -5615,10 +5611,20 @@
         "type": "object",
         "required": [
           "url",
+          "tenantId",
+          "productId",
           "httpMethod"
         ],
         "properties": {
           "url": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "tenantId": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "productId": {
             "type": "string",
             "pattern": "\\S"
           },
@@ -6151,6 +6157,9 @@
         "title": "ProductRoleInfo",
         "type": "object",
         "properties": {
+          "multiroleAllowed": {
+            "type": "boolean"
+          },
           "skipUserCreation": {
             "type": "boolean"
           },

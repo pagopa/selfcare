@@ -13,6 +13,7 @@ public class WebhookNotification {
   private ObjectId webhookId;
   private String tenantId;
   private String payload;
+  private String topic;
   private NotificationStatus status;
   private Integer attemptCount;
   private String lastError;

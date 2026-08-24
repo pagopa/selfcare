@@ -9,12 +9,12 @@ import it.pagopa.selfcare.onboarding.controller.response.OnboardingGet;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingGetResponse;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingResponse;
 import it.pagopa.selfcare.onboarding.entity.CheckManagerResponse;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.registry.RegistryManager;
 import it.pagopa.selfcare.onboarding.entity.registry.RegistryResourceFactory;
 import it.pagopa.selfcare.onboarding.exception.*;
 import it.pagopa.selfcare.onboarding.factory.OnboardingResponseFactory;
-import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingDocumentMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.FormItem;
@@ -64,7 +64,6 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Inject OnboardingMapper onboardingMapper;
     @Inject OnboardingResponseFactory onboardingResponseFactory;
-    @Inject InstitutionMapper institutionMapper;
     @Inject ProductService productAzureService;
     @Inject OnboardingDocumentMapper onboardingDocumentMapper;
     @Inject RegistryResourceFactory registryResourceFactory;
@@ -161,24 +160,26 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                     WorkflowType workflowType) {
         log.info("Starting onboardingUsers: origin={}, institutionType={}, workflowType={}",
                 request.getOrigin(), request.getInstitutionType(), workflowType);
-        return Uni.createFrom()
-                .item(() -> productAzureService.getProductExpirationDate(request.getProductId()))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .onItem().transformToUni(expirationDays ->
-                        queryHelper.getInstitutionFromUserRequest(request)
-                                .onItem().transform(response -> {
-                                    Onboarding onboarding = onboardingMapper.toEntity(request, userId, workflowType);
-                                    it.pagopa.selfcare.onboarding.entity.Institution institution = institutionMapper.toEntity(response);
-                                    institution.setInstitutionType(request.getInstitutionType());
-                                    onboarding.setInstitution(institution);
-                                    if(Objects.nonNull(request.getOrigin()) && Objects.nonNull(request.getOriginId())) {
-                                        onboarding.getInstitution().setOrigin(Origin.valueOf(request.getOrigin()));
-                                        onboarding.getInstitution().setOriginId(request.getOriginId());
-                                    }
-                                    onboarding.setExpiringDate(OffsetDateTime.now().plusDays(expirationDays).toLocalDateTime());
-                                    return onboarding;
-                                })
-                                .onItem().transformToUni(onboarding -> verifyExistingOnboarding(onboarding, request.getUsers())));
+        return computeExpiry(request.getProductId())
+                .onItem().transformToUni(expiringDate -> {
+                    Onboarding onboarding = onboardingMapper.toEntity(request, userId, workflowType);
+                    onboarding.setInstitution(buildInstitutionFromUserRequest(request));
+                    onboarding.setExpiringDate(expiringDate);
+                    return verifyExistingOnboarding(onboarding, request.getUsers());
+                });
+    }
+
+    private Institution buildInstitutionFromUserRequest(OnboardingUserRequest request) {
+        Institution institution =
+                new Institution();
+        institution.setTaxCode(request.getTaxCode());
+        institution.setSubunitCode(request.getSubunitCode());
+        institution.setInstitutionType(request.getInstitutionType());
+        if (Objects.nonNull(request.getOrigin())) {
+            institution.setOrigin(Origin.valueOf(request.getOrigin()));
+        }
+        institution.setOriginId(request.getOriginId());
+        return institution;
     }
 
     @Override
@@ -629,7 +630,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         onboarding.setCreatedAt(LocalDateTime.now());
         return getProductByOnboarding(onboarding)
                 .onItem().transformToUni(product ->
-                        persistenceHelper.addReferencedOnboardingId(onboarding)
+                        persistenceHelper.addReferencedOnboardingId(onboarding, true)
                                 .onItem().invoke(current -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
                                 .onItem().invoke(() -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
                                 .onItem().transformToUni(current ->

@@ -61,3 +61,21 @@ No modules.
 | <a name="output_vnet_resource_group_name"></a> [vnet\_resource\_group\_name](#output\_vnet\_resource\_group\_name) | n/a |
 | <a name="output_vnet_selc_name"></a> [vnet\_selc\_name](#output\_vnet\_selc\_name) | n/a |
 <!-- END_TF_DOCS -->
+
+## Tenant registry
+
+`config.tenant_registry` is the environment-specific source of truth for tenant
+URLs, allowed origins and authentication ownership. It has two
+APIM-compatible projections:
+
+- `config.tenant_ids` maps each tenant to its frontend origin and is used to
+  build the CORS allow-list.
+- `config.tenant_hosts` maps each tenant to the APIM gateway hostname derived
+  from its `api_uri`, and is used to resolve the tenant of an incoming request.
+  The hostname is bound to DNS and to the TLS certificate, so — unlike `Origin`
+  or `Referer` — it cannot be chosen by the caller. Any gateway hostname that
+  serves a tenant-enforced API must appear here, otherwise requests arriving on
+  it are rejected with 403.
+
+The registry contains routing metadata only. Tenant credentials and secrets
+must remain in Key Vault.

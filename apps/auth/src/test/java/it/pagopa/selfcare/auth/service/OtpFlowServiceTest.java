@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
@@ -11,6 +12,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
@@ -29,7 +31,9 @@ import java.util.*;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.openapi.quarkus.one_mail_json.model.EmailAddress;
 import org.openapi.quarkus.one_mail_json.model.EmailStatus;
@@ -42,8 +46,14 @@ public class OtpFlowServiceTest {
   @InjectMock SessionService sessionService;
   @InjectMock UserService userService;
   @InjectMock OtpNotificationService otpNotificationService;
+  @InjectMock AuthTenantContext tenantContext;
 
   @Inject OtpFlowService otpFlowService;
+
+  @BeforeEach
+  void setUpTenant() {
+    when(tenantContext.getTenantId()).thenReturn("AR");
+  }
 
   private UserClaims getUserClaims() {
     return UserClaims.builder()
@@ -51,6 +61,7 @@ public class OtpFlowServiceTest {
         .name("name")
         .familyName("family")
         .fiscalCode("fiscalCode")
+        .tenantId("AR")
         .build();
   }
 
@@ -84,6 +95,7 @@ public class OtpFlowServiceTest {
     Assertions.assertEquals(0, created.getAttempts());
     Assertions.assertEquals(OtpStatus.PENDING, created.getStatus());
     Assertions.assertEquals(input.getUid(), created.getUserId());
+    Assertions.assertEquals("AR", created.getTenantId());
   }
 
   @Test
@@ -164,6 +176,7 @@ public class OtpFlowServiceTest {
     String otp = "test-otp";
     OtpFlow otpFlow = new OtpFlow();
     otpFlow.setUuid(otpUid);
+    otpFlow.setUserId("user-id");
     otpFlow.setOtp(DigestUtils.md5Hex(otp));
     otpFlow.setExpiresAt(OffsetDateTime.now().plusMinutes(5));
     otpFlow.setStatus(OtpStatus.PENDING);
@@ -190,6 +203,9 @@ public class OtpFlowServiceTest {
             .getItem();
 
     Assertions.assertEquals("session-token", response.getSessionToken());
+    ArgumentCaptor<UserClaims> userClaimsCaptor = ArgumentCaptor.forClass(UserClaims.class);
+    verify(sessionService).generateSessionToken(userClaimsCaptor.capture());
+    Assertions.assertEquals("AR", userClaimsCaptor.getValue().getTenantId());
   }
 
   @Test
