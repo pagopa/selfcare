@@ -14,7 +14,10 @@
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selc-starter-parent</artifactId>
     <version>0.3.2-SNAPSHOT</version>
-    <!-- <relativePath/> lookup parent from repository -->
+    <!-- lookup parent from repository instead of the default ../pom.xml,
+         which would otherwise incorrectly resolve to libs/pom.xml now that
+         this module is nested under libs/ in the monorepo -->
+    <relativePath/>
   </parent>
 
   <artifactId>selc-commons</artifactId>
