@@ -206,5 +206,5 @@ Feature: Otp
      | requiresOtpFlow    | true                      |
      | maskedEmail        | r*.b****a@regionelazio.it |
     And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING"
+    And An OTP flow should be created with status "PENDING" and mailRequestId "f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
     And The OTP flow with uuid "239b58f1-9865-4ef5-b45f-b7f574a0c84c" has been updated to status "REJECTED"
