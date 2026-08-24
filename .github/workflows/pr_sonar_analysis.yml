@@ -170,7 +170,13 @@ jobs:
           fi
 
           if [[ "${{ steps.scope.outputs.mode }}" == "partial" ]]; then
-            mvn -T 1C -B -ntp --projects "${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
+            # The sonar-maven-plugin requires the reactor session to contain the execution-root
+            # project (session.getTopLevelProject()), otherwise it fails with "Maven session does
+            # not declare a top level project". --also-make only pulls in <dependency> upstreams,
+            # not aggregator ancestors, so modules whose <parent> is resolved from the repository
+            # instead of from an in-reactor pom would leave the root project out of the reactor.
+            # Explicitly include the repo root to always keep a valid Maven module tree for Sonar.
+            mvn -T 1C -B -ntp --projects ".,${{ steps.scope.outputs.projects }}" --also-make "${SONAR_ARGS[@]}"
           else
             mvn -T 1C -B -ntp "${SONAR_ARGS[@]}"
           fi

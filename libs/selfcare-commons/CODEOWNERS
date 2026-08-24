@@ -1,0 +1,4 @@
+# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
+* @pagopa/selfcare-contributors @OraldoDoci @giampiero-ferrara @giulia-tremolada @GabrieleMaiocchiFilippo
+
+/.github/workflows/env @pagopa/selfcare-contributors @OraldoDoci @giampiero-ferrara @giulia-tremolada @GabrieleMaiocchiFilippo

@@ -1,0 +1,170 @@
+name: Deploy CDN Vite
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        description: The environment to use
+        type: string
+      file_environment:
+        type: string
+        required: false
+        description: File presents on selfcare-common/github/workflows/env where retrieve environment variables
+      storage_account_name:
+        required: true
+        description: Storage account name
+        type: string
+      profile_name:
+        required: true
+        description: CDN profile name
+        type: string
+      endpoint_name:
+        required: true
+        description: CDN endpoint name
+        type: string
+      resource_group_name:
+        required: true
+        description: Resource group name
+        type: string
+      blob_container_name:
+        required: true
+        description: Blob container name
+        type: string
+      base_path:
+        required: true
+        description: Base path for cdn files
+        type: string
+
+env:
+  BUNDLE_NAME: bundle
+  ENV_FILE: ${{ inputs.environment }}.env
+  ENV_SHORT: ${{ inputs.environment == 'dev' && 'd' || inputs.environment == 'uat' && 'u' || 'p' }}
+  VITE_ENABLE_ASSISTANCE: "true"
+  VITE_PAGOPA_HELP_EMAIL: "areariservata@assistenza.pagopa.it"
+  VITE_OT_SRC: https://privacyportalde-cdn.onetrust.com/privacy-notice-scripts/otnotice-1.0.min.js
+  VITE_OT_TERMS_CONDITION_RESOURCE: https://privacyportalde-cdn.onetrust.com/77f17844-04c3-4969-a11d-462ee77acbe1/privacy-notices/6f92cced-3bd1-4859-9295-baecfc74c64a.json
+  VITE_OT_TOKEN: eyJjYWxsYmFja1VybCI6Imh0dHBzOi8vcHJpdmFjeXBvcnRhbC1kZS5vbmV0cnVzdC5jb20vcmVxdWVzdC92MS9wcml2YWN5Tm90aWNlcy9zdGF0cy92aWV3cyJ9
+  VITE_OT_TOS_RESOURCE: https://privacyportalde-cdn.onetrust.com/77f17844-04c3-4969-a11d-462ee77acbe1/privacy-notices/26403d01-dc46-4c89-be70-4894839cf639.json
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check-out code
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version-file: ".node-version"
+          cache: "yarn"
+          cache-dependency-path: "yarn.lock"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+        working-directory: .
+
+      - name: Build files
+        env:
+          VITE_ENV: "${{ inputs.environment == 'prod' && 'PROD' || inputs.environment == 'uat' && 'UAT' || 'DEV' }}"
+          VITE_ENABLE_ASSISTANCE: "${{ env.VITE_ENABLE_ASSISTANCE }}"
+          VITE_PAGOPA_HELP_EMAIL: "${{ env.VITE_PAGOPA_HELP_EMAIL }}"
+          VITE_OT_SRC: "${{ env.VITE_OT_SRC }}"
+          VITE_OT_TOKEN: "${{ env.VITE_OT_TOKEN }}"
+          VITE_OT_TERMS_AND_CONDITION_RESOURCE: "${{ env.VITE_OT_TERMS_CONDITION_RESOURCE }}"
+          VITE_OT_TOS_RESOURCE: "${{ env.VITE_OT_TOS_RESOURCE }}"
+          FILE_ENVIRONMENT: "${{ inputs.file_environment }}"
+        run: |
+          : "${FILE_ENVIRONMENT:?FILE_ENVIRONMENT is empty or not set}"
+          ENV_ENDPOINT="https://raw.githubusercontent.com/pagopa/selfcare-commons/refs/heads/main/.github/workflows/env/${FILE_ENVIRONMENT}"
+
+          echo "ENV_ENDPOINT = $ENV_ENDPOINT"
+
+          set -a
+          source <(curl -fsSL "$ENV_ENDPOINT")
+          set +a
+
+          # Build
+          yarn build
+        shell: bash
+
+      - name: Build info
+        env:
+          EXECUTION_ID: "${{ github.run_number }} - ${{ github.workflow }}(${{ github.run_id }})"
+          WORKSPACE: "${{ github.workspace }}"
+        run: printf "$EXECUTION_ID\n$(git name-rev --name-only FETCH_HEAD) $(git rev-parse HEAD)" > "${WORKSPACE}/dist/build.info"
+        shell: bash
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: "${{ github.workspace }}/dist"
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Success
+        id: success
+        run: |
+          echo "success=true" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs:
+      - build
+    if: success()
+    runs-on: "ubuntu-22.04"
+    environment: "${{ inputs.environment }}-cd"
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+      - name: Download Artifact
+        uses: actions/download-artifact@87c55149d96e628cc2ef7e6fc2aab372015aec85 # v4.1.3
+        with:
+          name: ${{ env.BUNDLE_NAME }}
+          path: ./${{ env.BUNDLE_NAME }}
+
+      - name: Azure Login
+        uses: azure/login@a65d910e8af852a8061c627c456678983e180302 # v2
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+        with:
+          client-id: ${{ env.ARM_CLIENT_ID }}
+          tenant-id: ${{ env.ARM_TENANT_ID }}
+          subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+
+      - name: Upload bundle to Blob
+        run: |
+          az storage blob sync \
+            -c "${BLOB_CONTAINER_NAME}" \
+            --account-name "${STORAGE_ACCOUNT_NAME}" \
+            -s "./${BUNDLE_NAME}" \
+            --destination "${BASE_PATH}/"
+        env:
+          BLOB_CONTAINER_NAME: ${{ inputs.blob_container_name }}
+          STORAGE_ACCOUNT_NAME: "selc${{ env.ENV_SHORT }}${{ inputs.storage_account_name }}"
+          BUNDLE_NAME: ${{ env.BUNDLE_NAME }}
+          BASE_PATH: ${{ inputs.base_path }}
+
+      - name: Purge CDN
+        run: |
+          az cdn endpoint purge -g "${RESOURCE_GROUP}" -n "${ENDPOINT_NAME}" --profile-name "${CDN_PROFILE}" --content-paths "/${BASE_PATH}" "/${BASE_PATH}/*" "/"
+        env:
+          CDN_PROFILE: selc-${{ env.ENV_SHORT }}-${{ inputs.profile_name}}
+          ENDPOINT_NAME: selc-${{ env.ENV_SHORT }}-${{ inputs.endpoint_name }}
+          RESOURCE_GROUP: selc-${{ env.ENV_SHORT }}-${{ inputs.resource_group_name }}
+          BASE_PATH: ${{ inputs.base_path }}
