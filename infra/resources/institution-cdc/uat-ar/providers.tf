@@ -12,7 +12,7 @@ terraform {
     resource_group_name  = "io-infra-rg"
     storage_account_name = "selcustinfraterraform"
     container_name       = "azurermstate"
-    key                  = "selc.infra.resources.delegation-cdc.uat-ar.tfstate"
+    key                  = "selc.infra.resources.institution-cdc.uat-ar.tfstate"
     use_azuread_auth     = true
   }
 
