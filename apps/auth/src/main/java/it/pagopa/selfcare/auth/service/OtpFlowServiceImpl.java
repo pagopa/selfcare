@@ -126,7 +126,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             isRequired ->
                 isRequired
                     ? createAndSendOtp(
-                            userClaims.getUid(), institutionalEmail, userClaims.getTenantId())
+                            userClaims.getUid(), institutionalEmail, userClaims.getName(), userClaims.getTenantId())
                         .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                     : checkPendingOtpFlow(otpFlow, institutionalEmail));
   }
@@ -147,7 +147,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             isRequired ->
                 isRequired
                     ? createAndSendOtp(
-                            userClaims.getUid(), institutionalEmail, userClaims.getTenantId())
+                            userClaims.getUid(), institutionalEmail, userClaims.getName(), userClaims.getTenantId())
                         .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                     : Uni.createFrom().item(Optional.empty()));
   }

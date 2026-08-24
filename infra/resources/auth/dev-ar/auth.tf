@@ -217,7 +217,7 @@ locals {
     "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
     "SAML_IDP_METADATA"                     = "saml-idp-metadata"
     "SAML_IDP_CERT"                         = "saml-idp-cert"
-    "ONE-MAIL-API-KEY"                      = "onemail-api-key"
+    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
   }
 }
 module "container_app_auth_ms" {
