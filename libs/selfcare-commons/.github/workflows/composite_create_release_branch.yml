@@ -1,0 +1,55 @@
+name: 'Create Release Branch'
+description: 'Create a new release branch using semver convention'
+
+inputs:
+  version_bump:
+    required: true
+    type: string
+outputs:
+  branch_name:
+    description: 'Name of the branch created'
+    value: ${{ steps.set_branch.outputs.NEW_BRANCH_NAME }}
+
+runs:
+  using: "composite"
+
+  steps:
+
+    - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      name: Checkout
+      with:
+        ref: main
+        fetch-depth: 0
+
+    - name: Install Node.js
+      uses: actions/setup-node@b39b52d1213e96004bfcb1c61a8a6fa8ab84f3e8 # v4.0.1
+
+    - name: Install semver
+      run: npm install -g semver
+
+    - name: Get Latest Release Version
+      id: get-version
+      run: |
+        RELEASE_BRANCH=$(git branch -r | grep -Eo 'releases/[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n 1)
+        echo "RELEASE_BRANCH=${RELEASE_BRANCH}" >> $GITHUB_ENV
+
+    - name: Set Branch Name
+      id: set_branch
+      run: |
+
+        if [ -z "${RELEASE_BRANCH}" ]; then
+          NEW_BRANCH_NAME="releases/0.0.1"
+        else
+          OLD_VERSION=$(echo "${RELEASE_BRANCH}" | sed 's/releases\///')
+
+          NEW_VERSION=$(semver --increment ${{ inputs.version-bump }} "${OLD_VERSION}")
+          echo "Bumping $OLD_VERSION to $NEW_VERSION"
+
+          NEW_BRANCH_NAME="releases/${NEW_VERSION}"
+        fi
+
+        echo "NEW_BRANCH_NAME=${NEW_BRANCH_NAME}" >> $GITHUB_ENV
+
+    - name: Create Branch
+      run: |
+        git checkout -b $NEW_BRANCH_NAME
