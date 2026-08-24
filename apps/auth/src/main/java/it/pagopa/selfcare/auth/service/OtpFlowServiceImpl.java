@@ -126,7 +126,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             isRequired ->
                 isRequired
                     ? createAndSendOtp(
-                            userClaims.getUid(), institutionalEmail, userClaims.getTenantId())
+                            userClaims.getUid(), institutionalEmail, userClaims.getName(), userClaims.getTenantId())
                         .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                     : checkPendingOtpFlow(otpFlow, institutionalEmail));
   }
@@ -147,7 +147,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             isRequired ->
                 isRequired
                     ? createAndSendOtp(
-                            userClaims.getUid(), institutionalEmail, userClaims.getTenantId())
+                            userClaims.getUid(), institutionalEmail, userClaims.getName(), userClaims.getTenantId())
                         .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
                     : Uni.createFrom().item(Optional.empty()));
   }
@@ -160,7 +160,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
    * @param email the user's institutional email
    * @return a new Otp Flow
    */
-  private Uni<OtpFlow> createAndSendOtp(String userId, String email, String tenantId) {
+  private Uni<OtpFlow> createAndSendOtp(String userId, String email, String name, String tenantId) {
     return Uni.createFrom()
         .item(OtpUtils::generateOTP)
         .chain(
@@ -168,11 +168,32 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                 createNewOtpFlow(userId, otp, tenantId)
                     .onFailure(WebApplicationException.class)
                     .transform(GeneralUtils::extractExceptionFromWebAppException)
-                    .chain(
-                        otpFlow ->
-                            otpNotificationService
-                                .sendOtpEmail(userId, email, otp)
-                                .replaceWith(otpFlow)));
+                  .chain(
+                    otpFlow ->
+                      otpNotificationService
+                        .sendOtpEmail(userId, email, otp, name)
+                        .chain(requestId -> {
+                          if (requestId == null) {
+                            return Uni.createFrom().item(otpFlow);
+                          }
+                          return updateOtpFlowRequestId(
+                            otpFlow.getUuid(), requestId)
+                            .onFailure()
+                            .recoverWithItem(0L)
+                            .map(
+                              ignored -> {
+                                otpFlow.setMailRequestId(requestId);
+                                return otpFlow;
+                              });
+                        })));
+  }
+
+  private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId) {
+    return OtpFlow.update(
+        "{ '$set': { 'mailRequestId': ?1, 'updatedAt': ?2 } }",
+        requestId,
+        Date.from(OffsetDateTime.now().toInstant()))
+      .where("uuid", uuid);
   }
 
   @Override
@@ -363,6 +384,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                         createAndSendOtp(
                                                 userClaims.getUid(),
                                                 institutionalEmail,
+                                          userClaims.getName(),
                                                 tenantId)
                                             .chain(
                                                 createdOtpFlow ->
