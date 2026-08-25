@@ -21,9 +21,9 @@
         }
       },
       "OffsetDateTime" : {
-        "type" : "string",
         "format" : "date-time",
-        "examples" : [ "2022-03-10T12:15:50-04:00" ]
+        "type" : "string",
+        "example" : "2022-03-10T12:15:50-04:00"
       },
       "OidcExchangeOtpResponse" : {
         "type" : "object",
@@ -112,8 +112,8 @@
             "type" : "string"
           },
           "attempts" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "history" : {
             "type" : "array",

@@ -6,6 +6,17 @@ tags:
 - name: SAML
 components:
   schemas:
+    MailStatusHistory:
+      type: object
+      properties:
+        status:
+          type: string
+        changedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+    OffsetDateTime:
+      format: date-time
+      type: string
+      example: 2022-03-10T12:15:50-04:00
     OidcExchangeOtpResponse:
       type: object
       properties:
@@ -70,8 +81,8 @@ components:
         recipient:
           type: string
         attempts:
-          type: integer
           format: int32
+          type: integer
         history:
           type: array
           items:
