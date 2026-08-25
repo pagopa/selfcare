@@ -41,4 +41,13 @@ class TenantRegistryTest {
     assertEquals("id", credentials.clientId());
     assertEquals("secret", credentials.clientSecret());
   }
+
+  @Test
+  void enabledAuthenticationTenantsContainOnlyEnabledTenants() {
+    assertEquals(
+        java.util.List.of("AR"),
+        tenantRegistry.enabledAuthenticationTenants().stream()
+            .map(TenantRegistry.Tenant::id)
+            .toList());
+  }
 }
