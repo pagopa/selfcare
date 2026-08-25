@@ -30,7 +30,7 @@ public class UserPermissionsRepository {
 
   /** Aggregation query to extract a user's permissions for a specific product (optional). */
   public Uni<UserPermissions> getUserPermissions(
-      String uid, String permission, List<String> products) {
+      String uid, String permission, List<String> products, String tenantId) {
     List<Bson> pipeline = new ArrayList<>();
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
@@ -41,6 +41,14 @@ public class UserPermissionsRepository {
             : List.of(ALL);
 
     pipeline.add(Aggregates.match(Filters.in("productRoles.productId", productIds)));
+    Optional.ofNullable(tenantId)
+        .ifPresent(
+            tid ->
+                pipeline.add(
+                    Aggregates.match(
+                        Filters.or(
+                            Filters.eq("productRoles.tenantId", tid),
+                            Filters.exists("productRoles.tenantId", false)))));
 
     List<Bson> pipelinePost =
         Arrays.asList(
@@ -52,13 +60,15 @@ public class UserPermissionsRepository {
             Aggregates.group(
                 new Document("uid", "$_id")
                     .append("email", "$email")
-                    .append("productId", "$productRoles.productId"),
+                    .append("productId", "$productRoles.productId")
+                    .append("tenantId", "$productRoles.tenantId"),
                 Accumulators.addToSet("permissions", "$roleDetails.permissions")),
             Aggregates.project(
                 Projections.fields(
                     Projections.computed("email", "$_id.email"),
                     Projections.computed("uid", "$_id.uid"),
                     Projections.computed("productId", "$_id.productId"),
+                    Projections.computed("tenantId", "$_id.tenantId"),
                     Projections.computed("permissions", "$permissions"),
                     // Projections.computed("permissions",
                     //   new Document("$reduce", new Document()
@@ -84,24 +94,36 @@ public class UserPermissionsRepository {
 
   /** Aggregation query to extract a list of product, role and permissions for a specific user. */
   public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(
-      String uid, String productId) {
+      String uid, String productId, String tenantId) {
     List<Bson> pipeline = new ArrayList<>();
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
-            .ifPresent(pid -> {
-              pipeline.add(Aggregates.match(
+        .ifPresent(
+            pid -> {
+              pipeline.add(
+                  Aggregates.match(
                       Filters.or(
-                              Filters.eq("productRoles.productId", pid),
-                              Filters.eq("productRoles.productId", "ALL"))));
+                          Filters.eq("productRoles.productId", pid),
+                          Filters.eq("productRoles.productId", "ALL"))));
 
               // priority when productId corresponds
               pipeline.add(
-                      Aggregates.addFields(
-                              new Field<>("isAll", new Document("$eq", Arrays.asList("$productRoles.productId", "ALL")))));
+                  Aggregates.addFields(
+                      new Field<>(
+                          "isAll",
+                          new Document("$eq", Arrays.asList("$productRoles.productId", "ALL")))));
               pipeline.add(Aggregates.sort(Sorts.ascending("isAll")));
               pipeline.add(Aggregates.limit(1));
             });
+    Optional.ofNullable(tenantId)
+        .ifPresent(
+            tid ->
+                pipeline.add(
+                    Aggregates.match(
+                        Filters.or(
+                            Filters.eq("productRoles.tenantId", tid),
+                            Filters.exists("productRoles.tenantId", false)))));
 
     List<Bson> pipelinePost =
         Arrays.asList(
@@ -113,6 +135,7 @@ public class UserPermissionsRepository {
                     Projections.computed("role", "$roleDetails._id"),
                     Projections.computed("group", "$roleDetails.group"),
                     Projections.computed("productId", "$productRoles.productId"),
+                    Projections.computed("tenantId", "$productRoles.tenantId"),
                     Projections.computed("permissions", "$roleDetails.permissions"),
                     Projections.excludeId())));
 
@@ -130,13 +153,21 @@ public class UserPermissionsRepository {
   }
 
   /** Aggregation query to extract a list of product, role for a specific user. */
-  public Uni<List<ProductRole>> getUserProductRoles(String uid, String productId) {
+  public Uni<List<ProductRole>> getUserProductRoles(String uid, String productId, String tenantId) {
     List<Bson> pipeline = new ArrayList<>();
     pipeline.add(Aggregates.match(Filters.eq("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
         .ifPresent(
             pid -> pipeline.add(Aggregates.match(Filters.eq("productRoles.productId", pid))));
+    Optional.ofNullable(tenantId)
+        .ifPresent(
+            tid ->
+                pipeline.add(
+                    Aggregates.match(
+                        Filters.or(
+                            Filters.eq("productRoles.tenantId", tid),
+                            Filters.exists("productRoles.tenantId", false)))));
 
     List<Bson> pipelinePost =
         Arrays.asList(
@@ -153,14 +184,16 @@ public class UserPermissionsRepository {
                         "group",
                         new Document("$ifNull", Arrays.asList("$roleDetails.group", null))),
                     Projections.computed("productId", "$productRoles.productId"),
+                    Projections.computed("tenantId", "$productRoles.tenantId"),
                     Projections.excludeId())),
             Aggregates.group(
-                "$productId",
+                new Document("productId", "$productId").append("tenantId", "$tenantId"),
                 Accumulators.addToSet(
                     "roles", new Document("role", "$role").append("group", "$group"))),
             Aggregates.project(
                 Projections.fields(
-                    Projections.computed("productId", "$_id"),
+                    Projections.computed("productId", "$_id.productId"),
+                    Projections.computed("tenantId", "$_id.tenantId"),
                     Projections.include("roles"),
                     Projections.excludeId())));
 
@@ -190,7 +223,11 @@ public class UserPermissionsRepository {
                             .group(r.getString("group"))
                             .build())
                 .toList();
-    return ProductRole.builder().productId(doc.getString("productId")).roles(roles).build();
+    return ProductRole.builder()
+        .productId(doc.getString("productId"))
+        .tenantId(doc.getString("tenantId"))
+        .roles(roles)
+        .build();
   }
 
   private ReactiveMongoCollection<Document> getCollection() {
@@ -206,6 +243,7 @@ public class UserPermissionsRepository {
         .email(doc.getString("email"))
         .uid(doc.getString("uid"))
         .productId(doc.getString("productId"))
+        .tenantId(doc.getString("tenantId"))
         .permissions((List<String>) doc.get("permissions"))
         .build();
   }

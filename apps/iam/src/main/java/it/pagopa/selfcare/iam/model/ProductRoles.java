@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ProductRoles {
   String productId;
+  String tenantId;
   List<String> roles;
 }

@@ -11,6 +11,7 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import it.pagopa.selfcare.auth.service.SAMLService;
@@ -19,6 +20,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +43,13 @@ class SamlCallbackControllerTest {
   @BeforeEach
   void setUp() {
     RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+    RestAssured.requestSpecification =
+        new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
+  }
+
+  @AfterEach
+  void resetRequestSpecification() {
+    RestAssured.requestSpecification = null;
   }
 
   /**

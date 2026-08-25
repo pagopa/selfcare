@@ -16,6 +16,7 @@ public class WebhookResponse {
   private String httpMethod;
   private Map<String, String> headers;
   private List<String> products;
+  private List<String> topics;
   private String status;
   private RetryPolicyResponse retryPolicy;
   private LocalDateTime createdAt;

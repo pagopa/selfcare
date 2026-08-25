@@ -5,6 +5,7 @@ import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import it.pagopa.selfcare.iam.cucumber.config.IntegrationProfile;
 import java.io.File;
 import java.io.IOException;
@@ -46,7 +47,11 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
     // By default, quarkus starts the ms on port 8081
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
+    RestAssured.requestSpecification =
+        new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
+
     tokenTest = ConfigProvider.getConfig().getValue(JWT_BEARER_TOKEN_ENV, String.class);
+
     log.info("Starting test containers...");
     composeContainer =
         new ComposeContainer(new File("docker-compose.yml"))
@@ -57,7 +62,7 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
             .waitingFor("userms", Wait.forLogMessage(".*Listening on:.*\\n", 1))
             .waitingFor(
                 "institutionms",
-                Wait.forLogMessage(".*Started SelfCareCoreApplication.*\\n", 1)
+                Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1)
                     .withStartupTimeout(Duration.ofMinutes(5)))
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
             .withStartupTimeout(Duration.ofMinutes(5));

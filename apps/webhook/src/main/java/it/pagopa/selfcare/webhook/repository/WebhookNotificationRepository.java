@@ -109,8 +109,31 @@ public class WebhookNotificationRepository
             query, update, new FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER));
   }
 
-  public Uni<Void> markAsPublished(ObjectId notificationId) {
+  /**
+   * Marks a notification as permanently failed without going through the delivery pipeline. Used
+   * when its queue message is moved to the poison queue: the message is gone, so nothing would
+   * ever move the notification out of PENDING/RETRY again and it would stay pending forever. The
+   * status filter keeps the update idempotent and prevents overwriting an already terminal state.
+   */
+  public Uni<Void> markAsPermanentlyFailed(ObjectId notificationId, String errorMessage) {
     return mongoCollection()
+        .updateOne(
+            Filters.and(
+                Filters.eq("_id", notificationId),
+                Filters.nin(
+                    "status",
+                    WebhookNotification.NotificationStatus.DELIVERED.name(),
+                    WebhookNotification.NotificationStatus.FAILED.name())),
+            Updates.combine(
+                Updates.set("status", WebhookNotification.NotificationStatus.FAILED.name()),
+                Updates.set("lastError", errorMessage),
+                Updates.set("completedAt", LocalDateTime.now()),
+                Updates.set("processing", false),
+                Updates.unset("processingUntil")))
+        .replaceWithVoid();
+  }
+
+  public Uni<Void> markAsPublished(ObjectId notificationId) {    return mongoCollection()
         .updateOne(
             Filters.eq("_id", notificationId),
             Updates.combine(
@@ -161,7 +184,39 @@ public class WebhookNotificationRepository
         .asList();
   }
 
+  /**
+   * Oldest notification still waiting to be published to the Storage Queue (status PENDING,
+   * never published). Used by the outbox readiness check to detect a growing publish lag.
+   */
+  public Uni<WebhookNotification> findOldestUnpublishedNotification() {
+    Document query =
+        new Document("status", WebhookNotification.NotificationStatus.PENDING.name())
+            .append("busPublishedAt", null);
+    Document sort = new Document("createdAt", 1);
+    return find(query, sort).firstResult();
+  }
+
   public Uni<List<WebhookNotification>> findByWebhookId(String webhookId) {
     return list("webhookId", new ObjectId(webhookId));
+  }
+
+  /**
+   * Find notifications matching the given status, optionally restricted to a specific webhook.
+   * Used to bulk-resend notifications (e.g. all FAILED notifications for a given webhook).
+   */
+  public Uni<List<WebhookNotification>> findByStatus(
+      WebhookNotification.NotificationStatus status, ObjectId webhookId) {
+    Document query = new Document("status", status.name());
+    if (webhookId != null) {
+      query.append("webhookId", webhookId);
+    }
+    return find(query).list();
+  }
+
+  /** Find notifications created within the given (inclusive) date-time range. */
+  public Uni<List<WebhookNotification>> findByCreatedAtRange(
+      LocalDateTime from, LocalDateTime to) {
+    Document query = new Document("createdAt", new Document("$gte", from).append("$lte", to));
+    return find(query).list();
   }
 }

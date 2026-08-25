@@ -13,3 +13,8 @@ data "azurerm_subnet" "private_endpoints" {
   virtual_network_name = var.virtual_network_name
   resource_group_name  = var.virtual_network_resource_group_name
 }
+
+data "azurerm_virtual_network" "this" {
+  name                = var.virtual_network_name
+  resource_group_name = var.virtual_network_resource_group_name
+}

@@ -1,11 +1,9 @@
 package it.pagopa.selfcare.mscore.web.model.mapper;
 
 import it.pagopa.selfcare.mscore.model.delegation.Delegation;
+import it.pagopa.selfcare.mscore.model.delegation.DelegationCount;
 import it.pagopa.selfcare.mscore.model.delegation.DelegationInstitution;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationInstitutionResponse;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationRequest;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationRequestFromTaxcode;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationResponse;
+import it.pagopa.selfcare.mscore.web.model.delegation.*;
 import org.mapstruct.Context;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
@@ -36,5 +34,8 @@ public interface DelegationMapper {
 
     @Mapping(source = "institution", target = "institution", qualifiedByName = "toInstitutionResponseWithType")
     DelegationInstitutionResponse toDelegationInstitutionResponse(DelegationInstitution delegationInstitution, @Context String productId);
+
+    DelegationCountResult toDelegationInstitutionResponse(DelegationCount delegationCount);
+
 
 }

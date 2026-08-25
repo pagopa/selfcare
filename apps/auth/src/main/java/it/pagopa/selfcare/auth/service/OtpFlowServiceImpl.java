@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
 import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
@@ -22,33 +23,33 @@ import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.codec.digest.DigestUtils;
-import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.bson.Document;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Slf4j
 @ApplicationScoped
 @RequiredArgsConstructor
 public class OtpFlowServiceImpl implements OtpFlowService {
 
+  private static final String LEGACY_TENANT_ID = "AR";
+
   private final UserService userService;
   private final OtpNotificationService otpNotificationService;
   private final SessionService sessionService;
+  private final AuthTenantContext tenantContext;
 
-  @Inject
-  OtpFeatureFlag otpFeatureFlag;
+  @Inject OtpFeatureFlag otpFeatureFlag;
 
-  @Inject
-  OtpDailyLimit otpLimitConfig;
+  @Inject OtpDailyLimit otpLimitConfig;
 
   @ConfigProperty(name = "auth-ms.retry.min-backoff")
   Integer retryMinBackOff;
@@ -87,79 +88,70 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     Optional<String> maybeForcedEmail = Optional.ofNullable(forcedEmail);
 
     return userService
-            .getUserInfoEmail(userClaims.getUid())
-            .onFailure(GeneralUtils::checkNotFoundException)
-            .recoverWithNull()
-            .map(Optional::ofNullable)
-            .onFailure()
-            .transform(
-                    failure ->
-                            new InternalException(
-                                    "Cannot get User Info Email on External Internal APIs:" + failure))
-            .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
-            .chain(
-                    maybeUserEmail ->
-                            maybeUserEmail
-                                    .map(email -> handleUserOtpFlow(userClaims, email))
-                                    .orElseGet(() -> Uni.createFrom().item(Optional.empty())));
+        .getUserInfoEmail(userClaims.getUid())
+        .onFailure(GeneralUtils::checkNotFoundException)
+        .recoverWithNull()
+        .map(Optional::ofNullable)
+        .onFailure()
+        .transform(
+            failure ->
+                new InternalException(
+                    "Cannot get User Info Email on External Internal APIs:" + failure))
+        .map(optionalEmail -> optionalEmail.map(maybeForcedEmail::orElse))
+        .chain(
+            maybeUserEmail ->
+                maybeUserEmail
+                    .map(email -> handleUserOtpFlow(userClaims, email))
+                    .orElseGet(() -> Uni.createFrom().item(Optional.empty())));
   }
 
-  private Uni<Optional<OtpInfo>> handleUserOtpFlow(UserClaims userClaims, String institutionalEmail) {
+  private Uni<Optional<OtpInfo>> handleUserOtpFlow(
+      UserClaims userClaims, String institutionalEmail) {
 
-    return findLastOtpFlowByUserId(userClaims.getUid())
-            .map(Optional::ofNullable)
-            .onFailure()
-            .transform(
-                    failure ->
-                            new InternalException("Cannot get last OTP Flow:" + failure))
-            .chain(
-                    maybeLastOtpFlow ->
-                            maybeLastOtpFlow
-                                    .map(flow -> handleExistingOtpFlow(flow, userClaims, institutionalEmail))
-                                    .orElseGet(() -> handleMissingOtpFlow(userClaims, institutionalEmail)));
+    return findLastOtpFlowByUserId(userClaims.getUid(), userClaims.getTenantId())
+        .map(Optional::ofNullable)
+        .onFailure()
+        .transform(failure -> new InternalException("Cannot get last OTP Flow:" + failure))
+        .chain(
+            maybeLastOtpFlow ->
+                maybeLastOtpFlow
+                    .map(flow -> handleExistingOtpFlow(flow, userClaims, institutionalEmail))
+                    .orElseGet(() -> handleMissingOtpFlow(userClaims, institutionalEmail)));
   }
 
   private Uni<Optional<OtpInfo>> handleExistingOtpFlow(
-          OtpFlow otpFlow,
-          UserClaims userClaims,
-          String institutionalEmail) {
+      OtpFlow otpFlow, UserClaims userClaims, String institutionalEmail) {
 
     return OtpUtils.isNewOtpFlowRequired(
-                    otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
-      .invoke(isRequired ->
-        log.info(
-          "isNewOtpFlowRequired={} for otpFlow uuid={}, status={}, expiresAt={}, sameIdp={}",
-          isRequired,
-          otpFlow.getUuid(),
-          otpFlow.getStatus(),
-          otpFlow.getExpiresAt(),
-          userClaims.getSameIdp()))
-            .chain(isRequired ->
-                    isRequired
-                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
-                            .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
-                            : checkPendingOtpFlow(otpFlow, institutionalEmail));
+            otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+        .chain(
+            isRequired ->
+                isRequired
+                    ? createAndSendOtp(
+                            userClaims.getUid(), institutionalEmail, userClaims.getName(), userClaims.getTenantId())
+                        .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
+                    : checkPendingOtpFlow(otpFlow, institutionalEmail));
   }
 
-  private static Uni<Optional<OtpInfo>> checkPendingOtpFlow(OtpFlow otpFlow, String institutionalEmail) {
+  private static Uni<Optional<OtpInfo>> checkPendingOtpFlow(
+      OtpFlow otpFlow, String institutionalEmail) {
     return otpFlow.getStatus().equals(OtpStatus.PENDING)
-            ? Uni.createFrom().item(Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)))
-            : Uni.createFrom().item(Optional.empty());
+        ? Uni.createFrom().item(Optional.of(new OtpInfo(otpFlow.getUuid(), institutionalEmail)))
+        : Uni.createFrom().item(Optional.empty());
   }
-
 
   private Uni<Optional<OtpInfo>> handleMissingOtpFlow(
-          UserClaims userClaims,
-          String institutionalEmail) {
+      UserClaims userClaims, String institutionalEmail) {
 
     return OtpUtils.isOtpRequiredWithMissingOtpFlow(
-                    userClaims.getSameIdp(),
-                    otpLimitConfig.getDailyLimit())
-            .chain(isRequired ->
-                    isRequired
-                            ? createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
-                            .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
-                            : Uni.createFrom().item(Optional.empty()));
+            userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+        .chain(
+            isRequired ->
+                isRequired
+                    ? createAndSendOtp(
+                            userClaims.getUid(), institutionalEmail, userClaims.getName(), userClaims.getTenantId())
+                        .map(flow -> Optional.of(new OtpInfo(flow.getUuid(), institutionalEmail)))
+                    : Uni.createFrom().item(Optional.empty()));
   }
 
   /**
@@ -170,12 +162,12 @@ public class OtpFlowServiceImpl implements OtpFlowService {
    * @param email the user's institutional email
    * @return a new Otp Flow
    */
-  private Uni<OtpFlow> createAndSendOtp(String userId, String email, String name) {
+  private Uni<OtpFlow> createAndSendOtp(String userId, String email, String name, String tenantId) {
     return Uni.createFrom()
         .item(OtpUtils::generateOTP)
         .chain(
             otp ->
-                createNewOtpFlow(userId, otp)
+                createNewOtpFlow(userId, otp, tenantId)
                     .onFailure(WebApplicationException.class)
                     .transform(GeneralUtils::extractExceptionFromWebAppException)
                   .chain(
@@ -208,6 +200,10 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
   @Override
   public Uni<OtpFlow> createNewOtpFlow(String userId, String otp) {
+    return createNewOtpFlow(userId, otp, tenantContext.getTenantId());
+  }
+
+  private Uni<OtpFlow> createNewOtpFlow(String userId, String otp, String tenantId) {
     return Uni.createFrom()
         .item(OffsetDateTime.now())
         .map(
@@ -215,6 +211,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                 OtpFlow.builder()
                     .uuid(UUID.randomUUID().toString())
                     .userId(userId)
+                    .tenantId(tenantId)
                     .attempts(0)
                     .otp(DigestUtils.md5Hex(otp))
                     .status(OtpStatus.PENDING)
@@ -226,14 +223,38 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
   @Override
   public Uni<OtpFlow> findLastOtpFlowByUserId(String userId) {
+    return findLastOtpFlowByUserId(userId, tenantContext.getTenantId());
+  }
+
+  private Uni<OtpFlow> findLastOtpFlowByUserId(String userId, String tenantId) {
     final String userIdField = OtpFlow.Fields.userId.name();
     final String createdAtField = OtpFlow.Fields.createdAt.name();
-    return OtpFlow.find(new Document(userIdField, userId), new Document(createdAtField, -1))
+    return OtpFlow.find(
+            tenantScoped(new Document(userIdField, userId), tenantId),
+            new Document(createdAtField, -1))
         .firstResult();
   }
 
-  private Uni<Optional<OtpFlow>> findOtpFlowByUuid(String uuid) {
-    return OtpFlow.find(new Document(OtpFlow.Fields.uuid.name(), uuid)).firstResultOptional();
+  private Uni<Optional<OtpFlow>> findOtpFlowByUuid(String uuid, String tenantId) {
+    return OtpFlow.find(tenantScoped(new Document(OtpFlow.Fields.uuid.name(), uuid), tenantId))
+        .firstResultOptional();
+  }
+
+  private Document tenantScoped(Document query, String tenantId) {
+    if (!LEGACY_TENANT_ID.equals(tenantId)) {
+      return query.append(OtpFlow.Fields.tenantId.name(), tenantId);
+    }
+
+    return new Document(
+        "$and",
+        java.util.List.of(
+            query,
+            new Document(
+                "$or",
+                java.util.List.of(
+                    new Document(OtpFlow.Fields.tenantId.name(), tenantId),
+                    new Document(
+                        OtpFlow.Fields.tenantId.name(), new Document("$exists", false))))));
   }
 
   private Uni<Long> updateOtpFlow(String uuid, OtpStatus newStatus, Boolean attemptsIncrement) {
@@ -252,7 +273,8 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     return updateOtpFlow(uuid, newStatus, true);
   }
 
-  private Uni<String> handleOtpVerification(OtpFlow otpFlow, String hashedOtp) {
+  private Uni<String> handleOtpVerification(
+      OtpFlow otpFlow, String hashedOtp, String tenantId) {
     if (otpFlow.getExpiresAt().isBefore(OffsetDateTime.now())) {
       return Uni.createFrom().failure(new ConflictException("Otp is expired"));
     }
@@ -300,6 +322,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .atMost(maxRetry)
         .onFailure(WebApplicationException.class)
         .transform(GeneralUtils::extractExceptionFromWebAppException)
+        .invoke(userClaims -> userClaims.setTenantId(tenantId))
         .chain(sessionService::generateSessionToken)
         .chain(
             sessionToken ->
@@ -312,17 +335,18 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
   @Override
   public Uni<TokenResponse> verifyOtp(String otpUid, String otp) {
+    String tenantId = tenantContext.getTenantId();
     return Uni.createFrom()
         .item(DigestUtils.md5Hex(otp))
         .chain(
             hashOtp ->
-                findOtpFlowByUuid(otpUid)
+                findOtpFlowByUuid(otpUid, tenantId)
                     .chain(
                         maybeOtpFlow ->
                             maybeOtpFlow
                                 .map(
                                     otpFlow ->
-                                        handleOtpVerification(otpFlow, hashOtp)
+                                        handleOtpVerification(otpFlow, hashOtp, tenantId)
                                             .map(TokenResponse::new))
                                 .orElse(
                                     Uni.createFrom()
@@ -331,7 +355,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                 "Cannot find OtpFlow")))));
   }
 
-  private Uni<OtpInfo> handleOtpResend(OtpFlow oldOtpFlow) {
+  private Uni<OtpInfo> handleOtpResend(OtpFlow oldOtpFlow, String tenantId) {
     if (oldOtpFlow.getStatus() != OtpStatus.PENDING) {
       return Uni.createFrom().failure(new ConflictException("Otp is expired or in a final state"));
     }
@@ -340,6 +364,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .onFailure()
         .transform(
             failure -> new InternalException("Cannot get User from PDV" + failure.toString()))
+        .invoke(userClaims -> userClaims.setTenantId(tenantId))
         .chain(
             userClaims ->
                 userService
@@ -358,7 +383,11 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                             maybeUserEmail
                                 .map(
                                     institutionalEmail ->
-                                        createAndSendOtp(userClaims.getUid(), institutionalEmail, userClaims.getName())
+                                        createAndSendOtp(
+                                                userClaims.getUid(),
+                                                institutionalEmail,
+                                          userClaims.getName(),
+                                                tenantId)
                                             .chain(
                                                 createdOtpFlow ->
                                                     // Fire & Forget update old otp flow status
@@ -383,13 +412,14 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
   @Override
   public Uni<OidcExchangeOtpResponse> resendOtp(String otpUid) {
-    return findOtpFlowByUuid(otpUid)
+    String tenantId = tenantContext.getTenantId();
+    return findOtpFlowByUuid(otpUid, tenantId)
         .chain(
             maybeOtpFlow ->
                 maybeOtpFlow
                     .map(
                         otpFlow ->
-                            handleOtpResend(otpFlow)
+                            handleOtpResend(otpFlow, tenantId)
                                 .map(
                                     newOtpInfo ->
                                         new OidcExchangeOtpResponse(

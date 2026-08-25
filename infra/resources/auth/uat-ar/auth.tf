@@ -20,16 +20,26 @@ module "local" {
 ###############################################################################
 
 module "apim_api_auth" {
-  source              = "../../_modules/apim_api"
-  apim_name           = module.local.config.apim_name
-  apim_rg             = module.local.config.apim_rg
-  api_name            = "selc-${module.local.config.env_short}-api-auth"
-  display_name        = "Auth API"
-  base_path           = "auth"
-  private_dns_name    = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/auth/src/main/docs/openapi.json"
+  source                     = "../../_modules/apim_api"
+  apim_name                  = module.local.config.apim_name
+  apim_rg                    = module.local.config.apim_rg
+  api_name                   = "selc-${module.local.config.env_short}-api-auth"
+  display_name               = "Auth API"
+  base_path                  = "auth"
+  private_dns_name           = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix            = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
+  openapi_path               = "../../../../apps/auth/src/main/docs/openapi.json"
+  tenant_ids                 = module.local.config.tenant_ids
+  tenant_hosts               = module.local.config.tenant_hosts
+  tenant_enforcement_enabled = true
+  allowed_headers = [
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "traceparent",
+    "tracestate"
+  ]
 
   api_operation_policies = [{
     operation_id = "loginSaml"
@@ -38,16 +48,19 @@ module "apim_api_auth" {
           <inbound>
               <cors allow-credentials="true">
                   <allowed-origins>
-                      <origin>https://${module.local.config.dns_zone_prefix}.${module.local.config.external_domain}</origin>
-                      <origin>https://${module.local.config.api_dns_zone_prefix}.${module.local.config.external_domain}</origin>
-                      <origin>http://localhost:3000</origin>
+%{for tenant in module.local.config.tenant_ids~}
+                      <origin>${tenant.origin}</origin>
+%{endfor~}
                       <origin>https://accounts.google.com</origin>
                   </allowed-origins>
                   <allowed-methods>
                       <method>POST</method>
                   </allowed-methods>
                   <allowed-headers>
-                      <header>*</header>
+                      <header>Content-Type</header>
+                      <header>Accept</header>
+                      <header>traceparent</header>
+                      <header>tracestate</header>
                   </allowed-headers>
               </cors>
               <base />
@@ -115,6 +128,10 @@ locals {
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "auth-ms"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = jsonencode(module.local.config.tenant_registry)
     },
     {
       name  = "SHARED_ACCESS_KEY_NAME"
@@ -188,18 +205,18 @@ locals {
 
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
-    "ONE_IDENTITY_CLIENT_ID"                = "oneidentity-client-id"
-    "ONE_IDENTITY_CLIENT_SECRET"            = "oneidentity-client-secret"
+    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+    "TENANT_AR_ONE_IDENTITY_CLIENT_ID"      = "oneidentity-client-id"
+    "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
     "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
-    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
-    "INTERNAL-API-KEY"                      = "internal-api-key"
-    "INTERNAL-MS-USER-API-KEY"              = "internal-ms-user-api-key"
+    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "INTERNAL_API_KEY"                      = "internal-api-key"
+    "INTERNAL_MS_USER_API_KEY"              = "internal-ms-user-api-key"
     "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
     "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
     "SAML_IDP_METADATA"                     = "saml-idp-metadata"
     "SAML_IDP_CERT"                         = "saml-idp-cert"
-    "ONE-MAIL-API-KEY"                      = "onemail-api-key"
+    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
   }
 }
 

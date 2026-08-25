@@ -1,6 +1,10 @@
 package it.pagopa.selfcare.auth.service;
 
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
+import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
@@ -9,6 +13,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
@@ -17,17 +22,14 @@ import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.profile.BetaFFTestProfile;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import org.bson.Document;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.UUID;
-
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import org.bson.Document;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 @QuarkusTest
 @TestProfile(BetaFFTestProfile.class)
@@ -35,7 +37,13 @@ public class OtpFlowBetaServiceTest {
 
   @InjectMock UserService userService;
   @InjectMock OtpNotificationService otpNotificationService;
+  @InjectMock AuthTenantContext tenantContext;
   @Inject OtpFlowService otpFlowService;
+
+  @BeforeEach
+  void setUpTenant() {
+    when(tenantContext.getTenantId()).thenReturn("AR");
+  }
 
   private UserClaims getUserClaims() {
     return UserClaims.builder()
@@ -43,6 +51,7 @@ public class OtpFlowBetaServiceTest {
         .name("name")
         .familyName("family")
         .fiscalCode("fiscalCode")
+        .tenantId("AR")
         .build();
   }
 
@@ -63,8 +72,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
-    when(query.firstResult())
-        .thenReturn(Uni.createFrom().nullItem());
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -95,8 +103,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
-    when(query.firstResult())
-        .thenReturn(Uni.createFrom().nullItem());
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -128,8 +135,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
-    when(query.firstResult())
-        .thenReturn(Uni.createFrom().nullItem());
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService

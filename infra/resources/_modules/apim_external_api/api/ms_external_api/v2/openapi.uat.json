@@ -964,6 +964,15 @@
                 "type": "string"
               }
             }
+          },
+          {
+            "name": "includeTest",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -2067,6 +2076,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            "required": true
           }
         ],
         "responses": {
@@ -2093,6 +2111,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
             }
           }
         ],
@@ -2176,6 +2202,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
+            }
           }
         ],
         "responses": {
@@ -2236,6 +2270,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
             }
           }
         ],
@@ -2319,6 +2361,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
+            }
           }
         ],
         "responses": {
@@ -2400,6 +2450,14 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "AR"
             }
           }
         ],
@@ -4695,6 +4753,10 @@
           "expiringDate": {
             "type": "string",
             "format": "date-time"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -5286,11 +5348,17 @@
           "requiresParentOnboarding": {
             "type": "boolean"
           },
+          "allowSameUserManagerAndDelegate": {
+            "type": "boolean"
+          },
           "expirationDays": {
             "type": "integer",
             "format": "int32"
           },
           "enabled": {
+            "type": "boolean"
+          },
+          "requiredRecipientCode": {
             "type": "boolean"
           }
         }
@@ -5318,6 +5386,9 @@
             "items": {
               "$ref": "#/components/schemas/BackOfficeRole"
             }
+          },
+          "excludeRoleFromUserGroups": {
+            "type": "boolean"
           }
         }
       },
@@ -5613,6 +5684,9 @@
           },
           "filter": {
             "$ref": "#/components/schemas/RequiredDocumentFilter"
+          },
+          "storageOrigin": {
+            "$ref": "#/components/schemas/StorageOrigin"
           }
         }
       },
@@ -5632,6 +5706,13 @@
             }
           }
         }
+      },
+      "StorageOrigin": {
+        "enum": [
+          "SYSTEM",
+          "USER"
+        ],
+        "type": "string"
       },
       "ProductOriginResponse": {
         "type": "object",
@@ -5876,11 +5957,16 @@
         "type": "object",
         "required": [
           "url",
+          "tenantId",
           "productId",
           "httpMethod"
         ],
         "properties": {
           "url": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "tenantId": {
             "type": "string",
             "pattern": "\\S"
           },
@@ -5894,6 +5980,12 @@
           "headers": {
             "type": "object",
             "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "topics": {
+            "type": "array",
+            "items": {
               "type": "string"
             }
           },
@@ -5953,6 +6045,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string"
           },
           "roles": {
@@ -6020,6 +6115,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "name": {
             "type": "string"
           },
@@ -6041,6 +6139,9 @@
         "type": "object",
         "properties": {
           "productId": {
+            "type": "string"
+          },
+          "tenantId": {
             "type": "string"
           },
           "role": {
@@ -6417,6 +6518,9 @@
         "title": "ProductRoleInfo",
         "type": "object",
         "properties": {
+          "multiroleAllowed": {
+            "type": "boolean"
+          },
           "skipUserCreation": {
             "type": "boolean"
           },
@@ -7282,7 +7386,8 @@
           "COMPLETED",
           "FAILED",
           "REJECTED",
-          "DELETED"
+          "DELETED",
+          "OVERRIDDEN"
         ],
         "type": "string"
       },
@@ -7325,6 +7430,17 @@
       }
     },
     "securitySchemes": {
+      "SecurityScheme": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Authentication"
+      },
+      "bearerAuth1": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
       "apiKeyHeader": {
         "type": "apiKey",
         "name": "Ocp-Apim-Subscription-Key",

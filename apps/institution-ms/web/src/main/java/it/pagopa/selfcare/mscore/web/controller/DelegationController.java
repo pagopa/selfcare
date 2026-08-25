@@ -10,23 +10,22 @@ import it.pagopa.selfcare.mscore.constant.Order;
 import it.pagopa.selfcare.mscore.core.DelegationService;
 import it.pagopa.selfcare.mscore.exception.InvalidRequestException;
 import it.pagopa.selfcare.mscore.model.delegation.Delegation;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationInstitutionResponse;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationRequest;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationRequestFromTaxcode;
-import it.pagopa.selfcare.mscore.web.model.delegation.DelegationResponse;
+import it.pagopa.selfcare.mscore.web.model.delegation.*;
 import it.pagopa.selfcare.mscore.web.model.mapper.DelegationMapper;
 import it.pagopa.selfcare.mscore.web.util.CustomExceptionMessage;
 import it.pagopa.selfcare.mscore.web.util.EncryptedTaxCodeParam;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -198,5 +197,24 @@ public class DelegationController {
         return ResponseEntity.status(HttpStatus.OK).body(delegationService.getDelegates(institutionId, productId, type, cursor, size)
                 .stream().map(d -> delegationMapper.toDelegationInstitutionResponse(d, productId)).toList());
     }
+
+  /**
+   * Returns the number of delegations created within the specified time range.
+   *
+   * @param fromDate start date/time (inclusive)
+   * @param toDate end date/time (inclusive)
+   * @param productId optional product identifier
+   * @return number of created delegations
+   */
+  @Tags({@Tag(name = "Delegation"), @Tag(name = "support")})
+  @Operation(summary = "${swagger.mscore.delegation.count}", description = "${swagger.mscore.delegation.count}")
+  @GetMapping(value = "/count", produces = MediaType.APPLICATION_JSON_VALUE)
+  public ResponseEntity<List<DelegationCountResult>> countDelegations(@Parameter(description = "Start date/time (inclusive)") @RequestParam("fromDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime fromDate,
+                                                                      @Parameter(description = "End date/time (inclusive)") @RequestParam("toDate") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime toDate,
+                                                                      @Parameter(description = "${swagger.mscore.product.model.id}") @RequestParam(name = "productId", required = false) String productId) {
+    return ResponseEntity.ok(
+      delegationService.countDelegations(fromDate, toDate, productId).stream().map(delegationMapper::toDelegationInstitutionResponse).toList()
+    );
+  }
 
 }

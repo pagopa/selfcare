@@ -1,8 +1,15 @@
 package it.pagopa.selfcare.auth.controller;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
@@ -33,6 +40,17 @@ import static org.mockito.Mockito.when;
 class OtpControllerTest {
 
   @InjectMock private OtpFlowService otpFlowService;
+
+  @BeforeEach
+  void setUpTenantHeader() {
+    RestAssured.requestSpecification =
+        new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
+  }
+
+  @AfterEach
+  void resetRequestSpecification() {
+    RestAssured.requestSpecification = null;
+  }
 
   @Test
   void verifyOtp_BadRequest() {
@@ -84,6 +102,9 @@ class OtpControllerTest {
         .post("/verify")
         .then()
         .statusCode(HttpStatus.SC_FORBIDDEN)
+        .contentType("application/problem+json")
+        .body("title", equalTo("Forbidden"))
+        .body("detail", equalTo("OTP verification failed"))
         .body("otpForbiddenCode", equalTo(wrongCodeException.getCode().name()))
         .body("remainingAttempts", equalTo(wrongCodeException.getRemainingAttempts()));
   }
@@ -106,6 +127,9 @@ class OtpControllerTest {
         .post("/verify")
         .then()
         .statusCode(HttpStatus.SC_FORBIDDEN)
+        .contentType("application/problem+json")
+        .body("title", equalTo("Forbidden"))
+        .body("detail", equalTo("OTP verification failed"))
         .body("otpForbiddenCode", equalTo(wrongCodeException.getCode().name()))
         .body("remainingAttempts", equalTo(wrongCodeException.getRemainingAttempts()));
   }

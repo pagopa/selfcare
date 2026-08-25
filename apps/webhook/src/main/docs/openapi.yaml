@@ -1,10 +1,12 @@
 ---
-openapi: 3.1.0
+openapi: 3.0.3
 tags:
 - name: System
   description: System information
 - name: Webhook
   description: API for webhook configuration management
+- name: Webhook Notification
+  description: API for resending webhook notifications
 - name: external-v2
 - name: internal-v1
 paths:
@@ -36,18 +38,18 @@ paths:
       - name: page
         in: query
         schema:
-          type: integer
           format: int32
-          minimum: 0
           default: 0
+          minimum: 0
+          type: integer
       - name: size
         in: query
         schema:
-          type: integer
           format: int32
+          default: 20
           maximum: 100
           minimum: 1
-          default: 20
+          type: integer
       - name: tenantId
         in: query
         schema:
@@ -81,6 +83,74 @@ paths:
             application/json: {}
         "400":
           description: Bad Request
+  /webhooks/notifications/resend:
+    post:
+      summary: Resend notifications by status
+      description: Reset every notification matching the given status (optionally
+        restricted to a single webhook) to PENDING and re-publish them for delivery
+      operationId: resendNotificationsByStatus
+      tags:
+      - internal-v1
+      parameters:
+      - name: status
+        in: query
+        schema:
+          allOf:
+          - $ref: "#/components/schemas/NotificationStatus"
+          - default: FAILED
+      - name: webhookId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /webhooks/notifications/resend/date-range:
+    post:
+      summary: Resend notifications created within a date range
+      description: Reset every notification created between the given ISO-8601 date-times
+        (e.g. 2024-01-01T00:00:00) to PENDING and re-publish them for delivery
+      operationId: resendNotificationsByDateRange
+      tags:
+      - internal-v1
+      parameters:
+      - name: from
+        in: query
+        schema:
+          pattern: \S
+          type: string
+        required: true
+      - name: to
+        in: query
+        schema:
+          pattern: \S
+          type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
+  /webhooks/notifications/{notificationId}/resend:
+    post:
+      summary: Resend a notification by ID
+      description: Reset a single notification to PENDING and re-publish it for delivery
+      operationId: resendNotificationById
+      tags:
+      - internal-v1
+      parameters:
+      - name: notificationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json: {}
   /webhooks/notify:
     post:
       summary: Send notification
@@ -145,8 +215,8 @@ paths:
       - name: tenantId
         in: query
         schema:
-          type: string
           pattern: \S
+          type: string
         required: true
       responses:
         "200":
@@ -173,78 +243,93 @@ paths:
 components:
   schemas:
     LocalDateTime:
-      type: string
       format: date-time
-      examples:
-      - 2022-03-10T12:15:50
+      type: string
+      example: 2022-03-10T12:15:50
     NotificationRequest:
-      type: object
       required:
       - productId
       - tenantId
       - payload
+      - topic
+      type: object
       properties:
         productId:
-          type: string
           pattern: \S
+          type: string
         tenantId:
-          type: string
           pattern: \S
+          type: string
         payload:
-          type: string
           pattern: \S
+          type: string
+        topic:
+          pattern: \S
+          type: string
+    NotificationStatus:
+      enum:
+      - PENDING
+      - SENDING
+      - DELIVERED
+      - FAILED
+      - RETRY
+      type: string
     RetryPolicyRequest:
       type: object
       properties:
         maxAttempts:
-          type: integer
           format: int32
+          type: integer
         initialDelayMs:
-          type: integer
           format: int64
+          type: integer
         maxDelayMs:
-          type: integer
           format: int64
+          type: integer
         backoffMultiplier:
-          type: number
           format: double
+          type: number
     RetryPolicyResponse:
       type: object
       properties:
         maxAttempts:
-          type: integer
           format: int32
+          type: integer
         initialDelayMs:
-          type: integer
           format: int64
+          type: integer
         maxDelayMs:
-          type: integer
           format: int64
+          type: integer
         backoffMultiplier:
-          type: number
           format: double
+          type: number
     WebhookRequest:
-      type: object
       required:
       - url
       - tenantId
       - productId
       - httpMethod
+      type: object
       properties:
         url:
-          type: string
           pattern: \S
+          type: string
         tenantId:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
+          type: string
         httpMethod:
           type: string
         headers:
           type: object
           additionalProperties:
+            type: string
+        topics:
+          type: array
+          items:
             type: string
         retryPolicy:
           $ref: "#/components/schemas/RetryPolicyRequest"
@@ -266,6 +351,10 @@ components:
           additionalProperties:
             type: string
         products:
+          type: array
+          items:
+            type: string
+        topics:
           type: array
           items:
             type: string

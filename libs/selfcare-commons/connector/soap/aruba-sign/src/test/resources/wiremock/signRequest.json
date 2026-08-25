@@ -1,0 +1,17 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/",
+    "headers": {
+      "SOAPAction": {"equalTo": "\"http://arubasignservice.arubapec.it/ArubaSignService/signhashRequest\""},
+      "Accept": {"equalTo": "text/xml, multipart/related"}
+    }
+  },
+  "response": {
+    "status": "200",
+    "body": "<S:Envelope xmlns:S=\"http://schemas.xmlsoap.org/soap/envelope/\" xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"><SOAP-ENV:Header/><S:Body><ns2:signhashResponse xmlns:ns2=\"http://arubasignservice.arubapec.it/\"><return><certID>AS0</certID><description>Success</description><return_code>0000</return_code><signature>ivxrc3sxInay9IRpIvR32rJDg6VeVo03xiw/tXHrgR7cXCSIpWPM6V35HVpIdtE5Uc5NljWoL8vbxDhNK4zd4ULEaf7FjTVINAMLcRy0LQAURQqcg2frKLNLdesWwq0q2smxa4vZa87f7XuySSMoyTDvTL/zuPZBo9v8C+COc1oON1NSF7XQhIOc0Cz6i5U+AET2yegqJRvW/RDYJCtLAi2RN3ZKwLy7XqeEbP7LKVYD+EyuMkQPt473uXptEAtVDHUyznBboN6EKDItM3x9Ga/0RUEckx4nc1tQQGY5FwEXtUelSgu/9QoSBD4pfnXkCDEZpzCHHiI+QKbwbHhJUQ==</signature><status>OK</status></return></ns2:signhashResponse></S:Body></S:Envelope>",
+    "headers": {
+      "Content-Type": "text/xml"
+    }
+  }
+}
