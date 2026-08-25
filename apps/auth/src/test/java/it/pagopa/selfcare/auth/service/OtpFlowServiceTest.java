@@ -1,9 +1,5 @@
 package it.pagopa.selfcare.auth.service;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
@@ -13,7 +9,6 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.context.AuthTenantContext;
-import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
@@ -27,8 +22,6 @@ import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
-import java.time.OffsetDateTime;
-import java.util.*;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
@@ -40,6 +33,16 @@ import org.openapi.quarkus.one_mail_json.model.EmailAddress;
 import org.openapi.quarkus.one_mail_json.model.EmailStatus;
 import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTOHistoryInner;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 public class OtpFlowServiceTest {
