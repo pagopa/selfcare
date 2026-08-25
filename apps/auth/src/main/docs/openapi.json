@@ -9,6 +9,22 @@
   } ],
   "components" : {
     "schemas" : {
+      "MailStatusHistory" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          },
+          "changedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          }
+        }
+      },
+      "OffsetDateTime" : {
+        "format" : "date-time",
+        "type" : "string",
+        "example" : "2022-03-10T12:15:50-04:00"
+      },
       "OidcExchangeOtpResponse" : {
         "type" : "object",
         "properties" : {
@@ -82,6 +98,30 @@
       "OtpForbiddenCode" : {
         "enum" : [ "CODE_001", "CODE_002" ],
         "type" : "string"
+      },
+      "OtpMailInfoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "mailRequestId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "attempts" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "history" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MailStatusHistory"
+            }
+          }
+        }
       },
       "OtpResendRequest" : {
         "required" : [ "otpUuid" ],
@@ -222,6 +262,64 @@
             "description" : "Internal Server Error",
             "content" : {
               "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otp/mail-info/{mailRequestId}" : {
+      "get" : {
+        "summary" : "Get OTP mail information",
+        "description" : "Retrieve the processing status of an email managed by OneMail",
+        "operationId" : "getOtpMailInfo",
+        "tags" : [ "OTP" ],
+        "parameters" : [ {
+          "name" : "mailRequestId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OtpMailInfoResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
                 }

@@ -131,4 +131,47 @@ public class OtpController {
   public Uni<OidcExchangeOtpResponse> resendOtp(@Valid OtpResendRequest otpResendRequest) {
     return otpFlowService.resendOtp(otpResendRequest.getOtpUuid());
   }
+
+  @Operation(
+    description = "Retrieve the processing status of an email managed by OneMail",
+    summary = "Get OTP mail information",
+    operationId = "getOtpMailInfo")
+  @APIResponses(
+    value = {
+      @APIResponse(
+        responseCode = "200",
+        description = "OK",
+        content =
+        @Content(
+          schema = @Schema(implementation = OtpMailInfoResponse.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "400",
+        description = "Bad Request",
+        content =
+        @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "404",
+        description = "Not Found",
+        content =
+        @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "500",
+        description = "Internal Server Error",
+        content =
+        @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON))
+    })
+  @GET
+  @Path("/mail-info/{mailRequestId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<OtpMailInfoResponse> getOtpMailInfo(
+    @PathParam("mailRequestId") String mailRequestId) {
+    return otpFlowService.getOtpMailInfo(mailRequestId);
+  }
 }
