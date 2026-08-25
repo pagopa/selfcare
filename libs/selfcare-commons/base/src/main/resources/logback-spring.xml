@@ -1,0 +1,60 @@
+<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <property name="LOG_DATEFORMAT_PATTERN" value="${LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd'T'HH:mm:ss.SSSZZ}"/>
+
+    <if condition='"true".equalsIgnoreCase(property("ENABLE_CONFIDENTIAL_FILTER"))'>
+        <then>
+            <turboFilter class="ch.qos.logback.classic.turbo.MarkerFilter">
+                <Name>CONFIDENTIAL_FILTER</Name>
+                <Marker>CONFIDENTIAL</Marker>
+                <OnMatch>DENY</OnMatch>
+            </turboFilter>
+        </then>
+    </if>
+
+    <if condition='"true".equalsIgnoreCase(property("ENABLE_JSON_LOGGING"))'>
+        <then>
+            <appender name="json" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
+                    <layout class="ch.qos.logback.contrib.json.classic.JsonLayout">
+                        <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter"/>
+                        <timestampFormat>${LOG_DATEFORMAT_PATTERN}</timestampFormat>
+                        <appendLineSeparator>true</appendLineSeparator>
+                    </layout>
+                </encoder>
+            </appender>
+            <property name="stdout_log_appender" value="json"/>
+        </then>
+        <else>
+            <if condition='"true".equalsIgnoreCase(property("ENABLE_SINGLE_LINE_STACK_TRACE_LOGGING"))'>
+                <then>
+                    <property name="msg_and_ex_log_pattern"
+                              value="%m%replace(%ex){'${line.separator}','${LINE_SEPARATOR_REPLACEMENT:- ~~ }'}%nopex%n"/>
+                </then>
+                <else>
+                    <property name="msg_and_ex_log_pattern" value="%m%n%wEx"/>
+                </else>
+            </if>
+            <springProperty name="additional-info" source="logging.pattern.additional-info"/>
+            <property name="stdout_log_pattern"
+                      value="%clr(%d{${LOG_DATEFORMAT_PATTERN}}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) [%X{uid:-}${additional-info:-]} %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} %clr(:){faint} ${msg_and_ex_log_pattern}"/>
+            <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                    <pattern>${stdout_log_pattern}</pattern>
+                    <charset>${CONSOLE_LOG_CHARSET}</charset>
+                </encoder>
+            </appender>
+            <property name="stdout_log_appender" value="stdout"/>
+        </else>
+    </if>
+
+    <root level="INFO">
+        <appender-ref ref="${stdout_log_appender}"/>
+    </root>
+
+    <logger name="org.springframework.aop.interceptor.PerformanceMonitorInterceptor" level="TRACE"/>
+</configuration>
+
+
