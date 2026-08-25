@@ -130,7 +130,8 @@ public class SelfCarePermissionEvaluatorV2 implements PermissionEvaluator {
                                             permission,
                                             userId,
                                             userGroupInfo.getInstitutionId(),
-                                            userGroupInfo.getProductId())
+                                            userGroupInfo.getProductId(),
+                                            "AR")
                                     .getBody())
                     .map(PermissionResponse::getHasPermission)
                     .orElse(false);
@@ -141,7 +142,8 @@ public class SelfCarePermissionEvaluatorV2 implements PermissionEvaluator {
                                         permission,
                                         userId,
                                         filterAuthorityDomain.getInstitutionId(),
-                                        filterAuthorityDomain.getProductId())
+                                        filterAuthorityDomain.getProductId(),
+                                        "AR")
                                 .getBody())
                 .map(PermissionResponse::getHasPermission)
                 .orElse(false);

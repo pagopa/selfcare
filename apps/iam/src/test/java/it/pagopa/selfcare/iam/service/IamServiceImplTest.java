@@ -1,9 +1,5 @@
 package it.pagopa.selfcare.iam.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
@@ -19,12 +15,17 @@ import it.pagopa.selfcare.iam.model.*;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import jakarta.inject.Inject;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
@@ -625,7 +626,7 @@ class IamServiceImplTest {
     List<ProductRolePermissions> productRolePermissions = List.of(prp1);
 
     ProductRolePermissionsList productRolePermissionsList =
-        ProductRolePermissionsList.builder().tenantId("AR").items(productRolePermissions).build();
+        ProductRolePermissionsList.builder().items(productRolePermissions).build();
 
     when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId, "AR"))
         .thenReturn(Uni.createFrom().item(productRolePermissions));
@@ -634,7 +635,6 @@ class IamServiceImplTest {
         service.getProductRolePermissionsList(userId, productId, "AR").await().indefinitely();
 
     assertNotNull(result);
-    assertEquals("AR", result.getTenantId());
     assertEquals(1, result.getItems().size());
     assertEquals("AR", result.getItems().get(0).getTenantId());
     assertEquals(productRolePermissionsList, result);

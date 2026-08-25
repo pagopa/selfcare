@@ -100,7 +100,7 @@ class SelfCarePermissionEvaluatorV2Test {
         String permission = "Selc:AccessProductBackofficeAdmin";
 
         when(authentication.getPrincipal()).thenReturn(user);
-        when(iamRestClient._hasIAMUserPermission(permission, user.getId(), domain.getInstitutionId(), domain.getProductId()))
+        when(iamRestClient._hasIAMUserPermission(permission, user.getId(), domain.getInstitutionId(), domain.getProductId(), "AR"))
                 .thenReturn(ResponseEntity.ok(new PermissionResponse(true)));
 
         assertTrue(permissionEvaluator.hasPermission(authentication, domain, permission));
@@ -114,7 +114,7 @@ class SelfCarePermissionEvaluatorV2Test {
         String permission = "Selc:ViewBilling";
 
         when(authentication.getPrincipal()).thenReturn(user);
-        when(iamRestClient._hasIAMUserPermission(permission,  user.getId(), domain.getInstitutionId(), domain.getProductId()))
+        when(iamRestClient._hasIAMUserPermission(permission,  user.getId(), domain.getInstitutionId(), domain.getProductId(), "AR"))
                 .thenReturn(ResponseEntity.ok(new PermissionResponse(false)));
 
         assertFalse(permissionEvaluator.hasPermission(authentication, domain, permission));
@@ -165,7 +165,7 @@ class SelfCarePermissionEvaluatorV2Test {
 
         when(authentication.getPrincipal()).thenReturn(user);
         when(userGroupRestClient._getUserGroupUsingGET("groupId")).thenReturn(ResponseEntity.of(Optional.of(userGroupResource)));
-        when(iamRestClient._hasIAMUserPermission("Selc:ListAllProductGroups","userId","institutionId", "productId")).thenReturn(ResponseEntity.ok(new PermissionResponse(true)));
+        when(iamRestClient._hasIAMUserPermission("Selc:ListAllProductGroups","userId","institutionId", "productId", "AR")).thenReturn(ResponseEntity.ok(new PermissionResponse(true)));
 
         assertTrue(permissionEvaluator.hasPermission(authentication, new FilterAuthorityDomain("institutionId", "productId", "groupId"), "Selc:ListAllProductGroups"));
     }
@@ -183,7 +183,7 @@ class SelfCarePermissionEvaluatorV2Test {
 
         when(authentication.getPrincipal()).thenReturn(user);
         when(userGroupRestClient._getUserGroupUsingGET("groupId")).thenReturn(ResponseEntity.of(Optional.of(userGroupResource)));
-        when(iamRestClient._hasIAMUserPermission("Selc:ListAllProductGroups","userId","institutionId", "productId")).thenReturn(ResponseEntity.ok(new PermissionResponse(false)));
+        when(iamRestClient._hasIAMUserPermission("Selc:ListAllProductGroups","userId","institutionId", "productId", "AR")).thenReturn(ResponseEntity.ok(new PermissionResponse(false)));
 
         assertFalse(permissionEvaluator.hasPermission(authentication, new FilterAuthorityDomain("institutionId", "productId", "groupId"), "Selc:ListAllProductGroups"));
     }
