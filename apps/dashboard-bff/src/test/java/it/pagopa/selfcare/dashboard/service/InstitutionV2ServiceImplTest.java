@@ -166,7 +166,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         final ProductRolePermissions permission2 = new ProductRolePermissions();
         permission2.setProductId("prod-3");
         iamPermissions.setItems(List.of(permission1, permission2));
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(any(), any())).thenReturn(ResponseEntity.ok(iamPermissions));
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(any(), any(), any())).thenReturn(ResponseEntity.ok(iamPermissions));
 
         final UserProductResponse response = institutionV2Service.getAllInstitutionUser(institutionId, userId, loggedUserId);
         assertEquals(1, response.getProducts().size());
@@ -198,7 +198,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         final ProductRolePermissions permission3 = new ProductRolePermissions();
         permission3.setProductId("prod-3");
         iamPermissions.setItems(List.of(permission1, permission2, permission3));
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(any(), any())).thenReturn(ResponseEntity.ok(iamPermissions));
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(any(), any(), any())).thenReturn(ResponseEntity.ok(iamPermissions));
 
         final UserProductResponse response = institutionV2Service.getAllInstitutionUser(institutionId, userId, loggedUserId);
         assertEquals(2, response.getProducts().size());
@@ -215,7 +215,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
     @Test
     void getAllInstitutionUser_noIamPermissions() {
         when(userV2Service.getAllUsers(any(), any())).thenReturn(List.of(new UserProductResponse()));
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(any(), any())).thenReturn(ResponseEntity.ok(new ProductRolePermissionsList().items(List.of())));
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(any(), any(), any())).thenReturn(ResponseEntity.ok(new ProductRolePermissionsList().items(List.of())));
         assertThrows(AccessDeniedException.class, () -> institutionV2Service.getAllInstitutionUser("institutionId", "userId", "loggedUserId"));
     }
 
@@ -292,7 +292,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
                 .items(List.of(perm))
                 .build();
 
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null))
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null, "AR"))
                 .thenReturn(ResponseEntity.ok(iamPermissions));
 
         // when
@@ -316,7 +316,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         // Checks
         verify(userApiRestClient, never())._getUserInstitutionWithPermission(any(), any(), any());
         verify(coreInstitutionApiRestClient, times(1))._retrieveInstitutionByIdUsingGET(institutionId, null);
-        verify(iamExternalRestClient, times(1))._getIAMProductRolePermissionsList(userId, null);
+        verify(iamExternalRestClient, times(1))._getIAMProductRolePermissionsList(userId, null, "AR");
     }
 
     @Test
@@ -344,7 +344,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
                 .items(Collections.emptyList())
                 .build();
 
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null))
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null, "AR"))
                 .thenReturn(ResponseEntity.ok(iamPermissions));
 
         // verify
@@ -382,7 +382,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
                 .items(List.of(perm))
                 .build();
 
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null))
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null, "AR"))
                 .thenReturn(ResponseEntity.ok(iamPermissions));
 
         // when
@@ -406,7 +406,7 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         // Checks
         verify(userApiRestClient, never())._getUserInstitutionWithPermission(any(), any(), any());
         verify(coreInstitutionApiRestClient, times(1))._retrieveInstitutionByIdUsingGET(institutionId, null);
-        verify(iamExternalRestClient, times(1))._getIAMProductRolePermissionsList(userId, null);
+        verify(iamExternalRestClient, times(1))._getIAMProductRolePermissionsList(userId, null, "AR");
     }
 
     @Test

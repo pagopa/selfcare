@@ -84,9 +84,9 @@ class ProductServiceImplTest extends BaseServiceTest {
         productRolePermissions.setPermissions(List.of("Selc:AccessProductBackofficeAdmin"));
         response.setItems(List.of(productRolePermissions));
 
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null)).thenReturn(ResponseEntity.ok(response));
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, null, "AR")).thenReturn(ResponseEntity.ok(response));
         Assertions.assertEquals(response, productService.getMyPermissions(userId));
-        Mockito.verify(iamExternalRestClient, Mockito.times(1))._getIAMProductRolePermissionsList(userId, null);
+        Mockito.verify(iamExternalRestClient, Mockito.times(1))._getIAMProductRolePermissionsList(userId, null, "AR");
     }
 
 }
