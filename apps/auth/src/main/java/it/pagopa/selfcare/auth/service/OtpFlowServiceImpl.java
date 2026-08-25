@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
+import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.controller.response.TokenResponse;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.ConflictException;
@@ -427,5 +428,21 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     .orElse(
                         Uni.createFrom()
                             .failure(new ResourceNotFoundException("Cannot find OtpFlow"))));
+  }
+
+  @Override
+  public Uni<OtpMailInfoResponse> getOtpMailInfo(String mailRequestId) {
+    return otpNotificationService
+      .getOtpMailInfo(mailRequestId)
+      .map(emailStatus -> new OtpMailInfoResponse(
+        emailStatus.getEmailId(),
+        emailStatus.getStatus().toString(),
+        emailStatus.getTo().getEmail(),
+        emailStatus.getAttempts(),
+        emailStatus.getHistory().stream()
+          .map(historyItem -> new OtpMailInfoResponse.MailStatusHistory(
+            historyItem.getStatus().toString(),
+            historyItem.getChangedAt()))
+          .toList()));
   }
 }
