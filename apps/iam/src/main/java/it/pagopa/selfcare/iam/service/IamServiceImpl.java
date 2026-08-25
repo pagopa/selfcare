@@ -1,7 +1,5 @@
 package it.pagopa.selfcare.iam.service;
 
-import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
-
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
@@ -16,8 +14,6 @@ import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
 import it.pagopa.selfcare.iam.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.time.Duration;
-import java.util.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -25,6 +21,11 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.institution_openapi_json.api.InstitutionApi;
 import org.openapi.quarkus.institution_openapi_json.model.InstitutionResponse;
 import org.owasp.encoder.Encode;
+
+import java.time.Duration;
+import java.util.*;
+
+import static it.pagopa.selfcare.iam.util.GeneralUtils.PRODUCT_ALL;
 
 @Slf4j
 @ApplicationScoped
@@ -315,14 +316,12 @@ public class IamServiceImpl implements IamService {
             userClaims ->
                 ProductRolePermissionsList.builder()
                     .userId(userId)
-                    .productId(productId)
-                    .tenantId(tenantId)
                     .name(userClaims.getName())
                     .familyName(userClaims.getFamilyName())
                     .email(userClaims.getEmail())
                     .build())
         .onFailure()
-        .recoverWithItem(ProductRolePermissionsList.builder().tenantId(tenantId).build())
+        .recoverWithItem(ProductRolePermissionsList.builder().build())
         .onItem()
         .transformToUni(
             permissions ->

@@ -220,7 +220,7 @@ class ExchangeTokenServiceV2Test {
 
         when(institutionService.getInstitutionById(institutionId)).thenReturn(institution);
         when(productService.getProduct(productId)).thenReturn(product);
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, productId)).thenReturn(ResponseEntity.ok(permissions));
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, productId, "AR")).thenReturn(ResponseEntity.ok(permissions));
 
         ExchangedToken result = exchangeTokenServiceV2.exchangeBackofficeAdmin(institutionId, productId, Optional.empty());
 
@@ -251,7 +251,7 @@ class ExchangeTokenServiceV2Test {
         TestSecurityContextHolder.setAuthentication(new TestingAuthenticationToken(SelfCareUser.builder(userId).build(), credential));
 
         when(institutionService.getInstitutionById(institutionId)).thenReturn(institution);
-        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, productId))
+        when(iamExternalRestClient._getIAMProductRolePermissionsList(userId, productId, "AR"))
                 .thenReturn(ResponseEntity.notFound().build());
 
         final Optional<String> environment = Optional.empty();

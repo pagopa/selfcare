@@ -44,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductRolePermissionsList getMyPermissions(String userId) {
         log.trace("getMyPermissions start");
         log.debug("getMyPermissions userId = {},", Encode.forJava(userId));
-        ProductRolePermissionsList result = iamExternalRestClient._getIAMProductRolePermissionsList(userId, null).getBody();
+        ProductRolePermissionsList result = iamExternalRestClient._getIAMProductRolePermissionsList(userId, null, "AR").getBody();
         log.debug("getMyPermissions result = {}", result);
         log.trace("getMyPermissions end");
         return result;

@@ -101,7 +101,7 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
         final UserProductResponse userProductResponse = userV2Service.getAllUsers(institutionId, userInfoFilter).stream().findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("No User found for the given userId and institutionId"));
 
-        final ProductRolePermissionsList roles = Optional.ofNullable(iamExternalRestClient._getIAMProductRolePermissionsList(loggedUserId, null).getBody())
+        final ProductRolePermissionsList roles = Optional.ofNullable(iamExternalRestClient._getIAMProductRolePermissionsList(loggedUserId, null, "AR").getBody())
                 .filter(l -> l.getItems() != null && !l.getItems().isEmpty())
                 .orElseThrow(() -> new AccessDeniedException("Not authorized to list users: No IAM permissions found"));
 
@@ -190,7 +190,7 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
         String userId = selfCareUser.getId();
 
         List<ProductRolePermissions> productRolePermissions = Optional.ofNullable(
-                        iamExternalRestClient._getIAMProductRolePermissionsList(userId, null).getBody())
+                        iamExternalRestClient._getIAMProductRolePermissionsList(userId, null, "AR").getBody())
                 .map(ProductRolePermissionsList::getItems)
                 .orElse(Collections.emptyList());
 
