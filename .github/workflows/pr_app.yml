@@ -32,6 +32,7 @@ on:
           - auth
           - iam
           - delegation-cdc
+          - institution-cdc
           - document-ms
           - institution-ms
           - institution-send-mail-scheduler

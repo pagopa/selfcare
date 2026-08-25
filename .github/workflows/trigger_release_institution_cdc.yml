@@ -1,0 +1,79 @@
+name: Institution CDC - Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        description: Environment
+        options:
+          - dev
+          - uat
+          - prod
+        required: true
+      branch:
+        type: string
+        description: Branch name (e.g. releases/institution-cdc_1.0.0)
+        required: true
+
+jobs:
+  release:
+    name: "Trigger Release Workflows"
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    outputs:
+      version: ${{ env.VERSION }}
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - name: Extract Version
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+        run: |
+          echo "VERSION=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
+
+      - name: Trigger Institution CDC Release (AR)
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
+        run: |
+          gh workflow run release_app.yml \
+            --ref "$INPUT_BRANCH" \
+            -f env="$INPUT_ENV" \
+            -f target=ar \
+            -f app=institution-cdc
+
+  update_uat_variable:
+    name: "Update UAT Version Variable"
+    needs: release
+    if: ${{ inputs.env == 'uat' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: institution-cdc
+      env: uat
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit
+
+  update_prod_variable:
+    name: "Update PROD Version Variable"
+    needs: release
+    if: ${{ inputs.env == 'prod' }}
+    permissions:
+      contents: read
+      actions: write
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: institution-cdc
+      env: prod
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit

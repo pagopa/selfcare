@@ -62,6 +62,8 @@ jobs:
               - 'apps/institution-send-mail-scheduler/**'
             delegation_cdc:
               - 'apps/delegation-cdc/**'
+            institution_cdc:
+              - 'apps/institution-cdc/**'
             user_ms:
               - 'apps/user-ms/**'
             user_group_ms:
@@ -128,6 +130,10 @@ jobs:
       - name: Trigger institution-send-mail-scheduler release
         if: needs.detect_changes.outputs.institution_send_mail_scheduler == 'true'
         run: gh workflow run "trigger_release_institution_send_mail_scheduler.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
+
+      - name: Trigger institution-cdc release
+        if: needs.detect_changes.outputs.institution_cdc == 'true'
+        run: gh workflow run "trigger_release_institution_cdc.yml" --repo "${{ github.repository }}" --ref main -f env=dev -f branch=main
 
       - name: Trigger delegation-cdc release
         if: needs.detect_changes.outputs.delegation_cdc == 'true'
