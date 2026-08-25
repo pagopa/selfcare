@@ -24,6 +24,8 @@ import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.service.OtpFlowService;
 import org.apache.http.HttpStatus;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -332,6 +334,7 @@ class OtpControllerTest {
       new OtpFlow(
         "uuid1",
         "userId",
+        "AR",
         "otp-1",
         OtpStatus.PENDING,
         1,
@@ -342,6 +345,7 @@ class OtpControllerTest {
       new OtpFlow(
         "uuid2",
         "userId",
+        "AR",
         "otp-2",
         OtpStatus.COMPLETED,
         2,
