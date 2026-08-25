@@ -6,6 +6,10 @@ tags:
 - name: SAML
 components:
   schemas:
+    Date:
+      format: date
+      type: string
+      example: 2022-03-10
     MailStatusHistory:
       type: object
       properties:
@@ -13,6 +17,17 @@ components:
           type: string
         changedAt:
           $ref: "#/components/schemas/OffsetDateTime"
+    ObjectId:
+      type: object
+      properties:
+        timestamp:
+          format: int32
+          type: integer
+        nonce:
+          format: int64
+          type: integer
+        date:
+          $ref: "#/components/schemas/Date"
     OffsetDateTime:
       format: date-time
       type: string
@@ -45,6 +60,32 @@ components:
           type: string
         requiresOtpFlow:
           type: boolean
+    OtpFlow:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ObjectId"
+        uuid:
+          type: string
+        userId:
+          type: string
+        tenantId:
+          type: string
+        otp:
+          type: string
+        status:
+          $ref: "#/components/schemas/OtpStatus"
+        attempts:
+          format: int32
+          type: integer
+        createdAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        updatedAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        expiresAt:
+          $ref: "#/components/schemas/OffsetDateTime"
+        mailRequestId:
+          type: string
     OtpForbidden:
       type: object
       properties:
@@ -189,6 +230,49 @@ paths:
           description: Internal Server Error
           content:
             application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+  /otp/info:
+    get:
+      summary: Get OTP information
+      description: Retrieve OTP information for a user
+      operationId: getOtpInfo
+      tags:
+      - OTP
+      parameters:
+      - name: status
+        in: query
+        schema:
+          $ref: "#/components/schemas/OtpStatus"
+      - name: userId
+        in: query
+        schema:
+          pattern: \S
+          type: string
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpFlow"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
               schema:
                 $ref: "#/components/schemas/Problem"
   /otp/mail-info/{mailRequestId}:

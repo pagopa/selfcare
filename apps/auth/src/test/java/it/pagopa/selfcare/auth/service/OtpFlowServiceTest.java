@@ -1,9 +1,5 @@
 package it.pagopa.selfcare.auth.service;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
@@ -26,8 +22,6 @@ import it.pagopa.selfcare.auth.model.otp.OtpInfo;
 import it.pagopa.selfcare.auth.util.OtpUtils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.NotFoundException;
-import java.time.OffsetDateTime;
-import java.util.*;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
@@ -39,6 +33,16 @@ import org.openapi.quarkus.one_mail_json.model.EmailAddress;
 import org.openapi.quarkus.one_mail_json.model.EmailStatus;
 import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTOHistoryInner;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 public class OtpFlowServiceTest {
@@ -652,5 +656,79 @@ public class OtpFlowServiceTest {
       .subscribe()
       .withSubscriber(UniAssertSubscriber.create())
       .assertFailedWith(InternalException.class, "OneMail error");
+  }
+
+  @Test
+  void testGetOtpInfo_WithStatus() {
+    String userId = "userId";
+
+    List<OtpFlow> otpFlows = List.of(
+      OtpFlow.builder()
+        .uuid("uuid1")
+        .userId(userId)
+        .status(OtpStatus.PENDING)
+        .build(),
+      OtpFlow.builder()
+        .uuid("uuid2")
+        .userId(userId)
+        .status(OtpStatus.PENDING)
+        .build());
+
+    PanacheMock.mock(OtpFlow.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
+      Mockito.mock(ReactivePanacheQuery.class);
+
+    when(query.list()).thenReturn((Uni) Uni.createFrom().item(otpFlows));
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
+
+    List<OtpFlow> result =
+      otpFlowService
+        .getOtpInfo(userId, OtpStatus.PENDING)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    Assertions.assertEquals(2, result.size());
+    Assertions.assertEquals("uuid1", result.get(0).getUuid());
+    Assertions.assertEquals(OtpStatus.PENDING, result.get(0).getStatus());
+    Assertions.assertEquals("uuid2", result.get(1).getUuid());
+    Assertions.assertEquals(OtpStatus.PENDING, result.get(1).getStatus());
+  }
+
+  @Test
+  void testGetOtpInfo_WithoutStatus() {
+    String userId = "userId";
+
+    List<OtpFlow> otpFlows = List.of(
+      OtpFlow.builder()
+        .uuid("uuid1")
+        .userId(userId)
+        .status(OtpStatus.COMPLETED)
+        .build());
+
+    PanacheMock.mock(OtpFlow.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
+      Mockito.mock(ReactivePanacheQuery.class);
+
+    when(query.list()).thenReturn((Uni) Uni.createFrom().item(otpFlows));
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
+
+    List<OtpFlow> result =
+      otpFlowService
+        .getOtpInfo(userId, null)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    Assertions.assertEquals(1, result.size());
+    Assertions.assertEquals("uuid1", result.get(0).getUuid());
+    Assertions.assertEquals(userId, result.get(0).getUserId());
+    Assertions.assertEquals(OtpStatus.COMPLETED, result.get(0).getStatus());
   }
 }

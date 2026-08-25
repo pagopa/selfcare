@@ -26,6 +26,7 @@ import jakarta.ws.rs.WebApplicationException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -444,5 +445,20 @@ public class OtpFlowServiceImpl implements OtpFlowService {
             historyItem.getStatus().toString(),
             historyItem.getChangedAt()))
           .toList()));
+  }
+
+  @Override
+  public Uni<List<OtpFlow>> getOtpInfo(String userId, OtpStatus status) {
+    return findOtpFlowsByUserIdAndStatus(userId, status);
+  }
+
+  private Uni<List<OtpFlow>> findOtpFlowsByUserIdAndStatus(String userId, OtpStatus status) {
+    Document filter = new Document(OtpFlow.Fields.userId.name(), userId);
+
+    if (status != null) {
+      filter.append(OtpFlow.Fields.status.name(), status);
+    }
+
+    return OtpFlow.find(filter, new Document(OtpFlow.Fields.createdAt.name(), -1)).list();
   }
 }
