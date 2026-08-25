@@ -1,10 +1,5 @@
 package it.pagopa.selfcare.auth.controller;
 
-import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
@@ -15,6 +10,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
 import it.pagopa.selfcare.auth.controller.request.OtpVerifyRequest;
 import it.pagopa.selfcare.auth.controller.response.OtpForbiddenCode;
+import it.pagopa.selfcare.auth.controller.response.OtpMailInfoResponse;
 import it.pagopa.selfcare.auth.exception.ConflictException;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.OtpForbiddenException;
@@ -25,6 +21,11 @@ import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 @TestHTTPEndpoint(OtpController.class)
@@ -219,5 +220,62 @@ class OtpControllerTest {
         .post("/resend")
         .then()
         .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void getOtpMailInfo_NotFound() {
+    when(otpFlowService.getOtpMailInfo(anyString()))
+      .thenReturn(
+        Uni.createFrom()
+          .failure(new ResourceNotFoundException("Cannot find mail info")));
+
+    given()
+      .when()
+      .get("/mail-info/requestId")
+      .then()
+      .statusCode(HttpStatus.SC_NOT_FOUND);
+  }
+
+  @Test
+  void getOtpMailInfo_InternalServerError() {
+    when(otpFlowService.getOtpMailInfo(anyString()))
+      .thenReturn(
+        Uni.createFrom()
+          .failure(new InternalException("Internal server error")));
+
+    given()
+      .when()
+      .get("/mail-info/requestId")
+      .then()
+      .statusCode(HttpStatus.SC_INTERNAL_SERVER_ERROR);
+  }
+
+  @Test
+  void getOtpMailInfo_Ok() {
+    OtpMailInfoResponse response =
+      new OtpMailInfoResponse(
+        "email-id",
+        "DELIVERED",
+        "test@test.com",
+        1,
+        java.util.List.of(
+          new OtpMailInfoResponse.MailStatusHistory(
+            "DELIVERED",
+            java.time.OffsetDateTime.now())));
+
+    when(otpFlowService.getOtpMailInfo(anyString()))
+      .thenReturn(Uni.createFrom().item(response));
+
+    given()
+      .when()
+      .get("/mail-info/requestId")
+      .then()
+      .statusCode(HttpStatus.SC_OK)
+      .body("mailRequestId", equalTo("email-id"))
+      .body("status", equalTo("DELIVERED"))
+      .body("recipient", equalTo("test@test.com"))
+      .body("attempts", equalTo(1))
+      .body("history.size()", equalTo(1))
+      .body("history[0].status", equalTo("DELIVERED"));
   }
 }

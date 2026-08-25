@@ -2,20 +2,22 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.OneMailEmailsApi;
+import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
-import java.time.Duration;
-import java.util.Map;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.one_mail_json.model.EmailAddress;
 import org.openapi.quarkus.one_mail_json.model.EmailHighPriorityBodyDTO;
+import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailSuccessResponseDTO;
+
+import java.time.Duration;
+import java.util.Map;
 
 @Slf4j
 @ApplicationScoped
@@ -70,4 +72,24 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
       .onFailure()
       .recoverWithNull();
   }
+
+  @Override
+  public Uni<EmailStatusItemResponseDTO> getOtpMailInfo(String mailRequestId) {
+    return oneMailEmailsApi
+      .v1EmailsStatusesGet(mailRequestId)
+      .onFailure()
+      .invoke(t -> log.error("OneMail call failed for requestId {}: {}", mailRequestId, t.getMessage(), t))
+      .onFailure(GeneralUtils::checkIfIsRetryableException)
+      .retry()
+      .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
+      .atMost(maxRetry)
+      .onFailure(WebApplicationException.class)
+      .transform(GeneralUtils::extractExceptionFromWebAppException)
+      .map(
+        responses ->
+          responses.stream()
+            .findFirst()
+            .orElseThrow(() -> new ResourceNotFoundException("Mail status not found for requestId " + mailRequestId)));
+  }
+
 }

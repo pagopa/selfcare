@@ -145,5 +145,84 @@
       "statusCode": 500,
       "body": "Unexpected mail recipient or request"
     }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/onemail-mock/v1/emails/statuses",
+      "queryStringParameters": {
+        "requestId": [
+          "f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": [
+        {
+          "status": "Delivered",
+          "priority": "HIGH",
+          "history": [
+            {
+              "changedAt": "2026-08-03T13:32:41.755Z",
+              "status": "Delivered"
+            },
+            {
+              "changedAt": "2026-08-03T13:32:40.280Z",
+              "status": "Dispatched"
+            },
+            {
+              "changedAt": "2026-08-03T13:32:38.549Z",
+              "status": "Queued"
+            }
+          ],
+          "to": {
+            "email": "test.test@test.it"
+          },
+          "emailId": "81650171-8048-4efc-8728-d3d54f1ee7ec",
+          "attempts": 1
+        }
+      ]
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/onemail-mock/v1/emails/statuses",
+      "queryStringParameters": {
+        "requestId": [
+          "not-found-request-id"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": []
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/onemail-mock/v1/emails/statuses",
+      "queryStringParameters": {
+        "requestId": [
+          "internal-error-request-id"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 500,
+      "body": "Internal Server Error"
+    }
   }
 ]
