@@ -8,6 +8,7 @@ import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import java.util.Collection;
 import java.util.Map;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -85,6 +86,13 @@ public class TenantRegistry {
       throw new ForbiddenException("OneIdentity is not enabled for tenant");
     }
     return credentials;
+  }
+
+  public Collection<Tenant> enabledAuthenticationTenants() {
+    return tenants.entrySet().stream()
+        .filter(entry -> entry.getValue().authEnabled())
+        .map(entry -> new Tenant(entry.getKey(), entry.getValue()))
+        .toList();
   }
 
   public record Tenant(String id, TenantDefinition definition) {}

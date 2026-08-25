@@ -2,10 +2,11 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.auth.exception.InternalException;
+import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
+import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider.SigningKey;
 import it.pagopa.selfcare.auth.model.UserClaims;
-import it.pagopa.selfcare.auth.util.Pkcs8Utils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
@@ -27,45 +28,46 @@ public class SessionServiceImpl implements SessionService {
   @ConfigProperty(name = "jwt.session.audience")
   String audience;
 
-  @ConfigProperty(name = "jwt.session.private.key")
-  String privateKeyPem;
+  @Inject TenantSessionKeyProvider tenantSessionKeyProvider;
 
   @Override
   public Uni<String> generateSessionToken(UserClaims userClaims) {
-    return Pkcs8Utils.extractRSAPrivateKeyFromPem(privateKeyPem)
-        .onFailure()
-        .transform(ex -> new InternalException(ex.getMessage()))
-        .map(
-            rsaPrivateKey ->
-                Jwt.claims()
-                    .claim("fiscal_number", userClaims.getFiscalCode())
-                    .claim("name", userClaims.getName())
-                    .claim("family_name", userClaims.getFamilyName())
-                    .claim("uid", userClaims.getUid())
-                    .claim(TENANT_CLAIM, userClaims.getTenantId())
-                    .claim("spid_level", SPID_LEVEL_L2)
-                    .issuer(ISSUER)
-                    .audience(audience)
-                    .issuedAt(Instant.now())
-                    .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
-                    .sign(rsaPrivateKey));
+    SigningKey signingKey = tenantSessionKeyProvider.getSigningKey(userClaims.getTenantId());
+    Instant issuedAt = Instant.now();
+    return Uni.createFrom()
+        .item(
+            Jwt.claims()
+                .claim("fiscal_number", userClaims.getFiscalCode())
+                .claim("name", userClaims.getName())
+                .claim("family_name", userClaims.getFamilyName())
+                .claim("uid", userClaims.getUid())
+                .claim(TENANT_CLAIM, userClaims.getTenantId())
+                .claim("spid_level", SPID_LEVEL_L2)
+                .issuer(ISSUER)
+                .audience(audience)
+                .issuedAt(issuedAt)
+                .expiresAt(issuedAt.plus(Duration.ofHours(sessionDuration)))
+                .jws()
+                .keyId(signingKey.keyId())
+                .sign(signingKey.privateKey()));
   }
 
   @Override
   public Uni<String> generateSessionTokenInternal(UserClaims userClaims) {
-    return Pkcs8Utils.extractRSAPrivateKeyFromPem(privateKeyPem)
-        .onFailure()
-        .transform(ex -> new InternalException(ex.getMessage()))
-        .map(
-            rsaPrivateKey ->
-                Jwt.claims()
-                    .claim("uid", userClaims.getUid())
-                    .claim("email", userClaims.getEmail())
-                    .claim(TENANT_CLAIM, userClaims.getTenantId())
-                    .issuer("PAGOPA")
-                    .audience(audience)
-                    .issuedAt(Instant.now())
-                    .expiresAt(Instant.now().plus(Duration.ofHours(sessionDuration)))
-                    .sign(rsaPrivateKey));
+    SigningKey signingKey = tenantSessionKeyProvider.getSigningKey(userClaims.getTenantId());
+    Instant issuedAt = Instant.now();
+    return Uni.createFrom()
+        .item(
+            Jwt.claims()
+                .claim("uid", userClaims.getUid())
+                .claim("email", userClaims.getEmail())
+                .claim(TENANT_CLAIM, userClaims.getTenantId())
+                .issuer("PAGOPA")
+                .audience(audience)
+                .issuedAt(issuedAt)
+                .expiresAt(issuedAt.plus(Duration.ofHours(sessionDuration)))
+                .jws()
+                .keyId(signingKey.keyId())
+                .sign(signingKey.privateKey()));
   }
 }

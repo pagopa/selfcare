@@ -322,6 +322,9 @@
             <user.country>US</user.country>
             <user.timezone>GMT</user.timezone>
           </systemPropertyVariables>
+          <excludes>
+            <exclude>**/CucumberSuite.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
       <plugin>
