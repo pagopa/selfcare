@@ -198,7 +198,7 @@ locals {
       value = "https://uat.onemail.pagopa.it"
     },
     {
-      name = "MAIL_SENDER_ADDRESS"
+      name  = "MAIL_SENDER_ADDRESS"
       value = "noreply@selfcare.pagopa.it"
     }
   ]
@@ -208,7 +208,8 @@ locals {
     "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
     "TENANT_AR_ONE_IDENTITY_CLIENT_ID"      = "oneidentity-client-id"
     "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
-    "SESSION_TOKEN_PRIVATE_KEY"             = "jwt-private-key-pkcs8"
+    "TENANT_AR_JWT_SESSION_PRIVATE_KEY"     = "jwt-private-key-pkcs8"
+    "TENANT_AR_JWT_SESSION_KEY_ID"          = "jwt-kid"
     "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
     "INTERNAL_API_KEY"                      = "internal-api-key"
     "INTERNAL_MS_USER_API_KEY"              = "internal-ms-user-api-key"
