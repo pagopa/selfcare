@@ -24,6 +24,7 @@
         <module>selfcare-sdk-pom</module>
         <module>selfcare-onboarding-sdk-pom</module>
         <module>selfcare-user-sdk-pom</module>
+        <module>selfcare-commons</module>
     </modules>
 
 
