@@ -91,6 +91,14 @@
     </repository>
   </repositories>
 
+  <distributionManagement>
+    <repository>
+      <id>selfcare</id>
+      <name>Selfcare</name>
+      <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+    </repository>
+  </distributionManagement>
+  
   <build>
     <plugins>
       <plugin>
