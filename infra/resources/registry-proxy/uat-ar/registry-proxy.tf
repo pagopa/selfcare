@@ -34,6 +34,7 @@ module "apim_api_registry_proxy" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   openapi_path        = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
   tenant_ids          = module.local.config.tenant_ids
+  tenant_hosts        = module.local.config.tenant_hosts
 }
 
 
@@ -295,10 +296,10 @@ locals {
 
   app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)
 
-  # cae_id               = 
+  # cae_id               =
   # container_app_id     = try(data.azurerm_container_app.ca.id, null)
   # storage_account_id   = try(data.azurerm_storage_account.existing_logs_storage.id, null)
-  # storage_account_name = 
+  # storage_account_name =
   # key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
   # logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key.value, null)
   probes = [
