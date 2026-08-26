@@ -26,6 +26,18 @@ class JwtAuthenticationTokenTest {
         Assertions.assertFalse(authentication.isAuthenticated());
         Assertions.assertNotNull(authentication.getAuthorities());
         Assertions.assertTrue(authentication.getAuthorities().isEmpty());
+        Assertions.assertNull(authentication.getTenantId());
+    }
+
+
+    @Test
+    void JwtAuthenticationToken_notAuthenticatedWithTenant() {
+        // given
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken("token", "AR");
+
+        // then
+        Assertions.assertEquals("AR", authentication.getTenantId());
+        Assertions.assertFalse(authentication.isAuthenticated());
     }
 
 

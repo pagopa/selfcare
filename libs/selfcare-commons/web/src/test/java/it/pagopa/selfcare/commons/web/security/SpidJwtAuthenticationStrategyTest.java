@@ -82,7 +82,7 @@ class SpidJwtAuthenticationStrategyTest {
     void authenticate_koAuthoritiesRetriever() {
         // given
         String token = "token";
-        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "PNPG");
         when(jwtServiceMock.getClaims(any()))
                 .thenReturn(mock(Claims.class));
         doThrow(RuntimeException.class)
@@ -105,7 +105,7 @@ class SpidJwtAuthenticationStrategyTest {
     void authenticate_nullUidAndNullAuthorities() {
         // given
         String token = "token";
-        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "PNPG");
         when(jwtServiceMock.getClaims(any()))
                 .thenReturn(mock(Claims.class));
         // when
@@ -130,7 +130,7 @@ class SpidJwtAuthenticationStrategyTest {
     void authenticate() {
         // given
         String token = "token";
-        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "PNPG");
         String uid = "uid";
         String email = "email@prova.com";
         String fiscalCode = "fiscalCode";
@@ -145,6 +145,7 @@ class SpidJwtAuthenticationStrategyTest {
         assertEquals(uid, MDC.get(MDC_UID));
         assertNotNull(authenticate);
         assertEquals(token, authenticate.getCredentials());
+        assertEquals("PNPG", ((JwtAuthenticationToken) authenticate).getTenantId());
         assertEquals(SelfCareUser.class, authenticate.getPrincipal().getClass());
         assertEquals(uid, ((SelfCareUser) authenticate.getPrincipal()).getId());
         assertEquals(email, ((SelfCareUser) authenticate.getPrincipal()).getEmail());
@@ -157,6 +158,83 @@ class SpidJwtAuthenticationStrategyTest {
         verify(authoritiesRetrieverMock, times(1))
                 .retrieveAuthorities();
         verifyNoMoreInteractions(jwtServiceMock, authoritiesRetrieverMock);
+    }
+
+
+    @Test
+    void authenticate_withTenantClaim() {
+        // given
+        String token = "token";
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "AR");
+        when(jwtServiceMock.getClaims(any()))
+                .thenReturn(new DefaultClaims(Map.of(CLAIM_UID, "uid", "tenant_id", "AR")));
+
+        // when
+        Authentication authenticate = spidJwtAuthenticationStrategy.authenticate(authentication);
+
+        // then
+        assertEquals("AR", ((JwtAuthenticationToken) authenticate).getTenantId());
+        verify(jwtServiceMock).getClaims(token);
+        verify(authoritiesRetrieverMock).retrieveAuthorities();
+    }
+
+
+    @Test
+    void authenticate_missingTenantClaim_defaultsToPnpgWhenHeaderMatches() {
+        // given
+        String token = "token";
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "PNPG");
+        when(jwtServiceMock.getClaims(any())).thenReturn(mock(Claims.class));
+
+        // when
+        Authentication authenticate = spidJwtAuthenticationStrategy.authenticate(authentication);
+
+        // then
+        assertEquals("PNPG", ((JwtAuthenticationToken) authenticate).getTenantId());
+    }
+
+
+    @Test
+    void authenticate_rejectsTenantMismatch() {
+        // given
+        String token = "token";
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "PNPG");
+        when(jwtServiceMock.getClaims(any()))
+                .thenReturn(new DefaultClaims(Map.of("tenant_id", "AR")));
+
+        // when / then
+        assertThrows(TenantValidationException.class,
+                () -> spidJwtAuthenticationStrategy.authenticate(authentication));
+        verifyNoInteractions(authoritiesRetrieverMock);
+    }
+
+
+    @Test
+    void authenticate_rejectsMissingTenantHeader() {
+        // given
+        String token = "token";
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token);
+        when(jwtServiceMock.getClaims(any())).thenReturn(mock(Claims.class));
+
+        // when / then
+        assertThrows(TenantValidationException.class,
+                () -> spidJwtAuthenticationStrategy.authenticate(authentication));
+        verifyNoInteractions(authoritiesRetrieverMock);
+    }
+
+
+    @Test
+    void authenticate_rejectsUnsupportedTenantClaim() {
+        // given
+        String token = "token";
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken(token, "PNPG");
+        when(jwtServiceMock.getClaims(any()))
+                .thenReturn(new DefaultClaims(Map.of("tenant_id", "UNKNOWN")));
+
+        // when / then
+        assertThrows(TenantValidationException.class,
+                () -> spidJwtAuthenticationStrategy.authenticate(authentication));
+        verifyNoInteractions(authoritiesRetrieverMock);
     }
 
 }
