@@ -24,17 +24,26 @@ module "local" {
 
 # ONLY FOR AR
 module "apim_api_registry_proxy" {
-  source              = "../../_modules/apim_api"
-  apim_name           = "selc-${module.local.config.env_short}-apim-v2"
-  apim_rg             = "selc-${module.local.config.env_short}-api-v2-rg"
-  api_name            = "selc-${module.local.config.env_short}-api-bff-proxy"
-  display_name        = "BFF Proxy API"
-  base_path           = "party-registry-proxy/v1"
-  private_dns_name    = "selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
-  tenant_ids          = module.local.config.tenant_ids
+  source                     = "../../_modules/apim_api"
+  apim_name                  = "selc-${module.local.config.env_short}-apim-v2"
+  apim_rg                    = "selc-${module.local.config.env_short}-api-v2-rg"
+  api_name                   = "selc-${module.local.config.env_short}-api-bff-proxy"
+  display_name               = "BFF Proxy API"
+  base_path                  = "party-registry-proxy/v1"
+  private_dns_name           = "selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix            = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
+  openapi_path               = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
+  tenant_ids                 = module.local.config.tenant_ids
+  tenant_hosts               = module.local.config.tenant_hosts
+  tenant_enforcement_enabled = true
+  allowed_headers = [
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "traceparent",
+    "tracestate"
+  ]
 }
 
 
