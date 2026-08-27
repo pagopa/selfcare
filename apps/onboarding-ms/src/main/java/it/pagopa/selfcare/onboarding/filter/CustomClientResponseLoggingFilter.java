@@ -24,7 +24,13 @@ public class CustomClientResponseLoggingFilter implements ResteasyReactiveClient
         String query = requestContext.getUri().getQuery();
         String method = requestContext.getMethod();
         int status = responseContext.getStatus();
-        LOG.infof("Response: method: %s, endpoint: %s, query: %s, status [%d]", method, endpoint, query, status);
+        LOG.infof(
+                "Response: tenant: %s, method: %s, endpoint: %s, query: %s, status [%d]",
+                TenantLogUtils.fromClientRequest(requestContext),
+                method,
+                endpoint,
+                query,
+                status);
 
     }
 }

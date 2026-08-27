@@ -24,6 +24,11 @@ public class CustomClientRequestLoggingFilter implements ResteasyReactiveClientR
         String endpoint = requestContext.getUri().getPath();
         String query = requestContext.getUri().getQuery();
         String method = requestContext.getMethod();
-        LOG.infof("Request: method: %s, endpoint: %s, query: %s", method, endpoint, query);
+        LOG.infof(
+                "Request: tenant: %s, method: %s, endpoint: %s, query: %s",
+                TenantLogUtils.fromClientRequest(requestContext),
+                method,
+                endpoint,
+                query);
     }
 }
