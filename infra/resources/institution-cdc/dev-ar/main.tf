@@ -48,7 +48,7 @@ locals {
   ]
 
   secrets_names_institution_cdc = {
-    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "MONGODB-CONNECTION-STRING" = "mongodb-connection-string"
   }
 
 }

@@ -2,9 +2,9 @@ resource "azurerm_container_app" "container_app" {
   name                         = local.app_name
   container_app_environment_id = data.azurerm_container_app_environment.container_app_environment.id
   resource_group_name          = data.azurerm_resource_group.resource_group_app.name
-  revision_mode               = "Single"
-  workload_profile_name       = var.workload_profile_name
-  tags                        = var.tags
+  revision_mode                = "Single"
+  workload_profile_name        = var.workload_profile_name
+  tags                         = var.tags
 
   # Managed Identity
   identity {
@@ -33,17 +33,17 @@ resource "azurerm_container_app" "container_app" {
       app_protocol = dapr.value.app_protocol
     }
   }
-  
+
   # Ingress configuration
   ingress {
     allow_insecure_connections = false
-    external_enabled          = true
-    target_port              = 8080
+    external_enabled           = true
+    target_port                = 8080
 
     traffic_weight {
       latest_revision = true
-      label          = "latest"
-      percentage     = 100
+      label           = "latest"
+      percentage      = 100
     }
   }
 
@@ -85,7 +85,7 @@ resource "azurerm_container_app" "container_app" {
 
           initial_delay           = try(liveness_probe.value.initialDelaySeconds, 0)
           interval_seconds        = try(liveness_probe.value.periodSeconds, 10)
-          timeout                = try(liveness_probe.value.timeoutSeconds, 30)
+          timeout                 = try(liveness_probe.value.timeoutSeconds, 30)
           failure_count_threshold = try(liveness_probe.value.failureThreshold, 3)
 
           dynamic "header" {
@@ -107,7 +107,7 @@ resource "azurerm_container_app" "container_app" {
 
           initial_delay           = try(readiness_probe.value.initialDelaySeconds, 0)
           interval_seconds        = try(readiness_probe.value.periodSeconds, 10)
-          timeout                = try(readiness_probe.value.timeoutSeconds, 30)
+          timeout                 = try(readiness_probe.value.timeoutSeconds, 30)
           failure_count_threshold = try(readiness_probe.value.failureThreshold, 3)
           success_count_threshold = try(readiness_probe.value.successThreshold, 1)
 
@@ -130,7 +130,7 @@ resource "azurerm_container_app" "container_app" {
 
           initial_delay           = try(startup_probe.value.initialDelaySeconds, 0)
           interval_seconds        = try(startup_probe.value.periodSeconds, 10)
-          timeout                = try(startup_probe.value.timeoutSeconds, 30)
+          timeout                 = try(startup_probe.value.timeoutSeconds, 30)
           failure_count_threshold = try(startup_probe.value.failureThreshold, 3)
 
           dynamic "header" {
