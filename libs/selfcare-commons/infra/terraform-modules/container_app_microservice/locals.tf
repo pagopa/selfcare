@@ -13,10 +13,10 @@ locals {
 
   secrets = [for secret in var.secrets_names :
     {
-      identity               = var.user_assigned_identity_id
-      name                   = secret
+      identity = var.user_assigned_identity_id
+      name     = secret
       # key_vault_secret_name  = "@Microsoft.KeyVault(VaultName=${data.azurerm_key_vault.key_vault.name};SecretName=${secret})"
-      key_vault_secret_name  = "https://${data.azurerm_key_vault.key_vault.name}.vault.azure.net/secrets/${secret}"
+      key_vault_secret_name = "https://${data.azurerm_key_vault.key_vault.name}.vault.azure.net/secrets/${secret}"
 
       # keyVaultId  = data.azurerm_key_vault_secret.keyvault_secret[secret].id
   }]

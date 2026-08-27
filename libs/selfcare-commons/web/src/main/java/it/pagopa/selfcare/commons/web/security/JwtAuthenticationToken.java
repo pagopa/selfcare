@@ -10,6 +10,7 @@ import java.util.Collection;
 public class JwtAuthenticationToken extends AbstractAuthenticationToken {
 
     private final String token;
+    private final String tenantId;
     private Object principal;
 
 
@@ -21,9 +22,15 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
      * @param token The JWT token for this user
      */
     public JwtAuthenticationToken(final String token) {
+        this(token, null);
+    }
+
+
+    public JwtAuthenticationToken(final String token, final String tenantId) {
         super(null);
         setAuthenticated(false);
         this.token = token;
+        this.tenantId = tenantId;
     }
 
 
@@ -38,8 +45,15 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
      * @param authorities The user authorities
      */
     JwtAuthenticationToken(final String token, final AuthenticatedPrincipal user, Collection<GrantedAuthority> authorities) {
+        this(token, user, authorities, null);
+    }
+
+
+    JwtAuthenticationToken(final String token, final AuthenticatedPrincipal user,
+                           Collection<GrantedAuthority> authorities, String tenantId) {
         super(authorities);
         this.token = token;
+        this.tenantId = tenantId;
         principal = user;
         super.setAuthenticated(true); // must use super, as we override
     }
@@ -54,6 +68,11 @@ public class JwtAuthenticationToken extends AbstractAuthenticationToken {
     @Override
     public Object getPrincipal() {
         return principal;
+    }
+
+
+    public String getTenantId() {
+        return tenantId;
     }
 
 

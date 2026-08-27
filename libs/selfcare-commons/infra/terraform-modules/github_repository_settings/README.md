@@ -23,11 +23,11 @@ module "repo_settings" {
 ```
 
 <!-- markdownlint-disable -->
-<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.6.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.90.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | 5.45.0 |
@@ -35,7 +35,7 @@ module "repo_settings" {
 ## Providers
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.90.0 |
 | <a name="provider_azurerm.dev"></a> [azurerm.dev](#provider\_azurerm.dev) | 3.90.0 |
 | <a name="provider_azurerm.prod"></a> [azurerm.prod](#provider\_azurerm.prod) | 3.90.0 |
@@ -49,7 +49,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [github_actions_environment_secret.env_dev_cd_secrets](https://registry.terraform.io/providers/integrations/github/5.45.0/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.env_dev_ci_secrets](https://registry.terraform.io/providers/integrations/github/5.45.0/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.env_prod_cd_secrets](https://registry.terraform.io/providers/integrations/github/5.45.0/docs/resources/actions_environment_secret) | resource |
@@ -95,14 +95,14 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_github"></a> [github](#input\_github) | n/a | <pre>object({<br/>    repository = string<br/>  })</pre> | n/a | yes |
 | <a name="input_identity_component"></a> [identity\_component](#input\_identity\_component) | n/a | `string` | `"ms"` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_managed_identity_id_dev_cd"></a> [managed\_identity\_id\_dev\_cd](#output\_managed\_identity\_id\_dev\_cd) | n/a |
 | <a name="output_managed_identity_id_dev_ci"></a> [managed\_identity\_id\_dev\_ci](#output\_managed\_identity\_id\_dev\_ci) | n/a |
 | <a name="output_managed_identity_id_prod_cd"></a> [managed\_identity\_id\_prod\_cd](#output\_managed\_identity\_id\_prod\_cd) | n/a |
@@ -110,4 +110,4 @@ No modules.
 | <a name="output_managed_identity_id_uat_cd"></a> [managed\_identity\_id\_uat\_cd](#output\_managed\_identity\_id\_uat\_cd) | n/a |
 | <a name="output_managed_identity_id_uat_ci"></a> [managed\_identity\_id\_uat\_ci](#output\_managed\_identity\_id\_uat\_ci) | n/a |
 | <a name="output_tenant_id"></a> [tenant\_id](#output\_tenant\_id) | n/a |
-<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+<!-- END_TF_DOCS -->

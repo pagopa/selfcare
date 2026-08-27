@@ -8,6 +8,7 @@ import org.mockito.ArgumentCaptor;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.DelegatingServletOutputStream;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.TestingAuthenticationToken;
@@ -159,6 +160,8 @@ class JwtAuthenticationFilterTest {
         HttpServletRequest requestMock = mock(HttpServletRequest.class);
         when(requestMock.getHeader(eq(HttpHeaders.AUTHORIZATION)))
                 .thenReturn("Bearer " + token);
+        when(requestMock.getHeader(eq("X-Tenant-Id")))
+                .thenReturn("AR");
         when(authenticationManagerMock.authenticate(any()))
                 .thenAnswer(invocationOnMock -> {
                     MDC.put(mdcKey, mdcVal);
@@ -172,8 +175,34 @@ class JwtAuthenticationFilterTest {
                 .authenticate(jwtAuthenticationTokenCaptor.capture());
         Assertions.assertNotNull(jwtAuthenticationTokenCaptor.getValue());
         Assertions.assertEquals(token, jwtAuthenticationTokenCaptor.getValue().getCredentials());
+        Assertions.assertEquals("AR", jwtAuthenticationTokenCaptor.getValue().getTenantId());
         Assertions.assertNull(MDC.get(mdcKey));
         verifyNoMoreInteractions(authenticationManagerMock);
+    }
+
+
+    @Test
+    void doFilterInternal_tenantValidationFailureReturnsBadRequest() throws ServletException, IOException {
+        // given
+        String token = "token";
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+        when(requestMock.getHeader(eq(HttpHeaders.AUTHORIZATION)))
+                .thenReturn("Bearer " + token);
+        when(requestMock.getHeader(eq("X-Tenant-Id")))
+                .thenReturn("AR");
+        when(RESPONSE_MOCK.getOutputStream())
+                .thenReturn(new DelegatingServletOutputStream(ServletOutputStream.nullOutputStream()));
+        doThrow(new TenantValidationException())
+                .when(authenticationManagerMock)
+                .authenticate(any());
+
+        // when
+        jwtAuthenticationFilter.doFilterInternal(requestMock, RESPONSE_MOCK, FILTER_CHAIN_MOCK);
+
+        // then
+        verify(RESPONSE_MOCK).setStatus(HttpStatus.BAD_REQUEST.value());
+        verify(RESPONSE_MOCK).setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        verifyNoInteractions(FILTER_CHAIN_MOCK);
     }
 
 }

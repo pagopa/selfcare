@@ -9,8 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collection;
+import java.util.Set;
 import java.util.Optional;
 
 /**
@@ -27,6 +29,10 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
     private static final String CLAIM_SURNAME = "family_name";
     private static final String CLAIM_FISCAL_CODE = "fiscal_number";
     private static final String CLAIM_ISSUER = "iss";
+    private static final String CLAIM_TENANT_ID = "tenant_id";
+    private static final String DEFAULT_TENANT_ID = "PNPG";
+    private static final String TENANT_HEADER = "X-Tenant-Id";
+    private static final Set<String> SUPPORTED_TENANTS = Set.of("AR", DEFAULT_TENANT_ID);
 
     private final JwtService jwtService;
     private final AuthoritiesRetriever authoritiesRetriever;
@@ -46,8 +52,10 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate authentication = {}", authentication);
 
         SelfCareUser user;
+        String tenantId;
         try {
             Claims claims = jwtService.getClaims(authentication.getCredentials());
+            tenantId = resolveTenant(authentication.getTenantId(), claims);
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate user with id = {}", claims.get(CLAIMS_UID, String.class));
             Optional<String> uid = Optional.ofNullable(claims.get(CLAIMS_UID, String.class));
             uid.ifPresentOrElse(value -> MDC.put(MDC_UID, value),
@@ -61,6 +69,9 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
                     .issuer(claims.get(CLAIM_ISSUER, String.class))
                     .build();
 
+        } catch (TenantValidationException e) {
+            MDC.remove(MDC_UID);
+            throw e;
         } catch (Exception e) {
             MDC.remove(MDC_UID);
             throw new JwtAuthenticationException(e.getMessage(), e);
@@ -74,10 +85,34 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
         }
         JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(authentication.getCredentials(),
                 user,
-                authorities);
+                authorities,
+                tenantId);
 
         log.trace("authenticate end");
         return authenticationToken;
+    }
+
+
+    private String resolveTenant(String headerTenantId, Claims claims) {
+        final Object rawClaimTenantId = claims.get(CLAIM_TENANT_ID);
+        final String effectiveTenantId;
+        if (rawClaimTenantId == null) {
+            effectiveTenantId = DEFAULT_TENANT_ID;
+        } else if (rawClaimTenantId instanceof String claimTenantId
+                && StringUtils.hasText(claimTenantId)
+                && SUPPORTED_TENANTS.contains(claimTenantId)) {
+            effectiveTenantId = claimTenantId;
+        } else {
+            throw new TenantValidationException();
+        }
+
+        if (!StringUtils.hasText(headerTenantId)
+                || !SUPPORTED_TENANTS.contains(headerTenantId)
+                || !effectiveTenantId.equals(headerTenantId)) {
+            log.warn("Tenant header {} does not match the verified JWT tenant", TENANT_HEADER);
+            throw new TenantValidationException();
+        }
+        return effectiveTenantId;
     }
 
 }

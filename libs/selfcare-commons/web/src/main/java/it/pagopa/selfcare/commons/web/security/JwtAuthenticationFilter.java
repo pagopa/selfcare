@@ -26,6 +26,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String TENANT_HEADER = "X-Tenant-Id";
+
     private static final AuthenticationConverter authenticationConverter = request -> {
         String jwt = null;
         String headerAuth = request.getHeader(HttpHeaders.AUTHORIZATION);
@@ -34,7 +36,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             jwt = headerAuth.substring(7);
         }
 
-        return new JwtAuthenticationToken(jwt);
+        return new JwtAuthenticationToken(jwt, request.getHeader(TENANT_HEADER));
     };
 
     private final AuthenticationManager authenticationManager;
@@ -59,6 +61,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);
                 filterChain.doFilter(request, response);
+            } catch (TenantValidationException e) {
+                log.warn("Cannot validate tenant context for request {}", request.getRequestURI());
+                response.setStatus(HttpStatus.BAD_REQUEST.value());
+                response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+                final Problem problem = new Problem(HttpStatus.BAD_REQUEST, e.getMessage());
+                response.getOutputStream().print(objectMapper.writeValueAsString(problem));
             } catch (AuthenticationException e) {
                 log.warn("Cannot set user authentication", e);
                 filterChain.doFilter(request, response);
