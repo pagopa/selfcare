@@ -18,7 +18,7 @@
 
                 var aud = "${API_DOMAIN}";
                 var iss = "SPID";
-                var tenant_id = "AR";
+                var tenant_id = "${APP_TENANT_ID}";
                 var payload = new { exp, uid, aud, iss, tenant_id };
                 var jwtPayloadBase64UrlEncoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload))).Replace("/", "_").Replace("+", "-"). Replace("=", "");
 
@@ -41,7 +41,7 @@
             <value>@(context.Request.IpAddress)</value>
         </set-header>
         <set-header name="X-Tenant-Id" exists-action="override">
-            <value>AR</value>
+            <value>${APP_TENANT_ID}</value>
         </set-header>
     </inbound>
     <backend>

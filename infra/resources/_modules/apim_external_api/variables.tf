@@ -4,6 +4,11 @@ locals {
   rg_apim_name  = "${local.project}-api-v2-rg"
   api_domain    = "api.${var.dns_zone_prefix}.${var.external_domain}"
   apim_base_url = "${local.api_domain}/external"
+
+  # Tenant ids are derived from the shared tenant_registry (single source of truth,
+  # same as local-env), instead of being hardcoded in each JWT policy template.
+  tenant_id_ar   = one([for id, tenant in var.tenant_registry : id if tenant.authentication_provider == "ONE_IDENTITY"])
+  tenant_id_pnpg = one([for id, tenant in var.tenant_registry : id if tenant.authentication_provider == "HUB_SPID_LOGIN"])
 }
 
 variable "prefix" {
@@ -116,4 +121,25 @@ variable "domain" {
 variable "developer_path" {
   type        = string
   description = "Path where is located developer index.html file"
+}
+
+variable "tenant_registry" {
+  type = map(object({
+    frontend_uri            = string
+    api_uri                 = string
+    allowed_origins         = list(string)
+    authentication_provider = string
+    auth_enabled            = bool
+  }))
+  description = <<-EOT
+    Registry of supported tenants for the current environment (same source as local-env's
+    tenant_registries), used to derive the tenant_id embedded in the session JWTs minted by
+    APIM and in the corresponding X-Tenant-Id header, instead of hardcoding "AR"/"PNPG" in
+    the policy templates.
+  EOT
+
+  validation {
+    condition     = length(var.tenant_registry) > 0
+    error_message = "tenant_registry must not be empty."
+  }
 }
