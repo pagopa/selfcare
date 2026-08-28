@@ -44,6 +44,11 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
       clientOutgoingHeaders.put(
           TenantContext.TENANT_HEADER, List.of(TenantContext.resolve(tenant)));
       LOGGER.info("Propagating tenant={}", tenant);
+    } else {
+      // FIXME: This is a temporary solution to avoid the propagation of an empty tenant header. On
+      // the Multitenant PHASE2 shold be removed
+      clientOutgoingHeaders.put(TenantContext.TENANT_HEADER, List.of(TenantContext.resolve("")));
+      LOGGER.warn("Tenant header is missing in the incoming request");
     }
     return clientOutgoingHeaders;
   }
