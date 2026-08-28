@@ -36,20 +36,15 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
     }
     clientOutgoingHeaders.put("Authorization", List.of("Bearer " + bearerToken));
 
-    // FIXME: this should be removed on phase 2
-    clientOutgoingHeaders.put(TenantContext.TENANT_HEADER, List.of(TenantContext.resolve("")));
-    LOGGER.info("Propagating tenant={}", TenantContext.currentTenantOrDefault());
-    /*
-    FIXME: this should be enabled on phase 2
     String tenant = incomingHeaders.getFirst(TenantContext.TENANT_HEADER);
     if (tenant == null || tenant.isBlank()) {
-        tenant = TenantContext.currentTenant();
+      tenant = TenantContext.currentTenant();
     }
     if (tenant != null && !tenant.isBlank()) {
-        clientOutgoingHeaders.put(
-                TenantContext.TENANT_HEADER, List.of(TenantContext.resolve(tenant)));
-        LOGGER.info("Propagating tenant={}", tenant);
-    }*/
+      clientOutgoingHeaders.put(
+          TenantContext.TENANT_HEADER, List.of(TenantContext.resolve(tenant)));
+      LOGGER.info("Propagating tenant={}", tenant);
+    }
     return clientOutgoingHeaders;
   }
 }
