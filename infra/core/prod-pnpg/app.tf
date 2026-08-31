@@ -128,10 +128,61 @@ resource "azurerm_monitor_metric_alert" "functions_exceptions" {
 }
 
 ###############################################################################
+# Log Alert: HTTP 400 rate per single API (operation_Name)
+# Fires when a single API returns more than the threshold of HTTP 400
+# within the evaluation window. Evaluated per operation_Name via dimension split.
+###############################################################################
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
+  count = local.env_short == "d" ? 0 : 1
+
+  name                = "${local.prefix}-${local.env_short}-api-400-rate"
+  resource_group_name = data.azurerm_resource_group.monitor_rg.name
+  location            = data.azurerm_resource_group.monitor_rg.location
+
+  description             = "Triggered when a single API (operation_Name) returns more than ${local.api_400_alert_threshold} HTTP 400 within ${local.api_400_alert_window_frequency}."
+  severity                = local.api_400_alert_severity
+  enabled                 = true
+  auto_mitigation_enabled = false
+
+  scopes               = [data.azurerm_application_insights.application_insights.id]
+  evaluation_frequency = local.api_400_alert_window_frequency
+  window_duration      = local.api_400_alert_window_frequency
+
+  criteria {
+    query = <<-KQL
+      requests
+      | where resultCode == "400"
+      | summarize Count = count() by operation_Name
+    KQL
+
+    time_aggregation_method = "Total"
+    metric_measure_column   = "Count"
+    operator                = "GreaterThan"
+    threshold               = local.api_400_alert_threshold
+
+    dimension {
+      name     = "operation_Name"
+      operator = "Include"
+      values   = ["*"]
+    }
+
+    failing_periods {
+      number_of_evaluation_periods             = 1
+      minimum_failing_periods_to_trigger_alert = 1
+    }
+  }
+
+  action {
+    action_groups = [azurerm_monitor_action_group.http_status[0].id]
+  }
+
+  tags = local.tags
+}
+
+
+###############################################################################
 # Network
 ###############################################################################
-
-
 data "azurerm_dns_zone" "public" {
   name                = "${local.dns_zone_prefix}.${local.external_domain}"
   resource_group_name = "${local.prefix}-${local.env_short}-vnet-rg"
