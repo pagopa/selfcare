@@ -22,6 +22,7 @@ import java.io.UnsupportedEncodingException;
 public class LogFilter implements Filter {
 
     private static final int MAX_LENGTH_CONTENT = 500;
+    private static final String TENANT_HEADER = "X-Tenant-Id";
 
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -37,6 +38,7 @@ public class LogFilter implements Filter {
         }
 
         final String httpMethod = httpServletRequest.getMethod();
+        final String tenantId = sanitizeTenant(httpServletRequest.getHeader(TENANT_HEADER));
         long startTime = System.currentTimeMillis();
 
         ContentCachingRequestWrapper requestCacheWrapperObject = new ContentCachingRequestWrapper(httpServletRequest);
@@ -44,12 +46,22 @@ public class LogFilter implements Filter {
 
         chain.doFilter(requestCacheWrapperObject, responseCacheWrapperObject);
         String requestBody = getContentAsString(requestCacheWrapperObject.getContentAsByteArray(), request.getCharacterEncoding(), false);
-        log.info("Request from URI : {} - method: {} - Request body: {}", Encode.forJava(httpUri), Encode.forJava(httpMethod), Encode.forJava(requestBody));
+        log.info("Request from URI : {} - tenant: {} - method: {} - Request body: {}",
+                Encode.forJava(httpUri), tenantId, Encode.forJava(httpMethod), Encode.forJava(requestBody));
 
         Long endTime = System.currentTimeMillis() - startTime;
         String responseBody = getContentAsString(responseCacheWrapperObject.getContentAsByteArray(), response.getCharacterEncoding(), true);
-        log.info("Response from URI : {} - method: {} - status: {} - timelapse: {}ms - Response body: {}", Encode.forJava(httpUri), Encode.forJava(httpMethod), httpServletResponse.getStatus(), endTime, Encode.forJava(responseBody));
+        log.info("Response from URI : {} - tenant: {} - method: {} - status: {} - timelapse: {}ms - Response body: {}",
+                Encode.forJava(httpUri), tenantId, Encode.forJava(httpMethod), httpServletResponse.getStatus(), endTime,
+                Encode.forJava(responseBody));
         responseCacheWrapperObject.copyBodyToResponse();
+    }
+
+    private String sanitizeTenant(String tenantId) {
+        if (tenantId == null) {
+            return "unknown";
+        }
+        return Encode.forJava(tenantId.replaceAll("[^A-Za-z0-9_-]", "_"));
     }
 
     private String getContentAsString(byte[] buf, String charsetName, boolean isResponse) {

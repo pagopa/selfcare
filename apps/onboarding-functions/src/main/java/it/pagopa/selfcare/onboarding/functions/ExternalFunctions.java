@@ -8,6 +8,7 @@ import com.microsoft.azure.functions.annotation.BindingName;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.service.CheckOrganizationService;
 import it.pagopa.selfcare.onboarding.utils.AckStatus;
 import org.apache.commons.lang3.StringUtils;
@@ -32,9 +33,16 @@ public class ExternalFunctions {
 
         context.getLogger().info("testToken trigger processed a request");
 
-        String accessToken = checkOrganizationService.testToken(context);
-
-        return request.createResponseBuilder(HttpStatus.OK).body(accessToken).build();
+        TenantContext.Scope tenantScope;
+        try {
+            tenantScope = TenantContext.open(request, context);
+        } catch (IllegalArgumentException exception) {
+            return invalidTenantResponse(request, context);
+        }
+        try (TenantContext.Scope ignored = tenantScope) {
+            String accessToken = checkOrganizationService.testToken(context);
+            return request.createResponseBuilder(HttpStatus.OK).body(accessToken).build();
+        }
     }
 
     @FunctionName("CheckOrganization")
@@ -54,12 +62,20 @@ public class ExternalFunctions {
                     .build();
         }
 
-        boolean alreadyRegistered = checkOrganizationService.checkOrganization(context, fiscalCode, vatNumber);
+        TenantContext.Scope tenantScope;
+        try {
+            tenantScope = TenantContext.open(request, context);
+        } catch (IllegalArgumentException exception) {
+            return invalidTenantResponse(request, context);
+        }
+        try (TenantContext.Scope ignored = tenantScope) {
+            boolean alreadyRegistered = checkOrganizationService.checkOrganization(context, fiscalCode, vatNumber);
 
-        if (alreadyRegistered) {
-            return request.createResponseBuilder(HttpStatus.OK).build();
-        } else {
-            return request.createResponseBuilder(HttpStatus.NOT_FOUND).build();
+            if (alreadyRegistered) {
+                return request.createResponseBuilder(HttpStatus.OK).build();
+            } else {
+                return request.createResponseBuilder(HttpStatus.NOT_FOUND).build();
+            }
         }
     }
 
@@ -98,6 +114,14 @@ public class ExternalFunctions {
         }
 
         return ackPayloadRequest;
+    }
+
+    private HttpResponseMessage invalidTenantResponse(
+            HttpRequestMessage<Optional<String>> request, ExecutionContext context) {
+        context.getLogger().warning("Rejected request with unsupported tenant");
+        return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+                .body("Invalid tenant context")
+                .build();
     }
 
   @FunctionName("webhookTest")
