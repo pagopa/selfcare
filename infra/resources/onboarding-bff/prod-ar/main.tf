@@ -89,4 +89,5 @@ module "apim_api_bff_onboarding" {
   api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
   external_domain     = "pagopa.it"
   openapi_path        = "../../../../apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+  tenant_ids          = module.local.config.tenant_ids
 }

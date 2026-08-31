@@ -121,6 +121,27 @@ module "log_analytics" {
   law_daily_quota_gb    = local.law_daily_quota_gb
 }
 
+resource "azurerm_resource_group" "synthetic_monitoring" {
+  name     = "${local.project}-synthetic-monitoring-rg"
+  location = local.location
+  tags     = local.tags
+}
+
+module "synthetic_monitoring_storage" {
+  source = "../_modules/synthetic_monitoring_storage"
+
+  project                             = "${local.project}-${local.location_short}"
+  location                            = local.location
+  resource_group_name                 = "${local.project}-synthetic-monitoring-rg"
+  private_endpoint_subnet_id          = module.network.private_endpoints_subnet_id
+  virtual_network_id                  = module.network.vnet_id
+  virtual_network_name                = module.network.vnet_name
+  virtual_network_resource_group_name = module.network.rg_vnet_name
+  tags                                = local.tags
+
+  depends_on = [azurerm_resource_group.synthetic_monitoring]
+}
+
 ###############################################################################
 # cdn (Front Door)
 ###############################################################################
@@ -615,11 +636,11 @@ module "storage_user_attachments" {
   base_blob_tier_to_cold_after_days_since_creation_greater_than     = 90
   base_delete_after_days_since_creation_greater_than                = 3651
 
-  snapshot_change_tier_to_cool_after_days_since_creation            = 90
-  snapshot_delete_after_days_since_creation_greater_than            = 3651
+  snapshot_change_tier_to_cool_after_days_since_creation = 90
+  snapshot_delete_after_days_since_creation_greater_than = 3651
 
-  version_change_tier_to_cool_after_days_since_creation             = 90
-  version_delete_after_days_since_creation                          = 3651
+  version_change_tier_to_cool_after_days_since_creation = 90
+  version_delete_after_days_since_creation              = 3651
 
   # Defender for Storage
   defender_enabled                           = true

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>selc-commons-connector-soap</artifactId>
+    <groupId>it.pagopa.selfcare</groupId>
+    <version>2.10.0</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>it.pagopa.selfcare.soap</groupId>
+  <artifactId>selc-commons-connector-soap-aruba-sign</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>it.pagopa.selfcare.utils</groupId>
+      <artifactId>selc-commons-crypto</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare.utils</groupId>
+      <artifactId>selc-commons-crypto</artifactId>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare.soap</groupId>
+      <artifactId>selc-commons-connector-soap-utils</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>com.sun.xml.ws</groupId>
+        <artifactId>jaxws-maven-plugin</artifactId>
+        <version>4.0.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>wsimport</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <wsdlDirectory>src/main/resources/docs/aruba/</wsdlDirectory>
+          <packageName>
+            it.pagopa.selfcare.commons.connector.soap.aruba.sign.generated.client
+          </packageName>
+          <sourceDestDir>
+            ${project.build.directory}/generated-sources/wsimport/
+          </sourceDestDir>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

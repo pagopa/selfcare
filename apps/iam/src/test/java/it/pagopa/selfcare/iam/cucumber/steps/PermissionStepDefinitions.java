@@ -40,13 +40,14 @@ public class PermissionStepDefinitions {
     // Setup per utente con permessi per istituzione specifica
   }
 
-  @When("I check if user {string} has permission {string} for product {string}")
+  @When("I check if user {string} has permission {string} for product {string} and tenant {string}")
   public void iCheckIfUserHasPermissionForProduct(
-      String userId, String permission, String productId) {
+      String userId, String permission, String productId, String tenantId) {
     response =
         given()
             .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
             .queryParam("productId", productId)
+            .queryParam("tenantId", tenantId)
             .when()
             .get("/iam/users/" + userId + "/permissions/" + permission)
             .then()
@@ -55,12 +56,13 @@ public class PermissionStepDefinitions {
   }
 
   @When(
-      "I check if user {string} has permission {string} for product {string} and institution {string}")
+      "I check if user {string} has permission {string} for product {string} and tenant {string} on institution {string}")
   public void iCheckIfUserHasPermissionForProductAndInstitution(
-      String userId, String permission, String productId, String institutionId) {
+      String userId, String permission, String productId, String tenantId, String institutionId) {
     response =
         given()
             .queryParam("productId", productId)
+            .queryParam("tenantId", tenantId)
             .header("Authorization", "Bearer " + CucumberSuiteTest.tokenTest)
             .queryParam("institutionId", institutionId)
             .when()

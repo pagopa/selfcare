@@ -25,8 +25,8 @@
             "type" : "string"
           },
           "status" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "title" : {
             "type" : "string"
@@ -40,6 +40,9 @@
         "type" : "object",
         "properties" : {
           "productId" : {
+            "type" : "string"
+          },
+          "tenantId" : {
             "type" : "string"
           },
           "role" : {
@@ -60,9 +63,6 @@
         "type" : "object",
         "properties" : {
           "userId" : {
-            "type" : "string"
-          },
-          "productId" : {
             "type" : "string"
           },
           "name" : {
@@ -88,6 +88,9 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "roles" : {
             "type" : "array",
             "items" : {
@@ -97,12 +100,12 @@
         }
       },
       "SaveUserRequest" : {
-        "type" : "object",
         "required" : [ "email" ],
+        "type" : "object",
         "properties" : {
           "email" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           },
           "uid" : {
             "type" : "string"
@@ -208,6 +211,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
+            "type" : "string"
+          }
         } ],
         "requestBody" : {
           "content" : {
@@ -270,6 +280,13 @@
           "name" : "productId",
           "in" : "query",
           "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -348,6 +365,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -398,6 +422,13 @@
           "name" : "productId",
           "in" : "query",
           "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -471,6 +502,13 @@
           "name" : "productId",
           "in" : "query",
           "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -559,6 +597,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -630,6 +675,13 @@
           "name" : "productId",
           "in" : "query",
           "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "schema" : {
+            "default" : "AR",
             "type" : "string"
           }
         } ],

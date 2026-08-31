@@ -11,8 +11,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.webhook.entity.WebhookNotification;
+import it.pagopa.selfcare.webhook.metrics.WebhookMetrics;
 import it.pagopa.selfcare.webhook.repository.WebhookNotificationRepository;
 import jakarta.inject.Inject;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +29,8 @@ class WebhookNotificationOutboxServiceTest {
   @InjectMock WebhookNotificationRepository notificationRepository;
 
   @InjectMock WebhookNotificationPublisher publisher;
+
+  @InjectMock WebhookMetrics metrics;
 
   private WebhookNotificationOutboxService serviceInstance;
 
@@ -75,6 +80,7 @@ class WebhookNotificationOutboxServiceTest {
   void publishUnpublishedNotifications_shouldPublishAndMarkNotificationAsPublished() {
     // given
     WebhookNotification notification = notification();
+    notification.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC).minusSeconds(5));
     when(notificationRepository.claimUnpublishedNotifications(100, 5))
         .thenReturn(Uni.createFrom().item(List.of(notification)));
     when(publisher.publish(notification.getId().toHexString())).thenReturn(Uni.createFrom().voidItem());
@@ -93,6 +99,8 @@ class WebhookNotificationOutboxServiceTest {
     verify(publisher).publish(notification.getId().toHexString());
     verify(notificationRepository).markAsPublished(notification.getId());
     verify(notificationRepository, never()).releasePublishingLock(notification.getId());
+    verify(metrics).recordClaim("outbox", 1);
+    verify(metrics).recordOutboxLag(org.mockito.ArgumentMatchers.anyLong());
   }
 
   @Test

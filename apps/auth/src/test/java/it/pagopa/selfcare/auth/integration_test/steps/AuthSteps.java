@@ -1,9 +1,11 @@
 package it.pagopa.selfcare.auth.integration_test.steps;
 
+import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
+import io.cucumber.java.en.Given;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.FeatureFlagEnum;
 import it.pagopa.selfcare.auth.model.OtpStatus;
@@ -57,6 +59,11 @@ public class AuthSteps {
   @Before(value = "@OidcOpenLimit", order = 10)
   public void setLimitOpen() {
     otpDailyLimit.setDailyLimit(-1);
+  }
+
+  @Before(value = "@NoOtpFlows")
+  public void deleteAllOtps() {
+    deleteAllOtpFlowsFromDatabase();
   }
 
   @After
@@ -120,8 +127,8 @@ public class AuthSteps {
         });
   }
 
-  @And("An OTP flow should be created with status {string}")
-  public void anOtpFlowShouldBeCreatedWithStatus(String status) {
+  @And("An OTP flow should be created with status {string} and mailRequestId {string}")
+  public void anOtpFlowShouldBeCreatedWithStatusAndRequestId(String status, String requestId) {
     String otpSessionUid =
         sharedStepData.getResponse().body().jsonPath().getString("otpSessionUid");
     final String uiidField = OtpFlow.Fields.uuid.name();
@@ -135,38 +142,92 @@ public class AuthSteps {
     Assertions.assertNotNull(otpFlow, "Failed to find OtpFlow with UUID:" + otpSessionUid);
     Assertions.assertEquals(
         OtpStatus.valueOf(status), otpFlow.getStatus(), "OtpFlow status is not : " + status);
+    Assertions.assertEquals(
+      "null".equals(requestId) ? null : requestId,
+      otpFlow.getMailRequestId(),
+      "OtpFlow requestId is not : " + requestId);
   }
 
   @And("An OTP flow with uuid {string} already exists with status {string} and attempts {int}")
   public void anOTPFlowWithUuidAlreadyExistsWithStatus(String uuid, String status, int attempts) {
-    String updateBuilder =
-        "{'$set': { 'status': ?1, 'attempts' : ?2, 'updatedAt': ?3, 'expiresAt' : ?4 } }";
-    OtpFlow.update(
-            updateBuilder,
-            status,
-            attempts,
-            Date.from(OffsetDateTime.now().toInstant()),
-            Date.from(OffsetDateTime.now().plusMinutes(5).toInstant()))
+
+    OtpFlow otpFlow =
+      OtpFlow.<OtpFlow>find(OtpFlow.Fields.uuid.name(), uuid)
+        .firstResult()
+        .await()
+        .indefinitely();
+
+    if (otpFlow != null) {
+      String updateBuilder =
+        "{'$set': { 'status': ?1, 'attempts': ?2, 'updatedAt': ?3, 'expiresAt': ?4 }}";
+
+      OtpFlow.update(
+          updateBuilder,
+          status,
+          attempts,
+          Date.from(OffsetDateTime.now().toInstant()),
+          Date.from(OffsetDateTime.now().plusMinutes(5).toInstant()))
         .where(OtpFlow.Fields.uuid.name(), uuid)
         .await()
         .indefinitely();
+
+    } else {
+      OtpFlow newOtpFlow =
+        OtpFlow.builder()
+          .uuid(uuid)
+          .status(OtpStatus.valueOf(status))
+          .attempts(attempts)
+          .createdAt(OffsetDateTime.now())
+          .updatedAt(OffsetDateTime.now())
+          .expiresAt(OffsetDateTime.now().plusMinutes(5))
+          .build();
+
+      newOtpFlow.persist()
+        .await()
+        .indefinitely();
+    }
   }
 
 
-  @And("An OTP flow with uuid {string} was COMPLETED {int} months ago")
-  public void anOTPFlowWithUuidWasCompletedMonthsAgo(String uuid, int months) {
-    String updateBuilder =
-            "{'$set': { 'status': ?1, 'attempts' : ?2, 'createdAt': ?3, 'updatedAt': ?4, 'expiresAt' : ?5 } }";
-    OtpFlow.update(
-                    updateBuilder,
-                    COMPLETED,
-                    0,
-                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
-                    Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
-                    Date.from(OffsetDateTime.now().minusMonths(months).plusMinutes(5).toInstant()))
-            .where(OtpFlow.Fields.uuid.name(), uuid)
-            .await()
-            .indefinitely();
+  @And("An OTP flow with uuid {string} for user {string} was COMPLETED {int} months ago")
+  public void anOTPFlowWithUuidWasCompletedMonthsAgo(String uuid, String userId, int months) {
+
+    OtpFlow otpFlow =
+      OtpFlow.<OtpFlow>find(OtpFlow.Fields.uuid.name(), uuid)
+        .firstResult()
+        .await()
+        .indefinitely();
+
+    if (otpFlow != null) {
+      String updateBuilder =
+        "{'$set': { 'status': ?1, 'attempts' : ?2, 'createdAt': ?3, 'updatedAt': ?4, 'expiresAt' : ?5, 'userId': ?6} }";
+      OtpFlow.update(
+          updateBuilder,
+          COMPLETED,
+          0,
+          Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
+          Date.from(OffsetDateTime.now().minusMonths(months).toInstant()),
+          Date.from(OffsetDateTime.now().minusMonths(months).plusMinutes(5).toInstant()),
+          userId)
+        .where(OtpFlow.Fields.uuid.name(), uuid)
+        .await()
+        .indefinitely();
+    } else {
+      OtpFlow newOtpFlow = OtpFlow.builder()
+        .uuid(uuid)
+        .userId(userId)
+        .status(OtpStatus.valueOf("COMPLETED"))
+        .attempts(1)
+        .createdAt(OffsetDateTime.now().minusMonths(months))
+        .updatedAt(OffsetDateTime.now().minusMonths(months))
+        .expiresAt(OffsetDateTime.now().minusMonths(months).plusMinutes(5))
+        .build();
+
+      newOtpFlow.persist()
+        .await()
+        .indefinitely();
+
+    }
   }
 
   @And("The OTP flow with uuid {string} has been updated to status {string}")
@@ -238,6 +299,40 @@ public class AuthSteps {
     OtpFlow.delete("userId", "35a78332-d038-4bfa-8e85-2cba7f6b7322")
             .await()
             .indefinitely();
+  }
+
+  private void deleteAllOtpFlowsFromDatabase() {
+    OtpFlow.deleteAll().await().indefinitely();
+  }
+
+  @And("An OTP flow with uuid {string} does not exist")
+  public void anOTPFlowWithUuidDoesNotExist(String uuid) {
+    Long deletedCount = OtpFlow.delete("uuid", uuid).await().indefinitely();
+    if (deletedCount > 0) {
+      log.info("Deleted {} OTP flow(s) with UUID: {}", deletedCount, uuid);
+    } else {
+      log.info("No OTP flow found with UUID: {}", uuid);
+    }
+  }
+
+  @Given("The following OTP flows exist:")
+  public void theFollowingOtpFlowsExist(DataTable dataTable) {
+    dataTable.asMaps().forEach(row -> {
+      OtpFlow otpFlow =
+        OtpFlow.builder()
+          .uuid(row.get("uuid"))
+          .userId(row.get("userId"))
+          .status(OtpStatus.valueOf(row.get("status")))
+          .attempts(Integer.parseInt(row.get("attempts")))
+          .mailRequestId(row.get("mailRequestId"))
+          .createdAt(OffsetDateTime.now().minusMinutes(10))
+          .updatedAt(OffsetDateTime.now().minusMinutes(5))
+          .expiresAt(OffsetDateTime.now().plusMinutes(5))
+          .otp("12345")
+          .build();
+
+      otpFlow.persist().await().indefinitely();
+    });
   }
 
 

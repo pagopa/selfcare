@@ -8,6 +8,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.jwt.auth.principal.ParseException;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.controller.response.OidcExchangeOtpResponse;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InternalException;
@@ -21,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.one_identity_json.api.DefaultApi;
 import org.openapi.quarkus.one_identity_json.model.TokenData;
@@ -33,8 +35,14 @@ public class OidcServiceTest {
   @InjectMock JwtService jwtService;
   @InjectMock UserService userService;
   @InjectMock OtpFlowService otpFlowService;
+  @InjectMock AuthTenantContext tenantContext;
 
   @RestClient @InjectMock DefaultApi tokenApi;
+
+  @BeforeEach
+  void setUpTenant() {
+    when(tenantContext.getTenantId()).thenReturn("AR");
+  }
 
   @Test
   void exchangeAuthCodeWithSessionToken() throws ParseException {
@@ -47,12 +55,7 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
-                        "TINIT-FISCALCODE",
-                        "name",
-                        "name",
-                        "family_name",
-                        "Doe")));
+                        "fiscalNumber", "TINIT-FISCALCODE", "name", "name", "familyName", "Doe")));
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(userClaims));
@@ -81,12 +84,7 @@ public class OidcServiceTest {
             Uni.createFrom()
                 .item(
                     Map.of(
-                        "fiscal_number",
-                        "TINIT-FISCALCODE",
-                        "name",
-                        "name",
-                        "family_name",
-                        "Doe")));
+                        "fiscalNumber", "TINIT-FISCALCODE", "name", "name", "familyName", "Doe")));
 
     when(userService.patchUser(anyString(), anyString(), anyString(), anyBoolean()))
         .thenReturn(Uni.createFrom().item(userClaims));

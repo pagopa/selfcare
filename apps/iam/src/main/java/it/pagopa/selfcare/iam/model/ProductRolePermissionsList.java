@@ -14,7 +14,6 @@ import java.util.List;
 public class ProductRolePermissionsList {
 
   private String userId;
-  private String productId;
   private String name;
   private String familyName;
   private String email;

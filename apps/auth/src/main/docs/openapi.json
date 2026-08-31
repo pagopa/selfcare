@@ -1,5 +1,5 @@
 {
-  "openapi" : "3.1.0",
+  "openapi" : "3.0.3",
   "tags" : [ {
     "name" : "OIDC"
   }, {
@@ -9,6 +9,43 @@
   } ],
   "components" : {
     "schemas" : {
+      "Date" : {
+        "format" : "date",
+        "type" : "string",
+        "example" : "2022-03-10"
+      },
+      "MailStatusHistory" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "string"
+          },
+          "changedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          }
+        }
+      },
+      "ObjectId" : {
+        "type" : "object",
+        "properties" : {
+          "timestamp" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "nonce" : {
+            "format" : "int64",
+            "type" : "integer"
+          },
+          "date" : {
+            "$ref" : "#/components/schemas/Date"
+          }
+        }
+      },
+      "OffsetDateTime" : {
+        "format" : "date-time",
+        "type" : "string",
+        "example" : "2022-03-10T12:15:50-04:00"
+      },
       "OidcExchangeOtpResponse" : {
         "type" : "object",
         "properties" : {
@@ -24,16 +61,16 @@
         }
       },
       "OidcExchangeRequest" : {
-        "type" : "object",
         "required" : [ "code", "redirectUri" ],
+        "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           },
           "redirectUri" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           }
         }
       },
@@ -48,15 +85,70 @@
           }
         }
       },
+      "OtpFlow" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "$ref" : "#/components/schemas/ObjectId"
+          },
+          "uuid" : {
+            "type" : "string"
+          },
+          "userId" : {
+            "type" : "string"
+          },
+          "tenantId" : {
+            "type" : "string"
+          },
+          "otp" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/OtpStatus"
+          },
+          "attempts" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "createdAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "updatedAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "expiresAt" : {
+            "$ref" : "#/components/schemas/OffsetDateTime"
+          },
+          "mailRequestId" : {
+            "type" : "string"
+          }
+        }
+      },
       "OtpForbidden" : {
         "type" : "object",
         "properties" : {
+          "detail" : {
+            "type" : "string"
+          },
+          "instance" : {
+            "type" : "string"
+          },
+          "status" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          },
           "otpForbiddenCode" : {
             "$ref" : "#/components/schemas/OtpForbiddenCode"
           },
           "remainingAttempts" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "otpStatus" : {
             "$ref" : "#/components/schemas/OtpStatus"
@@ -64,34 +156,58 @@
         }
       },
       "OtpForbiddenCode" : {
-        "type" : "string",
-        "enum" : [ "CODE_001", "CODE_002" ]
+        "enum" : [ "CODE_001", "CODE_002" ],
+        "type" : "string"
+      },
+      "OtpMailInfoResponse" : {
+        "type" : "object",
+        "properties" : {
+          "mailRequestId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "recipient" : {
+            "type" : "string"
+          },
+          "attempts" : {
+            "format" : "int32",
+            "type" : "integer"
+          },
+          "history" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MailStatusHistory"
+            }
+          }
+        }
       },
       "OtpResendRequest" : {
-        "type" : "object",
         "required" : [ "otpUuid" ],
+        "type" : "object",
         "properties" : {
           "otpUuid" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           }
         }
       },
       "OtpStatus" : {
-        "type" : "string",
-        "enum" : [ "PENDING", "EXPIRED", "REJECTED", "COMPLETED" ]
+        "enum" : [ "PENDING", "EXPIRED", "REJECTED", "COMPLETED" ],
+        "type" : "string"
       },
       "OtpVerifyRequest" : {
-        "type" : "object",
         "required" : [ "otpUuid", "otp" ],
+        "type" : "object",
         "properties" : {
           "otpUuid" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           },
           "otp" : {
-            "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string"
           }
         }
       },
@@ -105,8 +221,8 @@
             "type" : "string"
           },
           "status" : {
-            "type" : "integer",
-            "format" : "int32"
+            "format" : "int32",
+            "type" : "integer"
           },
           "title" : {
             "type" : "string"
@@ -206,6 +322,129 @@
             "description" : "Internal Server Error",
             "content" : {
               "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otp/info" : {
+      "get" : {
+        "summary" : "Get OTP information",
+        "description" : "Retrieve OTP information for a user",
+        "operationId" : "getOtpInfo",
+        "tags" : [ "OTP" ],
+        "parameters" : [ {
+          "name" : "status",
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/OtpStatus"
+          }
+        }, {
+          "name" : "userId",
+          "in" : "query",
+          "schema" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "required" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OtpFlow"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otp/mail-info/{mailRequestId}" : {
+      "get" : {
+        "summary" : "Get OTP mail information",
+        "description" : "Retrieve the processing status of an email managed by OneMail",
+        "operationId" : "getOtpMailInfo",
+        "tags" : [ "OTP" ],
+        "parameters" : [ {
+          "name" : "mailRequestId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OtpMailInfoResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Problem"
                 }

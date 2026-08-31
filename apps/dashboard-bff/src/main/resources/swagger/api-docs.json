@@ -5456,6 +5456,9 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "role" : {
             "type" : "string"
           },
@@ -5474,9 +5477,6 @@
         "type" : "object",
         "properties" : {
           "userId" : {
-            "type" : "string"
-          },
-          "productId" : {
             "type" : "string"
           },
           "name" : {
