@@ -89,6 +89,7 @@ class AuthorizationHeaderInterceptorTest {
         String authorizationValue = "auth value";
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addHeader(HttpHeaders.AUTHORIZATION, authorizationValue);
+        request.addHeader("X-Tenant-Id", "AR");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
         RequestTemplate requestTemplate = new RequestTemplate();
 
@@ -103,5 +104,6 @@ class AuthorizationHeaderInterceptorTest {
         Optional<String> headerValue = headerValues.stream().findAny();
         assertTrue(headerValue.isPresent());
         assertEquals(authorizationValue, headerValue.get());
+        assertEquals("AR", headers.get("X-Tenant-Id").iterator().next());
     }
 }
