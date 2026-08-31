@@ -72,6 +72,7 @@ module "apim_pnpg_external_api_data_vault_v1" {
     API_DOMAIN                 = local.api_pnpg_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid_pnpg.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate_pnpg.thumbprint
+    APP_TENANT_ID              = local.tenant_id_pnpg
   })
 
   subscription_required = true
@@ -136,6 +137,7 @@ module "apim_pnpg_external_api_ms_v2" {
     API_DOMAIN                 = local.api_pnpg_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid_pnpg.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate_pnpg.thumbprint
+    APP_TENANT_ID              = local.tenant_id_pnpg
   })
 
   subscription_required = true
@@ -243,6 +245,7 @@ module "apim_pnpg_support_service_v2" {
     API_DOMAIN                 = local.api_pnpg_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid_pnpg.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate_pnpg.thumbprint
+    APP_TENANT_ID              = local.tenant_id_pnpg
   })
 
 
@@ -353,6 +356,7 @@ module "apim_pnpg_internal_api" {
     API_DOMAIN                 = local.api_pnpg_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid_pnpg.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate_pnpg.thumbprint
+    APP_TENANT_ID              = local.tenant_id_pnpg
   })
 
 
