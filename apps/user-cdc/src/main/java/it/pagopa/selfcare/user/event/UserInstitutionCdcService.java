@@ -38,6 +38,7 @@ import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.TrackEventInput;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -79,7 +80,7 @@ import static java.util.Comparator.nullsLast;
 public class UserInstitutionCdcService {
 
     private static final String COLLECTION_NAME = "userInstitutions";
-    private static final String OPERATION_NAME = "USER-CDC-UserInfoUpdate";
+    private static final String OPERATION_NAME = "USER-CDC-Update";
     public static final String USERS_FIELD_LIST_WITHOUT_FISCAL_CODE = "name,familyName,email,workContacts";
     public static final String ERROR_DURING_SUBSCRIBE_COLLECTION_EXCEPTION_MESSAGE = "Error during subscribe collection, exception: {} , message: {}";
 
@@ -170,7 +171,12 @@ public class UserInstitutionCdcService {
         this.addOnAggregatesEnabled = addOnAggregatesEnabled;
         this.addOnAggregatesGroupProducts = addOnAggregatesGroupProducts;
         telemetryClient.getContext().getOperation().setName(OPERATION_NAME);
-        initOrderStream();
+    }
+
+    @PostConstruct
+    void start() {
+      // start the change-stream watcher after CDI injection is complete
+      initOrderStream();
     }
 
     private void initOrderStream() {
