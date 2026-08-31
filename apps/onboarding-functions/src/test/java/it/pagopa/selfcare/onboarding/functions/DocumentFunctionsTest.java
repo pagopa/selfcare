@@ -59,6 +59,28 @@ public class DocumentFunctionsTest {
   }
 
   @Test
+  void deleteUserAttachments() throws JsonProcessingException {
+    EntityFilter entity = EntityFilter.builder().value("onb-user-1").build();
+    String params = objectMapper.writeValueAsString(entity);
+    when(documentService.deleteUserAttachments("onb-user-1")).thenReturn(Response.ok("2/2 deleted").build());
+
+    function.deleteUserAttachments(params, executionContext);
+
+    verify(documentService, times(1)).deleteUserAttachments("onb-user-1");
+  }
+
+  @Test
+  void deleteUserAttachments_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
+    EntityFilter entity = EntityFilter.builder().value("onb-user-2").build();
+    String params = objectMapper.writeValueAsString(entity);
+    when(documentService.deleteUserAttachments("onb-user-2")).thenReturn(Response.status(500).build());
+
+    assertThrows(
+        GenericOnboardingException.class,
+        () -> function.deleteUserAttachments(params, executionContext));
+  }
+
+  @Test
   void getLatestDocument_success() throws JsonProcessingException {
     Onboarding onboarding = new Onboarding();
     onboarding.setId("onb-1");
