@@ -90,6 +90,32 @@ In the current rollout, `PNPG` continues to authenticate through
   use the validated `PNPG` request tenant established by the compatibility
   flow.
 
+### 4. Shared JWT validation libraries
+
+- **SELC-4.1** The shared JWT validation libraries for Quarkus and Spring
+  applications MUST implement the same tenant-validation behavior.
+- **SELC-4.2** The libraries MUST determine the token tenant only after
+  validating the JWT signature, allowed algorithm, issuer, audience, and
+  expiration.
+- **SELC-4.3** For a token cryptographically verified as issued by the configured
+  SPID issuer (`hub-spid-login`), if `tenant_id` is absent, the libraries MUST
+  assign the effective token tenant `PNPG`.
+- **SELC-4.4** If a verified SPID token contains `tenant_id`, the libraries MUST
+  validate and preserve that value and MUST NOT replace it with the `PNPG`
+  default.
+- **SELC-4.5** The libraries MUST compare the effective token tenant with the
+  trusted `X-Tenant-Id` request header. A missing trusted header or a tenant
+  mismatch MUST cause authentication to fail with `400 Bad Request` using the
+  RFC 7807 `Problem` convention.
+- **SELC-4.6** The `X-Tenant-Id` header MUST be considered trusted only when it
+  is derived from the request URL and overwritten by APIM, or supplied through
+  an equivalent authenticated gateway-to-backend channel. A client-provided
+  header MUST NOT independently establish tenant identity.
+- **SELC-4.7** After successful validation, the libraries MUST expose the
+  reconciled tenant through a trusted application security context so business
+  logic and downstream calls do not independently interpret the raw header or
+  unverified JWT claims.
+
 ## Open Questions
 
 - What overlap duration applies during certificate rotation, and what approval

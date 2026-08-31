@@ -40,6 +40,7 @@ class JWTSecurityIdentityAugmentorTest {
   void testAugment_WithValidJWT_ShouldAddRoleAndAttribute() {
     // Given
     when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn("AR");
 
     SecurityIdentity identity = QuarkusSecurityIdentity.builder()
       .setPrincipal(jsonWebToken)
@@ -55,7 +56,28 @@ class JWTSecurityIdentityAugmentorTest {
     // Then
     assertNotNull(result);
     assertEquals("SPID", result.getAttribute("jwt.issuer"));
+    assertEquals("AR", result.getAttribute("jwt.tenant"));
     assertTrue(result.getRoles().contains("USER")); // Ruoli originali preservati
+  }
+
+  @Test
+  void testAugment_WithSPIDTokenWithoutTenant_ShouldDefaultToPNPG() {
+    // Given
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn(null);
+
+    SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+        .setPrincipal(jsonWebToken)
+        .build();
+
+    // When
+    SecurityIdentity result = augmentor.augment(identity, authContext)
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    // Then
+    assertEquals("PNPG", result.getAttribute("jwt.tenant"));
   }
 
   @Test

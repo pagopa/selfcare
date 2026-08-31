@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
-        <artifactId>selc-commons</artifactId>
-        <groupId>it.pagopa.selfcare</groupId>
-        <version>2.9.3</version>
-    </parent>
-    <modelVersion>4.0.0</modelVersion>
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <parent>
+    <artifactId>selc-commons</artifactId>
+    <groupId>it.pagopa.selfcare</groupId>
+    <version>2.10.0</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>selc-commons-connector</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>rest</module>
-        <module>soap</module>
-    </modules>
+  <artifactId>selc-commons-connector</artifactId>
+  <packaging>pom</packaging>
+  <modules>
+    <module>rest</module>
+    <module>soap</module>
+  </modules>
 
-    <dependencies>
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selc-commons-base</artifactId>
-        </dependency>
-    </dependencies>
+  <dependencies>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selc-commons-base</artifactId>
+    </dependency>
+  </dependencies>
 
 </project>
