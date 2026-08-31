@@ -121,6 +121,7 @@ locals {
       "ONBOARDING_DATA_ENCRIPTION_KEY" = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)",
       "ONBOARDING_DATA_ENCRIPTION_IV"  = "@Microsoft.KeyVault(SecretUri=https://selc-u-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
 
+      "DEFAULT_TENANT" = "AR"
     }
   }
 }

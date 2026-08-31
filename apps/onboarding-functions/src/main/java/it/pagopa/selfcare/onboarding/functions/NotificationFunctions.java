@@ -13,6 +13,7 @@ import com.microsoft.durabletask.azurefunctions.DurableClientInput;
 import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 import it.pagopa.selfcare.onboarding.dto.NotificationCountResult;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
@@ -84,8 +85,16 @@ public class NotificationFunctions {
         .build();
     }
 
-    notificationEventService.send(context, onboarding, queueEvent);
-    return request.createResponseBuilder(HttpStatus.OK).build();
+    TenantContext.Scope tenantScope;
+    try {
+      tenantScope = TenantContext.open(request, context);
+    } catch (IllegalArgumentException exception) {
+      return invalidTenantResponse(request, context);
+    }
+    try (TenantContext.Scope ignored = tenantScope) {
+      notificationEventService.send(context, onboarding, queueEvent);
+      return request.createResponseBuilder(HttpStatus.OK).build();
+    }
   }
 
   /**
@@ -115,8 +124,24 @@ public class NotificationFunctions {
         .body("Onboarding with ID: " + onboardingId + " not found")
         .build();
     }
-    notificationEventService.send(context, onboarding.get(), queueEvent);
-    return request.createResponseBuilder(HttpStatus.OK).build();
+    TenantContext.Scope tenantScope;
+    try {
+      tenantScope = TenantContext.open(request, context);
+    } catch (IllegalArgumentException exception) {
+      return invalidTenantResponse(request, context);
+    }
+    try (TenantContext.Scope ignored = tenantScope) {
+      notificationEventService.send(context, onboarding.get(), queueEvent);
+      return request.createResponseBuilder(HttpStatus.OK).build();
+    }
+  }
+
+  private HttpResponseMessage invalidTenantResponse(
+      HttpRequestMessage<Optional<String>> request, ExecutionContext context) {
+    context.getLogger().warning("Rejected request with unsupported tenant");
+    return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+        .body("Invalid tenant context")
+        .build();
   }
 
   /**

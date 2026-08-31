@@ -1,8 +1,9 @@
 package it.pagopa.selfcare.dashboard.config.restclient;
 
 import it.pagopa.selfcare.commons.connector.rest.config.RestClientBaseConfig;
+import it.pagopa.selfcare.dashboard.interceptor.TenantHeaderInterceptor;
 import org.springframework.context.annotation.Import;
 
-@Import({RestClientBaseConfig.class})
+@Import({RestClientBaseConfig.class, TenantHeaderInterceptor.class})
 public class UserRegistryRestClientConfig {
 }
