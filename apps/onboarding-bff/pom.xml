@@ -23,7 +23,7 @@
     <description>SelfCare Onboarding BFF</description>
 
     <properties>
-        <selc-commons.version>2.9.0</selc-commons.version>
+        <selc-commons.version>2.10.0</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <parent-commons-sdk-version>0.17.5</parent-commons-sdk-version>
     </properties>

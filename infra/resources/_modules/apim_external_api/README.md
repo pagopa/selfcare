@@ -145,6 +145,7 @@
 | <a name="input_private_dns_name"></a> [private\_dns\_name](#input\_private\_dns\_name) | AKS private DNS record | `string` | n/a | yes |
 | <a name="input_private_onboarding_dns_name"></a> [private\_onboarding\_dns\_name](#input\_private\_onboarding\_dns\_name) | AKS private onboarding DNS record | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | <pre>{<br/>  "CreatedBy": "Terraform"<br/>}</pre> | no |
+| <a name="input_tenant_registry"></a> [tenant\_registry](#input\_tenant\_registry) | Registry of supported tenants for the current environment (same source as local-env's<br/>tenant\_registries), used to derive the tenant\_id embedded in the session JWTs minted by<br/>APIM and in the corresponding X-Tenant-Id header, instead of hardcoding "AR"/"PNPG" in<br/>the policy templates. | <pre>map(object({<br/>    frontend_uri            = string<br/>    api_uri                 = string<br/>    allowed_origins         = list(string)<br/>    authentication_provider = string<br/>    auth_enabled            = bool<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

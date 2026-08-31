@@ -13,6 +13,7 @@ import java.util.List;
 @Component
 public class LogRequestInterceptor implements HandlerInterceptor {
 
+    private static final String TENANT_HEADER = "X-Tenant-Id";
     private static final Collection<String> URI_PREFIX_WHITELIST = List.of(
             "/swagger",
             "/v3/api-docs"
@@ -24,10 +25,20 @@ public class LogRequestInterceptor implements HandlerInterceptor {
         boolean skipLog = URI_PREFIX_WHITELIST.stream()
                 .anyMatch(request.getRequestURI()::startsWith);
         if (!skipLog) {
-            log.info("Requested {} {}", request.getMethod(), request.getRequestURI());
+            log.info("Requested {} {} tenant={}",
+                    request.getMethod(),
+                    request.getRequestURI(),
+                    sanitizeTenant(request.getHeader(TENANT_HEADER)));
         }
 
         return true;
+    }
+
+    private String sanitizeTenant(String tenantId) {
+        if (tenantId == null) {
+            return "unknown";
+        }
+        return tenantId.replaceAll("[^A-Za-z0-9_-]", "_");
     }
 
 }

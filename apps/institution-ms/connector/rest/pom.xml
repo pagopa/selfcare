@@ -16,6 +16,11 @@
             <artifactId>selc-commons-connector-rest</artifactId>
         </dependency>
         <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-connector-rest</artifactId>
             <type>test-jar</type>
