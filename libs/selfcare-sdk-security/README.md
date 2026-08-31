@@ -52,6 +52,3 @@ The custom logic is primarily executed within the overridden ```parse``` method 
 - Tenant Validation: For a verified `SPID` token, the SDK exposes the effective
   tenant as the `jwt.tenant` security identity attribute and validates it
   against the `X-Tenant-Id` header after authentication.
-- Tenant Configuration: `SUPPORTED_TENANTS` accepts a comma-separated list of
-  tenant identifiers, while `DEFAULT_TENANT` selects the tenant used when
-  `tenant_id` is absent. Their defaults are `AR,PNPG` and `PNPG`, respectively.
