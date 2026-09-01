@@ -11,6 +11,11 @@ Custom Public Key Verification: Both JWT will use the same pre-configured shared
 
 Conditional Role Assignment: It conditionally augments the authenticated user's Security Identity by adding the SUPPORT role if the token's issuer is PAGOPA.
 
+Tenant Consistency Validation: For tokens issued by SPID, the validated
+`tenant_id` claim is reconciled with the trusted `X-Tenant-Id` request header.
+When the claim is absent, the effective tenant is `PNPG`; a missing, unknown,
+or mismatching header is rejected.
+
 ## Configuration and Usage
 
 The core functionality is implemented within the custom
@@ -44,3 +49,6 @@ The custom logic is primarily executed within the overridden ```parse``` method 
 - Key Setup: The shared public key, injected during the constructor phase, is set on the ```JWTAuthContextInfo``` used for the standard validation process.
 - Security Identity Augmentation: The custom logic ensures that tokens issued by ```PAGOPA``` result in a ```SecurityIdentity``` that includes the ```SUPPORT``` role, enabling access to specific privileged endpoints.
   - (Note: While the provided class is a ```JWTCallerPrincipalFactory```, the role assignment is typically handled by a subsequent ```SecurityIdentityAugmentor``` in a complete flow. However, the custom factory sets the foundation by ensuring only valid issuers pass the initial check.)
+- Tenant Validation: For a verified `SPID` token, the SDK exposes the effective
+  tenant as the `jwt.tenant` security identity attribute and validates it
+  against the `X-Tenant-Id` header after authentication.

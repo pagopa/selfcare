@@ -34,12 +34,12 @@ data "azurerm_user_assigned_identity" "product_storage_blob_identity" {
 }
 
 data "azurerm_user_assigned_identity" "users_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-sc-users-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
 data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
-  name = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-selfcare-fd-eventhub-sender-managed-identity"
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
@@ -168,6 +168,14 @@ locals {
       value = "https://selc-${module.local.config.env_short}-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
+      name  = "WEBHOOK_URL"
+      value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
+      name  = "USER_MS_WEBHOOK_ENABLED"
+      value = true
+    },
+    {
       name  = "BLOB-STORAGE-PRODUCT-ACCOUNT-NAME"
       value = data.azurerm_storage_account.product_storage.name
     },
@@ -194,12 +202,12 @@ locals {
   ]
 
   secrets_names_user_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "appinsights-connection-string"
-    "JWT-PUBLIC-KEY"                                     = "jwt-public-key"
-    "MONGODB-CONNECTION-STRING"                          = "mongodb-connection-string"
-    "USER-REGISTRY-API-KEY"                              = "user-registry-api-key"
-    "AWS-SES-ACCESS-KEY-ID"                              = "aws-ses-access-key-id"
-    "AWS-SES-SECRET-ACCESS-KEY"                          = "aws-ses-secret-access-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
+    "MONGODB-CONNECTION-STRING"             = "mongodb-connection-string"
+    "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
+    "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
+    "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
   }
 }
 

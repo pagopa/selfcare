@@ -23,16 +23,26 @@ module "local" {
 
 # ONLY FOR AR
 module "apim_api_registry_proxy" {
-  source              = "../../_modules/apim_api"
-  apim_name           = "selc-${module.local.config.env_short}-apim-v2"
-  apim_rg             = "selc-${module.local.config.env_short}-api-v2-rg"
-  api_name            = "selc-${module.local.config.env_short}-api-bff-proxy"
-  display_name        = "BFF Proxy API"
-  base_path           = "party-registry-proxy/v1"
-  private_dns_name    = "selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix     = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix = module.local.config.api_dns_zone_prefix
-  openapi_path        = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
+  source                     = "../../_modules/apim_api"
+  apim_name                  = "selc-${module.local.config.env_short}-apim-v2"
+  apim_rg                    = "selc-${module.local.config.env_short}-api-v2-rg"
+  api_name                   = "selc-${module.local.config.env_short}-api-bff-proxy"
+  display_name               = "BFF Proxy API"
+  base_path                  = "party-registry-proxy/v1"
+  private_dns_name           = "selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix            = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
+  openapi_path               = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
+  tenant_ids                 = module.local.config.tenant_ids
+  tenant_hosts               = module.local.config.tenant_hosts
+  tenant_enforcement_enabled = true
+  allowed_headers = [
+    "Authorization",
+    "Content-Type",
+    "Accept",
+    "traceparent",
+    "tracestate"
+  ]
 }
 
 
@@ -123,7 +133,7 @@ locals {
 
   dapr_sidecar_settings = [
     {
-      app_id       = "party-reg-proxy"
+      app_id       = "selc-${module.local.config.env_short}-party-reg-proxy-ca"
       app_port     = 8080
       app_protocol = "http"
     }
@@ -294,10 +304,10 @@ locals {
 
   app_settings = concat(local.registry_proxy_app_settings, local.dapr_settings)
 
-  # cae_id               = 
+  # cae_id               =
   # container_app_id     = try(data.azurerm_container_app.ca.id, null)
   # storage_account_id   = try(data.azurerm_storage_account.existing_logs_storage.id, null)
-  # storage_account_name = 
+  # storage_account_name =
   # key_vault_id         = try(data.azurerm_key_vault.key_vault.id, null)
   # logs_storage_key     = try(data.azurerm_key_vault_secret.logs_storage_access_key.value, null)
   probes = [

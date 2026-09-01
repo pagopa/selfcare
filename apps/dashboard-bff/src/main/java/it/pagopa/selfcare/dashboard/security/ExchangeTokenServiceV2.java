@@ -32,7 +32,6 @@ import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsLis
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
 import lombok.Data;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -157,7 +156,7 @@ public class ExchangeTokenServiceV2 {
         it.pagopa.selfcare.dashboard.model.institution.Institution institution = institutionService.getInstitutionById(institutionId);
         Assert.notNull(institution, INSTITUTION_REQUIRED_MESSAGE);
 
-        final ProductRolePermissionsList permissions = iamExternalRestClient._getIAMProductRolePermissionsList(selfCareUser.getId(), productId).getBody();
+        final ProductRolePermissionsList permissions = iamExternalRestClient._getIAMProductRolePermissionsList(selfCareUser.getId(), productId, "AR").getBody();
         final List<ProductRolePermissions> productRoles = permissions == null || permissions.getItems() == null ? List.of() : permissions.getItems();
 
         InstitutionBackofficeAdmin institutionExchange = institutionResourceMapper.toInstitutionBackofficeAdmin(institution, productRoles);

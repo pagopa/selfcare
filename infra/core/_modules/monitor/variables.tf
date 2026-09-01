@@ -94,3 +94,28 @@ variable "selfcare_status_uat_slack" {
   description = "UAT status alert slack email"
   default     = ""
 }
+
+# Alert: HTTP 400 rate per single API (operation_Name)
+variable "api_400_alert_enabled" {
+  type        = bool
+  description = "Enable the per-API HTTP 400 rate alert"
+  default     = true
+}
+
+variable "api_400_alert_threshold" {
+  type        = number
+  description = "Number of HTTP 400 for a single API within the evaluation window that triggers the alert"
+  default     = 25
+}
+
+variable "api_400_alert_window_frequency" {
+  type        = string
+  description = "Evaluation window and frequency (ISO 8601 duration) for the per-API HTTP 400 alert"
+  default     = "PT5M"
+}
+
+variable "api_400_alert_severity" {
+  type        = number
+  description = "Severity of the per-API HTTP 400 alert (0 = Critical ... 4 = Verbose)"
+  default     = 3
+}

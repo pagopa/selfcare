@@ -107,8 +107,8 @@ module "apim" {
     instrumentation_key = data.azurerm_application_insights.ai.instrumentation_key
   }
 
-  diagnostic_sampling_percentage = var.diagnostic_sampling_percentage
-  diagnostic_operation_name_format  = "Url"
+  diagnostic_sampling_percentage   = var.diagnostic_sampling_percentage
+  diagnostic_operation_name_format = "Url"
 
   xml_content = file("${path.module}/root_policy.xml")
 

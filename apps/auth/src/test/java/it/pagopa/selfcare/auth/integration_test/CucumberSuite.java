@@ -2,21 +2,15 @@ package it.pagopa.selfcare.auth.integration_test;
 
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
+import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
-
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Scanner;
 
 @Slf4j
+@TestProfile(IntegrationProfile.class)
 @CucumberOptions(
     features = "src/test/resources/features",
     glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.auth.integration_test"},
@@ -26,40 +20,17 @@ import java.util.Scanner;
     })
 public class CucumberSuite extends CucumberQuarkusTest {
 
-  private static ComposeContainer composeContainer;
-
   public static void main(String[] args) {
     runMain(CucumberSuite.class, args);
   }
 
   @BeforeAll
-  static void setup() throws IOException {
-    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-    try (InputStream inputStream = classLoader.getResourceAsStream("key/public-key.pub")) {
-      if (inputStream == null) {
-        throw new IOException("Public key file not found in classpath");
-      }
-      String publicKey =
-          new Scanner(inputStream, StandardCharsets.UTF_8.name()).useDelimiter("\\A").next();
-      System.setProperty("JWT-PUBLIC-KEY", publicKey);
-    }
-
+  static void setup() {
     // By default, quarkus starts the ms on port 8081
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
-
-    composeContainer =
-        new ComposeContainer(new File("docker-compose.yml"))
-            .withLocalCompose(true)
-            .withPull(true)
-            .waitingFor("institutionms", Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .waitingFor("userms", Wait.forLogMessage(".*user-ms.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .waitingFor("iamms", Wait.forLogMessage(".*iam.*started in.*Listening on.*", 1).withStartupTimeout(Duration.ofMinutes(5)))
-            .withStartupTimeout(Duration.ofMinutes(5));
-
-    composeContainer.start();
-
-    Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+    RestAssured.requestSpecification =
+        new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
 
     log.info(
         "\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n",

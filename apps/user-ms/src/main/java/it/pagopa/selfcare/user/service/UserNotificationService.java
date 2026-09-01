@@ -13,6 +13,8 @@ import java.util.List;
 public interface UserNotificationService {
     Uni<UserNotificationToSend> sendKafkaNotification(UserNotificationToSend userNotificationToSend);
 
+    Uni<UserNotificationToSend> sendUserNotification(UserNotificationToSend userNotificationToSend);
+
     Uni<Void> sendEmailNotification(UserResource user, UserInstitution institution, Product product, OnboardedProductState status, String productRole, String loggedUserName, String loggedUserSurname);
 
     Uni<Void> sendCreateUserNotification(String institutionDescription, List<String> roleLabels, UserResource userResource, UserInstitution userInstitution, Product product, LoggedUser loggedUser);

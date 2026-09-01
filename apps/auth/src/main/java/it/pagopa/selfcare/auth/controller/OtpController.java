@@ -4,8 +4,11 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.controller.request.OtpResendRequest;
 import it.pagopa.selfcare.auth.controller.request.OtpVerifyRequest;
 import it.pagopa.selfcare.auth.controller.response.*;
+import it.pagopa.selfcare.auth.entity.OtpFlow;
+import it.pagopa.selfcare.auth.model.OtpStatus;
 import it.pagopa.selfcare.auth.service.OtpFlowService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,8 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+
+import java.util.List;
 
 @Tag(name = "OTP")
 @Path("/otp")
@@ -130,5 +135,88 @@ public class OtpController {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<OidcExchangeOtpResponse> resendOtp(@Valid OtpResendRequest otpResendRequest) {
     return otpFlowService.resendOtp(otpResendRequest.getOtpUuid());
+  }
+
+  @Operation(
+    description = "Retrieve the processing status of an email managed by OneMail",
+    summary = "Get OTP mail information",
+    operationId = "getOtpMailInfo")
+  @APIResponses(
+    value = {
+      @APIResponse(
+        responseCode = "200",
+        description = "OK",
+        content =
+        @Content(
+          schema = @Schema(implementation = OtpMailInfoResponse.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "400",
+        description = "Bad Request",
+        content =
+        @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "404",
+        description = "Not Found",
+        content =
+        @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "500",
+        description = "Internal Server Error",
+        content =
+        @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON))
+    })
+  @GET
+  @Path("/mail-info/{mailRequestId}")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<OtpMailInfoResponse> getOtpMailInfo(
+    @PathParam("mailRequestId") String mailRequestId) {
+    return otpFlowService.getOtpMailInfo(mailRequestId);
+  }
+
+  @Operation(
+    description = "Retrieve OTP information for a user",
+    summary = "Get OTP information",
+    operationId = "getOtpInfo")
+  @APIResponses(
+    value = {
+      @APIResponse(
+        responseCode = "200",
+        description = "OK",
+        content = @Content(
+          schema = @Schema(implementation = OtpFlow.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "400",
+        description = "Bad Request",
+        content = @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "404",
+        description = "Not Found",
+        content = @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON)),
+      @APIResponse(
+        responseCode = "500",
+        description = "Internal Server Error",
+        content = @Content(
+          schema = @Schema(implementation = Problem.class),
+          mediaType = MediaType.APPLICATION_JSON))
+    })
+  @GET
+  @Path("/info")
+  @Produces(MediaType.APPLICATION_JSON)
+  public Uni<List<OtpFlow>> getOtpInfo(
+    @QueryParam("userId") @NotBlank String userId,
+    @QueryParam("status") OtpStatus status) {
+    return otpFlowService.getOtpInfo(userId, status);
   }
 }

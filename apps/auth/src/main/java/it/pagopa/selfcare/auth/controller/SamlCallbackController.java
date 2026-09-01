@@ -84,7 +84,7 @@ public class SamlCallbackController {
       @Context ContainerRequestContext requestContext,
       @FormParam("SAMLResponse") String samlResponse)
       throws Exception {
-    log.info("{}", samlResponse == null ? null : samlResponse.replaceAll("[\\r\\n]", ""));
+    log.info("event=saml_response_received");
 
     return validateRequest(requestContext.getMediaType(), samlResponse)
         .onItem()

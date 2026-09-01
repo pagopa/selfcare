@@ -76,6 +76,7 @@ module "apim_external_api_onboarding_auto_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -108,6 +109,7 @@ module "apim_external_api_onboarding_io_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -148,6 +150,7 @@ module "apim_external_api_ms_v2" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -502,6 +505,7 @@ module "apim_internal_api_ms_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -709,6 +713,7 @@ module "apim_pdnd_infocamere_api_ms_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -758,6 +763,7 @@ module "apim_selfcare_support_service_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -928,6 +934,12 @@ module "apim_selfcare_support_service_v1" {
       xml_content = templatefile("${path.module}/api/base_ms_url_policy.xml", {
         MS_BACKEND_URL = "https://selc-${var.env_short}-institution-ms-ca.${var.ca_suffix_dns_private_name}/"
       })
+    },
+    {
+      operation_id = "countDelegationsUsingGET"
+      xml_content = templatefile("${path.module}/api/base_ms_url_policy.xml", {
+        MS_BACKEND_URL = "https://selc-${var.env_short}-institution-ms-ca.${var.ca_suffix_dns_private_name}/"
+      })
     }
   ]
 }
@@ -967,6 +979,7 @@ module "apim_notification_event_api_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -978,6 +991,7 @@ module "apim_notification_event_api_v1" {
         API_DOMAIN                 = local.api_domain
         KID                        = data.azurerm_key_vault_secret.jwt_kid.value
         JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+        APP_TENANT_ID              = local.tenant_id_ar
       })
     },
     {
@@ -986,6 +1000,7 @@ module "apim_notification_event_api_v1" {
         API_DOMAIN                 = local.api_domain
         KID                        = data.azurerm_key_vault_secret.jwt_kid.value
         JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+        APP_TENANT_ID              = local.tenant_id_ar
       })
     }
     #{
@@ -1033,6 +1048,7 @@ module "apim_external_api_contract_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -1044,6 +1060,7 @@ module "apim_external_api_contract_v1" {
         API_DOMAIN                 = local.api_domain
         KID                        = data.azurerm_key_vault_secret.jwt_kid.value
         JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+        APP_TENANT_ID              = local.tenant_id_ar
       })
     }
   ]
@@ -1084,6 +1101,7 @@ module "apim_external_api_contract_public_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -1161,6 +1179,7 @@ module "apim_billing_portal_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true
@@ -1215,6 +1234,7 @@ module "apim_internal_user_api_ms_v1" {
     API_DOMAIN                 = local.api_domain
     KID                        = data.azurerm_key_vault_secret.jwt_kid.value
     JWT_CERTIFICATE_THUMBPRINT = azurerm_api_management_certificate.jwt_certificate.thumbprint
+    APP_TENANT_ID              = local.tenant_id_ar
   })
 
   subscription_required = true

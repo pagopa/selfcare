@@ -11,6 +11,12 @@ variable "environment" {
   description = "Naming inputs for the Storage Account hosting the webhook queue."
 }
 
+variable "location" {
+  type        = string
+  default     = "westeurope"
+  description = "Location of the resource group hosting the Storage Account."
+}
+
 variable "resource_group_name" {
   type        = string
   description = "Resource group where the storage account and Container Apps Environment identity reside."
@@ -59,6 +65,12 @@ variable "subscription_id" {
 variable "queue_name" {
   type        = string
   description = "Name of the queue used for webhook delivery notifications."
+}
+
+variable "poison_queue_name" {
+  type        = string
+  default     = null
+  description = "Queue collecting messages that exceeded the maximum dequeue count. Azure Storage Queues have no native dead-lettering, so the application moves them here. Defaults to <queue_name>-poison."
 }
 
 variable "tags" {

@@ -9,6 +9,7 @@ public class ActivityName {
   public static final String DELETE_USER_ONBOARDING_ACTIVITY_NAME = "DeleteUserOnboarding";
   public static final String DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME = "DeleteInstitutionOnboarding";
   public static final String DELETE_TOKEN_CONTRACT_ACTIVITY_NAME = "DeleteTokenContract";
+  public static final String DELETE_USER_ATTACHMENTS_ACTIVITY_NAME = "DeleteUserAttachments";
   public static final String SEND_MAIL_REGISTRATION_FOR_CONTRACT =
     "SendMailRegistrationForContract";
   public static final String SEND_MAIL_REGISTRATION_FOR_CONTRACT_WHEN_APPROVE_ACTIVITY =

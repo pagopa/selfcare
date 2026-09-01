@@ -1,5 +1,5 @@
 ---
-openapi: 3.1.0
+openapi: 3.0.3
 tags:
 - name: System
   description: System information
@@ -38,18 +38,18 @@ paths:
       - name: page
         in: query
         schema:
-          type: integer
           format: int32
-          minimum: 0
           default: 0
+          minimum: 0
+          type: integer
       - name: size
         in: query
         schema:
-          type: integer
           format: int32
+          default: 20
           maximum: 100
           minimum: 1
-          default: 20
+          type: integer
       - name: tenantId
         in: query
         schema:
@@ -119,14 +119,14 @@ paths:
       - name: from
         in: query
         schema:
-          type: string
           pattern: \S
+          type: string
         required: true
       - name: to
         in: query
         schema:
-          type: string
           pattern: \S
+          type: string
         required: true
       responses:
         "200":
@@ -215,8 +215,8 @@ paths:
       - name: tenantId
         in: query
         schema:
-          type: string
           pattern: \S
+          type: string
         required: true
       responses:
         "200":
@@ -243,85 +243,84 @@ paths:
 components:
   schemas:
     LocalDateTime:
-      type: string
       format: date-time
-      examples:
-      - 2022-03-10T12:15:50
+      type: string
+      example: 2022-03-10T12:15:50
     NotificationRequest:
-      type: object
       required:
       - productId
       - tenantId
       - payload
       - topic
+      type: object
       properties:
         productId:
-          type: string
           pattern: \S
+          type: string
         tenantId:
-          type: string
           pattern: \S
+          type: string
         payload:
-          type: string
           pattern: \S
+          type: string
         topic:
-          type: string
           pattern: \S
+          type: string
     NotificationStatus:
-      type: string
       enum:
       - PENDING
       - SENDING
       - DELIVERED
       - FAILED
       - RETRY
+      type: string
     RetryPolicyRequest:
       type: object
       properties:
         maxAttempts:
-          type: integer
           format: int32
+          type: integer
         initialDelayMs:
-          type: integer
           format: int64
+          type: integer
         maxDelayMs:
-          type: integer
           format: int64
+          type: integer
         backoffMultiplier:
-          type: number
           format: double
+          type: number
     RetryPolicyResponse:
       type: object
       properties:
         maxAttempts:
-          type: integer
           format: int32
+          type: integer
         initialDelayMs:
-          type: integer
           format: int64
+          type: integer
         maxDelayMs:
-          type: integer
           format: int64
+          type: integer
         backoffMultiplier:
-          type: number
           format: double
+          type: number
     WebhookRequest:
-      type: object
       required:
       - url
       - tenantId
       - productId
       - httpMethod
+      type: object
       properties:
         url:
-          type: string
           pattern: \S
+          type: string
         tenantId:
-          type: string
           pattern: \S
+          type: string
         productId:
-          type: string
           pattern: \S
+          type: string
         httpMethod:
           type: string
         headers:

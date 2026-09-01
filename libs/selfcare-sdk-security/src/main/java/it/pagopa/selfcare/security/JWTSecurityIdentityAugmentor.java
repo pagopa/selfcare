@@ -31,6 +31,10 @@ public class JWTSecurityIdentityAugmentor implements SecurityIdentityAugmentor {
     identity.getRoles().forEach(builder::addRole);
     identity.getAttributes().forEach(builder::addAttribute);
     builder.addAttribute("jwt.issuer", issuer);
+    if (issuer.equals("SPID")) {
+      builder.addAttribute(
+          JwtTenantValidator.TENANT_ATTRIBUTE, JwtTenantValidator.resolveTokenTenant(jwt));
+    }
     builder.addRoles(determineRolesForIssuer(issuer));
     identity.getCredentials().forEach(builder::addCredential);
     return Uni.createFrom().item(builder.build());

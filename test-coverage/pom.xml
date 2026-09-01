@@ -189,6 +189,25 @@
       </dependencies>
     </profile>
     <profile>
+      <id>institution-cdc</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <dependencies>
+        <dependency>
+          <groupId>it.pagopa.selfcare</groupId>
+          <artifactId>libs</artifactId>
+          <version>0.0.1</version>
+          <type>pom</type>
+        </dependency>
+        <dependency>
+          <groupId>it.pagopa.selfcare</groupId>
+          <artifactId>institution-cdc</artifactId>
+          <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+      </dependencies>
+    </profile>
+    <profile>
       <id>institution-send-mail-scheduler</id>
       <activation>
         <activeByDefault>false</activeByDefault>

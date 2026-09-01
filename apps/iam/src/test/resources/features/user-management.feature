@@ -73,45 +73,50 @@ Feature: User Management
 
   Scenario: Get user product role permissions list by UID
     When I request the user product role permissions list with parameters:
-      | uid | a0530f76-3454-418c-9d65-eb3162075495 |
+      | uid      | a0530f76-3454-418c-9d65-eb3162075495 |
+      | tenantId | tenant-A                             |
     Then the user product role permissions list should be retrieved successfully
     And the user should have the following product role permissions:
-      | productId | role     | permissions            |
-      | product-A | OPERATOR | read:users             |
-      | product-B | OPERATOR | read:users             |
-      | product-B | SUPPORT  | read:users,write:users |
+      | productId | tenantId | role     | permissions            |
+      | product-A | tenant-A | OPERATOR | read:users             |
+      | product-B | tenant-A | OPERATOR | read:users             |
+      | product-B | tenant-A | SUPPORT  | read:users,write:users |
 
   Scenario: Get user product role permissions list by UID and productId
     When I request the user product role permissions list with parameters:
       | uid       | a0530f76-3454-418c-9d65-eb3162075495 |
       | productId | product-A                            |
+      | tenantId  | tenant-A                             |
     Then the user product role permissions list should be retrieved successfully
     And the user should have the following product role permissions:
-      | productId | role     | permissions |
-      | product-A | OPERATOR | read:users  |
+      | productId | tenantId | role     | permissions |
+      | product-A | tenant-A | OPERATOR | read:users  |
 
   Scenario: Get user product role permissions list by UID and productId when user has permission productId and ALL
     When I request the user product role permissions list with parameters:
       | uid       | 72d4984f-d2bc-4584-a6a7-dd63068b7f48 |
       | productId | product-A                            |
+      | tenantId  | tenant-A                             |
     Then the user product role permissions list should be retrieved successfully
     And the user should have the following product role permissions:
-      | productId | role     | permissions |
-      | product-A | OPERATOR | read:users  |
+      | productId | tenantId | role     | permissions |
+      | product-A | tenant-A | OPERATOR | read:users  |
 
   Scenario: Get user product role permissions list by UID and productId when user has permission ALL
     When I request the user product role permissions list with parameters:
-      | uid       | 72d4984f-d2bc-4584-a6a7-dd63068b7f48 |
+      | uid       | 9f3c7a12-6d44-4b1a-8b7e-2f6d91c5e321 |
       | productId | product-A                            |
+      | tenantId  | tenant-A                             |
     Then the user product role permissions list should be retrieved successfully
     And the user should have the following product role permissions:
-      | productId | role     | permissions             |
-      | ALL       | SUPPORT  | read:users,write:users  |
+      | productId | tenantId | role    | permissions            |
+      | ALL       | tenant-A | SUPPORT | read:users,write:users |
 
   Scenario: Get user product role permissions list with unknown product should return empty list
     When I request the user product role permissions list with parameters:
       | uid       | a0530f76-3454-418c-9d65-eb3162075495 |
-      | productId | product-Z                             |
+      | productId | product-Z                            |
+      | tenantId  | tenant-A                             |
     Then the user product role permissions list should be retrieved successfully
     And the user should have no product role permissions
 

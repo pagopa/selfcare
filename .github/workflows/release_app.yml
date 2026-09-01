@@ -28,6 +28,7 @@ on:
           - iam
           - dashboard-bff
           - delegation-cdc
+          - institution-cdc
           - document-ms
           - external-api
           - institution-ms

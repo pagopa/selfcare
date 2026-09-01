@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.auth.service;
 
+import io.quarkus.mongodb.panache.common.reactive.ReactivePanacheUpdate;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery;
 import io.quarkus.panache.mock.PanacheMock;
@@ -8,6 +9,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.model.OtpStatus;
@@ -18,6 +20,7 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -34,7 +37,13 @@ public class OtpFlowBetaServiceTest {
 
   @InjectMock UserService userService;
   @InjectMock OtpNotificationService otpNotificationService;
+  @InjectMock AuthTenantContext tenantContext;
   @Inject OtpFlowService otpFlowService;
+
+  @BeforeEach
+  void setUpTenant() {
+    when(tenantContext.getTenantId()).thenReturn("AR");
+  }
 
   private UserClaims getUserClaims() {
     return UserClaims.builder()
@@ -42,6 +51,7 @@ public class OtpFlowBetaServiceTest {
         .name("name")
         .familyName("family")
         .fiscalCode("fiscalCode")
+        .tenantId("AR")
         .build();
   }
 
@@ -51,14 +61,18 @@ public class OtpFlowBetaServiceTest {
     getUserClaims().setFiscalCode("fiscalCode2");
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(update);
+    when(update.where(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
-    when(query.firstResult())
-        .thenReturn(Uni.createFrom().nullItem());
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -78,14 +92,18 @@ public class OtpFlowBetaServiceTest {
     input.setFiscalCode("fiscalCode3");
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(update);
+    when(update.where(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
-    when(query.firstResult())
-        .thenReturn(Uni.createFrom().nullItem());
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -97,7 +115,7 @@ public class OtpFlowBetaServiceTest {
     Assertions.assertTrue(maybeOtpInfo.isPresent());
     OtpInfo otpInfo = maybeOtpInfo.get();
     verify(otpNotificationService, times(1))
-        .sendOtpEmail(eq(input.getUid()), eq("forced.mail@test.com"), anyString());
+        .sendOtpEmail(eq(input.getUid()), eq("forced.mail@test.com"), anyString(), anyString());
     Assertions.assertEquals("forced.mail@test.com", otpInfo.getInstitutionalEmail());
   }
 
@@ -106,14 +124,18 @@ public class OtpFlowBetaServiceTest {
     UserClaims input = getUserClaims();
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(update);
+    when(update.where(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
-    when(query.firstResult())
-        .thenReturn(Uni.createFrom().nullItem());
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -133,8 +155,8 @@ public class OtpFlowBetaServiceTest {
 
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -142,6 +164,11 @@ public class OtpFlowBetaServiceTest {
     OtpFlow foundOtpFlow =
         OtpFlow.builder().uuid("uuid").otp("123456").status(OtpStatus.COMPLETED).build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(update);
+    when(update.where(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -162,8 +189,8 @@ public class OtpFlowBetaServiceTest {
 
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -176,6 +203,11 @@ public class OtpFlowBetaServiceTest {
             .expiresAt(OffsetDateTime.now())
             .build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(update);
+    when(update.where(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
         otpFlowService
@@ -196,9 +228,14 @@ public class OtpFlowBetaServiceTest {
 
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(update);
+    when(update.where(anyString(), Mockito.<Object[]>any()))
+      .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
@@ -230,8 +267,8 @@ public class OtpFlowBetaServiceTest {
 
     when(userService.getUserInfoEmail(anyString()))
         .thenReturn(Uni.createFrom().item("test@test.com"));
-    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString()))
-        .thenReturn(Uni.createFrom().voidItem());
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(Uni.createFrom().item("requestId"));
     PanacheMock.mock(OtpFlow.class);
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);

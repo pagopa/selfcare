@@ -80,6 +80,11 @@ public class DocumentServiceImpl implements DocumentService {
   }
 
   @Override
+  public Response deleteUserAttachments(String onboardingId) {
+    return documentContentControllerApi.deleteUserAttachments(onboardingId);
+  }
+
+  @Override
   public DocumentResponse getDocumentByOnboardingId(String onboardingId) {
     return documentControllerApi.getDocumentByOnboardingId(onboardingId);
   }
