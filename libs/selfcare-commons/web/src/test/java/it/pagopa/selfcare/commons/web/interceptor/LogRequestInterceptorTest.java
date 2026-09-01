@@ -11,7 +11,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 @ExtendWith(OutputCaptureExtension.class)
 class LogRequestInterceptorTest {
 
-    private static final String MESSAGE_TEMPLATE = "Requested %s %s" + System.lineSeparator();
+    private static final String MESSAGE_TEMPLATE = "Requested %s %s tenant=%s" + System.lineSeparator();
 
     private final LogRequestInterceptor logRequestInterceptorUnderTest = new LogRequestInterceptor();
 
@@ -21,7 +21,10 @@ class LogRequestInterceptorTest {
         // given
         MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
         MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
-        String expectedSuffix = String.format(MESSAGE_TEMPLATE, mockHttpServletRequest.getMethod(), mockHttpServletRequest.getRequestURI());
+        String expectedSuffix = String.format(MESSAGE_TEMPLATE,
+                mockHttpServletRequest.getMethod(),
+                mockHttpServletRequest.getRequestURI(),
+                "unknown");
         // when
         boolean result = logRequestInterceptorUnderTest.preHandle(mockHttpServletRequest, mockHttpServletResponse, "controller");
         // then
@@ -41,6 +44,17 @@ class LogRequestInterceptorTest {
         // then
         Assertions.assertTrue(result);
         Assertions.assertTrue(output.getOut().isEmpty());
+    }
+
+    @Test
+    void preHandle_logsTenant(CapturedOutput output) {
+        MockHttpServletRequest mockHttpServletRequest = new MockHttpServletRequest();
+        mockHttpServletRequest.addHeader("X-Tenant-Id", "AR");
+        MockHttpServletResponse mockHttpServletResponse = new MockHttpServletResponse();
+
+        logRequestInterceptorUnderTest.preHandle(mockHttpServletRequest, mockHttpServletResponse, "controller");
+
+        Assertions.assertTrue(output.getOut().contains("tenant=AR"));
     }
 
 }

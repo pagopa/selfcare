@@ -11,6 +11,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.onboarding.client.webhook.WebhookRestClient;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.config.NotificationConfig;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.dto.webhook.NotificationRequest;
@@ -284,7 +285,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         }
 
         webhookRestClient.sendNotification(NotificationRequest.builder().productId(notificationToSend.getProduct())
-                .payload(message).tenantId("AR").topic("SC-Contracts").build());
+                .payload(message).tenantId(TenantContext.currentTenantOrDefault()).topic("SC-Contracts").build());
         telemetryService.trackEvent(EVENT_ONBOARDING_FN_NAME,
                 notificationEventMap(notificationToSend, "WEBHOOK", notificationEventTraceId),
                 Map.of(EVENT_ONBOARDING_INSTTITUTION_FN_SUCCESS, 1D));
