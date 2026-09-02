@@ -49,6 +49,11 @@ variable "application_insights_name" {
   description = "Application Insights name (from log_analytics module)"
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "Log Analytics workspace ID used by Application Insights log alerts"
+}
+
 # Web test URLs - from dns_public and cdn modules
 variable "dns_a_api_fqdn" {
   type        = string
