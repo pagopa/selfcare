@@ -890,3 +890,16 @@ module "user_managed_identity" {
   eventhub_namespace_name   = "${local.prefix}-${local.env_short}-eventhub-ns"
   eventhub_namespace_rg     = "${local.prefix}-${local.env_short}-event-rg"
 }
+
+###############################################################################
+# Internal Events
+###############################################################################
+
+module "internal_events" {
+  source = "../_modules/internal_events"
+
+  location                  = local.location
+  env_short                 = local.env_short
+  domain                    = local.app_domain
+  tags                      = local.tags
+}
