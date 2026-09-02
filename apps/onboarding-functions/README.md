@@ -100,6 +100,45 @@ If you want enable debugging you must add -DenableDebug
 ```
 You can follow this guide for debugging application in IntelliJ https://www.jetbrains.com/help/idea/tutorial-remote-debug.html
 
+## Cucumber integration tests in IntelliJ
+
+The Cucumber suite exercises the Functions Host running in the Docker integration stack; it does not use the development configuration or credentials of an Azure environment.
+
+### Prerequisites
+
+- Docker must be running and able to pull the images used by `src/test/resources/docker-compose.yml` (access to `ghcr.io/pagopa` may be required).
+- Maven dependencies must be available. If required by the Docker build, configure the local Maven settings in `~/.m2/settings.xml`.
+
+Start the stack from the repository root:
+
+```shell
+docker compose -f apps/onboarding-functions/src/test/resources/docker-compose.yml up --build
+```
+
+The stack starts MongoDB, Azurite, MockServer, User MS, Institution MS, Document MS and the Function Host. The Function endpoint used by the feature is `http://localhost:8090`.
+
+> **Test data only:** all environment variables, keys, tokens, connection strings, fixtures and databases used by this stack are fake/local test data. MongoDB and Azurite run in Docker and are not connected to Azure or to a real database.
+
+### IntelliJ run configuration
+
+Create a **Cucumber Java** configuration with these values (the shared configuration is [Feature_ onboarding-fn.run.xml](../../.run/Feature_%20onboarding-fn.run.xml)):
+
+| Field | Value |
+| --- | --- |
+| Feature file | `apps/onboarding-functions/src/test/resources/features/onboarding-fn.feature` |
+| Main class | `it.pagopa.selfcare.onboarding.steps.OnboardingFunctionStep` |
+| Module | `onboarding-functions` |
+| Working directory | module directory (`apps/onboarding-functions`) |
+| Program arguments | `--plugin teamcity` (optional) |
+
+Run it only after the `onboarding-function` container is ready. The test profile reads the local test properties, fixtures and certificates already versioned under `src/test/resources`; do not replace them with application credentials, connection strings, API keys, or environment-specific values.
+
+Stop and remove the stack when finished:
+
+```shell
+docker compose -f apps/onboarding-functions/src/test/resources/docker-compose.yml down
+```
+
 ## Deploy
 
 ### Configuration Properties
