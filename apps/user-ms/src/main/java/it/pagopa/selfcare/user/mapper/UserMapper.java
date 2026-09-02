@@ -4,7 +4,6 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.constant.CertificationEnum;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.response.*;
-import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
@@ -293,5 +292,4 @@ public interface UserMapper {
         return Collections.min(partyRoleList).name();
     }
 
-    UserInfoResponse toUserInfoResponse(UserInfo userInfo);
 }
