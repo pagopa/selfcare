@@ -228,7 +228,7 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
-      <artifactId>selfcare-internal-events</artifactId>
+      <artifactId>selfcare-internal-events-sdk</artifactId>
       <version>0.0.1</version>
     </dependency>
     <dependency>
