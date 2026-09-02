@@ -150,6 +150,11 @@
             <version>${cucumber-sdk.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-internal-events</artifactId>
+            <version>0.0.1</version>
+        </dependency>
     </dependencies>
 
     <build>
