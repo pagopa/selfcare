@@ -206,23 +206,6 @@ public class DocumentContentController {
                 .recoverWithItem(err -> Response.status(HttpStatus.SC_CONFLICT).entity(err.getMessage()).build());
     }
 
-    @Operation(
-            summary = "Store the Visura in Azure Blob Storage",
-            description = "Receives the Visura data (filename and content) and stores it in Azure Blob Storage."
-    )
-    @POST
-    @Path("/visura")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
-    public Uni<Response> saveVisuraForMerchant(@Valid UploadVisuraRequest request) {
-        log.info(
-                "Saving Visura for onboardingId= {}, filename= {}",
-                sanitize(request.getOnboardingId()),
-                sanitize(request.getFilename()));
-        return documentContentService.saveVisuraForMerchant(request)
-                .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build())
-                .onFailure()
-                .recoverWithItem(err -> Response.status(HttpStatus.SC_INTERNAL_SERVER_ERROR).entity(err.getMessage()).build());
-    }
 
     @Operation(
             summary = "Delete contract from Azure Blob Storage",
