@@ -53,7 +53,6 @@ public class DocumentMsTelemetryService {
     static final String EVENT_USER_ATTACHMENTS_DELETED       = "DOCUMENT-MS-USER-ATTACHMENTS-DELETED";
     static final String EVENT_USER_ATTACHMENTS_DELETE_FAILED = "DOCUMENT-MS-USER-ATTACHMENTS-DELETE-FAILED";
     static final String EVENT_AGGREGATES_CSV_UPLOADED  = "DOCUMENT-MS-AGGREGATES-CSV-UPLOADED";
-    static final String EVENT_VISURA_SAVED             = "DOCUMENT-MS-VISURA-SAVED";
 
     private volatile TelemetryClient telemetryClient;
 
@@ -261,20 +260,6 @@ public class DocumentMsTelemetryService {
         props.put("productId", productId);
 
         track(EVENT_AGGREGATES_CSV_UPLOADED, props, new HashMap<>());
-    }
-
-    /**
-     * Tracks the successful save of a Visura document for a merchant to Azure Blob Storage.
-     *
-     * @param onboardingId onboarding identifier
-     * @param filename     visura filename
-     */
-    public void trackVisuraSaved(String onboardingId, String filename) {
-        Map<String, String> props = new HashMap<>();
-        props.put("onboardingId", onboardingId);
-        props.put("filename", filename);
-
-        track(EVENT_VISURA_SAVED, props, new HashMap<>());
     }
 
     // -------------------------------------------------------------------------
