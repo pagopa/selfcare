@@ -2,8 +2,9 @@ package it.pagopa.selfcare.dashboard.config.restclient;
 
 import it.pagopa.selfcare.commons.connector.rest.config.RestClientBaseConfig;
 import it.pagopa.selfcare.commons.connector.rest.interceptor.AuthorizationHeaderInterceptor;
+import it.pagopa.selfcare.dashboard.interceptor.TenantHeaderInterceptor;
 import org.springframework.context.annotation.Import;
 
-@Import({RestClientBaseConfig.class, AuthorizationHeaderInterceptor.class})
+@Import({RestClientBaseConfig.class, AuthorizationHeaderInterceptor.class, TenantHeaderInterceptor.class})
 public class UserGroupRestClientConfig {
 }

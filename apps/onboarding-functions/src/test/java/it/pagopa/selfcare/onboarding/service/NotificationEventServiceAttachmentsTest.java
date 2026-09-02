@@ -26,6 +26,7 @@ import org.mockito.ArgumentCaptor;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.document_json.model.DocumentType;
 import org.openapi.quarkus.document_json.model.RelatedDocumentResponse;
 
 import java.time.LocalDateTime;
@@ -92,7 +93,7 @@ class NotificationEventServiceAttachmentsTest {
         attachment.setId("document-id");
         attachment.setFileName("attachment.pdf");
         attachment.setFilePath("/contracts/onboarding-id/attachments/attachment.pdf");
-        attachment.setType(RelatedDocumentResponse.TypeEnum.ATTACHMENT);
+        attachment.setType(DocumentType.ATTACHMENT);
         attachment.setMimeType("application/pdf");
         attachment.setCreatedAt(LocalDateTime.parse("2026-07-15T10:00:00"));
         when(documentService.getRelatedDocuments("onboarding-id")).thenReturn(List.of(attachment));

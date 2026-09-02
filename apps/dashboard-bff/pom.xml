@@ -17,7 +17,7 @@
     <properties>
         <azure-identity.version>1.18.1</azure-identity.version>
         <azure-storage-blob.version>12.24.0</azure-storage-blob.version>
-        <selc-commons.version>2.9.3</selc-commons.version>
+        <selc-commons.version>2.10.0</selc-commons.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
     </properties>

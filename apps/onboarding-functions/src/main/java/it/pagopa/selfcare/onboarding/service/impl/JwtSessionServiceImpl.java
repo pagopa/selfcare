@@ -7,6 +7,7 @@ import io.jsonwebtoken.JwsHeader;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import it.pagopa.selfcare.onboarding.config.TokenConfig;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.bouncycastle.asn1.pkcs.RSAPrivateKey;
@@ -57,6 +58,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
                     .claim("fiscal_number", userResource.getFiscalCode())
                     .claim("name", userResource.getName().getValue())
                     .claim("uid", userId)
+                    .claim(TenantContext.TENANT_CLAIM, TenantContext.currentTenantOrDefault())
                     .signWith(SignatureAlgorithm.RS256, privateKey)
                     .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
                     .setHeaderParam(Header.TYPE, Header.JWT_TYPE)

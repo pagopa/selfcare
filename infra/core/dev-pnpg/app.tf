@@ -136,6 +136,45 @@ resource "azurerm_monitor_metric_alert" "functions_exceptions" {
   }
 }
 
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "unavailable_blob_storage_access" {
+  name                = "unavailable-blob-storage-access-pnpg"
+  resource_group_name = data.azurerm_resource_group.monitor_rg.name
+  location            = data.azurerm_resource_group.monitor_rg.location
+  scopes              = [data.azurerm_log_analytics_workspace.log_analytics.id]
+  description         = "Action will be triggered when a PNPG application cannot access Blob Storage."
+  severity            = 2
+
+  evaluation_frequency = "PT5M"
+  window_duration      = "PT5M"
+
+  criteria {
+    query = <<-QUERY
+      union AppDependencies, AppExceptions, AppTraces
+      | extend payload = tostring(pack_all())
+      | where (Target has "blob.core.windows.net" and Target has "pnpg" and Success == false and (isempty(ResultCode) or ResultCode != "404"))
+        or (payload has "pnpg"
+          and not(payload has_any ("Status code 404", "StatusCode: 404", "HTTP 404"))
+          and payload has_any ("BlobStorageException", "blob.core.windows.net", "AuthorizationPermissionMismatch", "ConnectException", "UnknownHostException", "SocketTimeoutException"))
+      | summarize AggregatedValue = count() by AppRoleName
+    QUERY
+
+    time_aggregation_method = "Count"
+    operator                = "GreaterThan"
+    threshold               = 0
+
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+
+  action {
+    action_groups = local.env_short == "d" ? [data.azurerm_monitor_action_group.slack.id] : [azurerm_monitor_action_group.http_status[0].id]
+  }
+
+  tags = local.tags
+}
+
 ###############################################################################
 # Network
 ###############################################################################
