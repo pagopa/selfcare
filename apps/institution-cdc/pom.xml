@@ -134,6 +134,11 @@
             <groupId>org.glassfish.jaxb</groupId>
             <artifactId>txw2</artifactId>
         </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-internal-events</artifactId>
+            <version>0.0.1</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
