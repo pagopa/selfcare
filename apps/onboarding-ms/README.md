@@ -74,6 +74,42 @@ Run the module tests from the repository root with:
 mvn -pl apps/onboarding-ms test
 ```
 
+## Cucumber integration tests in IntelliJ
+
+The Cucumber suite starts its own Testcontainers Compose stack: MongoDB on port `28017`, Azurite, MockServer, Document MS and Product MS. Docker must be running and able to pull the required images (access to `ghcr.io/pagopa` may be required).
+
+> **Test data only:** all environment variables, keys, tokens, connection strings, fixtures and databases used by the suite are fake/local test data. MongoDB and Azurite run in Docker and are not connected to Azure or to a real database.
+
+### Fallback when Testcontainers fails
+
+If Testcontainers cannot start the stack, temporarily comment the `ComposeContainer` creation, `start()` and shutdown-hook lines in `OnboardingStep.setup()` (currently [lines 100-107](src/test/java/it/pagopa/selfcare/onboarding/steps/OnboardingStep.java#L100-L107)). Do not commit that local change.
+
+Then start the same stack manually from the repository root:
+
+```shell
+docker compose -f apps/onboarding-ms/src/test/resources/docker-compose.yml up
+```
+
+Wait for the `azure-cli` service to log `BLOBSTORAGE INITIALIZED`, then run the IntelliJ Cucumber configuration. Stop the manually managed stack at the end:
+
+```shell
+docker compose -f apps/onboarding-ms/src/test/resources/docker-compose.yml down
+```
+
+Create a **Cucumber Java** configuration with these values (the shared configuration is [Feature_ onboarding-ms.run.xml](../../.run/Feature_%20onboarding-ms.run.xml)):
+
+| Field | Value |
+| --- | --- |
+| Feature file | `apps/onboarding-ms/src/test/resources/features/onboarding.feature` |
+| Main class | `it.pagopa.selfcare.onboarding.steps.OnboardingStep` |
+| Module | `onboarding-ms` |
+| Working directory | module directory (`apps/onboarding-ms`) |
+| Program arguments | `--plugin teamcity` (optional) |
+
+The runner selects the `IntegrationProfile`, which uses the test properties and fixtures under `src/test/resources`, including the Azurite catalog and MockServer expectations. To run the readiness scenarios, use the same configuration and select `apps/onboarding-ms/src/test/resources/features/health.feature`; the runner includes both `@Onboarding` and `@Health` tags.
+
+No environment variables or Azure credentials are required for these Cucumber configurations. Keep environment-specific keys, connection strings and URLs out of shared IntelliJ configurations.
+
 ## Related Guides
 
 
