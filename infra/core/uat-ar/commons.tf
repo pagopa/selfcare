@@ -854,3 +854,16 @@ module "user_managed_identity" {
 #   container                 = module.storage_documents.storage_container_name
 #   primary_connection_string = module.storage_documents.storage_account.primary_connection_string
 # }
+
+###############################################################################
+# Internal Events
+###############################################################################
+
+module "internal_events" {
+  source = "../_modules/internal_events"
+
+  location                  = local.location
+  env_short                 = local.env_short
+  domain                    = local.app_domain
+  tags                      = local.tags
+}
