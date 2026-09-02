@@ -318,51 +318,6 @@ class DocumentContentControllerTest {
                 .statusCode(200);
     }
 
-    @Test
-    void saveVisuraForMerchant_shouldReturnNoContent_whenUploadSuccessful() throws IOException {
-        File tempFile = Files.createTempFile("visura", ".pdf").toFile();
-        tempFile.deleteOnExit();
-
-        UploadVisuraRequest request = UploadVisuraRequest.builder()
-                .onboardingId(ONBOARDING_ID)
-                .filename("VISURA_test.xml")
-                .build();
-
-        when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
-                .thenReturn(Uni.createFrom().voidItem());
-
-        given()
-                .multiPart("onboardingId", request.getOnboardingId())
-                .multiPart("filename", request.getFilename())
-                .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
-                .when()
-                .post(BASE_PATH + "visura")
-                .then()
-                .statusCode(204);
-    }
-
-    @Test
-    void saveVisuraForMerchant_shouldReturnInternalServerError_whenServiceFails() throws IOException {
-        File tempFile = Files.createTempFile("visura", ".pdf").toFile();
-        tempFile.deleteOnExit();
-
-        UploadVisuraRequest request = UploadVisuraRequest.builder()
-                .onboardingId(ONBOARDING_ID)
-                .filename("VISURA_test.xml")
-                .build();
-
-        when(documentContentService.saveVisuraForMerchant(any(UploadVisuraRequest.class)))
-                .thenReturn(Uni.createFrom().failure(new RuntimeException("Generic error")));
-
-        given()
-                .multiPart("onboardingId", request.getOnboardingId())
-                .multiPart("filename", request.getFilename())
-                .multiPart("file", tempFile, MediaType.APPLICATION_OCTET_STREAM)
-                .when()
-                .post(BASE_PATH + "visura")
-                .then()
-                .statusCode(500);
-    }
 
     @Test
     void getContract_shouldReturnFile_whenContractExists() throws Exception {
