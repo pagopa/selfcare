@@ -8,6 +8,7 @@ import java.util.List;
 public class AuthenticationPropagationHeadersFactory implements ClientHeadersFactory {
 
     private static final String AUTHORIZATION = "Authorization";
+    private static final String TENANT_HEADER = "X-Tenant-Id";
 
     @Override
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {
@@ -19,6 +20,15 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
             }
 
         }
+
+        if (incomingHeaders.containsKey(TENANT_HEADER)) {
+            List<String> headerValue = incomingHeaders.get(TENANT_HEADER);
+
+            if (headerValue != null) {
+                clientOutgoingHeaders.put(TENANT_HEADER, headerValue);
+            }
+        }
+
         return clientOutgoingHeaders;
     }
 }

@@ -1,9 +1,10 @@
 package it.pagopa.selfcare.external_api.client.config;
 
 import it.pagopa.selfcare.commons.connector.rest.config.RestClientBaseConfig;
+import it.pagopa.selfcare.external_api.client.interceptor.TenantHeaderInterceptor;
 import it.pagopa.selfcare.external_api.client.interceptor.UserRegistryAuthInterceptor;
 import org.springframework.context.annotation.Import;
 
-@Import({RestClientBaseConfig.class, UserRegistryAuthInterceptor.class})
+@Import({RestClientBaseConfig.class, UserRegistryAuthInterceptor.class, TenantHeaderInterceptor.class})
 public class UserRegistryRestClientConfig {
 }

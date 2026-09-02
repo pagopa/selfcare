@@ -175,6 +175,13 @@ public class InstitutionFunctions {
         String.class)
       .await();
 
+    ctx.callActivity(
+        DELETE_USER_ATTACHMENTS_ACTIVITY_NAME,
+        enrichedFilters,
+        optionsRetry,
+        String.class)
+      .await();
+
     logger.debug("processDocumentsDeletions completed");
   }
 

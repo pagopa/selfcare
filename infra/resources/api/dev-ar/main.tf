@@ -24,4 +24,5 @@ module "apim" {
   app_gateway_api_certificate_name = local.app_gateway_api_certificate_name
   ca_pnpg_suffix_dns_private_name  = local.ca_pnpg_suffix_dns_private_name
   developer_path                   = "${path.module}/developer"
+  tenant_registry                  = module.local.config.tenant_registry
 }
