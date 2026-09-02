@@ -68,11 +68,6 @@ public class DocumentServiceImpl implements DocumentService {
     return documentContentControllerApi.uploadAggregatesCsv(request);
   }
 
-  @Override
-  public Response saveVisuraForMerchant(
-      DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request) {
-    return documentContentControllerApi.saveVisuraForMerchant(request);
-  }
 
   @Override
   public Response deleteContract(String onboardingId) {
