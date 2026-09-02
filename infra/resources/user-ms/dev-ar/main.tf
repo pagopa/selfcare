@@ -194,11 +194,11 @@ locals {
     },
     {
       name  = "INTERNALEVENTS_ENABLED"
-      value = true
+      value = "true"
     },
     {
       name  = "INTERNALEVENTS_NAMESPACE"
-      value = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events"
+      value = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events.servicebus.windows.net"
     },
     {
       name  = "INTERNALEVENTS_CLIENT_ID"
