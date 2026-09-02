@@ -75,6 +75,11 @@ module "collection_user_groups" {
 # Container App
 ###############################################################################
 
+data "azurerm_user_assigned_identity" "internal_events_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events-rg"
+}
+
 locals {
   app_settings_user_groups_ms = [
     {
@@ -92,6 +97,18 @@ locals {
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "ms-user-group"
+    },
+    {
+      name  = "INTERNALEVENTS_ENABLED"
+      value = true
+    },
+    {
+      name  = "INTERNALEVENTS_NAMESPACE"
+      value = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events"
+    },
+    {
+      name  = "INTERNALEVENTS_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.internal_events_identity.client_id
     }
   ]
 
@@ -117,4 +134,7 @@ module "container_app_user_group_ms" {
   key_vault_resource_group_name  = module.local.config.key_vault_resource_group_name
   key_vault_name                 = module.local.config.key_vault_name
   tags                           = module.local.config.tags
+  additional_user_assigned_identity_ids = [
+    data.azurerm_user_assigned_identity.internal_events_identity.id,
+  ]
 }
