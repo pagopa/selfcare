@@ -198,6 +198,11 @@ locals {
   alert_functions_exceptions_name       = "pnpg-functions-exception"
   alert_functions_exceptions_role_names = ["${local.app_name_fn}"]
 
+  # Alert: HTTP 400 rate per single API (operation_Name)
+  api_400_alert_threshold        = 25
+  api_400_alert_window_frequency = "PT5M"
+  api_400_alert_severity         = 3
+
   api_gateway_url = "https://api-pnpg.selfcare.pagopa.it"
 
   # jwt exchange duration

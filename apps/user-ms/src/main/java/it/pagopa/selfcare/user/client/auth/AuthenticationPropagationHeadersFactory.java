@@ -7,16 +7,25 @@ import java.util.List;
 
 public class AuthenticationPropagationHeadersFactory implements ClientHeadersFactory {
 
+    static final String AUTHORIZATION_HEADER = "Authorization";
+    static final String TENANT_HEADER = "X-Tenant-Id";
+
     @Override
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {
-        if(incomingHeaders.containsKey("Authorization")) {
-            List<String> headerValue = incomingHeaders.get("Authorization");
-
-            if (headerValue != null) {
-                clientOutgoingHeaders.put("Authorization", headerValue);
-            }
-
-        };
+        copyHeader(incomingHeaders, clientOutgoingHeaders, AUTHORIZATION_HEADER);
+        copyHeader(incomingHeaders, clientOutgoingHeaders, TENANT_HEADER);
         return clientOutgoingHeaders;
+    }
+
+    private static void copyHeader(
+            MultivaluedMap<String, String> incomingHeaders,
+            MultivaluedMap<String, String> clientOutgoingHeaders,
+            String headerName) {
+        if (incomingHeaders.containsKey(headerName)) {
+            List<String> headerValue = incomingHeaders.get(headerName);
+            if (headerValue != null) {
+                clientOutgoingHeaders.put(headerName, headerValue);
+            }
+        }
     }
 }
