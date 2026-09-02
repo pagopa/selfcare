@@ -70,6 +70,7 @@ public class CreateUserGroupSteps extends UserGroupSteps {
 
         if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
+            requestSpecification.header("X-Tenant-Id", "AR");
         }
 
         ExtractableResponse<?> response = requestSpecification
