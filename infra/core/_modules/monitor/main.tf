@@ -7,6 +7,8 @@ locals {
   alert_functions_exceptions_name       = "functions-exception"
   alert_functions_exceptions_role_names = ["selc-${var.env_short}-onboarding-fn"]
 
+  alert_unavailable_blob_storage_access_name = "unavailable-blob-storage-access"
+
   test_urls_map = {
     "apigw-selfcare" = {
       host                              = trimsuffix(var.dns_a_api_fqdn, "."),
@@ -286,4 +288,96 @@ resource "azurerm_monitor_metric_alert" "functions_exceptions" {
   action {
     action_group_id = azurerm_monitor_action_group.slack.id
   }
+}
+
+#
+# Log Alert: HTTP 400 rate per single API (operation_Name)
+# Fires when a single API returns more than the threshold of HTTP 400
+# within the evaluation window. Evaluated per operation_Name via dimension split.
+# Only enabled in prod.
+#
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
+  count = var.env_short == "p" && var.api_400_alert_enabled ? 1 : 0
+
+  name                = "${local.project}-api-400-rate"
+  resource_group_name = var.monitor_rg_name
+  location            = var.monitor_rg_location
+
+  description             = "Triggered when a single API (operation_Name) returns more than ${var.api_400_alert_threshold} HTTP 400 within ${var.api_400_alert_window_frequency}."
+  severity                = var.api_400_alert_severity
+  enabled                 = true
+  auto_mitigation_enabled = false
+
+  scopes               = [var.application_insights_id]
+  evaluation_frequency = var.api_400_alert_window_frequency
+  window_duration      = var.api_400_alert_window_frequency
+
+  criteria {
+    query = <<-KQL
+      requests
+      | where resultCode == "400"
+      | summarize Count = count() by operation_Name
+    KQL
+
+    time_aggregation_method = "Total"
+    metric_measure_column   = "Count"
+    operator                = "GreaterThan"
+    threshold               = var.api_400_alert_threshold
+
+    dimension {
+      name     = "operation_Name"
+      operator = "Include"
+      values   = ["*"]
+    }
+
+    failing_periods {
+      number_of_evaluation_periods             = 1
+      minimum_failing_periods_to_trigger_alert = 1
+    }
+  }
+
+  action {
+    action_groups = [azurerm_monitor_action_group.error_action_group[0].id]
+  }
+
+  tags = var.tags
+}
+
+
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "unavailable_blob_storage_access" {
+  name                = local.alert_unavailable_blob_storage_access_name
+  resource_group_name = var.monitor_rg_name
+  location            = var.monitor_rg_location
+  scopes              = [var.log_analytics_workspace_id]
+  description         = "Action will be triggered when an application cannot access Blob Storage."
+  severity            = 2
+
+  evaluation_frequency = "PT5M"
+  window_duration      = "PT5M"
+
+  criteria {
+    query = <<-QUERY
+      union AppDependencies, AppExceptions, AppTraces
+      | extend payload = tostring(pack_all())
+      | where (Target has "blob.core.windows.net" and Target !has "pnpg" and Success == false and (isempty(ResultCode) or ResultCode != "404"))
+        or (payload !has "pnpg"
+          and not(payload has_any ("Status code 404", "StatusCode: 404", "HTTP 404"))
+          and payload has_any ("BlobStorageException", "blob.core.windows.net", "AuthorizationPermissionMismatch", "ConnectException", "UnknownHostException", "SocketTimeoutException"))
+      | summarize AggregatedValue = count() by AppRoleName
+    QUERY
+
+    time_aggregation_method = "Count"
+    operator                = "GreaterThan"
+    threshold               = 0
+
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+  action {
+    action_groups = [azurerm_monitor_action_group.error_action_group[0].id]
+  }
+
+  tags = var.tags
 }
