@@ -113,6 +113,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
     public void iSendAPutRequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
                 .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR")
                 .pathParam("id", userGroupId)
                 .pathParam("memberId", userGroupMemberId)
                 .when()
@@ -131,6 +132,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
 
         if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
+            requestSpecification.header("X-Tenant-Id", "AR");
         }
 
         ExtractableResponse<?> response = requestSpecification
@@ -156,6 +158,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
 
         if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
+            requestSpecification.header("X-Tenant-Id", "AR");
         }
 
         ExtractableResponse<?> response = requestSpecification
@@ -175,6 +178,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
     public void iSendADELETERequestTo(String url) {
         ResponseOptions<Response> response = RestAssured.given()
                 .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR")
                 .pathParam("id", userGroupId)
                 .pathParam("memberId", userGroupMemberId)
                 .when()
@@ -190,6 +194,7 @@ public class UserGroupMemberSteps extends UserGroupSteps {
     public void iSendADELETERequestToWithQueryParameters(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR")
                 .pathParam("memberId", userGroupMemberId);
 
         if (userGroupEntityFilter.getInstitutionId() != null) {
