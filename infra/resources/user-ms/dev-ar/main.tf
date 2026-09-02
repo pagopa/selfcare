@@ -40,6 +40,11 @@ data "azurerm_user_assigned_identity" "fd_eventhub_sender_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_user_assigned_identity" "internal_events_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events-rg"
+}
+
 ###############################################################################
 # COSMOS DB
 ###############################################################################
@@ -187,6 +192,18 @@ locals {
       name  = "EVENTHUBFD_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.client_id
     },
+    {
+      name  = "INTERNALEVENTS_ENABLED"
+      value = true
+    },
+    {
+      name  = "INTERNALEVENTS_NAMESPACE"
+      value = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events"
+    },
+    {
+      name  = "INTERNALEVENTS_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.internal_events_identity.client_id
+    },
   ]
 
   secrets_names_user_ms = {
@@ -218,6 +235,7 @@ module "container_app_user_ms" {
   additional_user_assigned_identity_ids = [
     data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
     data.azurerm_user_assigned_identity.users_eventhub_sender_identity.id,
-    data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.id
+    data.azurerm_user_assigned_identity.fd_eventhub_sender_identity.id,
+    data.azurerm_user_assigned_identity.internal_events_identity.id
   ]
 }
