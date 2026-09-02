@@ -21,7 +21,7 @@ import java.util.Optional;
 public class InternalEvents {
 
   private static final String INSTITUTION_EVENTS_TOPIC = "institution-events";
-  private static final String SUBSCRIPTION_NAME = "user-ms-sub";
+  private static final String SUBSCRIPTION_NAME = "user-sub";
 
   private static final int MAX_CONCURRENT_SESSIONS = 10;
   private static final int MAX_CONCURRENT_CALLS = 1;
