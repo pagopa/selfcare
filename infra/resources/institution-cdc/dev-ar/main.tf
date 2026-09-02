@@ -31,6 +31,11 @@ data "azurerm_user_assigned_identity" "product_storage_table_identity" {
   resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-user-managed-identity-rg"
 }
 
+data "azurerm_user_assigned_identity" "internal_events_identity" {
+  name                = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events-managed-identity"
+  resource_group_name = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events-rg"
+}
+
 ###############################################################################
 # Institution CDC
 ###############################################################################
@@ -44,6 +49,18 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
+    },
+    {
+      name  = "INTERNALEVENTS_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "INTERNALEVENTS_NAMESPACE"
+      value = "selc-${module.local.config.env_short}-${module.local.config.domain}-internal-events.servicebus.windows.net"
+    },
+    {
+      name  = "INTERNALEVENTS_CLIENT_ID"
+      value = data.azurerm_user_assigned_identity.internal_events_identity.client_id
     }
   ]
 
@@ -70,6 +87,7 @@ module "container_app_institution_cdc" {
   probes                         = module.local.config.quarkus_health_probes
   tags                           = module.local.config.tags
   additional_user_assigned_identity_ids = [
-    data.azurerm_user_assigned_identity.product_storage_table_identity.id
+    data.azurerm_user_assigned_identity.product_storage_table_identity.id,
+    data.azurerm_user_assigned_identity.internal_events_identity.id
   ]
 }
