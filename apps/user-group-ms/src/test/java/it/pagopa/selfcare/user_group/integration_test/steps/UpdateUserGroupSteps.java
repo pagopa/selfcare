@@ -73,6 +73,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
 
         if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
+            requestSpecification.header("X-Tenant-Id", "AR");
         }
 
         ExtractableResponse<?> response = requestSpecification
@@ -95,6 +96,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
 
         if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
+            requestSpecification.header("X-Tenant-Id", "AR");
         }
 
         ExtractableResponse<?> response = requestSpecification
@@ -118,6 +120,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
 
         if(StringUtils.isNotBlank(token)){
             requestSpecification.header("Authorization", "Bearer " + token);
+            requestSpecification.header("X-Tenant-Id", "AR");
         }
 
         ExtractableResponse<?> response = requestSpecification
@@ -138,6 +141,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
         ExtractableResponse<?> response = RestAssured.given()
                 .contentType("application/json")
                 .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR")
                 .when()
                 .get("/v1/user-groups/" + userGroupId)
                 .then()
@@ -171,6 +175,7 @@ public class UpdateUserGroupSteps extends UserGroupSteps {
         ExtractableResponse<?> response = RestAssured.given()
                 .contentType("application/json")
                 .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR")
                 .when()
                 .get("/v1/user-groups/" + userGroupId)
                 .then()
