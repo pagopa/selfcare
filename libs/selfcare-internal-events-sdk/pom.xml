@@ -10,7 +10,7 @@
         <version>0.0.1</version>
     </parent>
 
-    <artifactId>selfcare-internal-events</artifactId>
+    <artifactId>selfcare-internal-events-sdk</artifactId>
 
     <properties>
         <azure-identity.version>1.18.4</azure-identity.version>
