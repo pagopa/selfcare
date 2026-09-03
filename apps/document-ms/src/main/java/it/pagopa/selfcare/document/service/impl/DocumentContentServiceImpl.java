@@ -590,35 +590,6 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
-    public Uni<Void> saveVisuraForMerchant(UploadVisuraRequest uploadVisuraRequest) {
-        final String filename = uploadVisuraRequest.getFilename();
-        final String path = String.format("%s%s/visura", documentMsConfig.getContractPath(), uploadVisuraRequest.getOnboardingId());
-
-        return Uni.createFrom().item(uploadVisuraRequest::getFileContent)
-                .emitOn(Infrastructure.getDefaultWorkerPool())
-                .invoke(file -> {
-                    try {
-                        storageRegistry.clientFor(StorageOrigin.SYSTEM).uploadFile(path, filename, file.readAllBytes());
-                    } catch (IOException e) {
-                        log.error("Error reading from file {} ", sanitize(path), e);
-                        throw new RuntimeException("Error during Azure upload", e);
-                    }
-                })
-                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
-                .onFailure().transform(e -> {
-                    log.error(
-                            "Impossible to store visura document for onboardingId: {}, filename: {}. Error: {}",
-                            sanitize(uploadVisuraRequest.getOnboardingId()), sanitize(filename), e.getMessage(), e);
-                    return new InternalException(
-                            GENERIC_ERROR.getCode(),
-                            String.format("Error storing visura document for onboardingId: %s", sanitize(uploadVisuraRequest.getOnboardingId())));
-                })
-                .invoke(ignored -> telemetryService.trackVisuraSaved(
-                        uploadVisuraRequest.getOnboardingId(), filename))
-                .replaceWithVoid();
-    }
-
-  @Override
   public Uni<String> uploadSignedContract(String onboardingId, DocumentBuilderRequest request, boolean skipSignatureVerification,
                                           InputStream fileUpload, String fileName, boolean skipSignerIdentityCheck, int signingStep) {
 

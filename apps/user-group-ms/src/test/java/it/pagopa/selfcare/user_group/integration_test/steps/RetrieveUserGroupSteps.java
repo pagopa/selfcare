@@ -103,6 +103,7 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
         ResponseOptions<Response> response = RestAssured.given()
                 .pathParam("id", userGroupId)
                 .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR")
                 .when()
                 .get(url);
         status = response.statusCode();
@@ -117,7 +118,8 @@ public class RetrieveUserGroupSteps extends UserGroupSteps {
     public void iSendAGETRequestToRetrieveUserGroups(String url) {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json")
-                .header("Authorization", "Bearer " + token);
+                .header("Authorization", "Bearer " + token)
+                .header("X-Tenant-Id", "AR");
 
         if (Objects.nonNull(userGroupEntityFilter)) {
             if (Objects.nonNull(userGroupEntityFilter.getProductId())) {
