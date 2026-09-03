@@ -8,7 +8,6 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
-import it.pagopa.selfcare.user.controller.request.SendEmailOtpDto;
 import it.pagopa.selfcare.user.controller.request.SendMailDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
@@ -440,24 +439,6 @@ public class UserController {
     public Uni<Void> sendMailRequest(@PathParam("userId") String userId,
                                             @Valid SendMailDto sendMailDto) {
         return userService.sendMailUserRequest(userId, sendMailDto.getUserMailUuid(), sendMailDto.getInstitutionName(), sendMailDto.getProductId(), sendMailDto.getType(), sendMailDto.getInstitutionId());
-    }
-
-    @APIResponses({
-            @APIResponse(responseCode = "202", description = "Email send accepted!"),
-            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
-    })
-    @Operation(description = "The sendEmailOtp function is used to send email containing a One Time Password for account verification", summary = "Send an email with OTP")
-    @POST
-    @Path(value = "/{userId}/send-mail-otp")
-    @Tag(name = "User")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public Uni<Response> sendEmailOtp(@PathParam(value = "userId") String userId,
-                                      @Valid SendEmailOtpDto sendEmailOtpDto,
-                                      @Context SecurityContext ctx) {
-        return readUserIdFromToken(ctx)
-                .onItem().transformToUni(loggedUser -> userService.sendEmailOtp(userId, sendEmailOtpDto.getInstitutionalEmail(), sendEmailOtpDto.getOtp()))
-                .map(response -> Response
-                        .status(HttpStatus.SC_ACCEPTED).build());
     }
 
     @Operation(description = "Get the user's email configured to receive the OTP", summary = "Get user's email for OTP")

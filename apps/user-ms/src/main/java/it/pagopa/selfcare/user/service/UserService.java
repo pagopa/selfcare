@@ -70,8 +70,6 @@ public interface UserService {
 
     Uni<Void> sendMailUserRequest(String userId, String userMailUuid, String institutionName, String productId, EmailType type, String institutionId);
 
-    Uni<Void> sendEmailOtp(String userId, String institutionalEmail, String otp);
-
     Uni<UserOtpEmailInfoResponse> getUserOtpEmailInfo(String userId);
 
 }
