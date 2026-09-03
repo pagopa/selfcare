@@ -15,6 +15,7 @@ import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
 import it.pagopa.selfcare.institution.event.entity.InstitutionEntity;
+import it.pagopa.selfcare.institution.event.internalevents.InternalEvents;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.BsonDocument;
@@ -42,11 +43,15 @@ public class InstitutionCdcService {
     private final TableClient tableClient;
     private final ReactiveMongoClient mongoClient;
 
+    private final InternalEvents internalEvents;
+
     public InstitutionCdcService(TableClient tableClient,
                                  ReactiveMongoClient mongoClient,
+                                 InternalEvents internalEvents,
                                  @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase) {
         this.tableClient = tableClient;
         this.mongoClient = mongoClient;
+        this.internalEvents = internalEvents;
         initOrderStream(mongodbDatabase);
     }
 
@@ -93,6 +98,7 @@ public class InstitutionCdcService {
     public void consumerInstitutionRepositoryEvent(ChangeStreamDocument<InstitutionEntity> document) {
         assert document.getDocumentKey() != null;
         assert document.getFullDocument() != null;
+        internalEvents.sendInstitutionUpdatedEvent(document.getFullDocument());
     }
 
 }
