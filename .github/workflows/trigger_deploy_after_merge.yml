@@ -23,6 +23,7 @@ jobs:
       dashboard_bff: ${{ steps.filter.outputs.dashboard_bff }}
       institution_ms: ${{ steps.filter.outputs.institution_ms }}
       institution_send_mail_scheduler: ${{ steps.filter.outputs.institution_send_mail_scheduler }}
+      institution_cdc: ${{ steps.filter.outputs.institution_cdc }}
       delegation_cdc: ${{ steps.filter.outputs.delegation_cdc }}
       user_ms: ${{ steps.filter.outputs.user_ms }}
       user_group_ms: ${{ steps.filter.outputs.user_group_ms }}
