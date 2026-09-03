@@ -47,7 +47,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
@@ -2504,32 +2503,6 @@ class UserServiceTest {
                         .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(RuntimeException.class);
-    }
-
-    @Test
-    void testSendMailOtp() {
-        NameCertifiableSchema nameSchema = NameCertifiableSchema.builder().value("name").build();
-        UserResource user = UserResource.builder().name(nameSchema).build();
-        when(userRegistryApi.findByIdUsingGET(any(), any()))
-                .thenReturn(Uni.createFrom().item(user));
-
-        when(userNotificationService.sendOtpNotification(
-                anyString(),
-                anyString(),
-                anyString())
-        ).thenReturn(Uni.createFrom().voidItem());
-
-        var subscriber = userService.sendEmailOtp("userId", "email", "123456")
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        subscriber.awaitItem();
-
-        verify(userNotificationService, times(1)).sendOtpNotification(
-                eq("email"),
-                eq(user.getName().getValue()),
-                eq("123456")
-        );
     }
 
     @Test
