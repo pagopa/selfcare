@@ -54,6 +54,4 @@ public class ContractPdfRequest {
     @Valid
     private BillingPdfData billing;
 
-    @Valid
-    private PaymentPdfData payment;
 }
