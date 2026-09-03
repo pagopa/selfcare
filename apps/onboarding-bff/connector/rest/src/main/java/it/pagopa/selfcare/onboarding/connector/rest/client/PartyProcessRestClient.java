@@ -97,6 +97,7 @@ public interface PartyProcessRestClient extends OnboardingApi {
 
     @GetMapping(value = "${rest-client.party-process.getInstitutionById.path}", produces = APPLICATION_JSON_VALUE)
     @ResponseBody
-    InstitutionResponse getInstitutionById(@PathVariable("institutionId") String institutionId);
+    InstitutionResponse getInstitutionById(@PathVariable("institutionId") String institutionId,
+                                           @RequestParam(value = "productId", required = false) String productId);
 
 }
