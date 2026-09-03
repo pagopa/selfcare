@@ -211,8 +211,6 @@ locals {
     "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
     "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "ONBOARDING_DATA_ENCRIPTION_KEY"          = "onboarding-data-encryption-key"
-    "ONBOARDING_DATA_ENCRIPTION_IV"           = "onboarding-data-encryption-iv"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
   }
