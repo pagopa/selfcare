@@ -412,7 +412,7 @@ class InstitutionServiceImpl implements InstitutionService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Onboarding for institutionId %s not found", institutionId)));
 
-        Institution institution = partyConnector.getInstitutionById(institutionId);
+        Institution institution = partyConnector.getInstitutionById(institutionId, productId);
         InstitutionOnboardingData result = new InstitutionOnboardingData();
         InstitutionInfo institutionInfo = institutionMapper.toInstitutionInfo(institution);
         institutionInfo.setPricingPlan(onboardingResource.getPricingPlan());

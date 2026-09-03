@@ -16,5 +16,6 @@ public class InstitutionEntity extends ReactivePanacheMongoEntity {
     @BsonProperty("_id")
     private String id;
     private String description;
+    private String parentDescription;
 
 }

@@ -754,8 +754,8 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
+          "409" : {
+            "description" : "Conflict",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -764,8 +764,8 @@
               }
             }
           },
-          "409" : {
-            "description" : "Conflict",
+          "403" : {
+            "description" : "Forbidden",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
