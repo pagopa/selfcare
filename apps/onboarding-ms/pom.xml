@@ -25,7 +25,7 @@
         <quarkus.platform.version>3.11.2</quarkus.platform.version>
         <skipITs>true</skipITs>
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
-        <quarkus-openapi-generator.version>2.4.2</quarkus-openapi-generator.version>
+        <quarkus-openapi-generator.version>2.17.0</quarkus-openapi-generator.version>
         <commons-sdk-version>0.17.5</commons-sdk-version>
         <common-sdk-security-version>0.3.0</common-sdk-security-version>
         <common-sdk-health-version>0.2.0</common-sdk-health-version>
