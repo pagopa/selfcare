@@ -6,7 +6,6 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.constant.PermissionTypeEnum;
 import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
@@ -1056,14 +1055,6 @@ public class UserServiceImpl implements UserService {
                 ))
                 .onFailure(this::isNotFound)
                 .recoverWithItem(false);
-    }
-
-    @Override
-    public Uni<Void> sendEmailOtp(String userId, String institutionalEmail, String otp) {
-        return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, userId)
-                .map(userResource -> userResource.getName().getValue()).chain(name ->
-                        userNotificationService.sendOtpNotification(institutionalEmail,name, otp)
-                );
     }
 
     @Override
