@@ -4,6 +4,9 @@ FROM maven:3-eclipse-temurin-17@sha256:0d328fa6843bb26b60cf44d69833f241ffe96218f
 WORKDIR /src
 COPY --link pom.xml .
 
+WORKDIR /src/libs
+COPY --link ./libs/ .
+
 WORKDIR /src/test-coverage
 COPY --link ./test-coverage/pom.xml .
 
