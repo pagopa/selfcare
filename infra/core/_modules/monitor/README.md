@@ -27,6 +27,8 @@ No requirements.
 | [azurerm_monitor_action_group.selfcare_status_uat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_action_group) | resource |
 | [azurerm_monitor_action_group.slack](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_action_group) | resource |
 | [azurerm_monitor_metric_alert.functions_exceptions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
+| [azurerm_monitor_scheduled_query_rules_alert_v2.api_400_rate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_scheduled_query_rules_alert_v2) | resource |
+| [azurerm_monitor_scheduled_query_rules_alert_v2.unavailable_blob_storage_access](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_scheduled_query_rules_alert_v2) | resource |
 | [azurerm_portal_dashboard.monitoring-dashboard](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/portal_dashboard) | resource |
 | [azurerm_key_vault_secret.alert_error_notification_email](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 | [azurerm_key_vault_secret.alert_error_notification_slack](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
@@ -38,6 +40,10 @@ No requirements.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_api_400_alert_enabled"></a> [api\_400\_alert\_enabled](#input\_api\_400\_alert\_enabled) | Enable the per-API HTTP 400 rate alert | `bool` | `true` | no |
+| <a name="input_api_400_alert_severity"></a> [api\_400\_alert\_severity](#input\_api\_400\_alert\_severity) | Severity of the per-API HTTP 400 alert (0 = Critical ... 4 = Verbose) | `number` | `3` | no |
+| <a name="input_api_400_alert_threshold"></a> [api\_400\_alert\_threshold](#input\_api\_400\_alert\_threshold) | Number of HTTP 400 for a single API within the evaluation window that triggers the alert | `number` | `25` | no |
+| <a name="input_api_400_alert_window_frequency"></a> [api\_400\_alert\_window\_frequency](#input\_api\_400\_alert\_window\_frequency) | Evaluation window and frequency (ISO 8601 duration) for the per-API HTTP 400 alert | `string` | `"PT5M"` | no |
 | <a name="input_application_insights_id"></a> [application\_insights\_id](#input\_application\_insights\_id) | Application Insights ID (from log\_analytics module) | `string` | n/a | yes |
 | <a name="input_application_insights_name"></a> [application\_insights\_name](#input\_application\_insights\_name) | Application Insights name (from log\_analytics module) | `string` | n/a | yes |
 | <a name="input_cdn_fqdn"></a> [cdn\_fqdn](#input\_cdn\_fqdn) | CDN FQDN for web test | `string` | n/a | yes |
@@ -46,6 +52,7 @@ No requirements.
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | n/a | `string` | n/a | yes |
 | <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | Key Vault ID for reading secrets and writing app insights key | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"westeurope"` | no |
+| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | Log Analytics workspace ID used by Application Insights log alerts | `string` | n/a | yes |
 | <a name="input_monitor_rg_location"></a> [monitor\_rg\_location](#input\_monitor\_rg\_location) | Monitor resource group location (from log\_analytics module) | `string` | n/a | yes |
 | <a name="input_monitor_rg_name"></a> [monitor\_rg\_name](#input\_monitor\_rg\_name) | Monitor resource group name (from log\_analytics module) | `string` | n/a | yes |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | n/a | `string` | `"selc"` | no |

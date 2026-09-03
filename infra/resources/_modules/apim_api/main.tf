@@ -61,11 +61,11 @@ module "apim_api" {
         </cors>
 %{if var.tenant_enforcement_enabled~}
         <set-variable name="tenantId" value='@{
-            var host = context.Request.OriginalUrl.Host;
+            var host = context.Request.Headers.GetValueOrDefault("X-Selfcare-Original-Host", string.Empty);
             if (string.IsNullOrWhiteSpace(host)) {
                 return string.Empty;
             }
-            host = host.ToLowerInvariant();
+            host = host.Trim().ToLowerInvariant();
 %{for tenant in var.tenant_hosts~}
             if (host == "${lower(tenant.host)}") {
                 return "${tenant.id}";
