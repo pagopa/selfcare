@@ -104,8 +104,6 @@ components:
             $ref: "#/components/schemas/UserPdfData"
         billing:
           $ref: "#/components/schemas/BillingPdfData"
-        payment:
-          $ref: "#/components/schemas/PaymentPdfData"
     ContractSignedReport:
       type: object
       properties:
@@ -409,13 +407,6 @@ components:
       - OPERATOR
       - ADMIN_EA
       type: string
-    PaymentPdfData:
-      type: object
-      properties:
-        holder:
-          type: string
-        iban:
-          type: string
     PaymentServiceProviderPdfData:
       type: object
       properties:
