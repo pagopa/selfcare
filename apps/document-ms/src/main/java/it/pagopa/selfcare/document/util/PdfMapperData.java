@@ -245,16 +245,6 @@ public class PdfMapperData {
         appendRecipientCode(map, billing);
     }
 
-    /**
-     * Sets up payment data for PRV institutions.
-     */
-    public static void setupPaymentData(Map<String, Object> data, PaymentPdfData payment) {
-        if (payment != null) {
-            data.put("holder", Optional.ofNullable(payment.getHolder()).orElse(EMPTY_STR));
-            data.put("holder-iban", Optional.ofNullable(payment.getIban()).orElse(EMPTY_STR));
-        }
-    }
-
     private static void addPricingPlan(String pricingPlan, Map<String, Object> map) {
         boolean isPlanInList = Objects.nonNull(pricingPlan) && Arrays.stream(PLAN_LIST).anyMatch(s -> s.equalsIgnoreCase(pricingPlan));
         map.put(PRICING_PLAN_PREMIUM, isPlanInList ? pricingPlan.replace("C", EMPTY_STR) : EMPTY_STR);
