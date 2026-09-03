@@ -1553,7 +1553,7 @@ class InstitutionServiceImplTest {
 
         Institution institutionMock = mockInstance(new Institution());
         institutionMock.setGeographicTaxonomies(List.of(new GeographicTaxonomy()));
-        when(partyConnectorMock.getInstitutionById(institutionId))
+        when(partyConnectorMock.getInstitutionById(institutionId, productId))
                 .thenReturn(institutionMock);
         //when
         InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingDataById(institutionId, productId);
@@ -1572,7 +1572,7 @@ class InstitutionServiceImplTest {
                 .getOnboardings(institutionId, productId);
 
         verify(partyConnectorMock, times(1))
-                .getInstitutionById(institutionId);
+                .getInstitutionById(institutionId, productId);
         verifyNoMoreInteractions(partyConnectorMock, userConnectorMock);
         verifyNoInteractions(productsConnectorMock);
     }
