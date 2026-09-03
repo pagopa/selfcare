@@ -737,7 +737,7 @@ class PartyConnectorImplTest {
         //given
         String institutionId = null;
         //when
-        Executable exe = () -> partyConnector.getInstitutionById(institutionId);
+        Executable exe = () -> partyConnector.getInstitutionById(institutionId, "productId");
         //then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, exe);
         assertEquals(REQUIRED_INSTITUTION_ID_MESSAGE, e.getMessage());
@@ -749,12 +749,13 @@ class PartyConnectorImplTest {
     void getInstitutionById() {
         //given
         String institutionId = "institutionId";
+        String productId = "productId";
         InstitutionResponse institutionResponseMock = mockInstance(new InstitutionResponse());
         institutionResponseMock.setGeographicTaxonomies(List.of(mockInstance(new GeographicTaxonomy())));
-        when(restClientMock.getInstitutionById(institutionId))
+        when(restClientMock.getInstitutionById(institutionId, productId))
                 .thenReturn(institutionResponseMock);
         //when
-        Institution institution = partyConnector.getInstitutionById(institutionId);
+        Institution institution = partyConnector.getInstitutionById(institutionId, productId);
         //then
         assertNotNull(institution);
         assertEquals(institutionResponseMock.getExternalId(), institution.getExternalId());
@@ -768,7 +769,7 @@ class PartyConnectorImplTest {
         assertEquals(institutionResponseMock.getGeographicTaxonomies().get(0).getCode(), institution.getGeographicTaxonomies().get(0).getCode());
         assertEquals(institutionResponseMock.getGeographicTaxonomies().get(0).getDesc(), institution.getGeographicTaxonomies().get(0).getDesc());
         verify(restClientMock, times(1))
-                .getInstitutionById(institutionId);
+                .getInstitutionById(institutionId, productId);
         verifyNoMoreInteractions(restClientMock);
     }
 
