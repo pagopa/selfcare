@@ -18,7 +18,8 @@
         "level": "L2",
         "aud": "api.dev.selfcare.pagopa.it",
         "iss": "SPID",
-        "jti": "_2f603a8bc36b1231b1a6"
+        "jti": "_2f603a8bc36b1231b1a6",
+        "tenant_id": "AR"
       }
     },
     {
@@ -39,7 +40,8 @@
         "level": "L2",
         "aud": "api.dev.selfcare.pagopa.it",
         "iss": "SPID",
-        "jti": "_2f603a8bc36b1231b1a6"
+        "jti": "_2f603a8bc36b1231b1a6",
+        "tenant_id": "AR"
       }
     }
   ]

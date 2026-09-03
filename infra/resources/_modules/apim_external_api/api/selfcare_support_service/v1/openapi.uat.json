@@ -1186,6 +1186,24 @@
             }
           },
           {
+            "name": "statusUpdatedFromDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "statusUpdatedToDate",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -3416,6 +3434,10 @@
             "format": "date-time"
           },
           "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "statusUpdatedAt": {
             "type": "string",
             "format": "date-time"
           }

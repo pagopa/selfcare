@@ -236,10 +236,11 @@ module "monitor" {
   key_vault_id    = module.key_vault.key_vault_id
 
   # From log_analytics module
-  monitor_rg_name           = module.log_analytics.monitor_rg_name
-  monitor_rg_location       = module.log_analytics.monitor_rg_location
-  application_insights_id   = module.log_analytics.application_insights_id
-  application_insights_name = module.log_analytics.application_insights_name
+  monitor_rg_name            = module.log_analytics.monitor_rg_name
+  monitor_rg_location        = module.log_analytics.monitor_rg_location
+  application_insights_id    = module.log_analytics.application_insights_id
+  application_insights_name  = module.log_analytics.application_insights_name
+  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
 
   # Web test URLs
   dns_a_api_fqdn      = module.dns_public.dns_a_api_fqdn
@@ -888,4 +889,17 @@ module "user_managed_identity" {
   onboarding_functions_name = "${local.prefix}-${local.env_short}-onboarding-fn"
   eventhub_namespace_name   = "${local.prefix}-${local.env_short}-eventhub-ns"
   eventhub_namespace_rg     = "${local.prefix}-${local.env_short}-event-rg"
+}
+
+###############################################################################
+# Internal Events
+###############################################################################
+
+module "internal_events" {
+  source = "../_modules/internal_events"
+
+  location                  = local.location
+  env_short                 = local.env_short
+  domain                    = local.app_domain
+  tags                      = local.tags
 }

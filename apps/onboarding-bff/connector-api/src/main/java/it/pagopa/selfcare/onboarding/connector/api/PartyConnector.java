@@ -25,7 +25,7 @@ public interface PartyConnector {
 
     Institution getInstitutionByExternalId(String externalInstitutionId);
 
-    Institution getInstitutionById(String institutionId);
+    Institution getInstitutionById(String institutionId, String productId);
 
     List<OnboardingResource> getOnboardings(String institutionId, String productId);
 

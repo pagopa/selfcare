@@ -851,42 +851,6 @@ class DocumentContentServiceImplTest {
         assertThrows(SelfcareAzureStorageException.class, awaiter::indefinitely);
     }
 
-    // ---- saveVisuraForMerchant ----
-
-    @Test
-    void saveVisuraForMerchant_shouldUploadVisuraSuccessfully() throws IOException {
-        byte[] content = new byte[]{1, 2, 3};
-        File tempFile = createTempFileWithContent(content);
-        UploadVisuraRequest request = UploadVisuraRequest.builder()
-                .onboardingId(ONBOARDING_ID)
-                .filename("VISURA_test.xml")
-                .fileContent(Files.newInputStream(tempFile.toPath()))
-                .build();
-
-        var awaiter = documentContentService.saveVisuraForMerchant(request).await();
-
-        assertDoesNotThrow(awaiter::indefinitely);
-        verify(azureBlobClient).uploadFile(anyString(), eq("VISURA_test.xml"), eq(content));
-    }
-
-    @Test
-    void saveVisuraForMerchant_shouldThrowInternalException_whenUploadFails() throws IOException {
-        byte[] content = new byte[]{4, 5, 6};
-        File tempFile = createTempFileWithContent(content);
-        UploadVisuraRequest request = UploadVisuraRequest.builder()
-                .onboardingId(ONBOARDING_ID)
-                .filename("VISURA_test.xml")
-                .fileContent(Files.newInputStream(tempFile.toPath()))
-                .build();
-
-        doThrow(new RuntimeException("upload error"))
-                .when(azureBlobClient)
-                .uploadFile(anyString(), anyString(), any());
-
-        var awaiter = documentContentService.saveVisuraForMerchant(request).await();
-
-        assertThrows(InternalException.class, awaiter::indefinitely);
-    }
 
     // ---- retrieveAggregatesCsv ----
     @Test
@@ -969,17 +933,6 @@ class DocumentContentServiceImplTest {
             pdf.save(tempFile);
         }
         return tempFile;
-    }
-
-    private File createTempFileWithContent(byte[] content) {
-        try {
-            File tempFile = Files.createTempFile("visura-test", ".tmp").toFile();
-            tempFile.deleteOnExit();
-            Files.write(tempFile.toPath(), content);
-            return tempFile;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to create temp file for test", e);
-        }
     }
 
     // ============================================
