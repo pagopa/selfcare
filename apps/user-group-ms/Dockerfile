@@ -17,6 +17,8 @@ WORKDIR /src/apps/user-group-ms
 COPY --link ./apps/user-group-ms/pom.xml .
 COPY ./apps/user-group-ms/ ./
 
+WORKDIR /src
+
 RUN echo "<settings>\n" \
          "<servers>\n" \
          "<server>\n" \
