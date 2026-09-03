@@ -5,9 +5,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import com.mongodb.client.model.Updates;
 import it.pagopa.selfcare.user.constant.SortEnum;
-import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.entity.filter.OnboardedProductFilter;
-import it.pagopa.selfcare.user.entity.filter.UserInstitutionRoleFilter;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.AccessLevel;
@@ -26,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static it.pagopa.selfcare.user.constant.CollectionUtil.USER_INSTITUTION_COLLECTION;
 import static java.util.stream.Collectors.groupingBy;
 
 @RequiredArgsConstructor(access = AccessLevel.NONE)
@@ -54,15 +51,15 @@ public class QueryUtils {
      * The function iterates through the key-value pairs in the map, and for each pair it adds an entry to
      * the query document. If there are multiple entries in the map, then they are combined using logical ANDs.
      */
-    public Document buildQueryDocument(Map<String, Object> parameters, String collection) {
+    public Document buildQueryDocument(Map<String, Object> parameters) {
         if (!parameters.isEmpty()) {
-            return bsonToDocument(Filters.and(constructBsonFilter(parameters, collection)));
+            return bsonToDocument(Filters.and(constructBsonFilter(parameters)));
         } else {
             return new Document();
         }
     }
-    public Document buildQueryDocumentByDate(Map<String, Object> parameters, String collection, OffsetDateTime fromDate) {
-            return bsonToDocument(Filters.and(constructBsonWithDateFilter(parameters, collection, fromDate)));
+    public Document buildQueryDocumentByDate(Map<String, Object> parameters, OffsetDateTime fromDate) {
+            return bsonToDocument(Filters.and(constructBsonWithDateFilter(parameters, fromDate)));
 
     }
 
@@ -111,13 +108,13 @@ public class QueryUtils {
      * Finally iterates on cleaned parameters map to add in or eq query operator and
      * returns a list of Bson objects, which will be used to filter our query.
      */
-    private List<Bson> constructBsonFilter(Map<String, Object> parameters, String collection) {
+    private List<Bson> constructBsonFilter(Map<String, Object> parameters) {
         List<Bson> bsonList = new ArrayList<>();
 
-        Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters, collection);
+        Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters);
 
         if (!mapForElemMatch.isEmpty()) {
-            addElemMatchOperator(mapForElemMatch, collection, bsonList);
+            addElemMatchOperator(mapForElemMatch, bsonList);
             parameters = parameters.entrySet().stream().filter(stringObjectEntry -> !mapForElemMatch.containsKey(stringObjectEntry.getKey()))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
@@ -126,13 +123,13 @@ public class QueryUtils {
         return bsonList;
     }
 
-    private List<Bson> constructBsonWithDateFilter(Map<String, Object> parameters, String collection, OffsetDateTime fromDate){
+    private List<Bson> constructBsonWithDateFilter(Map<String, Object> parameters, OffsetDateTime fromDate){
         List<Bson> bsonList = new ArrayList<>();
         if (!parameters.isEmpty()) {
-            Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters, collection);
+            Map<String, Object> mapForElemMatch = retrieveArrayFilterIfPresent(parameters);
 
             if (!mapForElemMatch.isEmpty()) {
-                addElemMatchOperator(mapForElemMatch, collection, bsonList);
+                addElemMatchOperator(mapForElemMatch, bsonList);
                 parameters = parameters.entrySet().stream()
                         .filter(entry -> !mapForElemMatch.containsKey(entry.getKey()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -159,9 +156,9 @@ public class QueryUtils {
      * Finally it iterates through each entry in groupedParentsMap and adds an elemMatch filter for each one with its value being
      * an AND filter containing all of the eq and in filters from addAnd
      */
-    private void addElemMatchOperator(Map<String, Object> mapForElemMatch, String collection, List<Bson> bsonList) {
+    private void addElemMatchOperator(Map<String, Object> mapForElemMatch, List<Bson> bsonList) {
         mapForElemMatch.keySet()
-                .stream().map(key -> retrieveParent(key, collection))
+                .stream().map(this::retrieveParent)
                 .collect(groupingBy(o -> o))
                 .forEach((s, strings) -> bsonList.add(Filters.elemMatch(s, Filters.and(addEqAndInFilters(mapForElemMatch)))));
     }
@@ -188,14 +185,9 @@ public class QueryUtils {
      * The retrieveParent function is used to retrieve the parent of a given key.
      * The parent is retrieved from enum related to given collection name;
      */
-    private String retrieveParent(String key, String collection) {
-        if (USER_INSTITUTION_COLLECTION.equalsIgnoreCase(collection)) {
-            return OnboardedProductFilter.OnboardedProductEnum.retrieveParent(key)
-                    .orElse(null);
-        } else {
-            return UserInstitutionRoleFilter.UserInstitutionRoleEnum.retrieveParent(key)
-                    .orElse(null);
-        }
+    private String retrieveParent(String key) {
+      return OnboardedProductFilter.OnboardedProductEnum.retrieveParent(key)
+              .orElse(null);
     }
 
 
@@ -205,15 +197,9 @@ public class QueryUtils {
      * This function retrieve a new parameterMap ,containing only those filters necessary to build an element match filter
      * The second argument represents which collection we are filtering for (either USER_INSTITUTION_COLLECTION or USER_INFO_COLLECTION)
      */
-    private Map<String, Object> retrieveArrayFilterIfPresent(Map<String, Object> parameters, String collection) {
-        if (USER_INSTITUTION_COLLECTION.equalsIgnoreCase(collection)) {
-            return parameters.entrySet().stream()
-                    .filter(mapEntry -> Arrays.stream(OnboardedProduct.Fields.values()).anyMatch(field -> field.name().equalsIgnoreCase(mapEntry.getKey())))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
-        } else {
-            return parameters.entrySet().stream()
-                    .filter(mapEntry -> Arrays.stream(UserInstitutionRole.Fields.values()).anyMatch(field -> field.name().equalsIgnoreCase(mapEntry.getKey())))
-                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
-        }
+    private Map<String, Object> retrieveArrayFilterIfPresent(Map<String, Object> parameters) {
+      return parameters.entrySet().stream()
+        .filter(mapEntry -> Arrays.stream(OnboardedProduct.Fields.values()).anyMatch(field -> field.name().equalsIgnoreCase(mapEntry.getKey())))
+        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (x, y) -> x));
     }
 }
