@@ -380,7 +380,7 @@
         <dependency>
           <groupId>it.pagopa.selfcare</groupId>
           <artifactId>selfcare-sdk-security</artifactId>
-          <version>0.2.3</version>
+          <version>0.3.0</version>
         </dependency>
       </dependencies>
     </profile>
