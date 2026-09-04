@@ -23,6 +23,7 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
   private static final String SEARCH_MODE_ALL = "all";
   private static final int SEARCH_MIN_TOKEN_LENGTH = 3;
+  private static final String ONBOARDING_STATUS_OVERRIDDEN = "OVERRIDDEN";
 
   private final AzureSearchRestClient azureSearchRestClient;
   private final SearchServiceMapper searchServiceMapper;
@@ -34,8 +35,21 @@ public class SearchServiceConnectorImpl implements SearchServiceConnector {
 
   @Override
   public SearchServiceStatus indexOnboarding(OnboardingIndex onboardingIndex) {
+    assert onboardingIndex != null : "onboardingIndex cannot be null";
+    assert onboardingIndex.getOnboardingId() != null : "onboardingId cannot be null";
+    assert onboardingIndex.getStatus() != null : "status cannot be null";
+
     final SearchServiceIndexRequest<SearchServiceOnboardingIndex> searchServiceIndexRequest = new SearchServiceIndexRequest<>();
-    searchServiceIndexRequest.setValue(List.of(searchServiceMapper.toSearchServiceOnboardingIndex(onboardingIndex)));
+    if (ONBOARDING_STATUS_OVERRIDDEN.equals(onboardingIndex.getStatus())) {
+      // Removing
+      log.info("Indexing onboarding with status OVERRIDDEN, setting action to delete for onboardingId: {}", onboardingIndex.getOnboardingId());
+      searchServiceIndexRequest.setValue(List.of(searchServiceMapper.toDeletedSearchServiceOnboardingIndex(onboardingIndex.getOnboardingId())));
+    } else {
+      // Adding or updating
+      log.info("Indexing onboarding with status {}, setting action to mergeOrUpload for onboardingId: {}", onboardingIndex.getStatus(), onboardingIndex.getOnboardingId());
+      searchServiceIndexRequest.setValue(List.of(searchServiceMapper.toSearchServiceOnboardingIndex(onboardingIndex)));
+    }
+
     return azureSearchRestClient.indexOnboarding(searchServiceIndexRequest);
   }
 
