@@ -1000,7 +1000,6 @@ class DocumentContentServiceImplTest {
         ContractPdfRequest request = buildValidContractRequest();
         request.setProductId("prod-pagopa");
         request.getInstitution().setInstitutionType(InstitutionType.PRV);
-        request.setPayment(PaymentPdfData.builder().holder("Holder").iban("IT123").build());
         File signedPdf = createTempPdf();
 
         when(azureBlobClient.getFileAsText(CONTRACT_TEMPLATE_PATH)).thenReturn("<html><body>Contract</body></html>");

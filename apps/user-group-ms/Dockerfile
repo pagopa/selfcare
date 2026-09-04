@@ -4,6 +4,9 @@ FROM maven:3-eclipse-temurin-17@sha256:0d328fa6843bb26b60cf44d69833f241ffe96218f
 WORKDIR /src
 COPY --link pom.xml .
 
+WORKDIR /src/libs
+COPY --link ./libs/ .
+
 WORKDIR /src/test-coverage
 COPY --link ./test-coverage/pom.xml .
 
@@ -14,15 +17,12 @@ WORKDIR /src/apps/user-group-ms
 COPY --link ./apps/user-group-ms/pom.xml .
 COPY ./apps/user-group-ms/ ./
 
+WORKDIR /src
+
 RUN echo "<settings>\n" \
          "<servers>\n" \
          "<server>\n" \
          "<id>\${repositoryId}</id>\n" \
-         "<username>\${repoLogin}</username>\n" \
-         "<password>\${repoPwd}</password>\n" \
-         "</server>\n" \
-         "<server>\n" \
-         "<id>\${selfcareRepositoryId}</id>\n" \
          "<username>\${repoLogin}</username>\n" \
          "<password>\${repoPwd}</password>\n" \
          "</server>\n" \
@@ -32,9 +32,8 @@ RUN echo "<settings>\n" \
 ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
-ARG REPO_SELFCARE
 
-RUN mvn --global-settings settings.xml --projects :user-group-ms -DrepositoryId=${REPO_SELFCARE} -DselfcareRepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make-dependents clean package -DskipTests
+RUN mvn --global-settings settings.xml --projects :user-group-ms -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} --also-make clean package -DskipTests
 
 
 FROM eclipse-temurin:17@sha256:d838da85ec7aa8fd72b613e30b5f7629d8f5ac70a4264d45735a8a2ed9af447c AS runtime

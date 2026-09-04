@@ -57,9 +57,6 @@ public class PdfGenerationService {
             PdfMapperData.setupPSPData(data, request.getManager(), request);
         } else if (isPrvOrGpuAndPagoPaOrIdpay(productId, institutionType)) {
             PdfMapperData.setupPRVData(data, request);
-            if (Objects.nonNull(request.getPayment())) {
-                PdfMapperData.setupPaymentData(data, request.getPayment());
-            }
         } else if (isEcAndPagoPa(productId, institutionType)) {
             PdfMapperData.setECData(data, institution);
         } else if (isProdIO(productId)) {
