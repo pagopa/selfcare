@@ -60,7 +60,7 @@ jobs:
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
       - name: Deploy Function App
         shell: bash
         working-directory: apps/${{ inputs.app }}
@@ -111,7 +111,7 @@ jobs:
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'u' || 'u-pnpg') }}
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
       - name: Deploy Function App
         shell: bash
         working-directory: apps/${{ inputs.app }}
@@ -162,7 +162,7 @@ jobs:
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'p' || 'p-pnpg') }}
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
       - name: Deploy Function App
         shell: bash
         working-directory: apps/${{ inputs.app }}

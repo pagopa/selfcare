@@ -28,7 +28,7 @@ on:
 
 jobs:
   code_review_dev_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: '[DEV-AR] External API Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -43,7 +43,7 @@ jobs:
       override_labels: dev
 
   code_review_dev_ar_api:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: '[DEV-AR] API Infra Code Review'
     if: ${{ !startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -58,7 +58,7 @@ jobs:
       override_labels: dev
 
   code_review_uat_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: '[UAT-AR] External API Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -73,7 +73,7 @@ jobs:
       override_labels: uat
 
   code_review_uat_ar_api:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: '[UAT-AR] API Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -88,7 +88,7 @@ jobs:
       override_labels: uat
 
   code_review_prod_ar:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: '[PROD-AR] External API Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit
@@ -103,7 +103,7 @@ jobs:
       override_labels: prod
 
   code_review_prod_ar_api:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: '[PROD-AR] API Infra Code Review'
     if: ${{ startsWith(github.ref_name, 'releases/') }}
     secrets: inherit

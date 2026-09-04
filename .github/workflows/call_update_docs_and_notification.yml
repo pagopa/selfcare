@@ -63,7 +63,7 @@ jobs:
         uses: actions/checkout@1f9a0c22da41e6ebfa534300ef656657ea2c6707
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
 
 
       - name: Extract environment short
@@ -95,7 +95,7 @@ jobs:
             az storage blob download-batch --auth-mode key -d ./docs/ --account-name ${{ steps.extract_env_short.outputs.storage_account_name }}  -s '$web' --pattern ${{ inputs.docs_openapi_path }}
 
       - name: Setup Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: 22
           package-manager-cache: false
