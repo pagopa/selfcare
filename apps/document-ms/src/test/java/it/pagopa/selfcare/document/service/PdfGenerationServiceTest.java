@@ -133,12 +133,6 @@ class PdfGenerationServiceTest {
         billing.setRecipientCode("ABCDEF");
         request.setBilling(billing);
 
-        // Payment (Dati pagamento) - opzionale ma meglio metterlo
-        PaymentPdfData payment = new PaymentPdfData();
-        payment.setHolder("ClearingHouseTest");
-        payment.setIban("IT60X0542811101000000123456");
-        request.setPayment(payment);
-
         return request;
     }
 
