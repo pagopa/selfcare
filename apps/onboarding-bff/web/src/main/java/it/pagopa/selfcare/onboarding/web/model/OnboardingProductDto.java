@@ -86,9 +86,6 @@ public class OnboardingProductDto {
     @Schema(description = "${swagger.onboarding.institutions.model.atecoCodes}")
     private List<String> atecoCodes;
 
-    @Schema(description = "${swagger.onboarding.institutions.model.payment}")
-    private PaymentDto payment;
-
     private UserRequestDto userRequester;
 
 }
