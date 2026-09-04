@@ -34,9 +34,5 @@
     "vatNumber": "05439260652",
     "recipientCode": "UFR0DM",
     "publicServices": true
-  },
-  "payment": {
-    "iban": "IT60X0542811101000000123456",
-    "holder": "Marco Rossi"
   }
 }

@@ -108,9 +108,6 @@
           },
           "billing" : {
             "$ref" : "#/components/schemas/BillingPdfData"
-          },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentPdfData"
           }
         }
       },
@@ -480,17 +477,6 @@
       "PartyRole" : {
         "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
-      },
-      "PaymentPdfData" : {
-        "type" : "object",
-        "properties" : {
-          "holder" : {
-            "type" : "string"
-          },
-          "iban" : {
-            "type" : "string"
-          }
-        }
       },
       "PaymentServiceProviderPdfData" : {
         "type" : "object",

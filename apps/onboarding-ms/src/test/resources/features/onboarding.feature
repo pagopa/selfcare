@@ -403,21 +403,6 @@ Feature: Onboarding collection
     And the response should have field "status" with value "PENDING"
     And the response should have field "workflowType" with value "IMPORT"
 
-  Scenario: Successfully store onboarding PRV with valid iban in status REQUEST
-    Given I have a request object named "success_iban_prv_request"
-    When I send a POST request to "" with this request
-    Then the response status code should be 200
-    And the response body should not be empty
-    And the response should have field "status" with value "REQUEST"
-    And the response should have field "workflowType" with value "CONTRACT_REGISTRATION"
-    And there is a document for onboardings with origin "PDND_INFOCAMERE" originId "15376371009" and workflowType "CONTRACT_REGISTRATION"
-
-  Scenario: Can't perform onboarding PRV request with invalid iban
-    Given I have a request object named "invalid_iban_prv_request"
-    When I send a POST request to "" with this request
-    Then the response status code should be 400
-    And the response should contain the text "IBAN is not in an Italian format or is not 27 characters long"
-
   Scenario: Can't perform onboarding request with institutionType not allowed for origin IPA
     Given I have a request object named "invalid_institution_type_for_origin_request"
     When I send a POST request to "/pa" with this request
