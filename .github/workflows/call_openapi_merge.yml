@@ -80,7 +80,7 @@ jobs:
     steps:
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
 
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
@@ -88,7 +88,7 @@ jobs:
           path: selfcare_openapi_merge
 
       - name: Download from blob storage
-        uses: azure/CLI@v2
+        uses: azure/CLI@9f7ce6f37c31b777ec6c6b6d1dfe7db79f497956 # v2
         with:
           azcliversion: 2.76.0
           inlineScript: |

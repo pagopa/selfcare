@@ -56,7 +56,7 @@ jobs:
           done
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
 
       - name: Set Terraform Version
         id: set-terraform-version
@@ -114,7 +114,7 @@ jobs:
           fi
 
       - name: Upload Terraform Plan as Artifact
-        uses: pagopa/dx/actions/terraform-plan-upload@main
+        uses: pagopa/dx/actions/terraform-plan-upload@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
@@ -141,10 +141,10 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
 
       - name: Download Terraform Plan as Artifact
-        uses: pagopa/dx/actions/terraform-plan-download@main
+        uses: pagopa/dx/actions/terraform-plan-download@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:

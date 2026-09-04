@@ -1,5 +1,5 @@
 # Primo stage: usiamo un'immagine con git per clonare il repository
-FROM alpine/git AS git-stage
+FROM alpine/git@sha256:4f9488b7295baec153a9953479690f835ad4699b1d9f11e3897a4485c224fc3e AS git-stage
 WORKDIR /repo
 RUN git clone https://github.com/pagopa/selfcare-infra.git
 

@@ -36,7 +36,7 @@ on:
 jobs:
 
   release_dev:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: "DEV ${{ inputs.domain || 'ar' }} Cert Infra Release"
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     secrets: inherit
@@ -49,7 +49,7 @@ jobs:
       override_labels: ${{ inputs.env }}
 
   release_uat:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: "UAT ${{ inputs.domain }} Cert Infra Release"
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     secrets: inherit
@@ -62,7 +62,7 @@ jobs:
       override_labels: ${{ inputs.env }}
 
   release_prod:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@723b8233cd9c48bac7cc9e796471d4e12d4f8e5c # main
     name: "PROD ${{ inputs.domain }} Cert Infra Release"
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
