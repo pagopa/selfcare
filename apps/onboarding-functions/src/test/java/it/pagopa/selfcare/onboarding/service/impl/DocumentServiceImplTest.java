@@ -114,20 +114,6 @@ class DocumentServiceImplTest {
     verify(contentApi).uploadAggregatesCsv(req);
   }
 
-  // ---------------------------------------------------------------------------
-  // saveVisuraForMerchant
-  // ---------------------------------------------------------------------------
-
-  @Test
-  void saveVisuraForMerchant_shouldDelegateToApi() {
-    DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm req =
-        new DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm();
-    Response expected = Response.ok().build();
-    when(contentApi.saveVisuraForMerchant(req)).thenReturn(expected);
-
-    assertSame(expected, service.saveVisuraForMerchant(req));
-    verify(contentApi).saveVisuraForMerchant(req);
-  }
 
   // ---------------------------------------------------------------------------
   // deleteContract

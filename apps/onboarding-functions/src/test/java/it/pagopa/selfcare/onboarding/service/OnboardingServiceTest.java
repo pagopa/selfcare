@@ -16,7 +16,6 @@ import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,7 +30,6 @@ import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfst
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
-import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.logging.Logger;
@@ -52,8 +50,6 @@ class OnboardingServiceTest {
     PdvUserRegistryService pdvUserRegistryService;
     @InjectMock
     UserService userService;
-    @InjectMock
-    RegistryProxyService registryProxyService;
     @InjectMock
     NotificationService notificationService;
     @InjectMock
@@ -440,56 +436,6 @@ class OnboardingServiceTest {
         );
     }
 
-    @Test
-    void testSaveVisuraForMerchant_Success() {
-        // Arrange
-        Onboarding onboarding = new Onboarding();
-        onboarding.setId("onboarding-id");
-        Institution institution = new Institution();
-        institution.setDescription("Test Institution");
-        institution.setTaxCode("12345678901");
-        onboarding.setInstitution(institution);
-        onboarding.setProductId("prod-123");
-
-        User user = new User();
-        user.setId("user-1");
-        user.setRole(PartyRole.MANAGER);
-        user.setUserMailUuid("uuid-123");
-        onboarding.setUsers(List.of(user));
-
-        Mockito.when(registryProxyService.getInstitutionVisuraByTaxCode(any()))
-                .thenReturn("test".getBytes(StandardCharsets.UTF_8));
-        Mockito.when(documentService.saveVisuraForMerchant(any()))
-                .thenReturn(Response.ok().build());
-        // Act
-        onboardingService.saveVisuraForMerchant(onboarding);
-
-        // Assert
-        Mockito.verify(registryProxyService).getInstitutionVisuraByTaxCode(Mockito.any());
-        Mockito.verify(documentService).saveVisuraForMerchant(any());
-    }
-
-    @Test
-    void testSaveVisuraForMerchant_Exception() {
-        Onboarding onboarding = new Onboarding();
-        Institution institution = new Institution();
-        institution.setDescription("Test Institution");
-        onboarding.setInstitution(institution);
-        onboarding.setProductId("prod-123");
-        User user = new User();
-        user.setId("user-1");
-        user.setRole(PartyRole.MANAGER);
-        user.setUserMailUuid("uuid-123");
-        onboarding.setUsers(List.of(user));
-
-        Mockito.doThrow(new RuntimeException("Error during download"))
-                .when(registryProxyService).getInstitutionVisuraByTaxCode(Mockito.any());
-
-        Assertions.assertThrows(RuntimeException.class, () -> onboardingService.saveVisuraForMerchant(onboarding));
-
-        Mockito.verify(registryProxyService).getInstitutionVisuraByTaxCode(Mockito.any());
-        Mockito.verifyNoInteractions(documentService);
-    }
 
     @Test
     void testSendMailRegistrationForUser_Exception() {
