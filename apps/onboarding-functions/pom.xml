@@ -42,13 +42,6 @@
                 <scope>import</scope>
             </dependency>
             <dependency>
-                <groupId>eu.europa.ec.joinup.sd-dss</groupId>
-                <artifactId>dss-bom</artifactId>
-                <version>6.2</version>
-                <type>pom</type>
-                <scope>import</scope>
-			</dependency>
-            <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
                 <version>${okhttp.version}</version>
@@ -252,10 +245,6 @@
               <artifactId>azure-core-http-netty</artifactId>
             </exclusion>
           </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>eu.europa.ec.joinup.sd-dss</groupId>
-            <artifactId>dss-model</artifactId>
         </dependency>
     </dependencies>
     <build>
