@@ -100,8 +100,21 @@ def get_onboarding_filter():
         "institution.description": {"$exists": True, "$ne": None},
         "institution.institutionType": {"$exists": True, "$ne": None},
         "productId": {"$exists": True, "$ne": None, "$nin": ["prod-interop-atst", "prod-interop-coll", "prod-fd", "prod-fd-garantito", "prod-pagopa-ec"]},
-        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST", "OVERRIDDEN"]}
+        "status": {"$exists": True, "$ne": None, "$nin": ["REQUEST"]}
     }
+
+def update_or_delete(onboardings: list[dict]):
+  onboarding_ids_to_delete = []
+  onboardings_to_update = []
+  for o in onboardings:
+    if o.get("status") in ["OVERRIDDEN"]:
+      onboarding_ids_to_delete.append(o.get("_id"))
+    else:
+      onboardings_to_update.append(o)
+  if onboarding_ids_to_delete:
+    delete_onboarding_index(onboarding_ids_to_delete)
+  if onboardings_to_update:
+    update_onboarding_index(onboardings_to_update)
 
 def main():
     client = MongoClient(MONGO_HOST)
@@ -110,22 +123,19 @@ def main():
     print("Fetching onboardings with filter:", json.dumps(get_onboarding_filter()))
     total_count = collection.count_documents(get_onboarding_filter())
     count = 0
-    count_errors = 0
     onboardings = []
     for o in collection.find(get_onboarding_filter(), batch_size=MONGO_BATCH_SIZE):
         onboardings.append(o)
         count += 1
         if len(onboardings) >= MONGO_BATCH_SIZE:
             print(f"Updating index: {count}/{total_count} onboardings", end="\r")
-            if not update_onboarding_index(onboardings):
-                count_errors += len(onboardings)
+            update_or_delete(onboardings)
             onboardings = []
     if onboardings:
         print(f"Updating index: {count}/{total_count} onboardings")
-        if not update_onboarding_index(onboardings):
-            count_errors += len(onboardings)
+        update_or_delete(onboardings)
         onboardings = []
-    print(f"Errors updating onboardings: {count_errors}")
+    print("Finished updating onboarding index.")
 
 if __name__ == "__main__":
     try:
