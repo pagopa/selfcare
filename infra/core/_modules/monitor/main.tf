@@ -345,6 +345,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "api_400_rate" {
 
 
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "unavailable_blob_storage_access" {
+  count               = var.env_short == "p" ? 1 : 0
   name                = local.alert_unavailable_blob_storage_access_name
   resource_group_name = var.monitor_rg_name
   location            = var.monitor_rg_location
