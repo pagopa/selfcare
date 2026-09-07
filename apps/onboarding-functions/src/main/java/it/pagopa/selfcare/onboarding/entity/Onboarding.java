@@ -40,7 +40,6 @@ public class Onboarding {
     private Aggregator aggregator;
     private String delegationId;
     private Boolean sendMailForImport;
-    private Payment payment;
     private Boolean toAddOnAggregates;
 
     //This field is used in case of workflowType USER
@@ -62,7 +61,6 @@ public class Onboarding {
                 ", signContract=" + signContract +
                 ", expiringDate=" + expiringDate +
                 ", status=" + status +
-                ", payment=" + payment +
                 ", workflowInstanceId='" + workflowInstanceId + '\'' +
                 ", activatedAt=" + activatedAt +
                 ", deletedAt=" + deletedAt +
