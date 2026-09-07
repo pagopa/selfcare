@@ -35,8 +35,6 @@ public interface OnboardingService {
 
   void sendMailManagingInstitution(ManagingInstitutionSendEmail managingInstitutionEmailRequest);
 
-  void saveVisuraForMerchant(Onboarding onboarding);
-
   void sendMailRegistrationForContract(OnboardingWorkflow onboardingWorkflow);
 
   void sendMailRegistrationForContractAggregator(Onboarding onboarding);
