@@ -14,6 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.query.UntypedExampleMatcher;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -71,7 +72,7 @@ public class InternalEvents {
     final String description = "Questo gruppo contiene gli utenti dell'Ente Aggregatore '" + event.getDescription() + "'";
     final UserGroupEntity probe = new UserGroupEntity();
     probe.setParentInstitutionId(event.getInstitutionId());
-    final Example<UserGroupEntity> example = Example.of(probe);
+    final Example<UserGroupEntity> example = Example.of(probe, UntypedExampleMatcher.matching());
     Pageable pageable = PageRequest.of(0, GROUP_UPDATE_BATCH_SIZE, Sort.by(UserGroupEntity.Fields.ID));
     Page<UserGroupEntity> groups;
 
