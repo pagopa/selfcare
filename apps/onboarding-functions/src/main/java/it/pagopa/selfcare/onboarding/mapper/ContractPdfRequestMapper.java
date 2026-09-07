@@ -9,7 +9,6 @@ import org.mapstruct.Mapping;
 import org.openapi.quarkus.document_json.model.BillingPdfData;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.InstitutionPdfData;
-import org.openapi.quarkus.document_json.model.PaymentPdfData;
 import org.openapi.quarkus.document_json.model.UserPdfData;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
@@ -25,7 +24,6 @@ public interface ContractPdfRequestMapper {
   @Mapping(target = "manager", expression = "java(toUserPdfData(manager, onboarding))")
   @Mapping(target = "delegates", expression = "java(toUserPdfDataList(delegates, onboarding))")
   @Mapping(target = "billing", source = "onboarding.billing")
-  @Mapping(target = "payment", source = "onboarding.payment")
   @Mapping(target = "contractTemplatePath", source = "contractTemplatePath")
   @Mapping(target = "aggregatesCsvBaseUrl", source = "aggregatesCsvBaseUrl")
   ContractPdfRequest toRequest(
@@ -39,8 +37,6 @@ public interface ContractPdfRequestMapper {
   InstitutionPdfData toInstitutionPdfData(Institution institution);
 
   BillingPdfData toBillingPdfData(Billing billing);
-
-  PaymentPdfData toPaymentPdfData(Payment payment);
 
   @Mapping(target = "id", expression = "java(userResource.getId() != null ? userResource.getId().toString() : null)")
   @Mapping(target = "name", source = "userResource.name.value")
