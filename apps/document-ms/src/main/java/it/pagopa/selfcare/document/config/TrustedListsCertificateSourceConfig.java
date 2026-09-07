@@ -18,11 +18,11 @@ import eu.europa.esig.dss.tsl.alerts.handlers.log.LogLOTLLocationChangeAlertHand
 import eu.europa.esig.dss.tsl.alerts.handlers.log.LogOJUrlChangeAlertHandler;
 import eu.europa.esig.dss.tsl.alerts.handlers.log.LogTLExpirationAlertHandler;
 import eu.europa.esig.dss.tsl.alerts.handlers.log.LogTLSignatureErrorAlertHandler;
-import eu.europa.esig.dss.tsl.cache.CacheCleaner;
+import eu.europa.esig.dss.validation.job.cache.CacheCleaner;
 import eu.europa.esig.dss.tsl.function.OfficialJournalSchemeInformationURI;
 import eu.europa.esig.dss.tsl.job.TLValidationJob;
 import eu.europa.esig.dss.tsl.source.LOTLSource;
-import eu.europa.esig.dss.tsl.sync.AcceptAllStrategy;
+import eu.europa.esig.dss.validation.job.sync.AcceptAllStrategy;
 import eu.europa.esig.dss.xml.common.DocumentBuilderFactoryBuilder;
 import eu.europa.esig.dss.xml.common.SchemaFactoryBuilder;
 import eu.europa.esig.dss.xml.common.ValidatorConfigurator;
