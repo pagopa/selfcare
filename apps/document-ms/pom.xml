@@ -48,7 +48,7 @@
       <dependency>
         <groupId>eu.europa.ec.joinup.sd-dss</groupId>
         <artifactId>dss-bom</artifactId>
-        <version>6.2</version>
+        <version>6.5</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -401,6 +401,16 @@
     <dependency>
       <groupId>eu.europa.ec.joinup.sd-dss</groupId>
       <artifactId>dss-validation</artifactId>
+    </dependency>
+    <!-- Provides the default XML validation policy required by SignedDocumentValidator#validateDocument (mandatory since DSS 6.3). -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-policy-jaxb</artifactId>
+    </dependency>
+    <!-- CMS implementation required by dss-cades/dss-pades for CAdES/PAdES handling (mandatory since DSS 6.3). -->
+    <dependency>
+      <groupId>eu.europa.ec.joinup.sd-dss</groupId>
+      <artifactId>dss-cms-object</artifactId>
     </dependency>
     <dependency>
       <groupId>eu.europa.ec.joinup.sd-dss</groupId>
