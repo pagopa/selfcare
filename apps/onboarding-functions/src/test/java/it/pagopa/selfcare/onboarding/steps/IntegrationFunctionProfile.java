@@ -68,6 +68,7 @@ public class IntegrationFunctionProfile implements QuarkusTestProfile {
     jwtPayload.put("level", "L2");
     jwtPayload.put("aud", "api.dev.selfcare.pagopa.it");
     jwtPayload.put("iss", "SPID");
+    jwtPayload.put("tenant_id", "AR");
     jwtPayload.put("jti", "_3f603a8bc36b1231b1a7");
     return jwtPayload;
   }

@@ -29,7 +29,6 @@ import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 
-import java.io.ByteArrayInputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -56,7 +55,6 @@ public class OnboardingServiceImpl implements OnboardingService {
     private final ProductService productService;
     private final PdvUserRegistryService pdvUserRegistryService;
     private final UserService userService;
-    private final RegistryProxyService registryProxyService;
     private final OnboardingRepositoryService onboardingRepositoryService;
 
     private final DocumentBuilder documentBuilder;
@@ -68,8 +66,7 @@ public class OnboardingServiceImpl implements OnboardingService {
             DocumentBuilder documentBuilder,
             OnboardingRepositoryService onboardingRepositoryService,
             PdvUserRegistryService pdvUserRegistryService,
-            UserService userService,
-            RegistryProxyService registryProxyService) {
+            UserService userService) {
         this.productService = productService;
         this.notificationService = notificationService;
         this.documentService = documentService;
@@ -77,7 +74,6 @@ public class OnboardingServiceImpl implements OnboardingService {
         this.onboardingRepositoryService = onboardingRepositoryService;
         this.pdvUserRegistryService = pdvUserRegistryService;
         this.userService = userService;
-        this.registryProxyService = registryProxyService;
     }
 
     public Optional<Onboarding> getOnboarding(String onboardingId) {
@@ -199,18 +195,6 @@ public class OnboardingServiceImpl implements OnboardingService {
         userService.sendMailRequest(request.getUserId(), sendMailDto);
     }
 
-    public void saveVisuraForMerchant(Onboarding onboarding) {
-        var taxCode = onboarding.getInstitution().getTaxCode();
-        var bytes = registryProxyService.getInstitutionVisuraByTaxCode(taxCode);
-        final String filename = String.format("VISURA_%s.xml", taxCode);
-        org.openapi.quarkus.document_json.api.DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request =
-                new org.openapi.quarkus.document_json.api.DocumentContentControllerApi
-                        .SaveVisuraForMerchantMultipartForm();
-        request.fileContent = new ByteArrayInputStream(bytes);
-        request.onboardingId = onboarding.getId();
-        request.filename = filename;
-        documentService.saveVisuraForMerchant(request);
-    }
 
     public void sendMailRegistrationForContract(OnboardingWorkflow onboardingWorkflow) {
 
