@@ -121,9 +121,9 @@ jobs:
       base_path: infra/resources/${{ inputs.app }}
       env_vars: TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}
       use_private_agent: true
-      override_github_environment: ${{ inputs.env }}
+      override_github_environment: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
       use_labels: true
-      override_labels: ${{ inputs.env }}
+      override_labels: ${{ inputs.environment }}
       
   # tf_plan:
   #   name: ${{ inputs.app }} - Terraform Plan
@@ -212,9 +212,9 @@ jobs:
       base_path: infra/resources/${{ inputs.app }}
       env_vars: TF_VAR_image_tag=${{ needs.prepare.outputs.image_tag }}
       use_private_agent: true
-      override_github_environment: ${{ inputs.env }}
+      override_github_environment: ${{ inputs.tf_environment != '' && inputs.tf_environment || inputs.environment }}
       use_labels: true
-      override_labels: ${{ inputs.env }}
+      override_labels: ${{ inputs.environment }}
   
   # release:
   #   name: ${{ inputs.app }} - Release
