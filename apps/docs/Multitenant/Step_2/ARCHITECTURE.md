@@ -100,6 +100,27 @@ Key Vault secret names. The application-facing registry contains identifiers and
 An unknown tenant, absent registry entry, null required dimension, or invalid configuration produces a typed
 failure. There is no default tenant or default resource.
 
+**Registry storage and schema.** The application-facing registry is a single non-secret configuration value
+(for example an environment variable populated with a JSON document, following the existing
+`tenant.registry.json` pattern already used by other services), holding one object keyed by tenant code. Each
+tenant entry groups its resource dimensions; the Cosmos DB Mongo dimension carries only the target
+account/database identifiers and the name of the environment variable that resolves to the connection string
+at runtime, never a Key Vault secret name or the secret value itself:
+
+```json
+{
+  "AR":   {"mongo": {"account": "cosmos-ar",   "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"}},
+  "PNPG": {"mongo": {"account": "cosmos-pnpg", "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"}}
+}
+```
+
+Only Terraform knows the actual Key Vault secret name; it maps that secret to the Container App secret and,
+from it, to the environment variable named in the registry. The registry loader validates, at startup and per
+tenant entry, that the referenced environment variable is present and non-blank; a missing or blank value
+fails closed for that tenant's route only and does not prevent loading the other valid entries. Adding a
+tenant, or changing which environment variable a dimension resolves to, is a registry (and, for Cosmos DB
+Mongo, Terraform/deployment) change; it never requires the application to call Key Vault directly.
+
 ### 3. Cosmos DB Mongo routing and isolation
 
 Cosmos DB uses the Mongo API over private networking. Mongo clients authenticate with connection strings
@@ -107,10 +128,15 @@ stored in Azure Key Vault; Managed Identity is not used for Mongo authentication
 
 The deployment path is:
 
-1. Terraform declares a distinct application secret/configuration key for every required Cosmos route.
+1. Terraform declares a distinct application secret/configuration key for every required Cosmos route and
+   records the corresponding environment variable name as that route's `connectionStringEnvVar` in the
+   tenant registry (see §2).
 2. The Container App module creates a Key Vault-backed Container App secret using its assigned identity.
-3. The secret is exposed to the container as a secret-backed environment variable.
-4. The application validates the configured routes and initializes the required Mongo clients at startup.
+3. The secret is exposed to the container as a secret-backed environment variable, named exactly as declared
+   in step 1.
+4. The application validates the configured routes and initializes the required Mongo clients at startup by
+   reading the already-resolved environment variable named in the registry; it never calls Key Vault, holds
+   Key Vault credentials, or resolves a Key Vault secret name itself.
 5. Each operation selects the client/database from the validated tenant and, when applicable, product routing.
 
 The runtime selector never fetches Key Vault on each data operation and never embeds connection strings in
