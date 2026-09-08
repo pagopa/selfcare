@@ -344,19 +344,14 @@ class PDNDInfoCamereConnectorImplTest {
 
         when(DataEncryptionUtils.decrypt(document)).thenReturn(document);
 
-        doNothing().when(storageAsyncService)
-                .saveStringToStorage(anyString(), anyString());
-
         // when
         var result = pdndInfoCamereConnector.retrieveInstitutionDetail(taxCode);
 
         // then
         verify(pdndCacheableService, times(1))
                 .getEncryptedDocument(anyString());
-        verify(storageAsyncService, times(1))
-                .saveStringToStorage(anyString(), anyString());
-
-        verifyNoMoreInteractions(pdndCacheableService, storageAsyncService);
+        verifyNoMoreInteractions(pdndCacheableService);
+        verifyNoInteractions(storageAsyncService);
     }
 
     @Test
