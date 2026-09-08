@@ -48,7 +48,7 @@ permissions:
 
 jobs:
   drift_detection:
-    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@main
+    uses: pagopa/dx/.github/workflows/infra_drift_detection.yml@72f0fb0b9df2374cf87fe0157b8fec1a65709c9b # main
     name: "[${{ inputs.env }}-${{ inputs.domain }}] Selfcare Infra Core Drift detection"
     secrets: inherit
     with:

@@ -29,7 +29,7 @@ on:
 
 jobs:
   release_dev:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@72f0fb0b9df2374cf87fe0157b8fec1a65709c9b # main
     name: "DEV ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'dev' }}
     secrets: inherit
@@ -43,7 +43,7 @@ jobs:
       override_labels: ${{ inputs.env }}
 
   release_uat:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@72f0fb0b9df2374cf87fe0157b8fec1a65709c9b # main
     name: "UAT ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'uat' }}
     secrets: inherit
@@ -57,7 +57,7 @@ jobs:
       override_labels: ${{ inputs.env }}
   
   release_prod:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@72f0fb0b9df2374cf87fe0157b8fec1a65709c9b # main
     name: "PROD ${{ inputs.domain }} Selfcare Infra Core Release"
     if: ${{ inputs.env == 'prod' }}
     secrets: inherit
