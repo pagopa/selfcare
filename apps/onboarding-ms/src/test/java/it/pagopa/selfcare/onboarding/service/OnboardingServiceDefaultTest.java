@@ -3235,6 +3235,25 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
+    void testInstitutionOnboardings_withoutTaxCode_doesNotCallPdv() {
+        Onboarding onboarding = mock(Onboarding.class);
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
+        when(Onboarding.find(any())).thenReturn(query);
+
+        UniAssertSubscriber<List<OnboardingResponse>> subscriber = onboardingService
+                .institutionOnboardings(null, "subunitCode", "origin", "originId", OnboardingStatus.PENDING)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
+        assertFalse(response.isEmpty());
+        assertEquals(1, response.size());
+        verify(userRegistryApi, never()).searchUsingPOST(any(), any());
+    }
+
+    @Test
     void testInstitutionOnboardings_withPersonalFiscalCode_userFoundOnPdv() {
         String personalFiscalCode = "PLTGMR96D20H224Z";
         UUID userId = UUID.randomUUID();
