@@ -16,6 +16,7 @@ public class Token extends ReactivePanacheMongoEntityBase {
 
     @BsonId
     private String id;
+    private String tenantId;
     private DocumentType type;
     private String onboardingId;
     private String productId;
@@ -32,4 +33,3 @@ public class Token extends ReactivePanacheMongoEntityBase {
     private LocalDateTime activatedAt;
 
 }
-

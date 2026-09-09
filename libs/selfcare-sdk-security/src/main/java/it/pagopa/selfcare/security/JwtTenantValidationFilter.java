@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.security;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.annotation.Priority;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -19,6 +20,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 public class JwtTenantValidationFilter implements ContainerRequestFilter {
 
   @Inject SecurityIdentity securityIdentity;
+  @Inject TenantContext tenantContext;
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -31,6 +33,7 @@ public class JwtTenantValidationFilter implements ContainerRequestFilter {
       String tenantId = JwtTenantValidator.resolveTokenTenant(jwt);
       JwtTenantValidator.validateHeader(
           tenantId, requestContext.getHeaderString(JwtTenantValidator.TENANT_HEADER));
+      tenantContext.setTenantId(tenantId);
     } catch (TenantValidationException exception) {
       requestContext.abortWith(
           Response.status(Response.Status.BAD_REQUEST)

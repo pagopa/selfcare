@@ -21,6 +21,7 @@ import it.pagopa.selfcare.onboarding.entity.registry.RegistryResourceFactory;
 import it.pagopa.selfcare.onboarding.exception.*;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -66,6 +67,9 @@ public class OnboardingValidationHelper {
 
     @Inject
     InstitutionMapper institutionMapper;
+
+    @Inject
+    OnboardingRepository onboardingRepository;
 
     // -------------------------------------------------------------------------
     // Verifica duplicati onboarding
@@ -408,7 +412,7 @@ public class OnboardingValidationHelper {
                         return Uni.createFrom().failure(new InvalidRequestException(
                                 INVALID_REFERENCE_ONBORADING.getMessage(), INVALID_REFERENCE_ONBORADING.getCode()));
                     }
-                    return Onboarding.findByIdOptional(onboarding.getReferenceOnboardingId())
+                    return onboardingRepository.findByIdOptional(onboarding.getReferenceOnboardingId())
                             .onItem().transformToUni(opt ->
                                     opt.map(Onboarding.class::cast)
                                             .filter(ref -> ref.getStatus().equals(COMPLETED))
@@ -461,7 +465,7 @@ public class OnboardingValidationHelper {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, productId);
         Document query = QueryUtils.buildQuery(params);
-        return Onboarding.find(query).stream()
+        return onboardingRepository.find(query).stream()
                 .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
                 .filter(r -> Objects.isNull(r.getReferenceOnboardingId()))
@@ -491,4 +495,3 @@ public class OnboardingValidationHelper {
         return onboarding;
     }
 }
-

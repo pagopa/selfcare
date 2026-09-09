@@ -27,6 +27,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.release>17</maven.compiler.release>
+    <common-sdk-tenant-version>0.1.0</common-sdk-tenant-version>
   </properties>
 
   <dependencyManagement>
@@ -43,6 +44,11 @@
 
   <dependencies>
 
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-tenant</artifactId>
+      <version>${common-sdk-tenant-version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.auth0</groupId>

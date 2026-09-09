@@ -19,6 +19,8 @@
 
     <modules>
         <module>selfcare-cucumber-sdk</module>
+        <module>selfcare-sdk-tenant</module>
+        <module>selfcare-sdk-tenant-mongodb</module>
         <module>selfcare-sdk-security</module>
         <module>selfcare-sdk-health</module>
         <module>selfcare-sdk-pom</module>

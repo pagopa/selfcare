@@ -13,6 +13,7 @@ import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import it.pagopa.selfcare.onboarding.util.SortEnum;
@@ -47,6 +48,9 @@ public class OnboardingPersistenceHelper {
 
     @Inject
     OrchestrationService orchestrationService;
+
+    @Inject
+    OnboardingRepository onboardingRepository;
 
     // -------------------------------------------------------------------------
     // Persistenza onboarding
@@ -84,7 +88,7 @@ public class OnboardingPersistenceHelper {
           onboarding.getInstitution().getTaxCode(),
           onboarding.getInstitution().getSubunitCode(),
           onboarding.getInstitution().getInstitutionType());
-        return Onboarding.persistOrUpdate(List.of(onboarding)).replaceWith(onboarding);
+        return onboardingRepository.persistOrUpdate(onboarding);
     }
 
     /**
@@ -97,7 +101,7 @@ public class OnboardingPersistenceHelper {
                 taxCode, subunitCode, origin, originId, COMPLETED, productId);
         Document sort = QueryUtils.buildSortDocument(Onboarding.Fields.createdAt.name(), SortEnum.DESC);
         Document query = QueryUtils.buildQuery(params);
-        return Onboarding.find(query, sort).stream();
+        return onboardingRepository.find(query, sort).stream();
     }
 
     /**
@@ -190,7 +194,7 @@ public class OnboardingPersistenceHelper {
                                                          Map<PartyRole, ProductRoleInfo> roleMappings) {
         List<PartyRole> allowedRoles = validRoles(product, PHASE_ADDITION_ALLOWED.ONBOARDING,
                 onboarding.getInstitution().getInstitutionType());
-        return Onboarding.persist(onboarding)
+        return onboardingRepository.persist(onboarding)
                 .replaceWith(onboarding)
                 .onItem().transformToUni(persisted ->
                         validationHelper.validationRole(userRequests, allowedRoles)
@@ -258,5 +262,3 @@ public class OnboardingPersistenceHelper {
     }
 
 }
-
-

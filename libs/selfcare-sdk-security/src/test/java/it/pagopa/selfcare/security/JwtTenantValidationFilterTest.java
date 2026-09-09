@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -20,6 +21,7 @@ class JwtTenantValidationFilterTest {
   @Mock SecurityIdentity securityIdentity;
   @Mock JsonWebToken jsonWebToken;
   @Mock ContainerRequestContext requestContext;
+  @Mock TenantContext tenantContext;
 
   private JwtTenantValidationFilter filter;
 
@@ -27,6 +29,7 @@ class JwtTenantValidationFilterTest {
   void setUp() {
     filter = new JwtTenantValidationFilter();
     filter.securityIdentity = securityIdentity;
+    filter.tenantContext = tenantContext;
   }
 
   @Test
@@ -39,6 +42,7 @@ class JwtTenantValidationFilterTest {
     filter.filter(requestContext);
 
     verify(requestContext).getHeaderString("X-Tenant-Id");
+    verify(tenantContext).setTenantId("AR");
   }
 
   @Test
@@ -51,6 +55,7 @@ class JwtTenantValidationFilterTest {
     filter.filter(requestContext);
 
     verify(requestContext).getHeaderString("X-Tenant-Id");
+    verify(tenantContext).setTenantId("PNPG");
   }
 
   @Test

@@ -4,6 +4,9 @@ import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoDatabase;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.tenant.TenantDefinition;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import org.bson.Document;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +15,8 @@ import org.mockito.Mockito;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -25,6 +30,8 @@ class OnboardingMongoReadinessCheckTest {
             "mongodb://user:pwd@mongo-primary.uat.local:27017,mongo-secondary.uat.local:27017/selcOnboarding?replicaSet=rs0";
 
     private ReactiveMongoDatabase database;
+    private TenantRegistry tenantRegistry;
+    private TenantMongoClientProducer tenantMongoClientProducer;
     private OnboardingMongoReadinessCheck check;
 
     @BeforeEach
@@ -32,7 +39,15 @@ class OnboardingMongoReadinessCheckTest {
         ReactiveMongoClient mongoClient = mock(ReactiveMongoClient.class);
         database    = mock(ReactiveMongoDatabase.class);
         when(mongoClient.getDatabase(DATABASE)).thenReturn(database);
-        check = new OnboardingMongoReadinessCheck(mongoClient, DATABASE, CONNECTION_STRING);
+        tenantRegistry = mock(TenantRegistry.class);
+        tenantMongoClientProducer = mock(TenantMongoClientProducer.class);
+        when(tenantRegistry.supportedTenantIds()).thenReturn(Set.of("AR"));
+        when(tenantRegistry.resolve("AR")).thenReturn(new TenantDefinition(
+                new TenantDefinition.MongoDefinition(
+                        "test", DATABASE, "MONGODB_CONNECTION_STRING_AR")));
+        when(tenantRegistry.connectionString("AR")).thenReturn(Optional.of(CONNECTION_STRING));
+        when(tenantMongoClientProducer.clientForTenant("AR")).thenReturn(mongoClient);
+        check = new OnboardingMongoReadinessCheck(tenantRegistry, tenantMongoClientProducer);
     }
 
     private HealthCheckResponse await() {
@@ -74,10 +89,9 @@ class OnboardingMongoReadinessCheckTest {
 
     @Test
     void host_showsPlaceholder_whenConnectionStringIsUnparseable() {
-        ReactiveMongoClient mongoClient = mock(ReactiveMongoClient.class);
-        when(mongoClient.getDatabase(DATABASE)).thenReturn(database);
+        when(tenantRegistry.connectionString("AR")).thenReturn(Optional.of("not-a-valid-connection-string"));
         OnboardingMongoReadinessCheck resilientCheck =
-                new OnboardingMongoReadinessCheck(mongoClient, DATABASE, "not-a-valid-connection-string");
+                new OnboardingMongoReadinessCheck(tenantRegistry, tenantMongoClientProducer);
         when(database.runCommand(Mockito.any(Document.class)))
                 .thenReturn(Uni.createFrom().item(new Document("ok", 1.0)));
 
