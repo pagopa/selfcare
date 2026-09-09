@@ -77,13 +77,13 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
 
     @Override
     public Multi<UserInstitution> paginatedFindAllWithFilter(Map<String, Object> queryParameter, Integer page, Integer size) {
-        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(queryParameter);
         return runUserInstitutionFindQuery(query, null).page(page, size).stream();
     }
 
     @Override
     public Uni<UserInstitution> retrieveFirstFilteredUserInstitution(Map<String, Object> queryParameter) {
-        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(queryParameter);
         return runUserInstitutionFindQuery(query, null).firstResult();
     }
 
@@ -169,10 +169,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
       onboardedProductFilterMap
     );
 
-    Document query = queryUtils.buildQueryDocument(
-      filterMap,
-      USER_INSTITUTION_COLLECTION
-    );
+    Document query = queryUtils.buildQueryDocument(filterMap);
 
     return UserInstitution.mongoCollection()
       .find(query, UserInstitution.class)
@@ -320,12 +317,12 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                                                       UserInstitution.Fields.products.name() + CURRENT_ANY + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         log.info("Update user institution with filter: {} and field to update: {}", Encode.forJava(filterMap.toString()), Encode.forJava(fieldToUpdateMap.toString()));
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+                .where(queryUtils.buildQueryDocument(filterMap));
     }
 
     @Override
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter) {
-        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(queryParameter);
         log.debug("Query: {}", query);
         return runUserInstitutionFindQuery(query, null).stream();
     }
@@ -333,26 +330,26 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
     @Override
     public Multi<UserInstitution> findAllWithFilter(Map<String, Object> queryParameter, Integer batchSize) {
         batchSize = Optional.ofNullable(batchSize).orElse(100);
-        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(queryParameter);
         log.debug("Query: {}", query);
         return UserInstitution.find(query).withBatchSize(batchSize).stream();
     }
 
     @Override
     public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate) {
-        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
+        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, fromDate);
         return runUserInstitutionFindQuery(query, null).stream();
     }
 
     @Override
     public Multi<UserInstitution> findUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate, Integer page) {
-        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
+        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, fromDate);
         return runUserInstitutionFindQuery(query, null).page(Page.ofSize(pageSizeFindUserInstitutions).index(page)).stream();
     }
 
     @Override
     public Uni<Integer> pageCountUserInstitutionsAfterDateWithFilter(Map<String, Object> queryParameter, OffsetDateTime fromDate) {
-        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, USER_INSTITUTION_COLLECTION, fromDate);
+        Document query = queryUtils.buildQueryDocumentByDate(queryParameter, fromDate);
         return runUserInstitutionFindQuery(query, null).page(Page.ofSize(pageSizeFindUserInstitutions)).pageCount();
     }
 
@@ -367,19 +364,19 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
             fieldToUpdateMap.put(UserInstitution.Fields.products.name() + CURRENT + OnboardedProduct.Fields.updatedAt.name(), Instant.now());
         }
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+                .where(queryUtils.buildQueryDocument(filterMap));
     }
 
     @Override
     public Uni<List<UserInstitution>> retrieveFilteredUserInstitution(Map<String, Object> queryParameter) {
-        Document query = queryUtils.buildQueryDocument(queryParameter, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(queryParameter);
         return runUserInstitutionFindQuery(query, null).list();
     }
 
     @Override
     public Uni<UserInstitution> findByUserIdAndInstitutionId(String userId, String institutionId) {
         Map<String, Object> userInstitutionFilterMap = UserInstitutionFilter.builder().userId(userId).institutionId(institutionId).build().constructMap();
-        Document query = queryUtils.buildQueryDocument(userInstitutionFilterMap, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(userInstitutionFilterMap);
         return runUserInstitutionFindQuery(query, null).firstResult();
     }
 
@@ -402,7 +399,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         }
         Map<String, Object> onboardedProductFilterMap = builder.build().constructMap();
         Map<String, Object> filterMap = userUtils.retrieveMapForFilter(userInstitutionFilterMap, onboardedProductFilterMap);
-        Document query = queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION);
+        Document query = queryUtils.buildQueryDocument(filterMap);
 
         return runUserInstitutionCountQuery(query);
     }
@@ -420,7 +417,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
         Map<String, Object> filterMap = Map.of(UserInstitution.Fields.institutionId.name(), institutionId);
 
         return UserInstitution.update(queryUtils.buildUpdateDocument(fieldToUpdateMap))
-                .where(queryUtils.buildQueryDocument(filterMap, USER_INSTITUTION_COLLECTION));
+                .where(queryUtils.buildQueryDocument(filterMap));
 
     }
 
@@ -451,7 +448,7 @@ public class UserInstitutionServiceDefault implements UserInstitutionService {
                 .status(status)
                 .build().constructMap();
 
-        final Document query = queryUtils.buildQueryDocument(userUtils.retrieveMapForFilter(userFilter, productFilter), USER_INSTITUTION_COLLECTION);
+        final Document query = queryUtils.buildQueryDocument(userUtils.retrieveMapForFilter(userFilter, productFilter));
         log.debug("Query: {}", query);
 
         return UserInstitution.count(query);
