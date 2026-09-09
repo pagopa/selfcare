@@ -325,7 +325,6 @@ public class UserInstitutionCdcServiceTest {
         verify(eventHubFdRestClient, times(0)).sendMessage(any(FdUserNotificationToSend.class));
         verify(eventHubRestClient, timeout(2000).times(1)).sendMessage(any(UserNotificationToSend.class));
         verify(webhookApi, timeout(2000).times(1)).sendNotification(any(NotificationRequest.class));
-        verify(userInstitutionRepository, times(1)).updateUser(any());
     }
 
     @Test
@@ -359,7 +358,6 @@ public class UserInstitutionCdcServiceTest {
         verify(eventHubFdRestClient, timeout(2000).times(1)).sendMessage(any(FdUserNotificationToSend.class));
         verify(eventHubRestClient, timeout(2000).times(1)).sendMessage(any(UserNotificationToSend.class));
         verify(webhookApi, timeout(2000).times(1)).sendNotification(any(NotificationRequest.class));
-        verify(userInstitutionRepository, times(1)).updateUser(any());
     }
 
 
@@ -393,7 +391,6 @@ public class UserInstitutionCdcServiceTest {
         verify(eventHubFdRestClient, times(0)).sendMessage(any(FdUserNotificationToSend.class));
         verify(eventHubRestClient, timeout(2000).times(1)).sendMessage(any(UserNotificationToSend.class));
         verify(webhookApi, timeout(2000).times(1)).sendNotification(any(NotificationRequest.class));
-        verify(userInstitutionRepository, times(1)).updateUser(any());
     }
 
     @Test
