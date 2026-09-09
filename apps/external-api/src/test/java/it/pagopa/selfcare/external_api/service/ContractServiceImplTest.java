@@ -5,7 +5,6 @@ import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.Document;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentResponse;
-import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
 import it.pagopa.selfcare.external_api.client.MsCoreInstitutionApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentContentApiClient;
@@ -104,19 +103,14 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         onboarding.setTokenId(onboardingId);
         OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
         onboardingsResponse.setOnboardings(List.of(onboarding));
-        DocumentResponse relatedDocument = new DocumentResponse();
-        relatedDocument.setType(DocumentType.ATTACHMENT);
-        relatedDocument.setOnboardingId(onboardingId);
-        relatedDocument.setAttachmentName("attachmentName");
-        relatedDocument.setContractFilename("attachment.pdf");
         Resource resource = new ByteArrayResource("related content".getBytes());
         ResponseEntity<Resource> responseFile = ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=attachment.pdf")
                 .body(resource);
         when(institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId))
                 .thenReturn(ResponseEntity.ok(onboardingsResponse));
-        when(documentApiClient._getDocumentById(documentId)).thenReturn(ResponseEntity.ok(relatedDocument));
-        when(documentContentApiClient._getAttachment(onboardingId, "attachmentName")).thenReturn(responseFile);
+        when(documentContentApiClient._getRelatedDocument(onboardingId, documentId)).thenReturn(responseFile);
 
         // when
         ResourceResponse result = contractService.getContractV2(institutionId, productId, documentId);

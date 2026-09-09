@@ -4,7 +4,6 @@ package it.pagopa.selfcare.external_api.service;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.Document;
-import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
 import it.pagopa.selfcare.external_api.client.MsCoreInstitutionApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentContentApiClient;
@@ -69,16 +68,10 @@ public class ContractServiceImpl implements ContractService {
         ResponseEntity<Resource> contract;
         String fileName;
         if (StringUtils.hasText(documentId)) {
-            document = Optional.ofNullable(documentApiClient._getDocumentById(documentId).getBody())
-                    .map(documentMapper::toEntity)
-                    .filter(relatedDocument -> DocumentType.ATTACHMENT.equals(relatedDocument.getType()))
-                    .filter(relatedDocument -> institutionOnboarding.getTokenId().equals(relatedDocument.getOnboardingId()))
-                    .filter(relatedDocument -> StringUtils.hasText(relatedDocument.getAttachmentName()))
-                    .orElseThrow(() -> new ResourceNotFoundException(String.format(CONTRACT_FOR_S_AND_S_NOT_FOUND, institutionId, productId)));
-            contract = documentContentApiClient._getAttachment(institutionOnboarding.getTokenId(), document.getAttachmentName());
-            fileName = StringUtils.hasText(document.getContractFilename())
-                    ? document.getContractFilename()
-                    : document.getAttachmentName();
+            contract = documentContentApiClient._getRelatedDocument(institutionOnboarding.getTokenId(), documentId);
+            fileName = Optional.ofNullable(contract.getHeaders().getContentDisposition().getFilename())
+                    .filter(StringUtils::hasText)
+                    .orElse(documentId);
         } else {
             document = Optional.ofNullable(documentApiClient._getDocumentByOnboardingId(institutionOnboarding.getTokenId()).getBody())
                     .map(documentMapper::toEntity)
