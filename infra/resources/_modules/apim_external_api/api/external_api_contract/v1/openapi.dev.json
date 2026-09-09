@@ -132,6 +132,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "documentId",
+            "in": "query",
+            "description": "Unique identifier of a related document",
+            "required": false,
+            "style": "form",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
