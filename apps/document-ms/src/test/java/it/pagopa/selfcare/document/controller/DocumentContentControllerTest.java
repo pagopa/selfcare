@@ -154,6 +154,22 @@ class DocumentContentControllerTest {
     }
 
     @Test
+    void getRelatedDocument_shouldReturnFile_whenDocumentExists() throws Exception {
+        // given
+        File tempFile = Files.createTempFile("related-document", ".pdf").toFile();
+        tempFile.deleteOnExit();
+        when(documentContentService.retrieveRelatedDocument(ONBOARDING_ID, DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
+
+        // when / then
+        given()
+                .when()
+                .get(BASE_PATH + ONBOARDING_ID + "/related-documents/" + DOCUMENT_ID)
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
     void uploadAttachment_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
         File tempFile = Files.createTempFile("upload", ".pdf").toFile();
         tempFile.deleteOnExit();
