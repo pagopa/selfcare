@@ -57,7 +57,7 @@ module "cosmosdb" {
   database_name               = "selcMsCore"
   resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
   cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
-  max_throughput              = 10000
+  max_throughput              = 20000
 }
 
 module "collection_institution" {
