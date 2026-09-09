@@ -93,6 +93,35 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
     }
 
     @Test
+    void getRelatedDocument() {
+        // given
+        String institutionId = "institutionId";
+        String productId = "productId";
+        String documentId = "documentId";
+        String onboardingId = "onboardingId";
+        OnboardingResponse onboarding = new OnboardingResponse();
+        onboarding.setTokenId(onboardingId);
+        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
+        onboardingsResponse.setOnboardings(List.of(onboarding));
+        Resource resource = new ByteArrayResource("related content".getBytes());
+        ResponseEntity<Resource> responseFile = ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=attachment.pdf")
+                .body(resource);
+        when(institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId))
+                .thenReturn(ResponseEntity.ok(onboardingsResponse));
+        when(documentContentApiClient._getRelatedDocument(onboardingId, documentId)).thenReturn(responseFile);
+
+        // when
+        ResourceResponse result = contractService.getContractV2(institutionId, productId, documentId);
+
+        // then
+        Assertions.assertEquals("attachment.pdf", result.getFileName());
+        Assertions.assertEquals("application/octet-stream", result.getMimetype());
+        Assertions.assertArrayEquals("related content".getBytes(), result.getData());
+    }
+
+    @Test
     void getContractErrorTest() throws Exception {
         InstitutionOnboarding institutionOnboarding = new InstitutionOnboarding();
         institutionOnboarding.setTokenId("tokenId");
@@ -127,6 +156,17 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         Assertions.assertThrows(ResourceNotFoundException.class,
                 () -> contractService.getContractV2("institutionId", "productId"),
                 "Token for institutionId and productId not found!");
+    }
+
+    @Test
+    void getContractV2_shouldThrowResourceNotFound_whenOnboardingsResponseBodyIsNull() {
+        // given
+        when(institutionApiClient._getOnboardingsInstitutionUsingGET("institutionId", "productId"))
+                .thenReturn(ResponseEntity.ok().build());
+
+        // when / then
+        Assertions.assertThrows(ResourceNotFoundException.class,
+                () -> contractService.getContractV2("institutionId", "productId"));
     }
 
     @Test
