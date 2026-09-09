@@ -34,8 +34,7 @@ on:
           - institution-ms
           - institution-send-mail-scheduler
           - onboarding-bff
-          - onboarding-cdc
-          - onboarding-ms
+          - onboarding
           - product
           - product-cdc
           - registry-proxy
@@ -52,6 +51,7 @@ jobs:
   release:
     uses: ./.github/workflows/call_release_app.yml
     name: Call Release App
+    if: ${{ inputs.app != 'onboarding' }}
     secrets: inherit
     with:
       env: ${{ inputs.env }}
@@ -60,3 +60,61 @@ jobs:
       APP_PATH: apps/${{ inputs.app }}
       APPS_POM: apps/pom.xml
       POM: pom.xml
+
+  release_onboarding:
+    name: Call Release Onboarding
+    if: ${{ inputs.app == 'onboarding' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write
+      contents: read
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      INPUT_BRANCH: ${{ github.ref_name }}
+      INPUT_ENV: ${{ inputs.env }}
+    steps:
+      - name: Trigger onboarding domain release
+        run: |
+          gh workflow run trigger_release_onboarding.yml \
+            --ref "$INPUT_BRANCH" \
+            -f env="$INPUT_ENV" \
+            -f branch="$INPUT_BRANCH"
+
+  prepare_version_update:
+    name: Prepare version update
+    needs: release
+    if: ${{ inputs.target == 'ar' && (inputs.env == 'uat' || inputs.env == 'prod') && startsWith(github.ref_name, 'releases/') }}
+    runs-on: ubuntu-24.04
+    outputs:
+      domain: ${{ steps.extract.outputs.domain }}
+      version: ${{ steps.extract.outputs.version }}
+    steps:
+      - name: Extract release version
+        id: extract
+        env:
+          INPUT_APP: ${{ inputs.app }}
+          INPUT_BRANCH: ${{ github.ref_name }}
+        run: |
+          VERSION="${INPUT_BRANCH##*_v}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error title=Invalid release branch::Expected releases/<domain>_vX.Y.Z, got $INPUT_BRANCH"
+            exit 1
+          fi
+
+          DOMAIN="$INPUT_APP"
+          if [[ "$INPUT_APP" == "onboarding-ms" || "$INPUT_APP" == "onboarding-cdc" ]]; then
+            DOMAIN="onboarding"
+          fi
+
+          echo "domain=$DOMAIN" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  update_version:
+    name: Update release version variable
+    needs: prepare_version_update
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: ${{ needs.prepare_version_update.outputs.domain }}
+      env: ${{ inputs.env }}
+      version: ${{ needs.prepare_version_update.outputs.version }}
+    secrets: inherit

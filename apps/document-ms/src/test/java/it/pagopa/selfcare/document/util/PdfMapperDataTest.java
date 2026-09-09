@@ -1087,50 +1087,6 @@ class PdfMapperDataTest {
         assertEquals("PN123", map.get("number"));
     }
 
-    // ---- setupPaymentData ----
-
-    @Test
-    void setupPaymentData_shouldMapPaymentFields() {
-        // Given
-        PaymentPdfData payment = PaymentPdfData.builder()
-                .holder("Mario Rossi")
-                .iban("IT60X0542811101000000123456")
-                .build();
-
-        Map<String, Object> map = new java.util.HashMap<>();
-
-        // When
-        PdfMapperData.setupPaymentData(map, payment);
-
-        // Then
-        assertEquals("Mario Rossi", map.get("holder"));
-        assertEquals("IT60X0542811101000000123456", map.get("holder-iban"));
-    }
-
-    @Test
-    void setupPaymentData_shouldHandleNullPayment() {
-        // Given
-        Map<String, Object> map = new java.util.HashMap<>();
-
-        // When & Then
-        assertDoesNotThrow(() -> PdfMapperData.setupPaymentData(map, null));
-        assertFalse(map.containsKey("holder"));
-    }
-
-    @Test
-    void setupPaymentData_shouldHandleNullPaymentFields() {
-        // Given
-        PaymentPdfData payment = PaymentPdfData.builder().build();
-        Map<String, Object> map = new java.util.HashMap<>();
-
-        // When
-        PdfMapperData.setupPaymentData(map, payment);
-
-        // Then
-        assertEquals("", map.get("holder"));
-        assertEquals("", map.get("holder-iban"));
-    }
-
     // ---- decodeInstitutionType ----
 
     @ParameterizedTest
@@ -1603,7 +1559,6 @@ class PdfMapperDataTest {
         assertNotNull(constructor.newInstance());
     }
 }
-
 
 
 

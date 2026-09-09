@@ -207,11 +207,4 @@ public interface WorkflowExecutor {
         }
     }
 
-    default void saveVisuraActivity(TaskOrchestrationContext ctx, Onboarding onboarding) {
-        List<String> atecoCodes = onboarding.getInstitution().getAtecoCodes();
-        if (Objects.nonNull(atecoCodes) && !atecoCodes.isEmpty()) {
-            ctx.callActivity(SAVE_VISURA_FOR_MERCHANT, getOnboardingString(objectMapper(), onboarding), optionsRetry(), String.class).await();
-        }
-    }
-
 }

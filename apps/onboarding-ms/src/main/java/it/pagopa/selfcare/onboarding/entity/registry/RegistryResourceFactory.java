@@ -8,12 +8,10 @@ import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.party_registry_proxy_json.api.*;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 
-import java.util.Optional;
 
 @ApplicationScoped
 public class RegistryResourceFactory {
@@ -58,18 +56,11 @@ public class RegistryResourceFactory {
     @Inject
     GeographicTaxonomiesApi geographicTaxonomiesApi;
 
-    @RestClient
-    @Inject
-    PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereControllerApi;
-
-    @ConfigProperty(name = "onboarding-ms.allowed-ateco-codes")
-    Optional<String> allowedAtecoCodes;
-
   public RegistryManager<?> create(Onboarding onboarding, String managerTaxCode) {
     return switch (onboarding.getInstitution().getOrigin() != null
         ? onboarding.getInstitution().getOrigin()
         : Origin.SELC) {
-      case PDND_INFOCAMERE -> new RegistryManagerPDNDInfocamere(onboarding, infocamerePdndApi, userRegistryApi, allowedAtecoCodes, pdndVisuraInfoCamereControllerApi);
+      case PDND_INFOCAMERE -> new RegistryManagerPDNDInfocamere(onboarding, infocamerePdndApi, userRegistryApi);
       case ANAC -> new RegistryManagerANAC(onboarding, stationsApi);
       case IVASS -> new RegistryManagerIVASS(onboarding, insuranceCompaniesApi);
       case INFOCAMERE -> new RegistryManagerInfocamere(onboarding, infocamereApi, managerTaxCode);

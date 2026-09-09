@@ -211,17 +211,17 @@ module "app_gw" {
         external_api = {
           paths                 = ["/external/*"]
           backend               = "apim"
-          rewrite_rule_set_name = null
+          rewrite_rule_set_name = "rewrite-rule-set-apim-headers"
         }
         internal_api = {
           paths                 = ["/internal/*"]
           backend               = "apim"
-          rewrite_rule_set_name = null
+          rewrite_rule_set_name = "rewrite-rule-set-apim-headers"
         }
         bff_api = {
           paths                 = ["/dashboard/*", "/onboarding/*", "/party-registry-proxy/*", "/auth/*"]
           backend               = "apim"
-          rewrite_rule_set_name = null
+          rewrite_rule_set_name = "rewrite-rule-set-apim-headers"
         }
       }
     }
@@ -232,7 +232,7 @@ module "app_gw" {
         bff_pnpg_api = {
           paths                 = ["/imprese/dashboard/*", "/imprese/onboarding/*", "/external/*", "/imprese/auth/*"]
           backend               = "apim"
-          rewrite_rule_set_name = null
+          rewrite_rule_set_name = "rewrite-rule-set-apim-headers"
         }
         hub_spid_pnpg = {
           paths                 = ["${var.spid_pnpg_path_prefix}/*"]
@@ -293,6 +293,36 @@ module "app_gw" {
             {
               header_name  = "X-Client-Ip"
               header_value = "{var_client_ip}"
+            },
+            {
+              header_name  = "X-Selfcare-Original-Host"
+              header_value = "{var_host}"
+            },
+          ]
+          response_header_configurations = []
+          url                            = null
+        },
+      ]
+    },
+    {
+      name = "rewrite-rule-set-apim-headers"
+      rewrite_rules = [
+        {
+          name          = "http-headers-apim"
+          rule_sequence = 1
+          conditions    = []
+          request_header_configurations = [
+            {
+              header_name  = "X-Forwarded-For"
+              header_value = "{var_client_ip}"
+            },
+            {
+              header_name  = "X-Client-Ip"
+              header_value = "{var_client_ip}"
+            },
+            {
+              header_name  = "X-Selfcare-Original-Host"
+              header_value = "{var_host}"
             },
           ]
           response_header_configurations = []

@@ -15,6 +15,7 @@ import java.util.Map;
 public class SharedStepData {
 
     private String token;
+    private String tenantId;
     private String requestBody;
     private Map<String, String> pathParams;
     private Map<String, List<String>> queryParams;
@@ -25,6 +26,7 @@ public class SharedStepData {
 
     public void clear() {
         this.token = null;
+        this.tenantId = null;
         this.requestBody = null;
         this.pathParams = null;
         this.queryParams = null;

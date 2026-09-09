@@ -27,10 +27,6 @@
     "taxCode": "00876320409",
     "zipCode": "47121"
   },
-  "payment": {
-    "holder": "NVtQ4B/aMp69L6eymY4SfXj3HHgos40FKyZTCw==",
-    "iban": "LGZ4yCiiLN7oGZyFYm4rEhv3jBuYPLoj32QkfXSso32nqZlt"
-  },
   "productId": "prod-idpay-merchant",
   "status": "REQUEST",
   "userRequester" : {
