@@ -159,6 +159,17 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
     }
 
     @Test
+    void getContractV2_shouldThrowResourceNotFound_whenOnboardingsResponseBodyIsNull() {
+        // given
+        when(institutionApiClient._getOnboardingsInstitutionUsingGET("institutionId", "productId"))
+                .thenReturn(ResponseEntity.ok().build());
+
+        // when / then
+        Assertions.assertThrows(ResourceNotFoundException.class,
+                () -> contractService.getContractV2("institutionId", "productId"));
+    }
+
+    @Test
     void getContractV2WhereTokenIsNull() {
         InstitutionOnboarding institutionOnboarding = new InstitutionOnboarding();
         institutionOnboarding.setTokenId(null);

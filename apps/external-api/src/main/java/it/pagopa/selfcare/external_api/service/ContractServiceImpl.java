@@ -3,6 +3,7 @@ package it.pagopa.selfcare.external_api.service;
 
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
+import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.Document;
 import it.pagopa.selfcare.external_api.client.MsCoreInstitutionApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentApiClient;
@@ -21,7 +22,6 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -55,7 +55,12 @@ public class ContractServiceImpl implements ContractService {
         log.trace("getContract start");
         log.debug("getContract institutionId = {}, productId = {}, documentId = {}", institutionId, productId, documentId);
 
-        List<OnboardingResponse> onboardings = Objects.requireNonNull(institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId).getBody()).getOnboardings();
+        OnboardingsResponse onboardingsResponse = Optional.ofNullable(
+                        institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId).getBody())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(TOKEN_FOR_S_AND_S_NOT_FOUND, institutionId, productId)));
+        List<OnboardingResponse> onboardings = Optional.ofNullable(onboardingsResponse.getOnboardings())
+                .orElse(Collections.emptyList());
 
         InstitutionOnboarding institutionOnboarding = Optional.ofNullable(onboardings)
             .orElse(Collections.emptyList())
