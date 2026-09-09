@@ -89,7 +89,16 @@ public class TenantRegistry {
     TenantDefinition.MongoDefinition mongo = resolve(tenantId).mongo();
     return ConfigProvider.getConfig()
         .getOptionalValue(mongo.connectionStringEnvVar(), String.class)
+        .map(TenantRegistry::sanitizeConnectionString)
         .filter(value -> !value.isBlank());
+  }
+
+  /**
+   * Cosmos connection strings stored in XML/HTML contexts often encode {@code &} as
+   * {@code &amp;}, which the Mongo driver rejects as the option {@code amp}.
+   */
+  static String sanitizeConnectionString(String value) {
+    return value.replace("&amp;", "&").trim();
   }
 
   private void validateMongoDefinition(String tenantId, TenantDefinition.MongoDefinition mongo) {

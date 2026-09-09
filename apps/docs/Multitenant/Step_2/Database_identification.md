@@ -90,22 +90,29 @@ PNPG → client created with MONGODB_CONNECTION_STRING_PNPG
 If a connection string is missing for a configured tenant, the application fails
 to start.
 
+Do not set `@MongoEntity(clientName)`: Panache would also create a synthetic
+named client and CDI would have two beans for the same name.
+
+The producer instead replaces the **default** Panache `ReactiveMongoClient`
+with an `@Alternative` proxy. `TenantMongoDatabaseResolver` supplies the
+database name for the current `TenantContext`.
+
 4. Client and database selection during a query
 
-The application exposes a CDI proxy for ReactiveMongoClient .
+When Panache opens a collection it:
 
-When Panache invokes:
+1. looks up the default reactive client (the tenant-aware alternative);
+2. asks `TenantMongoDatabaseResolver` for the database name of the current
+   `TenantContext`;
+3. calls `getDatabase(name)` on the tenant-aware proxy.
 
-```
-mongoClient.getDatabase(...)
-```
-
-the proxy:
+The proxy:
 
 1. reads the tenant from TenantContext ;
 2. retrieves the corresponding definition from TenantRegistry ;
 3. selects the correct Mongo client;
-4. selects the database configured for that tenant.
+4. opens the database name provided by the resolver (or the registry if none
+   was passed).
 
 Example for AR:
 

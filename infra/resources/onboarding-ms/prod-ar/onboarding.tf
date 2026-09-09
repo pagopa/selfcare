@@ -203,13 +203,17 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
     }
   ]
 
   onboarding_ms_secrets_names = {
     "JWT-PUBLIC-KEY"                          = "jwt-public-key"
     "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_AR"            = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
     "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
