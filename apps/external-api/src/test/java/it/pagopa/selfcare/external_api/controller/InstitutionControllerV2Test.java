@@ -194,7 +194,7 @@ class InstitutionControllerV2Test extends BaseControllerTest {
         resourceResponse.setData("data".getBytes());
         resourceResponse.setFileName("fileName");
         resourceResponse.setMimetype("mimetype");
-        when(contractService.getContractV2(institutionId, productId)).thenReturn(resourceResponse);
+        when(contractService.getContractV2(institutionId, productId, null)).thenReturn(resourceResponse);
 
         MockMvcBuilders.standaloneSetup(institutionV2Controller)
                 .build().perform(MockMvcRequestBuilders.get(BASE_URL + "/{institutionId}/contract", institutionId)
@@ -202,6 +202,28 @@ class InstitutionControllerV2Test extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE))
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=%s", resourceResponse.getFileName())))
+                .andExpect(content().bytes(resourceResponse.getData()));
+    }
+
+    @Test
+    void getRelatedDocumentOk() throws Exception {
+        // given
+        String institutionId = "institutionId";
+        String productId = "productId";
+        String documentId = "documentId";
+        ResourceResponse resourceResponse = new ResourceResponse();
+        resourceResponse.setData("data".getBytes());
+        resourceResponse.setFileName("fileName.pdf");
+        when(contractService.getContractV2(institutionId, productId, documentId)).thenReturn(resourceResponse);
+
+        // when / then
+        MockMvcBuilders.standaloneSetup(institutionV2Controller)
+                .build().perform(MockMvcRequestBuilders.get(BASE_URL + "/{institutionId}/contract", institutionId)
+                        .param("productId", productId)
+                        .param("documentId", documentId)
+                        .accept(MediaType.APPLICATION_OCTET_STREAM))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=fileName.pdf"))
                 .andExpect(content().bytes(resourceResponse.getData()));
     }
 

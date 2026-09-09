@@ -5,6 +5,7 @@ import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.Document;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentResponse;
+import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentType;
 import it.pagopa.selfcare.external_api.client.MsCoreInstitutionApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentContentApiClient;
@@ -90,6 +91,40 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         Assertions.assertEquals("application/octet-stream", result.getMimetype());
         Assertions.assertEquals("contractSigned", result.getFileName());
         Assertions.assertEquals(12, result.getData().length);
+    }
+
+    @Test
+    void getRelatedDocument() {
+        // given
+        String institutionId = "institutionId";
+        String productId = "productId";
+        String documentId = "documentId";
+        String onboardingId = "onboardingId";
+        OnboardingResponse onboarding = new OnboardingResponse();
+        onboarding.setTokenId(onboardingId);
+        OnboardingsResponse onboardingsResponse = new OnboardingsResponse();
+        onboardingsResponse.setOnboardings(List.of(onboarding));
+        DocumentResponse relatedDocument = new DocumentResponse();
+        relatedDocument.setType(DocumentType.ATTACHMENT);
+        relatedDocument.setOnboardingId(onboardingId);
+        relatedDocument.setAttachmentName("attachmentName");
+        relatedDocument.setContractFilename("attachment.pdf");
+        Resource resource = new ByteArrayResource("related content".getBytes());
+        ResponseEntity<Resource> responseFile = ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+                .body(resource);
+        when(institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId))
+                .thenReturn(ResponseEntity.ok(onboardingsResponse));
+        when(documentApiClient._getDocumentById(documentId)).thenReturn(ResponseEntity.ok(relatedDocument));
+        when(documentContentApiClient._getAttachment(onboardingId, "attachmentName")).thenReturn(responseFile);
+
+        // when
+        ResourceResponse result = contractService.getContractV2(institutionId, productId, documentId);
+
+        // then
+        Assertions.assertEquals("attachment.pdf", result.getFileName());
+        Assertions.assertEquals("application/octet-stream", result.getMimetype());
+        Assertions.assertArrayEquals("related content".getBytes(), result.getData());
     }
 
     @Test
