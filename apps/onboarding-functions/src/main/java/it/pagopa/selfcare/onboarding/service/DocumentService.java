@@ -20,8 +20,6 @@ public interface DocumentService {
 
   Response uploadAggregatesCsv(DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request);
 
-  Response saveVisuraForMerchant(DocumentContentControllerApi.SaveVisuraForMerchantMultipartForm request);
-
   Response deleteContract(String onboardingId);
 
   Response deleteUserAttachments(String onboardingId);

@@ -118,10 +118,6 @@ class OnboardingServiceDefaultTest {
     @RestClient
     InfocamerePdndApi infocamerePdndApi;
 
-    @InjectMock
-    @RestClient
-    PdndVisuraInfoCamereControllerApi pdndVisuraInfoCamereControllerApi;
-
     @RestClient
     @InjectMock
     InfocamereApi infocamereApi;
@@ -1052,7 +1048,6 @@ class OnboardingServiceDefaultTest {
         pdndBusinessResource.setAtecoCodes(List.of("01.11.00"));
 
         when(infocamerePdndApi.institutionPdndByTaxCodeUsingGET(any())).thenReturn(Uni.createFrom().item(pdndBusinessResource));
-        when(pdndVisuraInfoCamereControllerApi.institutionVisuraPdndByTaxCodeUsingGET(any())).thenReturn(Uni.createFrom().item(pdndBusinessResource));
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -1115,7 +1110,6 @@ class OnboardingServiceDefaultTest {
         pdndBusinessResource.setAtecoCodes(List.of("01.11.00"));
 
         when(infocamerePdndApi.institutionPdndByTaxCodeUsingGET(any())).thenReturn(Uni.createFrom().item(pdndBusinessResource));
-        when(pdndVisuraInfoCamereControllerApi.institutionVisuraPdndByTaxCodeUsingGET(any())).thenReturn(Uni.createFrom().item(pdndBusinessResource));
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -1173,7 +1167,6 @@ class OnboardingServiceDefaultTest {
         pdndBusinessResource.setAtecoCodes(List.of("01.11.00"));
 
         when(infocamerePdndApi.institutionPdndByTaxCodeUsingGET(any())).thenReturn(Uni.createFrom().item(pdndBusinessResource));
-        when(pdndVisuraInfoCamereControllerApi.institutionVisuraPdndByTaxCodeUsingGET(any())).thenReturn(Uni.createFrom().item(pdndBusinessResource));
 
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
@@ -2531,41 +2524,6 @@ class OnboardingServiceDefaultTest {
         subscriber.assertCompleted().assertItem(getResponse);
     }
 
-    @Test
-    void testOnboardingGetWithPaymentNode() {
-        Onboarding onboarding = createDummyOnboarding();
-        Payment payment = new Payment();
-        payment.encryptedHolder("holder");
-        payment.encryptedIban("iban");
-        onboarding.setPayment(payment);
-        ReactivePanacheQuery query = mock(ReactivePanacheQuery.class);
-        PanacheMock.mock(Onboarding.class);
-        when(Onboarding.find(any(Document.class), any(Document.class))).thenReturn(query);
-        when(Onboarding.find(any(Document.class), eq(null))).thenReturn(query);
-        when(query.list()).thenReturn(Uni.createFrom().item(List.of(onboarding)));
-        when(query.count()).thenReturn(Uni.createFrom().item(1L));
-
-        OnboardingGetFilters filters = OnboardingGetFilters.builder()
-                .taxCode("taxCode")
-                .subunitCode("subunitCode")
-                .from("2023-12-01")
-                .to("2023-12-31")
-                .productIds(List.of("prod-io"))
-                .status(OnboardingStatus.COMPLETED)
-                .skipPagination(true)
-                .build();
-        UniAssertSubscriber<OnboardingGetResponse> subscriber = onboardingService
-                .onboardingGet(filters)
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create());
-
-        var response = subscriber.assertCompleted().getItem();
-        assertNotNull(response);
-        assertNotNull(response.getItems());
-        assertNotNull(response.getItems().get(0));
-        assertEquals("iban", response.getItems().get(0).getPayment().getIban());
-    }
-
 
     private OnboardingGetResponse getOnboardingGetResponse(Onboarding onboarding) {
         OnboardingGet onboardingGet = onboardingMapper.toGetResponse(onboarding);
@@ -3274,6 +3232,25 @@ class OnboardingServiceDefaultTest {
         List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
         assertFalse(response.isEmpty());
         assertEquals(1, response.size());
+    }
+
+    @Test
+    void testInstitutionOnboardings_withoutTaxCode_doesNotCallPdv() {
+        Onboarding onboarding = mock(Onboarding.class);
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
+        when(Onboarding.find(any())).thenReturn(query);
+
+        UniAssertSubscriber<List<OnboardingResponse>> subscriber = onboardingService
+                .institutionOnboardings(null, "subunitCode", "origin", "originId", OnboardingStatus.PENDING)
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        List<OnboardingResponse> response = subscriber.assertCompleted().awaitItem().getItem();
+        assertFalse(response.isEmpty());
+        assertEquals(1, response.size());
+        verify(userRegistryApi, never()).searchUsingPOST(any(), any());
     }
 
     @Test
@@ -6032,8 +6009,6 @@ class OnboardingServiceDefaultTest {
         pdndBusinessResource.setAtecoCodes(List.of("01.11.00"));
 
         when(infocamerePdndApi.institutionPdndByTaxCodeUsingGET(any()))
-                .thenReturn(Uni.createFrom().item(pdndBusinessResource));
-        when(pdndVisuraInfoCamereControllerApi.institutionVisuraPdndByTaxCodeUsingGET(any()))
                 .thenReturn(Uni.createFrom().item(pdndBusinessResource));
 
         asserter.execute(() -> {

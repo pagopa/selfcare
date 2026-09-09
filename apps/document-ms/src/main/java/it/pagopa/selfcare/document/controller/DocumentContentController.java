@@ -174,6 +174,21 @@ public class DocumentContentController {
     }
 
     @Operation(
+            summary = "Retrieve a related document for a given onboarding",
+            description = "Downloads a related document identified by its unique document ID within the onboarding."
+    )
+    @APIResponse(responseCode = "404", description = "Related document not found for onboarding")
+    @GET
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Path("/{onboardingId}/related-documents/{documentId}")
+    public Uni<RestResponse<File>> getRelatedDocument(@PathParam(value = "onboardingId") String onboardingId,
+                                                      @PathParam(value = "documentId") String documentId) {
+        log.info("Retrieving related document for onboardingId: {}, documentId: {}",
+                sanitize(onboardingId), sanitize(documentId));
+        return documentContentService.retrieveRelatedDocument(onboardingId, documentId);
+    }
+
+    @Operation(
             summary = "Upload attachment by verifying and signing document, then save into storage.",
             description = "Perform upload  of the file passed in input verifying digest e put company signature"
     )

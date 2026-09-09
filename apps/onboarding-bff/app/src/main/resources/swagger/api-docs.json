@@ -4660,27 +4660,10 @@
               "description" : "Institution's ateco codes"
             }
           },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentDto"
-          },
           "userRequester" : {
             "$ref" : "#/components/schemas/UserRequestDto"
           }
         }
-      },
-      "PaymentDto" : {
-        "type" : "object",
-        "properties" : {
-          "iban" : {
-            "type" : "string",
-            "description" : "Institution's IBAN"
-          },
-          "holder" : {
-            "type" : "string",
-            "description" : "IBAN's holder"
-          }
-        },
-        "description" : "contains payment information"
       },
       "PspDataDto" : {
         "required" : [ "abiCode", "businessRegisterNumber", "dpoData", "legalRegisterName", "legalRegisterNumber", "vatNumberGroup" ],

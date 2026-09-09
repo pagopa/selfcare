@@ -26,7 +26,7 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     outputs:
-      version: ${{ env.VERSION }}
+      version: ${{ steps.extract.outputs.version }}
 
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -34,10 +34,11 @@ jobs:
           ref: ${{ inputs.branch }}
 
       - name: Extract Version
+        id: extract
         env:
           INPUT_BRANCH: ${{ inputs.branch }}
         run: |
-          echo "VERSION=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')" >> $GITHUB_ENV
+          echo "version=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')" >> $GITHUB_OUTPUT
 
       - name: Trigger Functions Release
         env:
@@ -47,22 +48,6 @@ jobs:
           gh workflow run release_functions.yml \
             --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=onboarding-functions
 
-      - name: Trigger Onboarding ms Release
-        env:
-          INPUT_BRANCH: ${{ inputs.branch }}
-          INPUT_ENV: ${{ inputs.env }}
-        run: |
-          gh workflow run release_app.yml \
-            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=onboarding-ms
-
-      - name: Trigger Onboarding CDC Release
-        env:
-          INPUT_BRANCH: ${{ inputs.branch }}
-          INPUT_ENV: ${{ inputs.env }}
-        run: |
-          gh workflow run release_app.yml \
-            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=onboarding-cdc
-
       - name: Trigger PNPG Functions Release
         env:
           INPUT_BRANCH: ${{ inputs.branch }}
@@ -71,22 +56,59 @@ jobs:
           gh workflow run release_functions.yml \
             --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=pnpg -f app=onboarding-functions
 
-      - name: Trigger PNPG Onboarding ms Release
-        env:
-          INPUT_BRANCH: ${{ inputs.branch }}
-          INPUT_ENV: ${{ inputs.env }}
-        run: |
-          gh workflow run release_app.yml \
-            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=pnpg -f app=onboarding-ms
+  release_onboarding_ms_ar:
+    name: Release Onboarding MS (AR)
+    needs: release
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: ar
+      app: onboarding-ms
+      APP_PATH: apps/onboarding-ms
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
 
-#      - name: Trigger PNPG Onboarding CDC Release
-#        run: |
-#          gh workflow run release_app.yml \
-#            --ref ${{ inputs.branch }} -f env=${{ inputs.env }} -f target=pnpg -f app=onboarding-cdc
+  release_onboarding_cdc_ar:
+    name: Release Onboarding CDC (AR)
+    needs: release
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: ar
+      app: onboarding-cdc
+      APP_PATH: apps/onboarding-cdc
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
+  release_onboarding_ms_pnpg:
+    name: Release Onboarding MS (PNPG)
+    needs: release
+    uses: ./.github/workflows/call_release_app.yml
+    with:
+      env: ${{ inputs.env }}
+      target: pnpg
+      app: onboarding-ms
+      APP_PATH: apps/onboarding-ms
+      APPS_POM: apps/pom.xml
+      POM: pom.xml
+    secrets: inherit
+
+  update_uat_variable:
+    name: Update UAT Version Variable
+    needs: [release, release_onboarding_ms_ar, release_onboarding_cdc_ar, release_onboarding_ms_pnpg]
+    if: ${{ inputs.env == 'uat' }}
+    uses: ./.github/workflows/call_update_gh_variable.yml
+    with:
+      domain: onboarding
+      env: uat
+      version: ${{ needs.release.outputs.version }}
+    secrets: inherit
 
   update_prod_variable:
     name: "Update PROD Version Variable"
-    needs: release
+    needs: [release, release_onboarding_ms_ar, release_onboarding_cdc_ar, release_onboarding_ms_pnpg]
     if: ${{ inputs.env == 'prod' }}
     permissions:
       contents: read

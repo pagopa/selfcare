@@ -4,9 +4,12 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.AzureSearchRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.SearchServiceMapperImpl;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
@@ -28,10 +31,33 @@ public class SearchServiceConnectorImplTest {
   private AzureSearchRestClient azureSearchRestClient;
 
   @Test
-  void testIndexOnboarding() {
+  void testIndexOnboardingWithOverriddenStatus() {
     when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
-    searchServiceConnector.indexOnboarding(new OnboardingIndex());
-    verify(azureSearchRestClient, times(1)).indexOnboarding(any());
+    OnboardingIndex onboardingIndex = new OnboardingIndex();
+    onboardingIndex.setOnboardingId("onboarding-id");
+    onboardingIndex.setStatus("OVERRIDDEN");
+
+    searchServiceConnector.indexOnboarding(onboardingIndex);
+
+    ArgumentCaptor<SearchServiceIndexRequest<SearchServiceOnboardingIndex>> requestCaptor =
+        ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
+    verify(azureSearchRestClient).indexOnboarding(requestCaptor.capture());
+    assertEquals("delete", requestCaptor.getValue().getValue().get(0).getAction());
+  }
+
+  @Test
+  void testIndexOnboardingWithNonOverriddenStatus() {
+    when(azureSearchRestClient.indexOnboarding(any())).thenReturn(new SearchServiceStatus());
+    OnboardingIndex onboardingIndex = new OnboardingIndex();
+    onboardingIndex.setOnboardingId("onboarding-id");
+    onboardingIndex.setStatus("ACTIVE");
+
+    searchServiceConnector.indexOnboarding(onboardingIndex);
+
+    ArgumentCaptor<SearchServiceIndexRequest<SearchServiceOnboardingIndex>> requestCaptor =
+        ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
+    verify(azureSearchRestClient).indexOnboarding(requestCaptor.capture());
+    assertEquals("mergeOrUpload", requestCaptor.getValue().getValue().get(0).getAction());
   }
 
   @Test
@@ -58,4 +84,3 @@ public class SearchServiceConnectorImplTest {
   }
 
 }
-

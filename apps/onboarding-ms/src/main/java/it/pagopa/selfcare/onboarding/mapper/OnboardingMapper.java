@@ -5,9 +5,7 @@ import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingGet;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingResponse;
-import it.pagopa.selfcare.onboarding.controller.response.PaymentResponse;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.entity.Payment;
 import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.model.Aggregate;
 import it.pagopa.selfcare.onboarding.model.AggregateUser;
@@ -37,7 +35,6 @@ public interface OnboardingMapper {
     @Mapping(target = "billing.recipientCode", source = "billing.recipientCode", qualifiedByName = "toUpperCase")
     @Mapping(target = "institution.gpuData", source = "gpuData")
     @Mapping(target = "institution", source = "institution")
-    @Mapping(target = "payment",  source = "payment", qualifiedByName = "toPaymentModel")
     Onboarding toEntity(OnboardingDefaultRequest request);
     @Mapping(target = "id", expression = "java(UUID.randomUUID().toString())")
     @Mapping(target = "billing.recipientCode", source = "billing.recipientCode", qualifiedByName = "toUpperCase")
@@ -79,34 +76,11 @@ public interface OnboardingMapper {
 
     OnboardingResponse toResponse(Onboarding model);
 
-    @Mapping(target = "payment",  source = "payment", qualifiedByName = "toPaymentResponse")
     OnboardingGet toGetResponse(Onboarding model);
 
     @Named("toUpperCase")
     default String toUpperCase(String recipientCode) {
         return Objects.nonNull(recipientCode) ? recipientCode.toUpperCase() : null;
-    }
-
-    @Named("toPaymentModel")
-    default Payment toPaymentModel(PaymentRequestDto requestDto) {
-        if (Objects.nonNull(requestDto)) {
-            Payment payment = new Payment();
-            payment.encryptedHolder(requestDto.getHolder());
-            payment.encryptedIban(requestDto.getIban());
-            return payment;
-        }
-        return null;
-    }
-
-    @Named("toPaymentResponse")
-    default PaymentResponse toPaymentResponse(Payment payment) {
-        if (Objects.nonNull(payment)) {
-            PaymentResponse response = new PaymentResponse();
-            response.setHolder(payment.retrieveEncryptedHolder());
-            response.setIban(payment.retrieveEncryptedIban());
-            return response;
-        }
-        return null;
     }
 
     @Named("getActivatedAt")

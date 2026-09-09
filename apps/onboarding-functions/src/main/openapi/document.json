@@ -124,9 +124,6 @@
           },
           "billing" : {
             "$ref" : "#/components/schemas/BillingPdfData"
-          },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentPdfData"
           }
         }
       },
@@ -515,17 +512,6 @@
         "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
       },
-      "PaymentPdfData" : {
-        "type" : "object",
-        "properties" : {
-          "holder" : {
-            "type" : "string"
-          },
-          "iban" : {
-            "type" : "string"
-          }
-        }
-      },
       "PaymentServiceProviderPdfData" : {
         "type" : "object",
         "properties" : {
@@ -636,24 +622,6 @@
             "type" : "string"
           },
           "csv" : {
-            "format" : "binary",
-            "type" : "string"
-          }
-        }
-      },
-      "UploadVisuraRequest" : {
-        "required" : [ "onboardingId", "filename", "fileContent" ],
-        "type" : "object",
-        "properties" : {
-          "onboardingId" : {
-            "pattern" : "\\S",
-            "type" : "string"
-          },
-          "filename" : {
-            "pattern" : "\\S",
-            "type" : "string"
-          },
-          "fileContent" : {
             "format" : "binary",
             "type" : "string"
           }
@@ -927,41 +895,6 @@
                 "request" : {
                   "contentType" : "application/json"
                 }
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : { }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/v1/document-content/visura" : {
-      "post" : {
-        "summary" : "Store the Visura in Azure Blob Storage",
-        "description" : "Receives the Visura data (filename and content) and stores it in Azure Blob Storage.",
-        "operationId" : "saveVisuraForMerchant",
-        "tags" : [ "Document Content Controller" ],
-        "requestBody" : {
-          "content" : {
-            "multipart/form-data" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/UploadVisuraRequest"
               }
             }
           },

@@ -227,14 +227,13 @@ class OnboardingFunctionsTest {
     function.onboardingsOrchestrator(orchestrationContext, executionContext);
 
     ArgumentCaptor<String> captorActivity = ArgumentCaptor.forClass(String.class);
-    verify(orchestrationContext, times(6))
+    verify(orchestrationContext, times(5))
             .callActivity(captorActivity.capture(), any(), any(), any());
     assertEquals(BUILD_CONTRACT_ACTIVITY_NAME, captorActivity.getAllValues().get(0));
     assertEquals(SAVE_TOKEN_WITH_CONTRACT_ACTIVITY_NAME, captorActivity.getAllValues().get(1));
     assertEquals(SEND_MAIL_REGISTRATION_FOR_CONTRACT, captorActivity.getAllValues().get(2));
-    assertEquals(SAVE_VISURA_FOR_MERCHANT, captorActivity.getAllValues().get(3));
-    assertEquals(SEND_MAIL_REGISTRATION_FOR_USER, captorActivity.getAllValues().get(4));
-    assertEquals(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER, captorActivity.getAllValues().get(5));
+    assertEquals(SEND_MAIL_REGISTRATION_FOR_USER, captorActivity.getAllValues().get(3));
+    assertEquals(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER, captorActivity.getAllValues().get(4));
 
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
   }
@@ -1309,16 +1308,6 @@ class OnboardingFunctionsTest {
     verify(service, times(1)).sendMailRegistrationForUserRequester(any());
   }
 
-  @Test
-  void saveVisuraForMerchant() {
-
-    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    doNothing().when(service).saveVisuraForMerchant(any());
-
-    function.saveVisuraForMerchant(onboardingStringBase, executionContext);
-
-    verify(service, times(1)).saveVisuraForMerchant(any());
-  }
 
   @Test
   void sendMailRegistrationApprove() {

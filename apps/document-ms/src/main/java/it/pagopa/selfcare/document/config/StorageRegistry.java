@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.document.config;
 
+import io.quarkus.runtime.Startup;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.document.model.StorageOrigin;
@@ -13,6 +14,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Eagerly initialized at application startup ({@link Startup}) so that the heavy, blocking
+ * Azure Blob Storage client bootstrap (DefaultAzureCredential chain, Jackson/Reactor/MSAL
+ * class-loading) runs on the startup thread instead of a Vert.x event-loop thread during the
+ * first readiness health check. This is to prevents Thread blocked warnings
+ */
+@Startup
 @ApplicationScoped
 @Slf4j
 public class StorageRegistry {

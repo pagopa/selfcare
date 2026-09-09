@@ -32,6 +32,9 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class CommonSteps {
 
+    private static final String TENANT_HEADER = "X-Tenant-Id";
+    private static final String TENANT_CLAIM = "tenant_id";
+
     private final SharedStepData sharedStepData;
     private final TestDataProvider testDataProvider;
     private final TestJwtGenerator testJwtGenerator;
@@ -56,6 +59,7 @@ public class CommonSteps {
             .findFirst()
             .orElse(null);
         sharedStepData.setToken(testJwtGenerator.generateToken(jwtData));
+        sharedStepData.setTenantId(resolveTenantId(jwtData));
     }
 
     @Given("A bad jwt token")
@@ -116,11 +120,9 @@ public class CommonSteps {
 
     @When("I send a GET request to {string}")
     public void sendGetRequest(String url) {
-        final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        sharedStepData.setResponse(authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .when()
@@ -132,11 +134,9 @@ public class CommonSteps {
 
     @When("I send a POST request to {string}")
     public void sendPostRequest(String url) {
-        final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        sharedStepData.setResponse(authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .body(Optional.ofNullable(sharedStepData.getRequestBody()).orElse(""))
@@ -149,11 +149,9 @@ public class CommonSteps {
 
     @When("I send a POST request to {string} with form data and multi-part file")
     public void sendPostRequestWithFormDataAndFileUpload(String url) {
-        final String token = sharedStepData.getToken();
-        RequestSpecification request = RestAssured
+        RequestSpecification request = authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.MULTIPART)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.MULTIPART))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()));
 
@@ -175,11 +173,9 @@ public class CommonSteps {
 
     @When("I send a POST request to {string} with form data only")
     public void sendPostRequestWithFormDataOnly(String url) {
-        final String token = sharedStepData.getToken();
-        RequestSpecification request = RestAssured
+        RequestSpecification request = authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.MULTIPART)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.MULTIPART))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()));
 
@@ -205,10 +201,9 @@ public class CommonSteps {
 
         FileDescriptor fileDescriptor = entry.getKey();
 
-        ExtractableResponse<Response> response = RestAssured
+        ExtractableResponse<Response> response = authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.MULTIPART)
-            .header("Authorization", "Bearer " + sharedStepData.getToken())
+            .contentType(ContentType.MULTIPART))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .multiPart(fileDescriptor.getKeyParamRequest(), fileDescriptor.getFilePathName(), (byte[]) entry.getValue(), fileDescriptor.getMediaType())
@@ -222,11 +217,9 @@ public class CommonSteps {
 
     @When("I send a PUT request to {string}")
     public void sendPutRequest(String url) {
-        final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        sharedStepData.setResponse(authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .body(Optional.ofNullable(sharedStepData.getRequestBody()).orElse(""))
@@ -239,11 +232,9 @@ public class CommonSteps {
 
     @When("I send a HEAD request to {string}")
     public void sendHeadRequest(String url) {
-        final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        sharedStepData.setResponse(authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .when()
@@ -254,11 +245,9 @@ public class CommonSteps {
 
     @When("I send a DELETE request to {string}")
     public void sendDeleteRequest(String url) {
-        final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        sharedStepData.setResponse(authenticatedRequest(RestAssured
             .given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer " + token)
+            .contentType(ContentType.JSON))
             .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
             .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
             .when()
@@ -271,6 +260,22 @@ public class CommonSteps {
     @Then("The status code is {int}")
     public void checkStatusCode(int expectedStatusCode) {
         Assertions.assertEquals(expectedStatusCode, sharedStepData.getResponse().statusCode());
+    }
+
+    private RequestSpecification authenticatedRequest(RequestSpecification request) {
+        request.header("Authorization", "Bearer " + sharedStepData.getToken());
+        Optional.ofNullable(sharedStepData.getTenantId())
+            .filter(tenantId -> !tenantId.isBlank())
+            .ifPresent(tenantId -> request.header(TENANT_HEADER, tenantId));
+        return request;
+    }
+
+    private String resolveTenantId(JwtData jwtData) {
+        if (jwtData == null || jwtData.getJwtPayload() == null) {
+            return null;
+        }
+        Object tenantId = jwtData.getJwtPayload().get(TENANT_CLAIM);
+        return tenantId == null ? null : tenantId.toString();
     }
 
     @And("The response header contains:")
@@ -450,11 +455,9 @@ public class CommonSteps {
 
     @When("I send a PATCH request to {string} with content type {string}")
     public void sendPatchRequest(String url, String contentType) {
-        final String token = sharedStepData.getToken();
-        sharedStepData.setResponse(RestAssured
+        sharedStepData.setResponse(authenticatedRequest(RestAssured
                 .given()
-                .contentType(contentType)
-                .header("Authorization", "Bearer " + token)
+                .contentType(contentType))
                 .pathParams(Optional.ofNullable(sharedStepData.getPathParams()).orElse(Collections.emptyMap()))
                 .queryParams(Optional.ofNullable(sharedStepData.getQueryParams()).orElse(Collections.emptyMap()))
                 .body(Optional.ofNullable(sharedStepData.getRequestBody()).orElse(""))

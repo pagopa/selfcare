@@ -124,9 +124,6 @@
           },
           "billing" : {
             "$ref" : "#/components/schemas/BillingPdfData"
-          },
-          "payment" : {
-            "$ref" : "#/components/schemas/PaymentPdfData"
           }
         }
       },
@@ -514,17 +511,6 @@
       "PartyRole" : {
         "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
-      },
-      "PaymentPdfData" : {
-        "type" : "object",
-        "properties" : {
-          "holder" : {
-            "type" : "string"
-          },
-          "iban" : {
-            "type" : "string"
-          }
-        }
       },
       "PaymentServiceProviderPdfData" : {
         "type" : "object",
@@ -1116,6 +1102,43 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/document-content/{onboardingId}/related-documents/{documentId}" : {
+      "get" : {
+        "summary" : "Retrieve a related document for a given onboarding",
+        "description" : "Downloads a related document identified by its unique document ID within the onboarding.",
+        "operationId" : "getRelatedDocument",
+        "tags" : [ "Document Content Controller" ],
+        "parameters" : [ {
+          "name" : "documentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Related document not found for onboarding"
           },
           "401" : {
             "description" : "Not Authorized"

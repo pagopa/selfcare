@@ -113,8 +113,6 @@ locals {
       "NAMIRIAL_BASE_URL"                                  = "https://selc-p-namirial-sws-ca.lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"                = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/namirial-sign-service-user/)"
       "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD"            = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/namirial-sign-service-psw/)"
-      "ONBOARDING_DATA_ENCRIPTION_KEY"                     = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/onboarding-data-encryption-key/)"
-      "ONBOARDING_DATA_ENCRIPTION_IV"                      = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/onboarding-data-encryption-iv/)"
       "EMAIL_SERVICE_AVAILABLE"                            = "true"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-private-key/)"
