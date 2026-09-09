@@ -177,14 +177,6 @@ locals {
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {
-      name  = "BLOB-STORAGE-TEMPLATES-ACCOUNT-NAME"
-      value = data.azurerm_storage_account.product_storage.name
-    },
-    {
-      name  = "BLOB-STORAGE-TEMPLATES-MANAGED-IDENTITY-CLIENT-ID"
-      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
-    },
-    {
       name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.users_eventhub_sender_identity.client_id
     },
@@ -204,6 +196,38 @@ locals {
       name  = "INTERNALEVENTS_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.internal_events_identity.client_id
     },
+    {
+      name  = "ACTIVATE_TEMPLATE_ID"
+      value = "selfcare_user_activated"
+    },
+    {
+      name  = "DELETE_TEMPLATE_ID"
+      value = "selfcare_user_deleted"
+    },
+    {
+      name  = "SUSPEND_TEMPLATE_ID"
+      value = "selfcare_user_suspended"
+    },
+    {
+      name  = "REQUEST_TEMPLATE_ID"
+      value = "selfcare_user_request"
+    },
+    {
+      name  = "CONVENTION_TEMPLATE_ID"
+      value = "selfcare_convention_request"
+    },
+    {
+      name = "CREATE_MULTI_ROLE_TEMPLATE_ID"
+      value = "selfcare_user_added_multi_role"
+    },
+    {
+      name  = "CREATE_SINGLE_ROLE_TEMPLATE_ID"
+      value = "selfcare_user_added_single_role"
+    },
+    {
+      name  = "ONE_MAIL_URL"
+      value = "https://uat.onemail.pagopa.it"
+    }
   ]
 
   secrets_names_user_ms = {
@@ -213,6 +237,7 @@ locals {
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
     "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
     "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
+    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
   }
 }
 

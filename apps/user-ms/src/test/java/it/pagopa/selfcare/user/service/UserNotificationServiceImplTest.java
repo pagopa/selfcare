@@ -1,16 +1,6 @@
 package it.pagopa.selfcare.user.service;
 
-import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
-import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
-
 import com.microsoft.applicationinsights.TelemetryClient;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
@@ -20,22 +10,13 @@ import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
-import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.inject.Produces;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import org.bson.types.ObjectId;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
@@ -46,6 +27,19 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
 import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
+import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 @QuarkusTest
 class UserNotificationServiceImplTest {
@@ -69,12 +63,6 @@ class UserNotificationServiceImplTest {
     private static final UserResource userResource;
     private static final UserInstitution userInstitution;
     private static final Product product;
-
-    @Produces
-    @ApplicationScoped
-    Configuration freemarkerConfig() {
-        return mock(Configuration.class);
-    }
 
     static {
         userResource = new UserResource();
@@ -132,19 +120,13 @@ class UserNotificationServiceImplTest {
     }
 
     @Test
-    void testSendMailNotificationForActivateUserProduct() throws IOException {
+    void testSendMailNotificationForActivateUserProduct() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
-
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -156,24 +138,18 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
 
     }
 
     @Test
-    void testSendMailNotificationForDeleteUserProduct() throws IOException {
+    void testSendMailNotificationForDeleteUserProduct() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
-
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -185,25 +161,19 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
 
     }
 
 
     @Test
-    void testSendMailNotificationForSuspendUserProduct() throws IOException {
+    void testSendMailNotificationForSuspendUserProduct() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
-
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -215,23 +185,16 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
 
 
     @Test
-    void testSendMailNotificationForRejectUserProduct() throws IOException {
+    void testSendMailNotificationForRejectUserProduct() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
-
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -243,24 +206,18 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(0)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(0)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
 
 
     @Test
-    void testSendMailNotificationWithNullInstitutionDescription() throws IOException {
+    void testSendMailNotificationWithNullInstitutionDescription() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
-
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -272,7 +229,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -284,7 +241,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -296,7 +253,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        userNotificationServiceImpl.sendEmailNotification(
+        userNotificationService.sendEmailNotification(
                         userResource,
                         userInstitution,
                         product,
@@ -308,7 +265,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(3)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(3)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
 
 
@@ -371,7 +328,7 @@ class UserNotificationServiceImplTest {
         verify(webhookApi, times(1)).sendNotification(any());
     }
     @Test
-    void testSendCreateUserNotification() throws IOException {
+    void testSendCreateUserNotification() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
         LoggedUser loggedUser = LoggedUser.builder()
@@ -379,56 +336,8 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
-
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("code2", "code3");
-        userNotificationServiceImpl.sendCreateUserNotification(
-                        userInstitution.getInstitutionDescription(),
-                        roleLabels,
-                        userResource,
-                        userInstitution,
-                        product,
-                        loggedUser
-                )
-                .subscribe()
-                .withSubscriber(UniAssertSubscriber.create())
-                .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
-    }
-
-    @Test
-    void testSendCreateUserNotification_whenLoggedUserIsFromApim_shouldUseDefaultName() throws IOException, TemplateException {
-        // Arrange
-        LoggedUser loggedUser = LoggedUser.builder()
-                .name("apim")
-                .build();
-
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        Template mockTemplate = mock(freemarker.template.Template.class);
-
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mockTemplate);
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
-
-        ArgumentCaptor<Map<String, String>> dataModelCaptor = ArgumentCaptor.forClass(Map.class);
-        doNothing().when(mockTemplate).process(dataModelCaptor.capture(), any(Writer.class));
-
-        UserNotificationServiceImpl userNotificationService = new UserNotificationServiceImpl(
-                freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient
-        );
-
-        when(mailService.sendMail(anyString(), anyString(), anyString()))
-                .thenReturn(Uni.createFrom().voidItem());
-
-        List<String> roleLabels = List.of("code2", "code3");
-
-        // Act
         userNotificationService.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
                         roleLabels,
@@ -439,18 +348,68 @@ class UserNotificationServiceImplTest {
                 )
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
-                .awaitItem()
-                .assertCompleted();
-
-        // Assert
-        verify(mockTemplate, times(1)).process(any(Map.class), any(Writer.class));
-        Map<String, String> capturedDataModel = dataModelCaptor.getValue();
-        assertEquals(UserNotificationServiceImpl.DEFAULT_NAME, capturedDataModel.get(UserNotificationServiceImpl.REQUESTER_NAME));
+                .awaitItem().assertCompleted();
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
+
+  @Test
+  void testSendCreateUserNotification_whenLoggedUserIsFromApim_shouldUseDefaultName() {
+
+    // Arrange
+    LoggedUser loggedUser = LoggedUser.builder()
+      .name("apim")
+      .build();
+
+    ArgumentCaptor<String> templateIdCaptor =
+      ArgumentCaptor.forClass(String.class);
+
+    ArgumentCaptor<Map<String, String>> templateAttributesCaptor =
+      ArgumentCaptor.forClass(Map.class);
+
+    when(mailService.sendOneMail(
+      anyString(),
+      anyString(),
+      templateIdCaptor.capture(),
+      templateAttributesCaptor.capture()
+    )).thenReturn(Uni.createFrom().voidItem());
+
+    List<String> roleLabels = List.of("code2", "code3");
+
+    // Act
+    userNotificationService
+      .sendCreateUserNotification(
+        userInstitution.getInstitutionDescription(),
+        roleLabels,
+        userResource,
+        userInstitution,
+        product,
+        loggedUser
+      )
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .awaitItem()
+      .assertCompleted();
+
+    // Assert
+    assertEquals(
+      "selfcare_user_added_multi_role",
+      templateIdCaptor.getValue()
+    );
+
+    Map<String, String> templateAttributes =
+      templateAttributesCaptor.getValue();
+
+    assertEquals(
+      UserNotificationServiceImpl.DEFAULT_NAME,
+      templateAttributes.get(
+        UserNotificationServiceImpl.REQUESTER_NAME
+      )
+    );
+  }
 
 
     @Test
-    void testSendCreateUserNotificationWith2RoleLabel() throws IOException {
+    void testSendCreateUserNotificationWith2RoleLabel() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
         LoggedUser loggedUser = LoggedUser.builder()
@@ -458,16 +417,9 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
-
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("code2", "code3");
-        userNotificationServiceImpl.sendCreateUserNotification(
+        userNotificationService.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
                         roleLabels,
                         userResource,
@@ -478,11 +430,11 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
 
     @Test
-    void testSendCreateUserNotificationWithRoleNotFound() throws IOException {
+    void testSendCreateUserNotificationWithRoleNotFound() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
         LoggedUser loggedUser = LoggedUser.builder()
@@ -490,16 +442,9 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
-
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("code5","code6");
-        userNotificationServiceImpl.sendCreateUserNotification(
+        userNotificationService.sendCreateUserNotification(
                         userInstitution.getInstitutionDescription(),
                         roleLabels,
                         userResource,
@@ -510,11 +455,11 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
 
     @Test
-    void testSendCreateUserNotificationWithNullInstitutionDescription() throws IOException {
+    void testSendCreateUserNotificationWithNullInstitutionDescription() {
         String loggedUserName = "loggedUserName";
         String loggedUserSurname = "loggedUserSurname";
         LoggedUser loggedUser = LoggedUser.builder()
@@ -522,16 +467,9 @@ class UserNotificationServiceImplTest {
                 .familyName(loggedUserSurname)
                 .build();
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
-
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
         List<String> roleLabels = List.of("label");
-        userNotificationServiceImpl.sendCreateUserNotification(
+        userNotificationService.sendCreateUserNotification(
                         null,
                         roleLabels,
                         userResource,
@@ -542,21 +480,15 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
     }
 
     @Test
-    void testSendMailNotificationForOnboardingRequest() throws IOException {
+    void testSendMailNotificationForOnboardingRequest() {
 
-        Configuration freemarkerConfig = mock(Configuration.class);
-        CloudTemplateLoader cloudTemplateLoader = mock(CloudTemplateLoader.class);
-        when(freemarkerConfig.getTemplate(anyString())).thenReturn(mock(freemarker.template.Template.class));
-        when(freemarkerConfig.getTemplateLoader()).thenReturn(cloudTemplateLoader);
+        when(mailService.sendOneMail(anyString(), anyString(), anyString(), anyMap())).thenReturn(Uni.createFrom().voidItem());
 
-        UserNotificationServiceImpl userNotificationServiceImpl = new UserNotificationServiceImpl(freemarkerConfig, cloudTemplateLoader, mailService, true, telemetryClient);
-        when(mailService.sendMail(anyString(), anyString(), anyString())).thenReturn(Uni.createFrom().voidItem());
-
-        userNotificationServiceImpl.buildDataModelRequestAndSendEmail(
+        userNotificationService.buildDataModelRequestAndSendEmail(
                         userResource,
                         userInstitution,
                         product
@@ -564,7 +496,7 @@ class UserNotificationServiceImplTest {
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
-        verify(mailService, times(1)).sendMail(anyString(), anyString(), anyString());
+        verify(mailService, times(1)).sendOneMail(anyString(), anyString(), anyString(), anyMap());
 
     }
 

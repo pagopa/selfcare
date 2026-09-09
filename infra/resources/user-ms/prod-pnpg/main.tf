@@ -154,12 +154,24 @@ locals {
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {
-      name  = "BLOB-STORAGE-TEMPLATES-ACCOUNT-NAME"
-      value = data.azurerm_storage_account.product_storage.name
+      name  = "ACTIVATE_TEMPLATE_ID"
+      value = "selfcare_pnpg_user_activated"
     },
     {
-      name  = "BLOB-STORAGE-TEMPLATES-MANAGED-IDENTITY-CLIENT-ID"
-      value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+      name  = "DELETE_TEMPLATE_ID"
+      value = "selfcare_pnpg_user_deleted"
+    },
+    {
+      name  = "SUSPEND_TEMPLATE_ID"
+      value = "selfcare_pnpg_user_suspended"
+    },
+    {
+      name  = "CREATE_SINGLE_ROLE_TEMPLATE_ID"
+      value = "selfcare_pnpg_user_added_single_role"
+    },
+    {
+      name  = "ONE_MAIL_URL"
+      value = "https://uat.onemail.pagopa.it"
     }
   ]
 
@@ -170,6 +182,7 @@ locals {
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
     "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
     "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
+    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
   }
 }
 
