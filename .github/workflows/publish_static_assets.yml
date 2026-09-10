@@ -1,10 +1,14 @@
 name: Publish static assets
 
+permissions:
+  id-token: write
+  pull-requests: write
+  contents: read
+
 on:
   push:
     branches:
       - main
-      - SELC-9240
     paths:
       - "infra/core/static/**"
 
@@ -15,7 +19,7 @@ on:
         type: choice
         description: 'Select the Environment'
         default: 'dev'
-        options: 
+        options:
         - dev
         - uat
         - prod
@@ -24,9 +28,13 @@ on:
         type: choice
         description: 'Select the Domain'
         default: 'ar'
-        options: 
+        options:
         - ar
         - pnpg
+
+concurrency:
+  group: publish-static-${{ inputs.domain || 'ar' }}-${{ inputs.env || 'dev' }}
+  cancel-in-progress: false
 
 jobs:
   release_dev:
