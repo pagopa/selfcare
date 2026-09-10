@@ -46,7 +46,7 @@ class PDNDInfoCamereControllerTest {
         List<PDNDBusinessResource> pdndBusinessResources = new ArrayList<>();
         pdndBusinessResources.add(dummyPDNDBusinessResource());
 
-        when(pdndInfoCamereService.retrieveInstitutionsPdndByDescription(anyString())).thenReturn(pdndBusinesses);
+        when(pdndInfoCamereService.retrieveInstitutionsPdndByDescription(anyString(), any())).thenReturn(pdndBusinesses);
         when(pdndBusinessMapper.toResources(pdndBusinesses)).thenReturn(pdndBusinessResources);
 
         mvc.perform(MockMvcRequestBuilders
@@ -68,7 +68,7 @@ class PDNDInfoCamereControllerTest {
                 .andExpect(jsonPath("$[0].digitalAddress", is("digitalAddress")))
                 .andReturn();
 
-        verify(pdndInfoCamereService, times(1)).retrieveInstitutionsPdndByDescription(anyString());
+        verify(pdndInfoCamereService, times(1)).retrieveInstitutionsPdndByDescription(anyString(), any());
         verify(pdndBusinessMapper, times(1)).toResources(pdndBusinesses);
         verifyNoMoreInteractions(pdndInfoCamereService);
         verifyNoMoreInteractions(pdndBusinessMapper);
@@ -80,7 +80,7 @@ class PDNDInfoCamereControllerTest {
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
         PDNDBusinessResource pdndBusinessResource = dummyPDNDBusinessResource();
 
-        when(pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(anyString())).thenReturn(pdndBusiness);
+        when(pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(anyString(), any())).thenReturn(pdndBusiness);
         when(pdndBusinessMapper.toResource(pdndBusiness)).thenReturn(pdndBusinessResource);
 
         mvc.perform(MockMvcRequestBuilders
@@ -101,7 +101,7 @@ class PDNDInfoCamereControllerTest {
                 .andExpect(jsonPath("$.digitalAddress", is("digitalAddress")))
                 .andReturn();
 
-        verify(pdndInfoCamereService, times(1)).retrieveInstitutionPdndByTaxCode(anyString());
+        verify(pdndInfoCamereService, times(1)).retrieveInstitutionPdndByTaxCode(anyString(), any());
         verify(pdndBusinessMapper, times(1)).toResource(pdndBusiness);
         verifyNoMoreInteractions(pdndInfoCamereService);
         verifyNoMoreInteractions(pdndBusinessMapper);

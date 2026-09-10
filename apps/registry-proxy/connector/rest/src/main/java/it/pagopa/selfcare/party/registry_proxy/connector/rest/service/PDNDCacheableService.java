@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDInfoCamereRestClient;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PDNDInfoCamereRestClientConfig;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.ClientCredentialsResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PDNDImpresa;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -19,26 +19,23 @@ import java.util.Objects;
 public class PDNDCacheableService {
 
     private final TokenProvider tokenProviderPDND;
-    private final PDNDInfoCamereRestClientConfig pdndInfoCamereRestClientConfig;
     private final PDNDInfoCamereRestClient pdndInfoCamereRestClient;
 
     private static final String BEARER = "Bearer ";
 
     public PDNDCacheableService(PDNDInfoCamereRestClient pdndInfoCamereRestClient,
-                                TokenProvider tokenProviderPDND,
-                                PDNDInfoCamereRestClientConfig pdndInfoCamereRestClientConfig) {
+                                TokenProvider tokenProviderPDND) {
         this.pdndInfoCamereRestClient = pdndInfoCamereRestClient;
         this.tokenProviderPDND = tokenProviderPDND;
-        this.pdndInfoCamereRestClientConfig = pdndInfoCamereRestClientConfig;
     }
 
 
     @Cacheable(cacheNames = "pdndInfocamere", cacheManager = "redisCacheManager", key = "'retrieveInstitutionPdndByTaxCode:' + #encryptedTaxCode")
-    public String getEncryptedPDNDImpresa(String encryptedTaxCode) {
+    public String getEncryptedPDNDImpresa(String encryptedTaxCode, PdndSecretValue pdndSecretValue) {
         log.info("getEncryptedPDNDImpresa for {} START", encryptedTaxCode);
         String taxCode = DataEncryptionUtils.decrypt(encryptedTaxCode);
 
-        ClientCredentialsResponse tokenResponse = tokenProviderPDND.getTokenPdnd(pdndInfoCamereRestClientConfig.getPdndSecretValue());
+        ClientCredentialsResponse tokenResponse = tokenProviderPDND.getTokenPdnd(pdndSecretValue);
         String bearer = BEARER + tokenResponse.getAccessToken();
 
         try {

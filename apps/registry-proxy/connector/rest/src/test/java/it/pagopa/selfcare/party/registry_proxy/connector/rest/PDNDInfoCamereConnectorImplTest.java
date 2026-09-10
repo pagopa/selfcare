@@ -6,10 +6,11 @@ import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.national_registries_pdnd.PDNDBusiness;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDInfoCamereRestClient;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PDNDInfoCamereRestClientConfig;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PdndSecretValueResolver;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.ClientCredentialsResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PDNDImpresa;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PDNDSedeImpresa;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.PDNDBusinessMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.PDNDCacheableService;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.TokenProviderPDND;
@@ -43,7 +44,7 @@ class PDNDInfoCamereConnectorImplTest {
     @Mock
     private PDNDBusinessMapper pdndBusinessMapper;
     @Mock
-    private PDNDInfoCamereRestClientConfig pdndInfoCamereRestClientConfig;
+    private PdndSecretValueResolver pdndSecretValueResolver;
     @Mock
     private PDNDCacheableService pdndCacheableService;
 
@@ -79,7 +80,7 @@ class PDNDInfoCamereConnectorImplTest {
         when(pdndBusinessMapper.toPDNDBusinesses(pdndImpresaList)).thenReturn(pdndBusinesses);
 
         // when
-        pdndBusinesses = pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(description);
+        pdndBusinesses = pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(description, "prod-test");
 
         // then
         assertNotNull(pdndBusinesses);
@@ -109,7 +110,7 @@ class PDNDInfoCamereConnectorImplTest {
         when(pdndBusinessMapper.toPDNDBusiness(pdndImpresa)).thenReturn(pdndBusiness);
 
         // when
-        PDNDBusiness result = pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea);
+        PDNDBusiness result = pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea, "prod-test");
 
         // then
         assertNotNull(result);
@@ -129,7 +130,7 @@ class PDNDInfoCamereConnectorImplTest {
 
         // when
         Executable executable =
-                () -> pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(description);
+                () -> pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(description, null);
 
         // then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, executable);
@@ -145,7 +146,7 @@ class PDNDInfoCamereConnectorImplTest {
 
         // when
         Executable executable =
-                () -> pdndInfoCamereConnector.retrieveInstitutionFromRea("county", rea);
+                () -> pdndInfoCamereConnector.retrieveInstitutionFromRea("county", rea, null);
 
         // then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, executable);
@@ -167,7 +168,7 @@ class PDNDInfoCamereConnectorImplTest {
 
         // when
         Executable executable =
-                () -> pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea);
+                () -> pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea, "prod-test");
 
         // then
         ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class, executable);
@@ -188,7 +189,7 @@ class PDNDInfoCamereConnectorImplTest {
 
         // when
         Executable executable =
-                () -> pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea);
+                () -> pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea, "prod-test");
 
         // then
         ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class, executable);
@@ -206,14 +207,14 @@ class PDNDInfoCamereConnectorImplTest {
         String encTaxCode = "TEST-STRING";
 
         when(DataEncryptionUtils.encrypt(any())).thenReturn(encTaxCode);
-        when(pdndCacheableService.getEncryptedPDNDImpresa(any())).thenReturn(encTaxCode);
+        when(pdndCacheableService.getEncryptedPDNDImpresa(any(), any())).thenReturn(encTaxCode);
 
         String decResult = new ObjectMapper().writeValueAsString(pdndImpresa);
         when(DataEncryptionUtils.decrypt(any())).thenReturn(decResult);
         when(pdndBusinessMapper.toPDNDBusiness(dummyPDNDImpresa())).thenReturn(pdndBusiness);
 
         // when
-        pdndBusiness = pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode);
+        pdndBusiness = pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode, "prod-test");
 
         // then
         assertNotNull(pdndBusiness);
@@ -229,10 +230,10 @@ class PDNDInfoCamereConnectorImplTest {
         String encTaxCode = "TEST-STRING";
 
         when(DataEncryptionUtils.encrypt(any())).thenReturn(encTaxCode);
-        when(pdndCacheableService.getEncryptedPDNDImpresa(any())).thenReturn(encTaxCode);
+        when(pdndCacheableService.getEncryptedPDNDImpresa(any(), any())).thenReturn(encTaxCode);
 
         // when
-        PDNDBusiness pdndBusiness = pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode);
+        PDNDBusiness pdndBusiness = pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode, "prod-test");
 
         // then
         assertNull(pdndBusiness);
@@ -245,7 +246,7 @@ class PDNDInfoCamereConnectorImplTest {
         String taxCode = null;
 
         // when
-        Executable executable = () -> pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode);
+        Executable executable = () -> pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode, null);
 
         // then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, executable);
@@ -302,7 +303,7 @@ class PDNDInfoCamereConnectorImplTest {
     }
 
     private void mockPdndSecretValue() {
-        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(null);
+        when(pdndSecretValueResolver.resolve(any())).thenReturn(PdndSecretValue.builder().build());
     }
 }
 

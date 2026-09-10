@@ -7,9 +7,10 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.PDNDInfoCamereConne
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.national_registries_pdnd.PDNDBusiness;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDInfoCamereRestClient;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PDNDInfoCamereRestClientConfig;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PdndSecretValueResolver;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.ClientCredentialsResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PDNDImpresa;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.mapper.PDNDBusinessMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.service.*;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ public class PDNDInfoCamereConnectorImpl implements PDNDInfoCamereConnector {
   private final PDNDInfoCamereRestClient pdndInfoCamereRestClient;
   private final PDNDBusinessMapper pdndBusinessMapper;
   private final TokenProvider tokenProvider;
-  private final PDNDInfoCamereRestClientConfig pdndInfoCamereRestClientConfig;
+  private final PdndSecretValueResolver pdndSecretValueResolver;
   private final PDNDCacheableService PDNDCacheableService;
   private static final String BEARER = "Bearer ";
 
@@ -34,32 +35,34 @@ public class PDNDInfoCamereConnectorImpl implements PDNDInfoCamereConnector {
           PDNDInfoCamereRestClient pdndInfoCamereRestClient,
           PDNDBusinessMapper pdndBusinessMapper,
           TokenProviderPDND tokenProviderPDND,
-          PDNDInfoCamereRestClientConfig pdndInfoCamereRestClientConfig,
+          PdndSecretValueResolver pdndSecretValueResolver,
           PDNDCacheableService PDNDCacheableService) {
     this.pdndInfoCamereRestClient = pdndInfoCamereRestClient;
     this.pdndBusinessMapper = pdndBusinessMapper;
     this.tokenProvider = tokenProviderPDND;
-    this.pdndInfoCamereRestClientConfig = pdndInfoCamereRestClientConfig;
+    this.pdndSecretValueResolver = pdndSecretValueResolver;
     this.PDNDCacheableService = PDNDCacheableService;
   }
 
   @Override
-  public List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description) {
+  public List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description, String productId) {
     Assert.hasText(description, "Description is required");
-    ClientCredentialsResponse tokenResponse = tokenProvider.getTokenPdnd(pdndInfoCamereRestClientConfig.getPdndSecretValue());
+    PdndSecretValue secretValue = pdndSecretValueResolver.resolve(productId);
+    ClientCredentialsResponse tokenResponse = tokenProvider.getTokenPdnd(secretValue);
     String bearer = BEARER + tokenResponse.getAccessToken();
     List<PDNDImpresa> result = pdndInfoCamereRestClient.retrieveInstitutionsPdndByDescription(description, bearer);
     return pdndBusinessMapper.toPDNDBusinesses(result);
   }
 
   @Override
-  public PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode) {
+  public PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode, String productId) {
       Assert.hasText(taxCode, TAX_CODE_REQUIRED_MESSAGE);
       String encTaxCode = DataEncryptionUtils.encrypt(taxCode);
+      PdndSecretValue secretValue = pdndSecretValueResolver.resolve(productId);
       PDNDImpresa impresa = null;
 
       try {
-          String encResult = PDNDCacheableService.getEncryptedPDNDImpresa(encTaxCode);
+          String encResult = PDNDCacheableService.getEncryptedPDNDImpresa(encTaxCode, secretValue);
           String decResult = DataEncryptionUtils.decrypt(encResult);
           impresa = new ObjectMapper().readValue(decResult, new TypeReference<>(){});
       } catch (Exception e) {
@@ -70,10 +73,11 @@ public class PDNDInfoCamereConnectorImpl implements PDNDInfoCamereConnector {
   }
 
   @Override
-  public PDNDBusiness retrieveInstitutionFromRea(String county, String rea) {
+  public PDNDBusiness retrieveInstitutionFromRea(String county, String rea, String productId) {
     Assert.hasText(rea, "Rea is required");
     Assert.hasText(county, "County is required");
-    ClientCredentialsResponse tokenResponse = tokenProvider.getTokenPdnd(pdndInfoCamereRestClientConfig.getPdndSecretValue());
+    PdndSecretValue secretValue = pdndSecretValueResolver.resolve(productId);
+    ClientCredentialsResponse tokenResponse = tokenProvider.getTokenPdnd(secretValue);
     String bearer = BEARER + tokenResponse.getAccessToken();
     List<PDNDImpresa> institutions = pdndInfoCamereRestClient.retrieveInstitutionPdndFromRea(rea, county, bearer);
     if (Objects.isNull(institutions) || institutions.isEmpty()) {
