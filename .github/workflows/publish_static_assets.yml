@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - SELC-9240
     paths:
       - "infra/core/static/**"
 
