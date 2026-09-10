@@ -20,7 +20,6 @@ class PDNDInfoCamereServiceImpl implements PDNDInfoCamereService {
         this.pdndInfoCamereConnector = pdndInfoCamereConnector;
     }
 
-
     @Override
     public List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description){
         Assert.hasText(description, "Description is required");
@@ -31,16 +30,6 @@ class PDNDInfoCamereServiceImpl implements PDNDInfoCamereService {
     public PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode){
         Assert.hasText(taxCode, "TaxCode is required");
         return pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode);
-    }
-
-    @Override
-    public PDNDBusiness retrieveInstitutionDetail(String taxCode) {
-        return pdndInfoCamereConnector.retrieveInstitutionDetail(taxCode);
-    }
-
-    @Override
-    public byte[] retrieveInstitutionDocument(String taxCode) {
-        return pdndInfoCamereConnector.retrieveInstitutionDocument(taxCode);
     }
 
     @Override

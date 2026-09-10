@@ -12,7 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -118,41 +117,6 @@ class PDNDInfoCamereServiceImplTest {
         verifyNoMoreInteractions(pdndInfoCamereConnector);
     }
 
-    @Test
-    void retrieveInstitutionDetail() {
-        //given
-        final String taxCode = "taxCode";
-        PDNDBusiness pdndBusiness = dummyPDNDBusiness();
-        when(pdndInfoCamereConnector.retrieveInstitutionDetail(anyString())).thenReturn(pdndBusiness);
-
-        //when
-        var result = pdndInfoCamereService.retrieveInstitutionDetail(taxCode);
-
-        //then
-        assertNotNull(result);
-        assertNotNull(result.getClass());
-        verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionDetail(any());
-        verifyNoMoreInteractions(pdndInfoCamereConnector);
-    }
-
-    @Test
-    void retrieveInstitutionDocument() {
-        //given
-        final String taxCode = "taxCode";
-        final String document = "document";
-
-        //when
-        when(pdndInfoCamereConnector.retrieveInstitutionDocument(anyString())).thenReturn(document.getBytes(StandardCharsets.UTF_8));
-        var result = pdndInfoCamereService.retrieveInstitutionDocument(taxCode);
-
-        //then
-        assertNotNull(result);
-        assertNotEquals(0, result.length);
-        verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionDocument(any());
-        verifyNoMoreInteractions(pdndInfoCamereConnector);
-    }
 
     @Test
     void retrieveInstitutionByTaxCode_nullTaxCode() {
