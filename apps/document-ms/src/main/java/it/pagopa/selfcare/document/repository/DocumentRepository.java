@@ -45,6 +45,11 @@ import static it.pagopa.selfcare.onboarding.common.DocumentType.*;
                 .firstResult();
     }
 
+    public Uni<Document> findRelatedDocument(String onboardingId, String documentId) {
+        return find("_id = ?1 and (onboardingId = ?2 or rootOnboardingId = ?2)", documentId, onboardingId)
+                .firstResult();
+    }
+
     public Uni<List<Document>> findAttachments(String onboardingId) {
         return find("onboardingId = ?1 and type = ?2", onboardingId, ATTACHMENT.name()).list();
     }

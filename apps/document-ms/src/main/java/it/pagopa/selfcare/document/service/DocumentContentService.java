@@ -46,6 +46,8 @@ public interface DocumentContentService {
 
     Uni<RestResponse<File>> retrieveAttachment(String onboardingId, String attachmentName);
 
+    Uni<RestResponse<File>> retrieveRelatedDocument(String onboardingId, String documentId);
+
     Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file);
 
     Uni<Void> uploadUserAttachment(UserAttachmentRequest request, FormItem file);

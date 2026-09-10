@@ -3,6 +3,7 @@ package it.pagopa.selfcare.external_api.service;
 
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingResponse;
+import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.Document;
 import it.pagopa.selfcare.external_api.client.MsCoreInstitutionApiClient;
 import it.pagopa.selfcare.external_api.client.MsDocumentApiClient;
@@ -21,7 +22,6 @@ import org.springframework.util.StringUtils;
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -51,11 +51,16 @@ public class ContractServiceImpl implements ContractService {
     }
 
     @Override
-    public ResourceResponse getContractV2(String institutionId, String productId) {
+    public ResourceResponse getContractV2(String institutionId, String productId, String documentId) {
         log.trace("getContract start");
-        log.debug("getContract institutionId = {}, productId = {}", institutionId, productId);
+        log.debug("getContract institutionId = {}, productId = {}, documentId = {}", institutionId, productId, documentId);
 
-        List<OnboardingResponse> onboardings = Objects.requireNonNull(institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId).getBody()).getOnboardings();
+        OnboardingsResponse onboardingsResponse = Optional.ofNullable(
+                        institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId).getBody())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format(TOKEN_FOR_S_AND_S_NOT_FOUND, institutionId, productId)));
+        List<OnboardingResponse> onboardings = Optional.ofNullable(onboardingsResponse.getOnboardings())
+                .orElse(Collections.emptyList());
 
         InstitutionOnboarding institutionOnboarding = Optional.ofNullable(onboardings)
             .orElse(Collections.emptyList())
@@ -64,13 +69,23 @@ public class ContractServiceImpl implements ContractService {
             .map(institutionMapper::toEntity)
             .orElseThrow(ResourceNotFoundException::new);
 
-        Document document = Optional.ofNullable(documentApiClient._getDocumentByOnboardingId(institutionOnboarding.getTokenId()).getBody())
-            .map(documentMapper::toEntity)
-            .orElseThrow(() -> new ResourceNotFoundException(String.format(TOKEN_FOR_S_AND_S_NOT_FOUND, institutionId, productId)));
-
-        if(!StringUtils.hasText(document.getContractSigned()))
-            throw new ResourceNotFoundException(String.format(TOKEN_FOR_S_AND_S_FOUND_BUT_CONTRACT_SIGNED_REFERENCE_IS_EMPTY, institutionId, productId));
-        ResponseEntity<Resource> contract = documentContentApiClient._getContractSigned(institutionOnboarding.getTokenId());
+        Document document;
+        ResponseEntity<Resource> contract;
+        String fileName;
+        if (StringUtils.hasText(documentId)) {
+            contract = documentContentApiClient._getRelatedDocument(institutionOnboarding.getTokenId(), documentId);
+            fileName = Optional.ofNullable(contract.getHeaders().getContentDisposition().getFilename())
+                    .filter(StringUtils::hasText)
+                    .orElse(documentId);
+        } else {
+            document = Optional.ofNullable(documentApiClient._getDocumentByOnboardingId(institutionOnboarding.getTokenId()).getBody())
+                    .map(documentMapper::toEntity)
+                    .orElseThrow(() -> new ResourceNotFoundException(String.format(TOKEN_FOR_S_AND_S_NOT_FOUND, institutionId, productId)));
+            if(!StringUtils.hasText(document.getContractSigned()))
+                throw new ResourceNotFoundException(String.format(TOKEN_FOR_S_AND_S_FOUND_BUT_CONTRACT_SIGNED_REFERENCE_IS_EMPTY, institutionId, productId));
+            contract = documentContentApiClient._getContractSigned(institutionOnboarding.getTokenId());
+            fileName = new File(document.getContractSigned()).getName();
+        }
 
         ResourceResponse response = new ResourceResponse();
         try {
@@ -79,8 +94,6 @@ public class ContractServiceImpl implements ContractService {
             throw new ResourceNotFoundException(String.format(CONTRACT_FOR_S_AND_S_NOT_FOUND, institutionId, productId));
         }
 
-        File contractSigned = new File(document.getContractSigned());
-        String fileName = contractSigned.getName();
         response.setFileName(fileName);
         String type = contract.getHeaders().containsKey("content-type") && !contract.getHeaders().get("content-type").isEmpty() ? contract.getHeaders().get("content-type").get(0) : "";
         response.setMimetype(type);

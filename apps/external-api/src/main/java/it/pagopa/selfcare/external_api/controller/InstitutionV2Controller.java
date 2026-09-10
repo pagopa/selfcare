@@ -74,10 +74,12 @@ public class InstitutionV2Controller {
     public ResponseEntity<byte[]> getContract(@Parameter(description = "${swagger.external_api.institutions.model.id}")
                                               @PathVariable("institutionId") String institutionId,
                                               @Parameter(description = "${swagger.external_api.products.model.id}")
-                                              @RequestParam(value = "productId", required = false) String productId){
+                                              @RequestParam(value = "productId", required = false) String productId,
+                                              @Parameter(description = "${swagger.external_api.documents.model.id}")
+                                              @RequestParam(value = "documentId", required = false) String documentId){
         log.trace("getContract start");
-        log.debug("getContract institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
-        ResourceResponse contract = contractService.getContractV2(institutionId, productId);
+        log.debug("getContract institutionId = {}, productId = {}, documentId = {}", Encode.forJava(institutionId), Encode.forJava(productId), Encode.forJava(documentId));
+        ResourceResponse contract = contractService.getContractV2(institutionId, productId, documentId);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM_VALUE);
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + contract.getFileName());
