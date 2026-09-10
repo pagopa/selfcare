@@ -18,7 +18,8 @@ class TenantMongoDatabaseResolverTest {
         when(tenantContext.requiredTenantId()).thenReturn("PNPG");
         when(tenantRegistry.resolve("PNPG")).thenReturn(new TenantDefinition(
                 new TenantDefinition.MongoDefinition(
-                        "cosmos-pnpg", "selcOnboardingPnpg", "MONGODB_CONNECTION_STRING_PNPG")));
+                        "cosmos-pnpg", "selcOnboardingPnpg", "MONGODB_CONNECTION_STRING_PNPG"),
+                null));
 
         TenantMongoDatabaseResolver resolver =
                 new TenantMongoDatabaseResolver(tenantRegistry, tenantContext);

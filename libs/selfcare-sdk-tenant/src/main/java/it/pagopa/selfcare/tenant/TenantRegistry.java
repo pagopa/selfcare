@@ -94,8 +94,24 @@ public class TenantRegistry {
   }
 
   /**
-   * Cosmos connection strings stored in XML/HTML contexts often encode {@code &} as
-   * {@code &amp;}, which the Mongo driver rejects as the option {@code amp}.
+   * Resolves the raw JWT verification key material (PEM or JWK/JWKS JSON) configured for {@code
+   * tenantId}, read from the environment variable named by that tenant's {@code
+   * jwt.publicKeyEnvVar}. Returns empty when the tenant has no JWT configuration at all, letting
+   * callers fall back to a legacy, non-tenant-scoped verification key.
+   */
+  public Optional<String> jwtPublicKey(String tenantId) {
+    TenantDefinition.JwtDefinition jwt = resolve(tenantId).jwt();
+    if (jwt == null || isBlank(jwt.publicKeyEnvVar())) {
+      return Optional.empty();
+    }
+    return ConfigProvider.getConfig()
+        .getOptionalValue(jwt.publicKeyEnvVar(), String.class)
+        .filter(value -> !value.isBlank());
+  }
+
+  /**
+   * Cosmos connection strings stored in XML/HTML contexts often encode {@code &} as {@code &amp;},
+   * which the Mongo driver rejects as the option {@code amp}.
    */
   static String sanitizeConnectionString(String value) {
     return value.replace("&amp;", "&").trim();

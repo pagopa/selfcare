@@ -16,8 +16,7 @@ final class JwtTenantValidator {
 
   static {
     if (!SUPPORTED_TENANTS.contains(DEFAULT_TENANT_ID)) {
-      throw new IllegalArgumentException(
-          "DEFAULT_TENANT must be included in SUPPORTED_TENANTS");
+      throw new IllegalArgumentException("DEFAULT_TENANT must be included in SUPPORTED_TENANTS");
     }
   }
 

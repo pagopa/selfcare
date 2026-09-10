@@ -210,6 +210,7 @@ locals {
 
   secrets_names_onboarding_ms = {
     "JWT-PUBLIC-KEY"                          = "jwt-public-key"
+    "JWT_PUBLIC_KEY_AR"                       = "jwt-public-key"
     "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
     "MONGODB_CONNECTION_STRING_AR"            = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"

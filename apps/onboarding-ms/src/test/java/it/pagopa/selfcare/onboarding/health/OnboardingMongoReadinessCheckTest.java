@@ -44,7 +44,8 @@ class OnboardingMongoReadinessCheckTest {
         when(tenantRegistry.supportedTenantIds()).thenReturn(Set.of("AR"));
         when(tenantRegistry.resolve("AR")).thenReturn(new TenantDefinition(
                 new TenantDefinition.MongoDefinition(
-                        "test", DATABASE, "MONGODB_CONNECTION_STRING_AR")));
+                        "test", DATABASE, "MONGODB_CONNECTION_STRING_AR"),
+                null));
         when(tenantRegistry.connectionString("AR")).thenReturn(Optional.of(CONNECTION_STRING));
         when(tenantMongoClientProducer.clientForTenant("AR")).thenReturn(mongoClient);
         check = new OnboardingMongoReadinessCheck(tenantRegistry, tenantMongoClientProducer);
