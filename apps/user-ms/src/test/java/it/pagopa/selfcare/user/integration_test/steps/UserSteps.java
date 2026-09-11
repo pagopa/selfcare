@@ -6,9 +6,7 @@ import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
 import it.pagopa.selfcare.onboarding.common.Env;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.user.entity.UserInfo;
 import it.pagopa.selfcare.user.entity.UserInstitution;
-import it.pagopa.selfcare.user.entity.UserInstitutionRole;
 import it.pagopa.selfcare.user.model.OnboardedProduct;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -19,7 +17,6 @@ import org.junit.jupiter.api.Assertions;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
@@ -36,32 +33,13 @@ public class UserSteps {
 
     private final String mockInstitutionId2 = "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21";
 
-    @After("@RemoveUserInstitutionAndUserInfoAfterScenario")
+    @After("@RemoveUserInstitutionAfterScenario")
     public void removeInstitutionIdAfterScenario(Scenario scenario) {
-        UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
-                .subscribe().with(
-                        success -> {
-                            log.info("userInstitution with id {} deleted", mockUserInstitutionId);
-                            UserInfo user = (UserInfo) UserInfo.findById(mockUserId).await().indefinitely();
-                            user.setInstitutions(user.getInstitutions()
-                                    .stream()
-                                    .filter(institution -> !institution.getInstitutionId().equals(mockInstitutionId))
-                                    .toList()
-                            );
+      UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
+        .await()
+        .indefinitely();
 
-                            UserInfo.persistOrUpdate(user)
-                                    .subscribe()
-                                    .with(
-                                            updateSuccess -> {
-                                                log.info("UserInfo with id {} update", user.getUserId());
-                                            },
-                                            updateFailure -> {
-                                                log.info("Failed to update UserInfo with id {}: {}", user.getUserId(), updateFailure.getMessage());
-                                            });
-                        },
-                        failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId, failure.getMessage())
-                );
-
+      log.info("userInstitution with id {} deleted", mockUserInstitutionId);
     }
 
     @After("@RemoveUserInstitutionAfterCreateFromAPI")
@@ -110,7 +88,7 @@ public class UserSteps {
                 );
     }
 
-    @After("@RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser")
+    @After("@RemoveUserInstitutionAfterScenarioWithUnusedUser")
     public void removeInstitutionIdAfterScenarioWithUnusedUser(Scenario scenario) {
         UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
                 .subscribe().with(
@@ -126,30 +104,6 @@ public class UserSteps {
                         },
                         failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId2, failure.getMessage())
                 );
-    }
-
-
-    @And("A mock userInfo with id {string}, institutionName {string}, status {string}, role {string} to userInfo document with id {string}")
-    public void createMockUserInfo(String institutionId, String institutionName, String status, String role, String userId) {
-        UserInstitutionRole userInstitutionRole = new UserInstitutionRole();
-        userInstitutionRole.setInstitutionId(institutionId);
-        userInstitutionRole.setRole(PartyRole.valueOf(role));
-        userInstitutionRole.setStatus(OnboardedProductState.valueOf(status));
-        userInstitutionRole.setInstitutionName(institutionName);
-
-        UserInfo user = (UserInfo) UserInfo.findById(userId).await().indefinitely();
-        user.getInstitutions().add(userInstitutionRole);
-
-        UserInfo.persistOrUpdate(user)
-                .subscribe()
-                .with(
-                        success -> {
-                            log.info("UserInfo with id {} updated", user.getUserId());
-                        },
-                        failure -> {
-                            log.info("Failed to update UserInfo with id {}: {}", user.getUserId(), failure.getMessage());
-                        });
-
     }
 
   @And("A mock userInstitution with id {string} and the following data:")

@@ -1,4 +1,4 @@
-name: Institution SendMailScheduler - Trigger Release
+name: External API - Trigger Release
 
 on:
   workflow_dispatch:
@@ -6,19 +6,16 @@ on:
       env:
         type: choice
         description: Environment
-        options:
-          - dev
-          - uat
-          - prod
+        options: [dev, uat, prod]
         required: true
       branch:
         type: string
-        description: Branch name (e.g. releases/institution-send-mail-scheduler_1.0.0)
+        description: Branch name (e.g. releases/external-api_v1.0.0)
         required: true
 
 jobs:
   release:
-    name: "Trigger Release Workflows"
+    name: Trigger Release Workflows
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -40,41 +37,40 @@ jobs:
         run: |
           echo "version=$(echo "$INPUT_BRANCH" | sed 's/.*_//;s/^v//')" >> $GITHUB_OUTPUT
 
-      - name: Trigger Institution SendMailScheduler Release (AR)
+      - name: Trigger External API release (AR)
         env:
           INPUT_BRANCH: ${{ inputs.branch }}
           INPUT_ENV: ${{ inputs.env }}
         run: |
           gh workflow run release_app.yml \
-            --ref "$INPUT_BRANCH" \
-            -f env="$INPUT_ENV" \
-            -f target=ar \
-            -f app=institution-send-mail-scheduler
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=ar -f app=external-api
+
+      - name: Trigger External API release (PNPG)
+        env:
+          INPUT_BRANCH: ${{ inputs.branch }}
+          INPUT_ENV: ${{ inputs.env }}
+        run: |
+          gh workflow run release_app.yml \
+            --ref "$INPUT_BRANCH" -f env="$INPUT_ENV" -f target=pnpg -f app=external-api
 
   update_uat_variable:
-    name: "Update UAT Version Variable"
+    name: Update UAT Version Variable
     needs: release
     if: ${{ inputs.env == 'uat' }}
-    permissions:
-      contents: read
-      actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: institution-send-mail-scheduler
+      domain: external-api
       env: uat
       version: ${{ needs.release.outputs.version }}
     secrets: inherit
 
   update_prod_variable:
-    name: "Update PROD Version Variable"
+    name: Update PROD Version Variable
     needs: release
     if: ${{ inputs.env == 'prod' }}
-    permissions:
-      contents: read
-      actions: write
     uses: ./.github/workflows/call_update_gh_variable.yml
     with:
-      domain: institution-send-mail-scheduler
+      domain: external-api
       env: prod
       version: ${{ needs.release.outputs.version }}
     secrets: inherit

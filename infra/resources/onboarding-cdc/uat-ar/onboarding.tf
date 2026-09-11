@@ -65,6 +65,10 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_table_identity.client_id
+    },
+    {
+      name  = "DEFAULT_TENANT"
+      value = "AR"
     }
   ]
 

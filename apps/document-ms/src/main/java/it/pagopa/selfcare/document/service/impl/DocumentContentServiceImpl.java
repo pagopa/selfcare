@@ -203,6 +203,39 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
+    public Uni<RestResponse<File>> retrieveRelatedDocument(String onboardingId, String documentId) {
+        return documentRepository.findRelatedDocument(onboardingId, documentId)
+                .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Related document %s not found for onboarding %s", documentId, onboardingId)))
+                .onItem().transformToUni(document -> {
+                    String filePath = resolveRelatedDocumentPath(document);
+                    return Uni.createFrom()
+                            .item(() -> storageRegistry.clientFor(document.getStorageOrigin()).getFileAsPdf(filePath))
+                            .runSubscriptionOn(Infrastructure.getDefaultExecutor())
+                            .onItem().transform(file -> RestResponse.ResponseBuilder
+                                    .ok(file, MediaType.APPLICATION_OCTET_STREAM)
+                                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                                            HTTP_HEADER_VALUE_ATTACHMENT_FILENAME + new File(filePath).getName())
+                                    .build());
+                });
+    }
+
+    private String resolveRelatedDocumentPath(Document document) {
+        if (ATTACHMENT.equals(document.getType())) {
+            return DocumentFileUtils.buildAttachmentPath(document, documentMsConfig.getContractPath());
+        }
+        if (Objects.nonNull(document.getContractSigned()) && !document.getContractSigned().isBlank()) {
+            return document.getContractSigned();
+        }
+        if (Objects.nonNull(document.getAttachmentPath()) && !document.getAttachmentPath().isBlank()) {
+            return document.getAttachmentPath();
+        }
+        return DocumentFileUtils.getContractNotSigned(
+                document.getOnboardingId(), documentMsConfig.getContractPath(), document.getContractFilename());
+    }
+
+    @Override
     public Uni<Void> uploadAttachment(DocumentBuilderRequest request, FormItem file) {
         log.info("Uploading attachment for onboardingId={}, productId={}, attachmentName={}",
                 sanitize(request.getOnboardingId()),

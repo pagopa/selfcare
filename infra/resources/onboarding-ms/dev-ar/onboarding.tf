@@ -171,10 +171,6 @@ locals {
       value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "ALLOWED_ATECO_CODES"
-      value = "47.12.10,47.54.00,47.11.02,47.12.20,47.12.30,47.12.40"
-    },
-    {
       name  = "PAGOPA_SIGNATURE_SOURCE"
       value = "namirial"
     },

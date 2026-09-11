@@ -503,6 +503,22 @@
             "format" : "date-time"
           }
         }, {
+          "name" : "statusUpdatedFromDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
+          "name" : "statusUpdatedToDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        }, {
           "name" : "page",
           "in" : "query",
           "required" : false,
@@ -532,12 +548,12 @@
             }
           }
         }, {
-          "name": "includeTest",
-          "in": "query",
-          "required": false,
-          "schema": {
-            "type": "boolean",
-            "default": false
+          "name" : "includeTest",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -1532,6 +1548,10 @@
           "deletedAt" : {
             "type" : "string",
             "format" : "date-time"
+          },
+          "statusUpdatedAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         }
       },
@@ -2132,10 +2152,10 @@
           "mail3" : {
             "type" : "string"
           },
-          "uriprotocolloInformatico" : {
+          "cap" : {
             "type" : "string"
           },
-          "cap" : {
+          "uriprotocolloInformatico" : {
             "type" : "string"
           }
         }
