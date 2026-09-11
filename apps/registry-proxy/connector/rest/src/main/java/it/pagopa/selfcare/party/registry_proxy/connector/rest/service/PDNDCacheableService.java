@@ -30,7 +30,7 @@ public class PDNDCacheableService {
     }
 
 
-    @Cacheable(cacheNames = "pdndInfocamere", cacheManager = "redisCacheManager", key = "'retrieveInstitutionPdndByTaxCode:' + #encryptedTaxCode")
+    @Cacheable(cacheNames = "pdndInfocamere", cacheManager = "redisCacheManager", key = "'retrieveInstitutionPdndByTaxCode:' + #pdndSecretValue.profile + ':' + #encryptedTaxCode")
     public String getEncryptedPDNDImpresa(String encryptedTaxCode, PdndSecretValue pdndSecretValue) {
         log.info("getEncryptedPDNDImpresa for {} START", encryptedTaxCode);
         String taxCode = DataEncryptionUtils.decrypt(encryptedTaxCode);

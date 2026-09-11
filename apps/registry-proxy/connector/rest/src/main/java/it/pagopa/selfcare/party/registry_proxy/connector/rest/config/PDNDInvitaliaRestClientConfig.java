@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.config;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.JwtConfig;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndProfile;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -28,6 +29,7 @@ public class PDNDInvitaliaRestClientConfig {
                 .clientId(clientId)
                 .secretKey(privateKey)
                 .jwtConfig(jwtConfig)
+                .profile(PdndProfile.INVITALIA)
                 .build();
     }
 

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest.config;
 import it.pagopa.selfcare.commons.connector.rest.config.RestClientBaseConfig;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDInfoCamereRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.JwtConfig;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndProfile;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.openfeign.EnableFeignClients;
@@ -35,6 +36,7 @@ public class PDNDInfoCamereRestClientConfig {
                 .clientId(clientId)
                 .secretKey(privateKey)
                 .jwtConfig(jwtConfig)
+                .profile(PdndProfile.SELFCARE)
                 .build();
     }
 

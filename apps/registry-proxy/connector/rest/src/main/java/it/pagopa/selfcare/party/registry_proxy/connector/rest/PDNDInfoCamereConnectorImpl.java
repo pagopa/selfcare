@@ -66,7 +66,7 @@ public class PDNDInfoCamereConnectorImpl implements PDNDInfoCamereConnector {
           String decResult = DataEncryptionUtils.decrypt(encResult);
           impresa = new ObjectMapper().readValue(decResult, new TypeReference<>(){});
       } catch (Exception e) {
-          log.error("Errore", e);
+          log.error("Error during retrieveInstitutionPdndByTaxCode", e);
       }
 
       return pdndBusinessMapper.toPDNDBusiness(impresa);
