@@ -42,7 +42,7 @@ public class PdndSecretValueResolver {
             log.info("Using Invitalia PDND subscription for product {}", sanitize(productId));
             return invitaliaConfig.getPdndSecretValue();
         }
-        log.info("Using InfoCamere PDND subscription for product {}", sanitize(productId));
+        log.info("Using InfoCamere PDND subscription");
         return infoCamereConfig.getPdndSecretValue();
     }
 }
