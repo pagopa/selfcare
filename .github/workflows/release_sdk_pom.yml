@@ -67,7 +67,10 @@ jobs:
 
       - name: Build with Maven
         shell: bash
-        run: mvn --projects :${{ matrix.module }} --also-make-dependents clean package -DskipTests
+        # --also-make (-am) builds/installs the module's own dependencies (e.g. selfcare-sdk-tenant
+        # for selfcare-sdk-tenant-mongodb) from source, and 'install' (not just 'package') puts them
+        # in the local repo so the separate single-module 'mvn deploy' step below can resolve them.
+        run: mvn --projects :${{ matrix.module }} --also-make --also-make-dependents clean install -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
