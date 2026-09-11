@@ -52,7 +52,6 @@ jobs:
     environment: ${{ inputs.environment }}-ci
     permissions:
       id-token: write
-      pull-requests: write
       contents: read
 
     steps:
@@ -79,12 +78,12 @@ jobs:
 
     - name: Purge blob storage static assets
       run: |
-          az afd endpoint purge \
-            --resource-group "${RESOURCE_GROUP}" \
-            --endpoint-name "${ENDPOINT_NAME}" \
-            --profile-name "${CDN_PROFILE}" \
-            --content-paths "/static/*" \
-            --no-wait
+        az afd endpoint purge \
+          --resource-group "${RESOURCE_GROUP}" \
+          --endpoint-name "${ENDPOINT_NAME}" \
+          --profile-name "${CDN_PROFILE}" \
+          --content-paths "/static/*" || { echo "Error purging CDN endpoint."; exit 1; }
+        echo "Purge success."
 
     - name: Azure Logout
       id: az_logout
