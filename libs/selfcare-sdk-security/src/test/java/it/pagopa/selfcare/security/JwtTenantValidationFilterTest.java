@@ -70,7 +70,7 @@ class JwtTenantValidationFilterTest {
     var responseCaptor =
         org.mockito.ArgumentCaptor.forClass(Response.class);
     verify(requestContext).abortWith(responseCaptor.capture());
-    assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), responseCaptor.getValue().getStatus());
+    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), responseCaptor.getValue().getStatus());
   }
 
   @Test
@@ -82,6 +82,8 @@ class JwtTenantValidationFilterTest {
 
     filter.filter(requestContext);
 
-    verify(requestContext).abortWith(org.mockito.ArgumentMatchers.any(Response.class));
+    var responseCaptor = org.mockito.ArgumentCaptor.forClass(Response.class);
+    verify(requestContext).abortWith(responseCaptor.capture());
+    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), responseCaptor.getValue().getStatus());
   }
 }

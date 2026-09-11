@@ -35,13 +35,15 @@ public class JwtTenantValidationFilter implements ContainerRequestFilter {
           tenantId, requestContext.getHeaderString(JwtTenantValidator.TENANT_HEADER));
       tenantContext.setTenantId(tenantId);
     } catch (TenantValidationException exception) {
+      // An invalid/mismatched tenant means the JWT cannot be trusted for this request, which is
+      // an authentication failure (401), not a client request-formation error (400).
       requestContext.abortWith(
-          Response.status(Response.Status.BAD_REQUEST)
+          Response.status(Response.Status.UNAUTHORIZED)
               .type("application/problem+json")
               .entity(
                   Map.of(
-                      "title", Response.Status.BAD_REQUEST.getReasonPhrase(),
-                      "status", Response.Status.BAD_REQUEST.getStatusCode(),
+                      "title", Response.Status.UNAUTHORIZED.getReasonPhrase(),
+                      "status", Response.Status.UNAUTHORIZED.getStatusCode(),
                       "detail", exception.getMessage()))
               .build());
     }
