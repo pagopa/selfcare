@@ -67,9 +67,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("multipart/form-data");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         // Send the PUT request with the multipart file
         ExtractableResponse<?> response = requestSpecification
@@ -88,9 +86,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
         if (Objects.nonNull(dashboardStepsUtil.filter.getProductId())) {
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
         }
@@ -115,9 +111,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
         if (Objects.nonNull(dashboardStepsUtil.filter.getTaxCode())) {
             requestSpecification.queryParam("taxCode", dashboardStepsUtil.filter.getTaxCode());
         }
@@ -138,9 +132,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
 
         ExtractableResponse<?> response = requestSpecification
@@ -164,9 +156,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if (Objects.nonNull(dashboardStepsUtil.filter.getProducts())) {
             requestSpecification.queryParam("products", dashboardStepsUtil.filter.getProducts());
@@ -192,9 +182,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if (Objects.nonNull(dashboardStepsUtil.filter.getProductId())) {
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
@@ -230,9 +218,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -259,9 +245,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -291,9 +275,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -317,9 +299,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -353,9 +333,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -379,9 +357,7 @@ public class InstitutionApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()

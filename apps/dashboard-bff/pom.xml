@@ -9,9 +9,9 @@
         <version>0.3.2-SNAPSHOT</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <artifactId>selc-dashboard</artifactId>
+    <artifactId>dashboard-bff</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>selc-dashboard</name>
+    <name>dashboard-bff</name>
     <description>Self Care Dashboard Backend</description>
 
     <properties>

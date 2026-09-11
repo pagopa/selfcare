@@ -29,9 +29,7 @@ public class ProductApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);;
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getInstitutionType())){
             requestSpecification.queryParam("institutionType", dashboardStepsUtil.filter.getInstitutionType());
         }
@@ -59,9 +57,7 @@ public class ProductApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+      dashboardStepsUtil.setHeader(requestSpecification);;
 
         if (dashboardStepsUtil.filter.getInstitutionId() != null) {
             requestSpecification.queryParam("institutionId", dashboardStepsUtil.filter.getInstitutionId());
@@ -88,9 +84,7 @@ public class ProductApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);;
 
 
         ExtractableResponse<?> response = requestSpecification
@@ -107,9 +101,7 @@ public class ProductApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);;
         if(Objects.nonNull(dashboardStepsUtil.filter.getLang())) {
             requestSpecification.queryParam("lang", dashboardStepsUtil.filter.getLang());
         }
@@ -140,9 +132,7 @@ public class ProductApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);;
 
         ExtractableResponse<?> response = requestSpecification
                 .when()

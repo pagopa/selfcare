@@ -368,6 +368,7 @@ public class UserV2ServiceImpl implements UserV2Service {
         var addUserRoleDtoBuilder = AddUserRoleDto.builder()
                 .institutionId(institution.getId())
                 .institutionDescription(institution.getDescription())
+                .hasToSendEmail(Boolean.TRUE)
                 .product(it.pagopa.selfcare.user.generated.openapi.v1.dto.Product.builder()
                         .productRoles(roles.stream().map(CreateUserDto.Role::getProductRole).toList())
                         .role(roles.get(0).getPartyRole().name())
