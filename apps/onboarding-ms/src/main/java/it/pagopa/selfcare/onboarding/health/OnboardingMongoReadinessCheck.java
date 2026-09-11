@@ -1,30 +1,42 @@
 package it.pagopa.selfcare.onboarding.health;
 
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.commons.health.AbstractMongoReadinessCheck;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.Readiness;
 
 @Readiness
 @ApplicationScoped
 public class OnboardingMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
-    private final ReactiveMongoClient mongoClient;
+    private final TenantMongoClientProducer tenantMongoClientProducer;
+    private final TenantRegistry tenantRegistry;
     private final String databaseName;
     private final String host;
 
     @Inject
     public OnboardingMongoReadinessCheck(
-            ReactiveMongoClient mongoClient,
-            @ConfigProperty(name = "quarkus.mongodb.database") String databaseName,
-            @ConfigProperty(name = "quarkus.mongodb.connection-string") String connectionString) {
-        this.mongoClient = mongoClient;
-        this.databaseName = databaseName;
-        this.host = hostFromConnectionString(connectionString);
+            TenantRegistry tenantRegistry,
+            TenantMongoClientProducer tenantMongoClientProducer) {
+        this.tenantRegistry = tenantRegistry;
+        this.tenantMongoClientProducer = tenantMongoClientProducer;
+
+        String firstTenant = tenantRegistry.supportedTenantIds().stream()
+                .findFirst()
+                .orElse(null);
+        if (firstTenant == null) {
+            this.databaseName = HOST_NOT_AVAILABLE;
+            this.host = HOST_NOT_AVAILABLE;
+        } else {
+            this.databaseName = tenantRegistry.resolve(firstTenant).mongo().database();
+            this.host = tenantRegistry.connectionString(firstTenant)
+                    .map(AbstractMongoReadinessCheck::hostFromConnectionString)
+                    .orElse(HOST_NOT_AVAILABLE);
+        }
     }
 
     @Override
@@ -44,7 +56,14 @@ public class OnboardingMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
     @Override
     protected Uni<?> probe() {
-        return mongoClient.getDatabase(databaseName)
-                .runCommand(new Document("ping", 1));
+        return io.smallrye.mutiny.Multi.createFrom().iterable(tenantRegistry.supportedTenantIds())
+                .onItem().transformToUniAndConcatenate(tenantId -> {
+                    String tenantDatabase = tenantRegistry.resolve(tenantId).mongo().database();
+                    return tenantMongoClientProducer.clientForTenant(tenantId)
+                            .getDatabase(tenantDatabase)
+                            .runCommand(new Document("ping", 1));
+                })
+                .collect().asList()
+                .replaceWithVoid();
     }
 }

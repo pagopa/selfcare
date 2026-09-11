@@ -45,6 +45,7 @@ import it.pagopa.selfcare.onboarding.service.profile.OnboardingTestProfile;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
 import it.pagopa.selfcare.product.entity.*;
 import it.pagopa.selfcare.product.exception.ProductNotFoundException;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -79,6 +80,9 @@ class OnboardingServiceDefaultTest {
 
     @Inject
     OnboardingServiceDefault onboardingService;
+
+    @InjectMock
+    TenantContext tenantContext;
 
     @InjectMock
     @RestClient
@@ -231,6 +235,9 @@ class OnboardingServiceDefaultTest {
 
     @BeforeEach
     void setupDefaultMocks() {
+        when(tenantContext.requiredTenantId()).thenReturn("AR");
+        when(tenantContext.getTenantId()).thenReturn("AR");
+        when(tenantContext.isInitialized()).thenReturn(true);
         when(productService.getWorkflowType(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     org.openapi.quarkus.product_json.model.Origin origin = invocation.getArgument(1);
@@ -2547,6 +2554,7 @@ class OnboardingServiceDefaultTest {
     private Onboarding createDummyOnboarding() {
         Onboarding onboarding = new Onboarding();
         onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setTenantId("AR");
         onboarding.setProductId("prod-id");
 
         UserRequester userRequester = UserRequester.builder()
@@ -2570,6 +2578,7 @@ class OnboardingServiceDefaultTest {
     private Onboarding createDummyOnboardingWithDelegate() {
         Onboarding onboarding = new Onboarding();
         onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setTenantId("AR");
         onboarding.setProductId("prod-id");
 
         UserRequester userRequester = UserRequester.builder()
@@ -2596,6 +2605,7 @@ class OnboardingServiceDefaultTest {
     private Onboarding createDummyUsersOnboarding() {
         Onboarding onboarding = new Onboarding();
         onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setTenantId("AR");
         onboarding.setProductId("prod-id");
         onboarding.setReferenceOnboardingId("referenceOnboardinId");
         onboarding.setStatus(OnboardingStatus.COMPLETED);
@@ -2674,7 +2684,8 @@ class OnboardingServiceDefaultTest {
         ReactivePanacheUpdate query = mock(ReactivePanacheUpdate.class);
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.update(any(Document.class))).thenReturn(query);
-        when(query.where("_id", onboardingId)).thenReturn(Uni.createFrom().item(updatedItemCount));
+        when(query.where("tenantId = ?1 and _id = ?2", "AR", onboardingId))
+                .thenReturn(Uni.createFrom().item(updatedItemCount));
     }
 
     @Test
@@ -3517,7 +3528,8 @@ class OnboardingServiceDefaultTest {
         ReactivePanacheUpdate query = mock(ReactivePanacheUpdate.class);
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.update(any(Document.class))).thenReturn(query);
-        when(query.where("_id", onboardingId)).thenReturn(Uni.createFrom().item(updatedItemCount));
+        when(query.where("tenantId = ?1 and _id = ?2", "AR", onboardingId))
+                .thenReturn(Uni.createFrom().item(updatedItemCount));
     }
 
     @Test
@@ -5058,7 +5070,7 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> {
             ReactivePanacheUpdate query = mock(ReactivePanacheUpdate.class);
             when(Onboarding.update(any(Document.class))).thenReturn(query);
-            when(query.where("_id", onboardingId))
+            when(query.where("tenantId = ?1 and _id = ?2", "AR", onboardingId))
                     .thenReturn(Uni.createFrom().failure(new RuntimeException("DB update failed")));
         });
 
@@ -5846,7 +5858,8 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(List.of("doc_A", "doc_B")));
         ReactivePanacheUpdate updateQuery = mock(ReactivePanacheUpdate.class);
         when(Onboarding.update(any(Document.class))).thenReturn(updateQuery);
-        when(updateQuery.where("_id", onboarding.getId())).thenReturn(Uni.createFrom().item(1L));
+        when(updateQuery.where("tenantId = ?1 and _id = ?2", "AR", onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(1L));
         when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
@@ -5882,7 +5895,8 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(List.of("doc_A", "doc_extra_1", "doc_extra_2")));
         ReactivePanacheUpdate updateQuery = mock(ReactivePanacheUpdate.class);
         when(Onboarding.update(any(Document.class))).thenReturn(updateQuery);
-        when(updateQuery.where("_id", onboarding.getId())).thenReturn(Uni.createFrom().item(1L));
+        when(updateQuery.where("tenantId = ?1 and _id = ?2", "AR", onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(1L));
         when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 

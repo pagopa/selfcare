@@ -7,7 +7,7 @@
   <artifactId>selfcare-sdk-security</artifactId>
   <name>selfcare-sdk-security</name>
   <packaging>jar</packaging>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <parent>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selfcare-sdk-pom</artifactId>
@@ -27,6 +27,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.release>17</maven.compiler.release>
+    <common-sdk-tenant-version>0.1.0</common-sdk-tenant-version>
   </properties>
 
   <dependencyManagement>
@@ -43,11 +44,22 @@
 
   <dependencies>
 
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-tenant</artifactId>
+      <version>${common-sdk-tenant-version}</version>
+    </dependency>
 
     <dependency>
       <groupId>com.auth0</groupId>
       <artifactId>java-jwt</artifactId>
       <version>4.0.0</version>
+    </dependency>
+    <dependency>
+      <!-- JWK/JWKS parsing for multi-tenant key selection by "kid" (version managed by quarkus-bom,
+           already a transitive dependency of quarkus-smallrye-jwt). -->
+      <groupId>org.bitbucket.b_c</groupId>
+      <artifactId>jose4j</artifactId>
     </dependency>
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>

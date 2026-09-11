@@ -22,10 +22,12 @@ import it.pagopa.selfcare.onboarding.controller.response.InstitutionResponse;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.service.impl.InstitutionServiceDefault;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import java.util.List;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionsResponse;
@@ -41,10 +43,19 @@ class InstitutionServiceDefaultTest {
     @RestClient
     InstitutionApi institutionApi;
 
+    @InjectMock
+    TenantContext tenantContext;
+
+    @BeforeEach
+    void setUpTenant() {
+        when(tenantContext.requiredTenantId()).thenReturn("AR");
+    }
+
 
     @Test
     void getInstitutions() {
         Onboarding onboarding = new Onboarding();
+        onboarding.setTenantId("AR");
         onboarding.setInstitution(dummyInstitution());
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);

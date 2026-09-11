@@ -3,7 +3,6 @@ package it.pagopa.selfcare.onboarding.conf;
 import io.quarkus.runtime.StartupEvent;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
-import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -44,7 +43,7 @@ public class OnboardingMsConfig {
     ProductService productAzureService;
 
     void onStart(@Observes StartupEvent ev) {
-        log.info(String.format("Database %s is starting...", Onboarding.mongoDatabase().getName()));
+        log.info("Tenant-aware Mongo configuration is starting");
         log.info("ProductService eagerly initialized: {}", productAzureService.getClass().getSimpleName());
     }
 

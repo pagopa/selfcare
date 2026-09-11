@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.security;
 
+import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.identity.SecurityIdentityAugmentor;
@@ -32,8 +33,14 @@ public class JWTSecurityIdentityAugmentor implements SecurityIdentityAugmentor {
     identity.getAttributes().forEach(builder::addAttribute);
     builder.addAttribute("jwt.issuer", issuer);
     if (issuer.equals("SPID")) {
-      builder.addAttribute(
-          JwtTenantValidator.TENANT_ATTRIBUTE, JwtTenantValidator.resolveTokenTenant(jwt));
+      try {
+        builder.addAttribute(
+            JwtTenantValidator.TENANT_ATTRIBUTE, JwtTenantValidator.resolveTokenTenant(jwt));
+      } catch (TenantValidationException exception) {
+        // An invalid tenant claim means the JWT itself cannot be trusted, so this must surface
+        // as an authentication failure (401), not propagate as an unmapped exception (500).
+        return Uni.createFrom().failure(new AuthenticationFailedException(exception));
+      }
     }
     builder.addRoles(determineRolesForIssuer(issuer));
     identity.getCredentials().forEach(builder::addCredential);
