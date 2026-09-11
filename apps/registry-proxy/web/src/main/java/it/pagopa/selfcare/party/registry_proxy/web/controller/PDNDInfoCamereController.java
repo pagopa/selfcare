@@ -42,7 +42,7 @@ public class PDNDInfoCamereController {
           summary = "${swagger.api.infocamere-pdnd.institutions.summary}",
           description = "${swagger.api.infocamere-pdnd.institutions.notes}",
           operationId = "institutionsPdndByDescriptionUsingGET")
-  @GetMapping(value = "/institutions", params = "description")
+  @GetMapping(value = "/institutions")
   public ResponseEntity<List<PDNDBusinessResource>> institutionsPdndByDescription(
           @ApiParam("${swagger.model.institution.description}") @RequestParam String description,
           @ApiParam("${swagger.model.institution.productId}") @RequestParam(required = false) String productId) {
@@ -71,9 +71,9 @@ public class PDNDInfoCamereController {
     summary = "${swagger.api.infocamere-pdnd.institutions.rea.summary}",
     description = "${swagger.api.infocamere-pdnd.institutions.rea.notes}",
     operationId = "institutionsPdndByReaGET")
-  @GetMapping(value = "/institutions", params = "rea")
+  @GetMapping(value = "/institutions/rea/{rea}")
   public ResponseEntity<PDNDBusinessResource> institutionsPdndByRea(
-    @ApiParam("${swagger.model.institution.rea}") @RequestParam String rea,
+    @ApiParam("${swagger.model.institution.rea}") @PathVariable String rea,
     @ApiParam("${swagger.model.institution.productId}") @RequestParam(required = false) String productId) {
     Matcher matcher = REA_PATTERN.matcher(rea);
     if (!matcher.matches()) {
