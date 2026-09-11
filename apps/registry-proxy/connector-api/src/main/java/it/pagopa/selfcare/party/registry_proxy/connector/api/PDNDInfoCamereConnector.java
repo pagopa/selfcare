@@ -5,14 +5,10 @@ import java.util.List;
 
 public interface PDNDInfoCamereConnector {
 
-    List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description);
+    List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description, String productId);
 
-    PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode);
+    PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode, String productId);
 
-    PDNDBusiness retrieveInstitutionDetail(String taxCode);
-
-    byte[] retrieveInstitutionDocument(String taxCode);
-
-    PDNDBusiness retrieveInstitutionFromRea(String county, String rea);
+    PDNDBusiness retrieveInstitutionFromRea(String county, String rea, String productId);
 
 }

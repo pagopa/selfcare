@@ -31,24 +31,10 @@ public class CacheConfig {
         return caffeineCacheManager;
     }
 
-    @Bean(name = PDND_VISURA_TOKEN_CACHE)
-    public CacheManager cacheManagerVisuraToken(@Value("${rest-client.pdnd.token.deadline:60}") Integer pdndTokenDeadlineInSeconds) {
-        CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager();
-        caffeineCacheManager.setCaffeine(Caffeine.newBuilder().expireAfterWrite(pdndTokenDeadlineInSeconds, TimeUnit.SECONDS));
-        return caffeineCacheManager;
-    }
-
   @Bean(name = INSTITUTION_CACHE)
   public CacheManager cacheInstitution(@Value("${rest-client.selc-institution.deadline:600}") Integer institutionDeadlineInSeconds) {
     CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager();
     caffeineCacheManager.setCaffeine(Caffeine.newBuilder().expireAfterWrite(institutionDeadlineInSeconds, TimeUnit.SECONDS));
     return caffeineCacheManager;
   }
-
-    @Bean(name = PDND_VISURA_CLIENT_ASSERTION_CACHE)
-    public CacheManager cacheManagerVisuraClientAssertion(@Value("${rest-client.pdnd.token.deadline:60}") Integer pdndTokenDeadlineInSeconds) {
-        CaffeineCacheManager caffeineCacheManager = new CaffeineCacheManager();
-        caffeineCacheManager.setCaffeine(Caffeine.newBuilder().expireAfterWrite(pdndTokenDeadlineInSeconds, TimeUnit.SECONDS));
-        return caffeineCacheManager;
-    }
 }

@@ -9,4 +9,5 @@ public class PdndSecretValue {
     private JwtConfig jwtConfig;
     private String clientId;
     private String secretKey;
+    private PdndProfile profile;
 }

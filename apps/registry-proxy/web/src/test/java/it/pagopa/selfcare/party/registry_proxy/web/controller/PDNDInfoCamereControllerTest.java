@@ -8,6 +8,7 @@ import static org.mockito.Mockito.*;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.national_registries_pdnd.PDNDBusiness;
 import it.pagopa.selfcare.party.registry_proxy.core.PDNDInfoCamereService;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
+import it.pagopa.selfcare.party.registry_proxy.web.handler.PartyRegistryProxyExceptionHandler;
 import it.pagopa.selfcare.party.registry_proxy.web.model.PDNDBusinessResource;
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.PDNDInfoCamereBusinessMapper;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
-@ContextConfiguration(classes = {PDNDInfoCamereController.class, WebTestConfig.class})
+@ContextConfiguration(classes = {PDNDInfoCamereController.class, PartyRegistryProxyExceptionHandler.class, WebTestConfig.class})
 @WebMvcTest(value = {PDNDInfoCamereController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 class PDNDInfoCamereControllerTest {
     private static final String BASE_URL = "/infocamere-pdnd";
@@ -46,7 +47,7 @@ class PDNDInfoCamereControllerTest {
         List<PDNDBusinessResource> pdndBusinessResources = new ArrayList<>();
         pdndBusinessResources.add(dummyPDNDBusinessResource());
 
-        when(pdndInfoCamereService.retrieveInstitutionsPdndByDescription(anyString())).thenReturn(pdndBusinesses);
+        when(pdndInfoCamereService.retrieveInstitutionsPdndByDescription(anyString(), any())).thenReturn(pdndBusinesses);
         when(pdndBusinessMapper.toResources(pdndBusinesses)).thenReturn(pdndBusinessResources);
 
         mvc.perform(MockMvcRequestBuilders
@@ -68,7 +69,7 @@ class PDNDInfoCamereControllerTest {
                 .andExpect(jsonPath("$[0].digitalAddress", is("digitalAddress")))
                 .andReturn();
 
-        verify(pdndInfoCamereService, times(1)).retrieveInstitutionsPdndByDescription(anyString());
+        verify(pdndInfoCamereService, times(1)).retrieveInstitutionsPdndByDescription(anyString(), any());
         verify(pdndBusinessMapper, times(1)).toResources(pdndBusinesses);
         verifyNoMoreInteractions(pdndInfoCamereService);
         verifyNoMoreInteractions(pdndBusinessMapper);
@@ -80,7 +81,7 @@ class PDNDInfoCamereControllerTest {
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
         PDNDBusinessResource pdndBusinessResource = dummyPDNDBusinessResource();
 
-        when(pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(anyString())).thenReturn(pdndBusiness);
+        when(pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(anyString(), any())).thenReturn(pdndBusiness);
         when(pdndBusinessMapper.toResource(pdndBusiness)).thenReturn(pdndBusinessResource);
 
         mvc.perform(MockMvcRequestBuilders
@@ -101,10 +102,57 @@ class PDNDInfoCamereControllerTest {
                 .andExpect(jsonPath("$.digitalAddress", is("digitalAddress")))
                 .andReturn();
 
-        verify(pdndInfoCamereService, times(1)).retrieveInstitutionPdndByTaxCode(anyString());
+        verify(pdndInfoCamereService, times(1)).retrieveInstitutionPdndByTaxCode(anyString(), any());
         verify(pdndBusinessMapper, times(1)).toResource(pdndBusiness);
         verifyNoMoreInteractions(pdndInfoCamereService);
         verifyNoMoreInteractions(pdndBusinessMapper);
+    }
+
+    @Test
+    void testInstitutionByRea() throws Exception {
+        String rea = "MI-123456";
+        PDNDBusiness pdndBusiness = dummyPDNDBusiness();
+        PDNDBusinessResource pdndBusinessResource = dummyPDNDBusinessResource();
+
+        when(pdndInfoCamereService.retrieveInstitutionFromRea(anyString(), anyString(), any())).thenReturn(pdndBusiness);
+        when(pdndBusinessMapper.toResource(pdndBusiness)).thenReturn(pdndBusinessResource);
+
+        mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institutions/rea/{rea}", rea)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.businessTaxId", is("taxId")))
+                .andExpect(jsonPath("$.businessName", is("description")))
+                .andExpect(jsonPath("$.legalNature", is("legalNature")))
+                .andExpect(jsonPath("$.legalNatureDescription", is("legalNatureDescription")))
+                .andExpect(jsonPath("$.cciaa", is("cciaa")))
+                .andExpect(jsonPath("$.nRea", is("nRea")))
+                .andExpect(jsonPath("$.businessStatus", is("status")))
+                .andExpect(jsonPath("$.city", is("city")))
+                .andExpect(jsonPath("$.county", is("county")))
+                .andExpect(jsonPath("$.zipCode", is("zipCode")))
+                .andExpect(jsonPath("$.address", is("address")))
+                .andExpect(jsonPath("$.digitalAddress", is("digitalAddress")))
+                .andReturn();
+
+        verify(pdndInfoCamereService, times(1)).retrieveInstitutionFromRea(anyString(), anyString(), any());
+        verify(pdndBusinessMapper, times(1)).toResource(pdndBusiness);
+        verifyNoMoreInteractions(pdndInfoCamereService);
+        verifyNoMoreInteractions(pdndBusinessMapper);
+    }
+
+    @Test
+    void testInstitutionByReaMalformed() throws Exception {
+        String rea = "malformed";
+
+        mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institutions/rea/{rea}", rea)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        verifyNoInteractions(pdndInfoCamereService);
+        verifyNoInteractions(pdndBusinessMapper);
     }
 
     private PDNDBusiness dummyPDNDBusiness(){

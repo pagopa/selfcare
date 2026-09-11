@@ -277,6 +277,10 @@ locals {
     {
       name  = "PDND_SKIP_LOCALIZZAZIONE_NODES"
       value = "false"
+    },
+    {
+      name = "PDND_INVITALIA_PRODUCTS"
+      value = "prod-idpay-merchant, prod-registro-beni"
     }
   ]
 
