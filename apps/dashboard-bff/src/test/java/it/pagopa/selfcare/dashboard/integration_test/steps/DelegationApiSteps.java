@@ -40,9 +40,7 @@ public class DelegationApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -64,9 +62,7 @@ public class DelegationApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
         if(Objects.nonNull(dashboardStepsUtil.filter.getSize())) {
             requestSpecification.queryParam("size", dashboardStepsUtil.filter.getSize());
         }
@@ -103,9 +99,8 @@ public class DelegationApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
+
         if (Objects.nonNull(dashboardStepsUtil.filter.getProductId())) {
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
         }
