@@ -108,8 +108,6 @@ class UserServiceTest {
     @InjectMock
     private UserNotificationService userNotificationService;
     @InjectMock
-    private UserInfoService userInfoService;
-    @InjectMock
     private UserRegistryService userRegistryApi;
     @InjectSpy
     private UserMapper userMapper;

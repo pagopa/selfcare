@@ -211,6 +211,38 @@ class DocumentContentServiceImplTest {
         assertNotNull(ex);
     }
 
+    @Test
+    void retrieveRelatedDocument_shouldReturnFileForMatchingOnboardingAndDocumentId() {
+        // given
+        String attachmentPath = "parties/docs/onboardingId/attachments/document.pdf";
+        Document document = buildUserAttachment(DOCUMENT_ID, attachmentPath, "document.pdf");
+        File file = mock(File.class);
+        when(documentRepository.findRelatedDocument(ONBOARDING_ID, DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().item(document));
+        when(azureBlobClient.getFileAsPdf(attachmentPath)).thenReturn(file);
+
+        // when
+        RestResponse<File> response = documentContentService
+                .retrieveRelatedDocument(ONBOARDING_ID, DOCUMENT_ID)
+                .await().indefinitely();
+
+        // then
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        verify(azureBlobClient).getFileAsPdf(attachmentPath);
+    }
+
+    @Test
+    void retrieveRelatedDocument_shouldThrowResourceNotFoundWhenDocumentDoesNotBelongToOnboarding() {
+        // given
+        when(documentRepository.findRelatedDocument(ONBOARDING_ID, DOCUMENT_ID))
+                .thenReturn(Uni.createFrom().nullItem());
+
+        // when / then
+        assertThrows(ResourceNotFoundException.class, () -> documentContentService
+                .retrieveRelatedDocument(ONBOARDING_ID, DOCUMENT_ID)
+                .await().indefinitely());
+    }
+
     // ---- retrieveTemplateAttachment ----
 
     @Test

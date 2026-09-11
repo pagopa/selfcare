@@ -228,10 +228,6 @@ public class UserInstitutionCdcService {
 
         boolean userMailIsChanged = isUserMailChanged(userInstitutionChanged);
 
-        if (!userMailIsChanged) {
-            consumerUserInstitutionRepositoryEvent(document);
-        }
-
         if (sendEventsEnabled) {
             consumerToSendScUserEvent(document);
         }
@@ -261,29 +257,6 @@ public class UserInstitutionCdcService {
         return mongoClient
                 .getDatabase(mongodbDatabase)
                 .getCollection(COLLECTION_NAME, UserInstitution.class);
-    }
-
-    protected void consumerUserInstitutionRepositoryEvent(ChangeStreamDocument<UserInstitution> document) {
-
-        assert document.getFullDocument() != null;
-        assert document.getDocumentKey() != null;
-        UserInstitution userInstitutionChanged = document.getFullDocument();
-        String userInstitutionId = userInstitutionChanged.getId().toHexString();
-
-        log.info("Starting consumerUserInstitutionRepositoryEvent from UserInstitution document having id: {}", userInstitutionId);
-
-        userInstitutionRepository.updateUser(userInstitutionChanged)
-                .onFailure().retry().withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofHours(retryMaxBackOff)).atMost(maxRetry)
-                .subscribe().with(
-                        result -> {
-                            log.info("UserInfo collection successfully updated from UserInstitution document having id: {}", userInstitutionId);
-                            updateLastResumeToken(document.getResumeToken());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(USER_INFO_UPDATE_SUCCESS, 1D));
-                        },
-                        failure -> {
-                            log.error("Error during UserInfo collection updating, from UserInstitution document having id: {} , message: {}", userInstitutionId, failure.getMessage());
-                            telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(USER_INFO_UPDATE_FAILURE, 1D));
-                        });
     }
 
     private void updateLastResumeToken(BsonDocument resumeToken) {
@@ -322,6 +295,7 @@ public class UserInstitutionCdcService {
                         result -> {
                             log.info("SendEvents successfully performed from UserInstitution document having id: {}", document.getDocumentKey().toJson());
                             telemetryClient.trackEvent(EVENT_USER_CDC_NAME, mapPropsForTrackEvent(toTrackEventInputByUserInstitution(userInstitutionChanged)), Map.of(EVENTS_USER_INSTITUTION_SUCCESS, 1D));
+                            updateLastResumeToken(document.getResumeToken());
                         },
                         failure -> {
                             log.error("Error during SendEvents from UserInstitution document having id: {} , message: {}", document.getDocumentKey().toJson(), failure.getMessage());

@@ -421,14 +421,13 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<List<OnboardingResponse>> institutionOnboardings(String taxCode, String subunitCode,
                                                                  String origin, String originId,
                                                                  OnboardingStatus status) {
+        if (!UserRegistryHelper.isPersonalFiscalCode(taxCode)) {
+            return findInstitutionOnboardings(taxCode, subunitCode, origin, originId, status);
+        }
         return userRegistryHelper.resolveTaxCodeForQuery(taxCode)
-                .onItem().transformToUni(resolvedTaxCode -> {
-                    if (Objects.isNull(resolvedTaxCode)) {
-                        return Uni.createFrom().item(List.of());
-                    }
-                    String resolvedOriginId = UserRegistryHelper.isPersonalFiscalCode(taxCode) ? resolvedTaxCode : originId;
-                    return findInstitutionOnboardings(resolvedTaxCode, subunitCode, origin, resolvedOriginId, status);
-                });
+                .onItem().transformToUni(resolvedTaxCode -> Objects.isNull(resolvedTaxCode)
+                        ? Uni.createFrom().item(List.of())
+                        : findInstitutionOnboardings(resolvedTaxCode, subunitCode, origin, resolvedTaxCode, status));
     }
 
     private Uni<List<OnboardingResponse>> findInstitutionOnboardings(String taxCode, String subunitCode,

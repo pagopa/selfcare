@@ -720,11 +720,10 @@ Feature: User
   ######################### BEGIN DELETE /{userId}/institutions/{institutionId}/products/{productId} #########################
 
   # Cancellazione riuscita
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully delete logically the association institution and product
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -761,11 +760,10 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
       # Cancellazione riuscita con productId figlio
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully delete logically the association institution and child product
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -801,11 +799,10 @@ Feature: User
       | DELETED   | prod-pagopa |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully delete logically the association institution and product when onboarding returns an handled error
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and tokenId "550e8400-e29b-41d4-a716-446655440001"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -841,7 +838,7 @@ Feature: User
       | DELETED                                                                           |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessully delete logically the association institution and product when onboarding returns an unhandled error
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and tokenId "550e8400-e29b-41d4-a716-446655440000"
@@ -868,11 +865,10 @@ Feature: User
     And The response body contains the string "Something has gone wrong in the server"
 
   # Cancellazione di prodotto già cancellato
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully delete logically the association institution and product because product is already deleted
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "DELETED" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "DELETED", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab               |
     And The following query params:
@@ -969,7 +965,7 @@ Feature: User
   ######################### BEGIN PUT /{id}/status #########################
 
   # Cambio stato corretto
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1051,7 +1047,7 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro institutionId
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution and institutionId filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1134,7 +1130,7 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro productId
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution and productId filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1217,7 +1213,7 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro productId figlio
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution and child productId filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1300,7 +1296,7 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro role
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution and role filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1383,7 +1379,7 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   # Cambio stato con filtro productRole
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED with multiple userInstitution and productRole filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1465,7 +1461,7 @@ Feature: User
       | prod-io                       | MANAGER      | ACTIVE     |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to PENDING)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1511,7 +1507,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from SUSPENDED to ACTIVE)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1557,7 +1553,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to SUSPENDED)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1603,7 +1599,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | SUSPENDED    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user status with status (from ACTIVE to DELETED)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1649,7 +1645,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | DELETED    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user status with invalid multirole configuration
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
@@ -1667,7 +1663,7 @@ Feature: User
     And The response body contains string:
       | Not valid multirole configuration |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to ACTIVE)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "PENDING" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1717,7 +1713,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to DELETED)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "PENDING" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -1767,7 +1763,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | PENDING    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Unsuccessfully update user status with status (from PENDING to SUSPENDED)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "PENDING" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -2241,7 +2237,7 @@ Feature: User
 
   ######################### BEGIN PUT /{id}/user-registry #########################
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user in user-registry and send notification when user data gets updated
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -2296,7 +2292,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
     And The response body contains field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user in user-registry and send notification when user data gets updated with two userInstitutions
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -2389,7 +2385,7 @@ Feature: User
       | prod-pagopa                   | SUB_DELEGATE | ACTIVE     |
     And The response body contains field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user in user-registry and send notification when user data gets updated with two userInstitutions and institutionId filter
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -2507,7 +2503,7 @@ Feature: User
     When I send a PUT request to "users/{id}/user-registry"
     Then The status code is 204
 
-  @RemoveUserInstitutionAndUserInfoAfterScenarioWithUnusedUser
+  @RemoveUserInstitutionAfterScenarioWithUnusedUser
   Scenario: Successfully update user in user-registry and send notification when user data gets updated with wrong institutionId
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa" and institutionId "d0d28367-1695-4c50-a260-6fda526e9aab" and institutionDescription "Comune di Milano" and unused user
@@ -2592,11 +2588,10 @@ Feature: User
 
   ######################### BEGIN PUT /{id}/institution/{institutionId}/product/{productId}/status #########################
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully update user product status from ACTIVE to DELETED
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2634,11 +2629,10 @@ Feature: User
       | DELETED                    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully update user product status from SUSPENDED to DELETED
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "SUSPENDED", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2676,11 +2670,10 @@ Feature: User
       | DELETED                    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully update user product status from SUSPENDED to ACTIVE
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "SUSPENDED", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2718,11 +2711,10 @@ Feature: User
       | ACTIVE                     |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully update user product status from ACTIVE to SUSPENDED
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2760,11 +2752,10 @@ Feature: User
       | SUSPENDED                  |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully update user product status with productRole filter
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2803,7 +2794,7 @@ Feature: User
       | DELETED                    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update product status with invalid multirole configuration
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
@@ -2823,11 +2814,10 @@ Feature: User
     And The response body contains string:
       | Not valid multirole configuration |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status from DELETED to ACTIVE
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "DELETED" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "DELETED", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2869,11 +2859,10 @@ Feature: User
       | DELETED                    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status from TOBEVALIDATED to ACTIVE
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "TOBEVALIDATED" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "TOBEVALIDATED", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2915,11 +2904,10 @@ Feature: User
       | TOBEVALIDATED              |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status from PENDING to ACTIVE
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "PENDING" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "PENDING", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -2961,11 +2949,10 @@ Feature: User
       | PENDING                    |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status with wrong productRole filter
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "ACTIVE", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -3008,7 +2995,7 @@ Feature: User
       | ACTIVE                     |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status with wrong productId
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -3024,7 +3011,7 @@ Feature: User
       | status             | 404                           |
       | title              | USER TO UPDATE NOT FOUND      |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status with wrong institutionId
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -3040,7 +3027,7 @@ Feature: User
       | status             | 404                           |
       | title              | USER TO UPDATE NOT FOUND      |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status with wrong user
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -3056,7 +3043,7 @@ Feature: User
       | status             | 404                           |
       | title              | USER TO UPDATE NOT FOUND      |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status with wrong status
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -3070,11 +3057,10 @@ Feature: User
     And The response body contains string:
       | Something has gone wrong in the server                                           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user product status without status
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "PENDING" and role "SUB_DELEGATE" and productId "prod-pagopa"
-    And A mock userInfo with id "d0d28367-1695-4c50-a260-6fda526e9aab", institutionName "Comune di Milano", status "PENDING", role "SUB_DELEGATE" to userInfo document with id "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
     And The following path params:
       | institutionId              |  d0d28367-1695-4c50-a260-6fda526e9aab                |
     And The following query params:
@@ -3998,7 +3984,7 @@ Feature: User
     And The response body contains field "[0].products[0].roleId"
 
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully create a new user or update an existing one (existing userInstitution with new product)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-io"
@@ -4123,7 +4109,7 @@ Feature: User
     And The response body contains string:
       | ProductRole referente amministrativo not found for role DELEGATE |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully create a new user or update an existing one with ACTIVE status (existing userInstitution with existing product)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
@@ -4188,7 +4174,7 @@ Feature: User
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | ACTIVE | asda8312-3311-5642-gsds-gfr2252341     |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully create a new user or update an existing one with SUSUPENDED status (existing userInstitution with existing product)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
@@ -4253,7 +4239,7 @@ Feature: User
       | prod-pagopa                    | admin                                         | SUB_DELEGATE | SUSPENDED | asda8312-3311-5642-gsds-gfr2252341     |
     And The response body doesn't contain field "[0].products[0].roleId"
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully create user with existing userInstitution and valid multirole configuration
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
@@ -4283,7 +4269,7 @@ Feature: User
     When I send a POST request to "users/"
     Then The status code is 201
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully create user with existing userInstitution and invalid multirole configuration
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
@@ -4316,7 +4302,7 @@ Feature: User
       | Not valid multirole configuration |
 
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update or create a user by userId with a new role (2 times with same product for same institution) with SUSPENDED status
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "SUSPENDED" and role "SUB_DELEGATE" and productId "prod-pagopa"
@@ -5123,7 +5109,7 @@ Feature: User
       | Selc:UpdateInstitutionData        |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-idpay-merchant)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-idpay-merchant"
@@ -5162,7 +5148,7 @@ Feature: User
       | Selc:UpdateGeoTaxonomy            |
       | Selc:CreateProductUsers           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE and prod-idpay-merchant)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "DELEGATE" and productId "prod-idpay-merchant"
@@ -5201,7 +5187,7 @@ Feature: User
       | Selc:UpdateGeoTaxonomy            |
       | Selc:CreateProductUsers           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE and prod-idpay-merchant)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-idpay-merchant"
@@ -5240,7 +5226,7 @@ Feature: User
       | Selc:UpdateGeoTaxonomy            |
       | Selc:CreateProductUsers           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR and prod-idpay-merchant)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "OPERATOR" and productId "prod-idpay-merchant"
@@ -5267,7 +5253,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:ListActiveProducts           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role MANAGER and prod-registro-beni)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-registro-beni"
@@ -5307,7 +5293,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE and prod-registro-beni)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "DELEGATE" and productId "prod-registro-beni"
@@ -5347,7 +5333,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE and prod-registro-beni)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-registro-beni"
@@ -5387,7 +5373,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR and prod-registro-beni)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "OPERATOR" and productId "prod-registro-beni"
@@ -5414,7 +5400,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:ListActiveProducts           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role OPERATOR)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "OPERATOR" and productId "prod-pagopa"
@@ -5440,7 +5426,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:ListActiveProducts           |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role DELEGATE)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "DELEGATE" and productId "prod-pagopa"
@@ -5481,7 +5467,7 @@ Feature: User
       | Selc:ViewContract                 |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role SUB_DELEGATE)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "SUB_DELEGATE" and productId "prod-pagopa"
@@ -5522,7 +5508,7 @@ Feature: User
       | Selc:ViewContract                 |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod pago-pa)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "ADMIN_EA" and productId "prod-pagopa"
@@ -5559,7 +5545,7 @@ Feature: User
       | Selc:ViewContract                 |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod io)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "ADMIN_EA" and productId "prod-io"
@@ -5591,7 +5577,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "ADMIN_EA" and productId "prod-ciban"
@@ -5627,7 +5613,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Successfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban and correct productId filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "ADMIN_EA" and productId "prod-ciban"
@@ -5665,7 +5651,7 @@ Feature: User
       | Selc:ViewInstitutionData          |
       | Selc:UpdateGeoTaxonomy            |
 
-  @RemoveUserInstitutionAndUserInfoAfterScenario
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully retrieves userInstitution data with list of actions permitted for each user's product (with role ADMIN_EA and prod ciban and wrong productId filter)
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "ADMIN_EA" and productId "prod-ciban"
