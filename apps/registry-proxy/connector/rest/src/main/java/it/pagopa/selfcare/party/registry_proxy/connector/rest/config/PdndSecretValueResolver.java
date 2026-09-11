@@ -10,6 +10,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static it.pagopa.selfcare.party.registry_proxy.connector.rest.utils.LogSanitizer.sanitize;
+
 /**
  * Selects the PDND subscription credentials to use based on the calling product.
  * Products listed in {@code rest-client.pdnd-infocamere.invitalia-products} use the
@@ -37,10 +39,10 @@ public class PdndSecretValueResolver {
 
     public PdndSecretValue resolve(String productId) {
         if (Objects.nonNull(productId) && invitaliaProducts.contains(productId)) {
-            log.info("Using Invitalia PDND subscription for product {}", productId);
+            log.info("Using Invitalia PDND subscription for product {}", sanitize(productId));
             return invitaliaConfig.getPdndSecretValue();
         }
-        log.info("Using InfoCamere PDND subscription");
+        log.info("Using InfoCamere PDND subscription for product {}", sanitize(productId));
         return infoCamereConfig.getPdndSecretValue();
     }
 }
