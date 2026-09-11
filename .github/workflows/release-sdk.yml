@@ -5,6 +5,7 @@ on:
     branches:
       - main
     paths:
+      - './libs/selfcare-sdk-security/**'
       - './libs/selfcare-sdk-tenant/**'
       - './libs/selfcare-sdk-tenant-mongodb/**'
 
