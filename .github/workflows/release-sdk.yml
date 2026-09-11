@@ -18,6 +18,7 @@ on:
         default: 'all'
         options:
           - all
+          - selfcare-sdk-security
           - selfcare-sdk-tenant
           - selfcare-sdk-tenant-mongodb
 
