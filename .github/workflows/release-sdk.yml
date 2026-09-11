@@ -22,6 +22,7 @@ jobs:
       fail-fast: false
       matrix:
         module:
+          - selfcare-sdk-security
           - selfcare-sdk-tenant
           - selfcare-sdk-tenant-mongodb
 
