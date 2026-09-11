@@ -35,7 +35,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.module }}" != "all" ]; then
             echo 'modules=["${{ inputs.module }}"]' >> "$GITHUB_OUTPUT"
           else
-            echo 'modules=["selfcare-sdk-tenant","selfcare-sdk-tenant-mongodb"]' >> "$GITHUB_OUTPUT"
+            echo 'modules=["selfcare-sdk-security","selfcare-sdk-tenant","selfcare-sdk-tenant-mongodb"]' >> "$GITHUB_OUTPUT"
           fi
 
   setup:
@@ -69,10 +69,13 @@ jobs:
 
       - name: Build with Maven
         shell: bash
-        # --also-make (-am) builds/installs the module's own dependencies (e.g. selfcare-sdk-tenant
+        # --also-make (-am) builds/installs only the module's own dependencies (e.g. selfcare-sdk-tenant
         # for selfcare-sdk-tenant-mongodb) from source, and 'install' (not just 'package') puts them
         # in the local repo so the separate single-module 'mvn deploy' step below can resolve them.
-        run: mvn --projects :${{ matrix.module }} --also-make --also-make-dependents clean install -DskipTests
+        # Deliberately NOT using --also-make-dependents: a release workflow only needs to build the
+        # target module and its dependencies, not every downstream app/module that depends on it
+        # (which may itself depend on other not-yet-released sibling modules and fail to resolve).
+        run: mvn --projects :${{ matrix.module }} --also-make clean install -DskipTests
 
       - name: Deploy to GitHub Package Registry
         shell: bash
