@@ -1,0 +1,62 @@
+name: Onboarding Frontend - Trigger OpenAPI Sync
+
+# Asks pagopa/selfcare-onboarding-frontend to update its local copy of the swaggers below
+# (its sync_bff_openapi.yml workflow opens a PR with the changed files).
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+      - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  ONBOARDING_SWAGGER: "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+  PROXY_SWAGGER: "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
+
+jobs:
+  dispatch:
+    name: "Dispatch OpenAPI sync"
+    runs-on: ubuntu-24.04
+
+    steps:
+      # Compares the blob SHA of each swagger before/after the push: exact regardless of push size.
+      # Manual runs sync both swaggers.
+      - name: Detect changed swaggers
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          blob_sha() {
+            gh api -H "Accept: application/vnd.github.object" \
+              "repos/${GITHUB_REPOSITORY}/contents/$1?ref=$2" --jq .sha 2>/dev/null || true
+          }
+          specs=()
+          for entry in "onboarding=${ONBOARDING_SWAGGER}" "proxy=${PROXY_SWAGGER}"; do
+            key="${entry%%=*}"
+            path="${entry#*=}"
+            if [ "$GITHUB_EVENT_NAME" != "push" ] || [ "$(blob_sha "$path" "$BEFORE")" != "$(blob_sha "$path" "$GITHUB_SHA")" ]; then
+              specs+=("$key")
+            fi
+          done
+          echo "Changed swaggers: ${specs[*]:-none}"
+          echo "specs=$(IFS=,; echo "${specs[*]:-}")" >> "$GITHUB_OUTPUT"
+
+      # Requires a token with "Actions: write" on pagopa/selfcare-onboarding-frontend
+      - name: Trigger sync on selfcare-onboarding-frontend
+        if: steps.detect.outputs.specs != ''
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT_VARIABLES }}
+          SPECS: ${{ steps.detect.outputs.specs }}
+        run: |
+          gh workflow run sync_bff_openapi.yml \
+            --repo pagopa/selfcare-onboarding-frontend \
+            --ref main \
+            -f specs="$SPECS" \
+            -f source_ref="$GITHUB_SHA"
