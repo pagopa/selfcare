@@ -56,7 +56,4 @@
             </plugin>
         </plugins>
     </build>
-    <properties>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/app/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
-    </properties>
 </project>

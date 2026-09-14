@@ -33,7 +33,7 @@ class StorageAsyncServiceTest {
     @Test
     void testSaveStringToStorageSuccess() {
         final String document = "<xml>test</xml>";
-        final String keyName = "visura_ABC_2025.xml";
+        final String keyName = "document_ABC_2025.xml";
 
         when(daprSelcClient.saveState(anyString(), anyString(), any()))
                 .thenReturn(Mono.empty());
@@ -45,7 +45,7 @@ class StorageAsyncServiceTest {
     @Test
     void testSaveStringToStorageError() {
         final String document = "<xml>broken</xml>";
-        final String keyName = "visura_ERR_2025.xml";
+        final String keyName = "document_ERR_2025.xml";
         when(daprSelcClient.saveState(any(), any(), any())).thenThrow(new IllegalArgumentException());
         assertDoesNotThrow(() -> storageAsyncService.saveStringToStorage(document, keyName));
         verify(daprSelcClient).saveState("blobstorage-state", keyName, document);

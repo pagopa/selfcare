@@ -4,11 +4,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.InvalidRequestException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.national_registries_pdnd.PDNDBusiness;
 import it.pagopa.selfcare.party.registry_proxy.core.PDNDInfoCamereService;
 import it.pagopa.selfcare.party.registry_proxy.web.model.PDNDBusinessResource;
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.PDNDInfoCamereBusinessMapper;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +28,8 @@ public class PDNDInfoCamereController {
   private final PDNDInfoCamereService pdndInfoCamereService;
   private final PDNDInfoCamereBusinessMapper pdndBusinessMapper;
 
+  private static final Pattern REA_PATTERN = Pattern.compile("^([A-Za-z]{2})-(\\d+)$");
+
   public PDNDInfoCamereController(
           PDNDInfoCamereService pdndInfoCamereService,
           PDNDInfoCamereBusinessMapper pdndBusinessMapper) {
@@ -36,11 +42,12 @@ public class PDNDInfoCamereController {
           summary = "${swagger.api.infocamere-pdnd.institutions.summary}",
           description = "${swagger.api.infocamere-pdnd.institutions.notes}",
           operationId = "institutionsPdndByDescriptionUsingGET")
-  @GetMapping("/institutions")
+  @GetMapping(value = "/institutions")
   public ResponseEntity<List<PDNDBusinessResource>> institutionsPdndByDescription(
-          @ApiParam("${swagger.model.institution.description}") @RequestParam String description) {
+          @ApiParam("${swagger.model.institution.description}") @RequestParam String description,
+          @ApiParam("${swagger.model.institution.productId}") @RequestParam(required = false) String productId) {
     List<PDNDBusiness> businessList =
-            pdndInfoCamereService.retrieveInstitutionsPdndByDescription(description);
+            pdndInfoCamereService.retrieveInstitutionsPdndByDescription(description, productId);
     return ResponseEntity.ok().body(pdndBusinessMapper.toResources(businessList));
   }
 
@@ -53,8 +60,29 @@ public class PDNDInfoCamereController {
           operationId = "institutionPdndByTaxCodeUsingGET")
   @GetMapping("/institution/{taxCode}")
   public ResponseEntity<PDNDBusinessResource> institutionPdndByTaxCode(
-          @ApiParam("${swagger.model.institution.taxCode}") @PathVariable String taxCode) {
-    PDNDBusiness business = pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode);
+          @ApiParam("${swagger.model.institution.taxCode}") @PathVariable String taxCode,
+          @ApiParam("${swagger.model.institution.productId}") @RequestParam(required = false) String productId) {
+    PDNDBusiness business = pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode, productId);
+    return ResponseEntity.ok().body(pdndBusinessMapper.toResource(business));
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(
+    summary = "${swagger.api.infocamere-pdnd.institutions.rea.summary}",
+    description = "${swagger.api.infocamere-pdnd.institutions.rea.notes}",
+    operationId = "institutionsPdndByReaGET")
+  @GetMapping(value = "/institutions/rea/{rea}")
+  public ResponseEntity<PDNDBusinessResource> institutionsPdndByRea(
+    @ApiParam("${swagger.model.institution.rea}") @PathVariable String rea,
+    @ApiParam("${swagger.model.institution.productId}") @RequestParam(required = false) String productId) {
+    Matcher matcher = REA_PATTERN.matcher(rea);
+    if (!matcher.matches()) {
+      throw new InvalidRequestException(
+        "Rea parameter is malformed. It should be in form of XX-123456");
+    }
+    String province = matcher.group(1);
+    String number = matcher.group(2);
+    PDNDBusiness business = pdndInfoCamereService.retrieveInstitutionFromRea(province, number, productId);
     return ResponseEntity.ok().body(pdndBusinessMapper.toResource(business));
   }
 }
