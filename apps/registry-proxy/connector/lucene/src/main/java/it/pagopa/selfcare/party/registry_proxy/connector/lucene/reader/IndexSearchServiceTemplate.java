@@ -13,6 +13,7 @@ import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.owasp.encoder.Encode;
@@ -207,7 +208,7 @@ abstract class IndexSearchServiceTemplate<T> implements IndexSearchService<T> {
      * <p>
      * The Lucene classic {@link QueryParser} throws a {@link ParseException} when the input contains
      * unbalanced special characters (e.g. an unclosed double quote such as {@code Istituto "sol}).
-     * In that case the raw value is escaped via {@link QueryParser#escape(String)} and parsed again so
+     * In that case the raw value is escaped via {@link QueryParserBase#escape(String)} and parsed again so
      * that the search degrades gracefully to a literal term match instead of failing with a 500 error.
      *
      * @param parser the configured query parser
@@ -220,7 +221,7 @@ abstract class IndexSearchServiceTemplate<T> implements IndexSearchService<T> {
         } catch (ParseException e) {
             log.warn("Unable to parse Lucene query value '{}', falling back to escaped query: {}",
                     Encode.forJava(value), e.getMessage());
-            return parser.parse(QueryParser.escape(value));
+            return parser.parse(QueryParserBase.escape(value));
         }
     }
 
