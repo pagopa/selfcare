@@ -5529,6 +5529,7 @@ class OnboardingServiceDefaultTest {
     void deleteOnboardingUser_shouldSucceedWhenUserIsBothManagerAndDelegate() {
         Onboarding onboarding = new Onboarding();
         onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setTenantId("AR");
         onboarding.setProductId("prod-id");
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setWorkflowType(WorkflowType.USERS);

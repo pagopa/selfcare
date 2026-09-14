@@ -34,6 +34,9 @@ public class OnboardingRepository {
         String tenantId = tenantId();
         return Onboarding.findById(onboardingId)
                 .map(entity -> {
+                    if (entity == null) {
+                        return null;
+                    }
                     Onboarding onboarding = (Onboarding) entity;
                     return tenantId.equalsIgnoreCase(onboarding.getTenantId()) ? onboarding : null;
                 });
