@@ -3975,7 +3975,7 @@ class OnboardingServiceDefaultTest {
 
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = mock(ReactivePanacheQuery.class);
-        when(Onboarding.find(anyString(), (Object) any())).thenReturn(query);
+        when(Onboarding.find(any(Document.class))).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().item(onboarding));
 
         // Act
@@ -3998,7 +3998,7 @@ class OnboardingServiceDefaultTest {
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = mock(ReactivePanacheQuery.class);
 
-        when(Onboarding.find(anyString(), (Object) any())).thenReturn(query);
+        when(Onboarding.find(any(Document.class))).thenReturn(query);
         when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
 
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
