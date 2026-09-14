@@ -75,7 +75,8 @@ jobs:
     steps:
       - name: Trigger onboarding domain release
         run: |
-          gh workflow run trigger_release_onboarding.yml \
+          gh workflow run "trigger_release_onboarding.yml" \
+            --repo "${{ github.repository }}" \
             --ref "$INPUT_BRANCH" \
             -f env="$INPUT_ENV" \
             -f branch="$INPUT_BRANCH"
