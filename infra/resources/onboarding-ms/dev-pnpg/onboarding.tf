@@ -205,7 +205,6 @@ locals {
   ]
 
   onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
     "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
     "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"

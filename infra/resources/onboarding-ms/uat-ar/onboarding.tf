@@ -207,11 +207,14 @@ locals {
     {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "AR"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"AR\": {\"mongo\": {\"account\": \"cosmos-ar\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_AR\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_AR\"}}}"
     }
   ]
 
   onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
     "JWT_PUBLIC_KEY_AR"                       = "jwt-public-key"
     "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
     "MONGODB_CONNECTION_STRING_AR"            = "mongodb-connection-string"
