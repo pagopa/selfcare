@@ -197,11 +197,14 @@ locals {
     {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "PNPG"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"PNPG\": {\"mongo\": {\"account\": \"cosmos-pnpg\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_PNPG\"}}}"
     }
   ]
 
   onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                        = "jwt-public-key"
     "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
     "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
