@@ -23,4 +23,7 @@ public interface PDNDInfoCamereRestClient {
     @ResponseBody
     List<PDNDImpresa> retrieveInstitutionPdndByTaxCode(@RequestParam(value = "codiceFiscale") String taxCode, @RequestHeader("Authorization") String accessToken);
 
+  @GetMapping(value = "${rest-client.pdnd-infocamere.getRea.path}", consumes = APPLICATION_XML_VALUE)
+  @ResponseBody
+  List<PDNDImpresa> retrieveInstitutionPdndFromRea(@RequestParam(value = "numeroRea") String rea, @RequestParam("siglaProvincia") String siglaProvincia, @RequestHeader("Authorization") String accessToken);
 }

@@ -36,7 +36,7 @@ module "apim_api_registry_proxy" {
   private_dns_name           = "selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix            = module.local.config.dns_zone_prefix
   api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
-  openapi_path               = "../../../../apps/registry-proxy/app/src/main/resources/swagger/apim_api_bff_proxy.json"
+  openapi_path               = "../../../../apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
   tenant_ids                 = module.local.config.tenant_ids
   tenant_hosts               = module.local.config.tenant_hosts
   tenant_enforcement_enabled = true
@@ -279,6 +279,10 @@ locals {
     {
       name  = "PDND_SKIP_LOCALIZZAZIONE_NODES"
       value = "false"
+    },
+    {
+      name = "PDND_INVITALIA_PRODUCTS"
+      value = "prod-idpay-merchant, prod-registro-beni"
     }
   ]
 
