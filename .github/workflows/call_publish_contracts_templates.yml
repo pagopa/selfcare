@@ -41,7 +41,7 @@ jobs:
           fetch-depth: 0
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@a18d71062ddaaa09f8e145835a05aefd7701935e # main
 
       - name: Upload to blob storage
         id: storage_upload
