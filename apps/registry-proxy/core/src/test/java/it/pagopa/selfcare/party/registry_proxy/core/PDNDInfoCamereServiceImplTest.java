@@ -12,7 +12,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,17 +34,17 @@ class PDNDInfoCamereServiceImplTest {
         String description = "description";
         List<PDNDBusiness> pdndBusinesses = new ArrayList<>();
         pdndBusinesses.add(dummyPDNDBusiness());
-        when(pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(anyString())).thenReturn(pdndBusinesses);
+        when(pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(anyString(), any())).thenReturn(pdndBusinesses);
 
         //when
-        pdndInfoCamereService.retrieveInstitutionsPdndByDescription(description);
+        pdndInfoCamereService.retrieveInstitutionsPdndByDescription(description, "prod-test");
 
         //then
         assertNotNull(pdndBusinesses);
         assertNotNull(pdndBusinesses.getClass());
         assertEquals(1, pdndBusinesses.size());
         verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionsPdndByDescription(any());
+                .retrieveInstitutionsPdndByDescription(any(), any());
         verifyNoMoreInteractions(pdndInfoCamereConnector);
     }
 
@@ -55,15 +54,15 @@ class PDNDInfoCamereServiceImplTest {
         final String rea = "rea";
         final String county = "county";
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
-        when(pdndInfoCamereConnector.retrieveInstitutionFromRea(anyString(), anyString())).thenReturn(pdndBusiness);
+        when(pdndInfoCamereConnector.retrieveInstitutionFromRea(anyString(), anyString(), any())).thenReturn(pdndBusiness);
 
         //when
-        pdndInfoCamereService.retrieveInstitutionFromRea(rea, county);
+        pdndInfoCamereService.retrieveInstitutionFromRea(rea, county, "prod-test");
 
         //then
         assertNotNull(pdndBusiness);
         verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionFromRea(anyString(), anyString());
+                .retrieveInstitutionFromRea(anyString(), anyString(), any());
         verifyNoMoreInteractions(pdndInfoCamereConnector);
     }
 
@@ -72,10 +71,10 @@ class PDNDInfoCamereServiceImplTest {
         //given
         String rea = null;
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
-        when(pdndInfoCamereConnector.retrieveInstitutionFromRea(any(), any())).thenReturn(pdndBusiness);
+        when(pdndInfoCamereConnector.retrieveInstitutionFromRea(any(), any(), any())).thenReturn(pdndBusiness);
 
         //when
-        Executable executable = () -> pdndInfoCamereService.retrieveInstitutionFromRea("county", rea);
+        Executable executable = () -> pdndInfoCamereService.retrieveInstitutionFromRea("county", rea, null);
 
         //then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, executable);
@@ -89,10 +88,10 @@ class PDNDInfoCamereServiceImplTest {
         String description = null;
         List<PDNDBusiness> pdndBusinesses = new ArrayList<>();
         pdndBusinesses.add(dummyPDNDBusiness());
-        when(pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(any())).thenReturn(pdndBusinesses);
+        when(pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(any(), any())).thenReturn(pdndBusinesses);
 
         //when
-        Executable executable = () -> pdndInfoCamereService.retrieveInstitutionsPdndByDescription(description);
+        Executable executable = () -> pdndInfoCamereService.retrieveInstitutionsPdndByDescription(description, null);
 
         //then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, executable);
@@ -105,64 +104,29 @@ class PDNDInfoCamereServiceImplTest {
         //given
         String taxCode = "taxCode";
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
-        when(pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(anyString())).thenReturn(pdndBusiness);
+        when(pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(anyString(), any())).thenReturn(pdndBusiness);
 
         //when
-        pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode);
+        pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode, "prod-test");
 
         //then
         assertNotNull(pdndBusiness);
         assertNotNull(pdndBusiness.getClass());
         verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionPdndByTaxCode(any());
+                .retrieveInstitutionPdndByTaxCode(any(), any());
         verifyNoMoreInteractions(pdndInfoCamereConnector);
     }
 
-    @Test
-    void retrieveInstitutionDetail() {
-        //given
-        final String taxCode = "taxCode";
-        PDNDBusiness pdndBusiness = dummyPDNDBusiness();
-        when(pdndInfoCamereConnector.retrieveInstitutionDetail(anyString())).thenReturn(pdndBusiness);
-
-        //when
-        var result = pdndInfoCamereService.retrieveInstitutionDetail(taxCode);
-
-        //then
-        assertNotNull(result);
-        assertNotNull(result.getClass());
-        verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionDetail(any());
-        verifyNoMoreInteractions(pdndInfoCamereConnector);
-    }
-
-    @Test
-    void retrieveInstitutionDocument() {
-        //given
-        final String taxCode = "taxCode";
-        final String document = "document";
-
-        //when
-        when(pdndInfoCamereConnector.retrieveInstitutionDocument(anyString())).thenReturn(document.getBytes(StandardCharsets.UTF_8));
-        var result = pdndInfoCamereService.retrieveInstitutionDocument(taxCode);
-
-        //then
-        assertNotNull(result);
-        assertNotEquals(0, result.length);
-        verify(pdndInfoCamereConnector, times(1))
-                .retrieveInstitutionDocument(any());
-        verifyNoMoreInteractions(pdndInfoCamereConnector);
-    }
 
     @Test
     void retrieveInstitutionByTaxCode_nullTaxCode() {
         //given
         String taxCode = null;
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
-        when(pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(any())).thenReturn(pdndBusiness);
+        when(pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(any(), any())).thenReturn(pdndBusiness);
 
         //when
-        Executable executable = () -> pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode);
+        Executable executable = () -> pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode, null);
 
         //then
         IllegalArgumentException e = assertThrows(IllegalArgumentException.class, executable);

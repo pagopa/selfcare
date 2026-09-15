@@ -20,34 +20,23 @@ class PDNDInfoCamereServiceImpl implements PDNDInfoCamereService {
         this.pdndInfoCamereConnector = pdndInfoCamereConnector;
     }
 
-
     @Override
-    public List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description){
+    public List<PDNDBusiness> retrieveInstitutionsPdndByDescription(String description, String productId){
         Assert.hasText(description, "Description is required");
-        return pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(description);
+        return pdndInfoCamereConnector.retrieveInstitutionsPdndByDescription(description, productId);
     }
 
     @Override
-    public PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode){
+    public PDNDBusiness retrieveInstitutionPdndByTaxCode(String taxCode, String productId){
         Assert.hasText(taxCode, "TaxCode is required");
-        return pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode);
+        return pdndInfoCamereConnector.retrieveInstitutionPdndByTaxCode(taxCode, productId);
     }
 
     @Override
-    public PDNDBusiness retrieveInstitutionDetail(String taxCode) {
-        return pdndInfoCamereConnector.retrieveInstitutionDetail(taxCode);
-    }
-
-    @Override
-    public byte[] retrieveInstitutionDocument(String taxCode) {
-        return pdndInfoCamereConnector.retrieveInstitutionDocument(taxCode);
-    }
-
-    @Override
-    public PDNDBusiness retrieveInstitutionFromRea(String county, String rea) {
+    public PDNDBusiness retrieveInstitutionFromRea(String county, String rea, String productId) {
         Assert.hasText(rea, "Rea is required");
         Assert.hasText(county, "county is required");
-        return pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea);
+        return pdndInfoCamereConnector.retrieveInstitutionFromRea(county, rea, productId);
     }
 
 }

@@ -1,12 +1,8 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.service;
 
-import feign.FeignException;
 import it.pagopa.selfcare.onboarding.crypto.utils.DataEncryptionUtils;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDInfoCamereRestClient;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.PDNDVisuraInfoCamereRawRestClient;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PDNDInfoCamereRestClientConfig;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.PDNDVisuraInfoCamereRestClientConfig;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.ClientCredentialsResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PDNDImpresa;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.PdndSecretValue;
@@ -17,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,15 +26,7 @@ import static org.mockito.Mockito.*;
 class PDNDCacheableServiceTest {
 
     @Mock
-    private TokenProviderVisura tokenProviderVisura;
-    @Mock
-    private PDNDVisuraInfoCamereRawRestClient pdndVisuraInfoCamereRawRestClient;
-    @Mock
-    private PDNDVisuraInfoCamereRestClientConfig pdndVisuraInfoCamereRestClientConfig;
-    @Mock
     private TokenProvider tokenProviderPDND;
-    @Mock
-    private PDNDInfoCamereRestClientConfig pdndInfoCamereRestClientConfig;
     @Mock
     private PDNDInfoCamereRestClient pdndInfoCamereRestClient;
 
@@ -48,127 +35,21 @@ class PDNDCacheableServiceTest {
     @BeforeEach
     void setup() {
         pdndCacheableService = new PDNDCacheableService(
-                tokenProviderVisura,
-                pdndVisuraInfoCamereRawRestClient,
-                pdndVisuraInfoCamereRestClientConfig,
                 pdndInfoCamereRestClient,
-                tokenProviderPDND,
-                pdndInfoCamereRestClientConfig
+                tokenProviderPDND
         );
     }
 
-    @Test
-    void getEncryptedDocument_success() {
-        String encryptedTax = "ENC_TC";
-        String decryptedTax = "TAX123";
-        String accessToken = "token123";
-        String responseBody = "{\"ok\":true}";
-
-        ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-        PdndSecretValue pdndSecretValue = null;
-        when(pdndVisuraInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
-        when(tokenProviderVisura.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
-        when(tokenResp.getAccessToken()).thenReturn(accessToken);
-
-        when(pdndVisuraInfoCamereRawRestClient.getRawInstitutionDetail(decryptedTax, ("Bearer " + accessToken)))
-                .thenReturn(responseBody.getBytes(StandardCharsets.UTF_8));
-
-        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
-            utils.when(() -> DataEncryptionUtils.decrypt(encryptedTax)).thenReturn(decryptedTax);
-            utils.when(() -> DataEncryptionUtils.encrypt(responseBody)).thenReturn("ENCRYPTED:" + responseBody);
-
-            String result = pdndCacheableService.getEncryptedDocument(encryptedTax);
-
-            assertThat(result).isEqualTo("ENCRYPTED:" + responseBody);
-            utils.verify(() -> DataEncryptionUtils.decrypt(encryptedTax));
-            utils.verify(() -> DataEncryptionUtils.encrypt(responseBody));
-            verify(tokenProviderVisura).getTokenPdnd(pdndSecretValue);
-            verify(pdndVisuraInfoCamereRawRestClient)
-                    .getRawInstitutionDetail(decryptedTax, "Bearer " + accessToken);
-        }
-    }
 
     @Test
-    void getEncryptedDocument_badRequestMapsToResourceNotFound() {
-        String encryptedTax = "ENC_TC";
-        String decryptedTax = "TAX123";
-        ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-
-        PdndSecretValue pdndSecretValue = null;
-
-        when(pdndVisuraInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
-        when(tokenProviderVisura.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
-        when(tokenResp.getAccessToken()).thenReturn("tok");
-
-        FeignException.BadRequest badReq = mock(FeignException.BadRequest.class);
-
-        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
-            utils.when(() -> DataEncryptionUtils.decrypt(encryptedTax)).thenReturn(decryptedTax);
-            when(pdndVisuraInfoCamereRawRestClient.getRawInstitutionDetail(anyString(), anyString()))
-                    .thenThrow(badReq);
-
-            ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
-                    () -> pdndCacheableService.getEncryptedDocument(encryptedTax));
-
-            assertThat(ex.getMessage()).contains(decryptedTax);
-        }
-    }
-
-    @Test
-    void getEncryptedDocument_otherFeignExceptionIsPropagated() {
-        String encryptedTax = "ENC";
-        String decryptedTax = "TAX999";
-        ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-
-        PdndSecretValue pdndSecretValue = null;
-
-        when(pdndVisuraInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
-        when(tokenProviderVisura.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
-        when(tokenResp.getAccessToken()).thenReturn("tok");
-
-        FeignException generic = mock(FeignException.class);
-
-        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
-            utils.when(() -> DataEncryptionUtils.decrypt(encryptedTax)).thenReturn(decryptedTax);
-            when(pdndVisuraInfoCamereRawRestClient.getRawInstitutionDetail(anyString(), anyString()))
-                    .thenThrow(generic);
-
-            assertThrows(FeignException.class, () -> pdndCacheableService.getEncryptedDocument(encryptedTax));
-        }
-    }
-
-    @Test
-    void getEncryptedDocument_unexpectedExceptionWrappedAsIllegalArgument() {
-        String encryptedTax = "ENC";
-        String decryptedTax = "TAX999";
-        ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-        PdndSecretValue pdndSecretValue = null;
-
-        when(pdndVisuraInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
-        when(tokenProviderVisura.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
-        when(tokenResp.getAccessToken()).thenReturn("tok");
-
-        try (MockedStatic<DataEncryptionUtils> utils = mockStatic(DataEncryptionUtils.class)) {
-            utils.when(() -> DataEncryptionUtils.decrypt(encryptedTax)).thenReturn(decryptedTax);
-            when(pdndVisuraInfoCamereRawRestClient.getRawInstitutionDetail(anyString(), anyString()))
-                    .thenThrow(new RuntimeException("boom"));
-
-            IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                    () -> pdndCacheableService.getEncryptedDocument(encryptedTax));
-            assertThat(ex).hasMessageContaining("Unexpected error while retrieving institution detail");
-        }
-    }
-
-    @Test
-    void getEncryptedPDNDImpresa_success() throws Exception {
+    void getEncryptedPDNDImpresa_success() {
         String encryptedTax = "ENC_TC";
         String decryptedTax = "TAXABC";
         String token = "tok-ic";
 
         ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-        PdndSecretValue pdndSecretValue = null;
+        PdndSecretValue pdndSecretValue = PdndSecretValue.builder().build();
 
-        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
         when(tokenProviderPDND.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
         when(tokenResp.getAccessToken()).thenReturn(token);
 
@@ -182,7 +63,7 @@ class PDNDCacheableServiceTest {
             utils.when(() -> DataEncryptionUtils.encrypt(anyString()))
                     .thenAnswer(inv -> "ENCRYPTED:" + inv.getArgument(0, String.class));
 
-            String result = pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax);
+            String result = pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax, pdndSecretValue);
 
             assertThat(result).startsWith("ENCRYPTED:");
             verify(tokenProviderPDND).getTokenPdnd(pdndSecretValue);
@@ -198,9 +79,8 @@ class PDNDCacheableServiceTest {
         String token = "tok-ic";
 
         ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-        PdndSecretValue pdndSecretValue = null;
+        PdndSecretValue pdndSecretValue = PdndSecretValue.builder().build();
 
-        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
         when(tokenProviderPDND.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
         when(tokenResp.getAccessToken()).thenReturn(token);
 
@@ -216,7 +96,7 @@ class PDNDCacheableServiceTest {
                     .thenAnswer(inv -> "ENCRYPTED:" + inv.getArgument(0, String.class));
 
             // when
-            String result = pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax);
+            String result = pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax, pdndSecretValue);
 
             // then
             assertThat(result).contains("LATEST-CF").doesNotContain("OLD-CF");
@@ -231,9 +111,8 @@ class PDNDCacheableServiceTest {
         String token = "tok-ic";
 
         ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-        PdndSecretValue pdndSecretValue = null;
+        PdndSecretValue pdndSecretValue = PdndSecretValue.builder().build();
 
-        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
         when(tokenProviderPDND.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
         when(tokenResp.getAccessToken()).thenReturn(token);
         when(pdndInfoCamereRestClient.retrieveInstitutionPdndByTaxCode(decryptedTax, "Bearer " + token))
@@ -244,7 +123,7 @@ class PDNDCacheableServiceTest {
 
             // when
             ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class,
-                    () -> pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax));
+                    () -> pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax, pdndSecretValue));
 
             // then
             assertThat(ex).hasMessageContaining("No institution found for taxCode: " + decryptedTax);
@@ -259,9 +138,8 @@ class PDNDCacheableServiceTest {
         String token = "tok-ic";
 
         ClientCredentialsResponse tokenResp = mock(ClientCredentialsResponse.class);
-        PdndSecretValue pdndSecretValue = null;
+        PdndSecretValue pdndSecretValue = PdndSecretValue.builder().build();
 
-        when(pdndInfoCamereRestClientConfig.getPdndSecretValue()).thenReturn(pdndSecretValue);
         when(tokenProviderPDND.getTokenPdnd(pdndSecretValue)).thenReturn(tokenResp);
         when(tokenResp.getAccessToken()).thenReturn(token);
 
@@ -271,7 +149,7 @@ class PDNDCacheableServiceTest {
                     .thenThrow(new RuntimeException("boom"));
 
             IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
-                    () -> pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax));
+                    () -> pdndCacheableService.getEncryptedPDNDImpresa(encryptedTax, pdndSecretValue));
             assertThat(ex).hasMessageContaining("Unexpected error while retrieving institution");
         }
     }
