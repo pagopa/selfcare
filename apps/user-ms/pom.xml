@@ -216,6 +216,11 @@
       <version>${common-sdk-security-version}</version>
     </dependency>
     <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-health</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
       <groupId>com.microsoft.azure</groupId>
       <artifactId>applicationinsights-web</artifactId>
       <version>3.7.8</version>
