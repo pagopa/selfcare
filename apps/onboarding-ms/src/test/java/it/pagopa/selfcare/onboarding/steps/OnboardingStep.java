@@ -15,6 +15,8 @@ import com.mongodb.client.model.Indexes;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ManagedContext;
 import io.quarkiverse.cucumber.CucumberOptions;
 import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.quarkus.test.InjectMock;
@@ -22,6 +24,7 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.TestProfile;
 import io.quarkus.test.security.TestSecurity;
 import io.restassured.response.ValidatableResponse;
+import io.restassured.specification.RequestSpecification;
 import io.smallrye.mutiny.Uni;
 import io.vertx.core.Vertx;
 import it.pagopa.selfcare.onboarding.common.*;
@@ -38,6 +41,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.AfterAll;
@@ -70,6 +74,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private static ObjectMapper objectMapper;
   private static String tokenTest;
   private static final String JWT_BEARER_TOKEN_ENV = "custom.jwt-token-test";
+  private static final String TENANT_ID = "AR";
 
   @InjectMock @RestClient OrchestrationApi orchestrationApi;
   @InjectMock @RestClient InstitutionApi institutionApi;
@@ -120,30 +125,45 @@ public class OnboardingStep extends CucumberQuarkusTest {
   }
 
   private static void initDb() {
-    mongoDatabase = IntegrationProfile.getMongoClientConnection();
+    ManagedContext requestContext = Arc.container().requestContext();
+    requestContext.activate();
+    try {
+      Arc.container().instance(it.pagopa.selfcare.tenant.TenantContext.class)
+              .get()
+              .setTenantId(TENANT_ID);
+      mongoDatabase = IntegrationProfile.getMongoClientConnection();
 
-    Onboarding onboarding = createDummyOnboarding();
-    Onboarding duplicatedOnboardingPA = createOnboardingForConflictScenario();
-    Token token = createDummyToken();
+      Onboarding onboarding = createDummyOnboarding();
+      Onboarding duplicatedOnboardingPA = createOnboardingForConflictScenario();
+      Token token = createDummyToken();
 
-    Uni.combine().all().unis(
-                    onboarding.persist(),
-                    duplicatedOnboardingPA.persist(),
-                    token.persist()
-            ).asTuple()
-            .invoke(tuple -> {
-              var persistedOnboarding = (Onboarding) tuple.getItem1();
-              var deuplicatedOnboarding = (Onboarding) tuple.getItem2();
-              var persistedToken = (Token) tuple.getItem3();
+      Uni.combine().all().unis(
+                      onboarding.persist(),
+                      duplicatedOnboardingPA.persist(),
+                      token.persist()
+              ).asTuple()
+              .invoke(tuple -> {
+                var persistedOnboarding = (Onboarding) tuple.getItem1();
+                var duplicatedOnboarding = (Onboarding) tuple.getItem2();
+                var persistedToken = (Token) tuple.getItem3();
 
-              assertNotNull(persistedOnboarding.getId());
-              assertNotNull(deuplicatedOnboarding.getId());
-              assertNotNull(persistedToken.getId());
+                assertNotNull(persistedOnboarding.getId());
+                assertNotNull(duplicatedOnboarding.getId());
+                assertNotNull(persistedToken.getId());
 
-              mongoDatabase.getCollection("onboardings")
-                      .createIndex(Indexes.ascending("createdAt"));
-            })
-            .await().indefinitely();
+                mongoDatabase.getCollection("onboardings")
+                        .createIndex(Indexes.ascending("createdAt"));
+              })
+              .await().indefinitely();
+    } finally {
+      requestContext.terminate();
+    }
+  }
+
+  private static RequestSpecification authenticatedRequest() {
+    return given()
+            .header("Authorization", "Bearer " + tokenTest)
+            .header("X-Tenant-Id", TENANT_ID);
   }
 
   @Given("I have a request object named {string}")
@@ -158,8 +178,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
             objectMapper.readValue(requestBody, OnboardingDefaultRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -173,8 +192,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingPgRequest request = objectMapper.readValue(requestBody, OnboardingPgRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -188,8 +206,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingUserRequest request = objectMapper.readValue(requestBody, OnboardingUserRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -203,8 +220,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingPspRequest request = objectMapper.readValue(requestBody, OnboardingPspRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -218,8 +234,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingImportPspRequest request = objectMapper.readValue(requestBody, OnboardingImportPspRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -233,8 +248,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingDefaultRequest request = objectMapper.readValue(requestBody, OnboardingDefaultRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -252,8 +266,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   @When("I send a PUT request to {string} with {string} and {string}")
   public void doCallApi(String url, String onboardingId, String recipientCode) {
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .pathParam("onboardingId", onboardingId)
                     .queryParam("recipientCode", recipientCode)
                     .when()
@@ -296,8 +309,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
           roles = {"admin", "user"})
   public void doCallApi(String url) {
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(new OnboardingDefaultRequest())
                     .when()
@@ -314,8 +326,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
             objectMapper.readValue(onboardingRequest, OnboardingDefaultRequest.class);
     assertNotNull(request);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -332,8 +343,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingDefaultRequest request =
             objectMapper.readValue(requestBody, OnboardingDefaultRequest.class);
     validatableResponse =
-            given()
-                    .header("Authorization", "Bearer " + tokenTest)
+            authenticatedRequest()
                     .body(request)
                     .when()
                     .post(url)
@@ -353,11 +363,13 @@ public class OnboardingStep extends CucumberQuarkusTest {
   }
 
   @Then("there is a document for onboardings with origin {string} originId {string} and workflowType {string}")
-  public void theResponseShouldHaveFieldWithValue(String origin, String originId, String worfklowType) {
-    var onboardings = Onboarding.find("workflowType = ?1 and institution.origin = ?2 and institution.originId = ?3",
-                    worfklowType, origin, originId).list()
-            .await().indefinitely();
-    assertFalse(onboardings.isEmpty());
+  public void theResponseShouldHaveFieldWithValue(String origin, String originId, String workflowType) {
+    Document query = new Document("tenantId", TENANT_ID)
+            .append("workflowType", workflowType)
+            .append("institution.origin", origin)
+            .append("institution.originId", originId);
+
+    assertTrue(mongoDatabase.getCollection("onboardings").countDocuments(query) > 0);
   }
 
   @AfterAll
@@ -374,6 +386,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private static Onboarding createDummyOnboarding() {
     Onboarding onboarding = new Onboarding();
     onboarding.setId(UUID.fromString("89ad7142-24bb-48ad-8504-9c9231137e85").toString());
+    onboarding.setTenantId(TENANT_ID);
     onboarding.setProductId("prod-pagopa");
     onboarding.setCreatedAt(LocalDateTime.now());
 
@@ -398,6 +411,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private static Onboarding createOnboardingForConflictScenario() {
     Onboarding onboarding = new Onboarding();
     onboarding.setId(UUID.randomUUID().toString());
+    onboarding.setTenantId(TENANT_ID);
     onboarding.setProductId("prod-io");
     onboarding.setStatus(OnboardingStatus.COMPLETED);
     onboarding.setCreatedAt(LocalDateTime.now());
@@ -426,6 +440,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private static Token createDummyToken() {
     Token token = new Token();
     token.setId(UUID.fromString("89ad7142-24bb-48ad-8504-9c9231137e85").toString());
+    token.setTenantId(TENANT_ID);
     token.setProductId("prod-pagopa");
     token.setCreatedAt(LocalDateTime.now());
     return token;
