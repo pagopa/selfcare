@@ -197,6 +197,10 @@ locals {
     {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "PNPG"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"PNPG\": {\"mongo\": {\"account\": \"cosmos-pnpg\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_PNPG\"}}}"
     }
   ]
 

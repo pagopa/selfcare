@@ -201,6 +201,10 @@ locals {
     {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "AR"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"AR\": {\"mongo\": {\"account\": \"cosmos-ar\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_AR\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_AR\"}}}"
     }
   ]
 
