@@ -37,6 +37,8 @@ public class PDNDInfoCamereController {
     this.pdndBusinessMapper = pdndBusinessMapper;
   }
 
+  @Tag(name = "internal-v1")
+  @Tag(name = "infocamere-pdnd")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
           summary = "${swagger.api.infocamere-pdnd.institutions.summary}",
@@ -66,6 +68,8 @@ public class PDNDInfoCamereController {
     return ResponseEntity.ok().body(pdndBusinessMapper.toResource(business));
   }
 
+  @Tag(name = "internal-v1")
+  @Tag(name = "infocamere-pdnd")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "${swagger.api.infocamere-pdnd.institutions.rea.summary}",
