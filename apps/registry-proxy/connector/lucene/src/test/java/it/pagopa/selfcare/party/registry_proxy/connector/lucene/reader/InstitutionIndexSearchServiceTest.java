@@ -66,6 +66,53 @@ class InstitutionIndexSearchServiceTest {
 
 
     @Test
+    void fullTextSearch_withUnbalancedDoubleQuote_doesNotThrow() {
+        // given: value with an unclosed double quote that makes the Lucene classic
+        final SearchField field = Field.DESCRIPTION;
+        final String value = "Istituto istruzione superiore \"sol";
+        final int page = 1;
+        final int limit = 10;
+        // when
+        final QueryResult<Institution> queryResult =
+                assertDoesNotThrow(() -> indexSearchService.fullTextSearch(field, value, page, limit));
+        // then
+        assertNotNull(queryResult);
+        assertNotNull(queryResult.getItems());
+    }
+
+
+    @Test
+    void fullTextSearch_withOtherUnbalancedSpecialChars_doesNotThrow() {
+        // given: other unbalanced Lucene special characters
+        final SearchField field = Field.DESCRIPTION;
+        final int page = 1;
+        final int limit = 10;
+        // when / then
+        assertDoesNotThrow(() -> indexSearchService.fullTextSearch(field, "istituto (sol", page, limit));
+        assertDoesNotThrow(() -> indexSearchService.fullTextSearch(field, "istituto [sol", page, limit));
+        assertDoesNotThrow(() -> indexSearchService.fullTextSearch(field, "istituto sol\"", page, limit));
+    }
+
+
+    @Test
+    void fullTextSearchWithCategories_withUnbalancedDoubleQuote_doesNotThrow() {
+        // given
+        final SearchField descriptionField = Field.DESCRIPTION;
+        final SearchField categoryField = Field.CATEGORY;
+        final String description = "Istituto istruzione superiore \"sol";
+        final String categories = "L6,L7";
+        final int page = 1;
+        final int limit = 10;
+        // when
+        final QueryResult<Institution> queryResult =
+                assertDoesNotThrow(() -> indexSearchService.fullTextSearch(
+                        descriptionField, description, categoryField, categories, page, limit));
+        // then
+        assertNotNull(queryResult);
+        assertNotNull(queryResult.getItems());
+    }
+
+    @Test
     void findById() {
         // given
         final SearchField field = Field.ID;

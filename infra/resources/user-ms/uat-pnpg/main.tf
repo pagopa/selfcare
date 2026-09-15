@@ -72,21 +72,6 @@ module "collection_user_institutions" {
   ]
 }
 
-module "collection_user_info" {
-  source = "../../_modules/cosmosdb_collection"
-
-  name                        = "userInfo"
-  resource_group_name         = module.local.config.mongo_db.mongodb_rg_name
-  cosmosdb_mongo_account_name = module.local.config.mongo_db.cosmosdb_account_mongodb_name
-  database_name               = module.cosmosdb.database_name
-
-  lock_enable = true
-
-  indexes = [
-    { keys = ["_id"], unique = true }
-  ]
-}
-
 ###############################################################################
 # Container App
 ###############################################################################

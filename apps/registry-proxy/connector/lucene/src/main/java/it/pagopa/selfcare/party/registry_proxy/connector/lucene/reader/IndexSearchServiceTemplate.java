@@ -11,7 +11,9 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.classic.QueryParserBase;
 import org.apache.lucene.search.*;
 import org.apache.lucene.store.Directory;
 import org.owasp.encoder.Encode;
@@ -57,7 +59,7 @@ abstract class IndexSearchServiceTemplate<T> implements IndexSearchService<T> {
         final TopScoreDocCollector collector = TopScoreDocCollector.create(reader.numDocs(), Integer.MAX_VALUE);
         final QueryParser parser = new QueryParser(field.toString(), analyzer);
         parser.setPhraseSlop(4);
-        indexSearcher.search(parser.parse(value), collector);
+        indexSearcher.search(parseSafely(parser, value), collector);
         final TopDocs hits = collector.topDocs((page - 1) * limit, limit);
 
         final List<T> categories = new ArrayList<>(hits.scoreDocs.length);
@@ -99,7 +101,7 @@ abstract class IndexSearchServiceTemplate<T> implements IndexSearchService<T> {
 
         QueryParser descriptionParser = new QueryParser(searchFieldDescription.toString(), analyzer);
         descriptionParser.setPhraseSlop(4);
-        Query descriptionQuery = descriptionParser.parse(currentDescription);
+        Query descriptionQuery = parseSafely(descriptionParser, currentDescription);
 
         BooleanQuery.Builder categoryQueryBuilder = new BooleanQuery.Builder();
 
@@ -199,6 +201,28 @@ abstract class IndexSearchServiceTemplate<T> implements IndexSearchService<T> {
         log.debug("findAll result = {}", queryResult);
         log.trace("findAll end");
         return queryResult;
+    }
+
+    /**
+     * Parses a user supplied query string in a fault-tolerant way.
+     * <p>
+     * The Lucene classic {@link QueryParser} throws a {@link ParseException} when the input contains
+     * unbalanced special characters (e.g. an unclosed double quote such as {@code Istituto "sol}).
+     * In that case the raw value is escaped via {@link QueryParserBase#escape(String)} and parsed again so
+     * that the search degrades gracefully to a literal term match instead of failing with a 500 error.
+     *
+     * @param parser the configured query parser
+     * @param value  the raw, user supplied search value
+     * @return a valid Lucene {@link Query}
+     */
+    private Query parseSafely(QueryParser parser, String value) throws ParseException {
+        try {
+            return parser.parse(value);
+        } catch (ParseException e) {
+            log.warn("Unable to parse Lucene query value '{}', falling back to escaped query: {}",
+                    Encode.forJava(value), e.getMessage());
+            return parser.parse(QueryParserBase.escape(value));
+        }
     }
 
     protected abstract QueryResult<T> getQueryResult(List<T> items, long totalHits);
