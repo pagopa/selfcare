@@ -187,6 +187,10 @@ locals {
       value = "true"
     },
     {
+      name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
+      value = "false"
+    },
+    {
       name  = "MS_DOCUMENT_URL"
       value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
