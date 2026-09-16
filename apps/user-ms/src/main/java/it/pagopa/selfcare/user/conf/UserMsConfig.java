@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user.conf;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.connectionstring.ConnectionString;
+import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
