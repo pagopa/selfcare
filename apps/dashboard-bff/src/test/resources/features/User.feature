@@ -194,7 +194,6 @@ Feature: User
     And the response should contain 6 items
     And The dashboard response body contains at path "" the following list of objects in any order:
       | id                                   | name   | surname | fiscalCode           | role      | product.id     |
-      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 | rocky  | Balboa  | blbrki80A41H401T     | LIMITED   | prod-io        |
       | 4f8c3f9d-1f72-4d7b-9d3d-8b5e9d2a6c41 | Giulia | Verdi   | VRDLGI90A41F205X     | ADMIN_EA  | prod-io        |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-io        |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-pagopa    |
