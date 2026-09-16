@@ -48,7 +48,8 @@
     "workflowType": "CONFIRMATION",
     "updatedAt": {
       "$date": "2024-11-11T14:07:07.043Z"
-    }
+    },
+    "tenantId": "AR"
   },
   {
     "_id": "bc804763-a2de-4713-b261-474afca5330e",
@@ -100,7 +101,8 @@
     "workflowInstanceId": "ba43b6cd-85c2-4c77-a6a8-4a60c9f47ec0",
     "updatedAt": {
       "$date": "2024-05-17T12:14:53.996Z"
-    }
+    },
+    "tenantId": "AR"
   },
   {
     "_id": "b05b9cde-7236-4d41-a888-5bf6c2e39f49",
@@ -154,7 +156,8 @@
     "updateAt": {
       "$date": "2024-02-29T09:27:06.530Z"
     },
-    "workflowInstanceId": "a1c75410-5e92-44eb-9bb0-35171706f3c4"
+    "workflowInstanceId": "a1c75410-5e92-44eb-9bb0-35171706f3c4",
+    "tenantId": "AR"
   },
   {
     "_id": "f7858caa-e5e0-4e53-85bb-1a49f4ab076d",
@@ -199,7 +202,8 @@
     },
     "activatedAt": {
       "$date": "2024-02-23T16:36:39.708Z"
-    }
+    },
+    "tenantId": "AR"
   },
   {
     "_id": "d5900f40-c4cd-4bdc-bacf-d1ffe6c9e442",
@@ -244,7 +248,8 @@
     },
     "activatedAt": {
       "$date": "2024-02-23T11:55:45.410Z"
-    }
+    },
+    "tenantId": "AR"
   },
   {
     "_id": "21f73488-d0df-4a3d-9b6f-9adf634780b5",
@@ -293,6 +298,7 @@
     "workflowInstanceId": "ba43b6cd-85c2-4c77-a6a8-4a60c9f47ec0",
     "updatedAt": {
       "$date": "2024-05-17T12:14:53.996Z"
-    }
+    },
+    "tenantId": "AR"
   }
 ]
