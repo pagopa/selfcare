@@ -23,6 +23,15 @@ info:
     description: "@project.description@"
     version: "@project.version@"
 
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        readiness:
+          include: readinessState,mongoReadiness
+
 
 logging:
   level:
