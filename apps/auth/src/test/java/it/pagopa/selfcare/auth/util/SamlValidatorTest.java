@@ -12,17 +12,29 @@ import it.pagopa.selfcare.auth.exception.SamlSignatureException;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.PublicKey;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Base64;
+import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import org.bouncycastle.asn1.x500.X500Name;
+import org.bouncycastle.cert.X509CertificateHolder;
+import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
+import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
+import org.bouncycastle.operator.ContentSigner;
+import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -83,17 +95,11 @@ public class SamlValidatorTest {
     </saml2p:Response>
     """;
 
-  private static final String VALID_SAML_BASE64 =
-      Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes(StandardCharsets.UTF_8));
-
   private static final String INVALID_XML = "This is not valid XML";
-  private static final String EMPTY_XML = "";
 
   // Sample certificate for testing (dummy)
   private static final String DUMMY_CERT_BASE64 =
       "LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tTUlJRER6Q0NBZmVnQXdJQkFnSVVUQ0c0RmJkMXlVSmdGTWZMOGljMUpJSmppODB3RFFZSktvWklodmNOQVFFTEJRQXdGekVWTUJNR0ExVUVBd3dNYldsdmMybDBieTUwWlhOME1CNFhEVEkxTURrd09URTFNakExTjFvWERUSTJNRGt3T1RFMU1qQTFOMW93RnpFVk1CTUdBMVVFQXd3TWJXbHZjMmwwYnk1MFpYTjBNSUlCSWpBTkJna3Foa2lHOXcwQkFRRUZBQU9DQVE4QU1JSUJDZ0tDQVFFQW1rNE5PaXFWMTFvbTIweU5nL1RweDEwRmFOTzlmR1VEdE0xNFYwZ2g3ZTltZVNIaC9uTFZTQUsvN3VBUEd2V1VMM3haKyswTFVGTHNBckZMU0hCc2Z1bGw2M3c5NVVvcTNQdEFCcVVLU2tJMmdrYlljbHpGaUlkcnJIOXJJb01ZdllHNXpJcm9LTlNEMi9pVURmRTNHbzc4QVdpbGZGcWEvT3ZJWjNyaU5wVHlxdEFiRnlxSjl0QmxTZ2RTVlY5THJxZHBUUm5rOTJia2FYMERWSHduWGF5M3owUmtXak84dU9EL0dHQzNCOGREdVBVUzR3WlR3Z2ZTOGNndXo5U3NnSTBoTWkyUlhSbWVUaVNyQUpGbHgxNFBmR0tuQnNhVm5NK0pEZFpIOUtUdVNKNys4ZDhsZDR5V3oxcTU2VVZkVHcxRElWOE9DOTFtRXZodHVZSkd2d0lEQVFBQm8xTXdVVEFkQmdOVkhRNEVGZ1FVZkdFT3hDMk5ZMk9ObENqN0s4dmNtaC91dEdZd0h3WURWUjBqQkJnd0ZvQVVmR0VPeEMyTlkyT05sQ2o3Szh2Y21oL3V0R1l3RHdZRFZSMFRBUUgvQkFVd0F3RUIvekFOQmdrcWhraUc5dzBCQVFzRkFBT0NBUUVBTmlDRzhCdmxPdVg5Y1MzeVk0RHh2TFZ2MGd6VHp3QW8xNTdKRkZFNTArcVo1SG4ydlFLTktRT2xyU0hlOSs1SnIySy9zR3N3UmFwRFZHMG8rd1Y1TGxGVGNvZTZrL0RWUjE5NlhTemc0WTYwS1REUUx2cy8wZGZTWjB0WWpuMFNuaTVUdVFyR2ZKZ253Z1oyWGtXVUhNWEtnMjJGZDZpZy9QaVpFK2ZOYnlpc1RCeVVKbGNxakVTUFAxQ2toV2hoYnNnOFZTbXY2Nmx5ZVdOU1k3ZEVKYmNlRy9abDh6K1NtU1UySWtZUTJlUXUwZU9jN012YWFQWk9XZHViZUplZm03NW54NmpublFaTVdFcEw1K3dRYUIycUtkZWpSaWJYMHBzMEU2bFJCT1NVcWY4SWozQkxNUlE0clBZQXZNOGVHeGJzUFJyUjVLYXd1aHJQQ2NVODJ3PT0tLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t";
-  private static final String FAKE_CERT =
-      "-----BEGIN CERTIFICATE-----MIIDDzCCAfegAwIBAgIUTCG4Fbd1yUJgFMfL8ic1JIJji80wDQYJKoZIhvcNAQELBQAwFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MB4XDTI1MDkwOTE1MjA1N1oXDTI2MDkwOTE1MjA1N1owFzEVMBMGA1UEAwwMbWlvc2l0by50ZXN0MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmk4NOiqV11om20yNg/Tpx10FaNO9fGUDtM14V0gh7e9meSHh/nLVSAK/7uAPGvWUL3xZ++0LUFLsArFLSHBsfull63w95Uoq3PtABqUKSkI2gkbYclzFiIdrrH9rIoMYvYG5zIroKNSD2/iUDfE3Go78AWilfFqa/OvIZ3riNpTyqtAbFyqJ9tBlSgdSVV9LrqdpTRnk92bkaX0DVHwnXay3z0RkWjO8uOD/GGC3B8dDuPUS4wZTwgfS8cguz9SsgI0hMi2RXRmeTiSrAJFlx14PfGKnBsaVnM+JDdZH9KTuSJ7+8d8ld4yWz1q56UVdTw1DIV8OC91mEvhtuYJGvwIDAQABo1MwUTAdBgNVHQ4EFgQUfGEOxC2NY2ONlCj7K8vcmh/utGYwHwYDVR0jBBgwFoAUfGEOxC2NY2ONlCj7K8vcmh/utGYwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEANiCG8BvlOuX9cS3yY4DxvLVv0gzTzwAo157JFFE50+qZ5Hn2vQKNKQOlrSHe9+5Jr2K/sGswRapDVG0o+wV5LlFTcoe6k/DVR196XSzg4Y60KTDQLvs/0dfSZ0tYjn0Sni5TuQrGfJgnwgZ2XkWUHMXKg22Fd6ig/PiZE+fNbyisTByUJlcqjESPP1CkhWhhbsg8VSmv66lyeWNSY7dEJbceG/Zl8z+SmSU2IkYQ2eQu0eOc7MvaaPZOWdubeJefm75nx6jnnQZMWEpL5+wQaB2qKdejRibX0ps0E6lRBOSUqf8Ij3BLMRQ4rPYAvM8eGxbsPRrR5KawuhrPCcU82w==-----END CERTIFICATE-----";
 
   private Method validateSignatureMethod;
 
@@ -230,20 +236,33 @@ public class SamlValidatorTest {
 
   @Test
   void testValidateSamlResponseAsync_cert_Failure() throws Exception {
-    // Arrange: Configure the spy. When the synchronous method is called,
-    // force it to return 'true' without executing its actual complex logic.
+    // Arrange: build a SAML response embedding a freshly generated, currently valid certificate.
+    // This lets the async pipeline get past certificate validation and fail on the (dummy)
+    // signature, so the propagated error is "Signature validation failed".
+    KeyPair keyPair = generateKeyPair();
+    X509Certificate validCertificate = generateValidCertificate(keyPair);
+    String certDerBase64 = Base64.getEncoder().encodeToString(validCertificate.getEncoded());
+
+    // idpCert must match the certificate embedded in the XML once decoded by fromBase64().
+    String pem = "-----BEGIN CERTIFICATE-----" + certDerBase64 + "-----END CERTIFICATE-----";
+    String idpCert = Base64.getEncoder().encodeToString(pem.getBytes(StandardCharsets.UTF_8));
+
+    // Replace the (expired) embedded certificate with the freshly generated valid one.
+    String dynamicXml =
+        VALID_SAML_XML.replaceAll(
+            "(?s)(<ds:X509Certificate>).*?(</ds:X509Certificate>)",
+            "$1" + Matcher.quoteReplacement(certDerBase64) + "$2");
+
+    // The spy stub is irrelevant here (the async method does not call validateSamlResponse),
+    // but it is kept to document that the async pipeline runs its real logic.
     doReturn(true).when(samlValidatorSpy).validateSamlResponse(anyString(), anyString(), anyLong());
 
     // Act: Call the asynchronous method on the spy object.
     Uni<Map<String, String>> resultUni =
         samlValidatorSpy.validateSamlResponseAsync(
-            Base64.getEncoder().encodeToString(VALID_SAML_XML.getBytes()),
-            DUMMY_CERT_BASE64,
+            Base64.getEncoder().encodeToString(dynamicXml.getBytes(StandardCharsets.UTF_8)),
+            idpCert,
             FAKE_LONG_INTERVAL);
-
-    // Assert: Await the result and verify it is true.
-    //    Boolean result = resultUni.await().indefinitely();
-    //    assertFalse(result, "Signature validation failed");
 
     RuntimeException thrown =
         assertThrows(
@@ -256,6 +275,31 @@ public class SamlValidatorTest {
         "Signature validation failed",
         thrown.getMessage(),
         "The exception should be propagated to the Uni.");
+  }
+
+  private static KeyPair generateKeyPair() throws Exception {
+    KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+    kpg.initialize(2048);
+    return kpg.generateKeyPair();
+  }
+
+  private static X509Certificate generateValidCertificate(KeyPair keyPair) throws Exception {
+    Instant now = Instant.now();
+    X500Name dn = new X500Name("CN=miosito.test");
+    BigInteger serial = BigInteger.valueOf(System.nanoTime());
+
+    JcaX509v3CertificateBuilder certBuilder =
+        new JcaX509v3CertificateBuilder(
+            dn,
+            serial,
+            Date.from(now.minus(1, ChronoUnit.DAYS)),
+            Date.from(now.plus(1, ChronoUnit.DAYS)),
+            dn,
+            keyPair.getPublic());
+
+    ContentSigner signer = new JcaContentSignerBuilder("SHA256WithRSA").build(keyPair.getPrivate());
+    X509CertificateHolder holder = certBuilder.build(signer);
+    return new JcaX509CertificateConverter().getCertificate(holder);
   }
 
   @Test

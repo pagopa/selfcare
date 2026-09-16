@@ -82,6 +82,9 @@ class SwaggerConfigTest {
     @MockBean
     private ApplicationInsightsLogger applicationInsightsLogger;
 
+    @MockBean
+    private OpenDataLoader openDataLoader;
+
     @Autowired
     WebApplicationContext context;
 

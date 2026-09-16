@@ -103,10 +103,23 @@ jobs:
             # Expand each detected aggregator to include ALL its sub-modules (pom.xml files).
             # Necessary because Maven's --projects on an aggregator (packaging=pom) does NOT
             # pull in its child modules (--also-make follows <dependency>, not parent-child).
+            # Also emit every ancestor directory (up to, but excluding, the repo root) of each
+            # discovered module. The sonar-maven-plugin rebuilds the module tree from the
+            # aggregator <module> relationship, so intermediate aggregators (e.g. "apps", "libs")
+            # must be in the reactor too; otherwise nested modules like "apps/registry-proxy"
+            # become orphans -> "Unable to determine structure of project".
             EXPANDED=$(
-              for mod in "${!MODULES[@]}"; do
-                find "$mod" -name pom.xml -not -path '*/target/*' -not -path '*/node_modules/*' -exec dirname {} \;
-              done | sort -u | paste -sd, -
+              {
+                for mod in "${!MODULES[@]}"; do
+                  find "$mod" -name pom.xml -not -path '*/target/*' -not -path '*/node_modules/*' -exec dirname {} \;
+                done | while IFS= read -r dir; do
+                  # Print the module dir and all its ancestors, stopping before the repo root ".".
+                  while [[ "$dir" != "." && "$dir" != "/" ]]; do
+                    echo "$dir"
+                    dir=$(dirname "$dir")
+                  done
+                done
+              } | sort -u | paste -sd, -
             )
             echo "mode=partial" >> "$GITHUB_OUTPUT"
             echo "projects=$EXPANDED" >> "$GITHUB_OUTPUT"

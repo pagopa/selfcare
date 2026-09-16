@@ -1,26 +1,14 @@
 package it.pagopa.selfcare.user.service;
 
-import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
-import static it.pagopa.selfcare.user.constant.TemplateMailConstant.*;
-import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
-import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_FAILURE;
-import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
-import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.applicationinsights.TelemetryClient;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.utils.ProductUtils;
 import it.pagopa.selfcare.user.client.EventHubFdRestClient;
 import it.pagopa.selfcare.user.client.EventHubRestClient;
-import it.pagopa.selfcare.user.conf.CloudTemplateLoader;
 import it.pagopa.selfcare.user.entity.UserInstitution;
 import it.pagopa.selfcare.user.exception.InvalidRequestException;
 import it.pagopa.selfcare.user.model.LoggedUser;
@@ -29,9 +17,6 @@ import it.pagopa.selfcare.user.model.UserNotificationToSend;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import java.io.StringWriter;
-import java.util.*;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -41,6 +26,15 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 import org.openapi.quarkus.webhook_ms_json.api.WebhookApi;
 import org.openapi.quarkus.webhook_ms_json.model.NotificationRequest;
 import software.amazon.awssdk.utils.CollectionUtils;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static it.pagopa.selfcare.user.UserUtils.mapPropsForTrackEvent;
+import static it.pagopa.selfcare.user.model.TrackEventInput.toTrackEventInput;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_FAILURE;
+import static it.pagopa.selfcare.user.model.constants.EventsMetric.EVENTS_USER_INSTITUTION_PRODUCT_SUCCESS;
+import static it.pagopa.selfcare.user.model.constants.EventsName.EVENT_USER_MS_NAME;
 
 @Slf4j
 @ApplicationScoped
@@ -63,15 +57,6 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
   @Inject ObjectMapper objectMapper;
 
-  @ConfigProperty(name = "user-ms.retry.min-backoff")
-  Integer retryMinBackOff;
-
-  @ConfigProperty(name = "user-ms.retry.max-backoff")
-  Integer retryMaxBackOff;
-
-  @ConfigProperty(name = "user-ms.retry")
-  Integer maxRetry;
-
   @ConfigProperty(name = "user-ms.selfcare-url")
   String selfcareUrl;
 
@@ -83,22 +68,31 @@ public class UserNotificationServiceImpl implements UserNotificationService {
 
   @ConfigProperty(name = "user-ms.webhook.topic")
   String webhookTopic;
+  @ConfigProperty(name = "user-ms.onemail.template.activated")
+  String activateUserTemplateId;
+  @ConfigProperty(name = "user-ms.onemail.template.deleted")
+  String deleteUserTemplateId;
+  @ConfigProperty(name = "user-ms.onemail.template.suspended")
+  String suspendUserTemplateId;
+  @ConfigProperty(name = "user-ms.onemail.template.request")
+  String requestUserTemplateId;
+  @ConfigProperty(name = "user-ms.onemail.template.convention")
+  String conventionRequestTemplateId;
+  @ConfigProperty(name = "user-ms.onemail.template.multi-role")
+  String createMultiRoleTemplateId;
+  @ConfigProperty(name = "user-ms.onemail.template.single-role")
+  String createSingleRoleTemplateId;
 
   private final MailService mailService;
-  private final Configuration freemarkerConfig;
   private final boolean eventHubUsersEnabled;
   private final TelemetryClient telemetryClient;
 
   public UserNotificationServiceImpl(
-      Configuration freemarkerConfig,
-      CloudTemplateLoader cloudTemplateLoader,
       MailService mailService,
       @ConfigProperty(name = "user-ms.eventhub.users.enabled") boolean eventHubUsersEnabled,
       TelemetryClient telemetryClient) {
     this.mailService = mailService;
-    this.freemarkerConfig = freemarkerConfig;
     this.telemetryClient = telemetryClient;
-    freemarkerConfig.setTemplateLoader(cloudTemplateLoader);
     this.eventHubUsersEnabled = eventHubUsersEnabled;
   }
 
@@ -204,8 +198,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
               user,
               institution,
               product,
-              ACTIVATE_TEMPLATE,
-              ACTIVATE_SUBJECT,
+            activateUserTemplateId,
               productRole,
               loggedUserName,
               loggedUserSurname);
@@ -214,8 +207,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
               user,
               institution,
               product,
-              DELETE_TEMPLATE,
-              DELETE_SUBJECT,
+            deleteUserTemplateId,
               productRole,
               loggedUserName,
               loggedUserSurname);
@@ -224,8 +216,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
               user,
               institution,
               product,
-              SUSPEND_TEMPLATE,
-              SUSPEND_SUBJECT,
+              suspendUserTemplateId,
               productRole,
               loggedUserName,
               loggedUserSurname);
@@ -249,14 +240,12 @@ public class UserNotificationServiceImpl implements UserNotificationService {
         userInstitution.getUserMailUuid());
 
     String email = retrieveMail(userResource, userInstitution);
-    String templateName =
-        roleLabels.size() > 1 ? CREATE_TEMPLATE_MULTIPLE_ROLE : CREATE_TEMPLATE_SINGLE_ROLE;
+    String templateId =
+        roleLabels.size() > 1 ? createMultiRoleTemplateId : createSingleRoleTemplateId;
     Map<String, String> dataModel =
         buildCreateEmailDataModel(loggedUser, product, institutionDescription, roleLabels);
 
-    return this.sendEmailNotification(templateName, CREATE_SUBJECT, email, dataModel)
-        .onItem()
-        .invoke(() -> log.debug("sendCreateNotification end"));
+    return sendMail(userInstitution.getUserId(), email, templateId, dataModel);
   }
 
   private Map<String, String> buildCreateEmailDataModel(
@@ -378,23 +367,14 @@ public class UserNotificationServiceImpl implements UserNotificationService {
       org.openapi.quarkus.user_registry_json.model.UserResource user,
       UserInstitution institution,
       Product product,
-      String templateName,
-      String subject,
+      String templateId,
       String productRole,
       String loggedUserName,
       String loggedUserSurname) {
     String email = retrieveMail(user, institution);
     Map<String, String> dataModel =
         buildEmailDataModel(institution, product, productRole, loggedUserName, loggedUserSurname);
-    return this.sendEmailNotification(templateName, subject, email, dataModel);
-  }
-
-  private String evaluateRole(PartyRole role) {
-    return switch (role) {
-      case MANAGER -> "Legale Rappresentante";
-      case DELEGATE, ADMIN_EA -> "Amministratore";
-      default -> NO_ROLE_FOUND;
-    };
+    return sendMail(user.getId().toString(), email, templateId, dataModel);
   }
 
   @Override
@@ -402,7 +382,7 @@ public class UserNotificationServiceImpl implements UserNotificationService {
       UserResource user, UserInstitution institution, Product product) {
     String email = retrieveMail(user, institution);
     Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
-    return this.sendEmailNotification(REQUEST_TEMPLATE, REQUEST_SUBJECT, email, dataModel);
+    return sendMail(user.getId().toString(), email, requestUserTemplateId, dataModel);
   }
 
   @Override
@@ -410,32 +390,17 @@ public class UserNotificationServiceImpl implements UserNotificationService {
       UserResource user, UserInstitution institution, Product product) {
     String email = retrieveMail(user, institution);
     Map<String, String> dataModel = buildEmailDataModelUserRequest(institution, product);
-    return this.sendEmailNotification(
-        CONVENTION_TEMPLATE,
-        String.format(CONVENTION_SUBJECT + " - %s", institution.getInstitutionDescription()),
-        email,
-        dataModel);
+    return sendMail(user.getId().toString(), email, conventionRequestTemplateId, dataModel);
   }
 
-  private Uni<Void> sendEmailNotification(
-      String templateName, String subject, String email, Map<String, String> dataModel) {
-    return Uni.createFrom()
-        .item(getContent(templateName, dataModel))
-        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-        .onItem()
-        .transformToUni(content -> mailService.sendMail(email, content.toString(), subject));
-  }
-
-  private StringWriter getContent(String templateName, Map<String, String> dataModel) {
-    StringWriter stringWriter = null;
-    try {
-      Template template = freemarkerConfig.getTemplate(templateName);
-      stringWriter = new StringWriter();
-      template.process(dataModel, stringWriter);
-    } catch (Exception e) {
-      log.error("Unable to fetch template {}", templateName, e);
-    }
-    return stringWriter;
+  private Uni<Void> sendMail(String userId, String email, String templateId, Map<String, String> dataModel) {
+    mailService.sendOneMail(userId, email, templateId, dataModel)
+      .subscribe()
+      .with(
+        ignored -> log.debug("Mail sent"),
+        failure -> log.error("Mail failed", failure)
+      );
+    return Uni.createFrom().voidItem();
   }
 
   private static String retrieveMail(UserResource user, UserInstitution institution) {
