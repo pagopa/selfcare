@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.onboarding.conf;
 
 import io.quarkus.runtime.StartupEvent;
+import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
-import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -44,18 +44,18 @@ public class OnboardingMsConfig {
     ProductService productAzureService;
 
     void onStart(@Observes StartupEvent ev) {
-        log.info(String.format("Database %s is starting...", Onboarding.mongoDatabase().getName()));
+        log.info("Tenant-aware Mongo configuration is starting");
         log.info("ProductService eagerly initialized: {}", productAzureService.getClass().getSimpleName());
     }
 
     @ApplicationScoped
-    public ProductService productService(AzureBlobClientDefault productBlobClient) {
+    public ProductService productService(AzureBlobClient productBlobClient) {
         return new ProductServiceCacheable(productBlobClient, filepathProduct);
     }
 
     /**
      * Producer of the {@link AzureBlobClientDefault} used to read the product catalog from Azure
-     * Blob Storage. Exposed as a CDI bean so that both {@link #productService(AzureBlobClientDefault)}
+     * Blob Storage. Exposed as a CDI bean so that both {@link #productService(AzureBlobClient)}
      * and the readiness health check
      * ({@code it.pagopa.selfcare.onboarding.health.ProductBlobStorageReadinessCheck}) share the
      * same instance (single connection pool, single Managed Identity token cache).
