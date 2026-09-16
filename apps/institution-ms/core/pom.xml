@@ -47,6 +47,10 @@
             <artifactId>ses</artifactId>
             <version>2.20.88</version>
         </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-health-spring</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

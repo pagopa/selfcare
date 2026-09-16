@@ -56,4 +56,8 @@ public class AzureBlobClient implements FileStorageConnector {
         }
     }
 
+    public void probeContainer() {
+        blobClient.getBlobContainerClient(azureStorageConfig.getContainer()).getProperties();
+    }
+
 }
