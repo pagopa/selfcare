@@ -295,6 +295,23 @@ class JWTSecurityIdentityAugmentorTest {
   }
 
   @Test
+  void testAugment_WithInvalidTenantClaim_ShouldFailAuthenticationWith401() {
+    // Given: a tenant_id claim that is not in the supported set (AR, PNPG)
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn("NOT_A_REAL_TENANT");
+
+    SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+        .setPrincipal(jsonWebToken)
+        .build();
+
+    // When / Then: the Uni must fail with AuthenticationFailedException (mapped to HTTP 401 by
+    // Quarkus), not complete successfully nor surface an unmapped exception.
+    augmentor.augment(identity, authContext)
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(io.quarkus.security.AuthenticationFailedException.class);
+  }
+
+  @Test
   void testAugment_WithLongIssuerString() {
     // Given
     String longIssuer = "A".repeat(1000);

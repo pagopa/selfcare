@@ -39,6 +39,8 @@ public class IntegrationProfile implements QuarkusTestProfile {
     return Map.of(
         "mp.jwt.verify.publickey",
         getPublicKey(),
+        "tenant.enforcement.enabled",
+        "true",
         "custom.jwt-token-test",
         Objects.requireNonNull(
             JwtUtils.generateToken(
@@ -81,13 +83,14 @@ public class IntegrationProfile implements QuarkusTestProfile {
     jwtPayload.put("aud", "api.dev.selfcare.pagopa.it");
     jwtPayload.put("iss", "SPID");
     jwtPayload.put("jti", "_3f603a8bc36b1231b1a7");
+    jwtPayload.put("tenant_id", "AR");
     return jwtPayload;
   }
 
   public static MongoDatabase getMongoClientConnection() {
     ConnectionString connectionString =
         new ConnectionString(
-            ConfigProvider.getConfig().getValue("quarkus.mongodb.connection-string", String.class));
+        ConfigProvider.getConfig().getValue("MONGODB_CONNECTION_STRING_AR", String.class));
     MongoClient mongoClient = MongoClients.create(connectionString);
     return mongoClient.getDatabase("dummyOnboarding");
   }

@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingDocumentMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
+import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
@@ -83,6 +84,8 @@ public class OnboardingServiceDefault implements OnboardingService {
     OnboardingPersistenceHelper persistenceHelper;
     @Inject
     OnboardingQueryHelper queryHelper;
+    @Inject
+    OnboardingRepository onboardingRepository;
     @Inject OnboardingUtils onboardingUtils;
 
     // -------------------------------------------------------------------------
@@ -247,7 +250,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                 onboarding.getInstitution(), product.getId(), product.getParentId()))
                                 .replaceWith(onboarding))
             .onItem().call(onboarding ->
-                    OnboardingQueryHelper.updateApproverUserUuid(onboardingId, approveRequest))
+                    queryHelper.updateApproverUserUuid(onboardingId, approveRequest))
             .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, null))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
@@ -289,7 +292,7 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reason) {
-        return Onboarding.findById(onboardingId)
+        return onboardingRepository.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
                         COMPLETED.equals(o.getStatus())
@@ -297,14 +300,14 @@ public class OnboardingServiceDefault implements OnboardingService {
                                         String.format("Onboarding with id %s is COMPLETED!", onboardingId)))
                                 : Uni.createFrom().item(o))
                 .onItem().transformToUni(id ->
-                        OnboardingQueryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
+                        queryHelper.updateReasonForRejectAndUpdateStatus(onboardingId, reason))
                 .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, "60"));
     }
 
     @Override
     public Uni<Long> deleteOnboarding(String onboardingId) {
         log.info("Deleting onboarding with id {}", onboardingId);
-        return Onboarding.findById(onboardingId)
+        return onboardingRepository.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o ->
@@ -317,7 +320,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                             "status", OnboardingStatus.DELETED.name(),
                             "updatedAt", LocalDateTime.now(),
                             "deletedAt", LocalDateTime.now());
-                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                    return queryHelper.updateOnboardingStatus(onboardingId, params);
                 })
                 .onItem().transformToUni(onboarding ->
                         orchestrationService.triggerOrchestrationDeleteInstitutionAndUser(onboardingId)
@@ -327,7 +330,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<Long> deleteOnboardingUser(String onboardingId, String userId) {
         log.info("Deleting user onboarding with id {} for userId {}", onboardingId, userId);
-        return Onboarding.findById(onboardingId)
+        return onboardingRepository.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
                 .onItem().transform(Onboarding.class::cast)
@@ -350,7 +353,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                             "status", OnboardingStatus.DELETED.name(),
                             "updatedAt", LocalDateTime.now(),
                             "deletedAt", LocalDateTime.now());
-                    return OnboardingQueryHelper.updateOnboardingStatus(onboardingId, params);
+                    return queryHelper.updateOnboardingStatus(onboardingId, params);
                 });
     }
 
@@ -385,7 +388,7 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<OnboardingGet> onboardingGet(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
+        return onboardingRepository.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
                         opt.map(Onboarding.class::cast)
                                 .map(onboardingResponseFactory::toGetResponse)
@@ -396,7 +399,7 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<OnboardingGet> onboardingGetWithUserInfo(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
+        return onboardingRepository.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
                         opt.map(Onboarding.class::cast)
                                 .map(Uni.createFrom()::item)
@@ -433,7 +436,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         Map<String, Object> params = QueryUtils.createMapForInstitutionOnboardingsQueryParameter(
                 taxCode, subunitCode, origin, originId, status, null);
         Document query = QueryUtils.buildQuery(params);
-        return Onboarding.find(query).stream()
+        return onboardingRepository.find(query).stream()
                 .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
                 .collect().asList();
@@ -449,14 +452,14 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<Long> updateOnboarding(String onboardingId, Onboarding onboarding) {
-        return Onboarding.findById(onboardingId)
+        return onboardingRepository.findById(onboardingId)
                 .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
                         Objects.isNull(o)
                                 ? Uni.createFrom().failure(new InvalidRequestException(
                                         String.format("Onboarding with id %s is not present!", onboardingId)))
                                 : Uni.createFrom().item(o))
-                .onItem().transformToUni(id -> OnboardingQueryHelper.updateOnboardingValues(onboardingId, onboarding));
+                .onItem().transformToUni(id -> queryHelper.updateOnboardingValues(onboardingId, onboarding));
     }
 
     @Override
@@ -487,8 +490,10 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Override
     public Uni<OnboardingGet> retrieveOnboardingByInstitutionId(String institutionId, String productId) {
-        return Onboarding.find("institution.id = ?1 and productId = ?2 and status = ?3",
-                        institutionId, productId, COMPLETED)
+        Document query = new Document("institution.id", institutionId)
+                .append("productId", productId)
+                .append("status", COMPLETED.name());
+        return onboardingRepository.find(query)
                 .firstResult()
                 .map(Onboarding.class::cast)
                 .onItem().ifNotNull().transformToUni(onboardingResponseFactory::toGetResponse)
@@ -800,7 +805,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<Void> triggerDocumentGate(String onboardingId) {
         log.info("triggerDocumentGate called for onboardingId={}", onboardingId);
-        return Onboarding.findById(onboardingId)
+        return onboardingRepository.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
                 .onItem().transform(Onboarding.class::cast)
@@ -883,7 +888,7 @@ public class OnboardingServiceDefault implements OnboardingService {
             Map<String, Object> params = Map.of(
                     "status", OnboardingStatus.REQUEST.name(),
                     "updatedAt", LocalDateTime.now());
-            return OnboardingQueryHelper.updateOnboardingStatus(onboarding.getId(), params)
+            return queryHelper.updateOnboardingStatus(onboarding.getId(), params)
                     .onItem().transformToUni(ignore -> triggerOrchestrationIfEnabled(onboarding).replaceWithVoid());
         }
 

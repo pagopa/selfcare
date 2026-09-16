@@ -31,12 +31,14 @@ import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductRole;
 import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.mockito.Spy;
@@ -65,6 +67,9 @@ class OnboardingServiceIntegrationTest {
 
     @Inject
     OnboardingServiceDefault onboardingService;
+
+    @InjectMock
+    TenantContext tenantContext;
 
     @InjectMock
     @RestClient
@@ -96,6 +101,13 @@ class OnboardingServiceIntegrationTest {
 
     @Spy
     OnboardingMapper onboardingMapper = new OnboardingMapperImpl();
+
+    @BeforeEach
+    void setupTenantContext() {
+        when(tenantContext.requiredTenantId()).thenReturn("AR");
+        when(tenantContext.getTenantId()).thenReturn("AR");
+        when(tenantContext.isInitialized()).thenReturn(true);
+    }
 
     static final UserRequest manager = UserRequest.builder()
             .name("name")
@@ -291,6 +303,7 @@ class OnboardingServiceIntegrationTest {
     private Onboarding createDummyOnboarding() {
         Onboarding onboarding = new Onboarding();
         onboarding.setId(UUID.randomUUID().toString());
+        onboarding.setTenantId("AR");
         onboarding.setProductId("prod-id");
 
         Institution institution = new Institution();
@@ -328,7 +341,8 @@ class OnboardingServiceIntegrationTest {
         ReactivePanacheUpdate query = mock(ReactivePanacheUpdate.class);
         PanacheMock.mock(Onboarding.class);
         when(Onboarding.update(any(Document.class))).thenReturn(query);
-        when(query.where("_id", onboardingId)).thenReturn(Uni.createFrom().item(updatedItemCount));
+        when(query.where("tenantId = ?1 and _id = ?2", "AR", onboardingId))
+                .thenReturn(Uni.createFrom().item(updatedItemCount));
     }
 
     void mockPersistOnboarding(UniAsserter asserter) {

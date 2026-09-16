@@ -6,6 +6,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.controller.response.InstitutionResponse;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -26,6 +27,9 @@ public class InstitutionServiceDefault implements InstitutionService {
     @RestClient
     @Inject
     private final InstitutionApi institutionApi;
+
+    @Inject
+    OnboardingRepository onboardingRepository;
 
     public InstitutionServiceDefault(@RestClient InstitutionApi institutionApi) {
         this.institutionApi = institutionApi;
@@ -70,7 +74,7 @@ public class InstitutionServiceDefault implements InstitutionService {
 
     public Multi<Onboarding> getDistinctOnboardings(Document query) {
         Set<String> seenInstitutionIds = new HashSet<>();
-        return Onboarding.find(query).stream().map(Onboarding.class::cast)
+        return onboardingRepository.find(query).stream().map(Onboarding.class::cast)
                 .filter(onboarding -> seenInstitutionIds.add(onboarding.getInstitution().getId()));
     }
 }

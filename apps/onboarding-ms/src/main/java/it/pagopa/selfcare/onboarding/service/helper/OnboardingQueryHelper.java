@@ -15,6 +15,7 @@ import it.pagopa.selfcare.onboarding.controller.response.OnboardingGetResponse;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.factory.OnboardingResponseFactory;
+import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import it.pagopa.selfcare.onboarding.util.SortEnum;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -38,12 +39,15 @@ public class OnboardingQueryHelper {
     @Inject
     OnboardingPersistenceHelper persistenceHelper;
 
+    @Inject
+    OnboardingRepository onboardingRepository;
+
     // -------------------------------------------------------------------------
     // Recupero onboarding
     // -------------------------------------------------------------------------
 
     public Uni<Onboarding> retrieveOnboarding(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
+        return onboardingRepository.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
                         opt.map(Onboarding.class::cast)
                                 .map(o -> Uni.createFrom().item(o))
@@ -53,7 +57,7 @@ public class OnboardingQueryHelper {
     }
 
     public Uni<Onboarding> retrieveOnboardingAndCheckIfExpired(String onboardingId) {
-        return Onboarding.findByIdOptional(onboardingId)
+        return onboardingRepository.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
                         opt.map(Onboarding.class::cast)
                                 .filter(o -> OnboardingStatus.TOBEVALIDATED.equals(o.getStatus())
@@ -107,39 +111,39 @@ public class OnboardingQueryHelper {
     }
 
     public io.quarkus.mongodb.panache.reactive.ReactivePanacheQuery<Onboarding> runQuery(Document query, Document sort) {
-        return Onboarding.find(query, sort);
+        return onboardingRepository.find(query, sort);
     }
 
     // -------------------------------------------------------------------------
     // Aggiornamenti stato onboarding
     // -------------------------------------------------------------------------
 
-    public static Uni<Long> updateReasonForRejectAndUpdateStatus(String onboardingId, ReasonRequest reasonForReject) {
+    public Uni<Long> updateReasonForRejectAndUpdateStatus(String onboardingId, ReasonRequest reasonForReject) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingReject(
                 reasonForReject, OnboardingStatus.REJECTED.name());
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }
 
-    public static Uni<Long> updateApproverUserUuid(String onboardingId, ApproveRequest approveRequest) {
+    public Uni<Long> updateApproverUserUuid(String onboardingId, ApproveRequest approveRequest) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingApprove(approveRequest);
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }
 
-    public static Uni<Long> updateOnboardingStatus(String id, Map<String, Object> queryParameter) {
+    public Uni<Long> updateOnboardingStatus(String id, Map<String, Object> queryParameter) {
         Document query = QueryUtils.buildUpdateDocument(queryParameter);
         return performUpdate(id, query);
     }
 
-    public static Uni<Long> updateOnboardingValues(String onboardingId, Onboarding onboarding) {
+    public Uni<Long> updateOnboardingValues(String onboardingId, Onboarding onboarding) {
         Map<String, Object> params = QueryUtils.createMapForOnboardingUpdate(onboarding);
         Document query = QueryUtils.buildUpdateDocument(params);
         return performUpdate(onboardingId, query);
     }
 
-    private static Uni<Long> performUpdate(String id, Document query) {
-        return Onboarding.update(query).where("_id", id)
+    private Uni<Long> performUpdate(String id, Document query) {
+        return onboardingRepository.update(query, id)
                 .onItem().transformToUni(count -> {
                     if (count == 0) {
                         return Uni.createFrom().failure(new InvalidRequestException(
@@ -168,7 +172,6 @@ public class OnboardingQueryHelper {
         return QueryUtils.buildSortDocument(Onboarding.Fields.createdAt.name(), SortEnum.DESC);
     }
 }
-
 
 
 
