@@ -4,10 +4,8 @@ on:
   push:
     branches:
       - main
-      - feature/SELC-9275
     paths:
       - 'libs/selfcare-sdk-health-spring/**'
-      - '.github/workflows/release_health_sdk_spring.yml'
 
   workflow_dispatch:
 
