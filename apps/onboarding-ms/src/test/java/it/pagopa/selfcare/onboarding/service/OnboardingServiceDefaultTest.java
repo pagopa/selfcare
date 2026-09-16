@@ -5922,6 +5922,33 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
+    void resolveRequiredDocumentsEnabled_returnsFalseWithoutCallingProductMs_whenFeatureIsDisabled() throws Exception {
+        // given
+        Onboarding onboarding = createDummyOnboarding();
+        java.lang.reflect.Field featureFlag = OnboardingServiceDefault.class
+                .getDeclaredField("requiredDocumentsEnabled");
+        featureFlag.setAccessible(true);
+        boolean initialFeatureFlagValue = featureFlag.getBoolean(onboardingService);
+        featureFlag.setBoolean(onboardingService, false);
+
+        try {
+            java.lang.reflect.Method resolveRequiredDocuments = OnboardingServiceDefault.class
+                    .getDeclaredMethod("resolveRequiredDocumentsEnabled", Onboarding.class);
+            resolveRequiredDocuments.setAccessible(true);
+
+            // when
+            @SuppressWarnings("unchecked")
+            Uni<Boolean> result = (Uni<Boolean>) resolveRequiredDocuments.invoke(onboardingService, onboarding);
+
+            // then
+            assertFalse(result.await().indefinitely());
+            verifyNoInteractions(productService);
+        } finally {
+            featureFlag.setBoolean(onboardingService, initialFeatureFlagValue);
+        }
+    }
+
+    @Test
     @RunOnVertxContext
     void onboarding_setsStatusRequestingAndSkipsOrchestration_whenRequiredDocumentsEnabled(UniAsserter asserter) {
         Onboarding request = buildPrvOnboardingRequest();
