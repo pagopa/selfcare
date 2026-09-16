@@ -33,6 +33,7 @@ import jakarta.ws.rs.WebApplicationException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.bson.Document;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
@@ -85,6 +86,9 @@ public class OnboardingServiceDefault implements OnboardingService {
     OnboardingQueryHelper queryHelper;
     @Inject OnboardingUtils onboardingUtils;
 
+    @ConfigProperty(name = "onboarding-ms.required-documents.enabled")
+    boolean requiredDocumentsEnabled;
+
     // -------------------------------------------------------------------------
     // Public interface — onboarding flows
     // -------------------------------------------------------------------------
@@ -119,6 +123,13 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<Boolean> resolveRequiredDocumentsEnabled(Onboarding onboarding) {
+
+      if (!requiredDocumentsEnabled) {
+            log.info("Required-documents flow disabled by configuration for institution {}",
+                    onboarding.getInstitution().getDescription());
+            return Uni.createFrom().item(Boolean.FALSE);
+        }
+
         InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
         Origin origin = onboarding.getInstitution().getOrigin();
         var productInstitutionType = institutionType != null
