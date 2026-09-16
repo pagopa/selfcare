@@ -200,6 +200,7 @@ Feature: User
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-pagopa    |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-pn        |
       | 97a511a7-2acc-47b9-afed-2f3c65753b4a | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-interop   |
+      | 85a521d6-2acd-47b9-afed-2f3c65753b7b | john   | Doe     | PRVTNT80A41H401T     | ADMIN     | prod-pn        |
     And The dashboard response body contains at path "find { it.id == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.product.roleInfos" the following list of objects in any order:
       | role     | partyRole | excludeRoleFromUserGroups |
       | admin    | OPERATOR  | false                     |
