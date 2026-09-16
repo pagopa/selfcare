@@ -185,6 +185,10 @@ locals {
       value = "true"
     },
     {
+      name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
+      value = "false"
+    },
+    {
       name  = "MS_DOCUMENT_URL"
       value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
@@ -199,13 +203,21 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"AR\": {\"mongo\": {\"account\": \"cosmos-ar\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_AR\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_AR\"}}}"
     }
   ]
 
   onboarding_ms_secrets_names = {
-    "JWT-PUBLIC-KEY"                          = "jwt-public-key"
+    "JWT_PUBLIC_KEY_AR"                       = "jwt-public-key"
     "JWT_BEARER_TOKEN"                        = "jwt-bearer-token-functions"
-    "MONGODB-CONNECTION-STRING"               = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_AR"            = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                   = "user-registry-api-key"
     "ONBOARDING-FUNCTIONS-API-KEY"            = "fn-onboarding-primary-key"
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"

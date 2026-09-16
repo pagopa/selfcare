@@ -1,7 +1,8 @@
 services:
   mongo-db:
-    image: mongo:latest
-    command: ["--replSet", "rs0"]
+    platform: linux/amd64
+    image: mongo@sha256:406a4fdca9fc763443268f000218d3849ef8996f66ed9e92ba0b501b446ab822
+    command: [ "--replSet", "rs0" ]
     ports:
       - "28017:27017"
     networks:
@@ -10,7 +11,7 @@ services:
       - "./mongo-init/:/docker-entrypoint-initdb.d"
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite:latest
+    image: mcr.microsoft.com/azure-storage/azurite@sha256:647c63a91102a9d8e8000aab803436e1fc85fbb285e7ce830a82ee5d6661cf37
     ports:
       - "10000:10000"
       - "10001:10001"
@@ -19,18 +20,17 @@ services:
       - develop-network
     environment:
       - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
-    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence"
+    command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --inMemoryPersistence --skipApiVersionCheck"
 
   azure-cli:
-    build:
-      context: "."
-      dockerfile: "Dockerfile-azure-cli"
+    image: mcr.microsoft.com/azure-cli:latest
     depends_on:
       - azurite
     volumes:
       - "./blobStorageInit/init_azurite.sh:/init_azurite.sh"
       - "./blobStorageInit/products.json:/workspace/products.json"
       - "./blobStorageInit/dummy-accordo_di_adesione.html:/workspace/dummy-accordo_di_adesione.html"
+    command: [ "/bin/sh", "-c", "/init_azurite.sh" ]
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:
@@ -50,33 +50,33 @@ services:
       - "./mock:/config"
 
   document-ms:
-     platform: linux/amd64
-     image: ghcr.io/pagopa/selfcare-document-ms:latest
-     depends_on:
-       - azurite
-       - mongo-db
-     ports:
+    platform: linux/amd64
+    image: ghcr.io/pagopa/selfcare-document-ms:latest
+    depends_on:
+      - azurite
+      - mongo-db
+    ports:
       - "8091:8080"
-     networks:
+    networks:
       - develop-network
-     env_file:
+    env_file:
       - test-integration-document.env
 
   product-ms:
-     platform: linux/amd64
-     image: ghcr.io/pagopa/selfcare-product-ms:latest
-     ports:
-       - "9090:8080"
-     networks:
-       - develop-network
-     env_file:
-       - test-product-ms.env
-     depends_on:
-       - mongo-db
+    platform: linux/amd64
+    image: ghcr.io/pagopa/selfcare-product-ms:latest
+    ports:
+      - "9090:8080"
+    networks:
+      - develop-network
+    env_file:
+      - test-product-ms.env
+    depends_on:
+      - mongo-db
 
 networks:
   develop-network:
-    name: selfcare-develop-network
+    name: selfcare-onboarding-develop-network
 
 secrets:
   maven_settings:

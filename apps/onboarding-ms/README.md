@@ -23,7 +23,9 @@ Before running you must set these properties as environment variables.
 
 | **Property**                                           | **Environment Variable**                 | **Default** | **Required** |
 |--------------------------------------------------------|------------------------------------------|-------------|:------------:|
-| quarkus.mongodb.connection-string<br/>                 | MONGODB-CONNECTION-STRING                |             |     yes      |
+| tenant.registry.json<br/>                              | TENANT_REGISTRY_JSON                     |             |     yes      |
+| Mongo AR connection string<br/>                        | MONGODB_CONNECTION_STRING_AR             |             |     yes      |
+| Mongo PNPG connection string<br/>                      | MONGODB_CONNECTION_STRING_PNPG           |             |     yes      |
 | mp.jwt.verify.publickey<br/>                           | JWT-PUBLIC-KEY                           |             |     yes      |
 | quarkus.rest-client."**.UserApi".api-key<br/>          | USER-REGISTRY-API-KEY                    |             |     yes      |
 | quarkus.rest-client."**.UserApi".url<br/>              | USER_REGISTRY_URL                        |             |     yes      |
@@ -33,6 +35,7 @@ Before running you must set these properties as environment variables.
 | quarkus.rest-client."**.OrchestrationApi".url<br/>     | ONBOARDING_FUNCTIONS_URL                 |             |     yes      |
 | quarkus.rest-client."**.OrchestrationApi".api-key<br/> | ONBOARDING-FUNCTIONS-API-KEY             |             |     yes      |
 | quarkus.rest-client."**.InstitutionApi".url<br/>       | MS_USER_URL                              |             |     yes      |
+| onboarding-ms.required-documents.enabled<br/>            | ONBOARDING-REQUIRED-DOCUMENTS-ENABLED    | false       |     no       |
 
 > **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
 
