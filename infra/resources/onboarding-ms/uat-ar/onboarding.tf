@@ -185,6 +185,10 @@ locals {
       value = "true"
     },
     {
+      name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
+      value = "false"
+    },
+    {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
       value = "prod-pn-pg"
     },
