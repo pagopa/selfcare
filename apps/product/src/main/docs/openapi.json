@@ -394,6 +394,15 @@
           }
         }
       },
+      "ProductExpirationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "expirationDays" : {
+            "format" : "int32",
+            "type" : "integer"
+          }
+        }
+      },
       "ProductMetadata" : {
         "type" : "object",
         "properties" : {
@@ -629,8 +638,22 @@
           }
         }
       },
+      "ProductRoleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        }
+      },
       "ProductStatus" : {
-        "enum" : [ "TESTING", "ACTIVE", "DELETED", "SUSPEND" ],
+        "enum" : [ "TESTING", "ACTIVE", "DELETED", "SUSPEND", "PHASE_OUT", "INACTIVE" ],
         "type" : "string"
       },
       "RequiredDocument" : {
@@ -774,6 +797,10 @@
       },
       "StorageOrigin" : {
         "enum" : [ "SYSTEM", "USER" ],
+        "type" : "string"
+      },
+      "UserRole" : {
+        "enum" : [ "MANAGER", "DELEGATE", "SUB_DELEGATE", "OPERATOR", "ADMIN_EA" ],
         "type" : "string"
       },
       "VisualConfiguration" : {
@@ -1087,6 +1114,71 @@
       }
     },
     "/product" : {
+      "get" : {
+        "summary" : "Get products (latest version per productId)",
+        "description" : "Returns the list of products, one entry per productId (latest version). Both query params rootOnly and valid are required.",
+        "operationId" : "getProducts",
+        "tags" : [ "Product" ],
+        "parameters" : [ {
+          "name" : "rootOnly",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "valid",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Products retrieved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request - missing required query params",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "post" : {
         "summary" : "Create or update a product configuration",
         "description" : "Creates a new product configuration or updates the existing one when a match is found",
@@ -1531,6 +1623,63 @@
         } ]
       }
     },
+    "/product/{productId}/expiration-days" : {
+      "get" : {
+        "summary" : "Get product expiration days",
+        "description" : "Returns the expiration days configured for a valid product; defaults to 30 when not set.",
+        "operationId" : "getProductExpirationDays",
+        "tags" : [ "Product" ],
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Expiration days retrieved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductExpirationResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product not found or not valid",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/product/{productId}/required-documents" : {
       "get" : {
         "summary" : "Get required documents for a product",
@@ -1663,6 +1812,144 @@
           },
           "500" : {
             "description" : "Internal Server Error"
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/{productId}/role-mappings/validate" : {
+      "get" : {
+        "summary" : "Validate a product role",
+        "description" : "Validates that the given productRole (product-specific role code) exists for the given role (party role) within the product configuration, returning its details.",
+        "operationId" : "validateProductRole",
+        "tags" : [ "Product" ],
+        "parameters" : [ {
+          "name" : "productId",
+          "required" : true,
+          "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productRole",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "role",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "$ref" : "#/components/schemas/UserRole"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Product role is valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductRoleResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request - missing or invalid parameters",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product, role or productRole not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/{productId}/valid" : {
+      "get" : {
+        "summary" : "Get product only if valid for onboarding",
+        "description" : "Retrieve a product by its identifier only when neither the product nor its parent (when present) is in a not-valid status (INACTIVE or PHASE_OUT).",
+        "operationId" : "getValidProductById",
+        "tags" : [ "Product" ],
+        "parameters" : [ {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Valid product found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product not found or not valid",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
           },
           "401" : {
             "description" : "Not Authorized"
