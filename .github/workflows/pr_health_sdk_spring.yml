@@ -1,0 +1,49 @@
+name: Build Spring Health SDK
+
+permissions:
+  contents: read
+  packages: read
+
+on:
+  workflow_dispatch:
+
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - 'libs/selfcare-sdk-health-spring/**'
+      - 'libs/selfcare-sdk-pom/**'
+      - '.github/workflows/pr_health_sdk_spring.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-24.04
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # 4.1.1
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@0ab4596768b603586c0de567f2430c30f5b0d2b0 # pin@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: maven
+
+      - uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # pin@v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Build and test with Maven
+        shell: bash
+        run: mvn -B -ntp -f libs/selfcare-sdk-health-spring/pom.xml clean verify
