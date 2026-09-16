@@ -32,6 +32,6 @@ public class ProductRepository implements ReactivePanacheMongoRepositoryBase<Pro
                             versions.stream()
                                 .max(Comparator.comparingInt(Product::getVersion))
                                 .orElseThrow())
-                    .collect(Collectors.toList()));
+                    .toList());
   }
 }
