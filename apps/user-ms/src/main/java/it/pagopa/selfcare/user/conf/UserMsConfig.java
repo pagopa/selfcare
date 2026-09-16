@@ -2,8 +2,6 @@ package it.pagopa.selfcare.user.conf;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.connectionstring.ConnectionString;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -29,18 +27,6 @@ public class UserMsConfig {
     @ConfigProperty(name = "user-ms.blob-storage.managed-identity-client-id-product")
     Optional<String> managedIdentityClientIdProduct;
 
-    @ConfigProperty(name = "user-ms.blob-storage.connection-string-templates")
-    Optional<String> connectionStringTemplates;
-
-    @ConfigProperty(name = "user-ms.blob-storage.account-name-templates")
-    Optional<String> accountNameTemplates;
-
-    @ConfigProperty(name = "user-ms.blob-storage.managed-identity-client-id-templates")
-    Optional<String> managedIdentityClientIdTemplates;
-
-    @ConfigProperty(name = "user-ms.blob-storage.container-templates")
-    String containerTemplates;
-
     @ApplicationScoped
     public ProductService productService(){
         return connectionStringProduct
@@ -48,15 +34,6 @@ public class UserMsConfig {
           .map(cs -> new ProductServiceCacheable(cs, containerProduct, filepathProduct))
           .orElseGet(() -> new ProductServiceCacheable(containerProduct, filepathProduct,
             accountNameProduct.orElse(""), managedIdentityClientIdProduct.orElse("")));
-    }
-
-    @ApplicationScoped
-    public AzureBlobClient azureBobClientContract() {
-        return connectionStringTemplates
-          .filter(cs -> !cs.isBlank())
-          .map(cs -> new AzureBlobClientDefault(cs, containerTemplates))
-          .orElseGet(() -> new AzureBlobClientDefault(containerTemplates,
-            accountNameTemplates.orElse(""), managedIdentityClientIdTemplates.orElse("")));
     }
 
     @ApplicationScoped
