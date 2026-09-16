@@ -212,28 +212,17 @@
   },
   {
     "httpRequest": {
-      "method": "GET",
-      "path": "/onemail-mock/v1/emails/statuses",
-      "queryStringParameters": {
-        "requestId": [
-          "internal-error-request-id"
-        ]
-      }
-    },
-    "httpResponse": {
-      "statusCode": 500,
-      "body": "Internal Server Error"
-    }
-  },
-  {
-    "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_activated')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_activated"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
@@ -249,11 +238,15 @@
     "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_deleted')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_deleted"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
@@ -269,11 +262,15 @@
     "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_suspended')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_suspended"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
@@ -289,11 +286,15 @@
     "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_request')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_request"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
@@ -309,11 +310,15 @@
     "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_convention')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_convention"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
@@ -329,11 +334,15 @@
     "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_added_multi_role')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_added_multi_role"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
@@ -349,11 +358,15 @@
     "httpRequest": {
       "method": "POST",
       "path": "/onemail-mock/v1/emails/send/high",
-      "bodyPatterns": [
-        {
-          "matchesJsonPath": "$.templateContent[?(@.templateId == 'selfcare_user_added_single_role')]"
+      "body": {
+        "type": "JSON",
+        "matchType": "ONLY_MATCHING_FIELDS",
+        "json": {
+          "templateContent": {
+            "templateId": "selfcare_user_added_single_role"
+          }
         }
-      ]
+      }
     },
     "httpResponse": {
       "statusCode": 200,
