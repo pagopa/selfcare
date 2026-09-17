@@ -363,7 +363,26 @@ public class OnboardingFunctions {
         default -> throw new IllegalArgumentException("Workflow options not found!");
       }
 
-      Optional<OnboardingStatus> optNextStatus = workflowExecutor.execute(ctx, onboarding);
+      Optional<OnboardingStatus> optNextStatus;
+      if (OnboardingStatus.TOBEVALIDATED.equals(onboarding.getStatus())
+          && workflowExecutor.requiresManualApproval()
+          && workflowExecutor.isApprovedByUser(onboarding)) {
+        if (!ctx.getIsReplaying()) {
+          telemetryService.trackFunction(
+              ONBOARDINGS,
+              "Phantom approval detected for onboardingId: "
+                  + onboardingId
+                  + ". The orchestration reached TOBEVALIDATED without a recorded approver "
+                  + "(processedByUserUid is missing): the transition was triggered without a manual approval. "
+                  + "The onboarding stays in TOBEVALIDATED and is not advanced.",
+              SeverityLevel.Warning,
+              Map.of(ONBOARDING_ID, onboardingId, PRODUCT_ID,
+                  onboarding.getProductId() != null ? onboarding.getProductId() : "unknown"));
+        }
+        return;
+      }
+
+      optNextStatus = workflowExecutor.execute(ctx, onboarding);
       optNextStatus.ifPresent(
           onboardingStatus -> onboardingService.updateOnboardingStatus(onboardingId, onboardingStatus));
     } catch (TaskFailedException | ResourceNotFoundException ex) {
