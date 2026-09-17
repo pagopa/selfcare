@@ -1,10 +1,12 @@
 package it.pagopa.selfcare.product.mapper;
 
+import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -22,4 +24,6 @@ public interface ProductMapperResponse {
 
   @Mapping(target = "maxDocumentsRequired", source = "maxDocumentsRequired", defaultValue = "1")
   RequiredDocumentResponse toRequiredDocumentResponse(RequiredDocument requiredDocument);
+
+  ProductRoleResponse toProductRoleResponse(BackOfficeRole backOfficeRole);
 }
