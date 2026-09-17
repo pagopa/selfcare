@@ -563,6 +563,7 @@ class OnboardingFunctionsTest {
     onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
     onboarding.setWorkflowType(WorkflowType.FOR_APPROVE);
     onboarding.setUsers(users);
+    onboarding.setProcessedByUserUid("approver-uid");
 
     UserRequester userRequester =
         UserRequester.builder()
@@ -590,6 +591,67 @@ class OnboardingFunctionsTest {
     assertEquals(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER, captorActivity.getAllValues().get(5));
 
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING);
+  }
+
+  @Test
+  void onboardingsOrchestratorForApproveWhenToBeValidatedWithoutApproverDoesNotAdvance() {
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    users.add(new User());
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
+    onboarding.setWorkflowType(WorkflowType.FOR_APPROVE);
+    onboarding.setUsers(users);
+    // no processedByUserUid: orchestration triggered without a manual approval (phantom trigger)
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    verify(orchestrationContext, never()).callActivity(any(), any(), any(), any());
+    verify(service, never()).updateOnboardingStatus(eq(onboarding.getId()), any());
+    verify(telemetryService, times(1))
+        .trackFunction(eq(ONBOARDINGS), anyString(), eq(SeverityLevel.Warning), any());
+  }
+
+  @Test
+  void onboardingsOrchestratorForApprovePtWhenToBeValidatedWithoutApproverDoesNotAdvance() {
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId("onboardingId");
+    onboarding.setInstitution(new Institution());
+    onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
+    onboarding.setWorkflowType(WorkflowType.FOR_APPROVE_PT);
+    // no processedByUserUid: orchestration triggered without a manual approval (phantom trigger)
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    verify(orchestrationContext, never()).callActivity(any(), any(), any(), any());
+    verify(service, never()).updateOnboardingStatus(eq(onboarding.getId()), any());
+    verify(telemetryService, times(1))
+        .trackFunction(eq(ONBOARDINGS), anyString(), eq(SeverityLevel.Warning), any());
+  }
+
+  @Test
+  void onboardingsOrchestratorForApproveGpuWhenToBeValidatedWithoutApproverDoesNotAdvance() {
+    Onboarding onboarding = new Onboarding();
+    List<User> users = new ArrayList<>();
+    users.add(new User());
+    onboarding.setId("onboardingId");
+    onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
+    onboarding.setWorkflowType(WorkflowType.FOR_APPROVE_GPU);
+    onboarding.setUsers(users);
+    // no processedByUserUid: orchestration triggered without a manual approval (phantom trigger)
+
+    TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
+
+    function.onboardingsOrchestrator(orchestrationContext, executionContext);
+
+    verify(orchestrationContext, never()).callActivity(any(), any(), any(), any());
+    verify(service, never()).updateOnboardingStatus(eq(onboarding.getId()), any());
+    verify(telemetryService, times(1))
+        .trackFunction(eq(ONBOARDINGS), anyString(), eq(SeverityLevel.Warning), any());
   }
 
   @Test
@@ -1009,6 +1071,7 @@ class OnboardingFunctionsTest {
     onboarding.setInstitution(new Institution());
     onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
     onboarding.setWorkflowType(WorkflowType.FOR_APPROVE_PT);
+    onboarding.setProcessedByUserUid("approver-uid");
 
     TaskOrchestrationContext orchestrationContext = mockTaskOrchestrationContext(onboarding);
 
@@ -1796,6 +1859,7 @@ class OnboardingFunctionsTest {
     onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
     onboarding.setWorkflowType(WorkflowType.FOR_APPROVE_GPU);
     onboarding.setUsers(users);
+    onboarding.setProcessedByUserUid("approver-uid");
 
     UserRequester userRequester = UserRequester.builder()
             .userRequestUid(UUID.randomUUID().toString())

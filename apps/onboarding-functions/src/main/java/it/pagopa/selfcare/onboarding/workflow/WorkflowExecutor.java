@@ -29,6 +29,31 @@ public interface WorkflowExecutor {
 
     Optional<OnboardingStatus> executePendingState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow);
 
+    /**
+     * Whether this workflow reaches {@code TOBEVALIDATED} only after an explicit manual approval and therefore
+     * must never advance past that state on its own. Overridden to {@code true} by the {@code FOR_APPROVE} family.
+     */
+    default boolean requiresManualApproval() {
+        return false;
+    }
+
+    /**
+     * Verifies that the onboarding was explicitly processed by a human approver.
+     * <p>
+     * The approver is tracked by {@link Onboarding#getProcessedByUserUid()}, which is populated exclusively by the
+     * {@code approve} / {@code reject} REST endpoints of {@code onboarding-ms}. When it is missing, the orchestration
+     * was triggered without a human approval (e.g. a direct or programmatic call to {@code StartOnboardingOrchestration}
+     * bypassing the controller): in that case the {@code FOR_APPROVE} workflows must NOT advance the onboarding beyond
+     * {@code TOBEVALIDATED}, so that a "phantom approval" cannot generate the contract, send emails and move the
+     * onboarding to {@code PENDING}/{@code COMPLETED}.
+     *
+     * @return {@code true} if no valid approver is recorded, {@code false} otherwise
+     */
+    default boolean isMissingManualApproval(Onboarding onboarding) {
+        String processedByUserUid = onboarding.getProcessedByUserUid();
+        return processedByUserUid == null || processedByUserUid.isBlank();
+    }
+
     default Optional<OnboardingStatus>  executePendingInReviewState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
         return Optional.empty();
     }

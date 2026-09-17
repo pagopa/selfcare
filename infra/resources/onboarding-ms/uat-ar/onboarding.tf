@@ -190,7 +190,7 @@ locals {
     },
     {
       name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
-      value = "false"
+      value = "true"
     },
     {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
