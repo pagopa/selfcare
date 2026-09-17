@@ -25,11 +25,14 @@ import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
+import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.ws.rs.BadRequestException;
@@ -926,4 +929,298 @@ class ProductControllerTest {
     }
     return productResponse;
   }
+
+  // -------------------------------------------------------------------------
+  // GET /{productId}/valid
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getValidProductById_shouldReturn200() {
+    // given
+    String productId = "prod-test";
+    ProductResponse response = new ProductResponse();
+    response.setProductId(productId);
+    response.setStatus(ProductStatus.ACTIVE);
+
+    when(productService.getValidProductById(productId))
+        .thenReturn(Uni.createFrom().item(response));
+
+    // when
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/valid")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("productId", equalTo(productId))
+        .body("status", equalTo(ProductStatus.ACTIVE.name()));
+
+    // then
+    verify(productService, times(1)).getValidProductById(productId);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getValidProductById_shouldReturn404_whenNotValid() {
+    // given
+    String productId = "prod-ced";
+
+    when(productService.getValidProductById(productId))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(
+                    new NotFoundException("Product with id prod-ced has status INACTIVE")));
+
+    // when
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/valid")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Product not found"))
+        .body("status", equalTo(404))
+        .body("detail", equalTo("Product with id prod-ced has status INACTIVE"))
+        .body("instance", equalTo("/product/" + productId + "/valid"));
+
+    // then
+    verify(productService, times(1)).getValidProductById(productId);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getValidProductById_shouldReturn404_whenNotFound() {
+    // given
+    String productId = "prod-missing";
+
+    when(productService.getValidProductById(productId))
+        .thenReturn(
+            Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
+
+    // when
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/valid")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Product not found"))
+        .body("status", equalTo(404))
+        .body("detail", containsString(productId))
+        .body("instance", equalTo("/product/" + productId + "/valid"));
+
+    // then
+    verify(productService, times(1)).getValidProductById(productId);
+  }
+
+  // -------------------------------------------------------------------------
+  // GET /{productId}/expiration-days
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getProductExpirationDays_shouldReturn200() {
+    // given
+    String productId = "prod-test";
+    ProductExpirationResponse response =
+        ProductExpirationResponse.builder().expirationDays(60).build();
+
+    when(productService.getProductExpirationDays(productId))
+        .thenReturn(Uni.createFrom().item(response));
+
+    // when
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/expiration-days")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("expirationDays", equalTo(60));
+
+    // then
+    verify(productService, times(1)).getProductExpirationDays(productId);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getProductExpirationDays_shouldReturn404_whenNotValid() {
+    // given
+    String productId = "prod-ced";
+
+    when(productService.getProductExpirationDays(productId))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(
+                    new NotFoundException("Product with id prod-ced has status INACTIVE")));
+
+    // when
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/expiration-days")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Product not found"))
+        .body("status", equalTo(404))
+        .body("detail", equalTo("Product with id prod-ced has status INACTIVE"))
+        .body("instance", equalTo("/product/" + productId + "/expiration-days"));
+
+    // then
+    verify(productService, times(1)).getProductExpirationDays(productId);
+  }
+
+  // -------------------------------------------------------------------------
+  // GET /product (list, latest version per productId)
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getProducts_shouldReturn200_withList() {
+    // given
+    ProductResponse root = new ProductResponse();
+    root.setProductId("prod-a");
+    root.setStatus(ProductStatus.ACTIVE);
+    ProductResponse other = new ProductResponse();
+    other.setProductId("prod-b");
+    other.setStatus(ProductStatus.ACTIVE);
+
+    when(productService.getProducts(true, true))
+        .thenReturn(Uni.createFrom().item(List.of(root, other)));
+
+    // when
+    given()
+        .queryParam("rootOnly", "true")
+        .queryParam("valid", "true")
+        .accept(ContentType.JSON)
+        .when()
+        .get()
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("size()", equalTo(2))
+        .body("[0].productId", equalTo("prod-a"))
+        .body("[1].productId", equalTo("prod-b"));
+
+    // then
+    verify(productService, times(1)).getProducts(true, true);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getProducts_shouldReturn400_whenQueryParamsMissing() {
+    // when
+    given()
+        .accept(ContentType.JSON)
+        .when()
+        .get()
+        .then()
+        .statusCode(400)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Bad Request"))
+        .body("status", equalTo(400))
+        .body("detail", equalTo("Query params 'rootOnly' and 'valid' are required"))
+        .body("instance", equalTo("/product"));
+
+    // then
+    verifyNoInteractions(productService);
+  }
+
+  // -------------------------------------------------------------------------
+  // GET /{productId}/role-mappings/validate
+  // -------------------------------------------------------------------------
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void validateProductRole_shouldReturn200() {
+    // given
+    String productId = "prod-test";
+    ProductRoleResponse response =
+        ProductRoleResponse.builder().code("admin").label("Admin").description("desc").build();
+
+    when(productService.validateProductRole(productId, UserRole.MANAGER, "admin"))
+        .thenReturn(Uni.createFrom().item(response));
+
+    // when
+    given()
+        .queryParam("role", "MANAGER")
+        .queryParam("productRole", "admin")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/role-mappings/validate")
+        .then()
+        .statusCode(200)
+        .contentType(ContentType.JSON)
+        .body("code", equalTo("admin"))
+        .body("label", equalTo("Admin"));
+
+    // then
+    verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, "admin");
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void validateProductRole_shouldReturn404_whenNotFound() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.validateProductRole(productId, UserRole.MANAGER, "missing"))
+        .thenReturn(
+            Uni.createFrom()
+                .failure(
+                    new NotFoundException(
+                        "ProductRole missing not found for role MANAGER in product prod-test")));
+
+    // when
+    given()
+        .queryParam("role", "MANAGER")
+        .queryParam("productRole", "missing")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/role-mappings/validate")
+        .then()
+        .statusCode(404)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Not Found"))
+        .body("status", equalTo(404))
+        .body("detail", containsString("missing"))
+        .body("instance", equalTo("/product/" + productId + "/role-mappings/validate"));
+
+    // then
+    verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, "missing");
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void validateProductRole_shouldReturn400_whenProductRoleMissing() {
+    // given
+    String productId = "prod-test";
+
+    when(productService.validateProductRole(productId, UserRole.MANAGER, null))
+        .thenReturn(
+            Uni.createFrom().failure(new BadRequestException("Missing productRole")));
+
+    // when
+    given()
+        .queryParam("role", "MANAGER")
+        .accept(ContentType.JSON)
+        .when()
+        .get(productId + "/role-mappings/validate")
+        .then()
+        .statusCode(400)
+        .contentType(ContentType.JSON)
+        .body("title", equalTo("Bad Request"))
+        .body("status", equalTo(400))
+        .body("detail", equalTo("Missing productRole"))
+        .body("instance", equalTo("/product/" + productId + "/role-mappings/validate"));
+
+    // then
+    verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, null);
+  }
+
 }

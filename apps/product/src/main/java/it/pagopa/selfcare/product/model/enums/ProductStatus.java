@@ -4,5 +4,7 @@ public enum ProductStatus {
   TESTING,
   ACTIVE,
   DELETED,
-  SUSPEND
+  SUSPEND,
+  PHASE_OUT,
+  INACTIVE
 }
