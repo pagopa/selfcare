@@ -1,9 +1,13 @@
 package it.pagopa.selfcare.dashboard.integration_test.steps;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.interfaces.Claim;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.restassured.response.ExtractableResponse;
+import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.commons.base.security.SelfCareAuthority;
 import it.pagopa.selfcare.dashboard.integration_test.model.Filter;
 import it.pagopa.selfcare.dashboard.integration_test.model.Requests;
@@ -21,6 +25,7 @@ import it.pagopa.selfcare.dashboard.model.user_groups.CreateUserGroupDto;
 import it.pagopa.selfcare.dashboard.model.user_groups.UpdateUserGroupDto;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -55,6 +60,17 @@ public class DashboardStepsUtil {
 
         return userResource;
 
+    }
+
+    public void setHeader(RequestSpecification requestSpecification) {
+      if(StringUtils.isNotBlank(token)) {
+        requestSpecification.header("Authorization", "Bearer " + token);
+
+        String tenantId = extractTenantIdFromToken();
+        if(StringUtils.isNotBlank(tenantId)) {
+          requestSpecification.header("X-Tenant-Id", tenantId);
+        }
+      }
     }
 
     private UUID mapUUID(String uuidString) {
@@ -340,6 +356,17 @@ public class DashboardStepsUtil {
 
         return userInstitutionRole;
 
+    }
+
+    private String extractTenantIdFromToken() {
+      if (StringUtils.isNotBlank(this.token)) {
+        DecodedJWT decodedJWT = JWT.decode(this.token);
+        Claim tenantClaim = decodedJWT.getClaim("tenant_id");
+        if (tenantClaim != null && !tenantClaim.isNull()) {
+          return tenantClaim.asString();
+        }
+      }
+      return null;
     }
 
 }

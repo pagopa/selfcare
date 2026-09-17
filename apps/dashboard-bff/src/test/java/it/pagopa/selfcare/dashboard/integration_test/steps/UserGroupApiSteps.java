@@ -12,7 +12,6 @@ import it.pagopa.selfcare.dashboard.model.product.ProductUserResource;
 import it.pagopa.selfcare.dashboard.model.user_groups.CreateUserGroupDto;
 import it.pagopa.selfcare.dashboard.model.user_groups.UpdateUserGroupDto;
 import it.pagopa.selfcare.dashboard.model.user_groups.UserGroupIdResource;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -56,9 +55,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -80,9 +77,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -102,9 +97,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -125,9 +118,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -148,9 +139,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
@@ -170,9 +159,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if (dashboardStepsUtil.filter.getInstitutionId() != null) {
             requestSpecification.queryParam("institutionId", dashboardStepsUtil.filter.getInstitutionId());
@@ -199,9 +186,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if (dashboardStepsUtil.filter.getInstitutionId() != null) {
             requestSpecification.queryParam("institutionId", dashboardStepsUtil.filter.getInstitutionId());
@@ -240,9 +225,7 @@ public class UserGroupApiSteps {
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()
