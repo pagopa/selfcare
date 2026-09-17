@@ -371,7 +371,7 @@ public class OnboardingFunctions {
           String phantomApprovalMessage =
               "Phantom approval detected for onboardingId: "
                   + onboardingId
-                  + ". The orchestration reached TOBEVALIDATED without a recorded approver "
+                  + ". The orchestration was invoked without a recorded approver "
                   + "(processedByUserUid is missing): the transition was triggered without a manual approval. "
                   + "The onboarding stays in TOBEVALIDATED and is not advanced.";
           functionContext.getLogger().warning(phantomApprovalMessage);
