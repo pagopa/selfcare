@@ -47,9 +47,9 @@ public interface WorkflowExecutor {
      * {@code TOBEVALIDATED}, so that a "phantom approval" cannot generate the contract, send emails and move the
      * onboarding to {@code PENDING}/{@code COMPLETED}.
      *
-     * @return {@code true} if a valid approver is recorded, {@code false} otherwise
+     * @return {@code true} if no valid approver is recorded, {@code false} otherwise
      */
-    default boolean isApprovedByUser(Onboarding onboarding) {
+    default boolean isMissingManualApproval(Onboarding onboarding) {
         String processedByUserUid = onboarding.getProcessedByUserUid();
         return processedByUserUid == null || processedByUserUid.isBlank();
     }

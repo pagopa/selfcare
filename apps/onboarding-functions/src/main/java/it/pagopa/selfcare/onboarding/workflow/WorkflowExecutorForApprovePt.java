@@ -32,7 +32,7 @@ public record WorkflowExecutorForApprovePt(ObjectMapper objectMapper, TaskOption
 
     @Override
     public Optional<OnboardingStatus> executeToBeValidatedState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
-        if (isApprovedByUser(onboardingWorkflow.getOnboarding())) {
+        if (isMissingManualApproval(onboardingWorkflow.getOnboarding())) {
             return Optional.empty();
         }
         return onboardingCompletionActivity(ctx, onboardingWorkflow);

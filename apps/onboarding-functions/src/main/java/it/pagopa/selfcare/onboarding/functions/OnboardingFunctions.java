@@ -366,7 +366,7 @@ public class OnboardingFunctions {
       Optional<OnboardingStatus> optNextStatus;
       if (OnboardingStatus.TOBEVALIDATED.equals(onboarding.getStatus())
           && workflowExecutor.requiresManualApproval()
-          && workflowExecutor.isApprovedByUser(onboarding)) {
+          && workflowExecutor.isMissingManualApproval(onboarding)) {
         if (!ctx.getIsReplaying()) {
           telemetryService.trackFunction(
               ONBOARDINGS,

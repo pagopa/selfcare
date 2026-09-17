@@ -42,7 +42,7 @@ public class WorkflowExecutorForApprove implements WorkflowExecutor {
 
     @Override
     public Optional<OnboardingStatus> executeToBeValidatedState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
-        if (isApprovedByUser(onboardingWorkflow.getOnboarding())) {
+        if (isMissingManualApproval(onboardingWorkflow.getOnboarding())) {
             return Optional.empty();
         }
         String onboardingWorkflowString = getOnboardingWorkflowString(objectMapper, onboardingWorkflow);
