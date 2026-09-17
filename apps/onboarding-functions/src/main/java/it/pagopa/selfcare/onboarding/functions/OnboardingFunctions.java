@@ -368,13 +368,16 @@ public class OnboardingFunctions {
           && workflowExecutor.requiresManualApproval()
           && workflowExecutor.isMissingManualApproval(onboarding)) {
         if (!ctx.getIsReplaying()) {
-          telemetryService.trackFunction(
-              ONBOARDINGS,
+          String phantomApprovalMessage =
               "Phantom approval detected for onboardingId: "
                   + onboardingId
                   + ". The orchestration reached TOBEVALIDATED without a recorded approver "
                   + "(processedByUserUid is missing): the transition was triggered without a manual approval. "
-                  + "The onboarding stays in TOBEVALIDATED and is not advanced.",
+                  + "The onboarding stays in TOBEVALIDATED and is not advanced.";
+          functionContext.getLogger().warning(phantomApprovalMessage);
+          telemetryService.trackFunction(
+              ONBOARDINGS,
+              phantomApprovalMessage,
               SeverityLevel.Warning,
               Map.of(ONBOARDING_ID, onboardingId, PRODUCT_ID,
                   onboarding.getProductId() != null ? onboarding.getProductId() : "unknown"));
