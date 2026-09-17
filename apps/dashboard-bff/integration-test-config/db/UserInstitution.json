@@ -123,7 +123,7 @@
         },
         "env": "ROOT",
         "productId": "prod-io",
-        "productRole": "admin",
+        "productRole": "referente operativo",
         "role": "OPERATOR",
         "status": "ACTIVE",
         "updatedAt": {
@@ -556,5 +556,29 @@
     ],
     "userId": "9b8e2b3f-4c7d-4f91-a6e2-3d1f8a7c5b42",
     "userMailUuid": "ID_CONTACTS#6b2f9a10-cd47-4e85-91ab-3f8d2c7e4b56"
+  },
+  {
+    "_id": {
+      "$oid": "6772b2beb957efbe104b7392"
+    },
+    "institutionDescription": "Comune di Castelbuono",
+    "institutionId": "c9a50656-f345-4c81-84be-5b2474470544",
+    "products": [
+      {
+        "createdAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        },
+        "env": "ROOT",
+        "productId": "prod-pn",
+        "productRole": "admin",
+        "role": "MANAGER",
+        "status": "ACTIVE",
+        "updatedAt": {
+          "$date": "2024-10-28T12:25:53.228+00:00"
+        }
+      }
+    ],
+    "userId": "85a521d6-2acd-47b9-afed-2f3c65753b7b",
+    "userMailUuid": "ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e"
   }
 ]
