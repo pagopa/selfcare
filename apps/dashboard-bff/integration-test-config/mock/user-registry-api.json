@@ -165,6 +165,46 @@
       "path": "/user-registry-mock/v1/users/{id}",
       "queryStringParameters": {
         "fl": [
+          "name,familyName,email,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "85a521d6-2acd-47b9-afed-2f3c65753b7b"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"body\":{\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"id\":\"85a521d6-2acd-47b9-afed-2f3c65753b7b\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}},\"ID_CONTACTS#a59d9a0a-2df1-4fb9-99c6-1c7fa3d1a867\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525251\"}},\"ID_CONTACTS#e59d9a0b-1de0-4fb9-99c6-1c7fa3d1a999\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525252\"}},\"ID_CONTACTS#f66d9a0e-1de0-4fb9-99c6-1d8fa3d1a000\":{\"email\":{\"certification\":\"NONE\",\"value\":\"cucumber2@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3252525253\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}}}},\"statusCode\":200}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
+          "fiscalCode,familyName,email,name,workContacts"
+        ]
+      },
+      "pathParameters": {
+        "id": [
+          "85a521d6-2acd-47b9-afed-2f3c65753b7b"
+        ]
+      }
+    },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"body\":{\"id\":\"85a521d6-2acd-47b9-afed-2f3c65753b7b\",\"fiscalCode\":\"PRVTNT80A41H401T\",\"name\":{\"certification\":\"SPID\",\"value\":\"john\"},\"familyName\":{\"certification\":\"SPID\",\"value\":\"Doe\"},\"email\":{\"certification\":\"SPID\",\"value\":\"personal@test.it\"},\"workContacts\":{\"ID_CONTACTS#8370aa38-a2ab-404b-9b8a-10487167332e\":{\"email\":{\"certification\":\"NONE\",\"value\":\"8370aa38-a2ab-404b-9b8a-10487167332e@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3365252525\"}},\"ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1\":{\"email\":{\"certification\":\"NONE\",\"value\":\"81956dd1-00fd-4423-888b-f77a48d26ba1@test.it\"}},\"ID_CONTACTS#875eeb28-2c83-4c0b-8d4d-63ac1b599375\":{\"email\":{\"certification\":\"NONE\",\"value\":\"875eeb28-2c83-4c0b-8d4d-63ac1b599375@test.it\"},\"mobilePhone\":{\"certification\":\"NONE\",\"value\":\"3335252525\"}}}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/user-registry-mock/v1/users/{id}",
+      "queryStringParameters": {
+        "fl": [
           "fiscalCode","familyName","email","name","workContacts"
         ]
       },

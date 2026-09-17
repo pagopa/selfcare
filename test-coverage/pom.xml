@@ -518,7 +518,7 @@
         </dependency>
         <dependency>
           <groupId>it.pagopa.selfcare</groupId>
-          <artifactId>selc-dashboard</artifactId>
+          <artifactId>dashboard-bff</artifactId>
           <version>0.0.1-SNAPSHOT</version>
         </dependency>
       </dependencies>
