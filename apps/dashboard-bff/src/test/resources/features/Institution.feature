@@ -380,7 +380,7 @@ Feature: Institution
     Given user login with username "j.doe" and password "test"
     And the institutionId is "c9a50656-f345-4c81-84be-5b2474470544"
     And the productId is "prod-interop"
-    And the userId is "35a78332-d038-4bfa-8e85-2cba7f6b7bf7"
+    And the userId is "85a521d6-2acd-47b9-afed-2f3c65753b7b"
     And the following user product request details:
       | role     | productRoles | toAddOnAggregates |
       | OPERATOR | security     | true              |
@@ -389,8 +389,8 @@ Feature: Institution
     And I send a GET request to "/v2/institutions/{institutionId}/users/{userId}" to retrieve institution user
     Then the response status should be 200
     And The dashboard response body contains:
-      | id         | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
-    And The dashboard response body contains the list "products" of size 3
+      | id         | 85a521d6-2acd-47b9-afed-2f3c65753b7b |
+    And The dashboard response body contains the list "products" of size 2
 
   Scenario: Attempt to add user by institutionId, productId and userId without permission
     Given user login with username "j.doe" and password "test"
@@ -413,7 +413,7 @@ Feature: Institution
       | DELEGATE | admin        |
     When I send a PUT request to "/v2/institutions/{institutionId}/products/{productId}/users/{userId}" to add a new user related to a product for institutions
     Then the response status should be 400
-    
+
   Scenario: Attempt to add user with an nonexistent institutionId
     Given user login with username "j.doe" and password "test"
     And the institutionId is "067327d3-bdd6-408d-8655-87e8f1970046"
