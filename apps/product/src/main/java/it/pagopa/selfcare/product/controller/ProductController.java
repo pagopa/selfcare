@@ -6,12 +6,15 @@ import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
+import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -619,6 +622,259 @@ public class ProductController {
                             .detail(String.format(PRODUCT_NOT_FOUND_WITH_PRODUCTID, productId))
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/product/" + sanitizedProductId + "/required-documents")
+                            .build())
+                    .build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/{productId}/valid")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Get product only if valid for onboarding",
+      description =
+          "Retrieve a product by its identifier only when neither the product nor its parent "
+              + "(when present) is in a not-valid status (INACTIVE or PHASE_OUT).",
+      operationId = "getValidProductById")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Valid product found",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductResponse.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found or not valid",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getValidProductById(@PathParam("productId") String productId) {
+    return productService
+        .getValidProductById(productId)
+        .onItem()
+        .transform(product -> Response.ok(product).build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(t.getMessage())
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance("/product/" + productId + "/valid")
+                            .build())
+                    .build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/{productId}/expiration-days")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Get product expiration days",
+      description =
+          "Returns the expiration days configured for a valid product; defaults to 30 when not set.",
+      operationId = "getProductExpirationDays")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Expiration days retrieved",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductExpirationResponse.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product not found or not valid",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getProductExpirationDays(@PathParam("productId") String productId) {
+    return productService
+        .getProductExpirationDays(productId)
+        .onItem()
+        .transform(expiration -> Response.ok(expiration).build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(t.getMessage())
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance("/product/" + productId + "/expiration-days")
+                            .build())
+                    .build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Get products (latest version per productId)",
+      description =
+          "Returns the list of products, one entry per productId (latest version). "
+              + "Both query params rootOnly and valid are required.",
+      operationId = "getProducts")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Products retrieved",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema =
+                        @Schema(
+                            implementation = ProductResponse.class,
+                            type =
+                                org.eclipse.microprofile.openapi.annotations.enums.SchemaType
+                                    .ARRAY))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request - missing required query params",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getProducts(
+      @Parameter(name = "rootOnly", required = true) @QueryParam("rootOnly") Boolean rootOnly,
+      @Parameter(name = "valid", required = true) @QueryParam("valid") Boolean valid) {
+
+    if (rootOnly == null || valid == null) {
+      return Uni.createFrom()
+          .item(
+              Response.status(Response.Status.BAD_REQUEST)
+                  .type("application/problem+json")
+                  .entity(
+                      Problem.builder()
+                          .title("Bad Request")
+                          .detail("Query params 'rootOnly' and 'valid' are required")
+                          .status(Response.Status.BAD_REQUEST.getStatusCode())
+                          .instance("/product")
+                          .build())
+                  .build());
+    }
+
+    return productService
+        .getProducts(rootOnly, valid)
+        .onItem()
+        .transform(products -> Response.ok(products).build());
+  }
+
+  @GET
+  @Tag(name = "Product")
+  @Path("/{productId}/role-mappings/validate")
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Validate a product role",
+      description =
+          "Validates that the given productRole (product-specific role code) exists for the given "
+              + "role (party role) within the product configuration, returning its details.",
+      operationId = "validateProductRole")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Product role is valid",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = ProductRoleResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request - missing or invalid parameters",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product, role or productRole not found",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> validateProductRole(
+      @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
+      @Parameter(name = "role", required = true) @QueryParam("role") UserRole role,
+      @Parameter(name = "productRole", required = true) @QueryParam("productRole")
+          String productRole) {
+
+    String sanitizedProductId = Encode.forJava(productId);
+
+    return productService
+        .validateProductRole(productId, role, productRole)
+        .onItem()
+        .transform(productRole1 -> Response.ok(productRole1).build())
+        .onFailure(BadRequestException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.BAD_REQUEST)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Bad Request")
+                            .detail(t.getMessage())
+                            .status(Response.Status.BAD_REQUEST.getStatusCode())
+                            .instance(
+                                "/product/" + sanitizedProductId + "/role-mappings/validate")
+                            .build())
+                    .build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Not Found")
+                            .detail(t.getMessage())
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance(
+                                "/product/" + sanitizedProductId + "/role-mappings/validate")
                             .build())
                     .build());
   }
