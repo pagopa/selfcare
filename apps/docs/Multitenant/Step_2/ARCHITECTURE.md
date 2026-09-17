@@ -93,7 +93,8 @@ Key Vault secret names. The application-facing registry contains identifiers and
 `TenantDataIsolationRegistry` is the application boundary for looking up:
 
 - Cosmos account/database metadata and connection-secret reference;
-- storage account/container naming metadata;
+- a map of logical storage bindings, each containing account/container, optional path prefix, authentication
+  mode, and secret-backed environment-variable references where required;
 - Personal Data Vault tenant identifier;
 - email sender domain and secret references.
 
@@ -103,23 +104,76 @@ failure. There is no default tenant or default resource.
 **Registry storage and schema.** The application-facing registry is a single non-secret configuration value
 (for example an environment variable populated with a JSON document, following the existing
 `tenant.registry.json` pattern already used by other services), holding one object keyed by tenant code. Each
-tenant entry groups its resource dimensions; the Cosmos DB Mongo dimension carries only the target
-account/database identifiers and the name of the environment variable that resolves to the connection string
-at runtime, never a Key Vault secret name or the secret value itself:
+tenant entry groups its resource dimensions. `storages` is a map keyed by application-owned logical names,
+not an array: callers request a binding such as `products`, while the registry decides which physical
+account/container serves that purpose for the current tenant. The Mongo and Storage dimensions carry only
+resource identifiers and environment-variable references, never secret values:
 
 ```json
 {
-  "AR":   {"mongo": {"account": "cosmos-ar",   "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"}},
-  "PNPG": {"mongo": {"account": "cosmos-pnpg", "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"}}
+  "AR": {
+    "mongo": {
+      "account": "cosmos-ar",
+      "database": "selcOnboarding",
+      "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
+    },
+    "jwt": {
+      "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR"
+    },
+    "storages": {
+      "products": {
+        "account": "stselcarproducts",
+        "container": "selc-d-product",
+        "pathPrefix": "",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_AR_PRODUCTS"
+        }
+      },
+      "contracts": {
+        "account": "stselcardocuments",
+        "container": "contracts",
+        "pathPrefix": "onboarding",
+        "authentication": {
+          "type": "CONNECTION_STRING",
+          "connectionStringEnvVar": "BLOB_CONNECTION_STRING_AR_CONTRACTS"
+        }
+      }
+    }
+  },
+  "PNPG": {
+    "mongo": {
+      "account": "cosmos-pnpg",
+      "database": "selcOnboarding",
+      "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"
+    },
+    "jwt": {
+      "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG"
+    },
+    "storages": {
+      "products": {
+        "account": "stpnpgproducts",
+        "container": "selc-d-product",
+        "pathPrefix": "",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_PNPG_PRODUCTS"
+        }
+      }
+    }
+  }
 }
 ```
 
-Only Terraform knows the actual Key Vault secret name; it maps that secret to the Container App secret and,
-from it, to the environment variable named in the registry. The registry loader validates, at startup and per
-tenant entry, that the referenced environment variable is present and non-blank; a missing or blank value
-fails closed for that tenant's route only and does not prevent loading the other valid entries. Adding a
-tenant, or changing which environment variable a dimension resolves to, is a registry (and, for Cosmos DB
-Mongo, Terraform/deployment) change; it never requires the application to call Key Vault directly.
+Only Terraform knows actual Key Vault secret names. It maps each secret to a Container App secret and then to
+the environment variable named in the registry. For `MANAGED_IDENTITY`, the account is non-secret metadata and
+the optional client ID is read from the referenced environment variable. For `CONNECTION_STRING`, the
+referenced environment variable is mandatory and secret-backed.
+
+The registry loader validates normalized tenant IDs, logical storage-key uniqueness, mandatory fields,
+supported authentication types, and mutually exclusive authentication settings. Adding a tenant, storage
+purpose, or physical account is a registry and infrastructure change; the application never calls Key Vault
+directly.
 
 ### 3. Cosmos DB Mongo routing and isolation
 
@@ -160,14 +214,42 @@ The migration sequence per environment is:
 
 ### 4. Azure Storage routing
 
-A tenant-aware storage provider selects the storage client and tenant container/path for each operation from
-`TenantContext` and the registry. Clients are initialized once and selected per operation so interleaved
-tenant requests cannot leak client state.
+A tenant-aware storage provider resolves a pair `(tenantId, logicalStorageKey)`:
 
-Tenant-owned `document-ms` operations use tenant-specific locations. Shared templates use separate typed
-operations or explicit call-site classification and remain in global locations. Client-supplied blob paths
-never decide whether an operation uses shared or tenant storage. Missing mappings or unprovisioned containers
-fail closed.
+```text
+TenantContext + code-owned key ("products")
+                    ↓
+TenantRegistry.storage(tenantId, logicalStorageKey)
+                    ↓
+account + container + pathPrefix + authentication
+                    ↓
+cached AzureBlobClient for the selected binding
+```
+
+The logical key is a stable application contract. `onboarding-ms` initially uses `products`; future purposes
+are added under the same `storages` map. A tenant can bind `products` and `contracts` to different accounts,
+while another tenant can bind both to one account. The caller does not know or select the physical topology.
+
+Clients are created once per distinct account/credential configuration and stored in an immutable registry.
+Container and trusted path-prefix metadata remain part of the logical binding and are applied per operation.
+No request-scoped tenant or selected client is stored in application-global mutable state.
+
+Authentication modes:
+
+- `MANAGED_IDENTITY`: construct the endpoint from `account`; optionally use the user-assigned identity client
+  ID read from `managedIdentityClientIdEnvVar`;
+- `CONNECTION_STRING`: read the value from the secret-backed `connectionStringEnvVar`;
+- additional modes require a schema and security review before use.
+
+`onboarding-ms` replaces the flat `onboarding-ms.blob-storage.*-product` selection path with the tenant-aware
+`products` binding. The product filename (currently `products.json`) remains application configuration because
+it identifies a domain asset, while account/container/authentication are tenant-resource routing metadata.
+
+Tenant-owned `document-ms` operations use tenant-specific logical bindings. Shared templates use separate
+typed operations or explicit call-site classification and an explicitly configured shared binding.
+Client-supplied blob paths never decide the logical key or whether an operation uses shared or tenant storage.
+Missing mappings, credentials, containers, or permissions fail closed without falling back to legacy flat
+properties.
 
 The ownership and provisioning mechanism for tenant containers is `TO BE DECIDED`. The classification of
 `dashboard-bff` institution logos is also `TO BE DECIDED`.
@@ -204,7 +286,8 @@ manages them. Legacy resources remain available until production validation succ
 | Key Vault-backed Cosmos configuration | SELC-13.9-SELC-13.14, SELC-17.2, SELC-17.5-SELC-17.6 | Container App identity retrieves the secret; Mongo authenticates with the resulting connection string, not Managed Identity |
 | Tenant/product-aware Mongo client and database selector | SELC-13.1, SELC-13.8, SELC-13.12-SELC-13.13 | `onboardingId`-only dedicated-database lookup still needs architecture input |
 | Strict discriminator and migration pipeline | SELC-13.1-SELC-13.7 | Backfill, verification, strict activation, index migration, and import are ordered gates |
-| Tenant-aware storage provider and typed shared/tenant operations | SELC-14.1-SELC-14.7 | Container provisioning ownership and `dashboard-bff` logo classification need architecture input |
+| Tenant/logical-key storage registry and cached client provider | SELC-14.1-SELC-14.10 | `onboarding-ms` starts with `products`; the schema supports additional accounts and purposes per tenant |
+| Typed shared/tenant storage operations | SELC-14.5, SELC-14.7-SELC-14.12 | Container provisioning ownership and `dashboard-bff` logo classification need architecture input |
 | Personal Data Vault provider | SELC-15 | Provider, API, caller inventory, tenant identifiers, and credentials are `TO BE DECIDED` |
 | Tenant-aware email provider and scheduler | SELC-16 | Sender mapping, complete producer inventory, and tenant-bound machine credentials are `TO BE DECIDED` |
 | Shared deployment configuration boundary | SELC-17 | Prevents tenant-specific values from being collapsed into legacy single-value settings |
