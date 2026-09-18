@@ -3931,6 +3931,9 @@
           "originId" : {
             "type" : "string"
           },
+          "isPartnerTech" : {
+            "type" : "boolean"
+          },
           "productId" : {
             "type" : "string"
           },
@@ -3989,6 +3992,9 @@
           },
           "originId" : {
             "type" : "string"
+          },
+          "isPartnerTech" : {
+            "type" : "boolean"
           },
           "pricingPlan" : {
             "type" : "string"
