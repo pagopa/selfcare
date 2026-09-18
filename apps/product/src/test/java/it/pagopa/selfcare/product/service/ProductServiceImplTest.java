@@ -15,19 +15,24 @@ import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
+import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.RequiredDocumentFilter;
+import it.pagopa.selfcare.product.model.RoleMapping;
 import it.pagopa.selfcare.product.model.WorkflowRule;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
+import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.JsonUtils;
@@ -646,7 +651,7 @@ class ProductServiceImplTest {
 
   @Test
   void getWorkflowType_throwsNotFound_whenNoRuleMatchesInstitutionTypeAndOrigin() {
-    // given - rule per PA/IPA, si cerca PA/SELC → nessun match
+    // given - rule per PA/IPA, si cerca PA/SELC â†’ nessun match
     Product product =
         Product.builder()
             .productId("prod-test")
@@ -1107,7 +1112,7 @@ class ProductServiceImplTest {
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
-    // when — origin IPA matches but institutionType PA does not match GSP
+    // when â€” origin IPA matches but institutionType PA does not match GSP
     Boolean enabled =
         productService
             .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
@@ -1324,4 +1329,512 @@ class ProductServiceImplTest {
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
   }
+
+  // -------------------------------------------------------------------------
+  // getValidProductById
+  // -------------------------------------------------------------------------
+
+  @Test
+  void getValidProductById_ok_whenProductActiveAndNoParent() {
+    // given
+    Product product =
+        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    ProductResponse mapped = new ProductResponse();
+    mapped.setProductId("prod-test");
+    mapped.setStatus(ProductStatus.ACTIVE);
+    when(productMapperResponse.toProductResponse(product)).thenReturn(mapped);
+
+    // when
+    ProductResponse out = productService.getValidProductById("prod-test").await().indefinitely();
+
+    // then
+    assertNotNull(out);
+    assertEquals("prod-test", out.getProductId());
+    assertEquals(ProductStatus.ACTIVE, out.getStatus());
+    verify(productRepository, times(1)).findProductById("prod-test");
+  }
+
+  @Test
+  void getValidProductById_ok_whenParentIsValid() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-child")
+            .parentId("prod-parent")
+            .status(ProductStatus.ACTIVE)
+            .build();
+    Product parent =
+        Product.builder().productId("prod-parent").status(ProductStatus.ACTIVE).build();
+
+    when(productRepository.findProductById("prod-child")).thenReturn(Uni.createFrom().item(product));
+    when(productRepository.findProductById("prod-parent"))
+        .thenReturn(Uni.createFrom().item(parent));
+
+    ProductResponse mapped = new ProductResponse();
+    mapped.setProductId("prod-child");
+    when(productMapperResponse.toProductResponse(product)).thenReturn(mapped);
+
+    // when
+    ProductResponse out = productService.getValidProductById("prod-child").await().indefinitely();
+
+    // then
+    assertNotNull(out);
+    assertEquals("prod-child", out.getProductId());
+    verify(productRepository, times(1)).findProductById("prod-parent");
+  }
+
+  @Test
+  void getValidProductById_throwsIllegalArgument_whenProductIdIsBlank() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getValidProductById(StringUtils.EMPTY).await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void getValidProductById_throwsNotFound_whenProductDoesNotExist() {
+    // given
+    when(productRepository.findProductById("prod-missing")).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getValidProductById("prod-missing").await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
+    verify(productMapperResponse, never()).toProductResponse(any(Product.class));
+  }
+
+  @Test
+  void getValidProductById_throwsNotFound_whenProductIsNotValid() {
+    // given
+    Product product =
+        Product.builder().productId("prod-test").status(ProductStatus.PHASE_OUT).build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getValidProductById("prod-test").await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
+    verify(productMapperResponse, never()).toProductResponse(any(Product.class));
+  }
+
+  @Test
+  void getValidProductById_throwsNotFound_whenParentIsNotValid() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-child")
+            .parentId("prod-parent")
+            .status(ProductStatus.ACTIVE)
+            .build();
+    Product parent =
+        Product.builder().productId("prod-parent").status(ProductStatus.INACTIVE).build();
+
+    when(productRepository.findProductById("prod-child")).thenReturn(Uni.createFrom().item(product));
+    when(productRepository.findProductById("prod-parent"))
+        .thenReturn(Uni.createFrom().item(parent));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getValidProductById("prod-child").await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
+    verify(productMapperResponse, never()).toProductResponse(any(Product.class));
+  }
+
+  // -------------------------------------------------------------------------
+  // getProductExpirationDays
+  // -------------------------------------------------------------------------
+
+  @Test
+  void getProductExpirationDays_returnsConfiguredValue() {
+    // given
+    Product product =
+        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    ProductResponse mapped = new ProductResponse();
+    mapped.setProductId("prod-test");
+    mapped.setFeatures(Features.builder().expirationDays(60).build());
+    when(productMapperResponse.toProductResponse(product)).thenReturn(mapped);
+
+    // when
+    ProductExpirationResponse out =
+        productService.getProductExpirationDays("prod-test").await().indefinitely();
+
+    // then
+    assertNotNull(out);
+    assertEquals(60, out.getExpirationDays());
+  }
+
+  @Test
+  void getProductExpirationDays_returnsDefault_whenFeaturesIsNull() {
+    // given
+    Product product =
+        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    ProductResponse mapped = new ProductResponse();
+    mapped.setProductId("prod-test");
+    mapped.setFeatures(null);
+    when(productMapperResponse.toProductResponse(product)).thenReturn(mapped);
+
+    // when
+    ProductExpirationResponse out =
+        productService.getProductExpirationDays("prod-test").await().indefinitely();
+
+    // then
+    assertNotNull(out);
+    assertEquals(30, out.getExpirationDays());
+  }
+
+  @Test
+  void getProductExpirationDays_throwsNotFound_whenProductIsNotValid() {
+    // given
+    Product product =
+        Product.builder().productId("prod-test").status(ProductStatus.INACTIVE).build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getProductExpirationDays("prod-test").await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
+  }
+
+  // -------------------------------------------------------------------------
+  // getProducts
+  // -------------------------------------------------------------------------
+
+  @Test
+  void getProducts_returnsAll_whenRootOnlyFalseAndValidFalse() {
+    // given
+    Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
+    Product child =
+        Product.builder()
+            .productId("prod-a-premium")
+            .parentId("prod-a")
+            .status(ProductStatus.ACTIVE)
+            .build();
+    Product phaseOut =
+        Product.builder().productId("prod-b").status(ProductStatus.PHASE_OUT).build();
+
+    when(productRepository.findLatestVersionForEachProduct())
+        .thenReturn(Uni.createFrom().item(List.of(root, child, phaseOut)));
+    mockToProductResponseEcho();
+
+    // when
+    List<ProductResponse> out = productService.getProducts(false, false).await().indefinitely();
+
+    // then
+    assertEquals(3, out.size());
+  }
+
+  @Test
+  void getProducts_excludesChildren_whenRootOnlyTrue() {
+    // given
+    Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
+    Product child =
+        Product.builder()
+            .productId("prod-a-premium")
+            .parentId("prod-a")
+            .status(ProductStatus.ACTIVE)
+            .build();
+
+    when(productRepository.findLatestVersionForEachProduct())
+        .thenReturn(Uni.createFrom().item(List.of(root, child)));
+    mockToProductResponseEcho();
+
+    // when
+    List<ProductResponse> out = productService.getProducts(true, false).await().indefinitely();
+
+    // then
+    assertEquals(1, out.size());
+    assertEquals("prod-a", out.get(0).getProductId());
+  }
+
+  @Test
+  void getProducts_excludesNotValid_whenValidTrue() {
+    // given
+    Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
+    Product inactive =
+        Product.builder().productId("prod-b").status(ProductStatus.INACTIVE).build();
+    Product phaseOut =
+        Product.builder().productId("prod-c").status(ProductStatus.PHASE_OUT).build();
+
+    when(productRepository.findLatestVersionForEachProduct())
+        .thenReturn(Uni.createFrom().item(List.of(root, inactive, phaseOut)));
+    mockToProductResponseEcho();
+
+    // when
+    List<ProductResponse> out = productService.getProducts(false, true).await().indefinitely();
+
+    // then
+    assertEquals(1, out.size());
+    assertEquals("prod-a", out.get(0).getProductId());
+  }
+
+  @Test
+  void getProducts_appliesBothFilters_whenRootOnlyTrueAndValidTrue() {
+    // given
+    Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
+    Product child =
+        Product.builder()
+            .productId("prod-a-premium")
+            .parentId("prod-a")
+            .status(ProductStatus.ACTIVE)
+            .build();
+    Product phaseOut =
+        Product.builder().productId("prod-b").status(ProductStatus.PHASE_OUT).build();
+
+    when(productRepository.findLatestVersionForEachProduct())
+        .thenReturn(Uni.createFrom().item(List.of(root, child, phaseOut)));
+    mockToProductResponseEcho();
+
+    // when
+    List<ProductResponse> out = productService.getProducts(true, true).await().indefinitely();
+
+    // then
+    assertEquals(1, out.size());
+    assertEquals("prod-a", out.get(0).getProductId());
+  }
+
+  private void mockToProductResponseEcho() {
+    when(productMapperResponse.toProductResponse(any(Product.class)))
+        .thenAnswer(
+            inv -> {
+              Product p = inv.getArgument(0, Product.class);
+              ProductResponse r = new ProductResponse();
+              r.setProductId(p.getProductId());
+              r.setParentId(p.getParentId());
+              r.setStatus(p.getStatus());
+              return r;
+            });
+  }
+
+  @Test
+  void getValidProductById_throwsNotFound_whenProductIsDeleted() {
+    // given
+    Product product =
+        Product.builder().productId("prod-test").status(ProductStatus.DELETED).build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () -> productService.getValidProductById("prod-test").await().indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
+    verify(productMapperResponse, never()).toProductResponse(any(Product.class));
+  }
+
+  @Test
+  void getProducts_excludesDeleted_whenValidTrue() {
+    // given
+    Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
+    Product deleted = Product.builder().productId("prod-b").status(ProductStatus.DELETED).build();
+
+    when(productRepository.findLatestVersionForEachProduct())
+        .thenReturn(Uni.createFrom().item(List.of(root, deleted)));
+    mockToProductResponseEcho();
+
+    // when
+    List<ProductResponse> out = productService.getProducts(false, true).await().indefinitely();
+
+    // then
+    assertEquals(1, out.size());
+    assertEquals("prod-a", out.get(0).getProductId());
+  }
+
+  // -------------------------------------------------------------------------
+  // validateProductRole
+  // -------------------------------------------------------------------------
+
+  @Test
+  void validateProductRole_ok_returnsMatchingRole() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .roleMappings(
+                List.of(
+                    RoleMapping.builder()
+                        .role(UserRole.MANAGER.name())
+                        .backOfficeRoles(
+                            List.of(
+                                BackOfficeRole.builder().code("admin").label("Admin").build(),
+                                BackOfficeRole.builder().code("ref").label("Referente").build()))
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+    when(productMapperResponse.toProductRoleResponse(any(BackOfficeRole.class)))
+        .thenAnswer(
+            inv -> {
+              BackOfficeRole b = inv.getArgument(0, BackOfficeRole.class);
+              return ProductRoleResponse.builder().code(b.getCode()).label(b.getLabel()).build();
+            });
+
+    // when
+    ProductRoleResponse out =
+        productService
+            .validateProductRole("prod-test", UserRole.MANAGER, "ref")
+            .await()
+            .indefinitely();
+
+    // then
+    assertNotNull(out);
+    assertEquals("ref", out.getCode());
+    assertEquals("Referente", out.getLabel());
+  }
+
+  @Test
+  void validateProductRole_throwsNotFound_whenRoleHasNoMappings() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .roleMappings(
+                List.of(
+                    RoleMapping.builder()
+                        .role(UserRole.MANAGER.name())
+                        .backOfficeRoles(
+                            List.of(BackOfficeRole.builder().code("admin").build()))
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .validateProductRole("prod-test", UserRole.DELEGATE, "admin")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("DELEGATE");
+  }
+
+  @Test
+  void validateProductRole_throwsNotFound_whenProductRoleNotFound() {
+    // given
+    Product product =
+        Product.builder()
+            .productId("prod-test")
+            .roleMappings(
+                List.of(
+                    RoleMapping.builder()
+                        .role(UserRole.MANAGER.name())
+                        .backOfficeRoles(
+                            List.of(BackOfficeRole.builder().code("admin").build()))
+                        .build()))
+            .build();
+
+    when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .validateProductRole("prod-test", UserRole.MANAGER, "not-existing")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("not-existing");
+    verify(productMapperResponse, never()).toProductRoleResponse(any(BackOfficeRole.class));
+  }
+
+  @Test
+  void validateProductRole_throwsNotFound_whenProductDoesNotExist() {
+    // given
+    when(productRepository.findProductById("prod-missing")).thenReturn(Uni.createFrom().nullItem());
+
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .validateProductRole("prod-missing", UserRole.MANAGER, "admin")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
+  }
+
+  @Test
+  void validateProductRole_throwsBadRequest_whenProductIdIsBlank() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .validateProductRole("  ", UserRole.MANAGER, "admin")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(BadRequestException.class).hasMessage("Missing productId");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void validateProductRole_throwsBadRequest_whenRoleIsNull() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .validateProductRole("prod-test", null, "admin")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(BadRequestException.class).hasMessage("Missing role");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void validateProductRole_throwsBadRequest_whenProductRoleIsBlank() {
+    // when
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .validateProductRole("prod-test", UserRole.MANAGER, "  ")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertThat(thrown).isInstanceOf(BadRequestException.class).hasMessage("Missing productRole");
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
 }
