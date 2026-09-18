@@ -18,6 +18,8 @@ import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.ManagerVerification;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionOnboarding;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
@@ -25,6 +27,7 @@ import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
 import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.GeographicTaxonomyMapperImpl;
 import it.pagopa.selfcare.onboarding.web.model.mapper.InstitutionResourceMapperImpl;
+import it.pagopa.selfcare.onboarding.web.model.mapper.IpaInstitutionsSearchResourceMapperImpl;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingInstitutionInfoMapperImpl;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapperImpl;
 import java.time.OffsetDateTime;
@@ -48,7 +51,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
 @WebMvcTest(value = {InstitutionV2Controller.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = {InstitutionV2Controller.class, WebTestConfig.class, OnboardingResourceMapperImpl.class, OnboardingInstitutionInfoMapperImpl.class, GeographicTaxonomyMapperImpl.class, InstitutionResourceMapperImpl.class})
+@ContextConfiguration(classes = {InstitutionV2Controller.class, WebTestConfig.class, OnboardingResourceMapperImpl.class, OnboardingInstitutionInfoMapperImpl.class, GeographicTaxonomyMapperImpl.class, InstitutionResourceMapperImpl.class, IpaInstitutionsSearchResourceMapperImpl.class})
 class InstitutionV2ControllerTest {
 
     private static final String BASE_URL = "/v2/institutions";
@@ -64,6 +67,39 @@ class InstitutionV2ControllerTest {
 
     @Autowired
     protected ObjectMapper objectMapper;
+
+    @Test
+    void searchIpaInstitutions() throws Exception {
+        // given
+        InstitutionProxyInfo institution = new InstitutionProxyInfo();
+        institution.setId("ipa-id");
+        institution.setDescription("Comune di esempio");
+        institution.setTaxCode("12345678901");
+        IpaInstitutionsSearchResult searchResult = new IpaInstitutionsSearchResult();
+        searchResult.setItems(List.of(institution));
+        searchResult.setCount(1L);
+        when(institutionServiceMock.searchIpaInstitutions("esempio", "L6", 1, 20)).thenReturn(searchResult);
+
+        // when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/ipa")
+                        .queryParam("search", "esempio")
+                        .queryParam("category", "L6")
+                        .queryParam("page", "1")
+                        .queryParam("pageSize", "20")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        IpaInstitutionsSearchResource response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), IpaInstitutionsSearchResource.class);
+        assertEquals(1L, response.getCount());
+        assertEquals("ipa-id", response.getItems().get(0).getId());
+        assertEquals("Comune di esempio", response.getItems().get(0).getDescription());
+        verify(institutionServiceMock).searchIpaInstitutions("esempio", "L6", 1, 20);
+        verifyNoMoreInteractions(institutionServiceMock);
+    }
 
     @Test
     void onboardingProductAsync(@Value("classpath:stubs/onboardingProductsDtoWithoutGeo.json") Resource onboardingDto) throws Exception {

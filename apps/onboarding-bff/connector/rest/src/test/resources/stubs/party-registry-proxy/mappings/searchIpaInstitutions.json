@@ -1,0 +1,30 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/external/ur/v1/institutions/ipa",
+    "queryParameters": {
+      "search": { "equalTo": "esempio" },
+      "category": { "equalTo": "L6" },
+      "page": { "equalTo": "0" },
+      "pageSize": { "equalTo": "50" }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "items": [
+        {
+          "id": "ipa-id",
+          "taxCode": "00000000000",
+          "description": "Comune di esempio",
+          "category": "L6",
+          "origin": "IPA"
+        }
+      ],
+      "count": 1
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}
