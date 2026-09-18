@@ -1,11 +1,8 @@
 package it.pagopa.selfcare.onboarding.conf;
 
 import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
@@ -14,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.InputStream;
-import java.util.Optional;
 
 @ApplicationScoped
 @Slf4j
@@ -25,64 +21,12 @@ public class OnboardingMsConfig {
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
 
-    @ConfigProperty(name = "onboarding-ms.blob-storage.container-product")
-    String containerProduct;
-
-    @ConfigProperty(name = "onboarding-ms.blob-storage.filepath-product")
-    String filepathProduct;
-
-    @ConfigProperty(name = "onboarding-ms.blob-storage.connection-string-product")
-    Optional<String> connectionStringProduct;
-
-    @ConfigProperty(name = "onboarding-ms.blob-storage.account-name-product")
-    Optional<String> accountNameProduct;
-
-    @ConfigProperty(name = "onboarding-ms.blob-storage.managed-identity-client-id-product")
-    Optional<String> managedIdentityClientIdProduct;
-
     @Inject
     ProductService productAzureService;
 
     void onStart(@Observes StartupEvent ev) {
         log.info("Tenant-aware Mongo configuration is starting");
         log.info("ProductService eagerly initialized: {}", productAzureService.getClass().getSimpleName());
-    }
-
-    @ApplicationScoped
-    public ProductService productService(AzureBlobClient productBlobClient) {
-        return new ProductServiceCacheable(productBlobClient, filepathProduct);
-    }
-
-    /**
-     * Producer of the {@link AzureBlobClientDefault} used to read the product catalog from Azure
-     * Blob Storage. Exposed as a CDI bean so that both {@link #productService(AzureBlobClient)}
-     * and the readiness health check
-     * ({@code it.pagopa.selfcare.onboarding.health.ProductBlobStorageReadinessCheck}) share the
-     * same instance (single connection pool, single Managed Identity token cache).
-     */
-    @ApplicationScoped
-    public AzureBlobClientDefault productBlobClient() {
-        return connectionStringProduct
-                .filter(connectionString -> !connectionString.isBlank())
-                .map(connectionString -> {
-                    log.info("Configuring ProductService with Azure Blob connection string: container={}, filepath={}",
-                            containerProduct, filepathProduct);
-                    return new AzureBlobClientDefault(connectionString, containerProduct);
-                })
-                .orElseGet(this::azureBlobClientWithManagedIdentity);
-    }
-
-    private AzureBlobClientDefault azureBlobClientWithManagedIdentity() {
-        String accountName = accountNameProduct.orElse("");
-        String managedIdentityClientId = managedIdentityClientIdProduct.orElse("");
-
-        log.info("Configuring ProductService with Azure Blob managed identity: container={}, accountNameConfigured={}, managedIdentityClientIdConfigured={}, filepath={}",
-                containerProduct,
-                !accountName.isBlank(),
-                !managedIdentityClientId.isBlank(),
-                filepathProduct);
-
-        return new AzureBlobClientDefault(containerProduct, accountName, managedIdentityClientId);
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService() {
