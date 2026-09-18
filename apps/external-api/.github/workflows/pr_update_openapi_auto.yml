@@ -86,7 +86,7 @@ jobs:
             az storage blob download \
               --account-name selcdcheckoutsa \
               --container-name selc-openapi \
-              --name pagopa/selfcare-ms-party-registry-proxy/openapi.json \
+              --name pagopa/selfcare-registry-proxy-ms/openapi.json \
               --file ${{ env.OPENAPI_DIR }}/api-selfcare-registry-proxy-docs.json
           fi
 
