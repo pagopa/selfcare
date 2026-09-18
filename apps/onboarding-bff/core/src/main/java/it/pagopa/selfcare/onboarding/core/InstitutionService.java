@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.*;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.GeographicTaxonomy;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
@@ -23,6 +24,8 @@ public interface InstitutionService {
     void onboardingPaAggregator(OnboardingData entity);
 
     List<InstitutionInfo> getInstitutions(String productId, String userId);
+
+    IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize);
 
     List<Institution> getActiveOnboarding(String taxCode,String productId,String subunitCode);
 

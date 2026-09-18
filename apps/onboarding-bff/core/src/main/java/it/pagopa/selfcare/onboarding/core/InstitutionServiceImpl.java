@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 import it.pagopa.selfcare.onboarding.connector.model.user.*;
 import it.pagopa.selfcare.onboarding.connector.model.user.mapper.CertifiedFieldMapper;
@@ -368,6 +369,11 @@ class InstitutionServiceImpl implements InstitutionService {
         log.debug("getInstitutions result = {}", result);
         log.trace("getInstitutions end");
         return result;
+    }
+
+    @Override
+    public IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize) {
+        return partyRegistryProxyConnector.searchIpaInstitutions(search, category, page, pageSize);
     }
 
     @Override

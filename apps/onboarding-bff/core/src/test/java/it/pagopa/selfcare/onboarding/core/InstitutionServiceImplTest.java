@@ -15,6 +15,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.*;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 import it.pagopa.selfcare.onboarding.connector.model.user.SaveUserDto;
 import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
@@ -135,6 +136,23 @@ class InstitutionServiceImplTest {
         ValidationException e = assertThrows(ValidationException.class, executable);
         assertEquals(LOCATION_INFO_IS_REQUIRED, e.getMessage());
         verifyNoInteractions(productsConnectorMock, partyConnectorMock, userConnectorMock);
+    }
+
+    @Test
+    void searchIpaInstitutions() {
+        // given
+        IpaInstitutionsSearchResult expected = new IpaInstitutionsSearchResult();
+        expected.setItems(List.of());
+        expected.setCount(0L);
+        when(partyRegistryProxyConnectorMock.searchIpaInstitutions("esempio", "L6", 0, 50))
+                .thenReturn(expected);
+
+        // when
+        IpaInstitutionsSearchResult actual = institutionService.searchIpaInstitutions("esempio", "L6", 0, 50);
+
+        // then
+        assertSame(expected, actual);
+        verify(partyRegistryProxyConnectorMock).searchIpaInstitutions("esempio", "L6", 0, 50);
     }
 
     @Test

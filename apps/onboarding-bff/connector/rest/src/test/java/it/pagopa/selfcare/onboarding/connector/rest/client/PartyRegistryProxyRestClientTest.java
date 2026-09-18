@@ -11,6 +11,7 @@ import it.pagopa.selfcare.onboarding.connector.model.InstitutionLegalAddressData
 import it.pagopa.selfcare.onboarding.connector.model.institutions.MatchInfoResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.InstitutionInfoIC;
 import it.pagopa.selfcare.onboarding.connector.rest.config.PartyRegistryProxyRestClientTestConfig;
+import it.pagopa.selfcare.onboarding.connector.rest.model.IpaInstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequest;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Order;
@@ -93,6 +94,22 @@ class PartyRegistryProxyRestClientTest extends BaseFeignRestClientTest {
         assertNotNull(response);
         assertNotNull(response.getAddress());
         assertNotNull(response.getZipCode());
+    }
+
+    @Test
+    void searchIpaInstitutions() {
+        // given
+        String search = "esempio";
+        String category = "L6";
+
+        // when
+        IpaInstitutionsSearchResponse response = restClient.searchIpaInstitutions(search, category, 0, 50);
+
+        // then
+        assertNotNull(response);
+        assertNotNull(response.getItems());
+        assertTrue(response.getCount() > 0);
+        assertNotNull(response.getItems().get(0).getTaxCode());
     }
 
 }
