@@ -1,4 +1,4 @@
-# selfcare-ms-party-registry-proxy
+# registry-proxy
 
 ## Description
 This Spring Boot-based microservice is designed to handle several key functionalities in onboarding operations domain. It includes business logic for proxy data sources used in SelfCare, such as:
@@ -23,23 +23,23 @@ Look at app/src/main/resources/`application.yml` file to set up environment-spec
 ## Installation and Local Startup
 To run the microservice locally, follow these steps:
 
-1. **Clone the Repository**
+1. **Clone the Monorepo**
 
 ```shell script
-git clone https://github.com/pagopa/selfcare-ms-party-registry-proxy.git
-cd selfcare-ms-party-registry-proxy
+git clone https://github.com/pagopa/selfcare.git
+cd selfcare
 ```
 
 2. **Build the Project**
 
 ```shell script
-mvn clean install
+mvn -pl apps/registry-proxy -am clean install
 ```
 
-2. **Start the Application**
+3. **Start the Application**
 
 ```shell script
-mvn spring-boot:run -pl app
+mvn -f apps/registry-proxy/pom.xml -pl app spring-boot:run
 ```
 
 ## Usage
@@ -109,4 +109,3 @@ dapr run --app-id dapr-consumer --app-port 8080 --dapr-http-port 3500 --componen
 ```shell script
 az containerapp logs show --name ca-dapr-consumer-dev --resource-group rg-dapr-consumer --container daprd
 ```
-

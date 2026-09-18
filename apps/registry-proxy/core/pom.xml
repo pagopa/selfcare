@@ -2,28 +2,28 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>selc-party-registry-proxy</artifactId>
+        <artifactId>registry-proxy</artifactId>
         <groupId>it.pagopa.selfcare.party</groupId>
         <version>0.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>selc-party-registry-proxy-core</artifactId>
+    <artifactId>registry-proxy-core</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-api</artifactId>
+            <artifactId>registry-proxy-connector-api</artifactId>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-api</artifactId>
+            <artifactId>registry-proxy-connector-api</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-rest</artifactId>
+            <artifactId>registry-proxy-connector-rest</artifactId>
         </dependency>
         <!-- Dapr SDK -->
         <dependency>
@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-dapr</artifactId>
+            <artifactId>registry-proxy-connector-dapr</artifactId>
             <version>0.2.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>

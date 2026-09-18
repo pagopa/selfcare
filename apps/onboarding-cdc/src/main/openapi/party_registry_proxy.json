@@ -1,7 +1,7 @@
 {
   "openapi" : "3.0.1",
   "info" : {
-    "title" : "selc-party-registry-proxy",
+    "title" : "registry-proxy",
     "description" : "Party Registry Proxy API documentation",
     "contact" : {
       "name" : "PagoPA",

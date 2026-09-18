@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
         locations = "classpath:config/mock-open-data-rest-client.properties",
         properties = {
                 "logging.level.it.pagopa.selfcare.party.registry_proxy.connector.rest=DEBUG",
-                "spring.application.name=selc-party-registry-proxy-connector-rest",
+                "spring.application.name=registry-proxy-connector-rest",
                 "MOCK_OPEN_DATA_ENABLED=true",
                 "MOCK_OPEN_DATA_INSTITUTION_ENDPOINT=/mock/institutions",
                 "MOCK_OPEN_DATA_CATEGORY_ENDPOINT=/mock/categories"

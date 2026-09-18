@@ -14,9 +14,9 @@
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
-  <artifactId>selc-party-registry-proxy</artifactId>
+  <artifactId>registry-proxy</artifactId>
   <version>0.2.0-SNAPSHOT</version>
-  <name>selc-party-registry-proxy</name>
+  <name>registry-proxy</name>
   <description>A proxy for all Party Registry data sources used in Self Care
   </description>
 
@@ -36,44 +36,44 @@
     <dependencies>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-connector-rest</artifactId>
+        <artifactId>registry-proxy-connector-rest</artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-connector-ftp</artifactId>
+        <artifactId>registry-proxy-connector-ftp</artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-connector-azure-storage
+        <artifactId>registry-proxy-connector-azure-storage
         </artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-connector-lucene</artifactId>
+        <artifactId>registry-proxy-connector-lucene</artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-connector-api</artifactId>
+        <artifactId>registry-proxy-connector-api</artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-connector-api</artifactId>
+        <artifactId>registry-proxy-connector-api</artifactId>
         <version>0.2.0-SNAPSHOT</version>
         <type>test-jar</type>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-core</artifactId>
+        <artifactId>registry-proxy-core</artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>it.pagopa.selfcare.party</groupId>
-        <artifactId>selc-party-registry-proxy-web</artifactId>
+        <artifactId>registry-proxy-web</artifactId>
         <version>0.2.0-SNAPSHOT</version>
       </dependency>
       <dependency>

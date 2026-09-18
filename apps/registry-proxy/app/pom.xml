@@ -2,37 +2,37 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>selc-party-registry-proxy</artifactId>
+        <artifactId>registry-proxy</artifactId>
         <groupId>it.pagopa.selfcare.party</groupId>
         <version>0.2.0-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>selc-party-registry-proxy-app</artifactId>
+    <artifactId>registry-proxy-app</artifactId>
 
     <dependencies>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-web</artifactId>
+            <artifactId>registry-proxy-web</artifactId>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-rest</artifactId>
+            <artifactId>registry-proxy-connector-rest</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-lucene</artifactId>
+            <artifactId>registry-proxy-connector-lucene</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-azure-storage</artifactId>
+            <artifactId>registry-proxy-connector-azure-storage</artifactId>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare.party</groupId>
-            <artifactId>selc-party-registry-proxy-connector-ftp</artifactId>
+            <artifactId>registry-proxy-connector-ftp</artifactId>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
