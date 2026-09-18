@@ -127,6 +127,11 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-health</artifactId>
         </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-health</artifactId>
+            <version>0.2.0</version>
+        </dependency>
 
         <dependency>
             <groupId>io.quarkus</groupId>
