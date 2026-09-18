@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.Ins
 import it.pagopa.selfcare.onboarding.connector.rest.model.AooResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.GeographicTaxonomiesResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.ProxyInstitutionResponse;
+import it.pagopa.selfcare.onboarding.connector.rest.model.IpaInstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.UoResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequest;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -36,6 +37,14 @@ public interface PartyRegistryProxyRestClient {
     @GetMapping(value = "${rest-client.party-registry-proxy.getInstitutionById.path}", consumes = APPLICATION_JSON_VALUE)
     @ResponseBody
     ProxyInstitutionResponse getInstitutionById(@PathVariable("institutionId") String id);
+
+    @GetMapping(value = "${rest-client.party-registry-proxy.searchIpaInstitutions.path}", produces = APPLICATION_JSON_VALUE)
+    @ResponseBody
+    IpaInstitutionsSearchResponse searchIpaInstitutions(
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "page", required = false) Integer page,
+            @RequestParam(value = "pageSize", required = false) Integer pageSize);
 
     @GetMapping(value = "${rest-client.party-registry-proxy.geo-taxonomies.getByCode.path}", consumes = APPLICATION_JSON_VALUE)
     @ResponseBody
