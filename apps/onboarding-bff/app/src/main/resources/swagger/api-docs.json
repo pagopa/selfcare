@@ -754,8 +754,8 @@
           "required" : true
         },
         "responses" : {
-          "409" : {
-            "description" : "Conflict",
+          "403" : {
+            "description" : "Forbidden",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -764,8 +764,8 @@
               }
             }
           },
-          "403" : {
-            "description" : "Forbidden",
+          "409" : {
+            "description" : "Conflict",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -3502,6 +3502,107 @@
         } ]
       }
     },
+    "/v2/institutions/ipa" : {
+      "get" : {
+        "tags" : [ "institutions" ],
+        "summary" : "Search IPA institutions",
+        "description" : "Searches IPA institutions indexed by the registry proxy",
+        "operationId" : "searchIpaInstitutionsUsingGET",
+        "parameters" : [ {
+          "name" : "search",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "*"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 50
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IpaInstitutionsSearchResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/v1/users/onboarding/{onboardingId}/manager" : {
       "get" : {
         "tags" : [ "user" ],
@@ -3881,63 +3982,6 @@
                 "schema" : {
                   "type" : "object",
                   "description" : "Generic problem response"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearerAuth" : [ "global" ]
-        } ]
-      }
-    },
-    "/v2/institutions/ipa" : {
-      "get" : {
-        "tags" : [ "institutions" ],
-        "summary" : "Search IPA institutions",
-        "description" : "Searches IPA institutions indexed by the registry proxy",
-        "operationId" : "searchIpaInstitutionsUsingGET",
-        "parameters" : [ {
-          "name" : "search",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "*"
-          }
-        }, {
-          "name" : "category",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "page",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0
-          }
-        }, {
-          "name" : "pageSize",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 50
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/IpaInstitutionsSearchResource"
                 }
               }
             }
@@ -5610,39 +5654,6 @@
           }
         }
       },
-      "IpaInstitutionsSearchResource" : {
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/IpaInstitutionResource"
-            }
-          },
-          "count" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
-      },
-      "IpaInstitutionResource" : {
-        "type" : "object",
-        "properties" : {
-          "id" : { "type" : "string" },
-          "originId" : { "type" : "string" },
-          "o" : { "type" : "string" },
-          "ou" : { "type" : "string" },
-          "aoo" : { "type" : "string" },
-          "taxCode" : { "type" : "string" },
-          "category" : { "type" : "string" },
-          "description" : { "type" : "string" },
-          "digitalAddress" : { "type" : "string" },
-          "address" : { "type" : "string" },
-          "zipCode" : { "type" : "string" },
-          "origin" : { "type" : "string" },
-          "istatCode" : { "type" : "string" }
-        }
-      },
       "OnboardingResult" : {
         "type" : "object",
         "properties" : {
@@ -5723,6 +5734,65 @@
             "items" : {
               "$ref" : "#/components/schemas/InstitutionOnboarding"
             }
+          }
+        }
+      },
+      "IpaInstitutionResource" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "originId" : {
+            "type" : "string"
+          },
+          "o" : {
+            "type" : "string"
+          },
+          "ou" : {
+            "type" : "string"
+          },
+          "aoo" : {
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "category" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "digitalAddress" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "zipCode" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "type" : "string"
+          },
+          "istatCode" : {
+            "type" : "string"
+          }
+        }
+      },
+      "IpaInstitutionsSearchResource" : {
+        "type" : "object",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/IpaInstitutionResource"
+            }
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },

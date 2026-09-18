@@ -61,7 +61,9 @@ public class InstitutionV2Controller {
 
     @GetMapping(value = "/ipa")
     @ResponseStatus(HttpStatus.OK)
-    @Operation(summary = "Search IPA institutions", description = "Searches IPA institutions indexed by the registry proxy", operationId = "searchIpaInstitutionsUsingGET")
+    @Operation(summary = "${swagger.onboarding.institutions.api.searchIpaInstitutions.summary}",
+            description = "${swagger.onboarding.institutions.api.searchIpaInstitutions.description}",
+            operationId = "searchIpaInstitutionsUsingGET")
     public IpaInstitutionsSearchResource searchIpaInstitutions(
             @RequestParam(defaultValue = "*") String search,
             @RequestParam(required = false) String category,
