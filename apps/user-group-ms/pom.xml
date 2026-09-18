@@ -19,6 +19,7 @@
 
     <properties>
         <selc-commons.version>2.10.0</selc-commons.version>
+        <selfcare-sdk-health-spring.version>0.1.0</selfcare-sdk-health-spring.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
         <maven.compiler.source>17</maven.compiler.source>
@@ -127,6 +128,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
             <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-health-spring</artifactId>
+            <version>${selfcare-sdk-health-spring.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
