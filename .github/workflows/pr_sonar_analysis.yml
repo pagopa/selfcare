@@ -133,7 +133,11 @@ jobs:
         run: |
           MODE="${{ steps.scope.outputs.mode }}"
           PROJECTS="${{ steps.scope.outputs.projects }}"
-          THREADS="1"
+          THREADS="1C"
+
+          if [[ "$MODE" != "partial" || ",$PROJECTS," == *",apps/onboarding-functions,"* ]]; then
+            THREADS="1"
+          fi
 
           if [[ "$MODE" == "partial" ]]; then
             mvn -T "$THREADS" -B -ntp clean test --projects "$PROJECTS" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
