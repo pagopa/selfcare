@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.mscore.web.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.mscore.connector.azure_storage.AzureBlobClient;
 import it.pagopa.selfcare.mscore.connector.rest.UserRegistryConnectorImpl;
 import it.pagopa.selfcare.mscore.core.*;
@@ -33,6 +34,9 @@ class SwaggerConfigTest {
 
     @MockBean
     ExternalService externalService;
+
+    @MockBean
+    private AzureBlobClientDefault productBlobClient;
 
     @MockBean
     InstitutionService institutionService;
