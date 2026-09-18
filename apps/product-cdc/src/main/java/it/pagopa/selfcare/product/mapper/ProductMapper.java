@@ -49,10 +49,15 @@ public interface ProductMapper {
       source = "backOfficeEnvironmentConfigurations",
       qualifiedByName = "mapBackOfficeConfigs")
   @Mapping(target = "roleMappings", source = "roleMappings", qualifiedByName = "mapRoleMappings")
+  @Mapping(target = "partnerTechRoleMappings", source = "partnerTechRoleMappings", qualifiedByName = "mapRoleMappings")
   @Mapping(
       target = "roleMappingsByInstitutionType",
       source = "roleMappings",
       qualifiedByName = "mapRoleMappingsByInstitutionType")
+  @Mapping(
+    target = "partnerTechRoleMappingsByInstitutionType",
+    source = "partnerTechRoleMappings",
+    qualifiedByName = "mapRoleMappingsByInstitutionType")
   @Mapping(
       target = "institutionContractMappings",
       expression =
