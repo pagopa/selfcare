@@ -109,6 +109,25 @@ class PDNDInfoCamereControllerTest {
     }
 
     @Test
+    void testInstitutionByTaxCode_whenBusinessNotFound() throws Exception {
+        // given
+        String taxCode = "taxCode";
+        when(pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(anyString(), any())).thenReturn(null);
+
+        // when
+        mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/institution/{taxCode}", taxCode)
+                        .contentType(MediaType.APPLICATION_JSON))
+                // then
+                .andExpect(status().isNotFound())
+                .andReturn();
+
+        verify(pdndInfoCamereService, times(1)).retrieveInstitutionPdndByTaxCode(anyString(), any());
+        verifyNoMoreInteractions(pdndInfoCamereService);
+        verifyNoInteractions(pdndBusinessMapper);
+    }
+
+    @Test
     void testInstitutionByRea() throws Exception {
         String rea = "MI-123456";
         PDNDBusiness pdndBusiness = dummyPDNDBusiness();
@@ -189,4 +208,3 @@ class PDNDInfoCamereControllerTest {
         return pdndBusinessResource;
     }
 }
-
