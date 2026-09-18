@@ -13,9 +13,11 @@ import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.OnboardingResult;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
 import it.pagopa.selfcare.onboarding.web.model.*;
 import it.pagopa.selfcare.onboarding.web.model.mapper.InstitutionResourceMapper;
+import it.pagopa.selfcare.onboarding.web.model.mapper.IpaInstitutionsSearchResourceMapper;
 import it.pagopa.selfcare.onboarding.web.model.mapper.OnboardingResourceMapper;
 import it.pagopa.selfcare.onboarding.web.utils.FileValidationUtils;
 import jakarta.validation.Valid;
@@ -42,16 +44,37 @@ public class InstitutionV2Controller {
     private final InstitutionService institutionService;
     private final OnboardingResourceMapper onboardingResourceMapper;
     private final InstitutionResourceMapper institutionMapper;
+    private final IpaInstitutionsSearchResourceMapper ipaInstitutionsSearchResourceMapper;
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
 
     @Autowired
     public InstitutionV2Controller(InstitutionService institutionService,
                                    OnboardingResourceMapper onboardingResourceMapper,
-                                   InstitutionResourceMapper institutionMapper) {
+                                   InstitutionResourceMapper institutionMapper,
+                                   IpaInstitutionsSearchResourceMapper ipaInstitutionsSearchResourceMapper) {
         this.institutionService = institutionService;
         this.onboardingResourceMapper = onboardingResourceMapper;
         this.institutionMapper = institutionMapper;
+        this.ipaInstitutionsSearchResourceMapper = ipaInstitutionsSearchResourceMapper;
+    }
+
+    @GetMapping(value = "/ipa")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "${swagger.onboarding.institutions.api.searchIpaInstitutions.summary}",
+            description = "${swagger.onboarding.institutions.api.searchIpaInstitutions.description}",
+            operationId = "searchIpaInstitutionsUsingGET")
+    public IpaInstitutionsSearchResource searchIpaInstitutions(
+            @RequestParam(defaultValue = "*") String search,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") Integer page,
+            @RequestParam(defaultValue = "50") Integer pageSize) {
+        log.trace("searchIpaInstitutions start");
+        IpaInstitutionsSearchResult result = institutionService.searchIpaInstitutions(search, category, page, pageSize);
+        IpaInstitutionsSearchResource resource = ipaInstitutionsSearchResourceMapper.toResource(result);
+        log.debug("searchIpaInstitutions result count = {}", resource.getCount());
+        log.trace("searchIpaInstitutions end");
+        return resource;
     }
 
     @ApiResponse(responseCode = "403",
