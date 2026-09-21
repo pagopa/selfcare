@@ -76,7 +76,8 @@
         "_class": "it.pagopa.selfcare.mscore.model.institution.Onboarding",
         "origin": "SELC",
         "originId": "123X",
-        "institutionType": "PT"
+        "institutionType": "PT",
+        "isPartnerTech": true
       }
     ],
     "geographicTaxonomies": [
