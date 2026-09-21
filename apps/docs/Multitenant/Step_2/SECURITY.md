@@ -25,8 +25,8 @@ Source inputs:
   Mongo client.
 - Data isolation: strict `tenantId` discriminator for tenant-owned Mongo data; explicit unscoped paths only
   for approved global catalogues; product-driven database selection is an additional routing dimension.
-- Storage isolation: tenant-specific container/path for tenant-owned `document-ms` objects; explicit shared
-  locations for global templates.
+- Storage isolation: storage is resolved by validated tenant plus a code-owned logical key. Each tenant can
+  have multiple bindings on shared or dedicated accounts; global assets use explicit shared bindings.
 - Asynchronous trust model: persisted `tenantId` or tenant-bound machine credentials for CDC, schedulers, and
   Azure Functions.
 - Personal Data Vault provider, protocol, tenant identifiers, and credential model: `TO BE DECIDED`.
@@ -106,8 +106,20 @@ Source inputs:
 
 ### Azure Storage and file handling
 
-- Select the storage account/container from `TenantContext` and the trusted registry before evaluating any
-  client-supplied object path. A filename or path MUST NOT influence whether shared or tenant storage is used.
+- Select the storage binding from `TenantContext` and a code-owned logical key before evaluating any
+  client-supplied object path. A filename, path, request parameter, JWT claim, or event field MUST NOT select
+  the logical key, account, container, authentication mode, or credential reference.
+- Model per-tenant `storages` configuration as a map keyed by allowlisted logical names. Reject unknown,
+  duplicate after normalization, blank, or dynamically supplied logical keys.
+- Validate that every binding has a non-blank account and container, an optional normalized trusted prefix,
+  and exactly one supported authentication mode. Reject configurations that combine Managed Identity and
+  connection-string settings or omit the credential required by the chosen mode.
+- Connection strings, account keys, and SAS tokens MUST only be supplied through secret-backed environment
+  variables. The registry stores the environment-variable name, never its value. Managed Identity bindings
+  MUST use least-privilege data-plane roles scoped to the required account or container.
+- A client cache MUST be keyed by immutable credential/account identity, not only by tenant or logical key.
+  Container and prefix authorization remain part of the resolved binding even when two bindings reuse the
+  same SDK client.
 - Use separate typed operations for tenant-owned documents and global templates. Do not classify storage
   scope by path prefixes supplied by a caller.
 - Normalize object names, reject traversal/control characters, and enforce business allowlists for extension,
@@ -117,10 +129,13 @@ Source inputs:
   authorizes replacement of the same tenant-owned object.
 - Authorize downloads, uploads, updates, and deletes independently. A caller permitted to create an object is
   not automatically permitted to retrieve or delete every object in the same container.
-- Provision containers and access grants before enabling tenant routing. Missing containers or permissions
-  fail closed; the base/shared container is never a fallback.
+- Provision containers and access grants before enabling tenant routing. Missing bindings, credentials,
+  containers, or permissions fail closed; another logical binding, legacy flat property, or shared container
+  is never a fallback.
 - Storage credentials, account keys, and SAS tokens remain Key Vault-backed and are never logged. Prefer
   short-lived, least-privilege SAS scopes when SAS is required.
+- Readiness checks SHOULD report tenant and logical key with non-secret account/container identifiers, and
+  MUST probe every mandatory binding without exposing credentials or blob contents.
 
 ### Outbound calls and SSRF resistance
 
@@ -217,8 +232,9 @@ Source inputs:
   cached client state.
 - Test missing/wrong Key Vault secret references, secret rotation, wrong-account configuration, and
   unavailable tenant resources without permitting fallback.
-- Test blob path traversal, spoofed content types, oversized files, shared-template access, and tenant
-  container separation.
+- Test blob path traversal, spoofed content types, oversized files, shared-template access, tenant/container
+  separation, multiple logical bindings for one tenant, different accounts for the same logical key, invalid
+  authentication combinations, and interleaved `(tenant, logicalKey)` resolution.
 - Treat failure of migration verification, index preparation, state ownership, or rollback rehearsal as a
   release blocker.
 
