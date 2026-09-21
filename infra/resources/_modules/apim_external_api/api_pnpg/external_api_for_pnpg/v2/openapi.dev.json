@@ -1413,6 +1413,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -1636,7 +1639,9 @@
           "TESTING",
           "ACTIVE",
           "DELETED",
-          "SUSPEND"
+          "SUSPEND",
+          "PHASE_OUT",
+          "INACTIVE"
         ],
         "type": "string"
       },
