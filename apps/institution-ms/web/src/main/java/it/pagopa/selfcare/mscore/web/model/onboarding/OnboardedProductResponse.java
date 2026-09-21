@@ -25,4 +25,5 @@ public class OnboardedProductResponse {
     private String origin;
     @DecryptIfUuid
     private String originId;
+    private Boolean isPartnerTech;
 }
