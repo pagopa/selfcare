@@ -12,6 +12,8 @@ import java.util.stream.Collectors;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Mapper(componentModel = "cdi")
 public interface ProductMapper {
@@ -286,15 +288,18 @@ public interface ProductMapper {
   @Named("mapRoleMappings")
   default Map<PartyRole, it.pagopa.selfcare.product.entity.ProductRoleInfo> mapProductRole(
       List<RoleMapping> roleMappings) {
+    Logger logger = LoggerFactory.getLogger(ProductMapper.class);
     if (roleMappings == null) {
+      logger.debug("mapProductRole: roleMappings is null");
       return null;
     }
+    logger.debug("mapProductRole: roleMappings size = {}", roleMappings.size());
     return roleMappings.stream()
-        .filter(
-            roleMapping ->
-                roleMapping
-                    .getInstitutionType()
-                    .equals(it.pagopa.selfcare.product.model.enums.InstitutionType.DEFAULT))
+      .filter(roleMapping -> {
+        boolean isDefault = it.pagopa.selfcare.product.model.enums.InstitutionType.DEFAULT.equals(roleMapping.getInstitutionType());
+        logger.debug("mapProductRole: roleMapping = {}, isDefault = {}", roleMapping, isDefault);
+        return isDefault;
+      })
         .collect(Collectors.toMap(this::getPartyRole, this::toRoleResource));
   }
 
