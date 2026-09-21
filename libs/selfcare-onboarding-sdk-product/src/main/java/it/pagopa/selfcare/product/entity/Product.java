@@ -428,7 +428,7 @@ public class Product {
     }
 
     public Map<PartyRole, ProductRoleInfo> getPartnerTechRoleMappings() {
-      return roleMappings;
+      return partnerTechRoleMappings;
     }
 
     public Map<String, Map<String, List<EmailTemplate>>> getEmailTemplates() {
