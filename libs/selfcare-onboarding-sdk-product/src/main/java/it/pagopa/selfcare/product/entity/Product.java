@@ -427,6 +427,10 @@ public class Product {
         return roleMappings;
     }
 
+    public Map<PartyRole, ProductRoleInfo> getPartnerTechRoleMappings() {
+      return roleMappings;
+    }
+
     public Map<String, Map<String, List<EmailTemplate>>> getEmailTemplates() {
         return emailTemplates;
     }
