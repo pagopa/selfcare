@@ -95,4 +95,12 @@
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>selfcare</id>
+            <name>Selfcare GitHub Packages</name>
+            <url>https://maven.pkg.github.com/pagopa/selfcare</url>
+        </repository>
+    </distributionManagement>
 </project>
