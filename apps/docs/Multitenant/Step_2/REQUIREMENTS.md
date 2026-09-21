@@ -25,16 +25,18 @@ The following decisions are already established and are not reopened by this ste
   `infra/resources/_modules/local-env/locals.tf` and delivered to applications through
   `SELFCARE_TENANT_DATA_ISOLATION`.
 - Cosmos DB Mongo API access does not use Managed Identity. Connection strings and credentials remain in
-  Azure Key Vault; the tenant registry contains only the Key Vault secret name or reference needed to resolve
-  the configuration for each tenant/resource.
+  Azure Key Vault; the tenant registry contains only the environment-variable name used to receive each
+  secret-backed value. Terraform owns the mapping from Key Vault secret to application environment variable.
 - `TenantDataIsolationRegistry` lookups are fail-closed: an unknown tenant, a missing mapping, or an undecided
   resource dimension MUST raise an explicit error and MUST NOT return a default tenant's resource.
 - Existing Cosmos DB records are migrated with
   `apps/docs/Multitenant/Step_1/scripts/backfill_tenant_id.py`. Until migration is verified, the temporary
   `tenantId = currentTenant OR tenantId IS NULL` read predicate remains controlled by
   `SELFCARE_TENANT_STRICT_DATA_ISOLATION`.
-- The selected Azure Storage model for tenant-owned `document-ms` content is a shared storage account with
-  tenant-specific containers or paths. Per-tenant storage accounts are not currently selected for any service.
+- Azure Storage topology is configured per tenant and per logical storage purpose. A tenant may use multiple
+  storage accounts, and the same physical account may be reused by multiple logical purposes when explicitly
+  configured. `onboarding-ms` initially requires the `products` binding; additional bindings can be added
+  without changing the tenant-registry schema.
 - Personal Data Vault identifiers and outbound email sender domains remain intentionally unset until their
   authoritative values and ownership are agreed.
 
@@ -48,9 +50,10 @@ The following decisions are already established and are not reopened by this ste
   migration and cutover.
 - **Tenant source:** A validated `TenantContext` for request-driven work; a persisted or signed tenant identity
   for asynchronous work where no request context exists.
-- **Resource source of truth:** `local.tenant_data_isolation`, with non-secret routing metadata and Key Vault
-  secret references distributed as application configuration. Cosmos DB Mongo connection strings MUST be
-  resolved from Azure Key Vault and MUST NOT be stored in the registry or Terraform state as plaintext.
+- **Resource source of truth:** `local.tenant_data_isolation`, with non-secret routing metadata and
+  environment-variable references distributed as application configuration. Terraform maps Key Vault-backed
+  secrets to those variables. Cosmos DB Mongo and Storage connection strings MUST NOT be stored in the
+  registry or Terraform state as plaintext.
 - **Resource topology:** A resource may be shared or dedicated. The choice MUST be explicit per resource and
   service, and routing MUST preserve tenant isolation in either topology.
 - **Migration model:** Environment-by-environment migration with explicit verification gates, parallel
@@ -67,8 +70,9 @@ The following decisions are already established and are not reopened by this ste
 | Cosmos DB product catalogue and IAM roles | Shared and intentionally unscoped | Global platform configuration |
 | Cosmos DB dedicated product data | Database selected from product configuration, plus tenant discriminator | `onboarding-ms` product-driven routing |
 | Cosmos DB Mongo credentials | Connection string resolved from a tenant/resource-specific Azure Key Vault secret reference; no Managed Identity | Every Mongo client configuration |
-| Azure Storage tenant-owned documents | Shared account with tenant-specific container/path | `document-ms` contracts and attachments |
-| Azure Storage shared assets | Shared account/container without tenant suffix | Product, mail, and contract templates explicitly classified as global |
+| Azure Storage logical bindings | Account/container selected by validated tenant and logical storage key | `onboarding-ms` products initially; contracts, attachments, templates, archives, and other purposes as adopted |
+| Azure Storage tenant-owned documents | Shared or dedicated account with tenant-specific container/path | `document-ms` contracts and attachments |
+| Azure Storage shared assets | Explicitly configured shared account/container; never an implicit fallback | Product, mail, and contract templates classified as global |
 | Personal Data Vault | Tenant-specific instance or logical tenant | Known callers: `auth`, `onboarding-ms`; final provider inventory required |
 | Outbound email | Tenant-specific sender domain and tenant-compatible credentials | At least `institution-send-mail-scheduler`; complete sender inventory required |
 
@@ -134,21 +138,41 @@ The following decisions are already established and are not reopened by this ste
 
 ### SELC-14: Azure Storage Routing
 
-- **SELC-14.1:** `document-ms` MUST route every tenant-owned contract, attachment, aggregate, or generated
-  document to the container/path derived from the validated tenant and the central tenant registry.
-- **SELC-14.2:** Shared templates and other global assets MUST remain in explicitly classified shared
+- **SELC-14.1:** Every tenant-aware storage operation MUST resolve a storage binding from the validated tenant
+  and an application-defined logical storage key. `onboarding-ms` MUST initially define the `products`
+  logical key and MUST NOT read its product catalogue from one global account/container setting.
+- **SELC-14.2:** Each tenant entry in `tenant.registry.json` MUST support a `storages` object containing zero or
+  more bindings keyed by a stable logical name such as `products`, `contracts`, `attachments`, `templates`, or
+  `archives`. The structure MUST be a map, not an ordered array, so lookup is deterministic and duplicate
+  logical keys are rejected by JSON parsing/configuration validation.
+- **SELC-14.3:** Each storage binding MUST identify the Azure Storage account and container, MAY define a
+  trusted path prefix, and MUST explicitly select its authentication mode. Connection-string authentication
+  MUST reference a secret-backed environment variable; Managed Identity authentication MUST reference the
+  account name and MAY reference a user-assigned managed identity client-ID environment variable.
+- **SELC-14.4:** A tenant MAY map different logical storage keys to different accounts, containers, credentials,
+  or identity assignments. Multiple logical keys MAY intentionally point to the same physical account or
+  container, but that reuse MUST be explicit in every binding.
+- **SELC-14.5:** Shared templates and other global assets MUST remain in explicitly classified shared
   containers. Tenant-owned and shared operations MUST be distinguished by the application call site or a
   typed API, never by parsing a client-supplied blob path.
-- **SELC-14.3:** Storage clients MUST be selected at operation time so interleaved requests for `AR` and
+- **SELC-14.6:** Storage clients MUST be initialized once per distinct credential/account configuration and
+  selected at operation time so interleaved requests for `AR` and
   `PNPG` in the same process cannot reuse a client, container, or path belonging to the previous request.
-- **SELC-14.4:** A missing tenant mapping, missing tenant container, or unavailable tenant account MUST reject
-  the operation. Falling back to the base container or another tenant's account is forbidden.
-- **SELC-14.5:** Required tenant containers and access grants MUST be provisioned before application routing is
+- **SELC-14.7:** Resolving a storage binding MUST use only `TenantContext` and a code-owned logical key. Account
+  names, container names, authentication modes, environment-variable names, and path prefixes MUST NOT be
+  accepted from an HTTP request, JWT claim, event payload, or blob name.
+- **SELC-14.8:** A missing tenant, unknown logical key, incomplete binding, missing credential, missing
+  container, or unavailable account MUST reject the affected operation. Falling back to another logical key,
+  a legacy application property, a base container, or another tenant's account is forbidden.
+- **SELC-14.9:** Registry validation MUST verify all mandatory storage bindings for every supported tenant at
+  startup. Optional bindings MAY be validated on first use, but an unconfigured optional binding MUST still
+  fail closed.
+- **SELC-14.10:** Required tenant containers and access grants MUST be provisioned before application routing is
   enabled. Ownership of container provisioning outside this repository MUST be identified and included in the
   rollout plan.
-- **SELC-14.6:** `dashboard-bff` institution-logo storage MUST be classified as tenant-owned or global before
+- **SELC-14.11:** `dashboard-bff` institution-logo storage MUST be classified as tenant-owned or global before
   its deployment is consolidated. No implicit classification is allowed.
-- **SELC-14.7:** CDC archive writers MUST preserve the upstream `tenantId` in object metadata, path, or payload
+- **SELC-14.12:** CDC archive writers MUST preserve the upstream `tenantId` in object metadata, path, or payload
   according to their established contract; they MUST NOT invent a tenant when the source event is unscoped.
 
 ### SELC-15: Personal Data Vault Routing
@@ -186,8 +210,8 @@ The following decisions are already established and are not reopened by this ste
   shared deployment. Two different tenant values MUST NOT be collapsed into one legacy environment variable.
 - **SELC-17.3:** A dedicated resource MUST be selected through the same canonical tenant registry and
   fail-closed rules as a shared resource. Dedicated topology MUST NOT introduce a second tenant registry.
-- **SELC-17.4:** The registry MUST contain secret names or resource identifiers, not connection strings,
-  access keys, SAS tokens, private keys, or SMTP passwords.
+- **SELC-17.4:** The registry MUST contain resource identifiers and environment-variable references, not Key
+  Vault secret names, connection strings, access keys, SAS tokens, private keys, or SMTP passwords.
 - **SELC-17.5:** Cosmos DB, Storage, vault, and email secret values MUST be supplied through Azure Key Vault
   references or the platform's equivalent secret injection mechanism. Configuration that embeds those values
   directly in Terraform variables, environment files, or the tenant registry is forbidden.
@@ -239,6 +263,11 @@ The following decisions are already established and are not reopened by this ste
 - Every Cosmos DB Mongo client obtains its connection configuration from a Key Vault-backed secret reference;
   no Managed Identity dependency or plaintext connection string is introduced.
 - `document-ms` routes tenant-owned blobs to tenant-specific locations while shared templates remain global.
+- `onboarding-ms` resolves the `products` storage binding independently for `AR` and `PNPG`; a configuration
+  test demonstrates that the two tenants may use different accounts and that one tenant may expose more than
+  one logical storage binding.
+- Adding a new logical storage purpose requires registry and infrastructure configuration only; it does not
+  require a new top-level tenant-registry field or a positional array contract.
 - Personal Data Vault and email operations remain disabled for a tenant until explicit mappings and
   credentials exist; no default tenant is used.
 - Service-to-service, CDC, scheduled, and Azure Functions workflows preserve tenant identity without relying
@@ -257,7 +286,10 @@ The following decisions are already established and are not reopened by this ste
 - Decide whether `dashboard-bff` institution logos are tenant-owned or global.
 - Confirm whether regulatory or data-residency constraints require physical resource separation for either
   tenant.
-- Provision the tenant-specific blob containers and access grants in the system that owns them.
+- Define the initial authoritative storage-binding inventory for `onboarding-ms` beyond `products`, including
+  which bindings are mandatory at startup and which are optional until first use.
+- Provision every configured tenant/logical-key container and its least-privilege access grants in the system
+  that owns it.
 - Resolve `onboarding-ms` lookups that have only an `onboardingId` before enabling any product with a
   `DEDICATED` database.
 - Complete tenant-qualified identity/index migrations, including `userInfo`, institution `externalId`, and

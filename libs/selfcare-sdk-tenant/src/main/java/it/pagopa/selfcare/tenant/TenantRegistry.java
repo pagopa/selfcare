@@ -26,6 +26,9 @@ public class TenantRegistry {
   @ConfigProperty(name = "tenant.supported-tenants", defaultValue = "*")
   String supportedTenants;
 
+  @ConfigProperty(name = "tenant.storage.mandatory-keys", defaultValue = "")
+  String mandatoryStorageKeys;
+
   private Map<String, TenantDefinition> tenants = Collections.emptyMap();
 
   @PostConstruct
@@ -51,6 +54,7 @@ public class TenantRegistry {
                     "Missing Mongo configuration for tenant " + tenantId);
               }
               validateMongoDefinition(tenantId, definition.mongo());
+              validateStorages(tenantId, definition);
             });
   }
 
@@ -99,6 +103,47 @@ public class TenantRegistry {
    * jwt.publicKeyEnvVar}. Returns empty when the tenant has no JWT configuration at all, letting
    * callers fall back to a legacy, non-tenant-scoped verification key.
    */
+  public TenantDefinition.StorageDefinition storage(String tenantId, String logicalStorageKey) {
+    String normalizedTenantId = normalize(tenantId);
+    String normalizedKey = TenantDefinition.normalizeStorageKey(logicalStorageKey);
+    TenantDefinition.StorageDefinition storage = resolve(normalizedTenantId).storages().get(normalizedKey);
+    if (storage == null) {
+      throw new UnknownStorageException(normalizedTenantId, normalizedKey);
+    }
+    return storage;
+  }
+
+  public Optional<String> storageConnectionString(String tenantId, String logicalStorageKey) {
+    TenantDefinition.StorageAuthentication authentication = storage(tenantId, logicalStorageKey).authentication();
+    if (authentication == null || isBlank(authentication.connectionStringEnvVar())) {
+      return Optional.empty();
+    }
+    return ConfigProvider.getConfig()
+        .getOptionalValue(authentication.connectionStringEnvVar(), String.class)
+        .map(TenantRegistry::sanitizeConnectionString)
+        .filter(value -> !value.isBlank());
+  }
+
+  public Optional<String> storageManagedIdentityClientId(String tenantId, String logicalStorageKey) {
+    TenantDefinition.StorageAuthentication authentication = storage(tenantId, logicalStorageKey).authentication();
+    if (authentication == null || isBlank(authentication.managedIdentityClientIdEnvVar())) {
+      return Optional.empty();
+    }
+    return ConfigProvider.getConfig()
+        .getOptionalValue(authentication.managedIdentityClientIdEnvVar(), String.class)
+        .filter(value -> !value.isBlank());
+  }
+
+  public Set<String> mandatoryStorageKeys() {
+    if (mandatoryStorageKeys == null || mandatoryStorageKeys.isBlank()) {
+      return Set.of();
+    }
+    return Arrays.stream(mandatoryStorageKeys.split(","))
+        .filter(value -> !value.isBlank())
+        .map(TenantDefinition::normalizeStorageKey)
+        .collect(Collectors.toUnmodifiableSet());
+  }
+
   public Optional<String> jwtPublicKey(String tenantId) {
     TenantDefinition.JwtDefinition jwt = resolve(tenantId).jwt();
     if (jwt == null || isBlank(jwt.publicKeyEnvVar())) {
@@ -115,6 +160,75 @@ public class TenantRegistry {
    */
   static String sanitizeConnectionString(String value) {
     return value.replace("&amp;", "&").trim();
+  }
+
+  private void validateStorages(String tenantId, TenantDefinition definition) {
+    definition.storages().forEach((logicalKey, storage) -> validateStorageDefinition(tenantId, logicalKey, storage));
+    mandatoryStorageKeys()
+        .forEach(
+            logicalKey -> {
+              if (!definition.storages().containsKey(logicalKey)) {
+                throw new IllegalStateException(
+                    "Missing mandatory storage '" + logicalKey + "' for tenant " + tenantId);
+              }
+            });
+  }
+
+  private void validateStorageDefinition(
+      String tenantId, String logicalKey, TenantDefinition.StorageDefinition storage) {
+    if (storage == null
+        || isBlank(storage.account())
+        || isBlank(storage.container())
+        || storage.authentication() == null
+        || storage.authentication().type() == null) {
+      throw new IllegalStateException(
+          "Incomplete storage configuration for tenant " + tenantId + " and key " + logicalKey);
+    }
+    TenantDefinition.StorageAuthentication authentication = storage.authentication();
+    boolean hasConnectionString = !isBlank(authentication.connectionStringEnvVar());
+    boolean hasManagedIdentityClientId = !isBlank(authentication.managedIdentityClientIdEnvVar());
+    switch (authentication.type()) {
+      case CONNECTION_STRING -> {
+        if (!hasConnectionString || hasManagedIdentityClientId) {
+          throw new IllegalStateException(
+              "Invalid CONNECTION_STRING storage authentication for tenant "
+                  + tenantId
+                  + " and key "
+                  + logicalKey);
+        }
+        storageConnectionString(tenantId, logicalKey)
+            .orElseThrow(
+                () ->
+                    new IllegalStateException(
+                        "Missing storage connection string environment variable "
+                            + authentication.connectionStringEnvVar()
+                            + " for tenant "
+                            + tenantId
+                            + " and key "
+                            + logicalKey));
+      }
+      case MANAGED_IDENTITY -> {
+        if (hasConnectionString) {
+          throw new IllegalStateException(
+              "Invalid MANAGED_IDENTITY storage authentication for tenant "
+                  + tenantId
+                  + " and key "
+                  + logicalKey);
+        }
+        if (hasManagedIdentityClientId) {
+          storageManagedIdentityClientId(tenantId, logicalKey)
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Missing managed identity client id environment variable "
+                              + authentication.managedIdentityClientIdEnvVar()
+                              + " for tenant "
+                              + tenantId
+                              + " and key "
+                              + logicalKey));
+        }
+      }
+    }
   }
 
   private void validateMongoDefinition(String tenantId, TenantDefinition.MongoDefinition mongo) {
