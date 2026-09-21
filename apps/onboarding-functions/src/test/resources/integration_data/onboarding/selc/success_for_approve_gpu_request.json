@@ -15,6 +15,7 @@
     "originId": "13234472819"
   },
   "productId": "prod-pagopa",
+  "processedByUserUid": "integration-test-approver",
   "status": "REQUEST",
   "users": [
     {

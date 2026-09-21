@@ -8,7 +8,6 @@ import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.dashboard.model.support.SupportRequestDto;
 import it.pagopa.selfcare.dashboard.model.support.SupportResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -37,9 +36,7 @@ public class SupportApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()

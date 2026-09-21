@@ -238,7 +238,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/national-registries/verify-legal",
+      "path": "/party-registry-mock/national-registries/verify-legal",
       "queryStringParameters": {
         "vatNumber": [
           "11223345665"
@@ -259,7 +259,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/national-registries/verify-legal?taxId=RSSMRA80A01H703Z&vatNumber=11223345665"
+      "path": "/party-registry-mock/national-registries/verify-legal?taxId=RSSMRA80A01H703Z&vatNumber=11223345665"
     },
     "httpResponse": {
       "statusCode": 200,
@@ -272,7 +272,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/national-registries/legal-address",
+      "path": "/party-registry-mock/national-registries/legal-address",
       "queryStringParameters":{
         "taxId": "11223345687"
       }
@@ -283,6 +283,25 @@
         "Content-Type": "application/json"
       },
       "body": "{\n  \"address\": \"Prova Indirizzo\", \"zipCode\": \"12345\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/party-registry-mock/institutions/ipa",
+      "queryStringParameters": {
+        "search": [ "Ferrara" ],
+        "category": [ "L6" ],
+        "page": [ "0" ],
+        "pageSize": [ "20" ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "body": "{\"items\":[{\"id\":\"ipa-c-d548\",\"originId\":\"c_d548\",\"taxCode\":\"00297110389\",\"category\":\"L6\",\"description\":\"Comune di Ferrara\",\"digitalAddress\":\"comune.ferrara@cert.comune.fe.it\",\"address\":\"Piazza del Municipio, 2\",\"zipCode\":\"44121\",\"origin\":\"IPA\",\"istatCode\":\"038008\"}],\"count\":1}"
     }
   }
 ]

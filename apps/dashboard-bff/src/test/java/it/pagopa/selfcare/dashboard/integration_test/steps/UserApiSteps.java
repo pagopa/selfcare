@@ -36,9 +36,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getProductId())){
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
@@ -68,9 +66,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getProductId())){
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
@@ -100,9 +96,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
         if (StringUtils.isNotBlank(dashboardStepsUtil.filter.getInstitutionId())) {
             requestSpecification.queryParam("institutionId", dashboardStepsUtil.filter.getInstitutionId());
         }
@@ -130,9 +124,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getProductId())){
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
@@ -166,9 +158,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getProductId())){
             requestSpecification.queryParam("productId", dashboardStepsUtil.filter.getProductId());
@@ -204,9 +194,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getTaxCode())){
             searchUserDto.setFiscalCode(dashboardStepsUtil.filter.getTaxCode());
@@ -237,9 +225,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getEmail())){
             updateUserDto.setEmail(dashboardStepsUtil.filter.getEmail());
@@ -275,9 +261,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if(StringUtils.isNotBlank(dashboardStepsUtil.filter.getTaxCode())){
             searchUserDto.setFiscalCode(dashboardStepsUtil.filter.getTaxCode());
@@ -307,9 +291,7 @@ public class UserApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         if (StringUtils.isNotBlank(dashboardStepsUtil.filter.getName())) {
             requestSpecification.queryParam("name", dashboardStepsUtil.filter.getName());
@@ -335,9 +317,7 @@ public class UserApiSteps{
     public void iSendAGETRequestToToRetrieveUserOtpInfo(String url) {
         RequestSpecification requestSpecification = RestAssured.given();
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)){
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
 
         ExtractableResponse<?> response = requestSpecification
                 .when()

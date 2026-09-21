@@ -36,7 +36,15 @@ public class WorkflowExecutorForApprove implements WorkflowExecutor {
     }
 
     @Override
+    public boolean requiresManualApproval() {
+        return true;
+    }
+
+    @Override
     public Optional<OnboardingStatus> executeToBeValidatedState(TaskOrchestrationContext ctx, OnboardingWorkflow onboardingWorkflow) {
+        if (isMissingManualApproval(onboardingWorkflow.getOnboarding())) {
+            return Optional.empty();
+        }
         String onboardingWorkflowString = getOnboardingWorkflowString(objectMapper, onboardingWorkflow);
         String onboardingString = getOnboardingString(objectMapper, onboardingWorkflow.getOnboarding());
         ctx.callActivity(BUILD_CONTRACT_ACTIVITY_NAME, onboardingWorkflowString, optionsRetry, String.class).await();

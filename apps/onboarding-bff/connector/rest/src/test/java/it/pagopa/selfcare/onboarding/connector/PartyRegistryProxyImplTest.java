@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.Ins
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 import it.pagopa.selfcare.onboarding.connector.rest.client.PartyRegistryProxyRestClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.RegistryProxyMapper;
@@ -23,6 +24,7 @@ import it.pagopa.selfcare.onboarding.connector.rest.mapper.RegistryProxyMapperIm
 import it.pagopa.selfcare.onboarding.connector.rest.model.AooResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.GeographicTaxonomiesResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.ProxyInstitutionResponse;
+import it.pagopa.selfcare.onboarding.connector.rest.model.IpaInstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.UoResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequest;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequestDto;
@@ -110,6 +112,27 @@ class PartyRegistryProxyImplTest {
         //then
         reflectionEqualsByName(proxyInstitutionResponse, actualInstitutionById);
         verify(restClientMock).getInstitutionById("42");
+    }
+
+    @Test
+    void searchIpaInstitutions() {
+        // given
+        ProxyInstitutionResponse institution = new ProxyInstitutionResponse();
+        institution.setId("ipa-id");
+        institution.setDescription("Comune di esempio");
+        IpaInstitutionsSearchResponse response = new IpaInstitutionsSearchResponse();
+        response.setItems(List.of(institution));
+        response.setCount(1L);
+        when(restClientMock.searchIpaInstitutions("esempio", "L6", 0, 50)).thenReturn(response);
+
+        // when
+        IpaInstitutionsSearchResult result = partyConnector.searchIpaInstitutions("esempio", "L6", 0, 50);
+
+        // then
+        assertEquals(1L, result.getCount());
+        assertEquals("ipa-id", result.getItems().get(0).getId());
+        verify(restClientMock).searchIpaInstitutions("esempio", "L6", 0, 50);
+        verifyNoMoreInteractions(restClientMock);
     }
 
 

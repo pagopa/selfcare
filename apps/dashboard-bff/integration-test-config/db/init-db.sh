@@ -15,9 +15,6 @@ mongoimport --host localhost --db selcOnboarding --collection tokens --file /doc
 echo "insert UserGroups"
 mongoimport --host localhost --db selcUserGroup --collection UserGroups --file /docker-entrypoint-initdb.d/UserGroups.json --jsonArray
 
-echo "insert UserInfo"
-mongoimport --host localhost --db selcUser --collection userInfo --file /docker-entrypoint-initdb.d/UserInfo.json --jsonArray
-
 echo "insert UserInstitutions"
 mongoimport --host localhost --db selcUser --collection userInstitutions --file /docker-entrypoint-initdb.d/UserInstitution.json --jsonArray
 
