@@ -20,7 +20,7 @@ import java.util.Optional;
 @Slf4j
 @Service
 @Profile("AzureStorage")
-class AzureBlobClient implements FileStorageConnector {
+public class AzureBlobClient implements FileStorageConnector {
 
     private final String institutionsLogoContainerReference;
     private final BlobServiceClient blobClient;
@@ -64,6 +64,10 @@ class AzureBlobClient implements FileStorageConnector {
         } catch (Exception ex) {
             throw new FileUploadException(ex);
         }
+    }
+
+    public void probeContainer() {
+        blobClient.getBlobContainerClient(institutionsLogoContainerReference).getProperties();
     }
 
 }

@@ -420,6 +420,96 @@ Feature: Product API end-to-end onboarding and lifecycle
       | title  | Product not found |
       | status | 404               |
 
+  Scenario: GET /product/{productId}/valid - returns the product when valid (ACTIVE)
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/product/prod-test/valid"
+    Then The status code is 200
+    And The response body contains:
+      | productId | prod-test |
+      | status    | ACTIVE    |
+
+  Scenario: GET /product/{productId}/valid - returns 404 when product not found
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/product/prod-unknown/valid"
+    Then The status code is 404
+    And The response body contains:
+      | title  | Product not found |
+      | status | 404               |
+
+  Scenario: GET /product/{productId}/expiration-days - returns configured expiration days
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/product/prod-test/expiration-days"
+    Then The status code is 200
+    And The response body contains:
+      | expirationDays | 30 |
+
+  Scenario: GET /product/{productId}/expiration-days - returns 404 when product not found
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/product/prod-unknown/expiration-days"
+    Then The status code is 404
+    And The response body contains:
+      | title  | Product not found |
+      | status | 404               |
+
+  Scenario: GET /product - returns list containing the valid product (rootOnly and valid true)
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | rootOnly | true |
+      | valid    | true |
+    When I send a GET request to "/product"
+    Then The status code is 200
+    And The response body contains the string "prod-test"
+
+  Scenario: GET /product - returns 400 when required query params are missing
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/product"
+    Then The status code is 400
+    And The response body contains:
+      | title  | Bad Request |
+      | status | 400         |
+
+  Scenario: GET /product/{productId}/role-mappings/validate - returns the role when valid
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | role        | OPERATOR            |
+      | productRole | referente operativo |
+    When I send a GET request to "/product/prod-test/role-mappings/validate"
+    Then The status code is 200
+    And The response body contains:
+      | code        | referente operativo |
+      | label       | Operatore           |
+      | description | Operatore           |
+
+  Scenario: GET /product/{productId}/role-mappings/validate - returns 404 when productRole not found
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | role        | OPERATOR     |
+      | productRole | not-existing |
+    When I send a GET request to "/product/prod-test/role-mappings/validate"
+    Then The status code is 404
+    And The response body contains:
+      | title  | Not Found |
+      | status | 404       |
+
+  Scenario: GET /product/{productId}/role-mappings/validate - returns 404 when role has no mapping
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | role        | MANAGER             |
+      | productRole | referente operativo |
+    When I send a GET request to "/product/prod-test/role-mappings/validate"
+    Then The status code is 404
+    And The response body contains:
+      | title  | Not Found |
+      | status | 404       |
+
+  Scenario: GET /product/{productId}/role-mappings/validate - returns 404 when product not found
+    Given User login with username "j.doe" and password "test"
+    And The following query params:
+      | role        | OPERATOR            |
+      | productRole | referente operativo |
+    When I send a GET request to "/product/prod-unknown/role-mappings/validate"
+    Then The status code is 404
+
   Scenario: DELETE /product - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
     When I send a DELETE request to "/product/prod-test"
@@ -427,6 +517,13 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The response body contains:
       | productId | prod-test |
       | status    | DELETED   |
+
+  Scenario: GET /product/{productId}/valid - returns 404 when product is DELETED
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/product/prod-test/valid"
+    Then The status code is 404
+    And The response body contains:
+      | status | 404 |
 
   Scenario: GET /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
@@ -464,3 +561,4 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The response body contains:
       | title  | Product not found |
       | status | 404               |
+

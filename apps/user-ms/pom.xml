@@ -175,21 +175,6 @@
       <version>2.0.1.Final</version>
     </dependency>
     <dependency>
-      <groupId>org.freemarker</groupId>
-      <artifactId>freemarker</artifactId>
-      <version>2.3.32</version>
-      <scope>compile</scope>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkiverse.freemarker</groupId>
-      <artifactId>quarkus-freemarker</artifactId>
-      <version>1.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-mailer</artifactId>
-    </dependency>
-    <dependency>
       <groupId>software.amazon.awssdk</groupId>
       <artifactId>ses</artifactId>
       <version>2.20.88</version>
@@ -214,6 +199,11 @@
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-sdk-security</artifactId>
       <version>${common-sdk-security-version}</version>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-health</artifactId>
+      <version>0.2.0</version>
     </dependency>
     <dependency>
       <groupId>com.microsoft.azure</groupId>

@@ -9,7 +9,6 @@ import io.restassured.RestAssured;
 import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
-import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -121,9 +120,7 @@ public class TokenApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
         if(Objects.nonNull(dashboardStepsUtil.filter.getLang())) {
             requestSpecification.queryParam("lang", dashboardStepsUtil.filter.getLang());
         }
@@ -153,9 +150,8 @@ public class TokenApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
+
         if (Objects.nonNull(dashboardStepsUtil.filter.getInstitutionId())) {
             requestSpecification.queryParam("institutionId", dashboardStepsUtil.filter.getInstitutionId());
         }
@@ -185,9 +181,7 @@ public class TokenApiSteps{
         RequestSpecification requestSpecification = RestAssured.given()
                 .contentType("application/json");
 
-        if(StringUtils.isNotBlank(dashboardStepsUtil.token)) {
-            requestSpecification.header("Authorization", "Bearer " + dashboardStepsUtil.token);
-        }
+        dashboardStepsUtil.setHeader(requestSpecification);
         if(Objects.nonNull(dashboardStepsUtil.filter.getLang())) {
             requestSpecification.queryParam("lang", dashboardStepsUtil.filter.getLang());
         }

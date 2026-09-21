@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.dashboard.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.dashboard.model.mapper.*;
 import it.pagopa.selfcare.dashboard.security.ExchangeTokenServiceV2;
 import it.pagopa.selfcare.dashboard.service.*;
@@ -27,6 +28,9 @@ class SwaggerConfigTest {
 
     @MockBean
     private FileStorageService storageServiceMock;
+
+    @MockBean
+    private AzureBlobClientDefault productBlobClient;
 
     @MockBean
     private InstitutionService institutionServiceMock;

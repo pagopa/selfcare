@@ -12,7 +12,7 @@
 
     <properties>
         <cucumber.version>7.20.1</cucumber.version>
-        <selfcare-cucumber-sdk.version>0.1.2</selfcare-cucumber-sdk.version>
+        <selfcare-cucumber-sdk.version>0.1.3</selfcare-cucumber-sdk.version>
     </properties>
 
     <dependencyManagement>

@@ -21,6 +21,10 @@
             <artifactId>azure-storage-blob</artifactId>
             <version>12.24.0</version>
         </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-health-spring</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

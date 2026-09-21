@@ -2,11 +2,11 @@ package it.pagopa.selfcare.user.conf;
 
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.connectionstring.ConnectionString;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Typed;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Optional;
@@ -29,34 +29,19 @@ public class UserMsConfig {
     @ConfigProperty(name = "user-ms.blob-storage.managed-identity-client-id-product")
     Optional<String> managedIdentityClientIdProduct;
 
-    @ConfigProperty(name = "user-ms.blob-storage.connection-string-templates")
-    Optional<String> connectionStringTemplates;
-
-    @ConfigProperty(name = "user-ms.blob-storage.account-name-templates")
-    Optional<String> accountNameTemplates;
-
-    @ConfigProperty(name = "user-ms.blob-storage.managed-identity-client-id-templates")
-    Optional<String> managedIdentityClientIdTemplates;
-
-    @ConfigProperty(name = "user-ms.blob-storage.container-templates")
-    String containerTemplates;
-
     @ApplicationScoped
-    public ProductService productService(){
-        return connectionStringProduct
-          .filter(cs -> !cs.isBlank())
-          .map(cs -> new ProductServiceCacheable(cs, containerProduct, filepathProduct))
-          .orElseGet(() -> new ProductServiceCacheable(containerProduct, filepathProduct,
-            accountNameProduct.orElse(""), managedIdentityClientIdProduct.orElse("")));
+    public ProductService productService(AzureBlobClientDefault productBlobClient) {
+        return new ProductServiceCacheable(productBlobClient, filepathProduct);
     }
 
     @ApplicationScoped
-    public AzureBlobClient azureBobClientContract() {
-        return connectionStringTemplates
+    @Typed(AzureBlobClientDefault.class)
+    public AzureBlobClientDefault productBlobClient() {
+        return connectionStringProduct
           .filter(cs -> !cs.isBlank())
-          .map(cs -> new AzureBlobClientDefault(cs, containerTemplates))
-          .orElseGet(() -> new AzureBlobClientDefault(containerTemplates,
-            accountNameTemplates.orElse(""), managedIdentityClientIdTemplates.orElse("")));
+          .map(cs -> new AzureBlobClientDefault(cs, containerProduct))
+          .orElseGet(() -> new AzureBlobClientDefault(containerProduct,
+            accountNameProduct.orElse(""), managedIdentityClientIdProduct.orElse("")));
     }
 
     @ApplicationScoped
