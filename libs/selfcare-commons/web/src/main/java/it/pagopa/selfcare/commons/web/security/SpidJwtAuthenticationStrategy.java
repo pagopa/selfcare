@@ -3,16 +3,17 @@ package it.pagopa.selfcare.commons.web.security;
 import io.jsonwebtoken.Claims;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.Collection;
-import java.util.Set;
 import java.util.Optional;
 
 /**
@@ -30,19 +31,35 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
     private static final String CLAIM_FISCAL_CODE = "fiscal_number";
     private static final String CLAIM_ISSUER = "iss";
     private static final String CLAIM_TENANT_ID = "tenant_id";
-    private static final String DEFAULT_TENANT_ID = "PNPG";
     private static final String TENANT_HEADER = "X-Tenant-Id";
-    private static final Set<String> SUPPORTED_TENANTS = Set.of("AR", DEFAULT_TENANT_ID);
 
     private final JwtService jwtService;
     private final AuthoritiesRetriever authoritiesRetriever;
+    private final TenantRegistry tenantRegistry;
+    private final String defaultTenantId;
 
 
     @Autowired
-    public SpidJwtAuthenticationStrategy(JwtService jwtService, AuthoritiesRetriever authoritiesRetriever) {
+    public SpidJwtAuthenticationStrategy(
+            JwtService jwtService,
+            AuthoritiesRetriever authoritiesRetriever,
+            org.springframework.beans.factory.ObjectProvider<TenantRegistry> tenantRegistryProvider,
+            @Value("${tenant.default:PNPG}") String defaultTenantId) {
         log.trace("Initializing {}", SpidJwtAuthenticationStrategy.class.getSimpleName());
         this.jwtService = jwtService;
         this.authoritiesRetriever = authoritiesRetriever;
+        this.tenantRegistry =
+                tenantRegistryProvider == null ? null : tenantRegistryProvider.getIfAvailable();
+        this.defaultTenantId =
+                StringUtils.hasText(defaultTenantId) ? defaultTenantId : "PNPG";
+    }
+
+    SpidJwtAuthenticationStrategy(
+            JwtService jwtService, AuthoritiesRetriever authoritiesRetriever) {
+        this.jwtService = jwtService;
+        this.authoritiesRetriever = authoritiesRetriever;
+        this.tenantRegistry = null;
+        this.defaultTenantId = "PNPG";
     }
 
 
@@ -54,7 +71,10 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
         SelfCareUser user;
         String tenantId;
         try {
-            Claims claims = jwtService.getClaims(authentication.getCredentials());
+            Claims claims = tenantRegistry != null && tenantRegistry.isConfigured()
+                    ? jwtService.getClaims(
+                            authentication.getCredentials(), authentication.getTenantId())
+                    : jwtService.getClaims(authentication.getCredentials());
             tenantId = resolveTenant(authentication.getTenantId(), claims);
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "authenticate user with id = {}", claims.get(CLAIMS_UID, String.class));
             Optional<String> uid = Optional.ofNullable(claims.get(CLAIMS_UID, String.class));
@@ -97,22 +117,39 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
         final Object rawClaimTenantId = claims.get(CLAIM_TENANT_ID);
         final String effectiveTenantId;
         if (rawClaimTenantId == null) {
-            effectiveTenantId = DEFAULT_TENANT_ID;
+            effectiveTenantId = normalizeAndValidate(defaultTenantId);
         } else if (rawClaimTenantId instanceof String claimTenantId
-                && StringUtils.hasText(claimTenantId)
-                && SUPPORTED_TENANTS.contains(claimTenantId)) {
-            effectiveTenantId = claimTenantId;
+                && StringUtils.hasText(claimTenantId)) {
+            effectiveTenantId = normalizeAndValidate(claimTenantId);
         } else {
             throw new TenantValidationException();
         }
 
-        if (!StringUtils.hasText(headerTenantId)
-                || !SUPPORTED_TENANTS.contains(headerTenantId)
-                || !effectiveTenantId.equals(headerTenantId)) {
+        String normalizedHeader;
+        try {
+            normalizedHeader = normalizeAndValidate(headerTenantId);
+        } catch (RuntimeException exception) {
+            throw new TenantValidationException();
+        }
+        if (!effectiveTenantId.equals(normalizedHeader)) {
             log.warn("Tenant header {} does not match the verified JWT tenant", TENANT_HEADER);
             throw new TenantValidationException();
         }
         return effectiveTenantId;
+    }
+
+    private String normalizeAndValidate(String tenantId) {
+        if (tenantRegistry != null && tenantRegistry.isConfigured()) {
+            return tenantRegistry.normalizeAndValidate(tenantId);
+        }
+        if (!StringUtils.hasText(tenantId)) {
+            throw new TenantValidationException();
+        }
+        String normalized = tenantId.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!java.util.Set.of("AR", "PNPG").contains(normalized)) {
+            throw new TenantValidationException();
+        }
+        return normalized;
     }
 
 }

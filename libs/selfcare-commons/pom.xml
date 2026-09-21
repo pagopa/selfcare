@@ -7,6 +7,7 @@
   <modules>
     <module>connector</module>
     <module>base</module>
+    <module>tenant</module>
     <module>web</module>
     <module>utils</module>
   </modules>
@@ -40,6 +41,11 @@
       <dependency>
         <groupId>it.pagopa.selfcare</groupId>
         <artifactId>selc-commons-base</artifactId>
+        <version>2.10.0</version>
+      </dependency>
+      <dependency>
+        <groupId>it.pagopa.selfcare</groupId>
+        <artifactId>selc-commons-tenant</artifactId>
         <version>2.10.0</version>
       </dependency>
       <dependency>

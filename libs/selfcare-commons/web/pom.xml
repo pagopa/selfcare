@@ -18,6 +18,10 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selc-commons-tenant</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selc-commons-base</artifactId>
       <type>test-jar</type>
       <scope>test</scope>
