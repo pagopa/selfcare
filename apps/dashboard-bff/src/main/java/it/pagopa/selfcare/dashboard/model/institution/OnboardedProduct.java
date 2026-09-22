@@ -17,6 +17,7 @@ public class OnboardedProduct {
     private Boolean isAggregator;
     private String origin;
     private String originId;
+    private Boolean isPartnerTech;
     private InstitutionType institutionType;
     private OffsetDateTime createdAt;
     private String tokenId;

@@ -26,14 +26,31 @@ existing `mongo` one:
 {
   "AR": {
     "mongo": { "account": "cosmos-ar", "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR" },
-    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" }
+    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
+    "storages": {
+      "products": {
+        "account": "stselcarproducts",
+        "container": "selc-d-product",
+        "authentication": { "type": "MANAGED_IDENTITY", "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_AR_PRODUCTS" }
+      }
+    }
   },
   "PNPG": {
     "mongo": { "account": "cosmos-pnpg", "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG" },
-    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" }
+    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" },
+    "storages": {
+      "products": {
+        "account": "stpnpgproducts",
+        "container": "selc-d-product",
+        "authentication": { "type": "MANAGED_IDENTITY", "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_PNPG_PRODUCTS" }
+      }
+    }
   }
 }
 ```
+
+The optional `storages` map is orthogonal to JWT verification. It is shown to keep all examples aligned with
+the canonical registry schema; see `Storage_identification.md`.
 
 `JWT_PUBLIC_KEY_AR` / `JWT_PUBLIC_KEY_PNPG` are populated from Key Vault via Terraform,
 reusing the existing `jwt-public-key` secret per stack (see
