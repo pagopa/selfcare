@@ -22,6 +22,7 @@ public class OnboardedProduct {
     private OnboardedProductState status;
     private String productRole;
     private PartyRole role;
+    private Boolean partnerTechRole;
     private Env env = ROOT;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

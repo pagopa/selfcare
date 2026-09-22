@@ -1881,6 +1881,9 @@
             "description" : "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA",
             "type" : "string"
           },
+          "partnerTechRole" : {
+            "type" : "boolean"
+          },
           "env" : {
             "$ref" : "#/components/schemas/Env"
           },
