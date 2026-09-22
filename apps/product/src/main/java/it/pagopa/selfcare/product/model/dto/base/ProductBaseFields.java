@@ -27,6 +27,7 @@ public class ProductBaseFields {
   private Features features;
 
   private List<RoleMapping> roleMappings;
+  private List<RoleMapping> partnerTechRoleMappings;
   private List<ContractTemplateConfig> contracts;
   private List<OriginEntry> institutionOrigins;
   private List<EmailTemplateConfig> emailTemplates;

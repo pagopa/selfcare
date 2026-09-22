@@ -335,6 +335,12 @@
               "$ref" : "#/components/schemas/RoleMapping"
             }
           },
+          "partnerTechRoleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
           "contracts" : {
             "type" : "array",
             "items" : {
@@ -466,6 +472,12 @@
               "$ref" : "#/components/schemas/RoleMapping"
             }
           },
+          "partnerTechRoleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
           "contracts" : {
             "type" : "array",
             "items" : {
@@ -561,6 +573,12 @@
             "$ref" : "#/components/schemas/Features"
           },
           "roleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/RoleMapping"
