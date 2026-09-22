@@ -38,6 +38,8 @@ public class Product {
 
   private List<RoleMapping> roleMappings;
 
+  private List<RoleMapping> partnerTechRoleMappings;
+
   private List<ContractTemplate> contracts;
 
   private List<OriginEntry> institutionOrigins;
