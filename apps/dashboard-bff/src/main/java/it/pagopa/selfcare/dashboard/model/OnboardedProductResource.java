@@ -28,6 +28,8 @@ public class OnboardedProductResource {
 
     private String originId;
 
+    private Boolean isPartnerTech;
+
     private InstitutionType institutionType;
 
     private OffsetDateTime createdAt;
