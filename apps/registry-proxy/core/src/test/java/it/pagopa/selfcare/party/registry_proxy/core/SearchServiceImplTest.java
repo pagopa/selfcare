@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.party.registry_proxy.core.exception.TooManyResourceFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -284,6 +286,61 @@ public class SearchServiceImplTest {
 
     assertNotNull(result);
     verify(ipaSearchServiceConnector, times(1)).search("*", null, 50, 0);
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldReturnTheExactInstitution() {
+    // given
+    IpaInstitution institution = new IpaInstitution();
+    institution.setTaxCode("00100000001");
+    IpaInstitutionSearchResult result = new IpaInstitutionSearchResult();
+    result.setInstitutions(List.of(institution));
+    result.setTotalElements(1L);
+    when(ipaSearchServiceConnector.search("*", "taxCode eq '00100000001'", 2, 0))
+        .thenReturn(result);
+
+    // when
+    IpaInstitution actual = searchService.findIpaInstitutionByTaxCode("00100000001");
+
+    // then
+    assertEquals("00100000001", actual.getTaxCode());
+    verify(ipaSearchServiceConnector).search("*", "taxCode eq '00100000001'", 2, 0);
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldFailWhenNotFound() {
+    // given
+    IpaInstitutionSearchResult result = new IpaInstitutionSearchResult();
+    result.setInstitutions(List.of());
+    result.setTotalElements(0L);
+    when(ipaSearchServiceConnector.search("*", "taxCode eq '00100000001'", 2, 0))
+        .thenReturn(result);
+
+    // when
+    ResourceNotFoundException exception = assertThrows(
+        ResourceNotFoundException.class,
+        () -> searchService.findIpaInstitutionByTaxCode("00100000001"));
+
+    // then
+    assertEquals("IPA institution with taxCode 00100000001 not found", exception.getMessage());
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldFailWhenMoreThanOneInstitutionIsFound() {
+    // given
+    IpaInstitutionSearchResult result = new IpaInstitutionSearchResult();
+    result.setInstitutions(List.of(new IpaInstitution(), new IpaInstitution()));
+    result.setTotalElements(2L);
+    when(ipaSearchServiceConnector.search("*", "taxCode eq '00100000001'", 2, 0))
+        .thenReturn(result);
+
+    // when
+    TooManyResourceFoundException exception = assertThrows(
+        TooManyResourceFoundException.class,
+        () -> searchService.findIpaInstitutionByTaxCode("00100000001"));
+
+    // then
+    assertEquals("More than one IPA institution found for taxCode 00100000001", exception.getMessage());
   }
 
 }
