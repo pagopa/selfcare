@@ -346,7 +346,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(institutionResource));
 
 
         UOResource uoResource = new UOResource();
@@ -460,7 +460,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(institutionResource));
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
                     .thenReturn(Uni.createFrom().item(Response.noContent().build()));
@@ -800,7 +800,7 @@ class OnboardingServiceDefaultTest {
         uoResource.setDenominazioneEnte("TEST");
         uoResource.setCodiceFiscaleEnte("taxCode");
         uoResource.setMail1("mail@pec.it");
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(new InstitutionResource()));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(new InstitutionResource()));
         when(uoApi.findByUnicodeUsingGET1(any(), any()))
                 .thenReturn(Uni.createFrom().item(uoResource));
 
@@ -891,7 +891,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDescription("TEST");
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), Assertions::assertNotNull);
@@ -954,7 +954,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDescription("TEST");
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null, userRequesterDto), InvalidRequestException.class);
@@ -996,7 +996,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDescription("TEST");
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null, null), InvalidRequestException.class);
@@ -1397,7 +1397,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(institutionResource));
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), Assertions::assertNotNull);
 
@@ -1480,7 +1480,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(institutionResource));
 
         asserter.execute(() -> {
             PanacheMock.verify(Onboarding.class).persist(any(Onboarding.class), any());
@@ -1828,7 +1828,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(institutionResource));
 
         asserter.execute(() -> when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse())));
@@ -1997,7 +1997,7 @@ class OnboardingServiceDefaultTest {
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        when(institutionRegistryProxyApi.findInstitutionUsingGET(any(), any(), any())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(any())).thenReturn(Uni.createFrom().item(institutionResource));
 
 
         asserter.execute(() -> when(Onboarding.persistOrUpdate(any(List.class)))
@@ -2908,7 +2908,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -3001,7 +3001,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setCategory("L37");
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertThat(() -> onboardingService.onboardingAggregationCompletion(request, users, null, null), Assertions::assertNotNull);
@@ -3044,7 +3044,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setCategory("L37");
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertThat(() -> onboardingService.onboardingCompletion(request, users, null), Assertions::assertNotNull);
@@ -3082,7 +3082,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setCategory("L37");
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setDescription(DESCRIPTION_FIELD);
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertFailedWith(() -> onboardingService.onboardingCompletion(request, users, null),
@@ -3122,7 +3122,7 @@ class OnboardingServiceDefaultTest {
 
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setCategory("L37");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         asserter.assertThat(() -> onboardingService.onboardingPgCompletion(request, users), Assertions::assertNotNull);
@@ -3833,7 +3833,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4365,7 +4365,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4445,7 +4445,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4516,7 +4516,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4593,7 +4593,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4695,7 +4695,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4797,7 +4797,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
@@ -4879,7 +4879,7 @@ class OnboardingServiceDefaultTest {
         institutionResource.setDescription(DESCRIPTION_FIELD);
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
         institutionResource.setIstatCode("istatCode");
-        asserter.execute(() -> when(institutionRegistryProxyApi.findInstitutionUsingGET(institutionBaseRequest.getTaxCode(), null, null))
+        asserter.execute(() -> when(institutionRegistryProxyApi.findIpaInstitutionByTaxCodeOnSearchEngine(institutionBaseRequest.getTaxCode()))
                 .thenReturn(Uni.createFrom().item(institutionResource)));
 
         GeographicTaxonomyResource geographicTaxonomyResource = new GeographicTaxonomyResource();
