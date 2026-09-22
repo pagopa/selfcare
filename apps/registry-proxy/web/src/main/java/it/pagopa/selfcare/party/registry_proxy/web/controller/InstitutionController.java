@@ -123,10 +123,12 @@ public class InstitutionController {
       description = "${swagger.api.search.ipa-institution-by-tax-code.notes}",
       operationId = "findIpaInstitutionByTaxCodeOnSearchEngine")
   public InstitutionResource findIpaInstitutionByTaxCode(
-      @PathVariable String taxCode) {
+      @PathVariable String taxCode,
+      @Parameter(description = "${swagger.model.*.categories}") @RequestParam(required = false)
+          String category) {
     log.trace("findIpaInstitutionByTaxCode start");
     InstitutionResource resource =
-        InstitutionMapper.toResource(searchService.findIpaInstitutionByTaxCode(taxCode));
+        InstitutionMapper.toResource(searchService.findIpaInstitutionByTaxCode(taxCode, category));
     log.trace("findIpaInstitutionByTaxCode end");
     return resource;
   }

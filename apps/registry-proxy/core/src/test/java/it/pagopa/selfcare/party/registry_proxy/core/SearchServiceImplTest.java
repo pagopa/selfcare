@@ -258,19 +258,41 @@ public class SearchServiceImplTest {
   }
 
   @Test
-  void searchIpaInstitutions_withCategory_shouldBuildFilter() {
+  void searchIpaInstitutions_withSingleCategory_shouldBuildSearchInFilter() {
+    // given
     IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
     mockResult.setInstitutions(List.of());
     mockResult.setTotalElements(0L);
 
-    when(ipaSearchServiceConnector.search("*", "category eq 'L6'", 50, 0))
+    when(ipaSearchServiceConnector.search("*", "search.in(category, 'L6', ',')", 50, 0))
             .thenReturn(mockResult);
 
+    // when
     IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, "L6", 0, 50);
 
+    // then
     assertNotNull(result);
     assertEquals(0L, result.getTotalElements());
-    verify(ipaSearchServiceConnector, times(1)).search("*", "category eq 'L6'", 50, 0);
+    verify(ipaSearchServiceConnector, times(1))
+        .search("*", "search.in(category, 'L6', ',')", 50, 0);
+  }
+
+  @Test
+  void searchIpaInstitutions_withMultipleCategories_shouldBuildSearchInFilter() {
+    // given
+    IpaInstitutionSearchResult mockResult = new IpaInstitutionSearchResult();
+    mockResult.setInstitutions(List.of());
+    mockResult.setTotalElements(0L);
+    String categories = " C17, C16, C17, , SA ";
+    String filter = "search.in(category, 'C17,C16,SA', ',')";
+    when(ipaSearchServiceConnector.search("*", filter, 50, 0)).thenReturn(mockResult);
+
+    // when
+    IpaInstitutionSearchResult result = searchService.searchIpaInstitutions(null, categories, 0, 50);
+
+    // then
+    assertNotNull(result);
+    verify(ipaSearchServiceConnector).search("*", filter, 50, 0);
   }
 
   @Test
@@ -300,11 +322,31 @@ public class SearchServiceImplTest {
         .thenReturn(result);
 
     // when
-    IpaInstitution actual = searchService.findIpaInstitutionByTaxCode("00100000001");
+    IpaInstitution actual = searchService.findIpaInstitutionByTaxCode("00100000001", null);
 
     // then
     assertEquals("00100000001", actual.getTaxCode());
     verify(ipaSearchServiceConnector).search("*", "taxCode eq '00100000001'", 2, 0);
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_withCategories_shouldBuildCombinedFilter() {
+    // given
+    IpaInstitution institution = new IpaInstitution();
+    institution.setTaxCode("00100000001");
+    IpaInstitutionSearchResult result = new IpaInstitutionSearchResult();
+    result.setInstitutions(List.of(institution));
+    result.setTotalElements(1L);
+    String filter = "taxCode eq '00100000001' and search.in(category, 'C17,C16', ',')";
+    when(ipaSearchServiceConnector.search("*", filter, 2, 0)).thenReturn(result);
+
+    // when
+    IpaInstitution actual =
+        searchService.findIpaInstitutionByTaxCode("00100000001", "C17,C16");
+
+    // then
+    assertEquals("00100000001", actual.getTaxCode());
+    verify(ipaSearchServiceConnector).search("*", filter, 2, 0);
   }
 
   @Test
@@ -319,7 +361,7 @@ public class SearchServiceImplTest {
     // when
     ResourceNotFoundException exception = assertThrows(
         ResourceNotFoundException.class,
-        () -> searchService.findIpaInstitutionByTaxCode("00100000001"));
+        () -> searchService.findIpaInstitutionByTaxCode("00100000001", null));
 
     // then
     assertEquals("IPA institution with taxCode 00100000001 not found", exception.getMessage());
@@ -337,7 +379,7 @@ public class SearchServiceImplTest {
     // when
     TooManyResourceFoundException exception = assertThrows(
         TooManyResourceFoundException.class,
-        () -> searchService.findIpaInstitutionByTaxCode("00100000001"));
+        () -> searchService.findIpaInstitutionByTaxCode("00100000001", null));
 
     // then
     assertEquals("More than one IPA institution found for taxCode 00100000001", exception.getMessage());

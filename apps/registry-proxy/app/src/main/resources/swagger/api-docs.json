@@ -891,12 +891,20 @@
       "get" : {
         "tags" : [ "institution", "external-v2", "support" ],
         "summary" : "Find IPA institution by tax code",
-        "description" : "Returns the single IPA institution matching the exact tax code from the Azure AI Search index",
+        "description" : "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
         "operationId" : "findIpaInstitutionByTaxCodeOnSearchEngine",
         "parameters" : [ {
           "name" : "taxCode",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "description" : "Filter from origin category. Multiple comma-separated values are supported",
+          "required" : false,
           "schema" : {
             "type" : "string"
           }
@@ -934,7 +942,7 @@
       "get" : {
         "tags" : [ "institution", "external-v2", "support" ],
         "summary" : "Retrieve IPA institutions",
-        "description" : "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "description" : "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and comma-separated category filter",
         "operationId" : "searchIpaInstitutionsOnSearchEngine",
         "parameters" : [ {
           "name" : "search",
@@ -948,7 +956,7 @@
         }, {
           "name" : "category",
           "in" : "query",
-          "description" : "Filter from origin category",
+          "description" : "Filter from origin category. Multiple comma-separated values are supported",
           "required" : false,
           "schema" : {
             "type" : "string"
