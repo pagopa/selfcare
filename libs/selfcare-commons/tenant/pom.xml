@@ -7,7 +7,7 @@
   <parent>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selc-commons</artifactId>
-    <version>2.10.0</version>
+    <version>2.20.0</version>
   </parent>
 
   <artifactId>selc-commons-tenant</artifactId>

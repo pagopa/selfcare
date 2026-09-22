@@ -44,7 +44,7 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
             JwtService jwtService,
             AuthoritiesRetriever authoritiesRetriever,
             ObjectProvider<TenantRegistry> tenantRegistryProvider,
-            @Value("${tenant.default:PNPG}") String defaultTenantId) {
+            @Value("${tenant.pagopa.default:AR}") String defaultTenantId) {
         log.trace("Initializing {}", PagopaJwtAuthenticationStrategy.class.getSimpleName());
         this.jwtService = jwtService;
         this.authoritiesRetriever = authoritiesRetriever;
@@ -53,12 +53,12 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
         this.defaultTenantId =
                 org.springframework.util.StringUtils.hasText(defaultTenantId)
                         ? defaultTenantId
-                        : "PNPG";
+                        : "AR";
     }
 
     PagopaJwtAuthenticationStrategy(
             JwtService jwtService, AuthoritiesRetriever authoritiesRetriever) {
-        this(jwtService, authoritiesRetriever, null, "PNPG");
+        this(jwtService, authoritiesRetriever, null, "AR");
     }
 
 
