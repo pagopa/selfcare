@@ -47,14 +47,46 @@ The current configuration is:
       "account": "cosmos-ar",
       "database": "selcOnboarding",
       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
-    } }, "PNPG": {
+    },
+    "jwt": {
+      "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR"
+    },
+    "storages": {
+      "products": {
+        "account": "stselcarproducts",
+        "container": "selc-d-product",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_AR_PRODUCTS"
+        }
+      }
+    }
+  }, "PNPG": {
     "mongo": {
       "account": "cosmos-pnpg",
       "database": "selcOnboarding",
       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"
-    } }
+    },
+    "jwt": {
+      "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG"
+    },
+    "storages": {
+      "products": {
+        "account": "stpnpgproducts",
+        "container": "selc-d-product",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_PNPG_PRODUCTS"
+        }
+      }
+    }
+  }
 }
 ```
+
+The `storages` dimension is independent from Mongo routing and is described in
+`Storage_identification.md`. It is included here to show the canonical registry shape: each tenant has one
+Mongo definition and can have multiple logical storage bindings.
 
 For AR , the registry resolves:
 
@@ -157,4 +189,3 @@ tenantId = ?1 and _id = ?2
 
 This ensures that tenant isolation remains enforced even when multiple tenants
 share the same Mongo database.
-

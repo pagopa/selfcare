@@ -10,6 +10,7 @@ import it.pagopa.selfcare.party.registry_proxy.core.PDNDInfoCamereService;
 import it.pagopa.selfcare.party.registry_proxy.web.model.PDNDBusinessResource;
 import it.pagopa.selfcare.party.registry_proxy.web.model.mapper.PDNDInfoCamereBusinessMapper;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -65,6 +66,9 @@ public class PDNDInfoCamereController {
           @ApiParam("${swagger.model.institution.taxCode}") @PathVariable String taxCode,
           @ApiParam("${swagger.model.institution.productId}") @RequestParam(required = false) String productId) {
     PDNDBusiness business = pdndInfoCamereService.retrieveInstitutionPdndByTaxCode(taxCode, productId);
+    if (Objects.isNull(business)) {
+      return ResponseEntity.notFound().build();
+    }
     return ResponseEntity.ok().body(pdndBusinessMapper.toResource(business));
   }
 
@@ -87,6 +91,11 @@ public class PDNDInfoCamereController {
     String province = matcher.group(1);
     String number = matcher.group(2);
     PDNDBusiness business = pdndInfoCamereService.retrieveInstitutionFromRea(province, number, productId);
+
+    if (Objects.isNull(business)) {
+      return ResponseEntity.notFound().build();
+    }
+
     return ResponseEntity.ok().body(pdndBusinessMapper.toResource(business));
   }
 }

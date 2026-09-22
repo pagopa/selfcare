@@ -1678,11 +1678,11 @@ Feature: Institution
     Then The status code is 200
     And The response body contains the list "onboarding" of size 4
     And The response body contains at path "onboarding" the following list of objects in any order:
-      | productId    | tokenId                              | status | institutionType | origin | originId |
-      | prod-interop | cdd3d4bb-bae3-4187-af16-53ec40358267 | ACTIVE | PA              | IPA    | c_c067   |
-      | prod-fd      | a3f2d517-b432-4745-ae9b-5bb1f1bcfb79 | ACTIVE | PA              | IPA    | c_c067   |
-      | prod-io      | 5eeaf667-e9c1-4150-bb4b-1fce01df6ab9 | ACTIVE | PA              | IPA    | c_c067   |
-      | prod-pagopa  | 6c4fc5c1-65bb-496c-ae0a-547a4c920bd9 | ACTIVE | PT              | SELC   | 123X     |
+      | productId    | tokenId                              | status | institutionType | origin | originId | isPartnerTech |
+      | prod-interop | cdd3d4bb-bae3-4187-af16-53ec40358267 | ACTIVE | PA              | IPA    | c_c067   |               |
+      | prod-fd      | a3f2d517-b432-4745-ae9b-5bb1f1bcfb79 | ACTIVE | PA              | IPA    | c_c067   |               |
+      | prod-io      | 5eeaf667-e9c1-4150-bb4b-1fce01df6ab9 | ACTIVE | PA              | IPA    | c_c067   |               |
+      | prod-pagopa  | 6c4fc5c1-65bb-496c-ae0a-547a4c920bd9 | ACTIVE | PT              | SELC   | 123X     | true          |
     And The response body contains:
       | id              | c9a50656-f345-4c81-84be-5b2474470544                        |
       | logo            | test-logo-url/c9a50656-f345-4c81-84be-5b2474470544/logo.png |

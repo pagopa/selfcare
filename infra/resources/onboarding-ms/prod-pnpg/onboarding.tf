@@ -187,6 +187,10 @@ locals {
       value = "true"
     },
     {
+      name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
+      value = "false"
+    },
+    {
       name  = "ONBOARDING_ALLOWED_INSTITUTIONS_PRODUCTS"
       value = "prod-pn-pg"
     },
@@ -208,7 +212,7 @@ locals {
     },
     {
       name  = "TENANT_REGISTRY_JSON"
-      value = "{\"PNPG\": {\"mongo\": {\"account\": \"cosmos-pnpg\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_PNPG\"}}}"
+      value = "{\"PNPG\": {\"mongo\": {\"account\": \"cosmos-pnpg\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_PNPG\"}, \"storages\":{\"products\":{\"account\":\"${data.azurerm_storage_account.product_storage.name}\",\"container\":\"selc-${module.local.config.env_short}-product\",\"pathPrefix\":\"\",\"authentication\":{\"type\":\"MANAGED_IDENTITY\",\"managedIdentityClientIdEnvVar\":\"AZURE_CLIENT_ID\"}}}}}"
     }
   ]
 

@@ -183,6 +183,10 @@ locals {
       value = "true"
     },
     {
+      name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
+      value = "true"
+    },
+    {
       name  = "MS_DOCUMENT_URL"
       value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
@@ -204,7 +208,7 @@ locals {
     },
     {
       name  = "TENANT_REGISTRY_JSON"
-      value = "{\"AR\": {\"mongo\": {\"account\": \"cosmos-ar\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_AR\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_AR\"}}}"
+      value = "{\"AR\": {\"mongo\": {\"account\": \"cosmos-ar\",\"database\": \"selcOnboarding\",\"connectionStringEnvVar\": \"MONGODB_CONNECTION_STRING_AR\"},\"jwt\": {\"publicKeyEnvVar\": \"JWT_PUBLIC_KEY_AR\"}, \"storages\":{\"products\":{\"account\":\"${data.azurerm_storage_account.product_storage.name}\",\"container\":\"selc-${module.local.config.env_short}-product\",\"pathPrefix\":\"\",\"authentication\":{\"type\":\"MANAGED_IDENTITY\",\"managedIdentityClientIdEnvVar\":\"AZURE_CLIENT_ID\"}}}}}"
     }
   ]
 

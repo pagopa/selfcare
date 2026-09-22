@@ -2,35 +2,36 @@ package it.pagopa.selfcare.onboarding.health;
 
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
-import it.pagopa.selfcare.commons.health.AbstractBlobStorageReadinessCheck;
+import it.pagopa.selfcare.commons.health.AbstractAsyncReadinessCheck;
+import it.pagopa.selfcare.commons.health.HealthCheckConstants;
+import it.pagopa.selfcare.onboarding.storage.StorageKeys;
+import it.pagopa.selfcare.onboarding.storage.TenantBlobClientProvider;
+import it.pagopa.selfcare.tenant.TenantDefinition;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.Readiness;
 
-import java.util.Optional;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Readiness
 @ApplicationScoped
-public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadinessCheck {
+public class ProductBlobStorageReadinessCheck extends AbstractAsyncReadinessCheck {
 
-    private static final String ACCOUNT_NOT_APPLICABLE = "n/a";
-
-    private final AzureBlobClientDefault blobClient;
-    private final String container;
-    private final String account;
+    private final TenantRegistry tenantRegistry;
+    private final TenantBlobClientProvider blobClientProvider;
     private final String probeTarget;
 
     @Inject
     public ProductBlobStorageReadinessCheck(
-            AzureBlobClientDefault productBlobClient,
-            @ConfigProperty(name = "onboarding-ms.blob-storage.container-product") String container,
-            @ConfigProperty(name = "onboarding-ms.blob-storage.account-name-product") Optional<String> account,
+            TenantRegistry tenantRegistry,
+            TenantBlobClientProvider blobClientProvider,
             @ConfigProperty(name = "onboarding-ms.blob-storage.filepath-product") String probeTarget) {
-        this.blobClient = productBlobClient;
-        this.container = container;
-        this.account = account.filter(s -> !s.isBlank()).orElse(ACCOUNT_NOT_APPLICABLE);
+        this.tenantRegistry = tenantRegistry;
+        this.blobClientProvider = blobClientProvider;
         this.probeTarget = probeTarget;
     }
 
@@ -40,24 +41,33 @@ public class ProductBlobStorageReadinessCheck extends AbstractBlobStorageReadine
     }
 
     @Override
-    protected String account() {
-        return account;
-    }
-
-    @Override
-    protected String container() {
-        return container;
-    }
-
-    @Override
-    protected String probeTarget() {
-        return probeTarget;
+    protected Map<String, String> data() {
+        Map<String, String> data = new LinkedHashMap<>();
+        data.put(HealthCheckConstants.DATA_KEY_COMPONENT, "blob-storage");
+        data.put("logicalKey", StorageKeys.PRODUCTS);
+        data.put("tenants", String.join(",", tenantRegistry.supportedTenantIds()));
+        data.put(HealthCheckConstants.DATA_KEY_BLOB_PROBE_TARGET, probeTarget);
+        String accounts = tenantRegistry.supportedTenantIds().stream()
+                .map(tenantId -> tenantRegistry.storage(tenantId, StorageKeys.PRODUCTS))
+                .map(TenantDefinition.StorageDefinition::account)
+                .collect(Collectors.joining(","));
+        String containers = tenantRegistry.supportedTenantIds().stream()
+                .map(tenantId -> tenantRegistry.storage(tenantId, StorageKeys.PRODUCTS).container())
+                .distinct()
+                .collect(Collectors.joining(","));
+        data.put(HealthCheckConstants.DATA_KEY_BLOB_ACCOUNT, accounts);
+        data.put(HealthCheckConstants.DATA_KEY_BLOB_CONTAINER, containers);
+        return data;
     }
 
     @Override
     protected Uni<?> probe() {
         return Uni.createFrom()
-                .item(() -> blobClient.getProperties(probeTarget))
+                .item(() -> {
+                    tenantRegistry.supportedTenantIds().forEach(tenantId ->
+                            blobClientProvider.clientFor(tenantId, StorageKeys.PRODUCTS).getProperties(probeTarget));
+                    return true;
+                })
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 }
