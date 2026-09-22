@@ -3506,7 +3506,7 @@
       "get" : {
         "tags" : [ "institutions" ],
         "summary" : "Search IPA institutions",
-        "description" : "Searches IPA institutions indexed by the registry proxy",
+        "description" : "Searches IPA institutions indexed by the registry proxy. category accepts a comma-separated list of IPA category codes.",
         "operationId" : "searchIpaInstitutionsUsingGET",
         "parameters" : [ {
           "name" : "search",
@@ -3520,6 +3520,7 @@
           "name" : "category",
           "in" : "query",
           "required" : false,
+          "description" : "One IPA category code or a comma-separated list of category codes.",
           "schema" : {
             "type" : "string"
           }
@@ -3588,6 +3589,56 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/institutions/ipa/{taxCode}" : {
+      "get" : {
+        "tags" : [ "institutions" ],
+        "summary" : "Find IPA institution by tax code",
+        "description" : "Returns the IPA institution with the exact tax code. category optionally accepts a comma-separated list of IPA category codes.",
+        "operationId" : "findIpaInstitutionByTaxCodeUsingGET",
+        "parameters" : [ {
+          "name" : "taxCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "required" : false,
+          "description" : "One IPA category code or a comma-separated list of category codes.",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IpaInstitutionResource"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
             "content" : {
               "application/problem+json" : {
                 "schema" : {

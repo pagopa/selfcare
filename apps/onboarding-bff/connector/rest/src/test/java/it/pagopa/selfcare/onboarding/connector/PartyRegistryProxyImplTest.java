@@ -123,15 +123,35 @@ class PartyRegistryProxyImplTest {
         IpaInstitutionsSearchResponse response = new IpaInstitutionsSearchResponse();
         response.setItems(List.of(institution));
         response.setCount(1L);
-        when(restClientMock.searchIpaInstitutions("esempio", "L6", 0, 50)).thenReturn(response);
+        when(restClientMock.searchIpaInstitutions("esempio", "C17,C16", 0, 50)).thenReturn(response);
 
         // when
-        IpaInstitutionsSearchResult result = partyConnector.searchIpaInstitutions("esempio", "L6", 0, 50);
+        IpaInstitutionsSearchResult result = partyConnector.searchIpaInstitutions("esempio", "C17,C16", 0, 50);
 
         // then
         assertEquals(1L, result.getCount());
         assertEquals("ipa-id", result.getItems().get(0).getId());
-        verify(restClientMock).searchIpaInstitutions("esempio", "L6", 0, 50);
+        verify(restClientMock).searchIpaInstitutions("esempio", "C17,C16", 0, 50);
+        verifyNoMoreInteractions(restClientMock);
+    }
+
+    @Test
+    void findIpaInstitutionByTaxCode() {
+        // given
+        ProxyInstitutionResponse response = new ProxyInstitutionResponse();
+        response.setId("ipa-id");
+        response.setTaxCode("12345678901");
+        response.setCategory("C17");
+        when(restClientMock.findIpaInstitutionByTaxCode("12345678901", "C17,C16")).thenReturn(response);
+
+        // when
+        InstitutionProxyInfo result = partyConnector.findIpaInstitutionByTaxCode("12345678901", "C17,C16");
+
+        // then
+        assertEquals("ipa-id", result.getId());
+        assertEquals("12345678901", result.getTaxCode());
+        assertEquals("C17", result.getCategory());
+        verify(restClientMock).findIpaInstitutionByTaxCode("12345678901", "C17,C16");
         verifyNoMoreInteractions(restClientMock);
     }
 

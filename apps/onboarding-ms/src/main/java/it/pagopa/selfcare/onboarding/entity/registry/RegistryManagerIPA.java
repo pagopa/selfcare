@@ -32,7 +32,7 @@ public class RegistryManagerIPA extends RegistryManagerIPAUo {
     @Override
     public IPAEntity retrieveInstitution() {
         super.originIdEC = onboarding.getInstitution().getOriginId();
-        InstitutionResource institutionResource = super.institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(onboarding.getInstitution().getTaxCode())
+        InstitutionResource institutionResource = super.institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(onboarding.getInstitution().getTaxCode(), null)
                 .onFailure().retry().atMost(MAX_NUMBER_ATTEMPTS)
                 .onFailure(WebApplicationException.class).recoverWithUni(ex -> ((WebApplicationException) ex).getResponse().getStatus() == 404
                         ? Uni.createFrom().failure(new ResourceNotFoundException(String.format("Institution with taxCode %s not found", onboarding.getInstitution().getTaxCode())))

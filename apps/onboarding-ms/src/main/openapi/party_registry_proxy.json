@@ -835,7 +835,7 @@
           "institution"
         ],
         "summary": "Find IPA institution by tax code",
-        "description": "Returns the single IPA institution matching the exact tax code from the Azure AI Search index",
+        "description": "Returns the single IPA institution matching the exact tax code from the Azure AI Search index. The optional category parameter accepts one IPA code or a comma-separated list of codes.",
         "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
         "parameters": [
           {
@@ -843,6 +843,16 @@
             "in": "path",
             "required": true,
             "style": "simple",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "One IPA category code or a comma-separated list of category codes.",
+            "required": false,
+            "style": "form",
             "schema": {
               "type": "string"
             }

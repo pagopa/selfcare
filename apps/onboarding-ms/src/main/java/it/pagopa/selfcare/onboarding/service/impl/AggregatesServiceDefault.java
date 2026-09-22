@@ -191,7 +191,7 @@ public class AggregatesServiceDefault implements AggregatesService {
         aggregate.setOrigin(InstitutionResource.OriginEnum.IPA.value());
 
         if (StringUtils.isEmpty(aggregate.getSubunitType())) {
-            return institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(aggregate.getTaxCode())
+            return institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(aggregate.getTaxCode(), null)
                     .onFailure(this::checkIfNotFound).recoverWithUni(Uni.createFrom().failure(new ResourceNotFoundException(ERROR_IPA.getMessage())))
                     .onItem().transformToUni(institutionResource -> retrieveCityCountyAndMapIpaFieldForPA(institutionResource, aggregate));
         } else if (InstitutionPaSubunitType.AOO.name().equalsIgnoreCase(aggregate.getSubunitType())) {
@@ -211,7 +211,7 @@ public class AggregatesServiceDefault implements AggregatesService {
 
     private Uni<Aggregate> retrieveCityCountyAndMapIpaFieldForUO(UOResource uoResource, Aggregate aggregateAppIo) {
         return Uni.combine().all()
-                .unis(retrieveGeographicTaxonomies(uoResource.getCodiceComuneISTAT()), institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(uoResource.getCodiceFiscaleEnte()))
+                .unis(retrieveGeographicTaxonomies(uoResource.getCodiceComuneISTAT()), institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(uoResource.getCodiceFiscaleEnte(), null))
                 .asTuple()
                 .onItem().transformToUni(tuple -> {
                     GeographicTaxonomyFromIstatCode geographicTaxonomyResource = tuple.getItem1();
@@ -223,7 +223,7 @@ public class AggregatesServiceDefault implements AggregatesService {
 
     private Uni<Aggregate> retrieveCityCountyAndMapIpaFieldForAOO(AOOResource aooResource, Aggregate aggregateAppIo) {
         return Uni.combine().all()
-                .unis(retrieveGeographicTaxonomies(aooResource.getCodiceComuneISTAT()), institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(aooResource.getCodiceFiscaleEnte()))
+                .unis(retrieveGeographicTaxonomies(aooResource.getCodiceComuneISTAT()), institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(aooResource.getCodiceFiscaleEnte(), null))
                 .asTuple()
                 .onItem().transformToUni(tuple -> {
                     GeographicTaxonomyFromIstatCode geographicTaxonomyResource = tuple.getItem1();
