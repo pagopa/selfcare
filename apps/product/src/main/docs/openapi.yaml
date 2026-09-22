@@ -263,6 +263,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RoleMapping"
+        partnerTechRoleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
         contracts:
           type: array
           items:
@@ -351,6 +355,10 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RoleMapping"
+        partnerTechRoleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
         contracts:
           type: array
           items:
@@ -416,6 +424,10 @@ components:
         features:
           $ref: "#/components/schemas/Features"
         roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        partnerTechRoleMappings:
           type: array
           items:
             $ref: "#/components/schemas/RoleMapping"

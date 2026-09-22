@@ -179,19 +179,21 @@ public class SearchServiceImpl implements SearchService {
 
     String search = searchText != null && !searchText.isBlank() ? searchText : "*";
 
-    String filter = null;
-    if (category != null && !category.isBlank()) {
-      filter = "category eq '" + category + "'";
-    }
+    String filter = buildIpaCategoryFilter(category);
 
     return ipaSearchServiceConnector.search(search, filter, pageSize, page * pageSize);
   }
 
   @Override
-  public IpaInstitution findIpaInstitutionByTaxCode(String taxCode) {
+  public IpaInstitution findIpaInstitutionByTaxCode(String taxCode, String category) {
     String escapedTaxCode = taxCode.replace("'", "''");
+    String filter = "taxCode eq '" + escapedTaxCode + "'";
+    String categoryFilter = buildIpaCategoryFilter(category);
+    if (categoryFilter != null) {
+      filter += AND + categoryFilter;
+    }
     IpaInstitutionSearchResult result =
-        ipaSearchServiceConnector.search("*", "taxCode eq '" + escapedTaxCode + "'", 2, 0);
+        ipaSearchServiceConnector.search("*", filter, 2, 0);
 
     if (result == null || result.getTotalElements() == 0 || result.getItems() == null || result.getItems().isEmpty()) {
       throw new ResourceNotFoundException("IPA institution with taxCode " + taxCode + " not found");
@@ -202,6 +204,24 @@ public class SearchServiceImpl implements SearchService {
     }
 
     return result.getItems().get(0);
+  }
+
+  private String buildIpaCategoryFilter(String categories) {
+    if (categories == null || categories.isBlank()) {
+      return null;
+    }
+
+    String categoryValues =
+        Arrays.stream(categories.split(","))
+            .map(String::trim)
+            .filter(value -> !value.isBlank())
+            .distinct()
+            .map(value -> value.replace("'", "''"))
+            .collect(Collectors.joining(","));
+
+    return categoryValues.isBlank()
+        ? null
+        : "search.in(category, '" + categoryValues + "', ',')";
   }
 
   private String buildOrderBy(List<String> orderBy) {

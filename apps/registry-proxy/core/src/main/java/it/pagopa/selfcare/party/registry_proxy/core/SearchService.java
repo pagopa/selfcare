@@ -21,5 +21,5 @@ public interface SearchService {
 
   IpaInstitutionSearchResult searchIpaInstitutions(String searchText, String category, Integer page, Integer pageSize);
 
-  IpaInstitution findIpaInstitutionByTaxCode(String taxCode);
+  IpaInstitution findIpaInstitutionByTaxCode(String taxCode, String category);
 }

@@ -269,7 +269,7 @@ class InstitutionControllerTest {
     institution.setTaxCode("00100000001");
     institution.setDescription("Comune di Roma");
     institution.setOrigin(Origin.IPA);
-    when(searchService.findIpaInstitutionByTaxCode("00100000001")).thenReturn(institution);
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", null)).thenReturn(institution);
 
     // when
     mvc.perform(get("/institutions/ipa/{taxCode}", "00100000001").accept(APPLICATION_JSON_VALUE))
@@ -278,13 +278,34 @@ class InstitutionControllerTest {
         .andExpect(jsonPath("$.description", is("Comune di Roma")));
 
     // then
-    verify(searchService).findIpaInstitutionByTaxCode("00100000001");
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", null);
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldForwardCategories() throws Exception {
+    // given
+    IpaInstitution institution = new IpaInstitution();
+    institution.setTaxCode("00100000001");
+    institution.setOrigin(Origin.IPA);
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", "C17,C16"))
+        .thenReturn(institution);
+
+    // when
+    mvc.perform(
+            get("/institutions/ipa/{taxCode}", "00100000001")
+                .param("category", "C17,C16")
+                .accept(APPLICATION_JSON_VALUE))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.taxCode", is("00100000001")));
+
+    // then
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", "C17,C16");
   }
 
   @Test
   void findIpaInstitutionByTaxCode_shouldReturnNotFoundWhenTheTaxCodeIsNotIndexed() throws Exception {
     // given
-    when(searchService.findIpaInstitutionByTaxCode("00100000001"))
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", null))
         .thenThrow(new ResourceNotFoundException());
 
     // when
@@ -292,13 +313,13 @@ class InstitutionControllerTest {
         .andExpect(status().isNotFound());
 
     // then
-    verify(searchService).findIpaInstitutionByTaxCode("00100000001");
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", null);
   }
 
   @Test
   void findIpaInstitutionByTaxCode_shouldReturnConflictWhenTheTaxCodeIsDuplicated() throws Exception {
     // given
-    when(searchService.findIpaInstitutionByTaxCode("00100000001"))
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", null))
         .thenThrow(new TooManyResourceFoundException());
 
     // when
@@ -306,7 +327,7 @@ class InstitutionControllerTest {
         .andExpect(status().isConflict());
 
     // then
-    verify(searchService).findIpaInstitutionByTaxCode("00100000001");
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", null);
   }
 
   @Test
