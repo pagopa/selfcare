@@ -16,8 +16,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.Origin;
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.core.InstitutionService;
 import it.pagopa.selfcare.party.registry_proxy.core.SearchService;
+import it.pagopa.selfcare.party.registry_proxy.core.exception.TooManyResourceFoundException;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
 import it.pagopa.selfcare.party.registry_proxy.web.handler.PartyRegistryProxyExceptionHandler;
 import it.pagopa.selfcare.party.registry_proxy.web.model.DummyInstitution;
@@ -257,6 +259,75 @@ class InstitutionControllerTest {
         .andExpect(jsonPath("$.items", hasSize(1)))
         .andExpect(jsonPath("$.items[0].id", is("ipa-1")))
         .andExpect(jsonPath("$.items[0].description", is("Comune di Roma")));
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldReturnOk() throws Exception {
+    // given
+    IpaInstitution institution = new IpaInstitution();
+    institution.setId("ipa-1");
+    institution.setTaxCode("00100000001");
+    institution.setDescription("Comune di Roma");
+    institution.setOrigin(Origin.IPA);
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", null)).thenReturn(institution);
+
+    // when
+    mvc.perform(get("/institutions/ipa/{taxCode}", "00100000001").accept(APPLICATION_JSON_VALUE))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.taxCode", is("00100000001")))
+        .andExpect(jsonPath("$.description", is("Comune di Roma")));
+
+    // then
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", null);
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldForwardCategories() throws Exception {
+    // given
+    IpaInstitution institution = new IpaInstitution();
+    institution.setTaxCode("00100000001");
+    institution.setOrigin(Origin.IPA);
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", "C17,C16"))
+        .thenReturn(institution);
+
+    // when
+    mvc.perform(
+            get("/institutions/ipa/{taxCode}", "00100000001")
+                .param("category", "C17,C16")
+                .accept(APPLICATION_JSON_VALUE))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.taxCode", is("00100000001")));
+
+    // then
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", "C17,C16");
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldReturnNotFoundWhenTheTaxCodeIsNotIndexed() throws Exception {
+    // given
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", null))
+        .thenThrow(new ResourceNotFoundException());
+
+    // when
+    mvc.perform(get("/institutions/ipa/{taxCode}", "00100000001").accept(APPLICATION_JSON_VALUE))
+        .andExpect(status().isNotFound());
+
+    // then
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", null);
+  }
+
+  @Test
+  void findIpaInstitutionByTaxCode_shouldReturnConflictWhenTheTaxCodeIsDuplicated() throws Exception {
+    // given
+    when(searchService.findIpaInstitutionByTaxCode("00100000001", null))
+        .thenThrow(new TooManyResourceFoundException());
+
+    // when
+    mvc.perform(get("/institutions/ipa/{taxCode}", "00100000001").accept(APPLICATION_JSON_VALUE))
+        .andExpect(status().isConflict());
+
+    // then
+    verify(searchService).findIpaInstitutionByTaxCode("00100000001", null);
   }
 
   @Test

@@ -23,6 +23,7 @@ public class OnboardedProductWithActions {
     private String productRole;
     @Schema(description = "Available values: MANAGER, DELEGATE, SUB_DELEGATE, OPERATOR, ADMIN_EA")
     private String role;
+    private Boolean partnerTechRole;
     private Env env = ROOT;
     private OffsetDateTime createdAt;
     private OffsetDateTime updatedAt;

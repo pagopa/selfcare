@@ -3,6 +3,7 @@ package it.pagopa.selfcare.party.registry_proxy.core;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.OnboardingIndexSearch;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitutionSearchResult;
+import it.pagopa.selfcare.party.registry_proxy.connector.model.IpaInstitution;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceInstitution;
 
 import java.time.OffsetDateTime;
@@ -19,4 +20,6 @@ public interface SearchService {
   OnboardingIndexSearch searchOnboarding(String searchText, List<String> products, List<String> institutionTypes, List<String> statuses, OffsetDateTime createdFromDate, OffsetDateTime createdToDate, OffsetDateTime statusUpdatedFromDate, OffsetDateTime statusUpdatedToDate, Long page, Long pageSize, List<String> orderBy, boolean includeTest);
 
   IpaInstitutionSearchResult searchIpaInstitutions(String searchText, String category, Integer page, Integer pageSize);
+
+  IpaInstitution findIpaInstitutionByTaxCode(String taxCode, String category);
 }
