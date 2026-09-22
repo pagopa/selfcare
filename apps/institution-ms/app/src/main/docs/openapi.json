@@ -3204,6 +3204,9 @@
           },
           "originId" : {
             "type" : "string"
+          },
+          "isPartnerTech" : {
+            "type" : "boolean"
           }
         }
       },
@@ -3618,6 +3621,9 @@
           },
           "originId" : {
             "type" : "string"
+          },
+          "isPartnerTech" : {
+            "type" : "boolean"
           }
         }
       },

@@ -3,6 +3,8 @@ package it.pagopa.selfcare.party.registry_proxy.core;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IpaSearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.SearchServiceConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.party.registry_proxy.core.exception.TooManyResourceFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,6 +187,23 @@ public class SearchServiceImpl implements SearchService {
     return ipaSearchServiceConnector.search(search, filter, pageSize, page * pageSize);
   }
 
+  @Override
+  public IpaInstitution findIpaInstitutionByTaxCode(String taxCode) {
+    String escapedTaxCode = taxCode.replace("'", "''");
+    IpaInstitutionSearchResult result =
+        ipaSearchServiceConnector.search("*", "taxCode eq '" + escapedTaxCode + "'", 2, 0);
+
+    if (result == null || result.getTotalElements() == 0 || result.getItems() == null || result.getItems().isEmpty()) {
+      throw new ResourceNotFoundException("IPA institution with taxCode " + taxCode + " not found");
+    }
+
+    if (result.getTotalElements() != 1 || result.getItems().size() != 1) {
+      throw new TooManyResourceFoundException("More than one IPA institution found for taxCode " + taxCode);
+    }
+
+    return result.getItems().get(0);
+  }
+
   private String buildOrderBy(List<String> orderBy) {
     if (orderBy == null || orderBy.isEmpty()) {
       return "description asc";
@@ -211,4 +230,3 @@ public class SearchServiceImpl implements SearchService {
   }
 
 }
-

@@ -7,23 +7,15 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import com.azure.storage.blob.models.BlobProperties;
 import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.ArubaPkcs7HashSignServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.NamirialPkcs7HashSignServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.Pkcs7HashSignService;
 import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import java.io.ByteArrayInputStream;
-import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,52 +26,12 @@ class OnboardingMsConfigTest {
     @BeforeEach
     void setUp() {
         config = new OnboardingMsConfig();
-        config.containerProduct = "products";
-        config.filepathProduct = "products.json";
-        config.connectionStringProduct = Optional.empty();
-        config.accountNameProduct = Optional.of("storage-account");
-        config.managedIdentityClientIdProduct = Optional.of("managed-identity");
         config.productAzureService = mock(ProductService.class);
     }
 
     @Test
     void onStart_shouldInitializeConfiguredProductService() {
         config.onStart(mock(StartupEvent.class));
-    }
-
-    @Test
-    void productService_shouldCreateCacheableService() {
-        AzureBlobClient blobClient = mock(AzureBlobClient.class);
-        BlobProperties properties = new BlobProperties(
-                OffsetDateTime.now(), OffsetDateTime.now(), null, 0L, null, null, null, null,
-                null, null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null, null, null, null, Map.of(), null);
-        when(blobClient.getProperties("products.json")).thenReturn(properties);
-        when(blobClient.getFileAsText("products.json"))
-                .thenReturn("[{\"id\":\"product-id\",\"title\":\"Product\"}]");
-
-        ProductService result = config.productService(blobClient);
-
-        assertInstanceOf(ProductServiceCacheable.class, result);
-    }
-
-    @Test
-    void productBlobClient_shouldUseConnectionStringWhenConfigured() {
-        config.connectionStringProduct = Optional.of("UseDevelopmentStorage=true");
-
-        assertInstanceOf(AzureBlobClientDefault.class, config.productBlobClient());
-    }
-
-    @Test
-    void productBlobClient_shouldUseManagedIdentityWhenConnectionStringIsMissing() {
-        assertInstanceOf(AzureBlobClientDefault.class, config.productBlobClient());
-    }
-
-    @Test
-    void productBlobClient_shouldUseManagedIdentityWhenConnectionStringIsBlank() {
-        config.connectionStringProduct = Optional.of(" ");
-
-        assertInstanceOf(AzureBlobClientDefault.class, config.productBlobClient());
     }
 
     @Test
