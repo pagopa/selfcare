@@ -25,6 +25,8 @@ public class Product {
     private String modifiedBy;
     private Map<PartyRole, ProductRoleInfo> roleMappings;
     private Map<String, Map<PartyRole, ProductRoleInfo>> roleMappingsByInstitutionType;
+    private Map<PartyRole, ProductRoleInfo> partnerTechRoleMappings;
+    private Map<String, Map<PartyRole, ProductRoleInfo>> partnerTechRoleMappingsByInstitutionType;
     private String roleManagementURL;
     private boolean enabled = false;
     private boolean delegable;
@@ -217,6 +219,57 @@ public class Product {
         this.roleMappingsByInstitutionType = roleMappingsByInstitutionType;
     }
 
+  public Map<String, Map<PartyRole, ProductRoleInfo>> getPartnerTechRoleMappingsByInstitutionType() {
+    return partnerTechRoleMappingsByInstitutionType;
+  }
+
+  public Map<PartyRole, ProductRoleInfo> getPartnerTechRoleMappings(String institutionType) {
+    if (Objects.nonNull(institutionType)
+      && Objects.nonNull(partnerTechRoleMappingsByInstitutionType)
+      && partnerTechRoleMappingsByInstitutionType.containsKey(institutionType)) {
+      return partnerTechRoleMappingsByInstitutionType.get(institutionType);
+    }
+    return partnerTechRoleMappings;
+  }
+
+  public Map<PartyRole, List<ProductRoleInfo>> getAllPartnerTechRoleMappings() {
+    Map<PartyRole, List<ProductRoleInfo>> roleInfoMap = new HashMap<>();
+    Optional.ofNullable(partnerTechRoleMappings)
+      .ifPresent(
+        roleMappings ->
+          roleMappings.forEach(
+            (key, value) -> {
+              List<ProductRoleInfo> productRoles = new ArrayList<>();
+              productRoles.add(value);
+              roleInfoMap.put(key, productRoles);
+            }));
+    Optional.ofNullable(partnerTechRoleMappingsByInstitutionType)
+      .map(Map::values)
+      .ifPresent(
+        items ->
+          items.stream()
+            .map(Map::entrySet)
+            .forEach(
+              item ->
+                item.forEach(
+                  entry -> {
+                    List<ProductRoleInfo> productRoles =
+                      roleInfoMap.getOrDefault(entry.getKey(), new ArrayList<>());
+                    productRoles.add(entry.getValue());
+                    roleInfoMap.put(entry.getKey(), productRoles);
+                  })));
+    return roleInfoMap;
+  }
+
+  public void setPartnerTechRoleMappings(Map<PartyRole, ProductRoleInfo> parnerTechRoleMappings) {
+    this.partnerTechRoleMappings = parnerTechRoleMappings;
+  }
+
+  public void setPartnerTechRoleMappingsByInstitutionType(
+    Map<String, Map<PartyRole, ProductRoleInfo>> partnerTechRoleMappingsByInstitutionType) {
+    this.partnerTechRoleMappingsByInstitutionType = partnerTechRoleMappingsByInstitutionType;
+  }
+
     public String getRoleManagementURL() {
         return roleManagementURL;
     }
@@ -372,6 +425,10 @@ public class Product {
 
     public Map<PartyRole, ProductRoleInfo> getRoleMappings() {
         return roleMappings;
+    }
+
+    public Map<PartyRole, ProductRoleInfo> getPartnerTechRoleMappings() {
+      return partnerTechRoleMappings;
     }
 
     public Map<String, Map<String, List<EmailTemplate>>> getEmailTemplates() {
