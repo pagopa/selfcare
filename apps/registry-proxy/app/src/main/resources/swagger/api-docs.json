@@ -887,6 +887,49 @@
         } ]
       }
     },
+    "/institutions/ipa/{taxCode}" : {
+      "get" : {
+        "tags" : [ "institution", "external-v2", "support" ],
+        "summary" : "Find IPA institution by tax code",
+        "description" : "Returns the single IPA institution matching the exact tax code from the Azure AI Search index",
+        "operationId" : "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters" : [ {
+          "name" : "taxCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InstitutionResource"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "404" : {
+            "description" : "Not Found"
+          },
+          "409" : {
+            "description" : "Conflict"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/institutions/ipa" : {
       "get" : {
         "tags" : [ "institution", "external-v2", "support" ],

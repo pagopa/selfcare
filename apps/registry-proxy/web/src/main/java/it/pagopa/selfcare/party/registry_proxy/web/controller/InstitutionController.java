@@ -116,6 +116,24 @@ public class InstitutionController {
   @Tag(name = "external-v2")
   @Tag(name = "support")
   @Tag(name = "institution")
+  @GetMapping("/ipa/{taxCode}")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(
+      summary = "${swagger.api.search.ipa-institution-by-tax-code.summary}",
+      description = "${swagger.api.search.ipa-institution-by-tax-code.notes}",
+      operationId = "findIpaInstitutionByTaxCodeOnSearchEngine")
+  public InstitutionResource findIpaInstitutionByTaxCode(
+      @PathVariable String taxCode) {
+    log.trace("findIpaInstitutionByTaxCode start");
+    InstitutionResource resource =
+        InstitutionMapper.toResource(searchService.findIpaInstitutionByTaxCode(taxCode));
+    log.trace("findIpaInstitutionByTaxCode end");
+    return resource;
+  }
+
+  @Tag(name = "external-v2")
+  @Tag(name = "support")
+  @Tag(name = "institution")
   @GetMapping("/ipa")
   @Operation(
       summary = "${swagger.api.search.ipa-institutions.summary}",
