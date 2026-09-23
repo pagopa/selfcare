@@ -377,6 +377,11 @@ class InstitutionServiceImpl implements InstitutionService {
     }
 
     @Override
+    public InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category) {
+        return partyRegistryProxyConnector.findIpaInstitutionByTaxCode(taxCode, category);
+    }
+
+    @Override
     public List<Institution> getActiveOnboarding(String taxCode, String productId, String subUnitCode) {
         log.trace("getActiveOnboarding start");
         log.debug("getActiveOnboarding taxCode = {}, productId = {}", Encode.forJava(taxCode), Encode.forJava(productId));

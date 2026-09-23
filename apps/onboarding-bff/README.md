@@ -1,6 +1,10 @@
 # Progetto Selfcare Onboarding Backend 
 An orchestrator for the onboarding process
 
+## IPA institution lookup
+
+The BFF exposes `GET /v2/institutions/ipa/{taxCode}` for an exact IPA tax-code lookup and `GET /v2/institutions/ipa` for paginated IPA search. Both endpoints forward the optional singular `category` query parameter to Registry Proxy; it accepts one IPA code or a comma-separated list such as `C17,C16,L10`.
+
 ## Configuration Properties
 
 #### Application properties
