@@ -1,7 +1,7 @@
 # JWT Verification Key Resolution
 
-The JWT verification key used by `onboarding-ms` (and, optionally, any other app that
-adopts the same pattern) is resolved through the same `TenantRegistry` already used
+The JWT verification key used by tenant-aware services is resolved through the same
+`TenantRegistry` already used
 for Mongo database identification (see `Database_identification.md`), instead of a
 single flat `mp.jwt.verify.publickey` property:
 
@@ -64,7 +64,8 @@ registry today.
 
 ## Key selection at verification time
 
-`JWTCallerPrincipalFactory` (in `selfcare-sdk-security`) builds a `kid -> PublicKey` map
+Quarkus implementations may build a `kid -> PublicKey` map through
+`JWTCallerPrincipalFactory` (in `selfcare-sdk-security`):
 at startup:
 
 - for every tenant with a configured `jwt.publicKeyEnvVar`, the referenced value is
@@ -88,6 +89,33 @@ practice (via `JWTCallerPrincipalFactory.selectPublicKey`, which requires an exa
 `kid` match whenever more than one key is configured) — no code changes are needed to
 migrate, only supplying JWKS-formatted key material per tenant.
 
-This mirrors, on the JWT side, the same per-tenant/env-var-indirection pattern already
-used for Mongo connection strings, keeping both concerns consistent and driven by the
-same `tenant.registry.json`.
+### Spring implementation (`selc-commons-web`)
+
+Spring services use `JwtService` from `selc-commons-web`. When the tenant registry is
+configured, the service:
+
+1. obtains the tenant from the request header before signature verification;
+2. normalizes and validates it against the registry;
+3. resolves that tenant's `jwt.publicKeyEnvVar`;
+4. parses the referenced RSA PEM public key and verifies the JWT with that key;
+5. propagates the authenticated tenant through `JwtAuthenticationToken` into
+   `TenantContext`.
+
+The Spring implementation currently expects an RSA public key in PEM/X.509 form and
+does not use a multi-key `kid` map. If a consolidated deployment requires multiple
+keys per tenant, the Spring resolver must be extended with an explicit JWKS/kid
+strategy before enabling that topology; it MUST NOT silently select a first or
+global key.
+
+`JwtAuthenticationFilter` clears both `TenantContext` and the Spring security context
+in a `finally` block, preventing tenant identity from leaking between reused request
+threads. A missing authenticated tenant is rejected when tenant-aware security is
+enabled.
+
+When no tenant registry is configured, Spring retains the legacy global
+`jwt.signingKey` fallback for backward compatibility. Once a registry is configured,
+missing or invalid tenant keys fail closed and never fall back to another tenant's
+key.
+
+This keeps the per-tenant/env-var-indirection pattern consistent across JWT and Mongo
+while allowing framework-specific key material and verification implementations.
