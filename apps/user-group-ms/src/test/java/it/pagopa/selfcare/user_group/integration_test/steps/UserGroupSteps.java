@@ -117,6 +117,7 @@ public class UserGroupSteps {
     public void initializeCollection() throws IOException {
         List<UserGroupEntity> groupsToInsert = objectMapper.readValue(new File("src/test/resources/dataPopulation/groupEntities.json"),
                 objectMapper.getTypeFactory().constructCollectionType(List.class, UserGroupEntity.class));
+        groupsToInsert.forEach(group -> group.setTenantId("AR"));
         userGroupRepository.insert(groupsToInsert);
     }
 

@@ -109,13 +109,25 @@ locals {
     {
       name  = "INTERNALEVENTS_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.internal_events_identity.client_id
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = "AR"
+    },
+    {
+      name  = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = "{\"AR\":{\"mongo\":{\"account\":\"cosmos-ar\",\"database\":\"selcUserGroup\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_AR\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_AR\"},\"storages\":{}}}"
     }
   ]
 
   secrets_names_user_group_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB_CONNECTION_URI"                = "mongodb-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "MONGODB_CONNECTION_STRING_AR"          = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_AR"                     = "jwt-public-key"
   }
 }
 

@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user_group.service;
 
 import com.mongodb.client.result.UpdateResult;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.commons.utils.TestUtils;
 import it.pagopa.selfcare.user_group.api.UserGroupOperations;
 import it.pagopa.selfcare.user_group.config.CoreTestConfig;
@@ -50,6 +51,7 @@ class UserGroupServiceImplTest {
     @BeforeEach
     void beforeEach() {
         TestSecurityContextHolder.clearContext();
+        when(tenantContext.requiredTenantId()).thenReturn("AR");
     }
 
     @MockBean
@@ -63,6 +65,9 @@ class UserGroupServiceImplTest {
 
     @MockBean
     private MongoTemplate mongoTemplateMock;
+
+    @MockBean
+    private TenantContext tenantContext;
 
     @Autowired
     private UserGroupServiceImpl groupService;
@@ -134,8 +139,12 @@ class UserGroupServiceImplTest {
         UserGroupOperations output = groupService.createGroup(input);
         //then
         assertNotNull(output);
-        verify(userGroupRepository).insert(any(UserGroupEntity.class));
-        verify(mongoTemplateMock).find(any(Query.class), eq(UserGroupEntity.class));
+        ArgumentCaptor<UserGroupEntity> entityCaptor = ArgumentCaptor.forClass(UserGroupEntity.class);
+        verify(userGroupRepository).insert(entityCaptor.capture());
+        assertEquals("AR", entityCaptor.getValue().getTenantId());
+        ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
+        verify(mongoTemplateMock).find(queryCaptor.capture(), eq(UserGroupEntity.class));
+        assertEquals("AR", queryCaptor.getValue().getQueryObject().getString("tenantId"));
     }
 
     @Test
@@ -192,12 +201,12 @@ class UserGroupServiceImplTest {
         //given
         String groupId = "groupId";
         UUID memberId = UUID.randomUUID();
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(null);
         //when
         Executable executable = () -> groupService.addMember(groupId, memberId);
         //then
         assertThrows(ResourceNotFoundException.class, executable);
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -208,13 +217,13 @@ class UserGroupServiceImplTest {
         UUID memberId = UUID.randomUUID();
         UserGroupEntity group = mock(UserGroupEntity.class);
         when(group.getStatus()).thenReturn(UserGroupStatus.SUSPENDED);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         //when
         Executable executable = () -> groupService.addMember(groupId, memberId);
         //then
         ResourceUpdateException exception = assertThrows(ResourceUpdateException.class, executable);
         assertEquals("Trying to modify suspended group", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -225,14 +234,14 @@ class UserGroupServiceImplTest {
         UUID memberId = UUID.randomUUID();
         UserGroupEntity group = mock(UserGroupEntity.class);
         when(group.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         UpdateResult updateResult = mock(UpdateResult.class);
         when(updateResult.getModifiedCount()).thenReturn(1L);
         when(mongoTemplateMock.updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class))).thenReturn(updateResult);
         //when
         groupService.addMember(groupId, memberId);
         //then
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(mongoTemplateMock).updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
@@ -244,7 +253,7 @@ class UserGroupServiceImplTest {
         UUID memberId = UUID.randomUUID();
         UserGroupEntity group = mock(UserGroupEntity.class);
         when(group.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         UpdateResult updateResult = mock(UpdateResult.class);
         when(updateResult.getModifiedCount()).thenReturn(0L);
         when(mongoTemplateMock.updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class))).thenReturn(updateResult);
@@ -253,7 +262,7 @@ class UserGroupServiceImplTest {
         //then
         ResourceUpdateException exception = assertThrows(ResourceUpdateException.class, executable);
         assertEquals("Couldn't update resource", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(mongoTemplateMock).updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
@@ -287,12 +296,12 @@ class UserGroupServiceImplTest {
         //given
         String groupId = "groupId";
         String memberId = "memberId";
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(null);
         //when
         Executable executable = () -> groupService.deleteMember(groupId, memberId);
         //then
         assertThrows(ResourceNotFoundException.class, executable);
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -303,13 +312,13 @@ class UserGroupServiceImplTest {
         String memberId = "memberId";
         UserGroupEntity group = mock(UserGroupEntity.class);
         when(group.getStatus()).thenReturn(UserGroupStatus.SUSPENDED);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         //when
         Executable executable = () -> groupService.deleteMember(groupId, memberId);
         //then
         ResourceUpdateException exception = assertThrows(ResourceUpdateException.class, executable);
         assertEquals("Trying to modify suspended group", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -320,14 +329,14 @@ class UserGroupServiceImplTest {
         String memberId = "memberId";
         UserGroupEntity group = mock(UserGroupEntity.class);
         when(group.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         UpdateResult updateResult = mock(UpdateResult.class);
         when(updateResult.getModifiedCount()).thenReturn(1L);
         when(mongoTemplateMock.updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class))).thenReturn(updateResult);
         //when
         groupService.deleteMember(groupId, memberId);
         //then
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(mongoTemplateMock).updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
@@ -339,7 +348,7 @@ class UserGroupServiceImplTest {
         String memberId = "memberId";
         UserGroupEntity group = mock(UserGroupEntity.class);
         when(group.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         UpdateResult updateResult = mock(UpdateResult.class);
         when(updateResult.getModifiedCount()).thenReturn(0L);
         when(mongoTemplateMock.updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class))).thenReturn(updateResult);
@@ -348,7 +357,7 @@ class UserGroupServiceImplTest {
         //then
         ResourceUpdateException exception = assertThrows(ResourceUpdateException.class, executable);
         assertEquals("Couldn't update resource", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(mongoTemplateMock).updateFirst(any(Query.class), any(Update.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
@@ -448,12 +457,12 @@ class UserGroupServiceImplTest {
     void getUserGroup_groupNotFound() {
         //given
         String groupId = "groupId";
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(null);
         //when
         Executable executable = () -> groupService.getUserGroup(groupId);
         //then
         assertThrows(ResourceNotFoundException.class, executable);
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -462,12 +471,12 @@ class UserGroupServiceImplTest {
         //given
         String groupId = "groupId";
         UserGroupEntity group = mock(UserGroupEntity.class);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(group));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(group);
         //when
         UserGroupOperations result = groupService.getUserGroup(groupId);
         //then
         assertNotNull(result);
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -741,12 +750,12 @@ class UserGroupServiceImplTest {
         //given
         String groupId = "groupId";
         UserGroupOperations group = mock(UserGroupOperations.class);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.empty());
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(null);
         //when
         Executable executable = () -> groupService.updateGroup(groupId, group);
         //then
         assertThrows(ResourceNotFoundException.class, executable);
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -757,13 +766,13 @@ class UserGroupServiceImplTest {
         UserGroupOperations group = mock(UserGroupOperations.class);
         UserGroupEntity foundGroup = mock(UserGroupEntity.class);
         when(foundGroup.getStatus()).thenReturn(UserGroupStatus.SUSPENDED);
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(foundGroup));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(foundGroup);
         //when
         Executable executable = () -> groupService.updateGroup(groupId, group);
         //then
         ResourceUpdateException exception = assertThrows(ResourceUpdateException.class, executable);
         assertEquals("Trying to modify suspended group", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verifyNoMoreInteractions(mongoTemplateMock, userGroupRepository);
     }
 
@@ -775,13 +784,13 @@ class UserGroupServiceImplTest {
         UserGroupEntity foundGroup = mock(UserGroupEntity.class);
         when(foundGroup.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
         when(group.getName()).thenReturn("groupName");
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(foundGroup));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(foundGroup);
         when(userGroupRepository.save(any(UserGroupEntity.class))).thenReturn(foundGroup);
         //when
         UserGroupOperations result = groupService.updateGroup(groupId, group);
         //then
         assertNotNull(result);
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(userGroupRepository).save(any(UserGroupEntity.class));
     }
 
@@ -793,14 +802,14 @@ class UserGroupServiceImplTest {
         UserGroupEntity foundGroup = mock(UserGroupEntity.class);
         when(foundGroup.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
         when(group.getName()).thenReturn("Group Name");
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(foundGroup));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(foundGroup);
         when(userGroupRepository.save(any(UserGroupEntity.class))).thenThrow(new DuplicateKeyException("Duplicate key"));
         //when
         Executable executable = () -> groupService.updateGroup(groupId, group);
         //then
         ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, executable);
         assertEquals("Failed _id or unique index constraint.", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(userGroupRepository).save(any(UserGroupEntity.class));
     }
 
@@ -848,7 +857,7 @@ class UserGroupServiceImplTest {
         when(foundGroup.getStatus()).thenReturn(UserGroupStatus.ACTIVE);
         when(foundGroup.getProductId()).thenReturn("productId");
         when(foundGroup.getInstitutionId()).thenReturn("institutionId");
-        when(userGroupRepository.findById(groupId)).thenReturn(Optional.of(foundGroup));
+        when(mongoTemplateMock.findOne(any(Query.class), eq(UserGroupEntity.class))).thenReturn(foundGroup);
 
         UserGroupEntity existingGroup = new UserGroupEntity();
         existingGroup.setId("existingGroupId");
@@ -866,7 +875,7 @@ class UserGroupServiceImplTest {
         //then
         ResourceAlreadyExistsException exception = assertThrows(ResourceAlreadyExistsException.class, executable);
         assertEquals("A group with the same name already exists in ACTIVE or SUSPENDED state", exception.getMessage());
-        verify(userGroupRepository).findById(groupId);
+        verify(mongoTemplateMock).findOne(any(Query.class), eq(UserGroupEntity.class));
         verify(mongoTemplateMock).find(any(Query.class), eq(UserGroupEntity.class));
         verify(group).getName();
     }

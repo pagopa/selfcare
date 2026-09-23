@@ -4,10 +4,14 @@ import io.kubernetes.client.openapi.apis.AuthenticationV1Api;
 import io.kubernetes.client.openapi.models.*;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.ServiceAccount;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import java.util.Optional;
+import java.util.Locale;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -22,12 +26,27 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
     private static final String MDC_UID = "uid";
 
     private final AuthenticationV1Api apiClient;
+    private final TenantRegistry tenantRegistry;
+    private final String defaultTenantId;
 
 
     @Autowired
-    public K8sJwtAuthenticationStrategy(AuthenticationV1Api apiClient) {
+    public K8sJwtAuthenticationStrategy(
+            AuthenticationV1Api apiClient,
+            ObjectProvider<TenantRegistry> tenantRegistryProvider,
+            @Value("${tenant.default:PNPG}") String defaultTenantId) {
         log.trace("Initializing {}", K8sJwtAuthenticationStrategy.class.getSimpleName());
         this.apiClient = apiClient;
+        this.tenantRegistry =
+                tenantRegistryProvider == null ? null : tenantRegistryProvider.getIfAvailable();
+        this.defaultTenantId =
+                org.springframework.util.StringUtils.hasText(defaultTenantId)
+                        ? defaultTenantId
+                        : "PNPG";
+    }
+
+    public K8sJwtAuthenticationStrategy(AuthenticationV1Api apiClient) {
+        this(apiClient, null, "PNPG");
     }
 
 
@@ -66,13 +85,27 @@ public class K8sJwtAuthenticationStrategy implements JwtAuthenticationStrategy {
             throw new JwtAuthenticationException(e.getMessage(), e);
         }
 
-        JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(authentication.getCredentials(),
-                user,
-                null);
+        String tenantId = resolveTenant(authentication.getTenantId());
+        JwtAuthenticationToken authenticationToken = new JwtAuthenticationToken(
+                authentication.getCredentials(), user, null, tenantId);
         authenticationToken.setDetails(authentication.getDetails());
 
         log.trace("authenticate end");
         return authenticationToken;
+    }
+
+    private String resolveTenant(String headerTenantId) {
+        String tenantId = org.springframework.util.StringUtils.hasText(headerTenantId)
+                ? headerTenantId
+                : defaultTenantId;
+        if (tenantRegistry != null && tenantRegistry.isConfigured()) {
+            return tenantRegistry.normalizeAndValidate(tenantId);
+        }
+        String normalized = tenantId.trim().toUpperCase(Locale.ROOT);
+        if (!java.util.Set.of("AR", "PNPG").contains(normalized)) {
+            throw new TenantValidationException();
+        }
+        return normalized;
     }
 
 }

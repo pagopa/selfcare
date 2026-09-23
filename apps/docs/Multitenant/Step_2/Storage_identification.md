@@ -144,7 +144,8 @@ operation, so concurrent AR and PNPG requests cannot leak a previously selected 
 
 ## 5. Validation and failure behavior
 
-At startup, the registry validates every mandatory logical key for every supported tenant:
+At startup, the registry validates every configured binding and every mandatory
+logical key for every supported tenant:
 
 1. tenant and logical key are non-blank and normalized;
 2. account and container are present;
@@ -152,6 +153,11 @@ At startup, the registry validates every mandatory logical key for every support
 4. authentication fields are complete and mutually exclusive;
 5. referenced environment variables exist and are non-blank;
 6. duplicate normalized logical keys are rejected.
+
+An omitted optional binding is allowed by the registry, but resolving that logical
+key later still fails closed with an unknown-storage error. A configured binding is
+not deferred: its account, container, authentication mode, and referenced
+credential are validated during startup.
 
 An unknown tenant, unknown logical key, missing environment variable, invalid binding, inaccessible account,
 or missing container fails closed. The provider MUST NOT use:
@@ -166,6 +172,15 @@ or missing container fails closed. The provider MUST NOT use:
 Terraform maps secret-backed values to the exact environment-variable names declared by each binding.
 Managed Identity bindings grant the Container App identity only the required Blob data-plane permissions.
 Connection-string bindings use distinct Key Vault-backed Container App secrets.
+
+### Spring implementation (`user-group-ms`)
+
+`TenantBlobClientProvider` resolves `(TenantContext.tenantId, logicalStorageKey)`
+on every operation and caches clients by immutable account/container/authentication
+configuration. `TenantBlobClient` applies the trusted `pathPrefix`, lists blobs
+with a server-side prefix, and rejects absolute paths or `..` path segments.
+The provider never accepts account, container, credential references, or logical
+keys from the HTTP request or blob path.
 
 Adding a new logical storage purpose requires:
 
