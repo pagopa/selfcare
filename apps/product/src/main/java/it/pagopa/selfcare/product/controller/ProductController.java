@@ -54,7 +54,8 @@ public class ProductController {
   private final ProductService productService;
 
   private static final String PRODUCT_NOT_FOUND = "Product not found";
-  private static final String PRODUCT_NOT_FOUND_WITH_PRODUCTID = "No product found with productId: %s";
+  private static final String PRODUCT_NOT_FOUND_WITH_PRODUCTID =
+      "No product found with productId: %s";
 
   @Operation(summary = "Ping endpoint", operationId = "ping")
   @APIResponses(
@@ -533,17 +534,11 @@ public class ProductController {
     return productService
         .isRequiredDocumentsEnabled(productId, institutionType, origin)
         .onItem()
-        .transform(
-            enabled ->
-                Response.ok()
-                    .header("X-Required-Documents-Enabled", enabled)
-                    .build())
+        .transform(enabled -> Response.ok().header("X-Required-Documents-Enabled", enabled).build())
         .onFailure(IllegalArgumentException.class)
-        .recoverWithItem(
-            t -> Response.status(Response.Status.BAD_REQUEST).build())
+        .recoverWithItem(t -> Response.status(Response.Status.BAD_REQUEST).build())
         .onFailure(NotFoundException.class)
-        .recoverWithItem(
-            t -> Response.status(Response.Status.NOT_FOUND).build());
+        .recoverWithItem(t -> Response.status(Response.Status.NOT_FOUND).build());
   }
 
   @GET
@@ -563,7 +558,12 @@ public class ProductController {
             content =
                 @Content(
                     mediaType = MediaType.APPLICATION_JSON,
-                    schema = @Schema(implementation = RequiredDocumentResponse.class, type = org.eclipse.microprofile.openapi.annotations.enums.SchemaType.ARRAY))),
+                    schema =
+                        @Schema(
+                            implementation = RequiredDocumentResponse.class,
+                            type =
+                                org.eclipse.microprofile.openapi.annotations.enums.SchemaType
+                                    .ARRAY))),
         @APIResponse(
             responseCode = "400",
             description = "Bad Request",
@@ -859,8 +859,7 @@ public class ProductController {
                             .title("Bad Request")
                             .detail(t.getMessage())
                             .status(Response.Status.BAD_REQUEST.getStatusCode())
-                            .instance(
-                                "/product/" + sanitizedProductId + "/role-mappings/validate")
+                            .instance("/product/" + sanitizedProductId + "/role-mappings/validate")
                             .build())
                     .build())
         .onFailure(NotFoundException.class)
@@ -873,8 +872,7 @@ public class ProductController {
                             .title("Not Found")
                             .detail(t.getMessage())
                             .status(Response.Status.NOT_FOUND.getStatusCode())
-                            .instance(
-                                "/product/" + sanitizedProductId + "/role-mappings/validate")
+                            .instance("/product/" + sanitizedProductId + "/role-mappings/validate")
                             .build())
                     .build());
   }

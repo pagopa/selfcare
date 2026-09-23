@@ -41,13 +41,13 @@ public class ExceptionHandler {
         Response.Status.INTERNAL_SERVER_ERROR, SOMETHING_HAS_GONE_WRONG_IN_THE_SERVER);
   }
 
-/**
- * Intercepts the NotFoundException thrown by JAX-RS when conversion of a @QueryParam
- * or @PathParam fails (e.g., invalid value for an enum).
- * In this case, the framework throws a NotFoundException with the generic message "HTTP 404 Not Found"
- * without indicating which parameter caused the issue; this mapper logs a more meaningful message
- * and returns 400 Bad Request.
- */
+  /**
+   * Intercepts the NotFoundException thrown by JAX-RS when conversion of a @QueryParam
+   * or @PathParam fails (e.g., invalid value for an enum). In this case, the framework throws a
+   * NotFoundException with the generic message "HTTP 404 Not Found" without indicating which
+   * parameter caused the issue; this mapper logs a more meaningful message and returns 400 Bad
+   * Request.
+   */
   @ServerExceptionMapper
   public Response toResponse(NotFoundException exception) {
     LOGGER.warn(
@@ -56,7 +56,8 @@ public class ExceptionHandler {
     Problem problem =
         Problem.builder()
             .title("Bad Request")
-            .detail("One or more query or path parameters contain an invalid value. Please check the allowed values for enum parameters.")
+            .detail(
+                "One or more query or path parameters contain an invalid value. Please check the allowed values for enum parameters.")
             .status(Response.Status.BAD_REQUEST.getStatusCode())
             .build();
     return Response.status(Response.Status.BAD_REQUEST)

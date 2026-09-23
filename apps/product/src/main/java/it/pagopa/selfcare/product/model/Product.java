@@ -60,5 +60,4 @@ public class Product {
   private List<WorkflowRule> workflowRules;
 
   private List<RequiredDocument> requiredDocuments;
-
 }

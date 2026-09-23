@@ -41,7 +41,8 @@ public interface ProductService {
 
   /**
    * Returns the product only if it is "valid" for onboarding purposes, i.e. neither the product nor
-   * its parent (when present) is in a not-valid status ({@code INACTIVE}, {@code DELETED} or {@code PHASE_OUT}).
+   * its parent (when present) is in a not-valid status ({@code INACTIVE}, {@code DELETED} or {@code
+   * PHASE_OUT}).
    *
    * @param productId the product identifier
    * @return the {@link ProductResponse} when valid; fails with {@link

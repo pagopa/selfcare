@@ -16,9 +16,7 @@ public class ProductRepository implements ReactivePanacheMongoRepositoryBase<Pro
     return find("productId = ?1", Sort.descending("version"), productId).firstResult();
   }
 
-  /**
-   * Returns the latest version of each product (one entry per {@code productId}).
-   */
+  /** Returns the latest version of each product (one entry per {@code productId}). */
   public Uni<List<Product>> findLatestVersionForEachProduct() {
     return listAll()
         .map(

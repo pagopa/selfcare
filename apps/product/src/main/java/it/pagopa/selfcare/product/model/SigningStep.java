@@ -10,17 +10,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class SigningStep {
-    /**
-     * Progression number of the step (1, 2, 3, ...).
-     * Determines the order in which signatures must be applied.
-     */
-    private int order;
+  /**
+   * Progression number of the step (1, 2, 3, ...). Determines the order in which signatures must be
+   * applied.
+   */
+  private int order;
 
-    private String label;
+  private String label;
 
-    /**
-     * Indicates whether this is the last step in the signing flow.
-     * Only the step with isFinal=true causes the transition to COMPLETED.
-     */
-    private boolean isFinal;
+  /**
+   * Indicates whether this is the last step in the signing flow. Only the step with isFinal=true
+   * causes the transition to COMPLETED.
+   */
+  private boolean isFinal;
 }

@@ -15,6 +15,7 @@ public class RequiredDocument {
 
   @BsonProperty("id")
   private String id;
+
   private String name;
   private String labelKey;
   private boolean required;

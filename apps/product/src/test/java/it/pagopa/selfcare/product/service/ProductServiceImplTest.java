@@ -11,11 +11,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
-import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.RequiredDocumentFilter;
 import it.pagopa.selfcare.product.model.RoleMapping;
@@ -572,7 +572,11 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getWorkflowType("  ", InstitutionType.PA, Origin.IPA).await().indefinitely());
+            () ->
+                productService
+                    .getWorkflowType("  ", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing productId");
@@ -584,10 +588,16 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getWorkflowType("prod-test", null, Origin.IPA).await().indefinitely());
+            () ->
+                productService
+                    .getWorkflowType("prod-test", null, Origin.IPA)
+                    .await()
+                    .indefinitely());
 
     // then
-    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    assertThat(thrown)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing institutionType");
     verify(productRepository, never()).findProductById(anyString());
   }
 
@@ -596,7 +606,11 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getWorkflowType("prod-test", InstitutionType.PA, null).await().indefinitely());
+            () ->
+                productService
+                    .getWorkflowType("prod-test", InstitutionType.PA, null)
+                    .await()
+                    .indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
@@ -618,19 +632,13 @@ class ProductServiceImplTest {
                     .indefinitely());
 
     // then
-    assertThat(thrown)
-        .isInstanceOf(NotFoundException.class)
-        .hasMessageContaining("prod-missing");
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
   }
 
   @Test
   void getWorkflowType_throwsNotFound_whenWorkflowRulesIsEmpty() {
     // given
-    Product product =
-        Product.builder()
-            .productId("prod-test")
-            .workflowRules(List.of())
-            .build();
+    Product product = Product.builder().productId("prod-test").workflowRules(List.of()).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -689,8 +697,7 @@ class ProductServiceImplTest {
     request.setProductId("prod-io-premium");
     request.setParentId("prod-io");
 
-    Product product =
-        Product.builder().productId("prod-io-premium").parentId("prod-io").build();
+    Product product = Product.builder().productId("prod-io-premium").parentId("prod-io").build();
 
     Product parent = Product.builder().productId("prod-io").build();
 
@@ -725,8 +732,7 @@ class ProductServiceImplTest {
     request.setProductId("prod-io-premium");
     request.setParentId("prod-io");
 
-    Product product =
-        Product.builder().productId("prod-io-premium").parentId("prod-io").build();
+    Product product = Product.builder().productId("prod-io-premium").parentId("prod-io").build();
 
     when(productMapperRequest.toProduct(request)).thenReturn(product);
     when(productRepository.findProductById("prod-io")).thenReturn(Uni.createFrom().nullItem());
@@ -769,8 +775,7 @@ class ProductServiceImplTest {
   @Test
   void patchProductByIdTest_whenSettingParentId_thenAppliesDefaultsAndValidatesParent() {
     // given
-    ProductPatchRequest patchRequest =
-        ProductPatchRequest.builder().parentId("prod-io").build();
+    ProductPatchRequest patchRequest = ProductPatchRequest.builder().parentId("prod-io").build();
 
     Product current = new Product();
     current.setProductId("prod-io-premium");
@@ -808,8 +813,7 @@ class ProductServiceImplTest {
   @Test
   void patchProductByIdTest_whenClearingParentId_thenRemovesRequiresParentOnboarding() {
     // given
-    ProductPatchRequest patchRequest =
-        ProductPatchRequest.builder().parentId("").build();
+    ProductPatchRequest patchRequest = ProductPatchRequest.builder().parentId("").build();
 
     Product current = new Product();
     current.setProductId("prod-io-premium");
@@ -916,11 +920,7 @@ class ProductServiceImplTest {
   @Test
   void isRequiredDocumentsEnabled_returnsFalse_whenRequiredDocumentsIsNull() {
     // given
-    Product product =
-        Product.builder()
-            .productId("prod-test")
-            .requiredDocuments(null)
-            .build();
+    Product product = Product.builder().productId("prod-test").requiredDocuments(null).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -938,11 +938,7 @@ class ProductServiceImplTest {
   @Test
   void isRequiredDocumentsEnabled_returnsFalse_whenRequiredDocumentsIsEmpty() {
     // given
-    Product product =
-        Product.builder()
-            .productId("prod-test")
-            .requiredDocuments(List.of())
-            .build();
+    Product product = Product.builder().productId("prod-test").requiredDocuments(List.of()).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -965,11 +961,7 @@ class ProductServiceImplTest {
             .productId("prod-test")
             .requiredDocuments(
                 List.of(
-                    RequiredDocument.builder()
-                        .id("doc-1")
-                        .name("Allegato A")
-                        .filter(null)
-                        .build()))
+                    RequiredDocument.builder().id("doc-1").name("Allegato A").filter(null).build()))
             .build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
@@ -1039,9 +1031,7 @@ class ProductServiceImplTest {
                     .indefinitely());
 
     // then
-    assertThat(thrown)
-        .isInstanceOf(NotFoundException.class)
-        .hasMessageContaining("prod-missing");
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
   }
 
   @Test
@@ -1072,7 +1062,9 @@ class ProductServiceImplTest {
                     .indefinitely());
 
     // then
-    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    assertThat(thrown)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing institutionType");
     verify(productRepository, never()).findProductById(anyString());
   }
 
@@ -1312,7 +1304,9 @@ class ProductServiceImplTest {
                     .indefinitely());
 
     // then
-    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    assertThat(thrown)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing institutionType");
   }
 
   @Test
@@ -1337,8 +1331,7 @@ class ProductServiceImplTest {
   @Test
   void getValidProductById_ok_whenProductActiveAndNoParent() {
     // given
-    Product product =
-        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+    Product product = Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -1369,7 +1362,8 @@ class ProductServiceImplTest {
     Product parent =
         Product.builder().productId("prod-parent").status(ProductStatus.ACTIVE).build();
 
-    when(productRepository.findProductById("prod-child")).thenReturn(Uni.createFrom().item(product));
+    when(productRepository.findProductById("prod-child"))
+        .thenReturn(Uni.createFrom().item(product));
     when(productRepository.findProductById("prod-parent"))
         .thenReturn(Uni.createFrom().item(parent));
 
@@ -1443,7 +1437,8 @@ class ProductServiceImplTest {
     Product parent =
         Product.builder().productId("prod-parent").status(ProductStatus.INACTIVE).build();
 
-    when(productRepository.findProductById("prod-child")).thenReturn(Uni.createFrom().item(product));
+    when(productRepository.findProductById("prod-child"))
+        .thenReturn(Uni.createFrom().item(product));
     when(productRepository.findProductById("prod-parent"))
         .thenReturn(Uni.createFrom().item(parent));
 
@@ -1464,8 +1459,7 @@ class ProductServiceImplTest {
   @Test
   void getProductExpirationDays_returnsConfiguredValue() {
     // given
-    Product product =
-        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+    Product product = Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -1486,8 +1480,7 @@ class ProductServiceImplTest {
   @Test
   void getProductExpirationDays_returnsDefault_whenFeaturesIsNull() {
     // given
-    Product product =
-        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+    Product product = Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -1577,8 +1570,7 @@ class ProductServiceImplTest {
   void getProducts_excludesNotValid_whenValidTrue() {
     // given
     Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
-    Product inactive =
-        Product.builder().productId("prod-b").status(ProductStatus.INACTIVE).build();
+    Product inactive = Product.builder().productId("prod-b").status(ProductStatus.INACTIVE).build();
     Product phaseOut =
         Product.builder().productId("prod-c").status(ProductStatus.PHASE_OUT).build();
 
@@ -1720,8 +1712,7 @@ class ProductServiceImplTest {
                 List.of(
                     RoleMapping.builder()
                         .role(UserRole.MANAGER.name())
-                        .backOfficeRoles(
-                            List.of(BackOfficeRole.builder().code("admin").build()))
+                        .backOfficeRoles(List.of(BackOfficeRole.builder().code("admin").build()))
                         .build()))
             .build();
 
@@ -1750,8 +1741,7 @@ class ProductServiceImplTest {
                 List.of(
                     RoleMapping.builder()
                         .role(UserRole.MANAGER.name())
-                        .backOfficeRoles(
-                            List.of(BackOfficeRole.builder().code("admin").build()))
+                        .backOfficeRoles(List.of(BackOfficeRole.builder().code("admin").build()))
                         .build()))
             .build();
 
@@ -1836,5 +1826,4 @@ class ProductServiceImplTest {
     assertThat(thrown).isInstanceOf(BadRequestException.class).hasMessage("Missing productRole");
     verify(productRepository, never()).findProductById(anyString());
   }
-
 }

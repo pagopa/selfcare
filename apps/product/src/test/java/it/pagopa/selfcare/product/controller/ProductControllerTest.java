@@ -23,9 +23,9 @@ import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
-import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
@@ -583,8 +583,7 @@ class ProductControllerTest {
 
     when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(
-            Uni.createFrom()
-                .failure(new NotFoundException("Product prod-missing not found")));
+            Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
 
     // when
     given()
@@ -644,9 +643,7 @@ class ProductControllerTest {
     String productId = "prod-test";
 
     when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
-        .thenReturn(
-            Uni.createFrom()
-                .failure(new IllegalArgumentException("Missing origin")));
+        .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Missing origin")));
 
     // when
     given()
@@ -726,8 +723,7 @@ class ProductControllerTest {
 
     when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(
-            Uni.createFrom()
-                .failure(new NotFoundException("Product prod-missing not found")));
+            Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
 
     // when
     given()
@@ -750,9 +746,7 @@ class ProductControllerTest {
     String productId = "prod-test";
 
     when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
-        .thenReturn(
-            Uni.createFrom()
-                .failure(new IllegalArgumentException("Missing productId")));
+        .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Missing productId")));
 
     // when
     given()
@@ -943,8 +937,7 @@ class ProductControllerTest {
     response.setProductId(productId);
     response.setStatus(ProductStatus.ACTIVE);
 
-    when(productService.getValidProductById(productId))
-        .thenReturn(Uni.createFrom().item(response));
+    when(productService.getValidProductById(productId)).thenReturn(Uni.createFrom().item(response));
 
     // when
     given()
@@ -970,8 +963,7 @@ class ProductControllerTest {
     when(productService.getValidProductById(productId))
         .thenReturn(
             Uni.createFrom()
-                .failure(
-                    new NotFoundException("Product with id prod-ced has status INACTIVE")));
+                .failure(new NotFoundException("Product with id prod-ced has status INACTIVE")));
 
     // when
     given()
@@ -1055,8 +1047,7 @@ class ProductControllerTest {
     when(productService.getProductExpirationDays(productId))
         .thenReturn(
             Uni.createFrom()
-                .failure(
-                    new NotFoundException("Product with id prod-ced has status INACTIVE")));
+                .failure(new NotFoundException("Product with id prod-ced has status INACTIVE")));
 
     // when
     given()
@@ -1202,8 +1193,7 @@ class ProductControllerTest {
     String productId = "prod-test";
 
     when(productService.validateProductRole(productId, UserRole.MANAGER, null))
-        .thenReturn(
-            Uni.createFrom().failure(new BadRequestException("Missing productRole")));
+        .thenReturn(Uni.createFrom().failure(new BadRequestException("Missing productRole")));
 
     // when
     given()
@@ -1222,5 +1212,4 @@ class ProductControllerTest {
     // then
     verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, null);
   }
-
 }
