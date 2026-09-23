@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
@@ -107,7 +109,7 @@ class AggregatesServiceDefaultTest {
         when(response.getStatus()).thenReturn(404);
         when(aooApi.findByUnicodeUsingGET("18SU3S", null)).thenReturn(Uni.createFrom().item(aooResource));
         when(aooApi.findByUnicodeUsingGET("18SU3R", null)).thenReturn(Uni.createFrom().failure(webClientApplicationException));
-        when(institutionApi.findInstitutionUsingGET("13071104841", null, null)).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(eq("13071104841"), isNull())).thenReturn(Uni.createFrom().item(institutionResource));
         when(uoApi.findByUnicodeUsingGET1("18SU3R", null)).thenReturn(Uni.createFrom().item(uoResource));
         when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET("123")).thenReturn(Uni.createFrom().item(geographicTaxonomyResource));
 
@@ -127,7 +129,7 @@ class AggregatesServiceDefaultTest {
         verify(geographicTaxonomiesApi, times(1)).retrieveGeoTaxonomiesByCodeUsingGET("123");
         verify(aooApi, times(1)).findByUnicodeUsingGET("18SU3R", null);
         verify(aooApi, times(1)).findByUnicodeUsingGET("18SU3S", null);
-        verify(institutionApi, times(3)).findInstitutionUsingGET("13071104841", null, null);
+        verify(institutionApi, times(3)).findIpaInstitutionByTaxCodeOnSearchEngine(eq("13071104841"), isNull());
 
     }
 
@@ -152,8 +154,8 @@ class AggregatesServiceDefaultTest {
         geographicTaxonomyResource.setProvinceAbbreviation("Provincia");
 
         VerifyAggregateResponse verifiyAggregateResponse = mockPagoPaResponse();
-        when(institutionApi.findInstitutionUsingGET("12345678901", null, null)).thenReturn(Uni.createFrom().item(institutionResource));
-        when(institutionApi.findInstitutionUsingGET("12345901", null, null)).thenReturn(Uni.createFrom().failure(webClientApplicationException));
+        when(institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(eq("12345678901"), isNull())).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(eq("12345901"), isNull())).thenReturn(Uni.createFrom().failure(webClientApplicationException));
         when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET("789")).thenReturn(Uni.createFrom().item(geographicTaxonomyResource));
 
         UniAssertSubscriber<VerifyAggregateResponse> resp = aggregatesServiceDefault.validatePagoPaAggregatesCsv(file)
@@ -209,7 +211,7 @@ class AggregatesServiceDefaultTest {
         when(response.getStatus()).thenReturn(404);
         when(aooApi.findByUnicodeUsingGET("18SU3S", null)).thenReturn(Uni.createFrom().item(aooResource));
         when(aooApi.findByUnicodeUsingGET("18SU3R", null)).thenReturn(Uni.createFrom().failure(webClientApplicationException));
-        when(institutionApi.findInstitutionUsingGET("13071104841", null, null)).thenReturn(Uni.createFrom().item(institutionResource));
+        when(institutionApi.findIpaInstitutionByTaxCodeOnSearchEngine(eq("13071104841"), isNull())).thenReturn(Uni.createFrom().item(institutionResource));
         when(uoApi.findByUnicodeUsingGET1("18SU3R", null)).thenReturn(Uni.createFrom().item(uoResource));
         when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET("456")).thenReturn(Uni.createFrom().item(geographicTaxonomyResource));
 
@@ -230,7 +232,7 @@ class AggregatesServiceDefaultTest {
         verify(geographicTaxonomiesApi, times(1)).retrieveGeoTaxonomiesByCodeUsingGET("456");
         verify(aooApi, times(1)).findByUnicodeUsingGET("18SU3R", null);
         verify(aooApi, times(1)).findByUnicodeUsingGET("18SU3S", null);
-        verify(institutionApi, times(3)).findInstitutionUsingGET("13071104841", null, null);
+        verify(institutionApi, times(3)).findIpaInstitutionByTaxCodeOnSearchEngine(eq("13071104841"), isNull());
     }
 
     private static VerifyAggregateResponse mockResponseForIO() {

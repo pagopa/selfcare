@@ -66,6 +66,7 @@ public class InstitutionV2Controller {
             operationId = "searchIpaInstitutionsUsingGET")
     public IpaInstitutionsSearchResource searchIpaInstitutions(
             @RequestParam(defaultValue = "*") String search,
+            @Parameter(description = "${swagger.onboarding.institutions.api.ipaCategory}")
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") Integer page,
             @RequestParam(defaultValue = "50") Integer pageSize) {
@@ -74,6 +75,22 @@ public class InstitutionV2Controller {
         IpaInstitutionsSearchResource resource = ipaInstitutionsSearchResourceMapper.toResource(result);
         log.debug("searchIpaInstitutions result count = {}", resource.getCount());
         log.trace("searchIpaInstitutions end");
+        return resource;
+    }
+
+    @GetMapping(value = "/ipa/{taxCode}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "${swagger.onboarding.institutions.api.findIpaInstitutionByTaxCode.summary}",
+            description = "${swagger.onboarding.institutions.api.findIpaInstitutionByTaxCode.description}",
+            operationId = "findIpaInstitutionByTaxCodeUsingGET")
+    public IpaInstitutionResource findIpaInstitutionByTaxCode(
+            @PathVariable String taxCode,
+            @Parameter(description = "${swagger.onboarding.institutions.api.ipaCategory}")
+            @RequestParam(required = false) String category) {
+        log.trace("findIpaInstitutionByTaxCode start");
+        IpaInstitutionResource resource = ipaInstitutionsSearchResourceMapper.toResource(
+                institutionService.findIpaInstitutionByTaxCode(taxCode, category));
+        log.trace("findIpaInstitutionByTaxCode end");
         return resource;
     }
 
