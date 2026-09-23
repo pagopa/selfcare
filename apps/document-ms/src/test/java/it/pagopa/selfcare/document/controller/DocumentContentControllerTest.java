@@ -51,12 +51,14 @@ class DocumentContentControllerTest {
 
     @Test
     void getContractSigned_shouldReturnFile_whenSignedContractExists() throws Exception {
+        // given
         File tempFile = Files.createTempFile("signed", ".pdf").toFile();
         tempFile.deleteOnExit();
 
-        when(documentContentService.retrieveSignedFile(DOCUMENT_ID))
+        when(documentContentService.retrieveSignedFile(DOCUMENT_ID, false))
                 .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
 
+        // when / then
         given()
                 .when()
                 .get(BASE_PATH + DOCUMENT_ID + "/contract-signed")
@@ -66,14 +68,34 @@ class DocumentContentControllerTest {
 
     @Test
     void getContractSigned_shouldReturnInternalServerError_whenServiceFails() {
-        when(documentContentService.retrieveSignedFile(DOCUMENT_ID))
+        // given
+        when(documentContentService.retrieveSignedFile(DOCUMENT_ID, false))
                 .thenReturn(Uni.createFrom().failure(new RuntimeException("Storage error")));
 
+        // when / then
         given()
                 .when()
                 .get(BASE_PATH + DOCUMENT_ID + "/contract-signed")
                 .then()
                 .statusCode(500);
+    }
+
+    @Test
+    void getContractSigned_shouldReturnP7mFile_whenRequested() throws Exception {
+        // given
+        File tempFile = Files.createTempFile("signed", ".p7m").toFile();
+        tempFile.deleteOnExit();
+        when(documentContentService.retrieveSignedFile(DOCUMENT_ID, true))
+                .thenReturn(Uni.createFrom().item(RestResponse.ok(tempFile)));
+
+        // when / then
+        given()
+                .queryParam("downloadP7MFile", true)
+                .when()
+                .get(BASE_PATH + DOCUMENT_ID + "/contract-signed")
+                .then()
+                .statusCode(200);
+        verify(documentContentService).retrieveSignedFile(DOCUMENT_ID, true);
     }
 
     @Test
