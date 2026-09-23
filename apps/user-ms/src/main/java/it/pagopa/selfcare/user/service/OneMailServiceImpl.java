@@ -26,7 +26,7 @@ public class OneMailServiceImpl implements MailService {
     String senderMail;
 
     @ConfigProperty(name = "user-ms.mail.enabled")
-    String isSenderMailEnabled;
+    boolean isSenderMailEnabled;
 
     @ConfigProperty(name = "user-ms.retry.min-backoff")
     Integer retryMinBackOff;
@@ -42,7 +42,7 @@ public class OneMailServiceImpl implements MailService {
 
       log.info("Sending email. userId={}, email={}, templateId={}", userId, email, templateId);
 
-      if (!Boolean.parseBoolean(isSenderMailEnabled)) {
+      if (!isSenderMailEnabled) {
         log.info("Email sending is disabled. Skipping email for userId={}, email={}", userId, email);
         return Uni.createFrom().voidItem();
       }
