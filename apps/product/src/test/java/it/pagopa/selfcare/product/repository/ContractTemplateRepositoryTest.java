@@ -2,8 +2,9 @@ package it.pagopa.selfcare.product.repository;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.mongodb.MongoTestResource;
 import it.pagopa.selfcare.product.model.ContractTemplate;
+import it.pagopa.selfcare.product.testsupport.TenantMongoTestResource;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import java.time.Instant;
 import java.util.List;
@@ -12,13 +13,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-@QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
+@QuarkusTestResource(value = TenantMongoTestResource.class, restrictToAnnotatedClass = true)
 public class ContractTemplateRepositoryTest {
 
   @Inject private ContractTemplateRepository contractTemplateRepository;
+  @Inject private TenantContext tenantContext;
 
   @BeforeEach
   void setup() {
+    tenantContext.setTenantId("AR");
     contractTemplateRepository.deleteAll().await().indefinitely();
     contractTemplateRepository
         .persist(

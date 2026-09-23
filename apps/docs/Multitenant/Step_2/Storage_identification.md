@@ -34,11 +34,15 @@ This provides deterministic lookup by `(tenantId, logicalStorageKey)`, avoids de
 makes duplicate keys invalid at configuration parsing time. Logical keys are application contracts and MUST
 be constants or validated enum values. They never come directly from an HTTP request or blob path.
 
-Initial `onboarding-ms` key:
+Initial logical keys:
 
-- `products`: account and container containing the product catalogue.
+- `onboarding-ms` `products`: account and container containing the product catalogue.
+- `product` `contracts`: contract-template blobs. Templates remain classified as
+  global shared assets (SELC-14.5); the binding still goes through TenantContext so
+  dedicated AR/PNPG storage accounts can be selected without adding a tenant path
+  from the request. Both tenants may later point at the same shared account.
 
-Future keys can be added without changing the top-level schema, for example `contracts`, `attachments`,
+Future keys can be added without changing the top-level schema, for example `attachments`,
 `templates`, or `archives`.
 
 ## 2. Registry configuration
@@ -172,6 +176,13 @@ or missing container fails closed. The provider MUST NOT use:
 Terraform maps secret-backed values to the exact environment-variable names declared by each binding.
 Managed Identity bindings grant the Container App identity only the required Blob data-plane permissions.
 Connection-string bindings use distinct Key Vault-backed Container App secrets.
+
+### Quarkus implementation (`product`)
+
+`TenantBlobClientProvider` resolves `(TenantContext.tenantId, StorageKeys.CONTRACTS)`
+and caches `BlobServiceAsyncClient` instances by account/container/credential.
+`ContractTemplateStorageImpl` prepends the trusted `pathPrefix` and rejects `..`.
+Legacy `product-ms.blob-storage.*` properties are no longer used.
 
 ### Spring implementation (`user-group-ms`)
 

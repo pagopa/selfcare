@@ -1,50 +1,75 @@
 package it.pagopa.selfcare.product.health;
 
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
+import io.quarkus.arc.Unremovable;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.commons.health.AbstractMongoReadinessCheck;
-import jakarta.enterprise.context.ApplicationScoped;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.Readiness;
 
 @Readiness
-@ApplicationScoped
+@Singleton
+@Unremovable
 public class ProductMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
-    private final ReactiveMongoClient mongoClient;
-    private final String databaseName;
-    private final String host;
+  private final TenantMongoClientProducer tenantMongoClientProducer;
+  private final TenantRegistry tenantRegistry;
+  private final String databaseName;
+  private final String host;
 
-    @Inject
-    public ProductMongoReadinessCheck(
-            ReactiveMongoClient mongoClient,
-            @ConfigProperty(name = "quarkus.mongodb.database") String databaseName,
-            @ConfigProperty(name = "quarkus.mongodb.connection-string") String connectionString) {
-        this.mongoClient = mongoClient;
-        this.databaseName = databaseName;
-        this.host = hostFromConnectionString(connectionString);
-    }
+  @Inject
+  public ProductMongoReadinessCheck(
+      TenantRegistry tenantRegistry, TenantMongoClientProducer tenantMongoClientProducer) {
+    this.tenantRegistry = tenantRegistry;
+    this.tenantMongoClientProducer = tenantMongoClientProducer;
 
-    @Override
-    protected String checkName() {
-        return "mongodb-product";
+    String firstTenant = tenantRegistry.supportedTenantIds().stream().findFirst().orElse(null);
+    if (firstTenant == null) {
+      this.databaseName = HOST_NOT_AVAILABLE;
+      this.host = HOST_NOT_AVAILABLE;
+    } else {
+      this.databaseName = tenantRegistry.resolve(firstTenant).mongo().database();
+      this.host =
+          tenantRegistry
+              .connectionString(firstTenant)
+              .map(AbstractMongoReadinessCheck::hostFromConnectionString)
+              .orElse(HOST_NOT_AVAILABLE);
     }
+  }
 
-    @Override
-    protected String databaseName() {
-        return databaseName;
-    }
+  @Override
+  protected String checkName() {
+    return "mongodb-product";
+  }
 
-    @Override
-    protected String host() {
-        return host;
-    }
+  @Override
+  protected String databaseName() {
+    return databaseName;
+  }
 
-    @Override
-    protected Uni<?> probe() {
-        return mongoClient.getDatabase(databaseName).runCommand(new Document("ping", 1));
-    }
+  @Override
+  protected String host() {
+    return host;
+  }
+
+  @Override
+  protected Uni<?> probe() {
+    return io.smallrye.mutiny.Multi.createFrom()
+        .iterable(tenantRegistry.supportedTenantIds())
+        .onItem()
+        .transformToUniAndConcatenate(
+            tenantId -> {
+              String tenantDatabase = tenantRegistry.resolve(tenantId).mongo().database();
+              return tenantMongoClientProducer
+                  .clientForTenant(tenantId)
+                  .getDatabase(tenantDatabase)
+                  .runCommand(new Document("ping", 1));
+            })
+        .collect()
+        .asList()
+        .replaceWithVoid();
+  }
 }
-

@@ -129,6 +129,19 @@ client/factory. Spring services MUST replace the default Mongo auto-configuratio
 with a tenant-aware `MongoDatabaseFactory`/`MongoTemplate` integration so that
 repository code cannot select a tenant database directly.
 
+### Quarkus implementation (`onboarding-ms`, `product`)
+
+`TenantMongoClientProducer` (`selfcare-sdk-tenant-mongodb`) creates one reactive
+Mongo client per supported tenant and replaces the default Panache
+`ReactiveMongoClient`. `TenantMongoDatabaseResolver` selects
+`registry[tenant].mongo.database` from `TenantContext`.
+
+`product` keeps the catalogue **unscoped**: `Product` and `ContractTemplate`
+documents do not gain a `tenantId` discriminator. Physical routing still uses the
+tenant registry so a shared Container App can reach the AR or PNPG Cosmos account
+during migration. Do not set `quarkus.mongodb.connection-string` or
+`@MongoEntity(clientName)`.
+
 ### Spring implementation (`user-group-ms`)
 
 `user-group-ms` imports the shared configurations from `selc-commons-tenant` and

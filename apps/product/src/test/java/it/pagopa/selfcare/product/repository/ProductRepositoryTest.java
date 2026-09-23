@@ -4,21 +4,24 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.mongodb.MongoTestResource;
 import it.pagopa.selfcare.product.model.Product;
+import it.pagopa.selfcare.product.testsupport.TenantMongoTestResource;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-@QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
+@QuarkusTestResource(value = TenantMongoTestResource.class, restrictToAnnotatedClass = true)
 class ProductRepositoryTest {
 
   @Inject ProductRepository productRepository;
+  @Inject TenantContext tenantContext;
 
   @BeforeEach
   void clean() {
+    tenantContext.setTenantId("AR");
     productRepository.deleteAll().await().indefinitely();
   }
 
