@@ -19,7 +19,6 @@ import it.pagopa.selfcare.onboarding.connector.model.user.CertifiedField;
 import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
 import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
-import it.pagopa.selfcare.onboarding.core.strategy.UserAllowedValidationStrategy;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
 import java.util.EnumSet;
 import java.util.List;
@@ -48,9 +47,6 @@ class UserServiceImplTest {
 
     @Mock
     private PgManagerVerifier pgManagerVerifierMock;
-
-    @Mock
-    private UserAllowedValidationStrategy userAllowedValidationStrategy;
 
 
     @Test
@@ -320,18 +316,6 @@ class UserServiceImplTest {
         assertEquals("Manager not found", exception.getMessage());
         verify(onboardingMsConnector, times(1)).getOnboardingWithUserInfo(onboardingId);
     }
-
-  @Test
-  void isAllowedUserByUidTest() {
-    // given
-    when(userAllowedValidationStrategy.isAuthorizedUser(anyString())).thenReturn(true);
-
-    // when
-    boolean result = userService.isAllowedUserByUid(anyString());
-
-    // then
-    assertTrue(result);
-  }
 
     @Test
     void searchUser_returnsUserId_whenValidTaxCode() {
