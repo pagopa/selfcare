@@ -18,7 +18,7 @@
     <description>Microservice to manage Self Care User Group</description>
 
     <properties>
-        <selc-commons.version>2.10.0</selc-commons.version>
+        <selc-commons.version>2.20.0</selc-commons.version>
         <selfcare-sdk-health-spring.version>0.1.0</selfcare-sdk-health-spring.version>
         <sonar.host.url>https://sonarcloud.io/</sonar.host.url>
         <sonar.skip>true</sonar.skip>
@@ -61,6 +61,11 @@
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-commons-web</artifactId>
+            <version>${selc-commons.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-tenant</artifactId>
             <version>${selc-commons.version}</version>
         </dependency>
         <dependency>
@@ -128,6 +133,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
             <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-storage-blob</artifactId>
+            <version>12.24.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.azure</groupId>
+            <artifactId>azure-identity</artifactId>
+            <version>1.11.1</version>
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>

@@ -5,8 +5,10 @@ import it.pagopa.selfcare.commons.web.model.Problem;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationFilter;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationProvider;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationStrategyFactory;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -45,10 +47,15 @@ public class SecurityConfig {
 
   private final JwtAuthenticationStrategyFactory jwtAuthenticationStrategyFactory;
   private final ObjectMapper objectMapper;
+  private final TenantContext tenantContext;
 
-  public SecurityConfig(JwtAuthenticationStrategyFactory jwtAuthenticationStrategyFactory, ObjectMapper objectMapper) {
+  public SecurityConfig(
+          JwtAuthenticationStrategyFactory jwtAuthenticationStrategyFactory,
+          ObjectMapper objectMapper,
+          ObjectProvider<TenantContext> tenantContextProvider) {
     this.jwtAuthenticationStrategyFactory = jwtAuthenticationStrategyFactory;
     this.objectMapper = objectMapper;
+    this.tenantContext = tenantContextProvider.getIfAvailable();
   }
 
   @Bean
@@ -107,7 +114,9 @@ public class SecurityConfig {
       .x509(AbstractHttpConfigurer::disable)
       .httpBasic(AbstractHttpConfigurer::disable)
       .rememberMe(AbstractHttpConfigurer::disable)
-      .addFilterBefore(new JwtAuthenticationFilter(authenticationManager(), objectMapper), UsernamePasswordAuthenticationFilter.class);
+      .addFilterBefore(
+          new JwtAuthenticationFilter(authenticationManager(), objectMapper, tenantContext),
+          UsernamePasswordAuthenticationFilter.class);
     return http.build();
   }
 
