@@ -86,6 +86,10 @@ locals {
       value = "https://selc-${module.local.config.env_short}-pnpg-document-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
+      name  = "KONECTA_RAW_CONTRACT"
+      value = "true"
+    },
+    {
       name  = "PRODUCT_STORAGE_CONTAINER"
       value = "selc-${module.local.config.env_short}-product"
     }
