@@ -25,6 +25,9 @@ public class OneMailServiceImpl implements MailService {
     @ConfigProperty(name = "user-ms.mail.no-reply")
     String senderMail;
 
+    @ConfigProperty(name = "user-ms.mail.enabled")
+    String isSenderMailEnabled;
+
     @ConfigProperty(name = "user-ms.retry.min-backoff")
     Integer retryMinBackOff;
 
@@ -38,6 +41,11 @@ public class OneMailServiceImpl implements MailService {
     public Uni<Void> sendOneMail(String userId, String email, String templateId, Map<String, String> templateAttributes) {
 
       log.info("Sending email. userId={}, email={}, templateId={}", userId, email, templateId);
+
+      if (!Boolean.parseBoolean(isSenderMailEnabled)) {
+        log.info("Email sending is disabled. Skipping email for userId={}, email={}", userId, email);
+        return Uni.createFrom().voidItem();
+      }
 
       EmailHighPriorityBodyDTO emailRequest = EmailHighPriorityBodyDTO.builder()
         .from(new EmailHighPriorityBodyDTOAllOfFrom().email(senderMail))
