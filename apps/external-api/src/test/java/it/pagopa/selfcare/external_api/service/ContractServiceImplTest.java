@@ -26,6 +26,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -34,6 +35,8 @@ import java.util.List;
 
 import static com.azure.core.http.ContentType.APPLICATION_OCTET_STREAM;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -79,7 +82,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
           .body(resource);
 
         when(onboardingsResponse.getOnboardings()).thenReturn(List.of(TestUtils.mockInstance(new OnboardingResponse())));
-        when(documentContentApiClient._getContractSigned(anyString())).thenReturn(responseFile);
+        when(documentContentApiClient._getContractSigned(anyString(), anyBoolean())).thenReturn(responseFile);
 
         DocumentResponse documentResponse = new DocumentResponse();
         documentResponse.setContractSigned(document.getContractSigned());
@@ -90,6 +93,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         Assertions.assertEquals("application/octet-stream", result.getMimetype());
         Assertions.assertEquals("contractSigned", result.getFileName());
         Assertions.assertEquals(12, result.getData().length);
+        org.mockito.Mockito.verify(documentContentApiClient)._getContractSigned(anyString(), eq(false));
     }
 
     @Test
@@ -122,6 +126,34 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
     }
 
     @Test
+    void getContractV2_shouldRequestOriginalP7m_whenRequested() throws Exception {
+        // given
+        OnboardingsResponse onboardingsResponse = mock(OnboardingsResponse.class);
+        Resource resource = new ByteArrayResource("p7m content".getBytes());
+        ResponseEntity<Resource> responseFile = ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=contract.pdf.p7m")
+                .body(resource);
+        DocumentResponse documentResponse = new DocumentResponse();
+        documentResponse.setContractSigned("contracts/contract.pdf.p7m");
+        ReflectionTestUtils.setField(contractService, "konectaRawContract", true);
+
+        when(onboardingsResponse.getOnboardings()).thenReturn(List.of(TestUtils.mockInstance(new OnboardingResponse())));
+        when(institutionApiClient._getOnboardingsInstitutionUsingGET("institutionId", "productId"))
+                .thenReturn(ResponseEntity.ok(onboardingsResponse));
+        when(documentApiClient._getDocumentByOnboardingId(any())).thenReturn(ResponseEntity.ok(documentResponse));
+        when(documentContentApiClient._getContractSigned(anyString(), eq(true))).thenReturn(responseFile);
+
+        // when
+        ResourceResponse result = contractService.getContractV2("institutionId", "productId", null);
+
+        // then
+        Assertions.assertEquals("contract.pdf.p7m", result.getFileName());
+        Assertions.assertArrayEquals("p7m content".getBytes(), result.getData());
+        org.mockito.Mockito.verify(documentContentApiClient)._getContractSigned(anyString(), eq(true));
+    }
+
+    @Test
     void getContractErrorTest() throws Exception {
         InstitutionOnboarding institutionOnboarding = new InstitutionOnboarding();
         institutionOnboarding.setTokenId("tokenId");
@@ -136,7 +168,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
           .body(null);
 
         when(onboardingsResponse.getOnboardings()).thenReturn(List.of(TestUtils.mockInstance(new OnboardingResponse())));
-        when(documentContentApiClient._getContractSigned(anyString())).thenReturn(responseFile);
+        when(documentContentApiClient._getContractSigned(anyString(), anyBoolean())).thenReturn(responseFile);
 
         DocumentResponse documentResponse = new DocumentResponse();
         documentResponse.setContractSigned(document.getContractSigned());
