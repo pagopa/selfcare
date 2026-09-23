@@ -3,6 +3,7 @@ package it.pagopa.selfcare.commons.web.security;
 import static it.pagopa.selfcare.commons.web.handler.RestExceptionsHandler.UNHANDLED_EXCEPTION;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.commons.web.model.Problem;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -41,12 +42,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
     private final ObjectMapper objectMapper;
+    private final TenantContext tenantContext;
 
 
     public JwtAuthenticationFilter(final AuthenticationManager authenticationManager,
                                    final ObjectMapper objectMapper) {
+        this(authenticationManager, objectMapper, null);
+    }
+
+    public JwtAuthenticationFilter(
+            final AuthenticationManager authenticationManager,
+            final ObjectMapper objectMapper,
+            final TenantContext tenantContext) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
+        this.tenantContext = tenantContext;
     }
 
     @Override
@@ -60,6 +70,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);
+                if (tenantContext != null && authentication instanceof JwtAuthenticationToken jwtToken) {
+                    if (!StringUtils.hasText(jwtToken.getTenantId())) {
+                        throw new TenantValidationException();
+                    }
+                    tenantContext.setTenantId(jwtToken.getTenantId());
+                }
                 filterChain.doFilter(request, response);
             } catch (TenantValidationException e) {
                 log.warn("Cannot validate tenant context for request {}", request.getRequestURI());
@@ -79,6 +95,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } finally {
+            if (tenantContext != null) {
+                tenantContext.clear();
+            }
             SecurityContextHolder.clearContext();
             MDC.clear();
             log.trace("doFilterInternal end");

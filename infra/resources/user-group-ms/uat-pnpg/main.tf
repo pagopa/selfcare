@@ -94,13 +94,25 @@ locals {
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "ms-user-group"
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "PNPG"
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = "PNPG"
+    },
+    {
+      name  = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = "{\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcUserGroup\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"},\"storages\":{}}}"
     }
   ]
 
   secrets_names_user_group_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB_CONNECTION_URI"                = "mongodb-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
   }
 }
 

@@ -9,10 +9,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
-import org.testcontainers.containers.ComposeContainer;
-import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.utility.DockerImageName;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -39,19 +38,22 @@ public class CucumberSuite {
     static class CucumberSdkTestConfiguration {
     }
 
-    private static final ComposeContainer composeContainer;
+    private static final GenericContainer<?> mongoContainer;
 
     static {
-        composeContainer = new ComposeContainer(new File("docker-compose.yml"))
-                .withLocalCompose(true)
-                .waitingFor("mongodb", Wait.forListeningPort());
-        composeContainer.start();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+        mongoContainer = new GenericContainer<>(
+                DockerImageName.parse(
+                        "mongo@sha256:1cb283500219e8fc0b61b328ea5a199a395a753d88b17351c58874fb425223cb"))
+                .withExposedPorts(27017);
+        mongoContainer.start();
     }
 
     @DynamicPropertySource
     static void setProperties(DynamicPropertyRegistry registry) throws IOException {
+        registry.add(
+                "spring.data.mongodb.uri",
+                () -> "mongodb://" + mongoContainer.getHost() + ":"
+                        + mongoContainer.getMappedPort(27017));
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         InputStream inputStream = classLoader.getResourceAsStream("key/public-key.pub");
         if (inputStream == null) {
