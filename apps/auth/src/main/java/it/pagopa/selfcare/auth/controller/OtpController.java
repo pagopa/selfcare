@@ -173,6 +173,8 @@ public class OtpController {
           mediaType = MediaType.APPLICATION_JSON))
     })
   @GET
+  @Tag(name = "support")
+  @Tag(name = "OTP")
   @Path("/mail-info/{mailRequestId}")
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<OtpMailInfoResponse> getOtpMailInfo(
@@ -212,6 +214,8 @@ public class OtpController {
           mediaType = MediaType.APPLICATION_JSON))
     })
   @GET
+  @Tag(name = "support")
+  @Tag(name = "OTP")
   @Path("/info")
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<List<OtpFlow>> getOtpInfo(
