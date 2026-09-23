@@ -56,6 +56,8 @@ import static it.pagopa.selfcare.onboarding.common.InstitutionType.PSP;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_DASHBOARD_PSP;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_INTEROP;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -75,8 +77,8 @@ class OnboardingServiceIntegrationTest {
     @RestClient
     UserApi userRegistryApi;
 
-    @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
+    it.pagopa.selfcare.product.service.ProductService productAzureService =
+            org.mockito.Mockito.mock(it.pagopa.selfcare.product.service.ProductService.class);
 
     @InjectMock
     ProductService productService;
@@ -174,6 +176,71 @@ class OnboardingServiceIntegrationTest {
         defaultResponse.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
         when(productService.getWorkflowType(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(defaultResponse));
+        when(productService.getWorkflowType(any(), any(), any(), nullable(String.class)))
+                .thenAnswer(invocation -> productService.getWorkflowType(
+                        invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+        when(productService.getValidProduct(anyString())).thenAnswer(invocation ->
+                productResponse(() -> productAzureService.getProductIsValid(invocation.getArgument(0))));
+        when(productService.getValidProduct(anyString(), any())).thenAnswer(invocation ->
+                productResponse(() -> productAzureService.getProductIsValid(invocation.getArgument(0))));
+        when(productService.getProductExpirationDays(anyString())).thenReturn(Uni.createFrom().item(30));
+        when(productService.getProductExpirationDays(anyString(), nullable(String.class)))
+                .thenAnswer(invocation -> productService.getProductExpirationDays(invocation.getArgument(0)));
+    }
+
+    private Uni<org.openapi.quarkus.product_json.model.ProductResponse> productResponse(java.util.function.Supplier<Product> supplier) {
+        try {
+            return Uni.createFrom().item(toProductResponse(supplier.get()));
+        } catch (Throwable throwable) {
+            return Uni.createFrom().failure(throwable);
+        }
+    }
+
+    private org.openapi.quarkus.product_json.model.ProductResponse toProductResponse(Product product) {
+        if (product == null) {
+            return null;
+        }
+        org.openapi.quarkus.product_json.model.ProductResponse response =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        response.setProductId(product.getId());
+        response.setTitle(product.getTitle());
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setAllowIndividualOnboarding(product.isAllowIndividualOnboarding());
+        features.setAllowCompanyOnboarding(product.isAllowCompanyOnboarding());
+        features.setEnabled(true);
+        response.setFeatures(features);
+        List<org.openapi.quarkus.product_json.model.RoleMapping> roleMappings = new ArrayList<>();
+        Optional.ofNullable(product.getRoleMappings(null))
+                .ifPresent(mappings -> mappings.forEach((role, info) ->
+                        roleMappings.add(toRoleMapping(role, info, null))));
+        Optional.ofNullable(product.getRoleMappingsByInstitutionType())
+                .ifPresent(mappingsByInstitutionType -> mappingsByInstitutionType.forEach((institutionType, mappings) ->
+                        mappings.forEach((role, info) -> roleMappings.add(toRoleMapping(role, info, institutionType)))));
+        response.setRoleMappings(roleMappings);
+        return response;
+    }
+
+    private org.openapi.quarkus.product_json.model.RoleMapping toRoleMapping(
+            PartyRole role,
+            ProductRoleInfo info,
+            String institutionType) {
+        org.openapi.quarkus.product_json.model.RoleMapping mapping =
+                new org.openapi.quarkus.product_json.model.RoleMapping();
+        mapping.setRole(role.name());
+        if (institutionType != null) {
+            mapping.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType));
+        }
+        mapping.setPhasesAdditionAllowed(info.getPhasesAdditionAllowed());
+        if (info.getRoles() != null) {
+            mapping.setBackOfficeRoles(info.getRoles().stream().map(productRole -> {
+                org.openapi.quarkus.product_json.model.BackOfficeRole backOfficeRole =
+                        new org.openapi.quarkus.product_json.model.BackOfficeRole();
+                backOfficeRole.setCode(productRole.getCode());
+                return backOfficeRole;
+            }).toList());
+        }
+        return mapping;
     }
 
     @Test

@@ -1,10 +1,13 @@
 package it.pagopa.selfcare.onboarding.client.auth;
 
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MultivaluedMap;
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
 import java.util.List;
 
+@ApplicationScoped
 public class AuthenticationPropagationHeadersFactory implements ClientHeadersFactory {
 
     private static final String AUTHORIZATION = "Authorization";

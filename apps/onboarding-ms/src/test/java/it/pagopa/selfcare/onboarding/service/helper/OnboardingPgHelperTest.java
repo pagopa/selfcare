@@ -26,10 +26,8 @@ import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.UserService;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -44,6 +42,7 @@ import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.BusinessResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.BusinessesResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.LegalVerificationResult;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 @QuarkusTest
@@ -53,7 +52,7 @@ class OnboardingPgHelperTest {
     OnboardingPgHelper onboardingPgHelper;
 
     @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
+    ProductService productService;
 
     @InjectMock
     OnboardingPersistenceHelper persistenceHelper;
@@ -131,8 +130,8 @@ class OnboardingPgHelperTest {
                 anyString(), isNull(), anyString(), isNull(), anyString()))
                 .thenReturn(Multi.createFrom().item(buildPreviousOnboarding()));
 
-        when(productAzureService.getProductIsValid(anyString()))
-                .thenThrow(new ProductNotFoundException("Product prod-pn-pg not found"));
+        when(productService.getValidProduct(anyString(), any()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.Status.NOT_FOUND)));
 
         //when
         UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
@@ -145,14 +144,14 @@ class OnboardingPgHelperTest {
     }
 
     @Test
-    void onboardingUserPg_whenStorageError_propagatesOriginalException() {
+    void onboardingUserPg_whenProductApiError_throwsOnboardingNotAllowedException() {
         //given
         when(persistenceHelper.getOnboardingByFilters(
                 anyString(), isNull(), anyString(), isNull(), anyString()))
                 .thenReturn(Multi.createFrom().item(buildPreviousOnboarding()));
 
-        when(productAzureService.getProductIsValid(anyString()))
-                .thenThrow(new RuntimeException("Azure Blob Storage unreachable"));
+        when(productService.getValidProduct(anyString(), any()))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("product-ms unreachable")));
 
         //when
         UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
@@ -161,7 +160,7 @@ class OnboardingPgHelperTest {
 
         //then
         subscriber.awaitFailure()
-                .assertFailedWith(RuntimeException.class, "Azure Blob Storage unreachable");
+                .assertFailedWith(OnboardingNotAllowedException.class);
     }
 
     // --- onboardingUserPg: checkIfUserIsAlreadyManager ---
@@ -488,11 +487,9 @@ class OnboardingPgHelperTest {
     }
 
     private void mockValidProduct() {
-        Product product = new Product();
-        Map<PartyRole, ProductRoleInfo> roleMappings = new HashMap<>();
-        roleMappings.put(PartyRole.MANAGER, new ProductRoleInfo());
-        product.setRoleMappings(roleMappings);
-        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
+        ProductResponse product = new ProductResponse();
+        product.setProductId("prod-pn-pg");
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
     }
 
     private void mockValidationAndUserRegistry() {
@@ -507,4 +504,3 @@ class OnboardingPgHelperTest {
                 .thenReturn(Uni.createFrom().item(List.of()));
     }
 }
-

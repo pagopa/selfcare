@@ -12,8 +12,6 @@ import it.pagopa.selfcare.onboarding.exception.PayloadTooLargeException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -21,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 import java.util.List;
 import java.util.Objects;
@@ -65,7 +65,7 @@ public class OnboardingUtils {
     public Uni<DocumentContentControllerApi.UploadSignedContractMultipartForm> buildUploadSignedContractRequest(
             Onboarding onboarding,
             boolean skipSignatureVerification,
-            FormItem formItem, Product product, DocumentType documentType, List<String> fiscalCodes,
+            FormItem formItem, ProductResponse product, DocumentType documentType, List<String> fiscalCodes,
             int signingStep) {
         DocumentContentControllerApi.UploadSignedContractMultipartForm request = new DocumentContentControllerApi.UploadSignedContractMultipartForm();
         request.skipSignatureVerification = skipSignatureVerification;
@@ -75,17 +75,17 @@ public class OnboardingUtils {
         if (OnboardingStatus.PENDING_IN_REVIEW.equals(onboarding.getStatus())) {
             request.skipSignerIdentityCheck =
                     Objects.nonNull(product.getSigningConfiguration())
-                            && product.getSigningConfiguration().isSkipSignerIdentityCheck();
+                            && Boolean.TRUE.equals(product.getSigningConfiguration().getSkipSignerIdentityCheck());
         }
 
         String institutionType = onboarding.getInstitution().getInstitutionType().name();
-        ContractTemplate contractTemplate = product.getInstitutionContractTemplate(institutionType);
+        ContractTemplateConfig contractTemplate = ProductConfigUtils.institutionContractTemplate(product, institutionType);
         request.request = DocumentBuilderRequest.builder()
                 .onboardingId(onboarding.getId())
-                .productId(product.getId())
+                .productId(product.getProductId())
                 .documentType(org.openapi.quarkus.document_json.model.DocumentType.fromString(documentType.name()))
-                .templateVersion(contractTemplate.getContractTemplateVersion())
-                .templatePath(contractTemplate.getContractTemplatePath())
+                .templateVersion(contractTemplate.getVersion())
+                .templatePath(contractTemplate.getPath())
                 .fiscalCodes(fiscalCodes)
                 .productTitle(product.getTitle())
                 .build();

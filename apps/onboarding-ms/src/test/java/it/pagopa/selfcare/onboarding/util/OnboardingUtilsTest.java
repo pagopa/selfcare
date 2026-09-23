@@ -21,9 +21,6 @@ import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -35,6 +32,10 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ContractType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 @QuarkusTest
 class OnboardingUtilsTest {
@@ -116,15 +117,15 @@ class OnboardingUtilsTest {
         onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
         onboarding.setStatus(OnboardingStatus.PENDING_IN_REVIEW);
 
-        Product product = new Product();
-        product.setId("productId");
+        ProductResponse product = new ProductResponse();
+        product.setProductId("productId");
         product.setTitle("productTitle");
-        ContractTemplate contractTemplate = new ContractTemplate();
-        contractTemplate.setContractTemplatePath("path");
-        contractTemplate.setContractTemplateVersion("version");
-        Map<String, ContractTemplate> contractMappings = new HashMap<>();
-        contractMappings.put("PA", contractTemplate);
-        product.setInstitutionContractMappings(contractMappings);
+        ContractTemplateConfig contractTemplate = new ContractTemplateConfig();
+        contractTemplate.setPath("path");
+        contractTemplate.setVersion("version");
+        contractTemplate.setContractType(ContractType.CONTRACT);
+        contractTemplate.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.PA);
+        product.setContracts(Collections.singletonList(contractTemplate));
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setSkipSignerIdentityCheck(true);
         product.setSigningConfiguration(signingConfiguration);

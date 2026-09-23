@@ -1,8 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.helper;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
-import static it.pagopa.selfcare.product.utils.ProductUtils.validRoles;
-
 import io.quarkus.mongodb.panache.common.reactive.Panache;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -15,17 +13,18 @@ import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
+import it.pagopa.selfcare.onboarding.service.util.ProductConfigUtils;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
 import it.pagopa.selfcare.onboarding.util.SortEnum;
-import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 
 /**
  * Helper che gestisce la persistenza degli onboarding e
@@ -51,6 +50,8 @@ public class OnboardingPersistenceHelper {
 
     @Inject
     OnboardingRepository onboardingRepository;
+    @Inject
+    ProductService productService;
 
     // -------------------------------------------------------------------------
     // Persistenza onboarding
@@ -61,22 +62,23 @@ public class OnboardingPersistenceHelper {
      * (se presente un parentId) risolve l'institutionId dal prodotto padre.
      */
     public Uni<Onboarding> persistOnboarding(Onboarding onboarding, List<UserRequest> userRequests,
-                                              Product product, List<AggregateInstitutionRequest> aggregates) {
-        log.info("Persist onboarding for: product {}, product parent {}", product.getId(), product.getParentId());
+                                               ProductResponse product, List<AggregateInstitutionRequest> aggregates) {
+        log.info("Persist onboarding for: product {}, product parent {}", product.getProductId(), product.getParentId());
 
-        Map<PartyRole, ProductRoleInfo> roleMappings = resolveRoleMappings(product, onboarding);
+        return resolveRoleMappings(product, onboarding)
+                .onItem().transformToUni(roleMappings -> {
+                    Uni<Onboarding> withInstitutionId = Objects.nonNull(product.getParentId())
+                            ? setInstitutionId(onboarding, product.getParentId())
+                            : Uni.createFrom().item(onboarding);
 
-        Uni<Onboarding> withInstitutionId = Objects.nonNull(product.getParentId())
-                ? setInstitutionId(onboarding, product.getParentId())
-                : Uni.createFrom().item(onboarding);
-
-        if (INTEGRATION_PROFILE.equals(activeProfile)) {
-            return withInstitutionId.onItem().transformToUni(o ->
-                    storeAndValidateOnboarding(o, userRequests, product, aggregates, roleMappings));
-        }
-        return withInstitutionId.onItem().transformToUni(o ->
-                Panache.withTransaction(() ->
-                        storeAndValidateOnboarding(o, userRequests, product, aggregates, roleMappings)));
+                    if (INTEGRATION_PROFILE.equals(activeProfile)) {
+                        return withInstitutionId.onItem().transformToUni(o ->
+                                storeAndValidateOnboarding(o, userRequests, product, aggregates, roleMappings));
+                    }
+                    return withInstitutionId.onItem().transformToUni(o ->
+                            Panache.withTransaction(() ->
+                                    storeAndValidateOnboarding(o, userRequests, product, aggregates, roleMappings)));
+                });
     }
 
     /**
@@ -190,9 +192,9 @@ public class OnboardingPersistenceHelper {
     // -------------------------------------------------------------------------
 
     private Uni<Onboarding> storeAndValidateOnboarding(Onboarding onboarding, List<UserRequest> userRequests,
-                                                         Product product, List<AggregateInstitutionRequest> aggregates,
-                                                         Map<PartyRole, ProductRoleInfo> roleMappings) {
-        List<PartyRole> allowedRoles = validRoles(product, PHASE_ADDITION_ALLOWED.ONBOARDING,
+                                                          ProductResponse product, List<AggregateInstitutionRequest> aggregates,
+                                                          Map<PartyRole, RoleMapping> roleMappings) {
+        List<PartyRole> allowedRoles = ProductConfigUtils.validRoles(product,
                 onboarding.getInstitution().getInstitutionType());
         return onboardingRepository.persist(onboarding)
                 .replaceWith(onboarding)
@@ -208,20 +210,20 @@ public class OnboardingPersistenceHelper {
                                 .replaceWith(persisted));
     }
 
-    private Uni<Void> retrieveAndSetUserAggregatesResources(Onboarding onboarding, Product product,
-                                                              List<AggregateInstitutionRequest> aggregates) {
+    private Uni<Void> retrieveAndSetUserAggregatesResources(Onboarding onboarding, ProductResponse product,
+                                                               List<AggregateInstitutionRequest> aggregates) {
         if (aggregates == null || aggregates.isEmpty()) return Uni.createFrom().voidItem();
 
-        Map<PartyRole, ProductRoleInfo> roleMappings = resolveRoleMappings(product, onboarding);
-
-        return Multi.createFrom().iterable(aggregates)
-                .filter(a -> a.getUsers() != null && !a.getUsers().isEmpty())
-                .onItem().invoke(a -> log.debug("Retrieving user resources for aggregate: {}", a.getTaxCode()))
-                .onItem().transformToUni(a ->
-                        userRegistryHelper.retrieveUserResources(a.getUsers(), roleMappings)
-                                .onFailure().invoke(t -> log.error("Error retrieving user resources for aggregate: {}", a.getTaxCode(), t))
-                                .onItem().invoke(users -> setUsersInAggregate(onboarding, a, users)))
-                .concatenate().onItem().ignoreAsUni();
+        return resolveRoleMappings(product, onboarding)
+                .onItem().transformToUni(roleMappings ->
+                        Multi.createFrom().iterable(aggregates)
+                                .filter(a -> a.getUsers() != null && !a.getUsers().isEmpty())
+                                .onItem().invoke(a -> log.debug("Retrieving user resources for aggregate: {}", a.getTaxCode()))
+                                .onItem().transformToUni(a ->
+                                        userRegistryHelper.retrieveUserResources(a.getUsers(), roleMappings)
+                                                .onFailure().invoke(t -> log.error("Error retrieving user resources for aggregate: {}", a.getTaxCode(), t))
+                                                .onItem().invoke(users -> setUsersInAggregate(onboarding, a, users)))
+                                .concatenate().onItem().ignoreAsUni());
     }
 
     private static void setUsersInAggregate(Onboarding onboarding, AggregateInstitutionRequest aggregate,
@@ -255,10 +257,14 @@ public class OnboardingPersistenceHelper {
                 });
     }
 
-    private static Map<PartyRole, ProductRoleInfo> resolveRoleMappings(Product product, Onboarding onboarding) {
-        return Objects.nonNull(product.getParent())
-                ? product.getParent().getRoleMappings(onboarding.getInstitution().getInstitutionType().name())
-                : product.getRoleMappings(onboarding.getInstitution().getInstitutionType().name());
+    private Uni<Map<PartyRole, RoleMapping>> resolveRoleMappings(ProductResponse product, Onboarding onboarding) {
+        if (Objects.nonNull(product.getParentId())) {
+            return productService.getValidProduct(product.getParentId(), onboarding.getTenantId())
+                    .onItem().transform(parent -> ProductConfigUtils.roleMappings(parent,
+                            onboarding.getInstitution().getInstitutionType()));
+        }
+        return Uni.createFrom().item(ProductConfigUtils.roleMappings(product,
+                onboarding.getInstitution().getInstitutionType()));
     }
 
 }

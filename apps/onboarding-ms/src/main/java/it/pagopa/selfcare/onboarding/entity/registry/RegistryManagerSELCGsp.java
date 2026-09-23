@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.entity.registry;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 import java.util.Objects;
 
@@ -16,7 +16,7 @@ public class RegistryManagerSELCGsp extends RegistryManagerSELC {
     }
 
     @Override
-    public Uni<Onboarding> customValidation(Product product) {
+    public Uni<Onboarding> customValidation(ProductResponse product) {
         return super.customValidation(product)
                 .onItem()
                 .transformToUni(

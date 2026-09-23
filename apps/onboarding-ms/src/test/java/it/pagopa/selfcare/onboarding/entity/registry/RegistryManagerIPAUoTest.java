@@ -11,7 +11,7 @@ import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.party_registry_proxy_json.api.UoApi;
 
@@ -26,7 +26,7 @@ class RegistryManagerIPAUoTest {
         RegistryManagerIPAUo registryManager = new RegistryManagerIPAUo(onboarding, mock(UoApi.class));
 
         // when
-        Uni<Onboarding> result = registryManager.customValidation(mock(Product.class));
+        Uni<Onboarding> result = registryManager.customValidation(mock(ProductResponse.class));
 
         // then
         assertThrows(InvalidRequestException.class, () -> result.await().indefinitely());
@@ -42,7 +42,7 @@ class RegistryManagerIPAUoTest {
         RegistryManagerIPAUo registryManager = new RegistryManagerIPAUo(onboarding, mock(UoApi.class));
 
         // when
-        Uni<Onboarding> result = registryManager.customValidation(mock(Product.class));
+        Uni<Onboarding> result = registryManager.customValidation(mock(ProductResponse.class));
 
         // then
         assertThrows(InvalidRequestException.class, () -> result.await().indefinitely());
@@ -57,7 +57,7 @@ class RegistryManagerIPAUoTest {
         RegistryManagerIPAUo registryManager = new RegistryManagerIPAUo(onboarding, mock(UoApi.class));
 
         // when
-        Uni<Onboarding> result = registryManager.customValidation(mock(Product.class));
+        Uni<Onboarding> result = registryManager.customValidation(mock(ProductResponse.class));
 
         // then
         assertEquals(onboarding, result.await().indefinitely());
@@ -72,7 +72,7 @@ class RegistryManagerIPAUoTest {
         RegistryManagerIPAUo registryManager = new RegistryManagerIPAUo(onboarding, mock(UoApi.class));
 
         // when
-        Uni<Onboarding> result = registryManager.customValidation(mock(Product.class));
+        Uni<Onboarding> result = registryManager.customValidation(mock(ProductResponse.class));
 
         // then
         assertEquals(onboarding, result.await().indefinitely());

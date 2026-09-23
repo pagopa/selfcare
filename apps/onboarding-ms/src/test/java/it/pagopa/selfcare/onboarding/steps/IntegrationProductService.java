@@ -78,6 +78,21 @@ public class IntegrationProductService implements ProductService {
     return Uni.createFrom().item(response);
   }
 
+  @Override
+  public Uni<ProductResponse> getValidProduct(String productId) {
+    return getProduct(productId);
+  }
+
+  @Override
+  public Uni<ProductResponse> getValidProduct(String productId, String tenantId) {
+    return getProduct(productId);
+  }
+
+  @Override
+  public Uni<Integer> getProductExpirationDays(String productId) {
+    return Uni.createFrom().item(30);
+  }
+
   private boolean matches(String ruleValue, Enum<?> requestValue) {
         if (ruleValue == null && requestValue == null) return true;
         if (ruleValue == null || requestValue == null) return false;

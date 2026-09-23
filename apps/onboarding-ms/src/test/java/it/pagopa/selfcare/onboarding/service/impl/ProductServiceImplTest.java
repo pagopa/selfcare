@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.product_json.api.ProductApi;
 import org.openapi.quarkus.product_json.model.InstitutionType;
 import org.openapi.quarkus.product_json.model.Origin;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.openapi.quarkus.product_json.model.WorkflowType;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
@@ -43,7 +44,7 @@ class ProductServiceImplTest {
         WorkflowTypeResponse expected = new WorkflowTypeResponse();
         expected.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
 
-        when(productApi.getWorkflowType(institutionType, origin, productId.getValue()))
+        when(productApi.getWorkflowType(institutionType, origin, productId.getValue(), null))
                 .thenReturn(Uni.createFrom().item(expected));
 
         // When
@@ -54,7 +55,7 @@ class ProductServiceImplTest {
         // Then
         assertNotNull(result);
         assertEquals(WorkflowType.CONTRACT_REGISTRATION, result.getWorkflowType());
-        verify(productApi).getWorkflowType(institutionType, origin, productId.getValue());
+        verify(productApi).getWorkflowType(institutionType, origin, productId.getValue(), null);
         verifyNoMoreInteractions(productApi);
     }
 
@@ -70,7 +71,7 @@ class ProductServiceImplTest {
         doc.setName("Atto costitutivo");
         doc.setRequired(true);
 
-        when(productApi.getRequiredDocuments(productId.getValue(), institutionType, origin))
+        when(productApi.getRequiredDocuments(productId.getValue(), institutionType, origin, null))
                 .thenReturn(Uni.createFrom().item(List.of(doc)));
 
         // When
@@ -83,7 +84,7 @@ class ProductServiceImplTest {
         assertEquals(1, result.size());
         assertEquals("doc-1", result.get(0).getId());
         assertEquals("Atto costitutivo", result.get(0).getName());
-        verify(productApi).getRequiredDocuments(productId.getValue(), institutionType, origin);
+        verify(productApi).getRequiredDocuments(productId.getValue(), institutionType, origin, null);
         verifyNoMoreInteractions(productApi);
     }
 
@@ -96,7 +97,7 @@ class ProductServiceImplTest {
 
         Response expectedResponse = Response.ok().header("X-Required-Documents-Enabled", "true").build();
 
-        when(productApi.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin))
+        when(productApi.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin, null))
                 .thenReturn(Uni.createFrom().item(expectedResponse));
 
         // When
@@ -107,7 +108,21 @@ class ProductServiceImplTest {
         // Then
         assertNotNull(result);
         assertEquals(Boolean.TRUE, result);
-        verify(productApi).isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin);
+        verify(productApi).isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin, null);
         verifyNoMoreInteractions(productApi);
+    }
+
+    @Test
+    void getValidProduct_shouldPropagateExplicitTenantHeader() {
+        ProductResponse expected = new ProductResponse();
+        expected.setProductId("prod-io");
+        when(productApi.getValidProductById("prod-io", "PNPG"))
+                .thenReturn(Uni.createFrom().item(expected));
+
+        ProductResponse result = productService.getValidProduct("prod-io", "PNPG")
+                .await().indefinitely();
+
+        assertEquals(expected, result);
+        verify(productApi).getValidProductById("prod-io", "PNPG");
     }
 }

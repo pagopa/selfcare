@@ -12,10 +12,10 @@ import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.util.WorkflowTypeResolver;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -29,9 +29,6 @@ class WorkflowTypeResolverTest {
     WorkflowTypeResolver workflowTypeResolver;
 
     @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
-
-    @InjectMock
     ProductService productService;
 
     @Test
@@ -42,11 +39,11 @@ class WorkflowTypeResolverTest {
         onboarding.setInstitution(buildInstitution(InstitutionType.PA, Origin.IPA));
         onboarding.setIsAggregator(false);
 
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setRequiredSignatures(2);
         product.setSigningConfiguration(signingConfiguration);
-        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -64,11 +61,11 @@ class WorkflowTypeResolverTest {
         onboarding.setInstitution(buildInstitution(InstitutionType.PA, Origin.IPA));
         onboarding.setIsAggregator(false);
 
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setRequiredSignatures(1);
         product.setSigningConfiguration(signingConfiguration);
-        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
 
         WorkflowTypeResponse response = new WorkflowTypeResponse();
         response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
@@ -90,8 +87,8 @@ class WorkflowTypeResolverTest {
         onboarding.setInstitution(buildInstitution(InstitutionType.PT, Origin.IPA));
         onboarding.setIsAggregator(false);
 
-        Product product = new Product();
-        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
+        ProductResponse product = new ProductResponse();
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)
@@ -109,8 +106,8 @@ class WorkflowTypeResolverTest {
         onboarding.setInstitution(buildInstitution(InstitutionType.PA, Origin.IPA));
         onboarding.setIsAggregator(true);
 
-        Product product = new Product();
-        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
+        ProductResponse product = new ProductResponse();
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
 
         //when
         UniAssertSubscriber<WorkflowType> subscriber = workflowTypeResolver.resolve(onboarding)

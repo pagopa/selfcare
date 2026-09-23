@@ -1366,6 +1366,12 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "X-Tenant-Id",
+          "in" : "header",
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1514,6 +1520,12 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "X-Tenant-Id",
+          "in" : "header",
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1631,8 +1643,14 @@
         "tags" : [ "Product" ],
         "parameters" : [ {
           "name" : "productId",
-          "in" : "path",
           "required" : true,
+          "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-Tenant-Id",
+          "in" : "header",
           "schema" : {
             "type" : "string"
           }
@@ -1706,6 +1724,12 @@
           "in" : "query",
           "schema" : {
             "$ref" : "#/components/schemas/Origin"
+          }
+        }, {
+          "name" : "X-Tenant-Id",
+          "in" : "header",
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -1790,6 +1814,12 @@
           "in" : "query",
           "schema" : {
             "$ref" : "#/components/schemas/Origin"
+          }
+        }, {
+          "name" : "X-Tenant-Id",
+          "in" : "header",
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -1916,6 +1946,12 @@
           "name" : "productId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "X-Tenant-Id",
+          "in" : "header",
           "schema" : {
             "type" : "string"
           }

@@ -100,8 +100,10 @@ class OnboardingServiceDefaultTest {
     @RestClient
     InsuranceCompaniesApi insuranceCompaniesApi;
 
-    @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
+    it.pagopa.selfcare.product.service.ProductService productAzureService =
+            org.mockito.Mockito.mock(it.pagopa.selfcare.product.service.ProductService.class);
+
+    private final Map<String, Product> productFixtures = new HashMap<>();
 
     @InjectMock
     ProductService productService;
@@ -238,6 +240,7 @@ class OnboardingServiceDefaultTest {
         when(tenantContext.requiredTenantId()).thenReturn("AR");
         when(tenantContext.getTenantId()).thenReturn("AR");
         when(tenantContext.isInitialized()).thenReturn(true);
+        productFixtures.clear();
         when(productService.getWorkflowType(any(), any(), any()))
                 .thenAnswer(invocation -> {
                     org.openapi.quarkus.product_json.model.Origin origin = invocation.getArgument(1);
@@ -249,6 +252,132 @@ class OnboardingServiceDefaultTest {
                     }
                     return Uni.createFrom().item(response);
                 });
+        when(productService.getWorkflowType(any(), any(), any(), nullable(String.class)))
+                .thenAnswer(invocation -> productService.getWorkflowType(
+                        invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+        when(productService.getValidProduct(anyString())).thenAnswer(invocation ->
+                productResponse(() -> validProduct(invocation.getArgument(0))));
+        when(productService.getValidProduct(anyString(), any())).thenAnswer(invocation ->
+                productResponse(() -> validProduct(invocation.getArgument(0))));
+        when(productService.getProduct(anyString())).thenAnswer(invocation ->
+                productResponse(() -> {
+                    String productId = invocation.getArgument(0);
+                    Product product = productAzureService.getProduct(productId);
+                    return product != null ? product : productFixtures.get(productId);
+                }));
+        when(productService.getProductExpirationDays(anyString())).thenAnswer(invocation -> {
+            Integer days = productAzureService.getProductExpirationDate(invocation.getArgument(0));
+            return Uni.createFrom().item(days != null ? days : 30);
+        });
+        when(productService.getProduct(anyString(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getProduct(invocation.getArgument(0)));
+        when(productService.getProductExpirationDays(anyString(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getProductExpirationDays(invocation.getArgument(0)));
+        when(productService.isRequiredDocuments(any(), any(), any(), nullable(String.class))).thenAnswer(invocation ->
+                productService.isRequiredDocuments(invocation.getArgument(0), invocation.getArgument(1),
+                        invocation.getArgument(2)));
+        when(productService.getRequiredDocuments(any(), any(), any(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getRequiredDocuments(invocation.getArgument(0), invocation.getArgument(1),
+                        invocation.getArgument(2)));
+    }
+
+    private Uni<org.openapi.quarkus.product_json.model.ProductResponse> productResponse(java.util.function.Supplier<Product> supplier) {
+        try {
+            Product product = supplier.get();
+            rememberProduct(product);
+            return Uni.createFrom().item(toProductResponse(product));
+        } catch (Throwable throwable) {
+            return Uni.createFrom().failure(throwable);
+        }
+    }
+
+    private Product validProduct(String productId) {
+        Product product = productAzureService.getProductIsValid(productId);
+        return product != null ? product : productFixtures.get(productId);
+    }
+
+    private void rememberProduct(Product product) {
+        if (product != null && product.getId() != null) {
+            productFixtures.put(product.getId(), product);
+            if (product.getParent() != null && product.getParent().getId() != null) {
+                productFixtures.put(product.getParent().getId(), product.getParent());
+            }
+        }
+    }
+
+    private org.openapi.quarkus.product_json.model.ProductResponse toProductResponse(Product product) {
+        if (product == null) {
+            return null;
+        }
+        org.openapi.quarkus.product_json.model.ProductResponse response =
+                new org.openapi.quarkus.product_json.model.ProductResponse();
+        response.setProductId(product.getId());
+        response.setParentId(product.getParentId());
+        response.setTitle(product.getTitle());
+        response.setTestEnvProductIds(product.getTestEnvProductIds());
+        response.setInstitutionTypesAllowed(product.getInstitutionTypesAllowed());
+        org.openapi.quarkus.product_json.model.Features features =
+                new org.openapi.quarkus.product_json.model.Features();
+        features.setAllowIndividualOnboarding(product.isAllowIndividualOnboarding());
+        features.setAllowCompanyOnboarding(product.isAllowCompanyOnboarding());
+        features.setDelegable(product.isDelegable());
+        features.setEnabled(product.isEnabled());
+        features.setExpirationDays(product.getExpirationDate());
+        features.setAllowedInstitutionTaxCode(product.getAllowedInstitutionTaxCode());
+        response.setFeatures(features);
+        if (product.getSigningConfiguration() != null) {
+            org.openapi.quarkus.product_json.model.SigningConfiguration signingConfiguration =
+                    new org.openapi.quarkus.product_json.model.SigningConfiguration();
+            signingConfiguration.setRequiredSignatures(product.getSigningConfiguration().getRequiredSignatures());
+            signingConfiguration.setSkipSignerIdentityCheck(product.getSigningConfiguration().isSkipSignerIdentityCheck());
+            response.setSigningConfiguration(signingConfiguration);
+        }
+        List<org.openapi.quarkus.product_json.model.RoleMapping> roleMappings = new ArrayList<>();
+        Optional.ofNullable(product.getRoleMappings(null))
+                .ifPresent(mappings -> mappings.forEach((role, info) ->
+                        roleMappings.add(toRoleMapping(role, info, null))));
+        Optional.ofNullable(product.getRoleMappingsByInstitutionType())
+                .ifPresent(mappingsByInstitutionType -> mappingsByInstitutionType.forEach((institutionType, mappings) ->
+                        mappings.forEach((role, info) -> roleMappings.add(toRoleMapping(role, info, institutionType)))));
+        response.setRoleMappings(roleMappings);
+        if (product.getInstitutionContractMappings() != null) {
+            response.setContracts(product.getInstitutionContractMappings().entrySet().stream().map(entry -> {
+                org.openapi.quarkus.product_json.model.ContractTemplateConfig contract =
+                        new org.openapi.quarkus.product_json.model.ContractTemplateConfig();
+                if (!Product.CONTRACT_TYPE_DEFAULT.equals(entry.getKey())) {
+                    contract.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(entry.getKey()));
+                }
+                contract.setContractType(org.openapi.quarkus.product_json.model.ContractType.CONTRACT);
+                contract.setPath(entry.getValue().getContractTemplatePath());
+                contract.setVersion(entry.getValue().getContractTemplateVersion());
+                return contract;
+            }).toList());
+        }
+        return response;
+    }
+
+    private org.openapi.quarkus.product_json.model.RoleMapping toRoleMapping(
+            PartyRole role,
+            ProductRoleInfo info,
+            String institutionType) {
+        org.openapi.quarkus.product_json.model.RoleMapping mapping =
+                new org.openapi.quarkus.product_json.model.RoleMapping();
+        mapping.setRole(role.name());
+        if (institutionType != null) {
+            mapping.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType));
+        }
+        mapping.setPhasesAdditionAllowed(info.getPhasesAdditionAllowed());
+        if (info.getRoles() != null) {
+            mapping.setBackOfficeRoles(info.getRoles().stream().map(productRole -> {
+                org.openapi.quarkus.product_json.model.BackOfficeRole backOfficeRole =
+                        new org.openapi.quarkus.product_json.model.BackOfficeRole();
+                backOfficeRole.setCode(productRole.getCode());
+                backOfficeRole.setLabel(productRole.getLabel());
+                backOfficeRole.setDescription(productRole.getDescription());
+                return backOfficeRole;
+            }).toList());
+        }
+        return mapping;
     }
 
     @Test
@@ -1579,6 +1708,7 @@ class OnboardingServiceDefaultTest {
         if (hasParent) {
             Product parent = new Product();
             parent.setId("productParentId");
+            parent.setEnabled(true);
             parent.setRoleMappings(Map.of(manager.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_CODE)));
             productResource.setParentId(parent.getId());
             productResource.setParent(parent);
@@ -2188,7 +2318,7 @@ class OnboardingServiceDefaultTest {
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -2325,7 +2455,7 @@ class OnboardingServiceDefaultTest {
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -2367,7 +2497,7 @@ class OnboardingServiceDefaultTest {
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -2434,8 +2564,8 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
 
-        asserter.execute(() ->
-            when(productAzureService.isProductEnabled(anyString())).thenReturn(false));
+        asserter.execute(() -> when(productService.getValidProduct(eq(onboarding.getProductId()), any()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(404).build()))));
 
         asserter.assertFailedWith(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 OnboardingNotAllowedException.class);
@@ -4995,7 +5125,7 @@ class OnboardingServiceDefaultTest {
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
