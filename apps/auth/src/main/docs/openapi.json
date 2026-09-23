@@ -6,6 +6,8 @@
     "name" : "OTP"
   }, {
     "name" : "SAML"
+  }, {
+    "name" : "support"
   } ],
   "components" : {
     "schemas" : {
@@ -336,7 +338,7 @@
         "summary" : "Get OTP information",
         "description" : "Retrieve OTP information for a user",
         "operationId" : "getOtpInfo",
-        "tags" : [ "OTP" ],
+        "tags" : [ "support", "OTP" ],
         "parameters" : [ {
           "name" : "status",
           "in" : "query",
@@ -401,7 +403,7 @@
         "summary" : "Get OTP mail information",
         "description" : "Retrieve the processing status of an email managed by OneMail",
         "operationId" : "getOtpMailInfo",
-        "tags" : [ "OTP" ],
+        "tags" : [ "support", "OTP" ],
         "parameters" : [ {
           "name" : "mailRequestId",
           "in" : "path",
