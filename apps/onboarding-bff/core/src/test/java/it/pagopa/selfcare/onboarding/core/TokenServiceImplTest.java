@@ -2,7 +2,6 @@ package it.pagopa.selfcare.onboarding.core;
 
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
@@ -10,7 +9,6 @@ import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import it.pagopa.selfcare.product.entity.ContractTemplate;
@@ -328,59 +326,6 @@ public class TokenServiceImplTest {
         //then
         verify(documentMsConnector, times(1))
                 .getAggregatesCsv(onboardingId, productId);
-    }
-
-    @Test
-    void verifyAllowedUserByRoleTest() {
-        //given
-        final String onboardingId = "onboardingId";
-        final String uid = "uid1";
-        OnboardingData onboardingData = new OnboardingData();
-
-        User userManager = new User();
-        userManager.setRole(PartyRole.MANAGER);
-        userManager.setId(uid);
-
-        User userDelegate = new User();
-        userDelegate.setRole(PartyRole.DELEGATE);
-        userDelegate.setId("uid2");
-
-        onboardingData.setUsers(List.of(userManager, userDelegate));
-
-        when(onboardingMsConnector.getOnboardingWithUserInfo(anyString())).thenReturn(onboardingData);
-
-        // when
-        boolean result = tokenService.verifyAllowedUserByRole(onboardingId, uid);
-
-        //then
-        assertTrue(result);
-        verify(onboardingMsConnector, times(1))
-            .getOnboardingWithUserInfo(anyString());
-    }
-
-    @Test
-    void verifyAllowedUserByRoleTest_CaseKO() {
-        //given
-        final String onboardingId = "onboardingId";
-        final String uid = "uid1";
-
-        OnboardingData onboardingData = new OnboardingData();
-
-        User user = new User();
-        user.setRole(PartyRole.DELEGATE);
-        user.setId("uid2");
-
-        onboardingData.setUsers(List.of(user));
-
-        when(onboardingMsConnector.getOnboardingWithUserInfo(anyString())).thenReturn(onboardingData);
-
-        // when
-        boolean result = tokenService.verifyAllowedUserByRole(onboardingId, uid);
-
-        //then
-        assertFalse(result);
-        verify(onboardingMsConnector, times(1))
-            .getOnboardingWithUserInfo(anyString());
     }
 
     private OnboardingData mockAttachmentContext(String onboardingId, String productId, String filename, String templatePath) {

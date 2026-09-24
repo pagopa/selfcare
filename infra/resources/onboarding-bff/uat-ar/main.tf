@@ -44,7 +44,6 @@ locals {
     "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
     "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
     "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
-    "USER-ALLOWED-LIST"                      = "user-allowed-list"
   }
 }
 

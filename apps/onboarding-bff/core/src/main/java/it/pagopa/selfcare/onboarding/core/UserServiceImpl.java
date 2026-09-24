@@ -18,7 +18,6 @@ import it.pagopa.selfcare.onboarding.connector.model.user.CertifiedField;
 import it.pagopa.selfcare.onboarding.connector.model.user.UserId;
 import it.pagopa.selfcare.onboarding.core.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedException;
-import it.pagopa.selfcare.onboarding.core.strategy.UserAllowedValidationStrategy;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -38,16 +37,14 @@ public class UserServiceImpl implements UserService {
     private final UserRegistryConnector userRegistryConnector;
     private final OnboardingMsConnector onboardingMsConnector;
     private final PgManagerVerifier pgManagerVerifier;
-    private final UserAllowedValidationStrategy userAllowedValidationStrategy;
 
     @Autowired
     public UserServiceImpl(UserRegistryConnector userRegistryConnector,
                            OnboardingMsConnector onboardingMsConnector,
-                           PgManagerVerifier pgManagerVerifier, UserAllowedValidationStrategy userAllowedValidationStrategy) {
+                           PgManagerVerifier pgManagerVerifier) {
         this.userRegistryConnector = userRegistryConnector;
         this.onboardingMsConnector = onboardingMsConnector;
         this.pgManagerVerifier = pgManagerVerifier;
-        this.userAllowedValidationStrategy = userAllowedValidationStrategy;
     }
 
     @Override
@@ -138,12 +135,6 @@ public class UserServiceImpl implements UserService {
         log.trace("getManagerInfo end");
         return managerInfo;
     }
-
-  @Override
-  public boolean isAllowedUserByUid(String uid) {
-      log.trace("isAllowedUser for {}", uid);
-      return userAllowedValidationStrategy.isAuthorizedUser(uid);
-  }
 
     @Override
     public UserId searchUser(String taxCode) {

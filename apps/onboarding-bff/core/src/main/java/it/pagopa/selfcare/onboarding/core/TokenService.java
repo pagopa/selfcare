@@ -32,8 +32,6 @@ public interface TokenService {
 
   Resource getAggregatesCsv(String onboardingId, String productId);
 
-  boolean verifyAllowedUserByRole(String onboardingId, String uid);
-
   void uploadAttachment(String onboardingId, MultipartFile attachment,
                         String attachmentName, String attachmentId, String attachmentDescription);
 

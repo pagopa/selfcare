@@ -181,13 +181,6 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public boolean verifyAllowedUserByRole(String onboardingId, String uid) {
-        log.trace("verifyAllowedUserRole for {} - {}", onboardingId, uid);
-        OnboardingData onboardingData = getOnboardingWithUserInfo(onboardingId);
-        return onboardingData.getUsers().stream().anyMatch(user -> uid.equalsIgnoreCase(user.getId()));
-    }
-
-    @Override
     public void uploadAttachment(String onboardingId, MultipartFile attachment,
                                  String attachmentName, String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
