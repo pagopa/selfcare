@@ -32,9 +32,3 @@ The BFF exposes `GET /v2/institutions/ipa/{taxCode}` for an exact IPA tax-code l
 |feign.client.config.user-registry.connectTimeout|USERVICE_USER_REGISTRY_REST_CLIENT_CONNECT_TIMEOUT<br>REST_CLIENT_CONNECT_TIMEOUT|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/connector/rest/src/main/resources/config/user-registry-rest-client.properties)| yes |
 |feign.client.config.user-registry.readTimeout|USERVICE_USER_REGISTRY_REST_CLIENT_READ_TIMEOUT<br>REST_CLIENT_READ_TIMEOUT|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/connector/rest/src/main/resources/config/user-registry-rest-client.properties)| yes |
 |feign.client.config.user-registry.loggerLevel|USERVICE_USER_REGISTRY_REST_CLIENT_LOGGER_LEVEL<br>REST_CLIENT_LOGGER_LEVEL|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/connector/rest/src/main/resources/config/user-registry-rest-client.properties)| yes |
-
-
-#### Core Configurations
-
-| **Property** | **Enviroment Variable** | **Default** | **Required** |
-|--------------|-------------------------|-------------|:------------:|
