@@ -12,7 +12,7 @@ L'immagine ha il tenant registry di produzione come default; richiede uno storag
 
 ### Correzione
 
-`test-onboarding-ms.env` imposta un tenant registry test con entrambi i tenant, connessioni Mongo dedicate e connection string Azurite dedicate a `products`.
+`test-onboarding-ms.env` imposta un tenant registry test con entrambi i tenant, collegati al database fixture `selcOnboarding`, e connection string Azurite dedicate a `products`.
 
 ### Verifica
 
