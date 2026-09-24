@@ -7,6 +7,10 @@ The BFF exposes `GET /v2/institutions/ipa/{taxCode}` for an exact IPA tax-code l
 
 ## Configuration Properties
 
+### Integration-test tenant registry
+
+The integration-test `onboarding-ms` container uses `TENANT_REGISTRY_JSON` with the AR and PNPG tenants. Its `products` storage is mapped to the Azurite `products` container through `BLOB_STORAGE_CONN_STRING_AR` and `BLOB_STORAGE_CONN_STRING_PNPG`; keep those variables aligned with the test fixture.
+
 #### Application properties
 
 | **Property** | **Enviroment Variable** | **Default** | **Required** |
