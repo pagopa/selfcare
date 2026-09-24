@@ -18,16 +18,16 @@ locals {
 
   dkim_aws_ses_areariservata_pagopa_it = [
     {
-      "name"  = "jhxmcfdewlxudlkkwf7zqmbcyh7gxfqi._domainkey"
-      "value" = "jhxmcfdewlxudlkkwf7zqmbcyh7gxfqi.dkim.eu-south-1.amazonses.com"
+      "name"  = "yq3qqke7xsdo7yae5bueiqeftuiettok._domainkey"
+      "value" = "yq3qqke7xsdo7yae5bueiqeftuiettok.dkim.eu-south-1.amazonses.com"
     },
     {
-      "name"  = "ziwig3w7kxrs22pp57pgva6gwgrrvsxt._domainkey"
-      "value" = "ziwig3w7kxrs22pp57pgva6gwgrrvsxt.dkim.eu-south-1.amazonses.com"
+      "name"  = "re45zcfiwgzn4jfxm5x6rqlj4gjm7fa5._domainkey"
+      "value" = "re45zcfiwgzn4jfxm5x6rqlj4gjm7fa5.dkim.eu-south-1.amazonses.com"
     },
     {
-      "name"  = "fpkweq37v2mlearalahfhfy4nwuzoiyv._domainkey"
-      "value" = "fpkweq37v2mlearalahfhfy4nwuzoiyv.dkim.eu-south-1.amazonses.com"
+      "name"  = "vuq3zzf6uvt3cpzj6hhhvvvcajfa6zpw._domainkey"
+      "value" = "vuq3zzf6uvt3cpzj6hhhvvvcajfa6zpw.dkim.eu-south-1.amazonses.com"
     }
   ]
 }
@@ -329,7 +329,7 @@ resource "azurerm_dns_caa_record" "caa_areariservata" {
 
 resource "azurerm_dns_mx_record" "dns-mx-email-areariservata-pagopa-it" {
   count               = var.env_short == "p" ? 1 : 0
-  name                = "email"
+  name                = "bounce"
   zone_name           = azurerm_dns_zone.areariservata_public[0].name
   resource_group_name = var.rg_vnet_name
   ttl                 = var.dns_default_ttl_sec
@@ -342,7 +342,7 @@ resource "azurerm_dns_mx_record" "dns-mx-email-areariservata-pagopa-it" {
 
 resource "azurerm_dns_txt_record" "dns-txt-email-areariservata-pagopa-it-aws-ses" {
   count               = var.env_short == "p" ? 1 : 0
-  name                = "email"
+  name                = "bounce"
   zone_name           = azurerm_dns_zone.areariservata_public[0].name
   resource_group_name = var.rg_vnet_name
   ttl                 = var.dns_default_ttl_sec
@@ -352,6 +352,20 @@ resource "azurerm_dns_txt_record" "dns-txt-email-areariservata-pagopa-it-aws-ses
   tags = var.tags
 }
 
+resource "azurerm_dns_txt_record" "dns-txt-dmarc-areariservata-pagopa-it-aws-ses" {
+  count               = var.env_short == "p" ? 1 : 0
+  name                = "_dmarc"
+  zone_name           = azurerm_dns_zone.areariservata_public[0].name
+  resource_group_name = var.rg_vnet_name
+  ttl                 = var.dns_default_ttl_sec
+  record {
+    value = "v=DMARC1; p=quarantine; adkim=s; aspf=s; fo=1; rua=mailto:dmarc@0f1qy7b5.uriports.com;"
+  }
+  tags = var.tags
+}
+
+
+/*
 resource "azurerm_dns_txt_record" "dns-txt-areariservata-pagopa-it-aws-ses" {
   count               = var.env_short == "p" ? 1 : 0
   name                = "_amazonses"
@@ -363,6 +377,7 @@ resource "azurerm_dns_txt_record" "dns-txt-areariservata-pagopa-it-aws-ses" {
   }
   tags = var.tags
 }
+*/
 
 resource "azurerm_dns_cname_record" "dkim-aws-ses-areariservata-pagopa-it" {
   for_each            = var.env_short == "p" ? { for d in local.dkim_aws_ses_areariservata_pagopa_it : d.name => d } : {}
