@@ -2520,6 +2520,20 @@
           }
         } ],
         "responses" : {
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "format" : "byte"
+                  }
+                }
+              }
+            }
+          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -2712,6 +2726,20 @@
           }
         } ],
         "responses" : {
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "format" : "byte"
+                  }
+                }
+              }
+            }
+          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -3519,8 +3547,8 @@
         }, {
           "name" : "category",
           "in" : "query",
+          "description" : "One IPA category code or a comma-separated list of IPA category codes.",
           "required" : false,
-          "description" : "One IPA category code or a comma-separated list of category codes.",
           "schema" : {
             "type" : "string"
           }
@@ -3620,8 +3648,8 @@
         }, {
           "name" : "category",
           "in" : "query",
+          "description" : "One IPA category code or a comma-separated list of IPA category codes.",
           "required" : false,
-          "description" : "One IPA category code or a comma-separated list of category codes.",
           "schema" : {
             "type" : "string"
           }
@@ -3637,8 +3665,41 @@
               }
             }
           },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
           "404" : {
             "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "application/problem+json" : {
                 "schema" : {

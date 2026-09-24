@@ -2428,6 +2428,17 @@
               }
             }
           },
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
           "404" : {
             "description" : "Not Found",
             "content" : {
@@ -2498,6 +2509,17 @@
           },
           "401" : {
             "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
