@@ -212,6 +212,10 @@ locals {
     {
       name  = "ONE_MAIL_URL"
       value = "https://uat.onemail.pagopa.it"
+    },
+    {
+      name  = "MAIL_ENABLED"
+      value = false
     }
   ]
 
