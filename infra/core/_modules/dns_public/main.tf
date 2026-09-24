@@ -340,9 +340,34 @@ resource "azurerm_dns_mx_record" "dns-mx-email-areariservata-pagopa-it" {
   tags = var.tags
 }
 
+resource "azurerm_dns_mx_record" "dns-mx-email-euc-areariservata-pagopa-it" {
+  count               = var.env_short == "p" ? 1 : 0
+  name                = "bounce.euc1"
+  zone_name           = azurerm_dns_zone.areariservata_public[0].name
+  resource_group_name = var.rg_vnet_name
+  ttl                 = var.dns_default_ttl_sec
+  record {
+    preference = 10
+    exchange   = "feedback-smtp.eu-central-1.amazonses.com"
+  }
+  tags = var.tags
+}
+
 resource "azurerm_dns_txt_record" "dns-txt-email-areariservata-pagopa-it-aws-ses" {
   count               = var.env_short == "p" ? 1 : 0
   name                = "bounce"
+  zone_name           = azurerm_dns_zone.areariservata_public[0].name
+  resource_group_name = var.rg_vnet_name
+  ttl                 = var.dns_default_ttl_sec
+  record {
+    value = "v=spf1 include:amazonses.com -all"
+  }
+  tags = var.tags
+}
+
+resource "azurerm_dns_txt_record" "dns-txt-email-euc-areariservata-pagopa-it-aws-ses" {
+  count               = var.env_short == "p" ? 1 : 0
+  name                = "bounce.euc1"
   zone_name           = azurerm_dns_zone.areariservata_public[0].name
   resource_group_name = var.rg_vnet_name
   ttl                 = var.dns_default_ttl_sec
