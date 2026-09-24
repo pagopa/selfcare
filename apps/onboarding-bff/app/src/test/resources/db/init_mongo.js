@@ -3,6 +3,7 @@ db = db.getSiblingDB("selcOnboarding");
 db.onboardings.insertMany([
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i103",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -37,6 +38,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i105",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -72,6 +74,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i110",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -107,6 +110,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i122",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -141,6 +145,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i1022",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -175,6 +180,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i10222",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -209,6 +215,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i123",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -238,6 +245,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i1000",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -267,6 +275,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "37f7609b-5a4b-4200-82e7-2117756d64aa",
+    tenantId: "AR",
     billing: {
       publicServices: false,
       vatNumber: "08875230016",
@@ -303,6 +312,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "30452bc5-2051-45db-8958-1ab0e25ccd99",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -332,6 +342,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "ac986657-2d5f-4e0f-bf0c-8953d3d8598c",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -361,6 +372,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "8b45369f-3ea9-468f-8a1f-4c2f18c23ce0",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -390,6 +402,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "a9609461-a99b-404f-8ed9-c9c2d2e7e416",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -419,6 +432,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "312affae-1382-4480-b63a-9883556d35ee",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -448,6 +462,7 @@ db.onboardings.insertMany([
   },
   {
     _id: "382ac4ff-03b1-4d98-bb06-f4bbd3335654",
+    tenantId: "AR",
     createdAt: ISODate("2024-10-18T12:24:50.050Z"),
     institution: {
       address: "sede leg",
@@ -480,6 +495,7 @@ db.onboardings.insertMany([
 db.tokens.insertMany([
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i103",
+    tenantId: "AR",
     onboardingId: "89ad7142-24bb-48ad-8504-9c9231137i103",
     type: "INSTITUTION",
     productId: "prod-io",
@@ -491,6 +507,7 @@ db.tokens.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i105",
+    tenantId: "AR",
     onboardingId: "89ad7142-24bb-48ad-8504-9c9231137i105",
     type: "INSTITUTION",
     productId: "prod-io",
@@ -501,6 +518,7 @@ db.tokens.insertMany([
   },
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137i122",
+    tenantId: "AR",
     onboardingId: "89ad7142-24bb-48ad-8504-9c9231137i122",
     type: "INSTITUTION",
     productId: "prod-io",
