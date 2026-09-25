@@ -15,14 +15,14 @@ No requirements.
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_dns_forwarder"></a> [dns\_forwarder](#module\_dns\_forwarder) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image | v9.6.1 |
-| <a name="module_dns_forwarder_pair_subnet"></a> [dns\_forwarder\_pair\_subnet](#module\_dns\_forwarder\_pair\_subnet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v9.6.1 |
-| <a name="module_dns_forwarder_pair_vpn"></a> [dns\_forwarder\_pair\_vpn](#module\_dns\_forwarder\_pair\_vpn) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm | v9.6.1 |
-| <a name="module_dns_forwarder_snet"></a> [dns\_forwarder\_snet](#module\_dns\_forwarder\_snet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v9.6.1 |
-| <a name="module_dns_forwarder_vpn"></a> [dns\_forwarder\_vpn](#module\_dns\_forwarder\_vpn) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm | v9.6.1 |
-| <a name="module_vpn"></a> [vpn](#module\_vpn) | github.com/pagopa/terraform-azurerm-v4.git//vpn_gateway | v9.6.1 |
-| <a name="module_vpn_pair_dns_forwarder"></a> [vpn\_pair\_dns\_forwarder](#module\_vpn\_pair\_dns\_forwarder) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image | v9.6.1 |
-| <a name="module_vpn_snet"></a> [vpn\_snet](#module\_vpn\_snet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v9.6.1 |
+| <a name="module_dns_forwarder"></a> [dns\_forwarder](#module\_dns\_forwarder) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image | v10.33.2 |
+| <a name="module_dns_forwarder_pair_subnet"></a> [dns\_forwarder\_pair\_subnet](#module\_dns\_forwarder\_pair\_subnet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v10.33.2 |
+| <a name="module_dns_forwarder_pair_vpn"></a> [dns\_forwarder\_pair\_vpn](#module\_dns\_forwarder\_pair\_vpn) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm | v10.33.2 |
+| <a name="module_dns_forwarder_snet"></a> [dns\_forwarder\_snet](#module\_dns\_forwarder\_snet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v10.33.2 |
+| <a name="module_dns_forwarder_vpn"></a> [dns\_forwarder\_vpn](#module\_dns\_forwarder\_vpn) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm | v10.33.2 |
+| <a name="module_vpn"></a> [vpn](#module\_vpn) | github.com/pagopa/terraform-azurerm-v4.git//vpn_gateway | v10.33.2 |
+| <a name="module_vpn_pair_dns_forwarder"></a> [vpn\_pair\_dns\_forwarder](#module\_vpn\_pair\_dns\_forwarder) | git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image | v10.33.2 |
+| <a name="module_vpn_snet"></a> [vpn\_snet](#module\_vpn\_snet) | github.com/pagopa/terraform-azurerm-v4.git//subnet | v10.33.2 |
 
 ## Resources
 
