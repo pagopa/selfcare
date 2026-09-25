@@ -34,6 +34,7 @@
 | <a name="module_dns_private"></a> [dns\_private](#module\_dns\_private) | ../_modules/dns_private | n/a |
 | <a name="module_dns_public"></a> [dns\_public](#module\_dns\_public) | ../_modules/dns_public | n/a |
 | <a name="module_events"></a> [events](#module\_events) | ../_modules/events | n/a |
+| <a name="module_internal_events"></a> [internal\_events](#module\_internal\_events) | ../_modules/internal_events | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ../_modules/key_vault | n/a |
 | <a name="module_log_analytics"></a> [log\_analytics](#module\_log\_analytics) | ../_modules/log_analytics | n/a |
 | <a name="module_logs_storage"></a> [logs\_storage](#module\_logs\_storage) | ../_modules/storage_account_template | n/a |

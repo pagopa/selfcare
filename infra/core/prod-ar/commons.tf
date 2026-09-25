@@ -875,8 +875,8 @@ module "user_managed_identity" {
 module "internal_events" {
   source = "../_modules/internal_events"
 
-  location                  = local.location
-  env_short                 = local.env_short
-  domain                    = local.app_domain
-  tags                      = local.tags
+  location  = local.location
+  env_short = local.env_short
+  domain    = local.app_domain
+  tags      = local.tags
 }
