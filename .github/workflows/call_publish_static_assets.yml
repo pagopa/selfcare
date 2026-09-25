@@ -64,7 +64,7 @@ jobs:
         fetch-depth: 0
 
     - name: Cloud Login
-      uses: pagopa/dx/actions/csp-login@main
+      uses: pagopa/dx/actions/csp-login@36ff122137235d814f3dbd20068acfb521d3fd74 # main
 
     - name: Upload static assets to blob storage
       run: |
