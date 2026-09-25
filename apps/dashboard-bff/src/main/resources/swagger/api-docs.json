@@ -4270,6 +4270,9 @@
           "userRole" : {
             "type" : "string"
           },
+          "userPartnerTechRole" : {
+            "type" : "boolean"
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "ACTIVE", "PENDING", "TOBEVALIDATED", "SUSPENDED", "DELETED", "REJECTED" ]
@@ -4295,7 +4298,7 @@
           "originId" : {
             "type" : "string"
           },
-          "isPartnerTech" : {
+          "partnerTechRolesEnabled" : {
             "type" : "boolean"
           },
           "institutionType" : {
@@ -5118,6 +5121,9 @@
           "userRole" : {
             "type" : "string"
           },
+          "userPartnerTechRole" : {
+            "type" : "boolean"
+          },
           "authorized" : {
             "type" : "boolean"
           },
@@ -5139,7 +5145,7 @@
           "originId" : {
             "type" : "string"
           },
-          "isPartnerTech" : {
+          "partnerTechRolesEnabled" : {
             "type" : "boolean"
           },
           "institutionType" : {

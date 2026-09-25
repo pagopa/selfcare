@@ -2,12 +2,11 @@ package it.pagopa.selfcare.dashboard.model.mapper;
 
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.*;
 import it.pagopa.selfcare.dashboard.model.institution.*;
+import it.pagopa.selfcare.dashboard.model.institution.Billing;
 import it.pagopa.selfcare.dashboard.model.product.PartyProduct;
 import it.pagopa.selfcare.dashboard.model.product.ProductOnBoardingStatus;
 import it.pagopa.selfcare.dashboard.model.user.UserInstitution;
-import it.pagopa.selfcare.dashboard.model.institution.Billing;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionDataResponse;
-import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionRoleResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -48,6 +47,9 @@ public interface InstitutionMapper {
 
     @Mapping(target = "category", expression = "java(getCategory(institution.getAttributes()))")
     Institution toInstitution(InstitutionResponse institution);
+
+    @Mapping(target = "partnerTechRolesEnabled", source = "isPartnerTech")
+    OnboardedProduct toOnboardedProduct(OnboardedProductResponse onboarding);
 
     UserInstitution toInstitution(UserInstitutionDataResponse institutionResponse);
 
