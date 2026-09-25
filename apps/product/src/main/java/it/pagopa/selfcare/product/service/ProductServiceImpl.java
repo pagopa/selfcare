@@ -24,6 +24,7 @@ import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.ProductUtils;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
@@ -56,6 +57,7 @@ public class ProductServiceImpl implements ProductService {
 
   // JPA
   private final ProductRepository productRepository;
+  private final TenantContext tenantContext;
 
   // MAPPER
   private final ProductMapperRequest productMapperRequest;
@@ -72,6 +74,7 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public Uni<ProductBaseResponse> createProduct(
       ProductCreateRequest productCreateRequest, String createdBy) {
+    useTenant(productCreateRequest.getTenantId());
 
     if (StringUtils.isBlank(productCreateRequest.getProductId())) {
       throw new BadRequestException(
@@ -85,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
 
     Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
     requestProduct.setProductId(productCreateRequest.getProductId());
+    requestProduct.setTenantId(tenantContext.requiredTenantId());
 
     if (requestProduct.getStatus() == null) {
       log.info("Product status missing - default TESTING");
@@ -128,13 +132,15 @@ public class ProductServiceImpl implements ProductService {
                         productUpdated ->
                             productMapperResponse.toProductBaseResponse(
                                 Product.builder()
+                                    .tenantId(productUpdated.getTenantId())
                                     .id(productUpdated.getId())
                                     .productId(productUpdated.getProductId())
                                     .status(productUpdated.getStatus())
                                     .build())));
   }
 
-  public Uni<ProductResponse> getProductById(String productId) {
+  public Uni<ProductResponse> getProduct(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
           .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
@@ -152,7 +158,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<ProductResponse> getValidProductById(String productId) {
+  public Uni<ProductResponse> getValidProduct(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
           .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
@@ -176,8 +183,9 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<ProductExpirationResponse> getProductExpirationDays(String productId) {
-    return getValidProductById(productId)
+  public Uni<ProductExpirationResponse> getProductExpirationDays(
+      String tenantId, String productId) {
+    return getValidProduct(tenantId, productId)
         .map(
             product -> {
               int expirationDays =
@@ -189,7 +197,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<List<ProductResponse>> getProducts(boolean rootOnly, boolean valid) {
+  public Uni<List<ProductResponse>> getProducts(String tenantId, boolean rootOnly, boolean valid) {
+    useTenant(tenantId);
     log.info("Getting products - rootOnly: {}, valid: {}", rootOnly, valid);
 
     return productRepository
@@ -205,7 +214,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<ProductRoleResponse> validateProductRole(
-      String productId, UserRole role, String productRole) {
+      String tenantId, String productId, UserRole role, String productRole) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom().failure(new BadRequestException("Missing productId"));
     }
@@ -321,7 +331,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<ProductBaseResponse> deleteProductById(String productId) {
+  public Uni<ProductBaseResponse> deleteProduct(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
           .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
@@ -342,7 +353,11 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<ProductResponse> patchProductById(
-      String productId, String createdBy, ProductPatchRequest productPatchRequest) {
+      String tenantId,
+      String productId,
+      String createdBy,
+      ProductPatchRequest productPatchRequest) {
+    useTenant(tenantId);
     String sanitizedProductId = Encode.forJava(productId);
     String sanitizedCreatedBy = Encode.forJava(createdBy);
     log.info(
@@ -374,6 +389,7 @@ public class ProductServiceImpl implements ProductService {
                     .transformToUni(
                         current -> {
                           Product patched = productMapperRequest.toPatch(patchRequest, current);
+                          patched.setTenantId(tenantContext.requiredTenantId());
                           applyParentOnboardingDefaults(
                               patched, patchRequest.getParentId() != null);
 
@@ -395,7 +411,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<ProductOriginResponse> getProductOriginsById(String productId) {
+  public Uni<ProductOriginResponse> getProductOrigins(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
           .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
@@ -414,7 +431,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<WorkflowTypeResponse> getWorkflowType(
-      String productId, InstitutionType institutionType, Origin origin) {
+      String tenantId, String productId, InstitutionType institutionType, Origin origin) {
+    useTenant(tenantId);
 
     return validateProductContext(productId, institutionType, origin)
         .onItem()
@@ -453,7 +471,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<Boolean> isRequiredDocumentsEnabled(
-      String productId, InstitutionType institutionType, Origin origin) {
+      String tenantId, String productId, InstitutionType institutionType, Origin origin) {
+    useTenant(tenantId);
 
     return validateProductContext(productId, institutionType, origin)
         .onItem()
@@ -492,7 +511,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<List<RequiredDocumentResponse>> getRequiredDocuments(
-      String productId, InstitutionType institutionType, Origin origin) {
+      String tenantId, String productId, InstitutionType institutionType, Origin origin) {
+    useTenant(tenantId);
 
     return validateProductContext(productId, institutionType, origin)
         .onItem()
@@ -529,6 +549,13 @@ public class ProductServiceImpl implements ProductService {
                         return documents;
                       });
             });
+  }
+
+  private void useTenant(String tenantId) {
+    if (StringUtils.isBlank(tenantId)) {
+      throw new BadRequestException("Missing tenantId");
+    }
+    tenantContext.setTenantId(tenantId);
   }
 
   private Uni<Void> validateProductContext(

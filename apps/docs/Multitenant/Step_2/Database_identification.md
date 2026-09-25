@@ -136,11 +136,11 @@ Mongo client per supported tenant and replaces the default Panache
 `ReactiveMongoClient`. `TenantMongoDatabaseResolver` selects
 `registry[tenant].mongo.database` from `TenantContext`.
 
-`product` keeps the catalogue **unscoped**: `Product` and `ContractTemplate`
-documents do not gain a `tenantId` discriminator. Physical routing still uses the
-tenant registry so a shared Container App can reach the AR or PNPG Cosmos account
-during migration. Do not set `quarkus.mongodb.connection-string` or
-`@MongoEntity(clientName)`.
+`product` receives the tenant as a controller path variable and stores it in
+`Product` and `ContractTemplate` as `tenantId`. Product repository reads and
+contract-template list/count queries are constrained by `TenantContext.tenantId`
+in addition to physical routing through the tenant registry. Do not set
+`quarkus.mongodb.connection-string` or `@MongoEntity(clientName)`.
 
 ### Spring implementation (`user-group-ms`)
 

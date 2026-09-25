@@ -38,6 +38,7 @@ public class ContractTemplateController {
   }
 
   @POST
+  @Path("/{tenantId}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   @Tag(name = "ContractTemplate")
@@ -79,6 +80,7 @@ public class ContractTemplateController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> upload(
+      @PathParam("tenantId") String tenantId,
       @QueryParam("productId") @NotNull String productId,
       @QueryParam("name")
           @NotNull
@@ -104,6 +106,7 @@ public class ContractTemplateController {
         .upload(
             ContractTemplateUploadRequest.builder()
                 .productId(productId)
+                .tenantId(tenantId)
                 .name(name)
                 .version(version)
                 .description(description)
@@ -115,7 +118,7 @@ public class ContractTemplateController {
   }
 
   @GET
-  @Path("/{contractTemplateId}")
+  @Path("/{tenantId}/{contractTemplateId}")
   @Tag(name = "ContractTemplate")
   @Tag(name = "external-v2")
   @Operation(
@@ -154,6 +157,7 @@ public class ContractTemplateController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> download(
+      @PathParam("tenantId") String tenantId,
       @QueryParam("productId") String productId,
       @QueryParam("fileType") @DefaultValue("HTML") String fileType,
       @PathParam("contractTemplateId") String contractTemplateId) {
@@ -161,12 +165,13 @@ public class ContractTemplateController {
     fileType = Optional.ofNullable(fileType).map(Encode::forJava).orElse(null);
     contractTemplateId = Optional.ofNullable(contractTemplateId).map(Encode::forJava).orElse(null);
     return contractTemplateService
-        .download(productId, contractTemplateId, ContractTemplateFileType.from(fileType))
+        .download(tenantId, productId, contractTemplateId, ContractTemplateFileType.from(fileType))
         .onItem()
         .transform(r -> Response.ok(r.getData()).type(r.getType().getContentType()).build());
   }
 
   @GET
+  @Path("/{tenantId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Tag(name = "ContractTemplate")
   @Tag(name = "external-v2")
@@ -199,11 +204,12 @@ public class ContractTemplateController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> list(
+      @PathParam("tenantId") String tenantId,
       @QueryParam("productId") String productId,
       @QueryParam("name") String name,
       @QueryParam("version") String version) {
     return contractTemplateService
-        .list(productId, name, version)
+        .list(tenantId, productId, name, version)
         .onItem()
         .transform(r -> Response.ok(r).build());
   }

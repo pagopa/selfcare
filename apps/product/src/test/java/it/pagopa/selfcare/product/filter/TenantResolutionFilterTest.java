@@ -70,6 +70,47 @@ class TenantResolutionFilterTest {
   }
 
   @Test
+  void filter_shouldPreferProductPathTenantOverHeaderWhenPresent() {
+    when(uriInfo.getPath()).thenReturn("product/pnpg/prod-test");
+    when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("pnpg");
+    when(tenantRegistry.normalizeTenantId("pnpg")).thenReturn("PNPG");
+
+    filter.filter(requestContext);
+
+    verify(tenantRegistry).resolve("pnpg");
+    verify(tenantContext).setTenantId("PNPG");
+    verify(requestContext, never()).abortWith(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
+  void filter_shouldResolveContractTemplatePathTenant() {
+    when(uriInfo.getPath()).thenReturn("contract-template/ar/123");
+    when(tenantRegistry.normalizeTenantId("ar")).thenReturn("AR");
+
+    filter.filter(requestContext);
+
+    verify(tenantRegistry).resolve("ar");
+    verify(tenantContext).setTenantId("AR");
+    verify(requestContext, never()).abortWith(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
+  void filter_shouldAbortWhenPathTenantConflictsWithHeaderTenant() {
+    when(uriInfo.getPath()).thenReturn("product/ar/prod-test");
+    when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("PNPG");
+    when(tenantRegistry.normalizeTenantId("ar")).thenReturn("AR");
+    when(tenantRegistry.normalizeTenantId("PNPG")).thenReturn("PNPG");
+
+    filter.filter(requestContext);
+
+    ArgumentCaptor<Response> responseCaptor = ArgumentCaptor.forClass(Response.class);
+    verify(requestContext).abortWith(responseCaptor.capture());
+    assertEquals(
+        Response.Status.BAD_REQUEST.getStatusCode(), responseCaptor.getValue().getStatus());
+    verify(tenantContext, never()).setTenantId(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
   void filter_shouldUseDefaultTenantWhenEnforcementIsDisabledAndHeaderIsMissing() {
     filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "PNPG");
     when(uriInfo.getPath()).thenReturn("v1/products");

@@ -37,10 +37,11 @@ be constants or validated enum values. They never come directly from an HTTP req
 Initial logical keys:
 
 - `onboarding-ms` `products`: account and container containing the product catalogue.
-- `product` `contracts`: contract-template blobs. Templates remain classified as
-  global shared assets (SELC-14.5); the binding still goes through TenantContext so
-  dedicated AR/PNPG storage accounts can be selected without adding a tenant path
-  from the request. Both tenants may later point at the same shared account.
+- `product` `contracts`: contract-template blobs. The tenant comes from the
+  `product`/`contract-template` API path, is stored in `TenantContext`, and
+  selects the configured AR/PNPG storage binding for contract templates. Both
+  tenants may still point at the same physical account only when explicitly
+  configured.
 
 Future keys can be added without changing the top-level schema, for example `attachments`,
 `templates`, or `archives`.

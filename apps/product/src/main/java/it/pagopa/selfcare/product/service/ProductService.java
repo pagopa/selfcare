@@ -21,23 +21,23 @@ public interface ProductService {
 
   Uni<ProductBaseResponse> createProduct(ProductCreateRequest product, String createdBy);
 
-  Uni<ProductResponse> getProductById(String productId);
+  Uni<ProductResponse> getProduct(String tenantId, String productId);
 
-  Uni<ProductBaseResponse> deleteProductById(String productId);
+  Uni<ProductBaseResponse> deleteProduct(String tenantId, String productId);
 
   Uni<ProductResponse> patchProductById(
-      String productId, String createdBy, ProductPatchRequest productPatchRequest);
+      String tenantId, String productId, String createdBy, ProductPatchRequest productPatchRequest);
 
-  Uni<ProductOriginResponse> getProductOriginsById(String productId);
+  Uni<ProductOriginResponse> getProductOrigins(String tenantId, String productId);
 
   Uni<WorkflowTypeResponse> getWorkflowType(
-      String productId, InstitutionType institutionType, Origin origin);
+      String tenantId, String productId, InstitutionType institutionType, Origin origin);
 
   Uni<Boolean> isRequiredDocumentsEnabled(
-      String productId, InstitutionType institutionType, Origin origin);
+      String tenantId, String productId, InstitutionType institutionType, Origin origin);
 
   Uni<List<RequiredDocumentResponse>> getRequiredDocuments(
-      String productId, InstitutionType institutionType, Origin origin);
+      String tenantId, String productId, InstitutionType institutionType, Origin origin);
 
   /**
    * Returns the product only if it is "valid" for onboarding purposes, i.e. neither the product nor
@@ -48,7 +48,7 @@ public interface ProductService {
    * @return the {@link ProductResponse} when valid; fails with {@link
    *     jakarta.ws.rs.NotFoundException} when the product/parent does not exist or is not valid
    */
-  Uni<ProductResponse> getValidProductById(String productId);
+  Uni<ProductResponse> getValidProduct(String tenantId, String productId);
 
   /**
    * Returns the expiration days associated with the given product. If the product exists and is
@@ -58,7 +58,7 @@ public interface ProductService {
    * @param productId the product identifier
    * @return the {@link ProductExpirationResponse} holding the expiration days
    */
-  Uni<ProductExpirationResponse> getProductExpirationDays(String productId);
+  Uni<ProductExpirationResponse> getProductExpirationDays(String tenantId, String productId);
 
   /**
    * Returns the list of products (one entry per {@code productId}, latest version).
@@ -68,7 +68,7 @@ public interface ProductService {
    *     PHASE_OUT} or {@code DELETED}) are excluded
    * @return the list of {@link ProductResponse}
    */
-  Uni<List<ProductResponse>> getProducts(boolean rootOnly, boolean valid);
+  Uni<List<ProductResponse>> getProducts(String tenantId, boolean rootOnly, boolean valid);
 
   /**
    * Validates that the given {@code productRole} (product-specific role code) exists for the given
@@ -80,5 +80,6 @@ public interface ProductService {
    * @return the matching {@link ProductRoleResponse}; fails with {@link
    *     jakarta.ws.rs.NotFoundException} when product, role or productRole is not found
    */
-  Uni<ProductRoleResponse> validateProductRole(String productId, UserRole role, String productRole);
+  Uni<ProductRoleResponse> validateProductRole(
+      String tenantId, String productId, UserRole role, String productRole);
 }

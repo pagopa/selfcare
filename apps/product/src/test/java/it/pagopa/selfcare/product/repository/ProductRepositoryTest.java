@@ -31,6 +31,7 @@ class ProductRepositoryTest {
         .persist(
             Product.builder()
                 .id(UUID.randomUUID().toString())
+                .tenantId("AR")
                 .productId("prod-test")
                 .version(1)
                 .build())
@@ -40,6 +41,7 @@ class ProductRepositoryTest {
         .persist(
             Product.builder()
                 .id(UUID.randomUUID().toString())
+                .tenantId("AR")
                 .productId("prod-test")
                 .version(3)
                 .build())

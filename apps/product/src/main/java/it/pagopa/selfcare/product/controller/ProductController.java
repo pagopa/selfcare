@@ -128,7 +128,7 @@ public class ProductController {
   }
 
   @GET
-  @Path("/{productId}")
+  @Path("/{tenantId}/{productId}")
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
@@ -160,9 +160,10 @@ public class ProductController {
                     mediaType = "application/problem+json",
                     schema = @Schema(implementation = Problem.class)))
       })
-  public Uni<Response> getProductById(@PathParam("productId") String productId) {
+  public Uni<Response> getProductById(
+      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
     return productService
-        .getProductById(productId)
+        .getProduct(tenantId, productId)
         .onItem()
         .transform(product -> Response.ok(product).build())
         .onFailure(NotFoundException.class)
@@ -180,7 +181,7 @@ public class ProductController {
   }
 
   @DELETE
-  @Path("/{productId}")
+  @Path("/{tenantId}/{productId}")
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
@@ -220,9 +221,10 @@ public class ProductController {
                     mediaType = "application/problem+json",
                     schema = @Schema(implementation = Problem.class)))
       })
-  public Uni<Response> deleteProductById(@PathParam("productId") String productId) {
+  public Uni<Response> deleteProductById(
+      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
     return productService
-        .deleteProductById(productId)
+        .deleteProduct(tenantId, productId)
         .map(product -> Response.ok(product).build())
         .onFailure(IllegalArgumentException.class)
         .recoverWithItem(
@@ -251,7 +253,7 @@ public class ProductController {
   }
 
   @PATCH
-  @Path("/{productId}")
+  @Path("/{tenantId}/{productId}")
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
@@ -297,6 +299,7 @@ public class ProductController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> patchProductById(
+      @PathParam("tenantId") String tenantId,
       @PathParam("productId") String productId,
       @QueryParam("createdBy") String createdBy,
       ProductPatchRequest productPatchRequest) {
@@ -304,7 +307,7 @@ public class ProductController {
     String sanitizedProductId = Encode.forJava(productId);
 
     return productService
-        .patchProductById(productId, createdBy, productPatchRequest)
+        .patchProductById(tenantId, productId, createdBy, productPatchRequest)
         .map(updated -> Response.ok(updated).build())
         .onFailure(IllegalArgumentException.class)
         .recoverWithItem(
@@ -374,7 +377,7 @@ public class ProductController {
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
-  @Path("/origins")
+  @Path("/{tenantId}/origins")
   @Operation(
       summary = "Get product origins by productId",
       description = "Retrieve the list of institution origins for the given product.",
@@ -404,9 +407,10 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProductOriginsById(
+      @PathParam("tenantId") String tenantId,
       @Parameter(name = "productId", required = true) @QueryParam("productId") String productId) {
     return productService
-        .getProductOriginsById(productId)
+        .getProductOrigins(tenantId, productId)
         .onItem()
         .transform(originsResponse -> Response.ok(originsResponse).build())
         .onFailure(NotFoundException.class)
@@ -425,7 +429,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/workflow-type")
+  @Path("/{tenantId}/workflow-type")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Resolve workflow type for a product",
@@ -465,13 +469,14 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getWorkflowType(
+      @PathParam("tenantId") String tenantId,
       @Parameter(name = "productId", required = true) @QueryParam("productId") String productId,
       @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
           InstitutionType institutionType,
       @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
 
     return productService
-        .getWorkflowType(productId, institutionType, origin)
+        .getWorkflowType(tenantId, productId, institutionType, origin)
         .onItem()
         .transform(response -> Response.ok(response).build())
         .onFailure(IllegalArgumentException.class)
@@ -504,7 +509,7 @@ public class ProductController {
 
   @HEAD
   @Tag(name = "Product")
-  @Path("/{productId}/required-documents/enabled")
+  @Path("/{tenantId}/{productId}/required-documents/enabled")
   @Operation(
       summary = "Check if required documents are enabled",
       description =
@@ -526,13 +531,14 @@ public class ProductController {
         @APIResponse(responseCode = "500", description = "Internal Server Error")
       })
   public Uni<Response> isRequiredDocumentsEnabled(
+      @PathParam("tenantId") String tenantId,
       @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
       @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
           InstitutionType institutionType,
       @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
 
     return productService
-        .isRequiredDocumentsEnabled(productId, institutionType, origin)
+        .isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin)
         .onItem()
         .transform(enabled -> Response.ok().header("X-Required-Documents-Enabled", enabled).build())
         .onFailure(IllegalArgumentException.class)
@@ -543,7 +549,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{productId}/required-documents")
+  @Path("/{tenantId}/{productId}/required-documents")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get required documents for a product",
@@ -587,6 +593,7 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getRequiredDocuments(
+      @PathParam("tenantId") String tenantId,
       @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
       @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
           InstitutionType institutionType,
@@ -595,7 +602,7 @@ public class ProductController {
     String sanitizedProductId = Encode.forJava(productId);
 
     return productService
-        .getRequiredDocuments(productId, institutionType, origin)
+        .getRequiredDocuments(tenantId, productId, institutionType, origin)
         .onItem()
         .transform(documents -> Response.ok(documents).build())
         .onFailure(IllegalArgumentException.class)
@@ -628,7 +635,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{productId}/valid")
+  @Path("/{tenantId}/{productId}/valid")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get product only if valid for onboarding",
@@ -660,9 +667,10 @@ public class ProductController {
                     mediaType = "application/problem+json",
                     schema = @Schema(implementation = Problem.class)))
       })
-  public Uni<Response> getValidProductById(@PathParam("productId") String productId) {
+  public Uni<Response> getValidProductById(
+      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
     return productService
-        .getValidProductById(productId)
+        .getValidProduct(tenantId, productId)
         .onItem()
         .transform(product -> Response.ok(product).build())
         .onFailure(NotFoundException.class)
@@ -682,7 +690,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{productId}/expiration-days")
+  @Path("/{tenantId}/{productId}/expiration-days")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get product expiration days",
@@ -713,9 +721,10 @@ public class ProductController {
                     mediaType = "application/problem+json",
                     schema = @Schema(implementation = Problem.class)))
       })
-  public Uni<Response> getProductExpirationDays(@PathParam("productId") String productId) {
+  public Uni<Response> getProductExpirationDays(
+      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
     return productService
-        .getProductExpirationDays(productId)
+        .getProductExpirationDays(tenantId, productId)
         .onItem()
         .transform(expiration -> Response.ok(expiration).build())
         .onFailure(NotFoundException.class)
@@ -735,6 +744,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
+  @Path("/{tenantId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get products (latest version per productId)",
@@ -772,6 +782,7 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProducts(
+      @PathParam("tenantId") String tenantId,
       @Parameter(name = "rootOnly", required = true) @QueryParam("rootOnly") Boolean rootOnly,
       @Parameter(name = "valid", required = true) @QueryParam("valid") Boolean valid) {
 
@@ -791,14 +802,14 @@ public class ProductController {
     }
 
     return productService
-        .getProducts(rootOnly, valid)
+        .getProducts(tenantId, rootOnly, valid)
         .onItem()
         .transform(products -> Response.ok(products).build());
   }
 
   @GET
   @Tag(name = "Product")
-  @Path("/{productId}/role-mappings/validate")
+  @Path("/{tenantId}/{productId}/role-mappings/validate")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Validate a product role",
@@ -838,6 +849,7 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> validateProductRole(
+      @PathParam("tenantId") String tenantId,
       @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
       @Parameter(name = "role", required = true) @QueryParam("role") UserRole role,
       @Parameter(name = "productRole", required = true) @QueryParam("productRole")
@@ -846,7 +858,7 @@ public class ProductController {
     String sanitizedProductId = Encode.forJava(productId);
 
     return productService
-        .validateProductRole(productId, role, productRole)
+        .validateProductRole(tenantId, productId, role, productRole)
         .onItem()
         .transform(productRole1 -> Response.ok(productRole1).build())
         .onFailure(BadRequestException.class)

@@ -17,6 +17,8 @@ public class ContractTemplateResponse {
 
   private String contractTemplateVersion;
 
+  private String tenantId;
+
   private String productId;
 
   private String name;

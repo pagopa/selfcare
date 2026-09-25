@@ -10,6 +10,7 @@ import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
+import java.util.Optional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @Provider
@@ -44,12 +45,25 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
       return;
     }
 
+    Optional<String> pathTenant = tenantFromPath(path);
     String headerTenant = requestContext.getHeaderString(TENANT_HEADER);
     try {
+      if (pathTenant.isPresent()
+          && headerTenant != null
+          && !headerTenant.isBlank()
+          && !tenantRegistry
+              .normalizeTenantId(pathTenant.get())
+              .equals(tenantRegistry.normalizeTenantId(headerTenant))) {
+        throw new IllegalArgumentException("Conflicting tenant context");
+      }
       String tenant =
-          tenantEnforcementEnabled
-              ? headerTenant
-              : (headerTenant == null || headerTenant.isBlank() ? defaultTenant : headerTenant);
+          pathTenant.orElseGet(
+              () ->
+                  tenantEnforcementEnabled
+                      ? headerTenant
+                      : (headerTenant == null || headerTenant.isBlank()
+                          ? defaultTenant
+                          : headerTenant));
       tenantRegistry.resolve(tenant);
       tenantContext.setTenantId(tenantRegistry.normalizeTenantId(tenant));
     } catch (RuntimeException exception) {
@@ -59,5 +73,15 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
               .type("application/problem+json")
               .build());
     }
+  }
+
+  private Optional<String> tenantFromPath(String path) {
+    String[] segments = path.split("/");
+    if (segments.length >= 2
+        && ("product".equals(segments[0]) || "contract-template".equals(segments[0]))
+        && !segments[1].isBlank()) {
+      return Optional.of(segments[1]);
+    }
+    return Optional.empty();
   }
 }

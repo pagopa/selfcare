@@ -19,6 +19,8 @@ public class ContractTemplate {
 
   @BsonId @Builder.Default private String id = UUID.randomUUID().toString();
 
+  private String tenantId;
+
   private String productId;
 
   private String name;

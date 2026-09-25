@@ -12,12 +12,14 @@ import it.pagopa.selfcare.product.model.dto.response.ContractTemplateResponse;
 import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.repository.ContractTemplateRepository;
 import it.pagopa.selfcare.product.storage.ContractTemplateStorage;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -29,6 +31,13 @@ public class ContractTemplateServiceImplTest {
   @InjectMock private ContractTemplateStorage contractTemplateStorage;
 
   @InjectMock private ContractTemplateRepository contractTemplateRepository;
+
+  @Inject private TenantContext tenantContext;
+
+  @BeforeEach
+  void setUpTenant() {
+    tenantContext.setTenantId("AR");
+  }
 
   @Test
   void upload_shouldReturnOk() throws URISyntaxException {
@@ -49,6 +58,7 @@ public class ContractTemplateServiceImplTest {
     final ContractTemplate contractTemplate =
         ContractTemplate.builder()
             .id("123")
+            .tenantId("AR")
             .productId(uploadRequest.getProductId())
             .name(uploadRequest.getName())
             .version(uploadRequest.getVersion())
@@ -57,7 +67,7 @@ public class ContractTemplateServiceImplTest {
 
     Mockito.when(
             contractTemplateRepository.countWithFilters(
-                Mockito.any(), Mockito.any(), Mockito.any()))
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().item(0L));
     Mockito.when(contractTemplateRepository.persist(Mockito.any(ContractTemplate.class)))
         .thenReturn(Uni.createFrom().item(contractTemplate));
@@ -79,6 +89,7 @@ public class ContractTemplateServiceImplTest {
     Assertions.assertEquals(
         "contract-templates/prod-test/123.html", response.getContractTemplatePath());
     Assertions.assertEquals("1.0.0", response.getContractTemplateVersion());
+    Assertions.assertEquals("AR", response.getTenantId());
     Assertions.assertEquals("prod-test", response.getProductId());
     Assertions.assertEquals("template-test", response.getName());
   }
@@ -110,7 +121,7 @@ public class ContractTemplateServiceImplTest {
 
     Mockito.when(
             contractTemplateRepository.countWithFilters(
-                Mockito.any(), Mockito.any(), Mockito.any()))
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().item(0L));
     Mockito.when(contractTemplateRepository.persist(Mockito.any(ContractTemplate.class)))
         .thenReturn(Uni.createFrom().item(contractTemplate));
@@ -125,7 +136,7 @@ public class ContractTemplateServiceImplTest {
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed();
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
-        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any());
+        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
         .persist(Mockito.any(ContractTemplate.class));
     Mockito.verify(contractTemplateRepository, Mockito.times(1)).deleteById(Mockito.any());
@@ -151,7 +162,7 @@ public class ContractTemplateServiceImplTest {
 
     Mockito.when(
             contractTemplateRepository.countWithFilters(
-                Mockito.any(), Mockito.any(), Mockito.any()))
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().item(1L));
 
     var sub =
@@ -162,7 +173,7 @@ public class ContractTemplateServiceImplTest {
             .assertFailedWith(ConflictException.class);
     Assertions.assertEquals("409", ((ConflictException) sub.getFailure()).getCode());
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
-        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any());
+        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     Mockito.verify(contractTemplateRepository, Mockito.never())
         .persist(Mockito.any(ContractTemplate.class));
     Mockito.verifyNoInteractions(contractTemplateStorage);
@@ -186,7 +197,7 @@ public class ContractTemplateServiceImplTest {
 
     Mockito.when(
             contractTemplateRepository.countWithFilters(
-                Mockito.any(), Mockito.any(), Mockito.any()))
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().failure(new Exception("DB error")));
 
     contractTemplateService
@@ -195,7 +206,7 @@ public class ContractTemplateServiceImplTest {
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed();
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
-        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any());
+        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     Mockito.verify(contractTemplateRepository, Mockito.never())
         .persist(Mockito.any(ContractTemplate.class));
     Mockito.verifyNoInteractions(contractTemplateStorage);
@@ -219,7 +230,7 @@ public class ContractTemplateServiceImplTest {
 
     Mockito.when(
             contractTemplateRepository.countWithFilters(
-                Mockito.any(), Mockito.any(), Mockito.any()))
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().item(0L));
     Mockito.when(contractTemplateRepository.persist(Mockito.any(ContractTemplate.class)))
         .thenReturn(Uni.createFrom().failure(new Exception("DB error")));
@@ -230,7 +241,7 @@ public class ContractTemplateServiceImplTest {
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed();
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
-        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any());
+        .countWithFilters(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
         .persist(Mockito.any(ContractTemplate.class));
     Mockito.verifyNoInteractions(contractTemplateStorage);
@@ -241,7 +252,7 @@ public class ContractTemplateServiceImplTest {
     Mockito.when(contractTemplateStorage.download(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().item(ContractTemplateFile.builder().build()));
     contractTemplateService
-        .download("prod-test", "template-test", ContractTemplateFileType.HTML)
+        .download("AR", "prod-test", "template-test", ContractTemplateFileType.HTML)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
@@ -255,7 +266,7 @@ public class ContractTemplateServiceImplTest {
     Mockito.when(contractTemplateStorage.download(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().failure(new Exception("Storage error")));
     contractTemplateService
-        .download("prod-test", "template-test", ContractTemplateFileType.HTML)
+        .download("AR", "prod-test", "template-test", ContractTemplateFileType.HTML)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed();
@@ -267,30 +278,32 @@ public class ContractTemplateServiceImplTest {
   @Test
   void list_shouldReturnOk() {
     Mockito.when(
-            contractTemplateRepository.listWithFilters(Mockito.any(), Mockito.any(), Mockito.any()))
+            contractTemplateRepository.listWithFilters(
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().item(List.of()));
     contractTemplateService
-        .list("prod-test", "template-test", "1.0.0")
+        .list("AR", "prod-test", "template-test", "1.0.0")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
-        .listWithFilters("prod-test", "template-test", "1.0.0");
+        .listWithFilters("AR", "prod-test", "template-test", "1.0.0");
     Mockito.verifyNoInteractions(contractTemplateStorage);
   }
 
   @Test
   void list_Error() {
     Mockito.when(
-            contractTemplateRepository.listWithFilters(Mockito.any(), Mockito.any(), Mockito.any()))
+            contractTemplateRepository.listWithFilters(
+                Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(Uni.createFrom().failure(new Exception("DB error")));
     contractTemplateService
-        .list("prod-test", "template-test", "1.0.0")
+        .list("AR", "prod-test", "template-test", "1.0.0")
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed();
     Mockito.verify(contractTemplateRepository, Mockito.times(1))
-        .listWithFilters("prod-test", "template-test", "1.0.0");
+        .listWithFilters("AR", "prod-test", "template-test", "1.0.0");
     Mockito.verifyNoInteractions(contractTemplateStorage);
   }
 }

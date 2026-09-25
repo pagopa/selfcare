@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoDatabase;
+import io.smallrye.health.api.AsyncHealthCheck;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.tenant.TenantDefinition;
 import it.pagopa.selfcare.tenant.TenantRegistry;
@@ -51,7 +52,7 @@ class ProductMongoReadinessCheckTest {
   }
 
   private HealthCheckResponse await() {
-    return check.call().await().atMost(Duration.ofSeconds(5));
+    return ((AsyncHealthCheck) check).call().await().atMost(Duration.ofSeconds(5));
   }
 
   @Test
@@ -96,7 +97,8 @@ class ProductMongoReadinessCheckTest {
     when(database.runCommand(Mockito.any(Document.class)))
         .thenReturn(Uni.createFrom().item(new Document("ok", 1.0)));
 
-    HealthCheckResponse response = resilientCheck.call().await().atMost(Duration.ofSeconds(5));
+    HealthCheckResponse response =
+        ((AsyncHealthCheck) resilientCheck).call().await().atMost(Duration.ofSeconds(5));
 
     assertThat(response.getStatus()).isEqualTo(HealthCheckResponse.Status.UP);
     assertThat(response.getData().orElseThrow())

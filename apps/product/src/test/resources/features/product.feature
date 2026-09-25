@@ -5,6 +5,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following request body:
     """
      {
+      "tenantId": "AR",
       "productId": "prod-test",
       "alias": "prod-test",
       "title": "Prod TEST",
@@ -126,19 +127,20 @@ Feature: Product API end-to-end onboarding and lifecycle
     }
     """
     And The following query params:
-      | productId | prod-test |
       | createdBy | user-test |
     When I send a POST request to "/product"
     Then The status code is 201
     And The response body contains:
+      | tenantId  | AR        |
       | productId | prod-test |
       | status    | TESTING   |
 
-  Scenario: GET /product - successfully retrieve product after creation
+  Scenario: GET /tenant/product - successfully retrieve product after creation
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-test"
+    When I send a GET request to "/product/AR/prod-test"
     Then The status code is 200
     And The response body contains:
+      | tenantId  | AR        |
       | productId | prod-test |
       | status    | TESTING   |
       | version   | 1         |
@@ -147,7 +149,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     Given User login with username "j.doe" and password "test"
     And The following query params:
       | productId | prod-test |
-    When I send a GET request to "/product/origins"
+    When I send a GET request to "/product/AR/origins"
     Then The status code is 200
     And The response body contains:
       | origins[0].institutionType | PA  |
@@ -159,6 +161,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following request body:
     """
      {
+      "tenantId": "AR",
       "productId": "prod-test",
       "alias": "prod-test",
       "title": "Prod TEST 2 - Patched",
@@ -316,9 +319,10 @@ Feature: Product API end-to-end onboarding and lifecycle
     Given User login with username "j.doe" and password "test"
     And The following query params:
       | createdBy | user-test |
-    When I send a GET request to "/product/prod-test"
+    When I send a GET request to "/product/AR/prod-test"
     Then The status code is 200
     And The response body contains:
+      | tenantId  | AR        |
       | productId | prod-test |
       | status    | ACTIVE    |
       | version   | 2         |
@@ -335,9 +339,10 @@ Feature: Product API end-to-end onboarding and lifecycle
         "title": "Prod TEST 2 - Patched"
       }
     """
-    When I send a PATCH request to "/product/prod-test" with content type "application/json"
+    When I send a PATCH request to "/product/AR/prod-test" with content type "application/json"
     Then The status code is 200
     And The response body contains:
+      | tenantId         | AR                            |
       | productId        | prod-test                     |
       | description      | Description updated via PATCH |
       | features.enabled | false                         |
@@ -345,9 +350,10 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product - successfully retrieve product after patch
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-test"
+    When I send a GET request to "/product/AR/prod-test"
     Then The status code is 200
     And The response body contains:
+      | tenantId         | AR                            |
       | productId        | prod-test                     |
       | description      | Description updated via PATCH |
       | features.enabled | false                         |
@@ -357,7 +363,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | institutionType | GSP |
       | origin          | IPA |
-    When I send a HEAD request to "/product/prod-test/required-documents/enabled"
+    When I send a HEAD request to "/product/AR/prod-test/required-documents/enabled"
     Then The status code is 200
     And The response header contains:
       | X-Required-Documents-Enabled | true |
@@ -367,7 +373,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | institutionType | PA  |
       | origin          | IPA |
-    When I send a HEAD request to "/product/prod-test/required-documents/enabled"
+    When I send a HEAD request to "/product/AR/prod-test/required-documents/enabled"
     Then The status code is 200
     And The response header contains:
       | X-Required-Documents-Enabled | false |
@@ -377,7 +383,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | institutionType | GSP |
       | origin          | IPA |
-    When I send a HEAD request to "/product/prod-unknown/required-documents/enabled"
+    When I send a HEAD request to "/product/AR/prod-unknown/required-documents/enabled"
     Then The status code is 404
 
   Scenario: GET /product/{productId}/required-documents - returns list of required documents
@@ -385,28 +391,28 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | institutionType | GSP |
       | origin          | IPA |
-    When I send a GET request to "/product/prod-test/required-documents"
+    When I send a GET request to "/product/AR/prod-test/required-documents"
     Then The status code is 200
     And The response body contains:
-      | [0].id                   | doc-statuto       |
-      | [0].name                 | Statuto Ente      |
-      | [0].labelKey             | statuto           |
-      | [0].required             | true              |
-      | [0].mimeType             | application/pdf   |
-      | [0].maxDocumentsRequired | 1                 |
-      | [1].id                   | doc-visura        |
-      | [1].name                 | Visura Camerale   |
-      | [1].labelKey             | visura            |
-      | [1].required             | true              |
-      | [1].mimeType             | application/pdf   |
-      | [1].maxDocumentsRequired | 3                 |
+      | [0].id                   | doc-statuto     |
+      | [0].name                 | Statuto Ente    |
+      | [0].labelKey             | statuto         |
+      | [0].required             | true            |
+      | [0].mimeType             | application/pdf |
+      | [0].maxDocumentsRequired | 1               |
+      | [1].id                   | doc-visura      |
+      | [1].name                 | Visura Camerale |
+      | [1].labelKey             | visura          |
+      | [1].required             | true            |
+      | [1].mimeType             | application/pdf |
+      | [1].maxDocumentsRequired | 3               |
 
   Scenario: GET /product/{productId}/required-documents - returns empty list when no document matches context
     Given User login with username "j.doe" and password "test"
     And The following query params:
       | institutionType | PA  |
       | origin          | IPA |
-    When I send a GET request to "/product/prod-test/required-documents"
+    When I send a GET request to "/product/AR/prod-test/required-documents"
     Then The status code is 200
 
   Scenario: GET /product/{productId}/required-documents - returns 404 when product not found
@@ -414,7 +420,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | institutionType | GSP |
       | origin          | IPA |
-    When I send a GET request to "/product/prod-unknown/required-documents"
+    When I send a GET request to "/product/AR/prod-unknown/required-documents"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |
@@ -422,7 +428,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product/{productId}/valid - returns the product when valid (ACTIVE)
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-test/valid"
+    When I send a GET request to "/product/AR/prod-test/valid"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
@@ -430,7 +436,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product/{productId}/valid - returns 404 when product not found
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-unknown/valid"
+    When I send a GET request to "/product/AR/prod-unknown/valid"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |
@@ -438,14 +444,14 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product/{productId}/expiration-days - returns configured expiration days
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-test/expiration-days"
+    When I send a GET request to "/product/AR/prod-test/expiration-days"
     Then The status code is 200
     And The response body contains:
       | expirationDays | 30 |
 
   Scenario: GET /product/{productId}/expiration-days - returns 404 when product not found
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-unknown/expiration-days"
+    When I send a GET request to "/product/AR/prod-unknown/expiration-days"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |
@@ -456,13 +462,13 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | rootOnly | true |
       | valid    | true |
-    When I send a GET request to "/product"
+    When I send a GET request to "/product/AR"
     Then The status code is 200
     And The response body contains the string "prod-test"
 
   Scenario: GET /product - returns 400 when required query params are missing
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product"
+    When I send a GET request to "/product/AR"
     Then The status code is 400
     And The response body contains:
       | title  | Bad Request |
@@ -473,7 +479,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | role        | OPERATOR            |
       | productRole | referente operativo |
-    When I send a GET request to "/product/prod-test/role-mappings/validate"
+    When I send a GET request to "/product/AR/prod-test/role-mappings/validate"
     Then The status code is 200
     And The response body contains:
       | code        | referente operativo |
@@ -485,7 +491,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | role        | OPERATOR     |
       | productRole | not-existing |
-    When I send a GET request to "/product/prod-test/role-mappings/validate"
+    When I send a GET request to "/product/AR/prod-test/role-mappings/validate"
     Then The status code is 404
     And The response body contains:
       | title  | Not Found |
@@ -496,7 +502,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | role        | MANAGER             |
       | productRole | referente operativo |
-    When I send a GET request to "/product/prod-test/role-mappings/validate"
+    When I send a GET request to "/product/AR/prod-test/role-mappings/validate"
     Then The status code is 404
     And The response body contains:
       | title  | Not Found |
@@ -507,12 +513,12 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following query params:
       | role        | OPERATOR            |
       | productRole | referente operativo |
-    When I send a GET request to "/product/prod-unknown/role-mappings/validate"
+    When I send a GET request to "/product/AR/prod-unknown/role-mappings/validate"
     Then The status code is 404
 
   Scenario: DELETE /product - successfully mark product as DELETED
     Given User login with username "j.doe" and password "test"
-    When I send a DELETE request to "/product/prod-test"
+    When I send a DELETE request to "/product/AR/prod-test"
     Then The status code is 200
     And The response body contains:
       | productId | prod-test |
@@ -520,14 +526,14 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: GET /product/{productId}/valid - returns 404 when product is DELETED
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-test/valid"
+    When I send a GET request to "/product/AR/prod-test/valid"
     Then The status code is 404
     And The response body contains:
       | status | 404 |
 
   Scenario: GET /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/product/prod-unknown"
+    When I send a GET request to "/product/AR/prod-unknown"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |
@@ -548,7 +554,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: PATCH /product - return 400 when payload is invalid
     Given User login with username "j.doe" and password "test"
-    When I send a PATCH request to "/product/prod-unknown" with content type "application/json"
+    When I send a PATCH request to "/product/AR/prod-unknown" with content type "application/json"
     Then The status code is 400
     And The response body contains:
       | title  | Bad Request |
@@ -556,7 +562,7 @@ Feature: Product API end-to-end onboarding and lifecycle
 
   Scenario: DELETE /product - return 404 when product not found
     Given User login with username "j.doe" and password "test"
-    When I send a DELETE request to "/product/prod-unknown"
+    When I send a DELETE request to "/product/AR/prod-unknown"
     Then The status code is 404
     And The response body contains:
       | title  | Product not found |

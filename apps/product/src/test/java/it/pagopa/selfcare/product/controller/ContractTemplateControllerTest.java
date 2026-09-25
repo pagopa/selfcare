@@ -62,7 +62,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template-fragment.html").toURI()),
             "text/html")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(201);
 
@@ -87,7 +87,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template-fragment.html").toURI()),
             "text/html")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(409);
 
@@ -98,13 +98,13 @@ public class ContractTemplateControllerTest {
   @Test
   @TestSecurity(user = "userJwt")
   void upload_shouldReturnBadRequest() throws URISyntaxException {
-    given().contentType("multipart/form-data").when().post().then().statusCode(400);
+    given().contentType("multipart/form-data").when().post("/AR").then().statusCode(400);
 
     given()
         .contentType("multipart/form-data")
         .queryParam("productId", "prod-test")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(400);
 
@@ -113,7 +113,7 @@ public class ContractTemplateControllerTest {
         .queryParam("productId", "prod-test")
         .queryParam("name", "Test template")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(400);
 
@@ -123,7 +123,7 @@ public class ContractTemplateControllerTest {
         .queryParam("name", "Test template")
         .queryParam("version", "1.0.0")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(400);
 
@@ -137,7 +137,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template-invalid.html").toURI()),
             "text/html")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(400);
 
@@ -151,7 +151,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template.pdf").toURI()),
             "application/pdf")
         .when()
-        .post()
+        .post("/AR")
         .then()
         .statusCode(400);
 
@@ -174,20 +174,21 @@ public class ContractTemplateControllerTest {
             .build();
 
     Mockito.when(
-            contractTemplateService.download("prod-test", "123", ContractTemplateFileType.HTML))
+            contractTemplateService.download(
+                "AR", "prod-test", "123", ContractTemplateFileType.HTML))
         .thenReturn(Uni.createFrom().item(contractTemplateFile));
 
     given()
         .queryParam("productId", "prod-test")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/{contractTemplateId}")
+        .get("/AR/{contractTemplateId}")
         .then()
         .statusCode(200)
         .contentType("text/html");
 
     Mockito.verify(contractTemplateService, Mockito.times(1))
-        .download("prod-test", "123", ContractTemplateFileType.HTML);
+        .download("AR", "prod-test", "123", ContractTemplateFileType.HTML);
   }
 
   @Test
@@ -201,7 +202,9 @@ public class ContractTemplateControllerTest {
             .type(ContractTemplateFileType.PDF)
             .build();
 
-    Mockito.when(contractTemplateService.download("prod-test", "123", ContractTemplateFileType.PDF))
+    Mockito.when(
+            contractTemplateService.download(
+                "AR", "prod-test", "123", ContractTemplateFileType.PDF))
         .thenReturn(Uni.createFrom().item(contractTemplateFile));
 
     given()
@@ -209,32 +212,33 @@ public class ContractTemplateControllerTest {
         .queryParam("fileType", "pdf")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/{contractTemplateId}")
+        .get("/AR/{contractTemplateId}")
         .then()
         .statusCode(200)
         .contentType("application/pdf");
 
     Mockito.verify(contractTemplateService, Mockito.times(1))
-        .download("prod-test", "123", ContractTemplateFileType.PDF);
+        .download("AR", "prod-test", "123", ContractTemplateFileType.PDF);
   }
 
   @Test
   @TestSecurity(user = "userJwt")
   void download_shouldReturnNotFound() {
     Mockito.when(
-            contractTemplateService.download("prod-test", "123", ContractTemplateFileType.HTML))
+            contractTemplateService.download(
+                "AR", "prod-test", "123", ContractTemplateFileType.HTML))
         .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Not found", "404")));
 
     given()
         .queryParam("productId", "prod-test")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/{contractTemplateId}")
+        .get("/AR/{contractTemplateId}")
         .then()
         .statusCode(404);
 
     Mockito.verify(contractTemplateService, Mockito.times(1))
-        .download("prod-test", "123", ContractTemplateFileType.HTML);
+        .download("AR", "prod-test", "123", ContractTemplateFileType.HTML);
   }
 
   @Test
@@ -245,18 +249,18 @@ public class ContractTemplateControllerTest {
         .queryParam("fileType", "json")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/{contractTemplateId}")
+        .get("/AR/{contractTemplateId}")
         .then()
         .statusCode(400);
 
     Mockito.verify(contractTemplateService, Mockito.times(0))
-        .download(Mockito.any(), Mockito.any(), Mockito.any());
+        .download(Mockito.any(), Mockito.any(), Mockito.any(), Mockito.any());
   }
 
   @Test
   @TestSecurity(user = "userJwt")
   void list_shouldReturnOk() {
-    Mockito.when(contractTemplateService.list("prod-test", "test", "1.0.0"))
+    Mockito.when(contractTemplateService.list("AR", "prod-test", "test", "1.0.0"))
         .thenReturn(
             Uni.createFrom()
                 .item(
@@ -288,10 +292,11 @@ public class ContractTemplateControllerTest {
         .queryParam("version", "1.0.0")
         .queryParam("name", "test")
         .when()
-        .get()
+        .get("/AR")
         .then()
         .statusCode(200);
 
-    Mockito.verify(contractTemplateService, Mockito.times(1)).list("prod-test", "test", "1.0.0");
+    Mockito.verify(contractTemplateService, Mockito.times(1))
+        .list("AR", "prod-test", "test", "1.0.0");
   }
 }
