@@ -63,7 +63,7 @@ jobs:
           docker system prune -af || true
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@36ff122137235d814f3dbd20068acfb521d3fd74 # main
 
       - name: Download config from blob-storage
         uses: azure/CLI@965c8d7571d2231a54e321ddd07f7b10317f34d9 # v2
