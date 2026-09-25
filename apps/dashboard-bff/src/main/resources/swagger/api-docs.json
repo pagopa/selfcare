@@ -3425,10 +3425,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductRoleMappingsResource"
-                  }
+                  "$ref" : "#/components/schemas/ProductRolesResource"
                 }
               }
             }
@@ -5411,7 +5408,8 @@
               "$ref" : "#/components/schemas/ProductRoleResource"
             }
           }
-        }
+        },
+        "description" : "List of partner technical role mappings"
       },
       "ProductRoleResource" : {
         "type" : "object",
@@ -5438,6 +5436,25 @@
           }
         },
         "description" : "Available product roles"
+      },
+      "ProductRolesResource" : {
+        "type" : "object",
+        "properties" : {
+          "roleMappings" : {
+            "type" : "array",
+            "description" : "List of product role mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRoleMappingsResource"
+            }
+          },
+          "partnerTechRoleMappings" : {
+            "type" : "array",
+            "description" : "List of partner technical role mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRoleMappingsResource"
+            }
+          }
+        }
       },
       "BrokerResource" : {
         "type" : "object",

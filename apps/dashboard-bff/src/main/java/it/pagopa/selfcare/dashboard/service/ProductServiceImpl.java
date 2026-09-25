@@ -41,6 +41,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Map<PartyRole, ProductRoleInfo> getPartnerTechRoles(String productId, String institutionType) {
+        log.trace("getPartnerTechRoles start");
+        log.debug("getPartnerTechRoles productId = {}, institutionType = {}", Encode.forJava(productId), Encode.forJava(institutionType));
+        Assert.hasText(productId, "A Product id is required");
+        Product product = productService.getProduct(productId);
+        Map<PartyRole, ProductRoleInfo> partnerTechRoleMappings = product != null ? product.getPartnerTechRoleMappings(institutionType) : null;
+
+        log.debug("getPartnerTechRoles result = {}", partnerTechRoleMappings);
+        log.trace("getPartnerTechRoles end");
+        return partnerTechRoleMappings;
+    }
+
+    @Override
     public ProductRolePermissionsList getMyPermissions(String userId) {
         log.trace("getMyPermissions start");
         log.debug("getMyPermissions userId = {},", Encode.forJava(userId));

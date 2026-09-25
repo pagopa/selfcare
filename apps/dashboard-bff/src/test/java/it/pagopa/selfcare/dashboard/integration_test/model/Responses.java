@@ -9,7 +9,7 @@ import it.pagopa.selfcare.dashboard.model.delegation.DelegationResource;
 import it.pagopa.selfcare.dashboard.model.delegation.DelegationWithPagination;
 import it.pagopa.selfcare.dashboard.model.institution.Institution;
 import it.pagopa.selfcare.dashboard.model.product.BrokerResource;
-import it.pagopa.selfcare.dashboard.model.product.ProductRoleMappingsResource;
+import it.pagopa.selfcare.dashboard.model.product.ProductRolesResource;
 import it.pagopa.selfcare.dashboard.model.product.ProductUserResource;
 import it.pagopa.selfcare.dashboard.model.support.SupportResponse;
 import it.pagopa.selfcare.dashboard.model.user.*;
@@ -26,7 +26,7 @@ public class Responses {
     protected SupportResponse supportResponse;
     protected URI backOfficeUrl;
     protected List<BrokerResource> brokerResource;
-    protected List<ProductRoleMappingsResource> productRoleMappingsResource;
+    protected ProductRolesResource productRolesResource;
     private DelegationWithPagination delegationWithPagination;
     private List<DelegationResource> delegationResource;
     private DelegationIdResource delegationIdResource;

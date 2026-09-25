@@ -9,11 +9,13 @@ import it.pagopa.selfcare.dashboard.model.backoffice.BrokerInfo;
 import it.pagopa.selfcare.dashboard.model.mapper.BrokerResourceMapper;
 import it.pagopa.selfcare.dashboard.model.mapper.ProductsMapper;
 import it.pagopa.selfcare.dashboard.model.product.BrokerResource;
-import it.pagopa.selfcare.dashboard.model.product.ProductRoleMappingsResource;
+import it.pagopa.selfcare.dashboard.model.product.ProductRolesResource;
 import it.pagopa.selfcare.dashboard.service.BrokerService;
 import it.pagopa.selfcare.dashboard.service.ProductService;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsList;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -49,13 +52,15 @@ public class ProductController {
     @GetMapping(value = "/{productId}/roles", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "getProductRoles", description = "${swagger.dashboard.product.api.getProductRoles}")
-    public Collection<ProductRoleMappingsResource> getProductRoles(@Parameter(description = "${swagger.dashboard.products.model.id}")
-                                                                   @PathVariable("productId") String productId,
-                                                                  @Parameter(description = "${swagger.dashboard.institutions.model.institutionType}")
-                                                                  @RequestParam(name = "institutionType", required = false) String institutionType) {
+    public ProductRolesResource getProductRoles(@Parameter(description = "${swagger.dashboard.products.model.id}")
+                                                @PathVariable("productId") String productId,
+                                                @Parameter(description = "${swagger.dashboard.institutions.model.institutionType}")
+                                                @RequestParam(name = "institutionType", required = false) String institutionType) {
         log.trace("getProductRoles start");
         log.debug("productId = {}", Encode.forJava(productId));
-        Collection<ProductRoleMappingsResource> result = ProductsMapper.toProductRoleMappingsResource(productService.getProductRoles(productId, institutionType));
+        final Map<PartyRole, ProductRoleInfo> productRoles = productService.getProductRoles(productId, institutionType);;
+        final Map<PartyRole, ProductRoleInfo> partnerTechRoles = productService.getPartnerTechRoles(productId, institutionType);
+        ProductRolesResource result = ProductsMapper.toProductRolesResource(productRoles, partnerTechRoles);
         log.debug("getProductRoles result = {}", result);
         log.trace("getProductRoles end");
 

@@ -15,7 +15,8 @@
       "$date": "2024-10-28T12:25:53.228+00:00"
     },
     "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
-    "modifiedAt": null
+    "modifiedAt": null,
+    "tenantId": "AR"
   },
   {
     "_id": {
@@ -31,7 +32,8 @@
       "$date": "2024-10-28T12:25:53.228+00:00"
     },
     "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
-    "modifiedAt": null
+    "modifiedAt": null,
+    "tenantId": "AR"
   },
   {
     "_id": {
@@ -49,7 +51,8 @@
       "$date": "2024-10-28T12:25:53.228+00:00"
     },
     "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
-    "modifiedAt": null
+    "modifiedAt": null,
+    "tenantId": "AR"
   },
   {
     "_id": {
@@ -67,6 +70,7 @@
       "$date": "2024-10-28T12:25:53.228+00:00"
     },
     "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
-    "modifiedAt": null
+    "modifiedAt": null,
+    "tenantId": "AR"
   }
 ]
