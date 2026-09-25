@@ -8,4 +8,8 @@ public class ProductConstant {
   public static final String PRODUCT_CDC = "PRODUCT_CDC";
   public static final String PRODUCT_FAILURE_METRICS = "Product_File_failures";
   public static final String PRODUCT_SUCCESS_METRICS = "Product_File_successes";
+
+  public static String partitionKey(String tenantId) {
+    return CDC_START_AT_PARTITION_KEY + "-" + tenantId;
+  }
 }

@@ -12,4 +12,3 @@ import lombok.NoArgsConstructor;
 public class ProductExpirationResponse {
   private Integer expirationDays;
 }
-

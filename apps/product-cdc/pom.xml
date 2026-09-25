@@ -198,6 +198,16 @@
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-tenant</artifactId>
+      <version>0.3.0</version>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
+      <artifactId>selfcare-sdk-tenant-mongodb</artifactId>
+      <version>0.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-cucumber-sdk</artifactId>
       <version>${selfcare-cucumber-sdk.version}</version>
       <scope>test</scope>

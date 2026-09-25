@@ -7,6 +7,7 @@
     "createdBy": "testuser",
     "fileType": "HTML",
     "name": "accordo di adesione",
+    "tenantId": "AR",
     "productId": "prod-test",
     "version": "0.0.2"
   },
@@ -18,6 +19,7 @@
     "description": "Accordo di adesione di esempio pdf",
     "fileType": "PDF",
     "name": "accordo di adesione",
+    "tenantId": "AR",
     "productId": "prod-test",
     "version": "0.0.3"
   }

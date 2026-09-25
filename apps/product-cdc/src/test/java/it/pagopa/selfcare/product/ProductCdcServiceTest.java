@@ -24,6 +24,7 @@ import it.pagopa.selfcare.product.mapper.ProductMapper;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,9 @@ class ProductCdcServiceTest {
     private AzureBlobClient azureBlobClient;
     private ProductMapper productMapper;
     private ObjectMapper objectMapper;
+    private TenantProductCdcResourceProvider resourceProvider;
+    private TenantRegistry tenantRegistry;
+    private TenantProductCdcResources tenantResources;
 
     @BeforeEach
     void setUp() {
@@ -60,6 +64,12 @@ class ProductCdcServiceTest {
         azureBlobClient = mock(AzureBlobClient.class);
         productMapper = mock(ProductMapper.class);
         objectMapper = new ObjectMapper();
+        resourceProvider = mock(TenantProductCdcResourceProvider.class);
+        tenantRegistry = mock(TenantRegistry.class);
+        tenantResources = new TenantProductCdcResources(
+                "AR", mongoClient, "test-db", productService, azureBlobClient, "products.json");
+        when(tenantRegistry.supportedTenantIds()).thenReturn(java.util.Set.of("AR"));
+        when(resourceProvider.forTenant("AR")).thenReturn(tenantResources);
 
         // Mock MongoDB structure
         when(mongoClient.getDatabase(anyString())).thenReturn(mongoDatabase);
@@ -76,14 +86,12 @@ class ProductCdcServiceTest {
                 .thenReturn(Multi.createFrom().empty());
 
         productCdcService = new ProductCdcService(
-                mongoClient,
-                "test-db",
+                resourceProvider,
+                tenantRegistry,
                 "test-collection",
                 true,
                 telemetryClient,
                 tableClient,
-                productService,
-                azureBlobClient,
                 productMapper,
                 objectMapper);
 
@@ -118,7 +126,7 @@ class ProductCdcServiceTest {
                 .thenReturn("uploaded-path");
 
         // Act
-        Uni<Object> result = productCdcService.invokeCreationDocument(product);
+        Uni<Object> result = productCdcService.invokeCreationDocument("AR", product);
 
         // Assert
         UniAssertSubscriber<Object> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -159,7 +167,7 @@ class ProductCdcServiceTest {
                 .thenReturn("uploaded-path");
 
         // Act
-        Uni<Object> result = productCdcService.invokeCreationDocument(product);
+        Uni<Object> result = productCdcService.invokeCreationDocument("AR", product);
 
         // Assert
         UniAssertSubscriber<Object> subscriber = result.subscribe().withSubscriber(UniAssertSubscriber.create());
@@ -191,7 +199,7 @@ class ProductCdcServiceTest {
         when(azureBlobClient.uploadFilePath(anyString(), any(byte[].class))).thenReturn("ok");
 
         // Act
-        productCdcService.consumerEvent(document);
+        productCdcService.consumerEvent("AR", document);
 
         // Assert
         // Verify that the resume token was updated in the Table Storage

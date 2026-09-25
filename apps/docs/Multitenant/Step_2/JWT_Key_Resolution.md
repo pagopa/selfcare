@@ -57,10 +57,11 @@ reusing the existing `jwt-public-key` secret per stack (see
 `infra/resources/onboarding-ms/*/onboarding.tf`).
 
 `mp.jwt.verify.publickey` is kept as a **legacy fallback only**: it is used solely when
-no tenant in the registry configures a `jwt.publicKeyEnvVar`. This keeps the other five
-apps sharing `selfcare-sdk-security` (`document-ms`, `iam`, `product`, `user-ms`,
-`webhook`) fully backward compatible, since none of them configure a tenant JWT
-registry today.
+no tenant in the registry configures a `jwt.publicKeyEnvVar`. Apps that already wire
+the tenant JWT registry (`onboarding-ms`, `product`, `user-group-ms`) resolve keys
+from `jwt.publicKeyEnvVar`. Remaining apps sharing `selfcare-sdk-security`
+(`document-ms`, `iam`, `user-ms`, `webhook`) stay backward compatible until they
+configure a tenant JWT registry.
 
 ## Key selection at verification time
 

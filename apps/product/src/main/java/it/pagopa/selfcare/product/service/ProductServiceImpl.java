@@ -24,11 +24,11 @@ import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.ProductUtils;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
-
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -47,16 +47,17 @@ public class ProductServiceImpl implements ProductService {
   private static final String PRODUCT_NOT_FOUND = "Product %s not found";
   private static final String PRODUCT_STATUS_NOT_VALID = "Product with id %s has status %s";
   private static final String PARENT_PRODUCT_NOT_FOUND = "Parent product %s not found";
-  private static final String PARENT_CANNOT_BE_CHILD = "Parent product %s cannot be a child product";
+  private static final String PARENT_CANNOT_BE_CHILD =
+      "Parent product %s cannot be a child product";
   private static final String PARENT_ID_SELF_REFERENCE = "parentId cannot be equal to productId";
   private static final String ROLE_NOT_FOUND = "Role %s not found for product %s";
   private static final String PRODUCT_ROLE_NOT_FOUND =
       "ProductRole %s not found for role %s in product %s";
   private static final int DEFAULT_EXPIRATION_DATE = 30;
 
-
   // JPA
   private final ProductRepository productRepository;
+  private final TenantContext tenantContext;
 
   // MAPPER
   private final ProductMapperRequest productMapperRequest;
@@ -73,6 +74,7 @@ public class ProductServiceImpl implements ProductService {
   @Override
   public Uni<ProductBaseResponse> createProduct(
       ProductCreateRequest productCreateRequest, String createdBy) {
+    useTenant(productCreateRequest.getTenantId());
 
     if (StringUtils.isBlank(productCreateRequest.getProductId())) {
       throw new BadRequestException(
@@ -86,6 +88,7 @@ public class ProductServiceImpl implements ProductService {
 
     Product requestProduct = productMapperRequest.toProduct(productCreateRequest);
     requestProduct.setProductId(productCreateRequest.getProductId());
+    requestProduct.setTenantId(tenantContext.requiredTenantId());
 
     if (requestProduct.getStatus() == null) {
       log.info("Product status missing - default TESTING");
@@ -112,7 +115,8 @@ public class ProductServiceImpl implements ProductService {
                               sanitizedProductId,
                               nextVersion);
                           return productRepository
-                              .persist(productMapperRequest.cloneObject(currentProduct, requestProduct))
+                              .persist(
+                                  productMapperRequest.cloneObject(currentProduct, requestProduct))
                               .replaceWith(requestProduct);
                         })
                     .onItem()
@@ -120,24 +124,26 @@ public class ProductServiceImpl implements ProductService {
                     .switchTo(
                         () -> {
                           log.info("Adding new config of product {}", sanitizedProductId);
-                          return productRepository.persist(requestProduct).replaceWith(requestProduct);
+                          return productRepository
+                              .persist(requestProduct)
+                              .replaceWith(requestProduct);
                         })
                     .map(
                         productUpdated ->
                             productMapperResponse.toProductBaseResponse(
                                 Product.builder()
+                                    .tenantId(productUpdated.getTenantId())
                                     .id(productUpdated.getId())
                                     .productId(productUpdated.getProductId())
                                     .status(productUpdated.getStatus())
                                     .build())));
   }
 
-  public Uni<ProductResponse> getProductById(String productId) {
+  public Uni<ProductResponse> getProduct(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
-          .failure(
-              new IllegalArgumentException(
-                  String.format(MISSING_PRODUCT_BY_ID, productId)));
+          .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
     }
 
     String sanitizedProductId = Encode.forJava(productId);
@@ -152,7 +158,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<ProductResponse> getValidProductById(String productId) {
+  public Uni<ProductResponse> getValidProduct(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
           .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
@@ -176,8 +183,9 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<ProductExpirationResponse> getProductExpirationDays(String productId) {
-    return getValidProductById(productId)
+  public Uni<ProductExpirationResponse> getProductExpirationDays(
+      String tenantId, String productId) {
+    return getValidProduct(tenantId, productId)
         .map(
             product -> {
               int expirationDays =
@@ -189,7 +197,8 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public Uni<List<ProductResponse>> getProducts(boolean rootOnly, boolean valid) {
+  public Uni<List<ProductResponse>> getProducts(String tenantId, boolean rootOnly, boolean valid) {
+    useTenant(tenantId);
     log.info("Getting products - rootOnly: {}, valid: {}", rootOnly, valid);
 
     return productRepository
@@ -205,7 +214,8 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<ProductRoleResponse> validateProductRole(
-      String productId, UserRole role, String productRole) {
+      String tenantId, String productId, UserRole role, String productRole) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom().failure(new BadRequestException("Missing productId"));
     }
@@ -233,8 +243,9 @@ public class ProductServiceImpl implements ProductService {
 
   /**
    * Replicates the legacy {@code ProductUtils.getProductRole} logic on the product-ms model: looks
-   * up the {@link RoleMapping}s whose {@code role} matches the given {@link UserRole}, then searches
-   * their {@code backOfficeRoles} for the one whose {@code code} equals {@code productRole}.
+   * up the {@link RoleMapping}s whose {@code role} matches the given {@link UserRole}, then
+   * searches their {@code backOfficeRoles} for the one whose {@code code} equals {@code
+   * productRole}.
    */
   private ProductRoleResponse resolveProductRole(
       Product product, UserRole role, String productRole, String sanitizedProductId) {
@@ -260,8 +271,7 @@ public class ProductServiceImpl implements ProductService {
         .orElseThrow(
             () ->
                 new NotFoundException(
-                    String.format(
-                        PRODUCT_ROLE_NOT_FOUND, productRole, role, sanitizedProductId)));
+                    String.format(PRODUCT_ROLE_NOT_FOUND, productRole, role, sanitizedProductId)));
   }
 
   /**
@@ -293,8 +303,7 @@ public class ProductServiceImpl implements ProductService {
         .failWith(
             () -> {
               log.warn("Parent product {} not found", Encode.forJava(product.getParentId()));
-              return new NotFoundException(
-                  String.format(PRODUCT_NOT_FOUND, product.getParentId()));
+              return new NotFoundException(String.format(PRODUCT_NOT_FOUND, product.getParentId()));
             })
         .onItem()
         .transformToUni(
@@ -317,16 +326,16 @@ public class ProductServiceImpl implements ProductService {
   }
 
   private static boolean statusIsNotValid(ProductStatus status) {
-    return List.of(ProductStatus.INACTIVE, ProductStatus.PHASE_OUT, ProductStatus.DELETED).contains(status);
+    return List.of(ProductStatus.INACTIVE, ProductStatus.PHASE_OUT, ProductStatus.DELETED)
+        .contains(status);
   }
 
   @Override
-  public Uni<ProductBaseResponse> deleteProductById(String productId) {
+  public Uni<ProductBaseResponse> deleteProduct(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
-          .failure(
-              new IllegalArgumentException(
-                  String.format(MISSING_PRODUCT_BY_ID, productId)));
+          .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
     }
 
     String sanitizedProductId = Encode.forJava(productId);
@@ -344,7 +353,11 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<ProductResponse> patchProductById(
-      String productId, String createdBy, ProductPatchRequest productPatchRequest) {
+      String tenantId,
+      String productId,
+      String createdBy,
+      ProductPatchRequest productPatchRequest) {
+    useTenant(tenantId);
     String sanitizedProductId = Encode.forJava(productId);
     String sanitizedCreatedBy = Encode.forJava(createdBy);
     log.info(
@@ -370,12 +383,15 @@ public class ProductServiceImpl implements ProductService {
                     .findProductById(productId)
                     .onItem()
                     .ifNull()
-                    .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, productId)))
+                    .failWith(
+                        () -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, productId)))
                     .onItem()
                     .transformToUni(
                         current -> {
                           Product patched = productMapperRequest.toPatch(patchRequest, current);
-                          applyParentOnboardingDefaults(patched, patchRequest.getParentId() != null);
+                          patched.setTenantId(tenantContext.requiredTenantId());
+                          applyParentOnboardingDefaults(
+                              patched, patchRequest.getParentId() != null);
 
                           return validateParentRelationship(patched)
                               .onItem()
@@ -391,16 +407,15 @@ public class ProductServiceImpl implements ProductService {
                                         .persist(patched)
                                         .map(productMapperResponse::toProductResponse);
                                   });
-                                }));
+                        }));
   }
 
   @Override
-  public Uni<ProductOriginResponse> getProductOriginsById(String productId) {
+  public Uni<ProductOriginResponse> getProductOrigins(String tenantId, String productId) {
+    useTenant(tenantId);
     if (StringUtils.isBlank(productId)) {
       return Uni.createFrom()
-          .failure(
-              new IllegalArgumentException(
-                  String.format(MISSING_PRODUCT_BY_ID, productId)));
+          .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
     }
 
     String sanitizedProductId = Encode.forJava(productId);
@@ -416,80 +431,131 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public Uni<WorkflowTypeResponse> getWorkflowType(
-      String productId, InstitutionType institutionType, Origin origin) {
+      String tenantId, String productId, InstitutionType institutionType, Origin origin) {
+    useTenant(tenantId);
 
     return validateProductContext(productId, institutionType, origin)
         .onItem()
-        .transformToUni(ignored -> {
-          String sanitizedProductId = Encode.forJava(productId);
-          log.info("Resolving workflowType for product {}, institutionType {}, origin {}",
-              sanitizedProductId, institutionType, origin);
+        .transformToUni(
+            ignored -> {
+              String sanitizedProductId = Encode.forJava(productId);
+              log.info(
+                  "Resolving workflowType for product {}, institutionType {}, origin {}",
+                  sanitizedProductId,
+                  institutionType,
+                  origin);
 
-          return productRepository
-              .findProductById(productId)
-              .onItem()
-              .ifNull()
-              .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
-              .map(product -> {
-                WorkflowTypeResponse result = resolveWorkflowType(product, institutionType, origin, sanitizedProductId);
-                log.info("Workflow type resolved - productId: {}, institutionType: {}, origin: {}, workflowType: {}",
-                    sanitizedProductId, institutionType, origin, result.getWorkflowType());
-                return result;
-              });
-        });
+              return productRepository
+                  .findProductById(productId)
+                  .onItem()
+                  .ifNull()
+                  .failWith(
+                      () ->
+                          new NotFoundException(
+                              String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+                  .map(
+                      product -> {
+                        WorkflowTypeResponse result =
+                            resolveWorkflowType(
+                                product, institutionType, origin, sanitizedProductId);
+                        log.info(
+                            "Workflow type resolved - productId: {}, institutionType: {}, origin: {}, workflowType: {}",
+                            sanitizedProductId,
+                            institutionType,
+                            origin,
+                            result.getWorkflowType());
+                        return result;
+                      });
+            });
   }
 
   @Override
   public Uni<Boolean> isRequiredDocumentsEnabled(
-      String productId, InstitutionType institutionType, Origin origin) {
+      String tenantId, String productId, InstitutionType institutionType, Origin origin) {
+    useTenant(tenantId);
 
     return validateProductContext(productId, institutionType, origin)
         .onItem()
-        .transformToUni(ignored -> {
-          String sanitizedProductId = Encode.forJava(productId);
-          log.info("Checking if required documents are enabled for product {}, institutionType {}, origin {}",
-              sanitizedProductId, institutionType, origin);
+        .transformToUni(
+            ignored -> {
+              String sanitizedProductId = Encode.forJava(productId);
+              log.info(
+                  "Checking if required documents are enabled for product {}, institutionType {}, origin {}",
+                  sanitizedProductId,
+                  institutionType,
+                  origin);
 
-          return productRepository
-              .findProductById(productId)
-              .onItem()
-              .ifNull()
-              .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
-              .map(product -> {
-                boolean enabled = !filterRequiredDocumentsForContext(product, institutionType, origin).isEmpty();
-                log.info("Required documents check - productId: {}, institutionType: {}, origin: {}, enabled: {}",
-                    sanitizedProductId, institutionType, origin, enabled);
-                return enabled;
-              });
-        });
+              return productRepository
+                  .findProductById(productId)
+                  .onItem()
+                  .ifNull()
+                  .failWith(
+                      () ->
+                          new NotFoundException(
+                              String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+                  .map(
+                      product -> {
+                        boolean enabled =
+                            !filterRequiredDocumentsForContext(product, institutionType, origin)
+                                .isEmpty();
+                        log.info(
+                            "Required documents check - productId: {}, institutionType: {}, origin: {}, enabled: {}",
+                            sanitizedProductId,
+                            institutionType,
+                            origin,
+                            enabled);
+                        return enabled;
+                      });
+            });
   }
 
   @Override
   public Uni<List<RequiredDocumentResponse>> getRequiredDocuments(
-      String productId, InstitutionType institutionType, Origin origin) {
+      String tenantId, String productId, InstitutionType institutionType, Origin origin) {
+    useTenant(tenantId);
 
     return validateProductContext(productId, institutionType, origin)
         .onItem()
-        .transformToUni(ignored -> {
-          String sanitizedProductId = Encode.forJava(productId);
-          log.info("Retrieving required documents for product {}, institutionType {}, origin {}",
-              sanitizedProductId, institutionType, origin);
+        .transformToUni(
+            ignored -> {
+              String sanitizedProductId = Encode.forJava(productId);
+              log.info(
+                  "Retrieving required documents for product {}, institutionType {}, origin {}",
+                  sanitizedProductId,
+                  institutionType,
+                  origin);
 
-          return productRepository
-              .findProductById(productId)
-              .onItem()
-              .ifNull()
-              .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
-              .map(product -> {
-                List<RequiredDocumentResponse> documents =
-                    filterRequiredDocumentsForContext(product, institutionType, origin).stream()
-                        .map(productMapperResponse::toRequiredDocumentResponse)
-                        .toList();
-                log.info("Required documents retrieved - productId: {}, institutionType: {}, origin: {}, count: {}",
-                    sanitizedProductId, institutionType, origin, documents.size());
-                return documents;
-              });
-        });
+              return productRepository
+                  .findProductById(productId)
+                  .onItem()
+                  .ifNull()
+                  .failWith(
+                      () ->
+                          new NotFoundException(
+                              String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+                  .map(
+                      product -> {
+                        List<RequiredDocumentResponse> documents =
+                            filterRequiredDocumentsForContext(product, institutionType, origin)
+                                .stream()
+                                .map(productMapperResponse::toRequiredDocumentResponse)
+                                .toList();
+                        log.info(
+                            "Required documents retrieved - productId: {}, institutionType: {}, origin: {}, count: {}",
+                            sanitizedProductId,
+                            institutionType,
+                            origin,
+                            documents.size());
+                        return documents;
+                      });
+            });
+  }
+
+  private void useTenant(String tenantId) {
+    if (StringUtils.isBlank(tenantId)) {
+      throw new BadRequestException("Missing tenantId");
+    }
+    tenantContext.setTenantId(tenantId);
   }
 
   private Uni<Void> validateProductContext(
@@ -508,26 +574,27 @@ public class ProductServiceImpl implements ProductService {
 
   private List<RequiredDocument> filterRequiredDocumentsForContext(
       Product product, InstitutionType institutionType, Origin origin) {
-    if (Objects.isNull(product.getRequiredDocuments()) || product.getRequiredDocuments().isEmpty()) {
+    if (Objects.isNull(product.getRequiredDocuments())
+        || product.getRequiredDocuments().isEmpty()) {
       return List.of();
     }
 
     return product.getRequiredDocuments().stream()
-        .filter(doc -> {
-          if (Objects.isNull(doc.getFilter())) {
-            return false;
-          }
-          boolean institutionTypeMatch =
-              Objects.nonNull(doc.getFilter().getInstitutionType())
-                  && doc.getFilter().getInstitutionType().contains(institutionType);
-          boolean originMatch =
-              Objects.nonNull(doc.getFilter().getOrigin())
-                  && doc.getFilter().getOrigin().contains(origin);
-          return institutionTypeMatch && originMatch;
-        })
+        .filter(
+            doc -> {
+              if (Objects.isNull(doc.getFilter())) {
+                return false;
+              }
+              boolean institutionTypeMatch =
+                  Objects.nonNull(doc.getFilter().getInstitutionType())
+                      && doc.getFilter().getInstitutionType().contains(institutionType);
+              boolean originMatch =
+                  Objects.nonNull(doc.getFilter().getOrigin())
+                      && doc.getFilter().getOrigin().contains(origin);
+              return institutionTypeMatch && originMatch;
+            })
         .toList();
   }
-
 
   private void applyParentOnboardingDefaults(Product product, boolean parentIdWasProvided) {
     if (!parentIdWasProvided) {
@@ -584,10 +651,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   private WorkflowTypeResponse resolveWorkflowType(
-      Product product,
-      InstitutionType institutionType,
-      Origin origin,
-      String sanitizedProductId) {
+      Product product, InstitutionType institutionType, Origin origin, String sanitizedProductId) {
 
     if (Objects.isNull(product.getWorkflowRules()) || product.getWorkflowRules().isEmpty()) {
       throw new NotFoundException(
@@ -600,9 +664,11 @@ public class ProductServiceImpl implements ProductService {
         .findFirst()
         .map(WorkflowRule::getWorkflowType)
         .map(wt -> WorkflowTypeResponse.builder().workflowType(wt).build())
-        .orElseThrow(() -> new NotFoundException(
-            String.format(
-                "No workflowRule found for product %s, institutionType %s, origin %s",
-                sanitizedProductId, institutionType, origin)));
+        .orElseThrow(
+            () ->
+                new NotFoundException(
+                    String.format(
+                        "No workflowRule found for product %s, institutionType %s, origin %s",
+                        sanitizedProductId, institutionType, origin)));
   }
 }

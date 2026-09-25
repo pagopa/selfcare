@@ -115,6 +115,9 @@
           "contractTemplateVersion" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "productId" : {
             "type" : "string"
           },
@@ -289,16 +292,23 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "status" : {
             "$ref" : "#/components/schemas/ProductStatus"
           }
         }
       },
       "ProductCreateRequest" : {
-        "required" : [ "productId" ],
+        "required" : [ "productId", "tenantId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "tenantId" : {
             "pattern" : "\\S",
             "type" : "string"
           },
@@ -432,10 +442,14 @@
         }
       },
       "ProductPatchRequest" : {
-        "required" : [ "productId" ],
+        "required" : [ "productId", "tenantId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "tenantId" : {
             "pattern" : "\\S",
             "type" : "string"
           },
@@ -538,10 +552,14 @@
         }
       },
       "ProductResponse" : {
-        "required" : [ "productId" ],
+        "required" : [ "productId", "tenantId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "tenantId" : {
             "pattern" : "\\S",
             "type" : "string"
           },
@@ -872,13 +890,20 @@
     }
   },
   "paths" : {
-    "/contract-template" : {
+    "/contract-template/{tenantId}" : {
       "post" : {
         "summary" : "Upload a new contract template version",
         "description" : "Upload an html file as a new contract template version to be used in product configuration",
         "operationId" : "uploadContractTemplate",
         "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "createdBy",
           "in" : "query",
           "schema" : {
@@ -989,6 +1014,13 @@
         "operationId" : "listContractTemplates",
         "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "name",
           "in" : "query",
           "schema" : {
@@ -1050,7 +1082,7 @@
         } ]
       }
     },
-    "/contract-template/{contractTemplateId}" : {
+    "/contract-template/{tenantId}/{contractTemplateId}" : {
       "get" : {
         "summary" : "Download a contract template version",
         "description" : "Download the html file of a specific contract template version",
@@ -1058,6 +1090,13 @@
         "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
           "name" : "contractTemplateId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -1132,71 +1171,6 @@
       }
     },
     "/product" : {
-      "get" : {
-        "summary" : "Get products (latest version per productId)",
-        "description" : "Returns the list of products, one entry per productId (latest version). Both query params rootOnly and valid are required.",
-        "operationId" : "getProducts",
-        "tags" : [ "Product" ],
-        "parameters" : [ {
-          "name" : "rootOnly",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "valid",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "boolean"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Products retrieved",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request - missing required query params",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      },
       "post" : {
         "summary" : "Create or update a product configuration",
         "description" : "Creates a new product configuration or updates the existing one when a match is found",
@@ -1232,63 +1206,6 @@
           },
           "400" : {
             "description" : "Bad Request",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      }
-    },
-    "/product/origins" : {
-      "get" : {
-        "summary" : "Get product origins by productId",
-        "description" : "Retrieve the list of institution origins for the given product.",
-        "operationId" : "getProductOriginsById",
-        "tags" : [ "Product", "external-v2", "external-pnpg" ],
-        "parameters" : [ {
-          "name" : "productId",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Origins found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProductOriginResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Product not found",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -1357,13 +1274,158 @@
         } ]
       }
     },
-    "/product/workflow-type" : {
+    "/product/{tenantId}" : {
+      "get" : {
+        "summary" : "Get products (latest version per productId)",
+        "description" : "Returns the list of products, one entry per productId (latest version). Both query params rootOnly and valid are required.",
+        "operationId" : "getProducts",
+        "tags" : [ "Product" ],
+        "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "rootOnly",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "valid",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Products retrieved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request - missing required query params",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/{tenantId}/origins" : {
+      "get" : {
+        "summary" : "Get product origins by productId",
+        "description" : "Retrieve the list of institution origins for the given product.",
+        "operationId" : "getProductOriginsById",
+        "tags" : [ "Product", "external-v2", "external-pnpg" ],
+        "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Origins found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductOriginResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/product/{tenantId}/workflow-type" : {
       "get" : {
         "summary" : "Resolve workflow type for a product",
         "description" : "Returns the WorkflowType to use for the given combination of productId, institutionType and origin, based on the workflowRules configured for the product.",
         "operationId" : "getWorkflowType",
         "tags" : [ "Product" ],
         "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "institutionType",
           "required" : true,
           "in" : "query",
@@ -1438,7 +1500,7 @@
         } ]
       }
     },
-    "/product/{productId}" : {
+    "/product/{tenantId}/{productId}" : {
       "patch" : {
         "summary" : "Partially update a product by ID",
         "description" : "Partially updates an existing product identified by its productId. Only the non-null fields provided in the request body will be updated; all other fields will remain unchanged.",
@@ -1446,6 +1508,13 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -1532,6 +1601,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1582,6 +1658,13 @@
         "tags" : [ "Product", "external-v2", "external-pnpg" ],
         "parameters" : [ {
           "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -1641,7 +1724,7 @@
         } ]
       }
     },
-    "/product/{productId}/expiration-days" : {
+    "/product/{tenantId}/{productId}/expiration-days" : {
       "get" : {
         "summary" : "Get product expiration days",
         "description" : "Returns the expiration days configured for a valid product; defaults to 30 when not set.",
@@ -1649,6 +1732,13 @@
         "tags" : [ "Product" ],
         "parameters" : [ {
           "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -1698,7 +1788,7 @@
         } ]
       }
     },
-    "/product/{productId}/required-documents" : {
+    "/product/{tenantId}/{productId}/required-documents" : {
       "get" : {
         "summary" : "Get required documents for a product",
         "description" : "Returns the list of required documents for the given combination of productId, institutionType and origin.",
@@ -1708,6 +1798,13 @@
           "name" : "productId",
           "required" : true,
           "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1782,7 +1879,7 @@
         } ]
       }
     },
-    "/product/{productId}/required-documents/enabled" : {
+    "/product/{tenantId}/{productId}/required-documents/enabled" : {
       "head" : {
         "summary" : "Check if required documents are enabled",
         "description" : "Returns HTTP 200 with header X-Required-Documents-Enabled set to true if required documents are configured for the given product, institutionType and origin combination; false otherwise.",
@@ -1792,6 +1889,13 @@
           "name" : "productId",
           "required" : true,
           "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1843,7 +1947,7 @@
         } ]
       }
     },
-    "/product/{productId}/role-mappings/validate" : {
+    "/product/{tenantId}/{productId}/role-mappings/validate" : {
       "get" : {
         "summary" : "Validate a product role",
         "description" : "Validates that the given productRole (product-specific role code) exists for the given role (party role) within the product configuration, returning its details.",
@@ -1853,6 +1957,13 @@
           "name" : "productId",
           "required" : true,
           "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "path",
+          "required" : true,
           "schema" : {
             "type" : "string"
           }
@@ -1924,7 +2035,7 @@
         } ]
       }
     },
-    "/product/{productId}/valid" : {
+    "/product/{tenantId}/{productId}/valid" : {
       "get" : {
         "summary" : "Get product only if valid for onboarding",
         "description" : "Retrieve a product by its identifier only when neither the product nor its parent (when present) is in a not-valid status (INACTIVE or PHASE_OUT).",
@@ -1932,6 +2043,13 @@
         "tags" : [ "Product" ],
         "parameters" : [ {
           "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
           "in" : "path",
           "required" : true,
           "schema" : {
