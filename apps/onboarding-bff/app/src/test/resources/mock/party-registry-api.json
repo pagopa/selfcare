@@ -101,7 +101,7 @@
     },
     "httpResponse": {
       "statusCode": 200,
-      "body": "{\n      \"requestDateTime\": \"2025-02-26T13:56:49.844205884Z\",\n      \"legalTaxId\": \"PRVTNT80A41H401T\",\n      \"businesses\": [\n        {\"businessName\": \"test0\", \"businessTaxId\": \"01501320442\"},\n        {\"businessName\": \"test1\", \"businessTaxId\": \"01501320442\"}\n      ]\n    }",
+      "body": "{\n      \"requestDateTime\": \"2025-02-26T13:56:49.844205884Z\",\n      \"legalTaxId\": \"PRVTNT80A41H401T\",\n      \"businesses\": [\n        {\"businessName\": \"test0\", \"businessTaxId\": \"01501320442\"},\n        {\"businessName\": \"test1\", \"businessTaxId\": \"01501320442\"},\n        {\"businessName\": \"BANCA FINTA SPA\", \"businessTaxId\": \"08875230016\"}\n      ]\n    }",
       "headers": {
         "Content-Type": "application/json"
       }

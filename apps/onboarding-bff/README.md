@@ -1,7 +1,15 @@
 # Progetto Selfcare Onboarding Backend 
 An orchestrator for the onboarding process
 
+## IPA institution lookup
+
+The BFF exposes `GET /v2/institutions/ipa/{taxCode}` for an exact IPA tax-code lookup and `GET /v2/institutions/ipa` for paginated IPA search. Both endpoints forward the optional singular `category` query parameter to Registry Proxy; it accepts one IPA code or a comma-separated list such as `C17,C16,L10`.
+
 ## Configuration Properties
+
+### Integration-test tenant registry
+
+The integration-test `onboarding-ms` container uses `TENANT_REGISTRY_JSON` with the AR and PNPG tenants. Its `products` storage is mapped to the Azurite `products` container through `BLOB_STORAGE_CONN_STRING_AR` and `BLOB_STORAGE_CONN_STRING_PNPG`; keep those variables aligned with the test fixture.
 
 #### Application properties
 
@@ -28,9 +36,3 @@ An orchestrator for the onboarding process
 |feign.client.config.user-registry.connectTimeout|USERVICE_USER_REGISTRY_REST_CLIENT_CONNECT_TIMEOUT<br>REST_CLIENT_CONNECT_TIMEOUT|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/connector/rest/src/main/resources/config/user-registry-rest-client.properties)| yes |
 |feign.client.config.user-registry.readTimeout|USERVICE_USER_REGISTRY_REST_CLIENT_READ_TIMEOUT<br>REST_CLIENT_READ_TIMEOUT|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/connector/rest/src/main/resources/config/user-registry-rest-client.properties)| yes |
 |feign.client.config.user-registry.loggerLevel|USERVICE_USER_REGISTRY_REST_CLIENT_LOGGER_LEVEL<br>REST_CLIENT_LOGGER_LEVEL|<a name= "default property"></a>[default_property](https://github.com/pagopa/selfcare-onboarding-bff/blob/main/connector/rest/src/main/resources/config/user-registry-rest-client.properties)| yes |
-
-
-#### Core Configurations
-
-| **Property** | **Enviroment Variable** | **Default** | **Required** |
-|--------------|-------------------------|-------------|:------------:|

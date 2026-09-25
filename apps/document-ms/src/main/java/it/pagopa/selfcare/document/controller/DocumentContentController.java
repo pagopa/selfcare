@@ -124,8 +124,9 @@ public class DocumentContentController {
     @Tag(name = "Document Content Controller")
     @Tag(name = "external-v2")
     @Path("/{onboardingId}/contract-signed")
-    public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "onboardingId") String onboardingId) {
-        return documentContentService.retrieveSignedFile(onboardingId);
+    public Uni<RestResponse<File>> getContractSigned(@PathParam(value = "onboardingId") String onboardingId, @QueryParam("downloadP7MFile") @DefaultValue("false") boolean downloadP7MFile) {
+        log.info("Retrieving signed contract for onboardingId: {}, downloadP7MFile: {}", sanitize(onboardingId), downloadP7MFile);
+        return documentContentService.retrieveSignedFile(onboardingId, downloadP7MFile);
     }
 
     @Operation(

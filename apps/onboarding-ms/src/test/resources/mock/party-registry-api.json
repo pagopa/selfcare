@@ -218,7 +218,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "00136380805"
@@ -236,7 +236,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "03309030652"
@@ -254,7 +254,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "00297110389"
@@ -272,7 +272,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "123456789"
@@ -290,7 +290,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "00231830688"
@@ -308,7 +308,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "83001010616"
@@ -326,7 +326,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/party-registry-mock/institutions/{taxCode}",
+      "path": "/party-registry-mock/institutions/ipa/{taxCode}",
       "pathParameters": {
         "taxCode": [
           "83001010617"
