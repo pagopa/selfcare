@@ -23,9 +23,9 @@ import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
+import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductResponse;
-import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
@@ -88,9 +88,12 @@ class ProductControllerTest {
   void createProduct_shouldReturnOK() {
     // given
     ProductCreateRequest productCreateRequest = getProductCreateRequest();
+    productCreateRequest.setTenantId("AR");
+    productCreateRequest.setProductId("prod-test");
 
     ProductBaseResponse productBaseResponse =
         ProductBaseResponse.builder()
+            .tenantId("AR")
             .productId("prod-test")
             .status(ProductStatus.TESTING)
             .id("prod-test-id")
@@ -101,15 +104,15 @@ class ProductControllerTest {
 
     // when
     given()
-        .queryParam("productId", "prod-test")
         .queryParam("createdBy", "createdBy")
         .contentType(ContentType.JSON)
         .body(productCreateRequest)
         .when()
-        .post()
+        .post("/")
         .then()
         .statusCode(201)
         .contentType(ContentType.JSON)
+        .body("tenantId", equalTo("AR"))
         .body("id", equalTo("prod-test-id"))
         .body("productId", equalTo("prod-test"))
         .body("status", equalTo("TESTING"));
@@ -142,7 +145,7 @@ class ProductControllerTest {
         .contentType(ContentType.JSON)
         .body(productCreateRequest)
         .when()
-        .post()
+        .post("/")
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON);
@@ -154,7 +157,7 @@ class ProductControllerTest {
     // given
     ProductResponse response = getProductResponse();
 
-    when(productService.getProductById("prod-test")).thenReturn(Uni.createFrom().item(response));
+    when(productService.getProduct("AR", "prod-test")).thenReturn(Uni.createFrom().item(response));
 
     // when
     given()
@@ -162,7 +165,7 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .get("prod-test")
+        .get("/AR/prod-test")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -170,7 +173,7 @@ class ProductControllerTest {
         .body("status", equalTo("TESTING"));
 
     // then
-    verify(productService, times(1)).getProductById("prod-test");
+    verify(productService, times(1)).getProduct("AR", "prod-test");
   }
 
   @Test
@@ -178,7 +181,7 @@ class ProductControllerTest {
   void getProductById_whenNotFound_shouldReturnKO() {
     // given
     String missing = "prod-ko";
-    when(productService.getProductById(missing))
+    when(productService.getProduct("AR", missing))
         .thenReturn(Uni.createFrom().failure(new NotFoundException("not found")));
 
     // when
@@ -186,7 +189,7 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .get(missing)
+        .get("/AR/" + missing)
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -196,7 +199,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/products/" + missing));
 
     // then
-    verify(productService, times(1)).getProductById(missing);
+    verify(productService, times(1)).getProduct("AR", missing);
   }
 
   @Test
@@ -207,7 +210,7 @@ class ProductControllerTest {
 
     ProductBaseResponse productBaseResponse = new ProductBaseResponse();
 
-    when(productService.deleteProductById(productId))
+    when(productService.deleteProduct("AR", productId))
         .thenReturn(Uni.createFrom().item(productBaseResponse));
 
     // when
@@ -215,14 +218,14 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .delete(productId)
+        .delete("/AR/" + productId)
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
         .body(notNullValue());
 
     // then
-    verify(productService, times(1)).deleteProductById(productId);
+    verify(productService, times(1)).deleteProduct("AR", productId);
     verifyNoMoreInteractions(productService);
   }
 
@@ -232,7 +235,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.deleteProductById(productId))
+    when(productService.deleteProduct("AR", productId))
         .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
 
     // when
@@ -240,7 +243,7 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .delete(productId)
+        .delete("/AR/" + productId)
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON)
@@ -250,7 +253,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/products/" + productId));
 
     // then
-    verify(productService, times(1)).deleteProductById(productId);
+    verify(productService, times(1)).deleteProduct("AR", productId);
     verifyNoMoreInteractions(productService);
   }
 
@@ -260,7 +263,7 @@ class ProductControllerTest {
     // given
     String productId = "missing";
 
-    when(productService.deleteProductById(productId))
+    when(productService.deleteProduct("AR", productId))
         .thenReturn(Uni.createFrom().failure(new NotFoundException("Product missing not found")));
 
     // when
@@ -268,7 +271,7 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .delete(productId)
+        .delete("/AR/" + productId)
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -278,7 +281,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/products/" + productId));
 
     // then
-    verify(productService, times(1)).deleteProductById(productId);
+    verify(productService, times(1)).deleteProduct("AR", productId);
     verifyNoMoreInteractions(productService);
   }
 
@@ -290,7 +293,7 @@ class ProductControllerTest {
     ProductResponse updated = mock(ProductResponse.class);
 
     when(productService.patchProductById(
-            eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
+            eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
         .thenReturn(Uni.createFrom().item(updated));
 
     String patchDoc = "{\"status\":\"TESTING\"}";
@@ -302,14 +305,14 @@ class ProductControllerTest {
         .accept(ContentType.JSON)
         .body(patchDoc)
         .when()
-        .patch(productId)
+        .patch("/AR/" + productId)
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON);
 
     // then
     verify(productService, times(1))
-        .patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
+        .patchProductById(eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
     verifyNoMoreInteractions(productService);
   }
 
@@ -320,7 +323,7 @@ class ProductControllerTest {
     String productId = " ";
 
     when(productService.patchProductById(
-            eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
+            eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
         .thenReturn(Uni.createFrom().failure(new IllegalArgumentException()));
 
     String patchDoc = "{\"status\":\"TESTING\"}";
@@ -332,7 +335,7 @@ class ProductControllerTest {
         .accept(ContentType.JSON)
         .body(patchDoc)
         .when()
-        .patch(productId)
+        .patch("/AR/" + productId)
         .then()
         .statusCode(405)
         .contentType(ContentType.JSON)
@@ -342,7 +345,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(0))
-        .patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
+        .patchProductById(eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
     verifyNoMoreInteractions(productService);
   }
 
@@ -353,7 +356,7 @@ class ProductControllerTest {
     String productId = "prod-test";
 
     when(productService.patchProductById(
-            eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
+            eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
         .thenReturn(Uni.createFrom().failure(new NotFoundException()));
 
     String patchDoc = "{\"productId\":\"prod-test\"}";
@@ -365,7 +368,7 @@ class ProductControllerTest {
         .accept(ContentType.JSON)
         .body(patchDoc)
         .when()
-        .patch(productId)
+        .patch("/AR/" + productId)
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -376,7 +379,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
+        .patchProductById(eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
     verifyNoMoreInteractions(productService);
   }
 
@@ -387,7 +390,7 @@ class ProductControllerTest {
     String productId = "prod-test";
 
     when(productService.patchProductById(
-            eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
+            eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
         .thenReturn(Uni.createFrom().failure(new RuntimeException()));
 
     String patchDoc = "{}";
@@ -399,7 +402,7 @@ class ProductControllerTest {
         .accept(ContentType.JSON)
         .body(patchDoc)
         .when()
-        .patch(productId)
+        .patch("/AR/" + productId)
         .then()
         .statusCode(500)
         .contentType(ContentType.JSON)
@@ -409,7 +412,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
+        .patchProductById(eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
     verifyNoMoreInteractions(productService);
   }
 
@@ -421,7 +424,7 @@ class ProductControllerTest {
     String invalidPayload = "{}";
 
     when(productService.patchProductById(
-            eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
+            eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class)))
         .thenReturn(
             Uni.createFrom()
                 .failure(
@@ -435,7 +438,7 @@ class ProductControllerTest {
         .accept(ContentType.JSON)
         .body(invalidPayload)
         .when()
-        .patch(productId)
+        .patch("/AR/" + productId)
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON)
@@ -446,7 +449,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .patchProductById(eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
+        .patchProductById(eq("AR"), eq(productId), eq("createdBy"), any(ProductPatchRequest.class));
     verifyNoMoreInteractions(productService);
   }
 
@@ -466,7 +469,7 @@ class ProductControllerTest {
                         .build()))
             .build();
 
-    when(productService.getProductOriginsById(productId))
+    when(productService.getProductOrigins("AR", productId))
         .thenReturn(Uni.createFrom().item(response));
 
     // when
@@ -475,7 +478,7 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .get("/origins")
+        .get("/AR/origins")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -484,7 +487,7 @@ class ProductControllerTest {
         .body("origins[0].origin", equalTo(Origin.IPA.name()));
 
     // then
-    verify(productService, times(1)).getProductOriginsById(productId);
+    verify(productService, times(1)).getProductOrigins("AR", productId);
   }
 
   @Test
@@ -493,7 +496,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.getProductOriginsById(productId))
+    when(productService.getProductOrigins("AR", productId))
         .thenReturn(Uni.createFrom().failure(new NotFoundException()));
 
     // when
@@ -502,7 +505,7 @@ class ProductControllerTest {
         .queryParam("createdBy", "createdBy")
         .accept(ContentType.JSON)
         .when()
-        .get("/origins")
+        .get("/AR/origins")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -512,7 +515,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/products/" + productId + "/origins"));
 
     // then
-    verify(productService, times(1)).getProductOriginsById(productId);
+    verify(productService, times(1)).getProductOrigins("AR", productId);
   }
 
   // -------------------------------------------------------------------------
@@ -527,7 +530,7 @@ class ProductControllerTest {
     WorkflowTypeResponse response =
         WorkflowTypeResponse.builder().workflowType(WorkflowType.CONTRACT_REGISTRATION).build();
 
-    when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.getWorkflowType("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(Uni.createFrom().item(response));
 
     // when
@@ -537,14 +540,15 @@ class ProductControllerTest {
         .queryParam("origin", "IPA")
         .accept(ContentType.JSON)
         .when()
-        .get("/workflow-type")
+        .get("/AR/workflow-type")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
         .body("workflowType", equalTo(WorkflowType.CONTRACT_REGISTRATION.name()));
 
     // then
-    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
+    verify(productService, times(1))
+        .getWorkflowType("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   @Test
@@ -555,7 +559,7 @@ class ProductControllerTest {
     WorkflowTypeResponse response =
         WorkflowTypeResponse.builder().workflowType(WorkflowType.FOR_APPROVE).build();
 
-    when(productService.getWorkflowType(productId, InstitutionType.GSP, Origin.SELC))
+    when(productService.getWorkflowType("AR", productId, InstitutionType.GSP, Origin.SELC))
         .thenReturn(Uni.createFrom().item(response));
 
     // when
@@ -565,14 +569,15 @@ class ProductControllerTest {
         .queryParam("origin", "SELC")
         .accept(ContentType.JSON)
         .when()
-        .get("/workflow-type")
+        .get("/AR/workflow-type")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
         .body("workflowType", equalTo(WorkflowType.FOR_APPROVE.name()));
 
     // then
-    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.GSP, Origin.SELC);
+    verify(productService, times(1))
+        .getWorkflowType("AR", productId, InstitutionType.GSP, Origin.SELC);
   }
 
   @Test
@@ -581,10 +586,9 @@ class ProductControllerTest {
     // given
     String productId = "prod-missing";
 
-    when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.getWorkflowType("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(
-            Uni.createFrom()
-                .failure(new NotFoundException("Product prod-missing not found")));
+            Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
 
     // when
     given()
@@ -593,7 +597,7 @@ class ProductControllerTest {
         .queryParam("origin", "IPA")
         .accept(ContentType.JSON)
         .when()
-        .get("/workflow-type")
+        .get("/AR/workflow-type")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -602,7 +606,8 @@ class ProductControllerTest {
         .body("detail", containsString(productId));
 
     // then
-    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
+    verify(productService, times(1))
+        .getWorkflowType("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   @Test
@@ -611,7 +616,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.getWorkflowType(productId, InstitutionType.GSP, Origin.SELC))
+    when(productService.getWorkflowType("AR", productId, InstitutionType.GSP, Origin.SELC))
         .thenReturn(
             Uni.createFrom()
                 .failure(
@@ -625,7 +630,7 @@ class ProductControllerTest {
         .queryParam("origin", "SELC")
         .accept(ContentType.JSON)
         .when()
-        .get("/workflow-type")
+        .get("/AR/workflow-type")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -634,7 +639,8 @@ class ProductControllerTest {
         .body("detail", containsString("GSP"));
 
     // then
-    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.GSP, Origin.SELC);
+    verify(productService, times(1))
+        .getWorkflowType("AR", productId, InstitutionType.GSP, Origin.SELC);
   }
 
   @Test
@@ -643,10 +649,8 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.getWorkflowType(productId, InstitutionType.PA, Origin.IPA))
-        .thenReturn(
-            Uni.createFrom()
-                .failure(new IllegalArgumentException("Missing origin")));
+    when(productService.getWorkflowType("AR", productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Missing origin")));
 
     // when
     given()
@@ -655,7 +659,7 @@ class ProductControllerTest {
         .queryParam("origin", "IPA")
         .accept(ContentType.JSON)
         .when()
-        .get("/workflow-type")
+        .get("/AR/workflow-type")
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON)
@@ -663,7 +667,8 @@ class ProductControllerTest {
         .body("status", equalTo(400));
 
     // then
-    verify(productService, times(1)).getWorkflowType(productId, InstitutionType.PA, Origin.IPA);
+    verify(productService, times(1))
+        .getWorkflowType("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   // -------------------------------------------------------------------------
@@ -676,7 +681,8 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.GSP, Origin.SELC))
+    when(productService.isRequiredDocumentsEnabled(
+            "AR", productId, InstitutionType.GSP, Origin.SELC))
         .thenReturn(Uni.createFrom().item(true));
 
     // when
@@ -684,14 +690,14 @@ class ProductControllerTest {
         .queryParam("institutionType", "GSP")
         .queryParam("origin", "SELC")
         .when()
-        .head(productId + "/required-documents/enabled")
+        .head("/AR/" + productId + "/required-documents/enabled")
         .then()
         .statusCode(200)
         .header("X-Required-Documents-Enabled", "true");
 
     // then
     verify(productService, times(1))
-        .isRequiredDocumentsEnabled(productId, InstitutionType.GSP, Origin.SELC);
+        .isRequiredDocumentsEnabled("AR", productId, InstitutionType.GSP, Origin.SELC);
   }
 
   @Test
@@ -700,7 +706,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.isRequiredDocumentsEnabled("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(Uni.createFrom().item(false));
 
     // when
@@ -708,14 +714,14 @@ class ProductControllerTest {
         .queryParam("institutionType", "PA")
         .queryParam("origin", "IPA")
         .when()
-        .head(productId + "/required-documents/enabled")
+        .head("/AR/" + productId + "/required-documents/enabled")
         .then()
         .statusCode(200)
         .header("X-Required-Documents-Enabled", "false");
 
     // then
     verify(productService, times(1))
-        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+        .isRequiredDocumentsEnabled("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   @Test
@@ -724,23 +730,22 @@ class ProductControllerTest {
     // given
     String productId = "prod-missing";
 
-    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.isRequiredDocumentsEnabled("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(
-            Uni.createFrom()
-                .failure(new NotFoundException("Product prod-missing not found")));
+            Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
 
     // when
     given()
         .queryParam("institutionType", "PA")
         .queryParam("origin", "IPA")
         .when()
-        .head(productId + "/required-documents/enabled")
+        .head("/AR/" + productId + "/required-documents/enabled")
         .then()
         .statusCode(404);
 
     // then
     verify(productService, times(1))
-        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+        .isRequiredDocumentsEnabled("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   @Test
@@ -749,23 +754,21 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
-        .thenReturn(
-            Uni.createFrom()
-                .failure(new IllegalArgumentException("Missing productId")));
+    when(productService.isRequiredDocumentsEnabled("AR", productId, InstitutionType.PA, Origin.IPA))
+        .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Missing productId")));
 
     // when
     given()
         .queryParam("institutionType", "PA")
         .queryParam("origin", "IPA")
         .when()
-        .head(productId + "/required-documents/enabled")
+        .head("/AR/" + productId + "/required-documents/enabled")
         .then()
         .statusCode(400);
 
     // then
     verify(productService, times(1))
-        .isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+        .isRequiredDocumentsEnabled("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   // -------------------------------------------------------------------------
@@ -796,7 +799,7 @@ class ProductControllerTest {
                 .maxDocumentsRequired(3)
                 .build());
 
-    when(productService.getRequiredDocuments(productId, InstitutionType.GSP, Origin.SELC))
+    when(productService.getRequiredDocuments("AR", productId, InstitutionType.GSP, Origin.SELC))
         .thenReturn(Uni.createFrom().item(documents));
 
     // when
@@ -805,7 +808,7 @@ class ProductControllerTest {
         .queryParam("origin", "SELC")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/required-documents")
+        .get("/AR/" + productId + "/required-documents")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -818,7 +821,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .getRequiredDocuments(productId, InstitutionType.GSP, Origin.SELC);
+        .getRequiredDocuments("AR", productId, InstitutionType.GSP, Origin.SELC);
   }
 
   @Test
@@ -827,7 +830,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.getRequiredDocuments("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(Uni.createFrom().item(List.of()));
 
     // when
@@ -836,7 +839,7 @@ class ProductControllerTest {
         .queryParam("origin", "IPA")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/required-documents")
+        .get("/AR/" + productId + "/required-documents")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -844,7 +847,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+        .getRequiredDocuments("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   @Test
@@ -853,7 +856,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-missing";
 
-    when(productService.getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.getRequiredDocuments("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(
             Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
 
@@ -863,7 +866,7 @@ class ProductControllerTest {
         .queryParam("origin", "IPA")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/required-documents")
+        .get("/AR/" + productId + "/required-documents")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -874,7 +877,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+        .getRequiredDocuments("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   @Test
@@ -883,7 +886,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+    when(productService.getRequiredDocuments("AR", productId, InstitutionType.PA, Origin.IPA))
         .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("Missing origin")));
 
     // when
@@ -892,7 +895,7 @@ class ProductControllerTest {
         .queryParam("origin", "IPA")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/required-documents")
+        .get("/AR/" + productId + "/required-documents")
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON)
@@ -902,7 +905,7 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1))
-        .getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+        .getRequiredDocuments("AR", productId, InstitutionType.PA, Origin.IPA);
   }
 
   // UTILS
@@ -943,14 +946,14 @@ class ProductControllerTest {
     response.setProductId(productId);
     response.setStatus(ProductStatus.ACTIVE);
 
-    when(productService.getValidProductById(productId))
+    when(productService.getValidProduct("AR", productId))
         .thenReturn(Uni.createFrom().item(response));
 
     // when
     given()
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/valid")
+        .get("/AR/" + productId + "/valid")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -958,7 +961,7 @@ class ProductControllerTest {
         .body("status", equalTo(ProductStatus.ACTIVE.name()));
 
     // then
-    verify(productService, times(1)).getValidProductById(productId);
+    verify(productService, times(1)).getValidProduct("AR", productId);
   }
 
   @Test
@@ -967,17 +970,16 @@ class ProductControllerTest {
     // given
     String productId = "prod-ced";
 
-    when(productService.getValidProductById(productId))
+    when(productService.getValidProduct("AR", productId))
         .thenReturn(
             Uni.createFrom()
-                .failure(
-                    new NotFoundException("Product with id prod-ced has status INACTIVE")));
+                .failure(new NotFoundException("Product with id prod-ced has status INACTIVE")));
 
     // when
     given()
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/valid")
+        .get("/AR/" + productId + "/valid")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -987,7 +989,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/product/" + productId + "/valid"));
 
     // then
-    verify(productService, times(1)).getValidProductById(productId);
+    verify(productService, times(1)).getValidProduct("AR", productId);
   }
 
   @Test
@@ -996,7 +998,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-missing";
 
-    when(productService.getValidProductById(productId))
+    when(productService.getValidProduct("AR", productId))
         .thenReturn(
             Uni.createFrom().failure(new NotFoundException("Product prod-missing not found")));
 
@@ -1004,7 +1006,7 @@ class ProductControllerTest {
     given()
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/valid")
+        .get("/AR/" + productId + "/valid")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -1014,7 +1016,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/product/" + productId + "/valid"));
 
     // then
-    verify(productService, times(1)).getValidProductById(productId);
+    verify(productService, times(1)).getValidProduct("AR", productId);
   }
 
   // -------------------------------------------------------------------------
@@ -1029,21 +1031,21 @@ class ProductControllerTest {
     ProductExpirationResponse response =
         ProductExpirationResponse.builder().expirationDays(60).build();
 
-    when(productService.getProductExpirationDays(productId))
+    when(productService.getProductExpirationDays("AR", productId))
         .thenReturn(Uni.createFrom().item(response));
 
     // when
     given()
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/expiration-days")
+        .get("/AR/" + productId + "/expiration-days")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
         .body("expirationDays", equalTo(60));
 
     // then
-    verify(productService, times(1)).getProductExpirationDays(productId);
+    verify(productService, times(1)).getProductExpirationDays("AR", productId);
   }
 
   @Test
@@ -1052,17 +1054,16 @@ class ProductControllerTest {
     // given
     String productId = "prod-ced";
 
-    when(productService.getProductExpirationDays(productId))
+    when(productService.getProductExpirationDays("AR", productId))
         .thenReturn(
             Uni.createFrom()
-                .failure(
-                    new NotFoundException("Product with id prod-ced has status INACTIVE")));
+                .failure(new NotFoundException("Product with id prod-ced has status INACTIVE")));
 
     // when
     given()
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/expiration-days")
+        .get("/AR/" + productId + "/expiration-days")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -1072,7 +1073,7 @@ class ProductControllerTest {
         .body("instance", equalTo("/product/" + productId + "/expiration-days"));
 
     // then
-    verify(productService, times(1)).getProductExpirationDays(productId);
+    verify(productService, times(1)).getProductExpirationDays("AR", productId);
   }
 
   // -------------------------------------------------------------------------
@@ -1090,7 +1091,7 @@ class ProductControllerTest {
     other.setProductId("prod-b");
     other.setStatus(ProductStatus.ACTIVE);
 
-    when(productService.getProducts(true, true))
+    when(productService.getProducts("AR", true, true))
         .thenReturn(Uni.createFrom().item(List.of(root, other)));
 
     // when
@@ -1099,7 +1100,7 @@ class ProductControllerTest {
         .queryParam("valid", "true")
         .accept(ContentType.JSON)
         .when()
-        .get()
+        .get("/AR")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -1108,7 +1109,7 @@ class ProductControllerTest {
         .body("[1].productId", equalTo("prod-b"));
 
     // then
-    verify(productService, times(1)).getProducts(true, true);
+    verify(productService, times(1)).getProducts("AR", true, true);
   }
 
   @Test
@@ -1118,7 +1119,7 @@ class ProductControllerTest {
     given()
         .accept(ContentType.JSON)
         .when()
-        .get()
+        .get("/AR")
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON)
@@ -1143,7 +1144,7 @@ class ProductControllerTest {
     ProductRoleResponse response =
         ProductRoleResponse.builder().code("admin").label("Admin").description("desc").build();
 
-    when(productService.validateProductRole(productId, UserRole.MANAGER, "admin"))
+    when(productService.validateProductRole("AR", productId, UserRole.MANAGER, "admin"))
         .thenReturn(Uni.createFrom().item(response));
 
     // when
@@ -1152,7 +1153,7 @@ class ProductControllerTest {
         .queryParam("productRole", "admin")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/role-mappings/validate")
+        .get("/AR/" + productId + "/role-mappings/validate")
         .then()
         .statusCode(200)
         .contentType(ContentType.JSON)
@@ -1160,7 +1161,8 @@ class ProductControllerTest {
         .body("label", equalTo("Admin"));
 
     // then
-    verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, "admin");
+    verify(productService, times(1))
+        .validateProductRole("AR", productId, UserRole.MANAGER, "admin");
   }
 
   @Test
@@ -1169,7 +1171,7 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.validateProductRole(productId, UserRole.MANAGER, "missing"))
+    when(productService.validateProductRole("AR", productId, UserRole.MANAGER, "missing"))
         .thenReturn(
             Uni.createFrom()
                 .failure(
@@ -1182,7 +1184,7 @@ class ProductControllerTest {
         .queryParam("productRole", "missing")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/role-mappings/validate")
+        .get("/AR/" + productId + "/role-mappings/validate")
         .then()
         .statusCode(404)
         .contentType(ContentType.JSON)
@@ -1192,7 +1194,8 @@ class ProductControllerTest {
         .body("instance", equalTo("/product/" + productId + "/role-mappings/validate"));
 
     // then
-    verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, "missing");
+    verify(productService, times(1))
+        .validateProductRole("AR", productId, UserRole.MANAGER, "missing");
   }
 
   @Test
@@ -1201,16 +1204,15 @@ class ProductControllerTest {
     // given
     String productId = "prod-test";
 
-    when(productService.validateProductRole(productId, UserRole.MANAGER, null))
-        .thenReturn(
-            Uni.createFrom().failure(new BadRequestException("Missing productRole")));
+    when(productService.validateProductRole("AR", productId, UserRole.MANAGER, null))
+        .thenReturn(Uni.createFrom().failure(new BadRequestException("Missing productRole")));
 
     // when
     given()
         .queryParam("role", "MANAGER")
         .accept(ContentType.JSON)
         .when()
-        .get(productId + "/role-mappings/validate")
+        .get("/AR/" + productId + "/role-mappings/validate")
         .then()
         .statusCode(400)
         .contentType(ContentType.JSON)
@@ -1220,7 +1222,6 @@ class ProductControllerTest {
         .body("instance", equalTo("/product/" + productId + "/role-mappings/validate"));
 
     // then
-    verify(productService, times(1)).validateProductRole(productId, UserRole.MANAGER, null);
+    verify(productService, times(1)).validateProductRole("AR", productId, UserRole.MANAGER, null);
   }
-
 }

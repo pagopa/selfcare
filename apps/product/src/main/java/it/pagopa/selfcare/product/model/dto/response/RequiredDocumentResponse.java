@@ -20,4 +20,3 @@ public class RequiredDocumentResponse {
   private Integer maxDocumentsRequired;
   private StorageOrigin storageOrigin;
 }
-

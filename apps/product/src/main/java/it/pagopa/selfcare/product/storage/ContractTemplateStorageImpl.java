@@ -3,7 +3,6 @@ package it.pagopa.selfcare.product.storage;
 import com.azure.storage.blob.BlobAsyncClient;
 import com.azure.storage.blob.BlobContainerAsyncClient;
 import com.azure.storage.blob.BlobServiceAsyncClient;
-import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.azure.storage.blob.models.BlobStorageException;
 import com.azure.storage.blob.models.DownloadRetryOptions;
@@ -16,8 +15,8 @@ import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.nio.ByteBuffer;
+import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import reactor.core.publisher.Flux;
 
 @ApplicationScoped
@@ -28,33 +27,29 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
   // contract-templates/{productId}/{contractTemplateId}.{contractTemplateExtension}
   private static final String DST_FILE_PATH = "contract-templates/%s/%s.%s";
 
-  private final String containerName;
-  private final BlobServiceAsyncClient blobClient;
+  private final Supplier<TenantBlobBinding> bindingSupplier;
 
   @Inject
-  public ContractTemplateStorageImpl(
-      @ConfigProperty(name = "product-ms.blob-storage.container-contract-template")
-          String containerName,
-      @ConfigProperty(name = "product-ms.blob-storage.connection-string-contract-template")
-          String connectionString) {
-    this.containerName = containerName;
-    this.blobClient =
-        new BlobServiceClientBuilder().connectionString(connectionString).buildAsyncClient();
+  public ContractTemplateStorageImpl(TenantBlobClientProvider blobClientProvider) {
+    this.bindingSupplier = () -> blobClientProvider.clientForCurrentTenant(StorageKeys.CONTRACTS);
   }
 
   public ContractTemplateStorageImpl(String containerName, BlobServiceAsyncClient blobClient) {
-    this.containerName = containerName;
-    this.blobClient = blobClient;
+    this.bindingSupplier = () -> new TenantBlobBinding(blobClient, containerName, "");
   }
 
   @Override
   public Uni<Void> upload(
       String productId, String contractTemplateId, ContractTemplateFile contractTemplateFile) {
+    final TenantBlobBinding binding = bindingSupplier.get();
     final BlobContainerAsyncClient blobContainer =
-        blobClient.getBlobContainerAsyncClient(containerName);
+        binding.client().getBlobContainerAsyncClient(binding.container());
     final String filePath =
         getContractTemplatePath(
-            productId, contractTemplateId, contractTemplateFile.getType().getExtension());
+            productId,
+            contractTemplateId,
+            contractTemplateFile.getType().getExtension(),
+            binding.pathPrefix());
     final BlobAsyncClient blob = blobContainer.getBlobAsyncClient(filePath);
     final BlobHttpHeaders headers = new BlobHttpHeaders();
     headers.setContentType(contractTemplateFile.getType().getContentType());
@@ -96,10 +91,12 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
   @Override
   public Uni<ContractTemplateFile> download(
       String productId, String contractTemplateId, ContractTemplateFileType fileType) {
+    final TenantBlobBinding binding = bindingSupplier.get();
     final BlobContainerAsyncClient blobContainer =
-        blobClient.getBlobContainerAsyncClient(containerName);
+        binding.client().getBlobContainerAsyncClient(binding.container());
     final String filePath =
-        getContractTemplatePath(productId, contractTemplateId, fileType.getExtension());
+        getContractTemplatePath(
+            productId, contractTemplateId, fileType.getExtension(), binding.pathPrefix());
     final BlobAsyncClient blob = blobContainer.getBlobAsyncClient(filePath);
     final DownloadRetryOptions retryOptions = new DownloadRetryOptions();
     retryOptions.setMaxRetryRequests(3);
@@ -132,6 +129,19 @@ public class ContractTemplateStorageImpl implements ContractTemplateStorage {
   @Override
   public String getContractTemplatePath(
       String productId, String contractTemplateId, String contractTemplateExtension) {
-    return String.format(DST_FILE_PATH, productId, contractTemplateId, contractTemplateExtension);
+    return getContractTemplatePath(productId, contractTemplateId, contractTemplateExtension, "");
+  }
+
+  String getContractTemplatePath(
+      String productId,
+      String contractTemplateId,
+      String contractTemplateExtension,
+      String pathPrefix) {
+    String relative =
+        String.format(DST_FILE_PATH, productId, contractTemplateId, contractTemplateExtension);
+    if (pathPrefix == null || pathPrefix.isBlank()) {
+      return relative;
+    }
+    return pathPrefix + "/" + relative;
   }
 }

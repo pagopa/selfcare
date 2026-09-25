@@ -13,5 +13,6 @@ import lombok.NoArgsConstructor;
 public class ProductBaseResponse {
   private String id;
   private String productId;
+  private String tenantId;
   private ProductStatus status;
 }

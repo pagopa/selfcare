@@ -2,7 +2,8 @@ version: '3.8'
 services:
 
   mongodb:
-    image: mongo:latest@sha256:bf5995bcccb65725aa81fd92e68449323c94b96bf1c1fa9f7acbc2a8ad518114
+    platform: linux/amd64
+    image: mongo@sha256:406a4fdca9fc763443268f000218d3849ef8996f66ed9e92ba0b501b446ab822
     ports:
       - '27017:27017'
     volumes:
@@ -11,19 +12,18 @@ services:
       - develop-network
 
   azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
+    platform: linux/amd64
+    image: mcr.microsoft.com/azure-storage/azurite@sha256:d5bb99496dc82ef0e34401ced6726d2f5d8fcbdf48670ba067ee3b394884cc3a
     ports:
       - "10000:10000"
-    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence"
+    command: "azurite --blobHost 0.0.0.0 --inMemoryPersistence --skipApiVersionCheck"
     environment:
       - AZURITE_ACCOUNTS=devstoreaccount1:Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
     networks:
       - develop-network
 
   azure-cli:
-    build:
-      context: "."
-      dockerfile: "Dockerfile-azure-cli"
+    image: mcr.microsoft.com/azure-cli@sha256:d483c14775d67577de4b2887aaef6d88f5a5371a151ad59872be91602cd89635
     depends_on:
       - azurite
     networks:
@@ -32,7 +32,8 @@ services:
       - "./blobStorage:/blobStorage"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
+    command: [ "/bin/sh", "-c", "/blobStorage/initAzurite.sh" ]
 
 networks:
   develop-network:
-    name: selfcare-develop-network
+    name: selfcare-product-develop-network

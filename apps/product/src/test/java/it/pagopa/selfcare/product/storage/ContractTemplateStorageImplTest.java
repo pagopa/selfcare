@@ -199,4 +199,12 @@ public class ContractTemplateStorageImplTest {
         "contract-templates/prod-test/123.html",
         contractTemplateStorage.getContractTemplatePath("prod-test", "123", "html"));
   }
+
+  @Test
+  void getContractTemplatePath_withPrefix() {
+    Assertions.assertEquals(
+        "ar/contracts/contract-templates/prod-test/123.html",
+        contractTemplateStorage.getContractTemplatePath(
+            "prod-test", "123", "html", "ar/contracts"));
+  }
 }

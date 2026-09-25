@@ -21,6 +21,10 @@ public class CustomLoggingFilter implements ResteasyReactiveContainerRequestFilt
   public void filter(ResteasyReactiveContainerRequestContext requestContext) {
     String endpoint = requestContext.getUriInfo().getPath();
     String method = requestContext.getMethod();
-    log.info("Request: method: {}, endpoint: {}", Encode.forJava(method), Encode.forJava(endpoint));
+    log.info(
+        "Request: tenant: {}, method: {}, endpoint: {}",
+        Encode.forJava(TenantLogUtils.fromInboundRequest(requestContext)),
+        Encode.forJava(method),
+        Encode.forJava(endpoint));
   }
 }

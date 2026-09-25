@@ -12,7 +12,7 @@
     </parent>
 
     <artifactId>selfcare-sdk-tenant</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <name>selfcare-sdk-tenant</name>
     <description>Shared tenant context and runtime tenant registry for Selfcare services.</description>
 
@@ -61,4 +61,21 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.smallrye</groupId>
+                <artifactId>jandex-maven-plugin</artifactId>
+                <version>3.1.8</version>
+                <executions>
+                    <execution>
+                        <id>make-index</id>
+                        <goals>
+                            <goal>jandex</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
