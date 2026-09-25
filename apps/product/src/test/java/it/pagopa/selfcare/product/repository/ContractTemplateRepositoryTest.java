@@ -230,4 +230,55 @@ public class ContractTemplateRepositoryTest {
     Assertions.assertEquals("testname3", result5.get(0).getName());
     Assertions.assertEquals("1.2.1", result5.get(0).getVersion());
   }
+
+  @Test
+  void filters_areCaseInsensitiveAndEscaped() {
+    contractTemplateRepository
+        .persist(
+            ContractTemplate.builder()
+                .tenantId("AR")
+                .productId("prod.+")
+                .name("Name[1]")
+                .version("V1")
+                .createdAt(Instant.parse("2012-01-01T10:15:30.00Z"))
+                .build())
+        .await()
+        .indefinitely();
+
+    Assertions.assertEquals(
+        1L,
+        contractTemplateRepository
+            .countWithFilters("ar", "PROD.+", "name[1]", "v1")
+            .await()
+            .indefinitely());
+  }
+
+  @Test
+  void filters_doNotReturnTemplatesOwnedByAnotherTenant() {
+    tenantContext.setTenantId("PNPG");
+    contractTemplateRepository
+        .persist(
+            ContractTemplate.builder()
+                .tenantId("PNPG")
+                .productId("prod-pnpg")
+                .name("pnpg")
+                .version("1")
+                .createdAt(Instant.now())
+                .build())
+        .await()
+        .indefinitely();
+
+    Assertions.assertEquals(
+        0L,
+        contractTemplateRepository
+            .countWithFilters(null, "prod-1", null, null)
+            .await()
+            .indefinitely());
+    Assertions.assertEquals(
+        1L,
+        contractTemplateRepository
+            .countWithFilters(null, "prod-pnpg", null, null)
+            .await()
+            .indefinitely());
+  }
 }

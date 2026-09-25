@@ -105,4 +105,45 @@ class ProductMongoReadinessCheckTest {
         .containsEntry("database", DATABASE)
         .containsEntry("host", "n/a");
   }
+
+  @Test
+  void down_whenAnyConfiguredTenantPingFails() {
+    ReactiveMongoClient pnpgClient = mock(ReactiveMongoClient.class);
+    ReactiveMongoDatabase pnpgDatabase = mock(ReactiveMongoDatabase.class);
+    when(pnpgClient.getDatabase(DATABASE)).thenReturn(pnpgDatabase);
+    when(tenantRegistry.supportedTenantIds()).thenReturn(Set.of("AR", "PNPG"));
+    when(tenantRegistry.resolve("PNPG"))
+        .thenReturn(
+            new TenantDefinition(
+                new TenantDefinition.MongoDefinition(
+                    "test-pnpg", DATABASE, "MONGODB_CONNECTION_STRING_PNPG"),
+                null));
+    when(tenantRegistry.connectionString("PNPG")).thenReturn(Optional.of(CONNECTION_STRING));
+    when(tenantMongoClientProducer.clientForTenant("PNPG")).thenReturn(pnpgClient);
+    when(database.runCommand(Mockito.any(Document.class)))
+        .thenReturn(Uni.createFrom().item(new Document("ok", 1.0)));
+    when(pnpgDatabase.runCommand(Mockito.any(Document.class)))
+        .thenReturn(Uni.createFrom().failure(new IllegalStateException("pnpg unavailable")));
+
+    HealthCheckResponse response = await();
+
+    assertThat(response.getStatus()).isEqualTo(HealthCheckResponse.Status.DOWN);
+    assertThat(response.getData().orElseThrow())
+        .containsEntry("error", "IllegalStateException: pnpg unavailable");
+  }
+
+  @Test
+  void emptyRegistry_usesUnavailableMetadataAndReportsUp() {
+    when(tenantRegistry.supportedTenantIds()).thenReturn(Set.of());
+    ProductMongoReadinessCheck emptyCheck =
+        new ProductMongoReadinessCheck(tenantRegistry, tenantMongoClientProducer);
+
+    HealthCheckResponse response =
+        ((AsyncHealthCheck) emptyCheck).call().await().atMost(Duration.ofSeconds(5));
+
+    assertThat(response.getStatus()).isEqualTo(HealthCheckResponse.Status.UP);
+    assertThat(response.getData().orElseThrow())
+        .containsEntry("database", "n/a")
+        .containsEntry("host", "n/a");
+  }
 }

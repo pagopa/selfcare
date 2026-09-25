@@ -169,6 +169,20 @@ class TenantBlobClientProviderTest {
   }
 
   @Test
+  void clientFor_removesTrailingSlashFromPathPrefix() {
+    TenantDefinition.StorageDefinition storage =
+        new TenantDefinition.StorageDefinition(
+            "st-ar",
+            "contracts",
+            "ar/contracts/",
+            new TenantDefinition.StorageAuthentication(
+                StorageAuthenticationType.CONNECTION_STRING, null, "BLOB_AR"));
+    when(tenantRegistry.storage("AR", StorageKeys.CONTRACTS)).thenReturn(storage);
+
+    assertEquals("ar/contracts", provider.clientFor("AR", StorageKeys.CONTRACTS).pathPrefix());
+  }
+
+  @Test
   void clientFor_rejectsPathTraversalPrefix() {
     TenantDefinition.StorageDefinition storage =
         new TenantDefinition.StorageDefinition(
