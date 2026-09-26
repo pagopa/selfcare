@@ -10,6 +10,8 @@ public interface ProductService {
 
     Map<PartyRole, ProductRoleInfo> getProductRoles(String productId, String institutionType);
 
+    Map<PartyRole, ProductRoleInfo> getPartnerTechRoles(String productId, String institutionType);
+
     ProductRolePermissionsList getMyPermissions(String userId);
 
 }

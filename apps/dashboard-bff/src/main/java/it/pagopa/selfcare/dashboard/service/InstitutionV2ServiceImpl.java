@@ -160,11 +160,18 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
                     product.setAuthorized(userInstitutionWithActionsDto.getProducts().stream().anyMatch(prodUser -> product.getProductId().equals(prodUser.getProductId())));
                     product.setUserRole(onBoardedProductWithActions.getRole().getSelfCareAuthority().name());
                     product.setUserProductActions(onBoardedProductWithActions.getUserProductActions());
+                    product.setUserPartnerTechRole(hasPartnerTechRole(userInstitutionWithActionsDto, product.getProductId()));
                 });
 
         log.debug("findInstitutionById result = {}", institution);
         log.trace("findInstitutionById end");
         return institution;
+    }
+
+    private boolean hasPartnerTechRole(UserInstitutionWithActionsDto userInstitutionWithActionsDto, String productId) {
+        return userInstitutionWithActionsDto.getProducts().stream()
+                .filter(prodUser -> productId.equals(prodUser.getProductId()) && RelationshipState.ACTIVE.equals(prodUser.getStatus()))
+                .anyMatch(product -> Boolean.TRUE.equals(product.getPartnerTechRole()));
     }
 
     @Override
