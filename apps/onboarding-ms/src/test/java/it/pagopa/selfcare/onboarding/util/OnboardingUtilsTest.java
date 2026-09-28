@@ -152,6 +152,27 @@ class OnboardingUtilsTest {
     }
 
     @Test
+    void buildUploadSignedContractRequest_keepsMissingTemplateMetadataOptional() {
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId("onboarding-id");
+        onboarding.setInstitution(new it.pagopa.selfcare.onboarding.entity.Institution());
+        onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        ProductResponse product = new ProductResponse().productId("prod-io").title("IO");
+        FormItem formItem = FormItem.builder().file(new File("signed.pdf")).fileName("signed.pdf").build();
+
+        DocumentContentControllerApi.UploadSignedContractMultipartForm request = onboardingUtils
+                .buildUploadSignedContractRequest(onboarding, false, formItem, product,
+                        DocumentType.INSTITUTION, Collections.emptyList(), 1)
+                .await().indefinitely();
+
+        assertEquals("onboarding-id", request.request.getOnboardingId());
+        assertEquals(formItem.getFile(), request._file);
+        assertEquals("signed.pdf", request.fileName);
+        assertNull(request.request.getTemplatePath());
+        assertNull(request.request.getTemplateVersion());
+    }
+
+    @Test
     void ensureSuccessfulDocumentResponse_shouldCompleteWhenResponseIs2xx() {
         //given
         Response response = Response.status(Response.Status.OK).build();

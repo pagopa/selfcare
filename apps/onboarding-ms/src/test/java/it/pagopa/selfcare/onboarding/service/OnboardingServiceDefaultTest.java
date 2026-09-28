@@ -5848,7 +5848,8 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.findById(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(onboarding));
         when(productService.getRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(404)));
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException(
+                        "Product not found with id: " + PROD_IO.getValue())));
 
         UniAssertSubscriber<Void> subscriber = onboardingService
                 .triggerDocumentGate(onboarding.getId())
@@ -5856,6 +5857,9 @@ class OnboardingServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(InvalidRequestException.class);
+        assertEquals("No required documents configuration found on product-ms for onboarding " + onboarding.getId(),
+                subscriber.getFailure().getMessage());
+        verify(documentControllerApi, never()).getAttachments(anyString());
     }
 
     @Test

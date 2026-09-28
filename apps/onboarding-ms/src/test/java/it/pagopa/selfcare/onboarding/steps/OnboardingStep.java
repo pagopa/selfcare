@@ -73,6 +73,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private ValidatableResponse validatableResponse;
   private static ObjectMapper objectMapper;
   private static String tokenTest;
+  private static String tokenTestPnpg;
   private static final String JWT_BEARER_TOKEN_ENV = "custom.jwt-token-test";
   private static final String TENANT_ID = "AR";
 
@@ -92,6 +93,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
   @BeforeAll
   static void setup() {
     tokenTest = ConfigProvider.getConfig().getValue(JWT_BEARER_TOKEN_ENV, String.class);
+    tokenTestPnpg = ConfigProvider.getConfig().getValue("custom.jwt-token-test-pnpg", String.class);
     objectMapper = new ObjectMapper();
     objectMapper.registerModule(new JavaTimeModule());
     Vertx vertx = Vertx.vertx();
@@ -161,9 +163,13 @@ public class OnboardingStep extends CucumberQuarkusTest {
   }
 
   private static RequestSpecification authenticatedRequest() {
+    return authenticatedRequest(TENANT_ID);
+  }
+
+  private static RequestSpecification authenticatedRequest(String tenantId) {
     return given()
-            .header("Authorization", "Bearer " + tokenTest)
-            .header("X-Tenant-Id", TENANT_ID);
+            .header("Authorization", "Bearer " + ("PNPG".equals(tenantId) ? tokenTestPnpg : tokenTest))
+            .header("X-Tenant-Id", tenantId);
   }
 
   @Given("I have a request object named {string}")
@@ -192,7 +198,7 @@ public class OnboardingStep extends CucumberQuarkusTest {
     OnboardingPgRequest request = objectMapper.readValue(requestBody, OnboardingPgRequest.class);
     assertNotNull(request);
     validatableResponse =
-            authenticatedRequest()
+            authenticatedRequest("PNPG")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(request)
                     .when()
@@ -276,7 +282,8 @@ public class OnboardingStep extends CucumberQuarkusTest {
 
   @Then("the response status code should be {int}")
   public void verifyStatusCodeResponse(int statusCode) {
-    assertEquals(statusCode, validatableResponse.extract().statusCode());
+    assertEquals(statusCode, validatableResponse.extract().statusCode(),
+            () -> "Response body: " + validatableResponse.extract().body().asString());
   }
 
   @Then("the response should contain the text {string}")

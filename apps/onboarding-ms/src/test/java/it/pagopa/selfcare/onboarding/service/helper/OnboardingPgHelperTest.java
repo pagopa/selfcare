@@ -43,6 +43,8 @@ import org.openapi.quarkus.party_registry_proxy_json.model.BusinessResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.BusinessesResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.LegalVerificationResult;
 import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.BackOfficeRole;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 @QuarkusTest
@@ -131,7 +133,7 @@ class OnboardingPgHelperTest {
                 .thenReturn(Multi.createFrom().item(buildPreviousOnboarding()));
 
         when(productService.getValidProduct(anyString(), any()))
-                .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.Status.NOT_FOUND)));
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Product not found")));
 
         //when
         UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
@@ -144,7 +146,7 @@ class OnboardingPgHelperTest {
     }
 
     @Test
-    void onboardingUserPg_whenProductApiError_throwsOnboardingNotAllowedException() {
+    void onboardingUserPg_whenProductApiError_preservesFailure() {
         //given
         when(persistenceHelper.getOnboardingByFilters(
                 anyString(), isNull(), anyString(), isNull(), anyString()))
@@ -160,7 +162,7 @@ class OnboardingPgHelperTest {
 
         //then
         subscriber.awaitFailure()
-                .assertFailedWith(OnboardingNotAllowedException.class);
+                .assertFailedWith(RuntimeException.class, "product-ms unreachable");
     }
 
     // --- onboardingUserPg: checkIfUserIsAlreadyManager ---
@@ -489,6 +491,11 @@ class OnboardingPgHelperTest {
     private void mockValidProduct() {
         ProductResponse product = new ProductResponse();
         product.setProductId("prod-pn-pg");
+        product.setRoleMappings(List.of(new RoleMapping()
+                .institutionType(org.openapi.quarkus.product_json.model.InstitutionType.PG)
+                .role(PartyRole.MANAGER.name())
+                .phasesAdditionAllowed(List.of("onboarding"))
+                .backOfficeRoles(List.of(new BackOfficeRole().code("admin")))));
         when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
     }
 

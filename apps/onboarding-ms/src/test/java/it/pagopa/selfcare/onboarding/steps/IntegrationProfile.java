@@ -41,15 +41,26 @@ public class IntegrationProfile implements QuarkusTestProfile {
         getPublicKey(),
         "tenant.enforcement.enabled",
         "true",
-        "custom.jwt-token-test",
-        Objects.requireNonNull(
+        "custom.jwt-token-test", tokenForTenant("AR"),
+        "custom.jwt-token-test-pnpg", tokenForTenant("PNPG"));
+  }
+
+  public static String tokenForTenant(String tenantId) {
+    return tokenForTenant(tenantId, "SPID");
+  }
+
+  public static String tokenForTenant(String tenantId, String issuer) {
+    Map<String, String> payload = buildJwtPayload();
+    payload.put("tenant_id", tenantId);
+    payload.put("iss", issuer);
+    return Objects.requireNonNull(
             JwtUtils.generateToken(
                 JwtData.builder()
                     .username("f.rossi")
                     .password("test")
                     .jwtHeader(buildJwtHeader())
-                    .jwtPayload(buildJwtPayload())
-                    .build())));
+                    .jwtPayload(payload)
+                    .build()));
   }
 
   private String getPublicKey() {
