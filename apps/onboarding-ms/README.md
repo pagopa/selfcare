@@ -35,9 +35,50 @@ Before running you must set these properties as environment variables.
 | quarkus.rest-client."**.OrchestrationApi".url<br/>     | ONBOARDING_FUNCTIONS_URL                 |             |     yes      |
 | quarkus.rest-client."**.OrchestrationApi".api-key<br/> | ONBOARDING-FUNCTIONS-API-KEY             |             |     yes      |
 | quarkus.rest-client."**.InstitutionApi".url<br/>       | MS_USER_URL                              |             |     yes      |
+| quarkus.rest-client."**.ProductApi".url<br/>           | MS_PRODUCT_URL                           | localhost:8080 | yes in deployments |
+| tenant.supported-tenants<br/>                         | TENANT_SUPPORTED_TENANTS                 | AR,PNPG     | per deployment |
 | onboarding-ms.required-documents.enabled<br/>            | ONBOARDING-REQUIRED-DOCUMENTS-ENABLED    | false       |     no       |
 
 > **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
+
+### Product catalog and tenants
+
+The catalog is read through Product MS, not directly from `products.json` on Azure Blob.
+The generated client uses the current tenant-aware contract, such as
+`/product/{tenantId}/{productId}/valid`. Keep `src/main/openapi/product.json`
+aligned with `apps/product/src/main/docs/openapi.json`, then regenerate with the
+existing Maven build; do not edit generated Java sources.
+
+The resolved tenant is validated against the registry and used consistently in
+the API path and `X-Tenant-Id`. Authorization is forwarded unchanged. An explicit
+tenant must match an already initialized request context; a missing or conflicting
+tenant must not cause a fallback to another tenant or to Blob.
+
+Role mappings use the requested institution type, then the global/`DEFAULT`
+mapping. Mappings for other institution types are not a fallback. Existing contract
+imports and signed uploads retain their optional template metadata.
+
+Onboarding needs no `storages.products`, product storage credentials or product
+Blob identity attachment. Product MS contract-template storage and Product CDC
+exports remain independent and must not be removed.
+
+### Catalog migration rollout
+
+Before releasing onboarding, verify the deployed Product MS supports the current
+tenant paths and its Mongo catalog contains the correct `tenantId` for every
+enabled tenant. Repository configuration alone does not establish either fact.
+Keep the tenant allowlist and Mongo/JWT configuration specific to each deployment.
+The referenced tenant SDK patch makes mandatory-storage configuration optional
+so an API-only consumer can start without `tenant.storage.mandatory-keys`.
+Build it in the Maven reactor (`--also-make`), as CI does, or publish/install it
+before building onboarding in isolation. No package publication is performed by
+the integration test workflow.
+
+Deploy the API-compatible consumer before removing its obsolete Blob settings
+and identity attachment. Review the Terraform plan for all affected stacks; shared
+storage, identities and role assignments must not be destroyed. If rolling back
+to a Blob-dependent consumer, restore its configuration and identity attachment
+first, and verify that the server/client versions remain compatible.
 
 
 ## Running the application in dev mode
@@ -77,9 +118,32 @@ Run the module tests from the repository root with:
 mvn -pl apps/onboarding-ms test
 ```
 
+When available, prefer the workspace's resolved Nx targets (`pnpm nx show projects`
+and `pnpm nx show project <project> --json`) over guessing a target name.
+
+The catalog checks include `ProductOpenApiContractTest`, `ProductConfigUtilsTest`,
+`ProductServiceImplTest`, `IntegrationProductServiceTest` and `ProductServiceHttpTest`.
+The HTTP suite uses the real generated client and adapter with a local Product
+HTTP server, checking tenant paths, forwarded headers, isolation, response models
+and failures. It does not select the fixture-only `IntegrationProductService`.
+
+The Cucumber suite is selected explicitly in CI:
+
+```shell
+APP_SERVER_PORT=8082 mvn --projects :onboarding-ms --also-make test \
+  -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingStep \
+  -Dsurefire.failIfNoSpecifiedTests=false
+```
+
+Check Cucumber's scenario report as well as Surefire's wrapper result. A green
+fixture-based suite alone does not establish HTTP compatibility with Product MS.
+
 ## Cucumber integration tests in IntelliJ
 
-The Cucumber suite starts its own Testcontainers Compose stack: MongoDB on port `28017`, Azurite, MockServer, Document MS and Product MS. Docker must be running and able to pull the required images (access to `ghcr.io/pagopa` may be required).
+The Cucumber suite starts its own Testcontainers Compose stack: MongoDB on port
+`28017`, Azurite, MockServer and Document MS. Product API HTTP checks use a dedicated
+local server instead of the old unused Product MS container. Docker must be running
+and able to pull the required images (access to `ghcr.io/pagopa` may be required).
 
 > **Test data only:** all environment variables, keys, tokens, connection strings, fixtures and databases used by the suite are fake/local test data. MongoDB and Azurite run in Docker and are not connected to Azure or to a real database.
 
@@ -109,7 +173,13 @@ Create a **Cucumber Java** configuration with these values (the shared configura
 | Working directory | module directory (`apps/onboarding-ms`) |
 | Program arguments | `--plugin teamcity` (optional) |
 
-The runner selects the `IntegrationProfile`, which uses the test properties and fixtures under `src/test/resources`, including the Azurite catalog and MockServer expectations. To run the readiness scenarios, use the same configuration and select `apps/onboarding-ms/src/test/resources/features/health.feature`; the runner includes both `@Onboarding` and `@Health` tags.
+The runner selects the `IntegrationProfile`, which uses test properties and local
+tenant-indexed catalog fixtures under `src/test/resources`, plus MockServer
+expectations. The product alternative does not read the catalog from Azurite;
+Azurite remains available for the other services in the stack. To run the readiness
+scenarios, select `apps/onboarding-ms/src/test/resources/features/health.feature`;
+the runner includes both `@Onboarding` and `@Health` tags. Readiness no longer
+contains the removed `blob-storage-product` check.
 
 No environment variables or Azure credentials are required for these Cucumber configurations. Keep environment-specific keys, connection strings and URLs out of shared IntelliJ configurations.
 
