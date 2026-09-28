@@ -144,15 +144,31 @@ class InstitutionServiceImplTest {
         IpaInstitutionsSearchResult expected = new IpaInstitutionsSearchResult();
         expected.setItems(List.of());
         expected.setCount(0L);
-        when(partyRegistryProxyConnectorMock.searchIpaInstitutions("esempio", "L6", 0, 50))
+        when(partyRegistryProxyConnectorMock.searchIpaInstitutions("esempio", "C17,C16", 0, 50))
                 .thenReturn(expected);
 
         // when
-        IpaInstitutionsSearchResult actual = institutionService.searchIpaInstitutions("esempio", "L6", 0, 50);
+        IpaInstitutionsSearchResult actual = institutionService.searchIpaInstitutions("esempio", "C17,C16", 0, 50);
 
         // then
         assertSame(expected, actual);
-        verify(partyRegistryProxyConnectorMock).searchIpaInstitutions("esempio", "L6", 0, 50);
+        verify(partyRegistryProxyConnectorMock).searchIpaInstitutions("esempio", "C17,C16", 0, 50);
+    }
+
+    @Test
+    void findIpaInstitutionByTaxCode() {
+        // given
+        InstitutionProxyInfo expected = new InstitutionProxyInfo();
+        expected.setTaxCode("12345678901");
+        when(partyRegistryProxyConnectorMock.findIpaInstitutionByTaxCode("12345678901", "C17,C16"))
+                .thenReturn(expected);
+
+        // when
+        InstitutionProxyInfo actual = institutionService.findIpaInstitutionByTaxCode("12345678901", "C17,C16");
+
+        // then
+        assertSame(expected, actual);
+        verify(partyRegistryProxyConnectorMock).findIpaInstitutionByTaxCode("12345678901", "C17,C16");
     }
 
     @Test

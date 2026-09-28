@@ -1413,6 +1413,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -1636,7 +1639,9 @@
           "TESTING",
           "ACTIVE",
           "DELETED",
-          "SUSPEND"
+          "SUSPEND",
+          "PHASE_OUT",
+          "INACTIVE"
         ],
         "type": "string"
       },
@@ -1699,6 +1704,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -2221,6 +2232,12 @@
               "$ref": "#/components/schemas/RoleMapping"
             }
           },
+          "partnerTechRoleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
           "contracts": {
             "type": "array",
             "items": {
@@ -2318,6 +2335,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"

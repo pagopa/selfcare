@@ -78,13 +78,13 @@ class InstitutionV2ControllerTest {
         IpaInstitutionsSearchResult searchResult = new IpaInstitutionsSearchResult();
         searchResult.setItems(List.of(institution));
         searchResult.setCount(1L);
-        when(institutionServiceMock.searchIpaInstitutions("esempio", "L6", 1, 20)).thenReturn(searchResult);
+        when(institutionServiceMock.searchIpaInstitutions("esempio", "C17,C16", 1, 20)).thenReturn(searchResult);
 
         // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/ipa")
                         .queryParam("search", "esempio")
-                        .queryParam("category", "L6")
+                        .queryParam("category", "C17,C16")
                         .queryParam("page", "1")
                         .queryParam("pageSize", "20")
                         .accept(APPLICATION_JSON_VALUE))
@@ -97,7 +97,35 @@ class InstitutionV2ControllerTest {
         assertEquals(1L, response.getCount());
         assertEquals("ipa-id", response.getItems().get(0).getId());
         assertEquals("Comune di esempio", response.getItems().get(0).getDescription());
-        verify(institutionServiceMock).searchIpaInstitutions("esempio", "L6", 1, 20);
+        verify(institutionServiceMock).searchIpaInstitutions("esempio", "C17,C16", 1, 20);
+        verifyNoMoreInteractions(institutionServiceMock);
+    }
+
+    @Test
+    void findIpaInstitutionByTaxCode() throws Exception {
+        // given
+        InstitutionProxyInfo institution = new InstitutionProxyInfo();
+        institution.setId("ipa-id");
+        institution.setDescription("Comune di esempio");
+        institution.setTaxCode("12345678901");
+        when(institutionServiceMock.findIpaInstitutionByTaxCode("12345678901", "C17,C16"))
+                .thenReturn(institution);
+
+        // when
+        MvcResult result = mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/ipa/{taxCode}", "12345678901")
+                        .queryParam("category", "C17,C16")
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        IpaInstitutionResource response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), IpaInstitutionResource.class);
+        assertEquals("ipa-id", response.getId());
+        assertEquals("Comune di esempio", response.getDescription());
+        assertEquals("12345678901", response.getTaxCode());
+        verify(institutionServiceMock).findIpaInstitutionByTaxCode("12345678901", "C17,C16");
         verifyNoMoreInteractions(institutionServiceMock);
     }
 

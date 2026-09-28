@@ -10,14 +10,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
-import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.connector.exceptions.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
-import it.pagopa.selfcare.onboarding.core.UserInstitutionService;
-import it.pagopa.selfcare.onboarding.core.UserService;
 import it.pagopa.selfcare.onboarding.web.constants.PermissionConstants;
 import it.pagopa.selfcare.onboarding.web.model.AvailableDocumentsResource;
 import it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType;
@@ -51,15 +47,11 @@ import static org.springframework.web.bind.annotation.RequestMethod.HEAD;
 public class TokenV2Controller {
 
     private final TokenService tokenService;
-    private final UserService userService;
-    private final UserInstitutionService userInstitutionService;
     private final OnboardingResourceMapper onboardingResourceMapper;
     private final static String SANITIZIER = "[^a-zA-Z0-9-_]";
 
-    public TokenV2Controller(TokenService tokenService, UserService userService, UserInstitutionService userInstitutionService, OnboardingResourceMapper onboardingResourceMapper) {
+    public TokenV2Controller(TokenService tokenService, OnboardingResourceMapper onboardingResourceMapper) {
         this.tokenService = tokenService;
-        this.userService = userService;
-        this.userInstitutionService = userInstitutionService;
         this.onboardingResourceMapper = onboardingResourceMapper;
     }
 
@@ -244,8 +236,10 @@ public class TokenV2Controller {
 
     @GetMapping(value = "/{onboardingId}/contract", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
     @Operation(summary = "${swagger.tokens.getContract}",
             description = "${swagger.tokens.getContract}", operationId = "getContractUsingGET")
+    @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents")
     public ResponseEntity<byte[]> getContract(@Parameter(description = "${swagger.tokens.onboardingId}")
                                               @PathVariable("onboardingId")
                                               String onboardingId) throws IOException {
@@ -400,33 +394,19 @@ public class TokenV2Controller {
 
     @GetMapping(value = "/{onboardingId}/products/{productId}/aggregates-csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
     @Operation(summary = "${swagger.tokens.getAggregatesCsv}",
             description = "${swagger.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
+    @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents")
     public ResponseEntity<byte[]> getAggregatesCsv(@Parameter(description = "${swagger.tokens.onboardingId}") @PathVariable("onboardingId")
-                                                   String onboardingIdInput,
+                                                   String onboardingId,
                                                    @Parameter(description = "${swagger.tokens.productId}")
                                                    @PathVariable("productId")
-                                                   String productIdInput, Principal principal) throws Exception {
-
-        JwtAuthenticationToken jwtAuthenticationToken = (JwtAuthenticationToken) principal;
-        SelfCareUser selfCareUser = (SelfCareUser) jwtAuthenticationToken.getPrincipal();
+                                                   String productId) throws IOException {
         log.trace("getAggregatesCsv start");
-        String onboardingId = Encode.forJava(onboardingIdInput);
-        String productId = Encode.forJava(productIdInput);
-        log.debug("getAggregatesCsv onboardingId = {}, productId = {}", onboardingId, productId);
-
-        String userUid = selfCareUser.getId();
-        OnboardingData onboardingWithUserInfo = tokenService.getOnboardingWithUserInfo(onboardingId);
-
-        if ((OnboardingStatus.COMPLETED.name().equalsIgnoreCase(onboardingWithUserInfo.getStatus()) && userInstitutionService.verifyAllowedUserInstitution(
-                onboardingWithUserInfo.getInstitutionUpdate().getId(), productId, userUid)) || tokenService.verifyAllowedUserByRole(onboardingId, userUid)
-                || userService.isAllowedUserByUid(userUid)) {
-            Resource csv = tokenService.getAggregatesCsv(onboardingId, productId);
-            return getResponseEntity(csv);
-        } else {
-            throw new UnauthorizedUserException("Normal-User not allowed to use this endpoint.");
-        }
-
+        log.debug("getAggregatesCsv onboardingId = {}, productId = {}", Encode.forJava(onboardingId), Encode.forJava(productId));
+        Resource csv = tokenService.getAggregatesCsv(onboardingId, productId);
+        return getResponseEntity(csv);
     }
 
     private HttpHeaders getHttpHeaders(Resource contract) {

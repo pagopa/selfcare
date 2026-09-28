@@ -33,7 +33,7 @@ public interface DocumentContentService {
      */
     Uni<CreatePdfResponse> createAttachmentPdf(AttachmentPdfRequest request);
 
-    Uni<RestResponse<File>> retrieveSignedFile(String id);
+    Uni<RestResponse<File>> retrieveSignedFile(String onboardingId, boolean downloadP7MFile);
 
     Uni<RestResponse<File>> retrieveContract(String onboardingId, boolean isSigned);
 

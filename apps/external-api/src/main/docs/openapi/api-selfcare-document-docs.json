@@ -1047,6 +1047,13 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "downloadP7MFile",
+          "in" : "query",
+          "schema" : {
+            "default" : false,
+            "type" : "boolean"
+          }
         } ],
         "responses" : {
           "200" : {

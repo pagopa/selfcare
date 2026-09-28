@@ -4,6 +4,7 @@ tags:
 - name: OIDC
 - name: OTP
 - name: SAML
+- name: support
 components:
   schemas:
     Date:
@@ -238,6 +239,7 @@ paths:
       description: Retrieve OTP information for a user
       operationId: getOtpInfo
       tags:
+      - support
       - OTP
       parameters:
       - name: status
@@ -281,6 +283,7 @@ paths:
       description: Retrieve the processing status of an email managed by OneMail
       operationId: getOtpMailInfo
       tags:
+      - support
       - OTP
       parameters:
       - name: mailRequestId

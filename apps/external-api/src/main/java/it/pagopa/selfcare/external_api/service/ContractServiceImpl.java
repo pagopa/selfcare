@@ -14,6 +14,7 @@ import it.pagopa.selfcare.external_api.mapper.InstitutionMapper;
 import it.pagopa.selfcare.external_api.model.document.ResourceResponse;
 import it.pagopa.selfcare.external_api.model.onboarding.InstitutionOnboarding;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,9 @@ public class ContractServiceImpl implements ContractService {
     private final MsDocumentContentApiClient documentContentApiClient;
     private final MsDocumentApiClient documentApiClient;
     private final DocumentMapper documentMapper;
+
+    @Value("${KONECTA_RAW_CONTRACT:false}")
+    private boolean konectaRawContract;
     public ContractServiceImpl(MsCoreInstitutionApiClient institutionApiClient,
                                InstitutionMapper institutionMapper,
                                MsDocumentContentApiClient documentContentApiClient,
@@ -53,7 +57,8 @@ public class ContractServiceImpl implements ContractService {
     @Override
     public ResourceResponse getContractV2(String institutionId, String productId, String documentId) {
         log.trace("getContract start");
-        log.debug("getContract institutionId = {}, productId = {}, documentId = {}", institutionId, productId, documentId);
+        log.debug("getContract institutionId = {}, productId = {}, documentId = {}, konectaRawContract = {}",
+                institutionId, productId, documentId, konectaRawContract);
 
         OnboardingsResponse onboardingsResponse = Optional.ofNullable(
                         institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId).getBody())
@@ -83,7 +88,7 @@ public class ContractServiceImpl implements ContractService {
                     .orElseThrow(() -> new ResourceNotFoundException(String.format(TOKEN_FOR_S_AND_S_NOT_FOUND, institutionId, productId)));
             if(!StringUtils.hasText(document.getContractSigned()))
                 throw new ResourceNotFoundException(String.format(TOKEN_FOR_S_AND_S_FOUND_BUT_CONTRACT_SIGNED_REFERENCE_IS_EMPTY, institutionId, productId));
-            contract = documentContentApiClient._getContractSigned(institutionOnboarding.getTokenId());
+            contract = documentContentApiClient._getContractSigned(institutionOnboarding.getTokenId(), konectaRawContract);
             fileName = new File(document.getContractSigned()).getName();
         }
 

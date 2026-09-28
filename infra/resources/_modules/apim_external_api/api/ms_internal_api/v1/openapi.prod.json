@@ -5115,9 +5115,6 @@
           },
           "gpuData": {
             "$ref": "#/components/schemas/GPUData1"
-          },
-          "payment": {
-            "$ref": "#/components/schemas/PaymentRequestDto"
           }
         }
       },
@@ -5167,18 +5164,6 @@
           }
         }
       },
-      "PaymentRequestDto": {
-        "type": "object",
-        "properties": {
-          "iban": {
-            "pattern": "^IT\\d{2}[A-Z]\\d{5}\\d{5}[0-9A-Z]{12}$",
-            "type": "string"
-          },
-          "holder": {
-            "type": "string"
-          }
-        }
-      },
       "OnboardingStatus": {
         "enum": [
           "REQUESTING",
@@ -5220,9 +5205,6 @@
           },
           "billing": {
             "$ref": "#/components/schemas/BillingResponse2"
-          },
-          "payment": {
-            "$ref": "#/components/schemas/PaymentResponse"
           },
           "signContract": {
             "type": "boolean"
@@ -5281,17 +5263,6 @@
             "$ref": "#/components/schemas/PartyRole"
           },
           "productRole": {
-            "type": "string"
-          }
-        }
-      },
-      "PaymentResponse": {
-        "type": "object",
-        "properties": {
-          "iban": {
-            "type": "string"
-          },
-          "holder": {
             "type": "string"
           }
         }

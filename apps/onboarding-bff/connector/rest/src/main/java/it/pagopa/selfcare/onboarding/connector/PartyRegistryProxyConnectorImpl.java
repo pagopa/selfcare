@@ -135,6 +135,19 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
 
     @Override
     @Retry(name = "retryTimeout")
+    public InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category) {
+        log.trace("findIpaInstitutionByTaxCode start");
+        log.debug("findIpaInstitutionByTaxCode taxCode = {}", taxCode);
+        Assert.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+        ProxyInstitutionResponse response = restClient.findIpaInstitutionByTaxCode(taxCode, category);
+        InstitutionProxyInfo result = proxyMapper.toInstitutionProxyInfo(response);
+        log.debug("findIpaInstitutionByTaxCode result = {}", result);
+        log.trace("findIpaInstitutionByTaxCode end");
+        return result;
+    }
+
+    @Override
+    @Retry(name = "retryTimeout")
     public IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize) {
         log.trace("searchIpaInstitutions start");
         IpaInstitutionsSearchResponse response = restClient.searchIpaInstitutions(search, category, page, pageSize);

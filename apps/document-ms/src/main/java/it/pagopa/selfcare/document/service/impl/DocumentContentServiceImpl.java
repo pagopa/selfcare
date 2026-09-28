@@ -133,13 +133,13 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     }
 
     @Override
-    public Uni<RestResponse<File>> retrieveSignedFile(String onboardingId) {
+    public Uni<RestResponse<File>> retrieveSignedFile(String onboardingId, boolean downloadP7MFile) {
         return documentRepository.findByOnboardingId(onboardingId)
                 .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
                 .onItem().transformToUni(document ->
-                        fetchFileFromAzureAsync(document.getContractSigned(), document.getStorageOrigin())
+                        fetchFileFromBlob(document.getContractSigned(), document.getStorageOrigin())
                                 .emitOn(Infrastructure.getDefaultWorkerPool())
-                                .onItem().transform(contract -> validateAndExtractSignedFile(contract, document.getContractSigned()))
+                                .onItem().transform(contract -> validateAndExtractSignedFile(contract, document.getContractSigned(), downloadP7MFile))
                                 .onItem().transform(processedFile -> buildDownloadResponse(processedFile, document, true))
                 )
                 .onFailure().recoverWithItem(() -> RestResponse.ResponseBuilder.<File>notFound().build());
@@ -937,7 +937,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         }
     }
 
-    private File validateAndExtractSignedFile(File contract, String contractSignedPath) {
+    private File validateAndExtractSignedFile(File contract, String contractSignedPath, boolean downloadP7MFile) {
         if (contractSignedPath.endsWith(".pdf")) {
             DocumentFileUtils.isPdfValid(contract);
             return contract;
@@ -945,11 +945,12 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             isP7mValid(contract);
             File extractedFile = signatureService.extractFile(contract);
             DocumentFileUtils.isPdfValid(extractedFile);
-            return extractedFile;
+            log.info("Extracted PDF from signed container for contractSignedPath={}, downloadP7MFile={}", sanitize(contractSignedPath), downloadP7MFile);
+            return downloadP7MFile ? contract : extractedFile;
         }
     }
 
-    private Uni<File> fetchFileFromAzureAsync(String filePath, StorageOrigin storageOrigin) {
+    private Uni<File> fetchFileFromBlob(String filePath, StorageOrigin storageOrigin) {
         AzureBlobClient azureBlobClient = storageRegistry.clientFor(storageOrigin);
         return Uni.createFrom().item(() -> azureBlobClient.retrieveFile(filePath))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor());

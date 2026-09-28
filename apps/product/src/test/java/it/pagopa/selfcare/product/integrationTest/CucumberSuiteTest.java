@@ -17,6 +17,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
     features = "src/test/resources/features",
     glue = {"it.pagopa.selfcare.cucumber.utils", "it.pagopa.selfcare.product.integrationTest"},
     plugin = {
+      "pretty",
       "html:target/cucumber-report/cucumber.html",
       "json:target/cucumber-report/cucumber.json"
     })

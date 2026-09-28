@@ -5,7 +5,9 @@ import com.mongodb.client.model.Sorts;
 import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoRepositoryBase;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.model.ContractTemplate;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,17 +19,27 @@ import org.bson.conversions.Bson;
 public class ContractTemplateRepository
     implements ReactivePanacheMongoRepositoryBase<ContractTemplate, String> {
 
-  public Uni<Long> countWithFilters(String productId, String name, String version) {
-    return count(buildFilter(productId, name, version));
+  @Inject TenantContext tenantContext;
+
+  public Uni<Long> countWithFilters(
+      String tenantId, String productId, String name, String version) {
+    return count(buildFilter(tenantId, productId, name, version));
   }
 
   public Uni<List<ContractTemplate>> listWithFilters(
-      String productId, String name, String version) {
-    return list(buildFilter(productId, name, version), Sorts.descending("createdAt"));
+      String tenantId, String productId, String name, String version) {
+    return list(buildFilter(tenantId, productId, name, version), Sorts.descending("createdAt"));
   }
 
-  private Bson buildFilter(String productId, String name, String version) {
+  private Bson buildFilter(String tenantId, String productId, String name, String version) {
     final List<Bson> filters = new ArrayList<>();
+    filters.add(Filters.eq("tenantId", tenantContext.requiredTenantId()));
+    Optional.ofNullable(tenantId)
+        .ifPresent(
+            t ->
+                filters.add(
+                    Filters.regex(
+                        "tenantId", Pattern.compile(Pattern.quote(t), Pattern.CASE_INSENSITIVE))));
     Optional.ofNullable(productId)
         .ifPresent(
             p ->

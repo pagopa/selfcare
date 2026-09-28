@@ -45,13 +45,61 @@ locals {
       name  = "STORAGE_CONTAINER_PRODUCT"
       value = "selc-${module.local.config.env_short}-product"
     }
+    , {
+      name = "TENANT_REGISTRY_JSON"
+      value = jsonencode({
+        AR = {
+          mongo = {
+            account                = "cosmos-ar"
+            database               = "selcProduct"
+            connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
+          }
+          storages = {
+            products = {
+              account    = "selc${module.local.config.env_short}product"
+              container  = "selc-${module.local.config.env_short}-product"
+              pathPrefix = ""
+              authentication = {
+                type                   = "CONNECTION_STRING"
+                connectionStringEnvVar = "BLOB_STORAGE_CONN_STRING_PRODUCT_AR"
+              }
+            }
+          }
+        }
+        PNPG = {
+          mongo = {
+            account                = "cosmos-pnpg"
+            database               = "selcProduct"
+            connectionStringEnvVar = "MONGODB_CONNECTION_STRING_PNPG"
+          }
+          storages = {
+            products = {
+              account    = "selc${module.local.config.env_short}product"
+              container  = "selc-${module.local.config.env_short}-product"
+              pathPrefix = ""
+              authentication = {
+                type                   = "CONNECTION_STRING"
+                connectionStringEnvVar = "BLOB_STORAGE_CONN_STRING_PRODUCT_PNPG"
+              }
+            }
+          }
+        }
+      })
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR,PNPG"
+    }
   ]
 
   secrets_names = {
     "BLOB_STORAGE_CONN_STRING_PRODUCT"      = "blob-storage-product-connection-string"
     "STORAGE_CONNECTION_STRING"             = "blob-storage-product-connection-string"
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_AR"          = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string-pnpg"
+    "BLOB_STORAGE_CONN_STRING_PRODUCT_AR"   = "blob-storage-product-connection-string"
+    "BLOB_STORAGE_CONN_STRING_PRODUCT_PNPG" = "blob-storage-product-connection-string-pnpg"
     "JWT_PUBLIC_KEY"                        = "jwt-public-key"
   }
 }

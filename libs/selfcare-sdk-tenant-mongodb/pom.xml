@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>selfcare-sdk-tenant-mongodb</artifactId>
-  <version>0.1.0</version>
+  <version>0.2.0</version>
   <name>selfcare-sdk-tenant-mongodb</name>
   <description>Quarkus MongoDB tenant routing for Selfcare services.
   </description>
@@ -25,7 +25,7 @@
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>3.11.2</quarkus.platform.version>
     <maven.compiler.release>17</maven.compiler.release>
-    <common-sdk-tenant-version>0.2.0</common-sdk-tenant-version>
+    <common-sdk-tenant-version>0.3.0</common-sdk-tenant-version>
   </properties>
 
   <dependencyManagement>
@@ -67,4 +67,21 @@
       <scope>provided</scope>
     </dependency>
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.smallrye</groupId>
+        <artifactId>jandex-maven-plugin</artifactId>
+        <version>3.1.8</version>
+        <executions>
+          <execution>
+            <id>make-index</id>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

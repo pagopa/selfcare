@@ -34,6 +34,9 @@
     {
       "name": "UserGroup",
       "description": "User group endpoint CRUD operations"
+    },
+    {
+      "name": "OTP"
     }
   ],
   "paths": {
@@ -1345,13 +1348,73 @@
         ]
       }
     },
+    "/institutions/ipa/{taxCode}": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Find IPA institution by tax code",
+        "description": "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
+        "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters": [
+          {
+            "name": "taxCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResource1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
     "/institutions/ipa": {
       "get": {
         "tags": [
           "institution"
         ],
         "summary": "Retrieve IPA institutions",
-        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and comma-separated category filter",
         "operationId": "searchIpaInstitutionsOnSearchEngine",
         "parameters": [
           {
@@ -1367,7 +1430,7 @@
           {
             "name": "category",
             "in": "query",
-            "description": "Filter from origin category",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
             "required": false,
             "schema": {
               "type": "string"
@@ -1525,6 +1588,138 @@
             ]
           }
         ]
+      }
+    },
+    "/otp/info": {
+      "get": {
+        "summary": "Get OTP information",
+        "description": "Retrieve OTP information for a user",
+        "operationId": "getOtpInfo",
+        "tags": [
+          "OTP"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/OtpStatus"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "pattern": "\\S",
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpFlow"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem5"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem5"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem5"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/otp/mail-info/{mailRequestId}": {
+      "get": {
+        "summary": "Get OTP mail information",
+        "description": "Retrieve the processing status of an email managed by OneMail",
+        "operationId": "getOtpMailInfo",
+        "tags": [
+          "OTP"
+        ],
+        "parameters": [
+          {
+            "name": "mailRequestId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OtpMailInfoResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem5"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem5"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem5"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/users": {
@@ -2792,6 +2987,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -3474,25 +3672,6 @@
           }
         }
       },
-      "InstitutionsResource": {
-        "required": [
-          "count",
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InstitutionResource1"
-            }
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
       "InstitutionResource1": {
         "type": "object",
         "properties": {
@@ -3547,6 +3726,25 @@
           }
         }
       },
+      "InstitutionsResource": {
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResource1"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
       "NotificationCountResult": {
         "title": "NotificationCountResult",
         "type": "object",
@@ -3557,6 +3755,131 @@
           },
           "productId": {
             "type": "string"
+          }
+        }
+      },
+      "OtpFlow": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "$ref": "#/components/schemas/ObjectId"
+          },
+          "uuid": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string"
+          },
+          "tenantId": {
+            "type": "string"
+          },
+          "otp": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/OtpStatus"
+          },
+          "attempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/OffsetDateTime"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/OffsetDateTime"
+          },
+          "expiresAt": {
+            "$ref": "#/components/schemas/OffsetDateTime"
+          },
+          "mailRequestId": {
+            "type": "string"
+          }
+        }
+      },
+      "ObjectId": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "nonce": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "date": {
+            "$ref": "#/components/schemas/Date"
+          }
+        }
+      },
+      "Date": {
+        "format": "date",
+        "type": "string",
+        "example": "2022-03-10"
+      },
+      "OtpStatus": {
+        "enum": [
+          "PENDING",
+          "EXPIRED",
+          "REJECTED",
+          "COMPLETED"
+        ],
+        "type": "string"
+      },
+      "Problem5": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "instance": {
+            "type": "string"
+          },
+          "status": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        }
+      },
+      "OtpMailInfoResponse": {
+        "type": "object",
+        "properties": {
+          "mailRequestId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "attempts": {
+            "format": "int32",
+            "type": "integer"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MailStatusHistory"
+            }
+          }
+        }
+      },
+      "MailStatusHistory": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "changedAt": {
+            "$ref": "#/components/schemas/OffsetDateTime"
           }
         }
       },

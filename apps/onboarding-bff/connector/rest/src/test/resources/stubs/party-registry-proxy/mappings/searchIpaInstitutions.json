@@ -4,7 +4,7 @@
     "urlPath": "/external/ur/v1/institutions/ipa",
     "queryParameters": {
       "search": { "equalTo": "esempio" },
-      "category": { "equalTo": "L6" },
+      "category": { "equalTo": "C17,C16" },
       "page": { "equalTo": "0" },
       "pageSize": { "equalTo": "50" }
     }

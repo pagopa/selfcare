@@ -25,6 +25,8 @@ public interface PartyRegistryProxyConnector {
 
     InstitutionProxyInfo getInstitutionProxyById(String externalId);
 
+    InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category);
+
     IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize);
 
 }

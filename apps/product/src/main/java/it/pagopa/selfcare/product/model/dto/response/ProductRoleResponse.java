@@ -14,4 +14,3 @@ public class ProductRoleResponse {
   private String label;
   private String description;
 }
-

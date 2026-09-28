@@ -30,7 +30,7 @@ module "apim_api_auth" {
   private_dns_name           = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
   dns_zone_prefix            = module.local.config.dns_zone_prefix
   api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
-  openapi_path               = "../../../../apps/auth/src/main/docs/openapi.json"
+  openapi_path               = "../../../../apps/auth/src/main/docs/openapi-apim.json"
   tenant_ids                 = module.local.config.tenant_ids
   tenant_hosts               = module.local.config.tenant_hosts
   tenant_enforcement_enabled = true

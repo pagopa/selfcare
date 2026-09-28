@@ -2520,6 +2520,20 @@
           }
         } ],
         "responses" : {
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "format" : "byte"
+                  }
+                }
+              }
+            }
+          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -2712,6 +2726,20 @@
           }
         } ],
         "responses" : {
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "format" : "byte"
+                  }
+                }
+              }
+            }
+          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -3506,7 +3534,7 @@
       "get" : {
         "tags" : [ "institutions" ],
         "summary" : "Search IPA institutions",
-        "description" : "Searches IPA institutions indexed by the registry proxy",
+        "description" : "Searches IPA institutions indexed by the registry proxy. category accepts a comma-separated list of IPA category codes.",
         "operationId" : "searchIpaInstitutionsUsingGET",
         "parameters" : [ {
           "name" : "search",
@@ -3519,6 +3547,7 @@
         }, {
           "name" : "category",
           "in" : "query",
+          "description" : "One IPA category code or a comma-separated list of IPA category codes.",
           "required" : false,
           "schema" : {
             "type" : "string"
@@ -3549,6 +3578,89 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/IpaInstitutionsSearchResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "type" : "object",
+                  "description" : "Generic problem response"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
+    "/v2/institutions/ipa/{taxCode}" : {
+      "get" : {
+        "tags" : [ "institutions" ],
+        "summary" : "Find IPA institution by tax code",
+        "description" : "Returns the IPA institution with the exact tax code. category optionally accepts a comma-separated list of IPA category codes.",
+        "operationId" : "findIpaInstitutionByTaxCodeUsingGET",
+        "parameters" : [ {
+          "name" : "taxCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "description" : "One IPA category code or a comma-separated list of IPA category codes.",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IpaInstitutionResource"
                 }
               }
             }

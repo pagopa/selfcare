@@ -36,8 +36,9 @@
   subscription-to-tenant binding. Async work carries `tenantId` in its persisted payload or uses a
   tenant-bound machine credential.
 - `Data model expectations:` Tenant-owned Mongo documents carry a mandatory `tenantId` discriminator after
-  migration. Global product and IAM role catalogues remain unscoped. Product-driven dedicated databases are
-  orthogonal to tenant isolation and retain the discriminator. Tenant-owned blobs use tenant-specific
+  migration. Product documents and contract templates are tenant-scoped through
+  the API path and persisted discriminator; the IAM role catalogue remains
+  unscoped. Product-driven dedicated databases are orthogonal to tenant isolation and retain the discriminator. Tenant-owned blobs use tenant-specific
   containers or paths; shared templates remain explicitly global. Tenant resource metadata and Key Vault
   secret references are represented by the canonical tenant registry.
 - `Deployment model:` Terraform-managed Azure resources under `infra/core` and `infra/resources`. The target

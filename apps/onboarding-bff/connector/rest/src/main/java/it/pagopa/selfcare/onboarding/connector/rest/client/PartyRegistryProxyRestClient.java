@@ -38,6 +38,12 @@ public interface PartyRegistryProxyRestClient {
     @ResponseBody
     ProxyInstitutionResponse getInstitutionById(@PathVariable("institutionId") String id);
 
+    @GetMapping(value = "${rest-client.party-registry-proxy.findIpaInstitutionByTaxCode.path}", produces = APPLICATION_JSON_VALUE)
+    @ResponseBody
+    ProxyInstitutionResponse findIpaInstitutionByTaxCode(
+            @PathVariable("taxCode") String taxCode,
+            @RequestParam(value = "category", required = false) String category);
+
     @GetMapping(value = "${rest-client.party-registry-proxy.searchIpaInstitutions.path}", produces = APPLICATION_JSON_VALUE)
     @ResponseBody
     IpaInstitutionsSearchResponse searchIpaInstitutions(

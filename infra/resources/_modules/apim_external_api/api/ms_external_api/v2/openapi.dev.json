@@ -1093,13 +1093,73 @@
         ]
       }
     },
+    "/institutions/ipa/{taxCode}": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Find IPA institution by tax code",
+        "description": "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
+        "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters": [
+          {
+            "name": "taxCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResource1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
     "/institutions/ipa": {
       "get": {
         "tags": [
           "institution"
         ],
         "summary": "Retrieve IPA institutions",
-        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and comma-separated category filter",
         "operationId": "searchIpaInstitutionsOnSearchEngine",
         "parameters": [
           {
@@ -1115,7 +1175,7 @@
           {
             "name": "category",
             "in": "query",
-            "description": "Filter from origin category",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
             "required": false,
             "schema": {
               "type": "string"
@@ -3992,6 +4052,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "downloadP7MFile",
+            "in": "query",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -4238,6 +4306,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -4813,25 +4884,6 @@
           }
         }
       },
-      "InstitutionsResource": {
-        "required": [
-          "count",
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InstitutionResource1"
-            }
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
       "InstitutionResource1": {
         "type": "object",
         "properties": {
@@ -4883,6 +4935,25 @@
           },
           "updateDate": {
             "type": "string"
+          }
+        }
+      },
+      "InstitutionsResource": {
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResource1"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -5234,7 +5305,9 @@
           "TESTING",
           "ACTIVE",
           "DELETED",
-          "SUSPEND"
+          "SUSPEND",
+          "PHASE_OUT",
+          "INACTIVE"
         ],
         "type": "string"
       },
@@ -5276,6 +5349,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -5798,6 +5877,12 @@
               "$ref": "#/components/schemas/RoleMapping"
             }
           },
+          "partnerTechRoleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
           "contracts": {
             "type": "array",
             "items": {
@@ -5895,6 +5980,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"

@@ -1,6 +1,6 @@
 ## VPN subnet
 module "vpn_snet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v10.33.2"
   name                              = "GatewaySubnet"
   address_prefixes                  = var.cidr_subnet_vpn
   resource_group_name               = var.rg_vnet_name
@@ -10,7 +10,7 @@ module "vpn_snet" {
 }
 
 module "vpn" {
-  source = "github.com/pagopa/terraform-azurerm-v4.git//vpn_gateway?ref=v9.6.1"
+  source = "github.com/pagopa/terraform-azurerm-v4.git//vpn_gateway?ref=v10.33.2"
 
   name                = "${var.project}-vpn"
   location            = var.location
@@ -42,7 +42,7 @@ module "vpn" {
 
 ## DNS Forwarder
 module "dns_forwarder_snet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v10.33.2"
   name                              = "${var.project}-dns-forwarder-snet"
   address_prefixes                  = var.cidr_subnet_dns_forwarder
   resource_group_name               = var.rg_vnet_name
@@ -51,7 +51,7 @@ module "dns_forwarder_snet" {
 }
 
 module "dns_forwarder" {
-  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image?ref=v9.6.1"
+  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image?ref=v10.33.2"
   resource_group_name = var.rg_vnet_name
   location            = var.location
   image_name          = "${var.project}-dns-forwarder-ubuntu2204-image"
@@ -63,11 +63,10 @@ module "dns_forwarder" {
 # with default image
 module "dns_forwarder_vpn" {
 
-  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm?ref=v9.6.1"
+  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm?ref=v10.33.2"
   name                = "${var.project}-dns-forwarder"
   resource_group_name = var.rg_vnet_name
   subnet_id           = module.dns_forwarder_snet.id
-  subscription_name   = var.subscription_name
   subscription_id     = var.subscription_id
   location            = var.location
   source_image_name   = "${var.project}-dns-forwarder-ubuntu2204-image-v1"
@@ -82,7 +81,7 @@ module "dns_forwarder_vpn" {
 # DNS Forwarder
 #
 module "dns_forwarder_pair_subnet" {
-  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v9.6.1"
+  source                            = "github.com/pagopa/terraform-azurerm-v4.git//subnet?ref=v10.33.2"
   name                              = "${var.project_pair}-dnsforwarder-snet"
   address_prefixes                  = var.cidr_subnet_pair_dnsforwarder
   resource_group_name               = var.rg_pair_vnet_name
@@ -100,7 +99,7 @@ resource "random_id" "pair_dns_forwarder_hash" {
 
 
 module "vpn_pair_dns_forwarder" {
-  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image?ref=v9.6.1"
+  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_vm_image?ref=v10.33.2"
   resource_group_name = var.rg_pair_vnet_name
   location            = var.location_pair
   image_name          = "${var.project_pair}-dns-forwarder-ubuntu2204-image"
@@ -111,11 +110,10 @@ module "vpn_pair_dns_forwarder" {
 
 module "dns_forwarder_pair_vpn" {
 
-  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm?ref=v9.6.1"
+  source              = "git::https://github.com/pagopa/terraform-azurerm-v4.git//dns_forwarder_scale_set_vm?ref=v10.33.2"
   name                = "${var.project_pair}-dns-forwarder"
   resource_group_name = var.rg_pair_vnet_name
   subnet_id           = module.dns_forwarder_pair_subnet.id
-  subscription_name   = var.subscription_name
   subscription_id     = var.subscription_id
   location            = var.location_pair
   source_image_name   = "${var.project_pair}-dns-forwarder-ubuntu2204-image-v1"
