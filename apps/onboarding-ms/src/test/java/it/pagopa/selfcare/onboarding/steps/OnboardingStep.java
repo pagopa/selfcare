@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.mongodb.client.MongoDatabase;
@@ -31,6 +32,8 @@ import it.pagopa.selfcare.onboarding.common.*;
 import it.pagopa.selfcare.onboarding.controller.OnboardingController;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.entity.*;
+import it.pagopa.selfcare.onboarding.service.ProductService;
+import it.pagopa.selfcare.onboarding.service.impl.ProductServiceImpl;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MediaType;
 import java.io.File;
@@ -76,6 +79,8 @@ public class OnboardingStep extends CucumberQuarkusTest {
   private static String tokenTestPnpg;
   private static final String JWT_BEARER_TOKEN_ENV = "custom.jwt-token-test";
   private static final String TENANT_ID = "AR";
+  private static final String MOCK_SERVER_URL = "http://localhost:1080";
+  private static final String PRODUCT_REQUEST_MATCHER = "{\"path\":\"/product.*\"}";
 
   @InjectMock @RestClient OrchestrationApi orchestrationApi;
   @InjectMock @RestClient InstitutionApi institutionApi;
@@ -107,11 +112,20 @@ public class OnboardingStep extends CucumberQuarkusTest {
     composeContainer = new ComposeContainer(new File("src/test/resources/docker-compose.yml"))
             .withPull(true)
             .waitingFor("mongo-db", Wait.forListeningPort())
+            .waitingFor("mock-server", Wait.forListeningPort())
             .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*", 1))
             .withStartupTimeout(Duration.ofMinutes(5));
 
     composeContainer.start();
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+
+    assertInstanceOf(ProductServiceImpl.class, Arc.container().instance(ProductService.class).get());
+    assertThat(given().baseUri(MOCK_SERVER_URL).port(1080).basePath("")
+            .contentType(MediaType.APPLICATION_JSON).body(PRODUCT_REQUEST_MATCHER)
+            .put("/mockserver/retrieve?type=ACTIVE_EXPECTATIONS")
+            .then().statusCode(200).extract().jsonPath().getList("$"))
+            .as("Product HTTP expectations must be loaded before scenarios start")
+            .isNotEmpty();
 
     log.info("Test containers started successfully");
 
@@ -124,6 +138,43 @@ public class OnboardingStep extends CucumberQuarkusTest {
     when(orchestrationApi.apiStartOnboardingOrchestrationGet(any(), any()))
             .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
     mockMSCoreResponses();
+  }
+
+  @io.cucumber.java.Before
+  public void clearProductRequests() {
+    given().baseUri(MOCK_SERVER_URL).port(1080).basePath("")
+            .contentType(MediaType.APPLICATION_JSON).body(PRODUCT_REQUEST_MATCHER)
+            .put("/mockserver/clear?type=log").then().statusCode(200);
+  }
+
+  @io.cucumber.java.After
+  public void verifyProductRequests() throws JsonProcessingException {
+    String exchanges = given().baseUri(MOCK_SERVER_URL).port(1080).basePath("")
+            .contentType(MediaType.APPLICATION_JSON).body(PRODUCT_REQUEST_MATCHER)
+            .put("/mockserver/retrieve?type=REQUEST_RESPONSES")
+            .then().statusCode(200).extract().asString();
+    for (JsonNode exchange : objectMapper.readTree(exchanges)) {
+      JsonNode request = exchange.path("httpRequest");
+      String path = request.path("path").asText();
+      assertEquals("matched", firstHeader(exchange.path("httpResponse").path("headers"), "X-Product-Mock"),
+              () -> "Unexpected Product request: " + request.path("method").asText() + " " + path);
+      String tenant = firstHeader(request.path("headers"), "X-Tenant-Id");
+      assertTrue(path.startsWith("/product/" + tenant + "/"), "Product path and tenant header must agree");
+      String expectedToken = "PNPG".equals(tenant) ? tokenTestPnpg : tokenTest;
+      assertTrue(("Bearer " + expectedToken).equals(firstHeader(request.path("headers"), "Authorization")),
+              "Product Authorization must match the request tenant");
+    }
+  }
+
+  private static String firstHeader(JsonNode headers, String name) {
+    var entries = headers.fields();
+    while (entries.hasNext()) {
+      var entry = entries.next();
+      if (name.equalsIgnoreCase(entry.getKey())) {
+        return entry.getValue().path(0).asText();
+      }
+    }
+    return null;
   }
 
   private static void initDb() {
@@ -175,6 +226,25 @@ public class OnboardingStep extends CucumberQuarkusTest {
   @Given("I have a request object named {string}")
   public void iHaveRequestObjectNamed(String name) {
     context.storeRequestBody(name);
+  }
+
+  @When("I request product {string} for tenant {string}")
+  public void requestProduct(String productId, String tenantId) {
+    validatableResponse = authenticatedRequest(tenantId).basePath("")
+            .pathParam("productId", productId)
+            .get("/product-http-contract/product/{productId}").then();
+  }
+
+  @When("I request the expiration of product {string} for tenant {string}")
+  public void requestProductExpiration(String productId, String tenantId) {
+    validatableResponse = authenticatedRequest(tenantId).basePath("")
+            .pathParam("productId", productId)
+            .get("/product-http-contract/expiration/{productId}").then();
+  }
+
+  @Then("the product expiration is {int} days")
+  public void verifyProductExpiration(int days) {
+    assertEquals(days, validatableResponse.extract().as(Integer.class));
   }
 
   @When("I send a POST request to {string} with this request")

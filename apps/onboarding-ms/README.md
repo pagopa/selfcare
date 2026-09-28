@@ -122,10 +122,24 @@ When available, prefer the workspace's resolved Nx targets (`pnpm nx show projec
 and `pnpm nx show project <project> --json`) over guessing a target name.
 
 The catalog checks include `ProductOpenApiContractTest`, `ProductConfigUtilsTest`,
-`ProductServiceImplTest`, `IntegrationProductServiceTest` and `ProductServiceHttpTest`.
+`ProductServiceImplTest` and `ProductServiceHttpTest`.
 The HTTP suite uses the real generated client and adapter with a local Product
 HTTP server, checking tenant paths, forwarded headers, isolation, response models
-and failures. It does not select the fixture-only `IntegrationProductService`.
+and failures.
+
+The Cucumber suite also uses the real `ProductServiceImpl` and generated
+`ProductApi`. Product MS responses are declared in
+`src/test/resources/mock/product-api.json` and served by the existing MockServer,
+alongside the User Registry and Party Registry mocks. There is no Product CDI
+alternative, legacy catalog loader or duplicated Product business logic.
+
+Add explicit expectations for the HTTP method, tenant path/header and required
+query parameters. Responses use API-native JSON; the required-documents HEAD
+response has no body and sets `X-Required-Documents-Enabled`. Every configured
+response carries `X-Product-Mock: matched`. After each scenario, the suite checks
+recorded Product responses for that marker, so an unconfigured request cannot
+silently pass a negative test through MockServer's default 404. Only Product
+request logs are cleared between scenarios; other services' expectations remain.
 
 The Cucumber suite is selected explicitly in CI:
 
@@ -135,8 +149,9 @@ APP_SERVER_PORT=8082 mvn --projects :onboarding-ms --also-make test \
   -Dsurefire.failIfNoSpecifiedTests=false
 ```
 
-Check Cucumber's scenario report as well as Surefire's wrapper result. A green
-fixture-based suite alone does not establish HTTP compatibility with Product MS.
+Check Cucumber's scenario report as well as Surefire's wrapper result. These tests
+exercise onboarding's HTTP integration against explicit Product responses, not
+Product MS's server-side business logic; that remains covered by `apps/product`.
 
 ## Cucumber integration tests in IntelliJ
 
@@ -149,7 +164,7 @@ and able to pull the required images (access to `ghcr.io/pagopa` may be required
 
 ### Fallback when Testcontainers fails
 
-If Testcontainers cannot start the stack, temporarily comment the `ComposeContainer` creation, `start()` and shutdown-hook lines in `OnboardingStep.setup()` (currently [lines 100-107](src/test/java/it/pagopa/selfcare/onboarding/steps/OnboardingStep.java#L100-L107)). Do not commit that local change.
+If Testcontainers cannot start the stack, temporarily comment the `ComposeContainer` creation, `start()` and shutdown-hook lines in [`OnboardingStep.setup()`](src/test/java/it/pagopa/selfcare/onboarding/steps/OnboardingStep.java). Do not commit that local change.
 
 Then start the same stack manually from the repository root:
 
@@ -174,9 +189,12 @@ Create a **Cucumber Java** configuration with these values (the shared configura
 | Program arguments | `--plugin teamcity` (optional) |
 
 The runner selects the `IntegrationProfile`, which uses test properties and local
-tenant-indexed catalog fixtures under `src/test/resources`, plus MockServer
-expectations. The product alternative does not read the catalog from Azurite;
-Azurite remains available for the other services in the stack. To run the readiness
+HTTP expectations under `src/test/resources/mock`; ProductApi points to
+`http://localhost:1080` through `src/test/resources/application.properties`.
+The runner waits for the mock and checks
+that Product expectations are loaded. The `product-catalog.feature` scenarios
+exercise tenant-specific responses and cross-tenant not-found through the real
+adapter. Azurite remains available for the other services in the stack. To run the readiness
 scenarios, select `apps/onboarding-ms/src/test/resources/features/health.feature`;
 the runner includes both `@Onboarding` and `@Health` tags. Readiness no longer
 contains the removed `blob-storage-product` check.

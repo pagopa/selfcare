@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @Slf4j
 @NoArgsConstructor
@@ -27,11 +26,6 @@ public class IntegrationProfile implements QuarkusTestProfile {
   @Override
   public String getConfigProfile() {
     return "integrationProfile";
-  }
-
-  @Override
-  public Set<Class<?>> getEnabledAlternatives() {
-    return Set.of(IntegrationProductService.class);
   }
 
   @Override

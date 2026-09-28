@@ -50,7 +50,7 @@ class ProductServiceHttpTest {
     @BeforeEach
     void resetRecordedRequests() throws Exception {
         serverUrl = ConfigProvider.getConfig().getValue("product-http-contract.url", String.class);
-        assertInstanceOf(ProductServiceImpl.class, productService, "HTTP tests must not use IntegrationProductService");
+        assertInstanceOf(ProductServiceImpl.class, productService, "HTTP tests must use the production ProductServiceImpl");
         assertEquals(200, HTTP.send(HttpRequest.newBuilder(URI.create(serverUrl + "/_requests"))
                 .DELETE().build(), HttpResponse.BodyHandlers.discarding()).statusCode());
     }
