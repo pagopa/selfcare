@@ -84,6 +84,17 @@ locals {
   }
 
   tenant_registry = local.tenant_registries[local.env]
+  tenant_credential_resources = {
+    for tenant_id, tenant in local.tenant_registry : tenant_id => {
+      oneIdentity = tenant.authentication_provider == "ONE_IDENTITY" && tenant.auth_enabled ? {
+        clientIdEnvVar     = "TENANT_${tenant_id}_ONE_IDENTITY_CLIENT_ID"
+        clientSecretEnvVar = "TENANT_${tenant_id}_ONE_IDENTITY_CLIENT_SECRET"
+      } : null
+      userRegistry = {
+        apiKeyEnvVar = "USER_REGISTRY_API_KEY_${tenant_id}"
+      }
+    }
+  }
   tenant_ids = flatten([
     for tenant_id, tenant in local.tenant_registry : [
       for origin in tenant.allowed_origins : {

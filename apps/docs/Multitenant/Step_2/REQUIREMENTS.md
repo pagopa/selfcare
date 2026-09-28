@@ -5,6 +5,10 @@ the shared tenant registry, tenant propagation, the Cosmos DB discriminator roll
 tooling. Step 2 completes the runtime routing to shared or dedicated resources and defines the gates that
 must be satisfied before a single backend deployment can safely serve both tenants.
 
+For the `auth` microservice, including OneIdentity credentials and the tenant-specific User Registry API
+key, see [the ordered implementation activities](Auth_implementation.md). The document distinguishes the
+existing AR-only authentication flows from the shared-deployment resource-routing work.
+
 The current tenants are:
 
 - `AR`: `selfcare.pagopa.it`

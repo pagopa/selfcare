@@ -2,6 +2,7 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.ExternalInternalUserApi;
+import it.pagopa.selfcare.auth.client.TenantUserRegistryApi;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.internal_json.model.UserOtpEmailInfoResponse;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.SaveUserDto;
@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
   @ConfigProperty(name = "auth-ms.retry")
   Integer maxRetry;
 
-  @RestClient @Inject UserApi userRegistryApi;
+  @RestClient @Inject TenantUserRegistryApi userRegistryApi;
 
   @RestClient @Inject ExternalInternalUserApi externalInternalUserApi;
 

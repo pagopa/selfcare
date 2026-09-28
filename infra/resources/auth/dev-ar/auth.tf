@@ -135,6 +135,19 @@ locals {
       value = jsonencode(module.local.config.tenant_registry)
     },
     {
+      name = "TENANT_RESOURCES_REGISTRY_JSON"
+      value = jsonencode({
+        for tenant_id, credentials in module.local.config.tenant_credential_resources :
+        tenant_id => merge(credentials, {
+          mongo = tenant_id == "AR" ? {
+            account                = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+            database               = "selcAuth"
+            connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
+          } : null
+        })
+      })
+    },
+    {
       name  = "SHARED_ACCESS_KEY_NAME"
       value = "selfcare-wo"
     },
@@ -206,12 +219,12 @@ locals {
 
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_AR"          = "mongodb-connection-string"
     "TENANT_AR_ONE_IDENTITY_CLIENT_ID"      = "oneidentity-client-id"
     "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
     "TENANT_AR_JWT_SESSION_PRIVATE_KEY"     = "jwt-private-key-pkcs8"
     "TENANT_AR_JWT_SESSION_KEY_ID"          = "jwt-kid"
-    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "USER_REGISTRY_API_KEY_AR"              = "user-registry-api-key"
     "INTERNAL_API_KEY"                      = "internal-api-key"
     "INTERNAL_MS_USER_API_KEY"              = "internal-ms-user-api-key"
     "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
