@@ -213,7 +213,7 @@ public class OnboardingPgHelper {
 
     private Uni<ProductResponse> getProductByOnboarding(Onboarding onboarding) {
         return productService.getValidProduct(onboarding.getProductId(), onboarding.getTenantId())
-                .onFailure().transform(exception -> {
+                .onFailure(ResourceNotFoundException.class).transform(exception -> {
                     log.error("Failed to retrieve product {} for institution {}: {}",
                             onboarding.getProductId(), onboarding.getInstitution().getTaxCode(), exception.getMessage(), exception);
                     return new OnboardingNotAllowedException(

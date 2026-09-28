@@ -52,9 +52,16 @@ public final class ProductConfigUtils {
     }
 
     public static Map<PartyRole, RoleMapping> roleMappings(ProductResponse product, InstitutionType institutionType) {
-        List<RoleMapping> roleMappings = Optional.ofNullable(product)
-                .map(ProductResponse::getRoleMappings)
-                .orElse(List.of());
+        if (product == null || product.getRoleMappings() == null) {
+            throw new IllegalStateException("Role mappings are missing for product " + productId(product));
+        }
+        List<RoleMapping> roleMappings = product.getRoleMappings();
+        if (roleMappings.isEmpty()) {
+            return Map.of();
+        }
+        if (roleMappings.stream().anyMatch(Objects::isNull)) {
+            throw new IllegalStateException("Null role mapping for product " + productId(product));
+        }
         String institutionTypeName = Optional.ofNullable(institutionType).map(Enum::name).orElse(null);
         List<RoleMapping> matching = roleMappings.stream()
                 .filter(mapping -> matchesInstitutionType(mapping, institutionTypeName))
@@ -65,14 +72,22 @@ public final class ProductConfigUtils {
                     .toList();
         }
         if (matching.isEmpty()) {
-            matching = roleMappings;
+            throw new IllegalStateException("Role mappings are missing for product " + productId(product)
+                    + " and institution type " + institutionTypeName);
         }
         return matching.stream()
-                .filter(mapping -> mapping.getRole() != null)
                 .collect(Collectors.toMap(
-                        mapping -> PartyRole.valueOf(mapping.getRole()),
+                        mapping -> partyRole(mapping, product),
                         mapping -> mapping,
                         (first, second) -> first));
+    }
+
+    private static PartyRole partyRole(RoleMapping mapping, ProductResponse product) {
+        try {
+            return PartyRole.valueOf(mapping.getRole());
+        } catch (IllegalArgumentException | NullPointerException exception) {
+            throw new IllegalStateException("Invalid role mapping for product " + productId(product), exception);
+        }
     }
 
     public static ContractTemplateConfig institutionContractTemplate(ProductResponse product, String institutionType) {

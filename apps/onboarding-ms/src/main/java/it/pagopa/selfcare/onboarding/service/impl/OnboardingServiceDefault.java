@@ -960,6 +960,14 @@ public class OnboardingServiceDefault implements OnboardingService {
                 ? productService.getRequiredDocuments(productId, instType, originEnum)
                 : productService.getRequiredDocuments(productId, instType, originEnum, onboarding.getTenantId());
         return requiredDocuments
+                .onFailure(ResourceNotFoundException.class)
+                .transform(ex -> {
+                    log.warn("triggerDocumentGate: product-ms returned 404 for onboarding {}, no required documents configured",
+                            onboarding.getId());
+                    return new InvalidRequestException(
+                            String.format("No required documents configuration found on product-ms for onboarding %s",
+                                    onboarding.getId()));
+                })
                 .onItem().transform(docs -> docs.stream()
                         .filter(doc -> Boolean.TRUE.equals(doc.getRequired()))
                         .map(RequiredDocumentResponse::getId)
