@@ -40,8 +40,6 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 @RequiredArgsConstructor
 public class OtpFlowServiceImpl implements OtpFlowService {
 
-  private static final String LEGACY_TENANT_ID = "AR";
-
   private final UserService userService;
   private final OtpNotificationService otpNotificationService;
   private final SessionService sessionService;
@@ -66,8 +64,19 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   @ConfigProperty(name = "otp.max.attempts")
   Integer otpMaxAttempts;
 
+  @ConfigProperty(name = "selfcare.tenant.strict-data-isolation", defaultValue = "false")
+  boolean strictDataIsolation;
+
+  private boolean legacyArReadEnabled() {
+    return !strictDataIsolation;
+  }
+
   @Override
   public Uni<Optional<OtpInfo>> handleOtpFlow(UserClaims userClaims) {
+    String tenantId = OtpUtils.requireTenantId(tenantContext.getTenantId());
+    if (userClaims == null || !tenantId.equals(userClaims.getTenantId())) {
+      return Uni.createFrom().failure(new IllegalStateException("OTP claims tenant does not match context"));
+    }
     Optional<OtpInfo> emptyOtpInfo = Optional.empty();
     String forcedEmail = null;
     if (FeatureFlagEnum.NONE.equals(otpFeatureFlag.getFeatureFlag())) {
@@ -123,7 +132,8 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       OtpFlow otpFlow, UserClaims userClaims, String institutionalEmail) {
 
     return OtpUtils.isNewOtpFlowRequired(
-            otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+            otpFlow, userClaims.getSameIdp(), otpLimitConfig.getDailyLimit(),
+            userClaims.getTenantId(), legacyArReadEnabled())
         .chain(
             isRequired ->
                 isRequired
@@ -144,7 +154,8 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       UserClaims userClaims, String institutionalEmail) {
 
     return OtpUtils.isOtpRequiredWithMissingOtpFlow(
-            userClaims.getSameIdp(), otpLimitConfig.getDailyLimit())
+            userClaims.getSameIdp(), otpLimitConfig.getDailyLimit(),
+            userClaims.getTenantId(), legacyArReadEnabled())
         .chain(
             isRequired ->
                 isRequired
@@ -174,28 +185,24 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     otpFlow ->
                       otpNotificationService
                         .sendOtpEmail(userId, email, otp, name)
-                        .chain(requestId -> {
-                          if (requestId == null) {
-                            return Uni.createFrom().item(otpFlow);
-                          }
-                          return updateOtpFlowRequestId(
-                            otpFlow.getUuid(), requestId)
-                            .onFailure()
-                            .recoverWithItem(0L)
-                            .map(
-                              ignored -> {
-                                otpFlow.setMailRequestId(requestId);
-                                return otpFlow;
-                              });
-                        })));
+                        .onItem().ifNull()
+                        .failWith(() -> new InternalException("OTP mail request ID is missing"))
+                        .chain(requestId ->
+                          updateOtpFlowRequestId(
+                            otpFlow.getUuid(), requestId, tenantId)
+                            .invoke(this::requireUpdatedOtpFlow)
+                            .replaceWith(otpFlow)
+                            .invoke(updatedFlow -> updatedFlow.setMailRequestId(requestId)))));
   }
 
-  private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId) {
+  private Uni<Long> updateOtpFlowRequestId(String uuid, String requestId, String tenantId) {
+    OtpUtils.requireTenantId(tenantId);
     return OtpFlow.update(
         "{ '$set': { 'mailRequestId': ?1, 'updatedAt': ?2 } }",
         requestId,
         Date.from(OffsetDateTime.now().toInstant()))
-      .where("uuid", uuid);
+      .where(new Document(OtpFlow.Fields.uuid.name(), uuid)
+          .append(OtpFlow.Fields.tenantId.name(), tenantId));
   }
 
   @Override
@@ -204,6 +211,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   }
 
   private Uni<OtpFlow> createNewOtpFlow(String userId, String otp, String tenantId) {
+    OtpUtils.requireTenantId(tenantId);
     return Uni.createFrom()
         .item(OffsetDateTime.now())
         .map(
@@ -230,34 +238,20 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     final String userIdField = OtpFlow.Fields.userId.name();
     final String createdAtField = OtpFlow.Fields.createdAt.name();
     return OtpFlow.find(
-            tenantScoped(new Document(userIdField, userId), tenantId),
+            OtpUtils.tenantScopedRead(new Document(userIdField, userId), tenantId, legacyArReadEnabled()),
             new Document(createdAtField, -1))
         .firstResult();
   }
 
   private Uni<Optional<OtpFlow>> findOtpFlowByUuid(String uuid, String tenantId) {
-    return OtpFlow.find(tenantScoped(new Document(OtpFlow.Fields.uuid.name(), uuid), tenantId))
+    return OtpFlow.find(OtpUtils.tenantScopedRead(
+            new Document(OtpFlow.Fields.uuid.name(), uuid), tenantId, legacyArReadEnabled()))
         .firstResultOptional();
   }
 
-  private Document tenantScoped(Document query, String tenantId) {
-    if (!LEGACY_TENANT_ID.equals(tenantId)) {
-      return query.append(OtpFlow.Fields.tenantId.name(), tenantId);
-    }
-
-    return new Document(
-        "$and",
-        java.util.List.of(
-            query,
-            new Document(
-                "$or",
-                java.util.List.of(
-                    new Document(OtpFlow.Fields.tenantId.name(), tenantId),
-                    new Document(
-                        OtpFlow.Fields.tenantId.name(), new Document("$exists", false))))));
-  }
-
-  private Uni<Long> updateOtpFlow(String uuid, OtpStatus newStatus, Boolean attemptsIncrement) {
+  private Uni<Long> updateOtpFlow(String uuid, OtpStatus newStatus, Boolean attemptsIncrement,
+      String tenantId) {
+    OtpUtils.requireTenantId(tenantId);
     StringBuilder updateBuilder = new StringBuilder();
     updateBuilder.append("{");
     if (Boolean.TRUE.equals(attemptsIncrement)) {
@@ -266,15 +260,20 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     updateBuilder.append(" '$set': { 'status': ?1, 'updatedAt': ?2 } }");
     return OtpFlow.update(
             updateBuilder.toString(), newStatus, Date.from(OffsetDateTime.now().toInstant()))
-        .where("uuid", uuid);
+        .where(new Document(OtpFlow.Fields.uuid.name(), uuid)
+            .append(OtpFlow.Fields.tenantId.name(), tenantId));
   }
 
-  private Uni<Long> updateOtpFlowVerification(String uuid, OtpStatus newStatus) {
-    return updateOtpFlow(uuid, newStatus, true);
+  private Uni<Long> updateOtpFlowVerification(String uuid, OtpStatus newStatus, String tenantId) {
+    return updateOtpFlow(uuid, newStatus, true, tenantId);
   }
 
   private Uni<String> handleOtpVerification(
       OtpFlow otpFlow, String hashedOtp, String tenantId) {
+    if (!tenantId.equals(otpFlow.getTenantId())) {
+      return Uni.createFrom()
+          .failure(new IllegalStateException("OTP flow requires tenant backfill before verification"));
+    }
     if (otpFlow.getExpiresAt().isBefore(OffsetDateTime.now())) {
       return Uni.createFrom().failure(new ConflictException("Otp is expired"));
     }
@@ -295,7 +294,8 @@ public class OtpFlowServiceImpl implements OtpFlowService {
     if (!otpFlow.getOtp().equals(hashedOtp)) {
       OtpStatus newStatus = isReachedMaxOnCurrentAttempt ? OtpStatus.REJECTED : otpFlow.getStatus();
       Integer remainingAttempts = otpMaxAttempts - (otpFlow.getAttempts() + 1);
-      return updateOtpFlowVerification(otpFlow.getUuid(), newStatus)
+      return updateOtpFlowVerification(otpFlow.getUuid(), newStatus, tenantId)
+          .invoke(this::requireUpdatedOtpFlow)
           .onFailure()
           .transform(failure -> new InternalException("Cannot update OtpFlow"))
           .chain(
@@ -326,11 +326,17 @@ public class OtpFlowServiceImpl implements OtpFlowService {
         .chain(sessionService::generateSessionToken)
         .chain(
             sessionToken ->
-                updateOtpFlowVerification(otpFlow.getUuid(), OtpStatus.COMPLETED)
+                updateOtpFlowVerification(otpFlow.getUuid(), OtpStatus.COMPLETED, tenantId)
+                    .invoke(this::requireUpdatedOtpFlow)
                     .onFailure()
-                    .transform(
-                        failure -> new InternalException("Cannot verify OTP:" + failure.toString()))
+                    .transform(failure -> new InternalException("Cannot verify OTP"))
                     .replaceWith(sessionToken));
+  }
+
+  private void requireUpdatedOtpFlow(Long updated) {
+    if (updated == null || updated != 1L) {
+      throw new ResourceNotFoundException("Cannot update OtpFlow for tenant");
+    }
   }
 
   @Override
@@ -356,14 +362,17 @@ public class OtpFlowServiceImpl implements OtpFlowService {
   }
 
   private Uni<OtpInfo> handleOtpResend(OtpFlow oldOtpFlow, String tenantId) {
+    if (!tenantId.equals(oldOtpFlow.getTenantId())) {
+      return Uni.createFrom()
+          .failure(new IllegalStateException("OTP flow requires tenant backfill before resend"));
+    }
     if (oldOtpFlow.getStatus() != OtpStatus.PENDING) {
       return Uni.createFrom().failure(new ConflictException("Otp is expired or in a final state"));
     }
     return userService
         .getUserClaimsFromPdv(oldOtpFlow.getUserId())
         .onFailure()
-        .transform(
-            failure -> new InternalException("Cannot get User from PDV" + failure.toString()))
+        .transform(failure -> new InternalException("Cannot get User from PDV"))
         .invoke(userClaims -> userClaims.setTenantId(tenantId))
         .chain(
             userClaims ->
@@ -373,11 +382,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                     .recoverWithNull()
                     .map(Optional::ofNullable)
                     .onFailure()
-                    .transform(
-                        failure ->
-                            new InternalException(
-                                "Cannot get User Info Email on External Internal APIs:"
-                                    + failure.toString()))
+                    .transform(failure -> new InternalException("Cannot get User Info Email"))
                     .chain(
                         maybeUserEmail ->
                             maybeUserEmail
@@ -390,14 +395,13 @@ public class OtpFlowServiceImpl implements OtpFlowService {
                                                 tenantId)
                                             .chain(
                                                 createdOtpFlow ->
-                                                    // Fire & Forget update old otp flow status
                                                     updateOtpFlow(
                                                             oldOtpFlow.getUuid(),
                                                             OtpStatus.REJECTED,
-                                                            false)
+                                                            false,
+                                                            tenantId)
+                                                        .invoke(this::requireUpdatedOtpFlow)
                                                         .replaceWith(createdOtpFlow)
-                                                        .onFailure()
-                                                        .recoverWithItem(createdOtpFlow)
                                                         .map(
                                                             newOtpFlow ->
                                                                 OtpInfo.builder()
@@ -433,8 +437,13 @@ public class OtpFlowServiceImpl implements OtpFlowService {
 
   @Override
   public Uni<OtpMailInfoResponse> getOtpMailInfo(String mailRequestId) {
-    return otpNotificationService
-      .getOtpMailInfo(mailRequestId)
+    return OtpFlow.find(OtpUtils.tenantScopedRead(
+            new Document(OtpFlow.Fields.mailRequestId.name(), mailRequestId),
+            tenantContext.getTenantId(), legacyArReadEnabled()))
+      .firstResultOptional()
+      .chain(flow -> flow.isPresent()
+          ? otpNotificationService.getOtpMailInfo(mailRequestId)
+          : Uni.createFrom().failure(new ResourceNotFoundException("Cannot find OtpFlow")))
       .map(emailStatus -> new OtpMailInfoResponse(
         emailStatus.getEmailId(),
         emailStatus.getStatus().toString(),
@@ -459,6 +468,7 @@ public class OtpFlowServiceImpl implements OtpFlowService {
       filter.append(OtpFlow.Fields.status.name(), status);
     }
 
-    return OtpFlow.find(filter, new Document(OtpFlow.Fields.createdAt.name(), -1)).list();
+    return OtpFlow.find(OtpUtils.tenantScopedRead(filter, tenantContext.getTenantId(),
+        legacyArReadEnabled()), new Document(OtpFlow.Fields.createdAt.name(), -1)).list();
   }
 }

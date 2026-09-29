@@ -131,14 +131,10 @@ locals {
       value = "auth-ms"
     },
     {
-      name  = "TENANT_REGISTRY_JSON"
-      value = jsonencode(module.local.config.tenant_registry)
-    },
-    {
-      name = "TENANT_RESOURCES_REGISTRY_JSON"
+      name = "TENANT_REGISTRY_JSON"
       value = jsonencode({
-        for tenant_id, credentials in module.local.config.tenant_credential_resources :
-        tenant_id => merge(credentials, {
+        for tenant_id, tenant in module.local.config.tenant_registry :
+        tenant_id => merge(tenant, module.local.config.tenant_credential_resources[tenant_id], {
           mongo = tenant_id == "AR" ? {
             account                = module.local.config.mongo_db.cosmosdb_account_mongodb_name
             database               = "selcAuth"
@@ -146,6 +142,10 @@ locals {
           } : null
         })
       })
+    },
+    {
+      name  = "SELFCARE_TENANT_STRICT_DATA_ISOLATION"
+      value = tostring(module.local.config.strict_tenant_data_isolation)
     },
     {
       name  = "SHARED_ACCESS_KEY_NAME"
@@ -212,7 +212,7 @@ locals {
       value = "https://uat.onemail.pagopa.it"
     },
     {
-      name  = "MAIL_SENDER_ADDRESS"
+      name  = "TENANT_AR_MAIL_SENDER"
       value = "noreply@selfcare.pagopa.it"
     }
   ]
@@ -231,7 +231,7 @@ locals {
     "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
     "SAML_IDP_METADATA"                     = "saml-idp-metadata"
     "SAML_IDP_CERT"                         = "saml-idp-cert"
-    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
+    "TENANT_AR_ONE_MAIL_API_KEY"            = "onemail-api-key"
   }
 }
 module "container_app_auth_ms" {

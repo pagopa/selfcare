@@ -35,6 +35,7 @@ import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTOHistoryInner;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -123,7 +124,8 @@ public class OtpFlowServiceTest {
   void findLastOtpFlowByUserId() {
     UserClaims input = getUserClaims();
     OtpFlow otpFlow =
-        OtpFlow.builder().userId(input.getUid()).uuid("uuid").status(OtpStatus.PENDING).build();
+        OtpFlow.builder().userId(input.getUid()).uuid("uuid").tenantId("AR")
+            .status(OtpStatus.PENDING).build();
     PanacheMock.mock(OtpFlow.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
@@ -135,6 +137,83 @@ public class OtpFlowServiceTest {
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertCompleted();
+  }
+
+  @Test
+  void interleavedTenantsUseSeparateReadPredicates() {
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    List<Document> filters = new ArrayList<>();
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenAnswer(invocation -> {
+      filters.add(invocation.getArgument(0));
+      return query;
+    });
+    when(query.firstResult()).thenReturn(Uni.createFrom().nullItem());
+    when(tenantContext.getTenantId()).thenReturn("AR", "PNPG");
+
+    otpFlowService.findLastOtpFlowByUserId("shared-user").await().indefinitely();
+    otpFlowService.findLastOtpFlowByUserId("shared-user").await().indefinitely();
+
+    Assertions.assertEquals("AR",
+        ((Document) ((List<?>) ((Document) ((List<?>) filters.get(0).get("$and"))
+            .get(1)).get("$or")).get(0)).getString("tenantId"));
+    Assertions.assertEquals("PNPG", filters.get(1).getString("tenantId"));
+    Assertions.assertFalse(filters.get(1).containsKey("$or"));
+  }
+
+  @Test
+  void missingTenantContextCannotAccessOtpFlows() {
+    when(tenantContext.getTenantId()).thenReturn(null);
+    Assertions.assertThrows(IllegalStateException.class,
+        () -> otpFlowService.findLastOtpFlowByUserId("shared-user"));
+    Assertions.assertThrows(IllegalStateException.class,
+        () -> otpFlowService.createNewOtpFlow("shared-user", "123456"));
+    Assertions.assertThrows(IllegalStateException.class,
+        () -> otpFlowService.getOtpInfo("shared-user", null));
+    Assertions.assertThrows(IllegalStateException.class,
+        () -> otpFlowService.getOtpMailInfo("request-id"));
+  }
+
+  @Test
+  void verifyOtpRejectsUnmatchedTenantUpdate() {
+    String otp = "123456";
+    OtpFlow flow = OtpFlow.builder().uuid("shared-uuid").userId("shared-user").tenantId("AR")
+        .otp(DigestUtils.md5Hex(otp)).status(OtpStatus.PENDING).attempts(0)
+        .expiresAt(OffsetDateTime.now().plusMinutes(5)).build();
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(flow)));
+    when(OtpFlow.find(any(Document.class))).thenReturn(query);
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(0L));
+    when(userService.getUserClaimsFromPdv(anyString()))
+        .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
+    when(sessionService.generateSessionToken(any()))
+        .thenReturn(Uni.createFrom().item("token"));
+
+    otpFlowService.verifyOtp("shared-uuid", otp).subscribe()
+        .withSubscriber(UniAssertSubscriber.create()).assertFailedWith(InternalException.class);
+
+    ArgumentCaptor<Document> filter = ArgumentCaptor.forClass(Document.class);
+    Mockito.verify(update).where(filter.capture());
+    Assertions.assertEquals(new Document("uuid", "shared-uuid").append("tenantId", "AR"),
+        filter.getValue());
+  }
+
+  @Test
+  void verifyOtpRejectsLegacyFlowBeforeTokenOrUpdate() {
+    OtpFlow legacyFlow = OtpFlow.builder().uuid("legacy-uuid").status(OtpStatus.PENDING).build();
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.find(any(Document.class))).thenReturn(query);
+    when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(legacyFlow)));
+
+    otpFlowService.verifyOtp("legacy-uuid", "123456")
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(IllegalStateException.class, "OTP flow requires tenant backfill before verification");
+
+    Mockito.verifyNoInteractions(userService, sessionService);
   }
 
   @Test
@@ -179,6 +258,7 @@ public class OtpFlowServiceTest {
     String otpUid = "test-uuid";
     String otp = "test-otp";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setUserId("user-id");
     otpFlow.setOtp(DigestUtils.md5Hex(otp));
@@ -192,7 +272,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -210,6 +290,9 @@ public class OtpFlowServiceTest {
     ArgumentCaptor<UserClaims> userClaimsCaptor = ArgumentCaptor.forClass(UserClaims.class);
     verify(sessionService).generateSessionToken(userClaimsCaptor.capture());
     Assertions.assertEquals("AR", userClaimsCaptor.getValue().getTenantId());
+    ArgumentCaptor<Document> filter = ArgumentCaptor.forClass(Document.class);
+    verify(update).where(filter.capture());
+    Assertions.assertEquals(new Document("uuid", otpUid).append("tenantId", "AR"), filter.getValue());
   }
 
   @Test
@@ -217,6 +300,7 @@ public class OtpFlowServiceTest {
     String otpUid = "test-uuid";
     String otp = "wrong-otp";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("hashed-otp");
     otpFlow.setExpiresAt(OffsetDateTime.now().plusMinutes(5));
@@ -230,7 +314,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -249,6 +333,7 @@ public class OtpFlowServiceTest {
     String otpUid = "test-uuid";
     String otp = "otp";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp(DigestUtils.md5Hex(otp));
     otpFlow.setExpiresAt(OffsetDateTime.now().plusMinutes(5));
@@ -262,7 +347,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -281,6 +366,7 @@ public class OtpFlowServiceTest {
     String otpUid = "test-uuid";
     String otp = "test-otp";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setAttempts(1);
@@ -294,7 +380,7 @@ public class OtpFlowServiceTest {
     when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(otpFlow)));
     when(OtpFlow.find(any())).thenReturn(query);
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class))).thenReturn(Uni.createFrom().item(1L));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
     when(userService.getUserClaimsFromPdv(anyString()))
         .thenReturn(Uni.createFrom().item(UserClaims.builder().build()));
@@ -327,6 +413,21 @@ public class OtpFlowServiceTest {
   }
 
   @Test
+  void resendOtpRejectsLegacyFlowBeforeMailOrUpdate() {
+    OtpFlow legacyFlow = OtpFlow.builder().uuid("legacy-uuid").status(OtpStatus.PENDING).build();
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.find(any(Document.class))).thenReturn(query);
+    when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(legacyFlow)));
+
+    otpFlowService.resendOtp("legacy-uuid")
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(IllegalStateException.class, "OTP flow requires tenant backfill before resend");
+
+    Mockito.verifyNoInteractions(userService, otpNotificationService);
+  }
+
+  @Test
   public void testResendOtp_InternalError() {
     String otpUid = "test-uuid";
 
@@ -349,6 +450,7 @@ public class OtpFlowServiceTest {
   public void testResendOtp_SuccessWhenOtpIsExpired() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setUserId("userId");
@@ -358,6 +460,7 @@ public class OtpFlowServiceTest {
 
     String newOtpUid = "test-newuuid";
     OtpFlow newOtpFlow = new OtpFlow();
+    newOtpFlow.setTenantId("AR");
     newOtpFlow.setUuid(newOtpUid);
     newOtpFlow.setOtp("test-otp");
     newOtpFlow.setUserId("userId");
@@ -375,8 +478,7 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
     when(OtpFlow.persist(any(OtpFlow.class), any())).thenReturn(Uni.createFrom().voidItem());
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class)))
-        .thenReturn(Uni.createFrom().failure(new Exception("Cannot update old OTP")));
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
 
     when(userService.getUserClaimsFromPdv(anyString()))
@@ -396,6 +498,7 @@ public class OtpFlowServiceTest {
   public void testResendOtp_ConflictWhenOtpIsInAFinalState() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setAttempts(1);
@@ -420,6 +523,7 @@ public class OtpFlowServiceTest {
   public void testResendOtp_InternalErrorWhenPdvIsUnreacheable() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setUserId("userId");
@@ -441,13 +545,14 @@ public class OtpFlowServiceTest {
         .resendOtp(otpUid)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertFailedWith(InternalException.class, "PDV unreachable");
+        .assertFailedWith(InternalException.class, "Cannot get User from PDV");
   }
 
   @Test
   public void testResendOtp_InternalErrorWhenInternalUserApiNotReachable() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setUserId("userId");
@@ -474,13 +579,14 @@ public class OtpFlowServiceTest {
         .resendOtp(otpUid)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertFailedWith(InternalException.class, "Internal User MS not reachable");
+        .assertFailedWith(InternalException.class, "Cannot get User Info Email");
   }
 
   @Test
   public void testResendOtp_ConflictErrorWhenUserNotFound() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setUserId("userId");
@@ -513,6 +619,7 @@ public class OtpFlowServiceTest {
   public void testResendOtp_ExceptionWhenOtpFlowCreationFails() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setUserId("userId");
@@ -543,9 +650,10 @@ public class OtpFlowServiceTest {
   }
 
   @Test
-  public void testResendOtp_successEvenIfUpdateOldOtpFlowFails() {
+  public void testResendOtp_failsIfUpdateOldOtpFlowFails() {
     String otpUid = "test-uuid";
     OtpFlow otpFlow = new OtpFlow();
+    otpFlow.setTenantId("AR");
     otpFlow.setUuid(otpUid);
     otpFlow.setOtp("test-otp");
     otpFlow.setUserId("userId");
@@ -555,6 +663,7 @@ public class OtpFlowServiceTest {
 
     String newOtpUid = "test-newuuid";
     OtpFlow newOtpFlow = new OtpFlow();
+    newOtpFlow.setTenantId("AR");
     newOtpFlow.setUuid(newOtpUid);
     newOtpFlow.setOtp("test-otp");
     newOtpFlow.setUserId("userId");
@@ -572,8 +681,8 @@ public class OtpFlowServiceTest {
     when(OtpFlow.find(any())).thenReturn(query);
     when(OtpFlow.persist(any(OtpFlow.class), any())).thenReturn(Uni.createFrom().voidItem());
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
-    when(update.where(anyString(), any(String.class)))
-        .thenReturn(Uni.createFrom().failure(new Exception("Cannot update old OTP")));
+    when(update.where(any(Document.class)))
+        .thenReturn(Uni.createFrom().item(1L), Uni.createFrom().failure(new Exception("Cannot update old OTP")));
     when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
 
     when(userService.getUserClaimsFromPdv(anyString()))
@@ -586,12 +695,69 @@ public class OtpFlowServiceTest {
         .resendOtp(otpUid)
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertCompleted();
+        .assertFailedWith(Exception.class, "Cannot update old OTP");
+    ArgumentCaptor<Document> filter = ArgumentCaptor.forClass(Document.class);
+    verify(update, Mockito.times(2)).where(filter.capture());
+    Assertions.assertEquals("AR", filter.getAllValues().get(0).getString("tenantId"));
+    Assertions.assertEquals(new Document("uuid", otpUid).append("tenantId", "AR"),
+        filter.getAllValues().get(1));
+  }
+
+  @Test
+  void resendOtpFailsIfMailRequestIdUpdateMatchesNoFlow() {
+    mockResendUntilNotification(Uni.createFrom().item("request-id"));
+    ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
+    when(OtpFlow.update(anyString(), (Object) any())).thenReturn(update);
+    when(update.where(any(Document.class))).thenReturn(Uni.createFrom().item(0L));
+
+    otpFlowService.resendOtp("test-uuid")
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(ResourceNotFoundException.class, "Cannot update OtpFlow for tenant");
+
+    ArgumentCaptor<Document> filter = ArgumentCaptor.forClass(Document.class);
+    verify(update).where(filter.capture());
+    Assertions.assertEquals("AR", filter.getValue().getString("tenantId"));
+  }
+
+  @Test
+  void resendOtpPropagatesNotificationFailure() {
+    mockResendUntilNotification(Uni.createFrom().failure(new IllegalStateException("OneMail unavailable")));
+
+    otpFlowService.resendOtp("test-uuid")
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(IllegalStateException.class, "OneMail unavailable");
+  }
+
+  @Test
+  void resendOtpRejectsMissingMailRequestId() {
+    mockResendUntilNotification(Uni.createFrom().nullItem());
+
+    otpFlowService.resendOtp("test-uuid")
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(InternalException.class, "OTP mail request ID is missing");
+  }
+
+  private void mockResendUntilNotification(Uni<String> notificationResult) {
+    OtpFlow oldFlow = OtpFlow.builder().uuid("test-uuid").userId("user-id")
+        .tenantId("AR").status(OtpStatus.PENDING).build();
+    PanacheMock.mock(OtpFlow.class);
+    when(OtpFlow.builder()).thenCallRealMethod();
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.find(any(Document.class))).thenReturn(query);
+    when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(oldFlow)));
+    when(OtpFlow.persist(any(OtpFlow.class), any())).thenReturn(Uni.createFrom().voidItem());
+    when(userService.getUserClaimsFromPdv("user-id"))
+        .thenReturn(Uni.createFrom().item(getUserClaims()));
+    when(userService.getUserInfoEmail("user-id"))
+        .thenReturn(Uni.createFrom().item("test@test.it"));
+    when(otpNotificationService.sendOtpEmail(anyString(), anyString(), anyString(), anyString()))
+        .thenReturn(notificationResult);
   }
 
   @Test
   void testGetOtpMailInfo_Success() {
     String mailRequestId = "request-id";
+    mockMailRequestIdForCurrentTenant();
 
     EmailStatusItemResponseDTOHistoryInner history1 =
       new EmailStatusItemResponseDTOHistoryInner();
@@ -647,6 +813,7 @@ public class OtpFlowServiceTest {
   @Test
   void testGetOtpMailInfo_Failure() {
     String mailRequestId = "request-id";
+    mockMailRequestIdForCurrentTenant();
 
     when(otpNotificationService.getOtpMailInfo(mailRequestId))
       .thenReturn(Uni.createFrom().failure(new InternalException("OneMail error")));
@@ -658,6 +825,35 @@ public class OtpFlowServiceTest {
       .assertFailedWith(InternalException.class, "OneMail error");
   }
 
+  private void mockMailRequestIdForCurrentTenant() {
+    OtpFlow flow = OtpFlow.builder().tenantId("AR").build();
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.find(any(Document.class))).thenReturn(query);
+    when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.of(flow)));
+  }
+
+  @Test
+  void mailRequestIdFromAnotherTenantCannotReadNotification() {
+    when(tenantContext.getTenantId()).thenReturn("PNPG");
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    List<Document> filters = new ArrayList<>();
+    when(OtpFlow.find(any(Document.class))).thenAnswer(invocation -> {
+      filters.add(invocation.getArgument(0));
+      return query;
+    });
+    when(query.firstResultOptional()).thenReturn(Uni.createFrom().item(Optional.empty()));
+
+    otpFlowService.getOtpMailInfo("shared-request-id").subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(ResourceNotFoundException.class);
+
+    Assertions.assertEquals(new Document("mailRequestId", "shared-request-id")
+        .append("tenantId", "PNPG"), filters.get(0));
+    Mockito.verifyNoInteractions(otpNotificationService);
+  }
+
   @Test
   void testGetOtpInfo_WithStatus() {
     String userId = "userId";
@@ -666,11 +862,13 @@ public class OtpFlowServiceTest {
       OtpFlow.builder()
         .uuid("uuid1")
         .userId(userId)
+        .tenantId("AR")
         .status(OtpStatus.PENDING)
         .build(),
       OtpFlow.builder()
         .uuid("uuid2")
         .userId(userId)
+        .tenantId("AR")
         .status(OtpStatus.PENDING)
         .build());
 
@@ -706,6 +904,7 @@ public class OtpFlowServiceTest {
       OtpFlow.builder()
         .uuid("uuid1")
         .userId(userId)
+        .tenantId("AR")
         .status(OtpStatus.COMPLETED)
         .build());
 
@@ -730,5 +929,23 @@ public class OtpFlowServiceTest {
     Assertions.assertEquals("uuid1", result.get(0).getUuid());
     Assertions.assertEquals(userId, result.get(0).getUserId());
     Assertions.assertEquals(OtpStatus.COMPLETED, result.get(0).getStatus());
+  }
+
+  @Test
+  void otpInfoStatusReadIsTenantScoped() {
+    when(tenantContext.getTenantId()).thenReturn("PNPG");
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(query.list()).thenReturn(Uni.createFrom().item(List.of()));
+    List<Document> filters = new ArrayList<>();
+    when(OtpFlow.find(any(Document.class), any(Document.class))).thenAnswer(invocation -> {
+      filters.add(invocation.getArgument(0));
+      return query;
+    });
+
+    otpFlowService.getOtpInfo("shared-user", OtpStatus.PENDING).await().indefinitely();
+
+    Assertions.assertEquals(new Document("userId", "shared-user")
+        .append("status", OtpStatus.PENDING).append("tenantId", "PNPG"), filters.get(0));
   }
 }

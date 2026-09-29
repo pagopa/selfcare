@@ -84,6 +84,12 @@ locals {
   }
 
   tenant_registry = local.tenant_registries[local.env]
+  strict_tenant_data_isolation_by_env = {
+    dev  = false
+    uat  = false
+    prod = false
+  }
+  strict_tenant_data_isolation = local.strict_tenant_data_isolation_by_env[local.env]
   tenant_credential_resources = {
     for tenant_id, tenant in local.tenant_registry : tenant_id => {
       oneIdentity = tenant.authentication_provider == "ONE_IDENTITY" && tenant.auth_enabled ? {

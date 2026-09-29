@@ -15,6 +15,7 @@ output "config" {
     apim_rg                        = local.apim_rg
     tenant_registry                = local.tenant_registry
     tenant_credential_resources    = local.tenant_credential_resources
+    strict_tenant_data_isolation   = local.strict_tenant_data_isolation
     tenant_ids                     = local.tenant_ids
     tenant_hosts                   = local.tenant_hosts
     project                        = local.project

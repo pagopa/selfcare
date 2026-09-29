@@ -11,8 +11,8 @@ validato, mai un parametro o un header riletto dal client.
 ## Stato attuale e obiettivo
 
 - `apps/auth/conf/TenantRegistry` legge `tenant.registry.json` dello Step 0, abilita oggi solo
-  AR per l'autenticazione e legge gia' `tenant.ar.one-identity.client-id` e
-  `tenant.ar.one-identity.client-secret`. `OidcServiceImpl` usa le credenziali di quel tenant.
+  AR per l'autenticazione e delega la risoluzione delle credenziali OneIdentity al registry
+  condiviso; `OidcServiceImpl` usa le credenziali di quel tenant.
   `TenantSessionKeyProvider` seleziona gia' chiave privata e `kid` di sessione per tenant.
   PNPG e' configurato con `HUB_SPID_LOGIN` e `auth_enabled=false`: non attivare OIDC o SAML
   per PNPG per effetto della sola unificazione del deployment.
@@ -21,18 +21,23 @@ validato, mai un parametro o un header riletto dal client.
   `TenantContext`. Il filtro di ingresso copia il tenant validato in quel contesto.
   Nel deployment corrente la route Mongo e' configurata solo per AR; PNPG resta
   disabilitato e non eredita la connessione AR.
-  `OtpFlow` contiene `tenantId`, ma alcune operazioni OTP usano filtri per `uuid` o
-  `userId` senza vincolo di tenant; il conteggio giornaliero non e' scoped.
+  Le query e i conteggi OTP usano `tenantId`; gli aggiornamenti richiedono il
+  tenant AR. In modalita' transitoria le letture AR possono ancora vedere record
+  legacy senza `tenantId`, ma verifica e reinvio li rifiutano prima di modificarli:
+  eseguire il backfill **prima** di trasferire il traffico OTP.
 - `UserServiceImpl` usa il client generato `user_registry_json` tramite
   `TenantUserRegistryApi`: `TenantUserRegistryApiKeyFilter` seleziona `x-api-key` dal
   registry in base al tenant validato, per ogni richiesta. La vecchia proprieta'
   `quarkus.openapi-generator.user_registry_json.auth.api_key.api-key` non e' piu' usata.
-  Anche `auth-ms.mail-sender`, `one_mail.api.key`, le destinazioni e le chiavi degli altri
-  client outbound sono attualmente singole; vanno classificate prima del cutover.
-- `infra/resources/auth/{dev,uat,prod}-ar/auth.tf` espone il registry di autenticazione,
-  il registry delle credenziali per tenant e i secret AR; le risorse Mongo/PDV per
-  entrambi i tenant non sono ancora configurate: la route Mongo AR e' presente,
-  quella PNPG e il routing PDV no.
+- Il mittente e la chiave OneMail sono associati esplicitamente al tenant AR; `auth`
+  riceve `TENANT_AR_MAIL_SENDER` e `TENANT_AR_ONE_MAIL_API_KEY` senza fallback.
+  Le destinazioni degli altri client outbound
+  sono ancora singole e vanno classificate prima di un eventuale cutover.
+- `infra/resources/auth/{dev,uat,prod}-ar/auth.tf` espone un solo JSON canonico per
+  tenant: metadati auth e riferimenti alle risorse/credenziali. La route Mongo,
+  OneIdentity e OneMail in `auth` sono solo AR; il riferimento User Registry PNPG
+  resta nel registro condiviso per gli altri microservizi. Il routing PDV non e'
+  stato definito.
   L'implementazione Step 2 deve mantenere separata l'identita' del tenant dalla topologia
   delle risorse: account condivisi e dedicati passano dalla **stessa** risoluzione.
 
@@ -63,35 +68,31 @@ indica il contenuto richiesto per un tenant che usa entrambi i servizi:
 }
 ```
 
-PNPG richiede una voce `mongo` distinta (anche se il database fosse condiviso). Le
+PNPG richiedera' una voce `mongo` distinta **solo quando usera' `auth`**. Le
 dimensioni `oneIdentity` e `userRegistry` sono configurate per tenant e validate come
 obbligatorie solo dai servizi/flussi che le usano: non inventare credenziali PNPG per
 `auth` mentre `auth_enabled=false`, ma non legare la disponibilita' di `userRegistry`
 all'abilitazione di `auth` se altri servizi lo utilizzano. Se il login PNPG verra'
 abilitato, definire prima il provider, il contratto PDV e le sue credenziali. Conservare nel registry
 Step 0 i campi pubblici (`frontend_uri`, `api_uri`, `allowed_origins`,
-`authentication_provider`, `auth_enabled`); riconciliare i due schemi in una sola
-definizione per tenant oppure tramite un adapter che legge la medesima configurazione
-canonica. `AuthTenantContext` e il `TenantContext` delle librerie devono rappresentare lo
-stesso tenant verificato, senza due risoluzioni indipendenti.
+`authentication_provider`, `auth_enabled`), ora nello stesso JSON canonico insieme
+ai riferimenti alle risorse. `AuthTenantContext` e il `TenantContext` delle
+librerie rappresentano lo stesso tenant verificato.
 
-Durante l'adozione progressiva, `auth` usa `tenant.resources.registry.json` separato
-dal `tenant.registry.json` dello Step 0: entrambi indicizzano gli stessi tenant.
-Il primo contiene i riferimenti alle credenziali e alla connessione Mongo AR.
-Terraform deriva i riferimenti di credenziale AR da `tenant_credential_resources`
-nel modulo `local-env` e aggiunge la route Mongo `selcAuth` nello stack `auth`.
+`auth` usa un solo `tenant.registry.json`: Terraform unisce i metadata Step 0,
+i riferimenti `tenant_credential_resources` nel modulo `local-env` e la route
+Mongo `selcAuth` AR nello stack `auth`. Il registry SDK ignora i metadata auth,
+mentre il registry auth ignora i campi risorsa; entrambi leggono la stessa definizione.
 `userRegistry` e' presente anche per PNPG nel registro condiviso, affinche' gli
 altri microservizi possano configurarne la propria credenziale. `auth` espone
 solo il secret AR e `tenant.supported-tenants=AR` limita l'inizializzazione dei
 client all'unico tenant oggi abilitato; configurare e validare i secret e la
 route Mongo PNPG prima di includere PNPG nel deployment di `auth`.
 
-I nomi MicroProfile `tenant.ar.one-identity.client-id` e
-`tenant.ar.one-identity.client-secret` sono gia' definiti in `application.properties`:
-mantenerli come ponte per i secret AR durante la migrazione e generalizzare il lookup
-per tenant abilitati, senza spostarne i **valori** nel registry. I riferimenti
-`clientIdEnvVar`/`clientSecretEnvVar` puntano alle variabili secret-backed corrispondenti;
-stabilire un'unica fonte di lettura per evitare configurazioni divergenti. Per User Registry
+Le proprieta' locali `tenant.ar.one-identity.client-id` e
+`tenant.ar.one-identity.client-secret` sono state rimosse: il registry condiviso risolve
+`clientIdEnvVar`/`clientSecretEnvVar` dalle variabili secret-backed senza inserirne i valori
+nel JSON. Per User Registry
 la proprieta' esistente `quarkus.openapi-generator.user_registry_json.auth.api_key.api-key`
 e' **globale**: non e' sufficiente interpolarvi una nuova variabile. Il client generato
 usa ora un filtro per richiesta per impostare `x-api-key` dal tenant validato. La copia
@@ -127,47 +128,42 @@ iniettate come configurazione secret-backed distinta per tenant (SELC-17.2/17.4)
    globale generata; controllare ordine/registrazione dei filtri del generatore e impedire
    che una chiave globale sovrascriva quella per tenant. Coprire chiamate AR/PNPG
    intercalate e configurazione mancante, senza loggare la chiave.
-4. **Parziale - `apps/auth` - adozione delle librerie e credenziali.** Le dipendenze
-   condivise e il bridge tra `AuthTenantContext` e `TenantContext` sono presenti.
-   Integrare l'attuale `conf/TenantRegistry`, `AuthTenantContext`,
-   `TenantResolutionFilter`, `OidcServiceImpl`, `TenantSessionKeyProvider` e
-   `UserServiceImpl` con un'unica definizione dei metadata per tenant, senza duplicare
-   la risoluzione dell'identita'. Conservare il comportamento AR
-   e il rifiuto dei flussi PNPG non abilitati. Portare OneIdentity e User Registry sulla
-   configurazione tipizzata per tenant, senza modificare le firme dei client generati.
-   Per la PDV confermare prima se URL/istanza e credenziali differiscono tra tenant:
-   in tal caso selezionare anche la destinazione per tenant, non solo l'API key
-   (SELC-15.1-15.3).
-5. **`apps/auth` - dati OTP e chiamate uscenti.** Il routing Mongo flat e' stato
-   sostituito per AR; applicare il filtro `tenantId` a tutte le letture,
-   aggiornamenti (incluso `mailRequestId`), conteggi/limiti e operazioni per `uuid` di
-   `OtpFlow`. Rimuovere la compatibilita' `tenantId` assente solo dopo backfill e
-   verifica in tutti gli ambienti. Propagare il tenant verificato nelle chiamate a IAM,
-   user-ms, OneMail e negli eventuali payload persistiti; classificare per tenant o
-   globali URL, API key, mittente, template, flag OTP e parametri SAML/redirect prima
-   di unificare i deployment (SELC-12.4, SELC-16, SELC-17.1).
-6. **Infrastruttura e migrazione.** Aggiornare il registro canonico Terraform e gli
-   stack `infra/resources/auth` per esporre entrambe le route Mongo, i secret OneIdentity,
-   User Registry e le eventuali chiavi di firma/PDV necessarie con nomi per tenant.
-   Non serializzare valori riservati nel registry o nello state; configurare accessi
-   Key Vault e connettivita' verso ogni dipendenza. Inventariare/backfillare e verificare
-   `otpFlows` per account e tenant; revisionare l'indice unico `uuid` e gli altri indici
-   rispetto a `(tenantId, ...)` prima di unire i dati. Trasferire ownership degli
-   eventuali resource ID a un solo Terraform state prima del cutover.
-7. **Verifica e rilascio.** Pubblicare `selfcare-sdk-tenant` 0.4.0 prima del
-   deployment di `auth`, che richiede le nuove dimensioni del registry. Aggiungere
-   test del registry/provider, del filtro
-   User Registry sul client effettivo e dei flussi OIDC, OTP e SAML, inclusi tenant
-   assente/sconosciuto/disabilitato, configurazione incompleta, dati cross-tenant e
-   richieste AR/PNPG intercalate. Verificare le query su Mongo reale/containerizzato,
-   non solo con mock. Eseguire il cutover DEV, UAT e PROD solo dopo i gate di SELC-18,
-   con rollback provato e stack legacy disponibili fino alla validazione di entrambi
-   i tenant.
+4. **Completato per AR - `apps/auth` - registry e credenziali.** Entrambi i registry
+   leggono lo stesso JSON; il contesto auth alimenta quello condiviso. Il login PNPG
+   resta disabilitato. Per un'eventuale futura attivazione PNPG, confermare prima
+   istanza, URL e credenziali PDV e scegliere la destinazione per tenant (SELC-15).
+5. **Implementato per AR, backfill obbligatorio - dati OTP e chiamate uscenti.**
+   Letture e conteggi OTP includono il tenant; scritture vincolate a `tenantId=AR`
+   non modificano record legacy. `selfcare.tenant.strict-data-isolation` elimina
+   la compatibilita' di lettura dopo il backfill; negli stack DEV/UAT/PROD il flag
+   resta `false` finche' non sono verificati i dati. Non spostare traffico OTP
+   legacy non migrato: verifica e reinvio sono rifiutati, non producono un successo
+   apparente. Il tenant e' propagato a IAM/user-ms e la chiave e il mittente
+   OneMail sono tenant-bound; un errore di invio fallisce il flusso. URL,
+   template, flag OTP e parametri SAML/redirect restano singoli per `auth` AR;
+   classificarli prima di qualsiasi ingresso PNPG (SELC-12.4, SELC-16).
+6. **Parziale - infrastruttura e migrazione AR.** Gli stack espongono il registry
+   canonico, la route Mongo e i secret necessari per AR; PNPG ha solo il riferimento
+   User Registry riutilizzabile dagli altri servizi, senza route Mongo o login in
+   `auth`. Nessuna migrazione dei dati e' stata eseguita. Inventariare,
+   backfillare e verificare `otpFlows` per ambiente con lo script Step 1,
+   revisionare gli indici `(tenantId, ...)` prima di unire dati e trasferire
+   ownership degli eventuali resource ID a un solo Terraform state prima del
+   cutover. Non serializzare valori riservati nel registry.
+7. **Gate di verifica e rilascio AR.** Pubblicare `selfcare-sdk-tenant` 0.4.0
+   prima del deployment di `auth`. Verificare le query su Mongo reale/containerizzato,
+   il backfill e i flussi OIDC/OTP/SAML sui dati d'ambiente, oltre ai test unitari.
+   Confermare il binding APIM subscription-to-tenant, il contratto PDV e la
+   connettivita' Key Vault: il repository non consente di accertarli. Abilitare
+   strict mode solo quando **tutti** i servizi tenant-owned dell'ambiente usano
+   il medesimo flag e i dati sono verificati; non attribuire ad `auth` un
+   isolamento strict dell'intera piattaforma. Cutover DEV/UAT/PROD e rollback
+   vanno provati nell'ambiente, mantenendo disponibili gli stack legacy (SELC-18).
 
 ## Decisioni bloccanti prima del cutover
 
-- Confermare se e quando `auth` deve gestire login PNPG: oggi usa `HUB_SPID_LOGIN` ed e'
-  disabilitato; il routing Step 2 non ne cambia implicitamente il comportamento.
+- PNPG non usa ancora `auth`: `HUB_SPID_LOGIN` resta disabilitato; un futuro login
+  richiedera' un progetto e un cutover separati.
 - Definire per AR/PNPG istanza/tenant della Personal Data Vault, URL User Registry,
   eventuale API key distinta e modello credenziali; bloccare il flusso non configurato
   invece di usare la chiave AR per PNPG.

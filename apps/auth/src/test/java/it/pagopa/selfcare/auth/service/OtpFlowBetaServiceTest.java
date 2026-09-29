@@ -22,6 +22,7 @@ import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.time.OffsetDateTime;
@@ -67,7 +68,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
     when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
       .thenReturn(update);
-    when(update.where(anyString(), Mockito.<Object[]>any()))
+    when(update.where(any(Document.class)))
       .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -84,6 +85,10 @@ public class OtpFlowBetaServiceTest {
     Assertions.assertTrue(maybeOtpInfo.isPresent());
     OtpInfo otpInfo = maybeOtpInfo.get();
     Assertions.assertEquals("test@test.com", otpInfo.getInstitutionalEmail());
+    ArgumentCaptor<Document> filter = ArgumentCaptor.forClass(Document.class);
+    verify(update).where(filter.capture());
+    Assertions.assertEquals("AR", filter.getValue().getString("tenantId"));
+    Assertions.assertEquals(otpInfo.getUuid(), filter.getValue().getString("uuid"));
   }
 
   @Test
@@ -98,7 +103,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
     when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
       .thenReturn(update);
-    when(update.where(anyString(), Mockito.<Object[]>any()))
+    when(update.where(any(Document.class)))
       .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -130,7 +135,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
     when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
       .thenReturn(update);
-    when(update.where(anyString(), Mockito.<Object[]>any()))
+    when(update.where(any(Document.class)))
       .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -162,12 +167,12 @@ public class OtpFlowBetaServiceTest {
         Mockito.mock(ReactivePanacheQuery.class);
     when(OtpFlow.builder()).thenCallRealMethod();
     OtpFlow foundOtpFlow =
-        OtpFlow.builder().uuid("uuid").otp("123456").status(OtpStatus.COMPLETED).build();
+        OtpFlow.builder().uuid("uuid").tenantId("AR").otp("123456").status(OtpStatus.COMPLETED).build();
     when(query.firstResult()).thenReturn(Uni.createFrom().item(foundOtpFlow));
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
     when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
       .thenReturn(update);
-    when(update.where(anyString(), Mockito.<Object[]>any()))
+    when(update.where(any(Document.class)))
       .thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
@@ -198,6 +203,7 @@ public class OtpFlowBetaServiceTest {
     OtpFlow foundOtpFlow =
         OtpFlow.builder()
             .uuid("uuid")
+            .tenantId("AR")
             .otp("123456")
             .status(OtpStatus.REJECTED)
             .expiresAt(OffsetDateTime.now())
@@ -206,7 +212,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
     when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
       .thenReturn(update);
-    when(update.where(anyString(), Mockito.<Object[]>any()))
+    when(update.where(any(Document.class)))
       .thenReturn(Uni.createFrom().item(1L));
     when(OtpFlow.find(any(Document.class), any(Document.class))).thenReturn(query);
     Optional<OtpInfo> maybeOtpInfo =
@@ -234,7 +240,7 @@ public class OtpFlowBetaServiceTest {
     ReactivePanacheUpdate update = Mockito.mock(ReactivePanacheUpdate.class);
     when(OtpFlow.update(anyString(), Mockito.<Object[]>any()))
       .thenReturn(update);
-    when(update.where(anyString(), Mockito.<Object[]>any()))
+    when(update.where(any(Document.class)))
       .thenReturn(Uni.createFrom().item(1L));
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query =
         Mockito.mock(ReactivePanacheQuery.class);
@@ -242,6 +248,7 @@ public class OtpFlowBetaServiceTest {
     OtpFlow foundOtpFlow =
         OtpFlow.builder()
             .uuid("uuid")
+            .tenantId("AR")
             .otp("123456")
             .status(OtpStatus.PENDING)
             .expiresAt(OffsetDateTime.now().minusHours(1))
@@ -276,6 +283,7 @@ public class OtpFlowBetaServiceTest {
     OtpFlow foundOtpFlow =
         OtpFlow.builder()
             .uuid("uuid")
+            .tenantId("AR")
             .otp("123456")
             .status(OtpStatus.PENDING)
             .createdAt(OffsetDateTime.now())
@@ -348,6 +356,7 @@ public class OtpFlowBetaServiceTest {
     OtpFlow foundOtpFlow =
         OtpFlow.builder()
             .uuid("uuid")
+            .tenantId("AR")
             .otp("123456")
             .status(OtpStatus.COMPLETED)
             .expiresAt(OffsetDateTime.now())
@@ -372,6 +381,7 @@ public class OtpFlowBetaServiceTest {
         .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
     OtpFlow.builder()
         .uuid("uuid")
+        .tenantId("AR")
         .otp("123456")
         .status(OtpStatus.COMPLETED)
         .expiresAt(OffsetDateTime.now())
