@@ -37,6 +37,7 @@ Before running you must set these properties as environment variables.
 | quarkus.rest-client."**.InstitutionApi".url<br/>       | MS_USER_URL                              |             |     yes      |
 | quarkus.rest-client."**.ProductApi".url<br/>           | MS_PRODUCT_URL                           | localhost:8080 | yes in deployments |
 | tenant.supported-tenants<br/>                         | TENANT_SUPPORTED_TENANTS                 | AR,PNPG     | per deployment |
+| tenant.storage.mandatory-keys<br/>                     | TENANT_STORAGE_MANDATORY_KEYS            | products    | yes with tenant SDK 0.2.0 |
 | onboarding-ms.required-documents.enabled<br/>            | ONBOARDING-REQUIRED-DOCUMENTS-ENABLED    | false       |     no       |
 
 > **_NOTE:_**  properties that contains secret must have the same name of its secret as uppercase.
@@ -58,9 +59,13 @@ Role mappings use the requested institution type, then the global/`DEFAULT`
 mapping. Mappings for other institution types are not a fallback. Existing contract
 imports and signed uploads retain their optional template metadata.
 
-Onboarding needs no `storages.products`, product storage credentials or product
-Blob identity attachment. Product MS contract-template storage and Product CDC
-exports remain independent and must not be removed.
+Onboarding does not read the catalog from Blob, but tenant SDK **0.2.0** still
+requires `tenant.storage.mandatory-keys` and validates the corresponding
+`storages.products` bindings. Keep the existing storage configuration and identity
+wiring until the SDK update is released and adopted. This compatibility
+configuration does not restore a Blob reader or Blob readiness check.
+Product MS contract-template storage and Product CDC exports remain independent
+and must not be removed.
 
 ### Catalog migration rollout
 
@@ -68,17 +73,21 @@ Before releasing onboarding, verify the deployed Product MS supports the current
 tenant paths and its Mongo catalog contains the correct `tenantId` for every
 enabled tenant. Repository configuration alone does not establish either fact.
 Keep the tenant allowlist and Mongo/JWT configuration specific to each deployment.
-The referenced tenant SDK patch makes mandatory-storage configuration optional
-so an API-only consumer can start without `tenant.storage.mandatory-keys`.
-Build it in the Maven reactor (`--also-make`), as CI does, or publish/install it
-before building onboarding in isolation. No package publication is performed by
-the integration test workflow.
+The tenant SDK update is a separate release: this consumer remains on **0.2.0**.
+Keep `tenant.storage.mandatory-keys=products` and valid bindings for every enabled
+tenant in application, test and deployment configuration. The default local
+registry references `BLOB_STORAGE_AR_PRODUCT_CONNECTION_STRING` and
+`BLOB_STORAGE_PNPG_PRODUCT_CONNECTION_STRING`; the deployment registries retain
+their existing managed identity configuration. Tests use emulator configuration,
+not cloud credentials.
 
-Deploy the API-compatible consumer before removing its obsolete Blob settings
-and identity attachment. Review the Terraform plan for all affected stacks; shared
-storage, identities and role assignments must not be destroyed. If rolling back
-to a Blob-dependent consumer, restore its configuration and identity attachment
-first, and verify that the server/client versions remain compatible.
+Remove these compatibility settings only after adopting an SDK that supports
+absent mandatory-storage configuration. `--also-make` builds a local SDK only
+when its version matches the dependency; it does not replace 0.2.0 with a newer
+checkout version. No SDK publication is performed by the integration workflow.
+Review the later cleanup plan for all six stacks; shared storage, identities and
+role assignments must not be destroyed. The Product API migration must not depend
+on applying that cleanup first.
 
 
 ## Running the application in dev mode
