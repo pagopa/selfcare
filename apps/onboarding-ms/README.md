@@ -171,6 +171,11 @@ The Sonar workflow imports module reports, not the separate `test-coverage`
 aggregate. A selected run containing only ordinary JUnit tests does not start the
 Quarkus report generator: include a `@QuarkusTest` or use the complete run above.
 
+The module sets `sonar.test.exclusions=src/test/**` to exclude test sources,
+fixtures and test-support classes from Sonar issue analysis. Maven still compiles
+and executes the tests, and JaCoCo still records their coverage of production
+code. This does not exclude any production code from coverage or issue analysis.
+
 ### Cucumber
 
 The Cucumber suite also uses the real `ProductServiceImpl` and generated
