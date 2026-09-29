@@ -16,6 +16,7 @@ import org.openapi.quarkus.product_json.model.Origin;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
+import org.owasp.encoder.Encode;
 
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductResponse> getProduct(String productId) {
-        log.info("Calling getProductById: productId={}", productId);
+        log.info("Calling getProductById: productId={}", Encode.forJava(String.valueOf(productId)));
         return getProduct(productId, null);
     }
 
@@ -93,19 +94,20 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public Uni<ProductResponse> getValidProduct(String productId) {
-        log.info("Calling getValidProductById: productId={}", productId);
+        log.info("Calling getValidProductById: productId={}", Encode.forJava(String.valueOf(productId)));
         return getValidProduct(productId, null);
     }
 
     @Override
     public Uni<ProductResponse> getValidProduct(String productId, String tenantId) {
-        log.info("Calling getValidProductById: productId={}, tenantId={}", productId, tenantId);
+        log.info("Calling getValidProductById: productId={}, tenantId={}",
+                Encode.forJava(String.valueOf(productId)), Encode.forJava(String.valueOf(tenantId)));
         return mapNotFound(productController.getValidProductById(productId, canonicalTenant(tenantId)), productId);
     }
 
     @Override
     public Uni<Integer> getProductExpirationDays(String productId) {
-        log.info("Calling getProductExpirationDays: productId={}", productId);
+        log.info("Calling getProductExpirationDays: productId={}", Encode.forJava(String.valueOf(productId)));
         return getProductExpirationDays(productId, null);
     }
 

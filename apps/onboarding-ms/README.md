@@ -55,6 +55,10 @@ the API path and `X-Tenant-Id`. Authorization is forwarded unchanged. An explici
 tenant must match an already initialized request context; a missing or conflicting
 tenant must not cause a fallback to another tenant or to Blob.
 
+Product lookup logs escape identifiers with the existing OWASP Java Encoder so
+CR/LF and Unicode line separators cannot create forged log lines. Encoding applies
+only to log arguments; Product API inputs and tenant validation remain unchanged.
+
 Role mappings use the requested institution type, then the global/`DEFAULT`
 mapping. Mappings for other institution types are not a fallback. Existing contract
 imports and signed uploads retain their optional template metadata.
@@ -135,6 +139,8 @@ The catalog checks include `ProductOpenApiContractTest`, `ProductConfigUtilsTest
 The HTTP suite uses the real generated client and adapter with a local Product
 HTTP server, checking tenant paths, forwarded headers, isolation, response models
 and failures.
+`ProductServiceImplTest` also captures formatted lookup logs to verify that
+identifiers stay on one line without changing the values sent to Product API.
 
 The Cucumber suite also uses the real `ProductServiceImpl` and generated
 `ProductApi`. Product MS responses are declared in
