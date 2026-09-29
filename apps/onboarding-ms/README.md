@@ -62,6 +62,8 @@ only to log arguments; Product API inputs and tenant validation remain unchanged
 Role mappings use the requested institution type, then the global/`DEFAULT`
 mapping. Mappings for other institution types are not a fallback. Existing contract
 imports and signed uploads retain their optional template metadata.
+Building a signed-contract request requires a Product response, checked with
+`Objects.requireNonNull`; a present product may still have no template metadata.
 
 Onboarding does not read the catalog from Blob, but tenant SDK **0.2.0** still
 requires `tenant.storage.mandatory-keys` and validates the corresponding
@@ -141,6 +143,30 @@ HTTP server, checking tenant paths, forwarded headers, isolation, response model
 and failures.
 `ProductServiceImplTest` also captures formatted lookup logs to verify that
 identifiers stay on one line without changing the values sent to Product API.
+
+### Coverage
+
+Coverage combines ordinary JUnit tests with `@QuarkusTest`. The Maven JaCoCo agent
+excludes `*QuarkusClassLoader` to avoid instrumenting Quarkus classes twice; both
+collectors append to `target/jacoco.exec`. The Quarkus report includes all
+application packages, including client headers, mappers, registries and utilities.
+Keep the agent version aligned with the JaCoCo runtime supplied by Quarkus.
+The collector settings live in test resources without a `%test` prefix so custom
+profiles such as `integrationProfile` use the same data file and report scope.
+
+Use a clean run to discard previous execution data and match the Sonar build:
+
+```shell
+mvn -B -ntp clean test --projects apps,apps/onboarding-ms --also-make \
+  -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+```
+
+The module report is `apps/onboarding-ms/target/jacoco-report/jacoco.xml`.
+The Sonar workflow imports module reports, not the separate `test-coverage`
+aggregate. A selected run containing only ordinary JUnit tests does not start the
+Quarkus report generator: include a `@QuarkusTest` or use the complete run above.
+
+### Cucumber
 
 The Cucumber suite also uses the real `ProductServiceImpl` and generated
 `ProductApi`. Product MS responses are declared in

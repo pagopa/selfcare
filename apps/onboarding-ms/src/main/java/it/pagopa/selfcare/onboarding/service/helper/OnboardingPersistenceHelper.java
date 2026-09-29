@@ -212,12 +212,12 @@ public class OnboardingPersistenceHelper {
 
     private Uni<Void> retrieveAndSetUserAggregatesResources(Onboarding onboarding, ProductResponse product,
                                                                List<AggregateInstitutionRequest> aggregates) {
-        if (aggregates == null || aggregates.isEmpty()) return Uni.createFrom().voidItem();
+        if (Objects.isNull(aggregates) || aggregates.isEmpty()) return Uni.createFrom().voidItem();
 
         return resolveRoleMappings(product, onboarding)
                 .onItem().transformToUni(roleMappings ->
                         Multi.createFrom().iterable(aggregates)
-                                .filter(a -> a.getUsers() != null && !a.getUsers().isEmpty())
+                                .filter(a -> Objects.nonNull(a.getUsers()) && !a.getUsers().isEmpty())
                                 .onItem().invoke(a -> log.debug("Retrieving user resources for aggregate: {}", a.getTaxCode()))
                                 .onItem().transformToUni(a ->
                                         userRegistryHelper.retrieveUserResources(a.getUsers(), roleMappings)

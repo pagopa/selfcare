@@ -9,6 +9,7 @@ import jakarta.ws.rs.core.MultivaluedMap;
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
 import java.util.List;
+import java.util.Objects;
 
 @ApplicationScoped
 public class AuthenticationPropagationHeadersFactory implements ClientHeadersFactory {
@@ -30,7 +31,7 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
         if(incomingHeaders.containsKey(AUTHORIZATION)) {
             List<String> headerValue = incomingHeaders.get(AUTHORIZATION);
 
-            if (headerValue != null) {
+            if (Objects.nonNull(headerValue)) {
                 clientOutgoingHeaders.put(AUTHORIZATION, headerValue);
             }
 
@@ -39,7 +40,7 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
         String tenant = tenantContext.isInitialized()
                 ? tenantContext.requiredTenantId()
                 : incomingHeaders.getFirst(TENANT_HEADER);
-        if (tenant != null && !tenant.isBlank()) {
+        if (Objects.nonNull(tenant) && !tenant.isBlank()) {
             String canonicalTenant = tenantRegistry.normalizeTenantId(tenant);
             tenantRegistry.resolve(canonicalTenant);
             validateTenantHeader(incomingHeaders.get(TENANT_HEADER), canonicalTenant);
@@ -51,11 +52,11 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
     }
 
     private void validateTenantHeader(List<String> values, String tenant) {
-        if (values == null) {
+        if (Objects.isNull(values)) {
             return;
         }
         for (String value : values) {
-            if (value != null && !value.isBlank()
+            if (Objects.nonNull(value) && !value.isBlank()
                     && !tenant.equals(tenantRegistry.normalizeTenantId(value))) {
                 throw new BadRequestException("Conflicting tenant context");
             }

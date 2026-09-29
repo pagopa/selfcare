@@ -23,7 +23,7 @@ public final class ProductConfigUtils {
     }
 
     public static String productId(ProductResponse product) {
-        return product != null ? product.getProductId() : null;
+        return Objects.nonNull(product) ? product.getProductId() : null;
     }
 
     public static int expirationDays(ProductResponse product) {
@@ -52,7 +52,7 @@ public final class ProductConfigUtils {
     }
 
     public static Map<PartyRole, RoleMapping> roleMappings(ProductResponse product, InstitutionType institutionType) {
-        if (product == null || product.getRoleMappings() == null) {
+        if (Objects.isNull(product) || Objects.isNull(product.getRoleMappings())) {
             throw new IllegalStateException("Role mappings are missing for product " + productId(product));
         }
         List<RoleMapping> roleMappings = product.getRoleMappings();
@@ -106,22 +106,22 @@ public final class ProductConfigUtils {
     }
 
     private static boolean matchesInstitutionType(RoleMapping mapping, String institutionType) {
-        return mapping.getInstitutionType() != null
+        return Objects.nonNull(mapping.getInstitutionType())
                 && mapping.getInstitutionType().name().equals(institutionType);
     }
 
     private static boolean matchesInstitutionType(ContractTemplateConfig config, String institutionType) {
-        return config.getInstitutionType() != null
+        return Objects.nonNull(config.getInstitutionType())
                 && config.getInstitutionType().name().equals(institutionType);
     }
 
     private static boolean isDefaultInstitutionType(RoleMapping mapping) {
-        return mapping.getInstitutionType() == null
+        return Objects.isNull(mapping.getInstitutionType())
                 || DEFAULT_INSTITUTION_TYPE.equals(mapping.getInstitutionType().name());
     }
 
     private static boolean isDefaultInstitutionType(ContractTemplateConfig config) {
-        return config.getInstitutionType() == null
+        return Objects.isNull(config.getInstitutionType())
                 || DEFAULT_INSTITUTION_TYPE.equals(config.getInstitutionType().name());
     }
 }

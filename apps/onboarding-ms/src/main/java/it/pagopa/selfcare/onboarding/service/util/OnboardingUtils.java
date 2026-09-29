@@ -67,6 +67,7 @@ public class OnboardingUtils {
             boolean skipSignatureVerification,
             FormItem formItem, ProductResponse product, DocumentType documentType, List<String> fiscalCodes,
             int signingStep) {
+        Objects.requireNonNull(product, "Product is required to build a signed contract request");
         DocumentContentControllerApi.UploadSignedContractMultipartForm request = new DocumentContentControllerApi.UploadSignedContractMultipartForm();
         request.skipSignatureVerification = skipSignatureVerification;
         request._file = formItem.getFile();
@@ -105,7 +106,7 @@ public class OnboardingUtils {
         return responseUni
                 .onFailure(WebApplicationException.class).recoverWithUni(ex -> {
                     WebApplicationException wae = (WebApplicationException) ex;
-                    if (wae.getResponse() != null
+                    if (Objects.nonNull(wae.getResponse())
                             && wae.getResponse().getStatus() == Response.Status.REQUEST_ENTITY_TOO_LARGE.getStatusCode()) {
                         return Uni.createFrom().failure(new PayloadTooLargeException(
                                 "Uploaded file exceeds allowed size",
@@ -148,7 +149,7 @@ public class OnboardingUtils {
      */
     private InvalidRequestException extractDocumentError(Response response, String operation, String onboardingId) {
         String body = readResponseBody(response);
-        if (body == null) return null;
+        if (Objects.isNull(body)) return null;
 
         log.warn("Document service call failed: operation={}, onboardingId={}, body={}", operation, onboardingId, body);
 
@@ -157,7 +158,7 @@ public class OnboardingUtils {
             if (root.has("title") && root.has("detail")) {
                 String errorCode = root.get("title").asText(null);
                 String errorDetail = root.get("detail").asText(null);
-                if (errorCode != null && errorDetail != null) {
+                if (Objects.nonNull(errorCode) && Objects.nonNull(errorDetail)) {
                     return new InvalidRequestException(errorDetail, errorCode);
                 }
             }

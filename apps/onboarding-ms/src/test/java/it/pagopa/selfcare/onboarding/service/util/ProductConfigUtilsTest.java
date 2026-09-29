@@ -12,6 +12,7 @@ import org.openapi.quarkus.product_json.model.RoleMapping;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,6 +27,22 @@ class ProductConfigUtilsTest {
                 specific);
 
         assertEquals(Map.of(PartyRole.MANAGER, specific), ProductConfigUtils.roleMappings(product, InstitutionType.PA));
+    }
+
+    @Test
+    void roleMappings_whenRoleAndInstitutionAreDuplicated_preservesFirstMapping() {
+        //given
+        RoleMapping first = role("PA", "MANAGER", "onboarding");
+        RoleMapping second = role("PA", "MANAGER", "management");
+        ProductResponse product = product(first, second);
+
+        //when
+        Map<PartyRole, RoleMapping> mappings = ProductConfigUtils.roleMappings(product, InstitutionType.PA);
+
+        //then
+        assertEquals(1, mappings.size());
+        assertSame(first, mappings.get(PartyRole.MANAGER));
+        assertEquals(List.of("onboarding"), mappings.get(PartyRole.MANAGER).getPhasesAdditionAllowed());
     }
 
     @Test
@@ -130,7 +147,7 @@ class ProductConfigUtilsTest {
 
     private RoleMapping role(String institutionType, String role, String... phases) {
         RoleMapping mapping = new RoleMapping().role(role).phasesAdditionAllowed(List.of(phases));
-        if (institutionType != null) {
+        if (Objects.nonNull(institutionType)) {
             mapping.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType));
         }
         return mapping;
@@ -139,7 +156,7 @@ class ProductConfigUtilsTest {
     private ContractTemplateConfig contract(String institutionType, String path, String version) {
         ContractTemplateConfig template = new ContractTemplateConfig()
                 .contractType(ContractType.CONTRACT).path(path).version(version);
-        if (institutionType != null) {
+        if (Objects.nonNull(institutionType)) {
             template.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType));
         }
         return template;

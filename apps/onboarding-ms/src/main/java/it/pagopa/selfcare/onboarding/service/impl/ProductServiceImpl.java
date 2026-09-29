@@ -19,6 +19,7 @@ import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 import org.owasp.encoder.Encode;
 
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @ApplicationScoped
@@ -114,14 +115,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<Integer> getProductExpirationDays(String productId, String tenantId) {
         return mapNotFound(productController.getProductExpirationDays(productId, canonicalTenant(tenantId)), productId)
-                .onItem().transform(response -> response != null && response.getExpirationDays() != null
+                .onItem().transform(response -> Objects.nonNull(response) && Objects.nonNull(response.getExpirationDays())
                         ? response.getExpirationDays()
                         : it.pagopa.selfcare.onboarding.service.util.ProductConfigUtils.DEFAULT_EXPIRATION_DAYS);
     }
 
     private String canonicalTenant(String tenantId) {
         String canonicalTenant = tenantRegistry.normalizeTenantId(
-                tenantId != null ? tenantId : tenantContext.requiredTenantId());
+                Objects.nonNull(tenantId) ? tenantId : tenantContext.requiredTenantId());
         tenantRegistry.resolve(canonicalTenant);
         if (tenantContext.isInitialized()) {
             String contextTenant = tenantRegistry.normalizeTenantId(tenantContext.getTenantId());
@@ -136,7 +137,7 @@ public class ProductServiceImpl implements ProductService {
 
     private <T> Uni<T> mapNotFound(Uni<T> result, String productId) {
         return result.onFailure(failure -> failure instanceof WebApplicationException exception
-                        && exception.getResponse() != null && exception.getResponse().getStatus() == 404)
+                        && Objects.nonNull(exception.getResponse()) && exception.getResponse().getStatus() == 404)
                 .transform(failure -> new ResourceNotFoundException("Product not found with id: " + productId));
     }
 }

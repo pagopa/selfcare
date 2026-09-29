@@ -13,6 +13,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -56,12 +57,12 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
             String tenant = exchange.getRequestHeaders().getFirst("X-Tenant-Id");
             String authorization = exchange.getRequestHeaders().getFirst("Authorization");
             requests.add(Map.of("path", path, "method", exchange.getRequestMethod(),
-                    "tenant", tenant == null ? "" : tenant,
-                    "authorization", authorization == null ? "" : authorization,
-                    "query", exchange.getRequestURI().getRawQuery() == null ? "" : exchange.getRequestURI().getRawQuery()));
-            if (tenant == null || !List.of("AR", "PNPG").contains(tenant)
+                    "tenant", Objects.isNull(tenant) ? "" : tenant,
+                    "authorization", Objects.isNull(authorization) ? "" : authorization,
+                    "query", Objects.isNull(exchange.getRequestURI().getRawQuery()) ? "" : exchange.getRequestURI().getRawQuery()));
+            if (Objects.isNull(tenant) || !List.of("AR", "PNPG").contains(tenant)
                     || !path.startsWith("/product/" + tenant + "/")
-                    || authorization == null || !authorization.startsWith("Bearer ")) {
+                    || Objects.isNull(authorization) || !authorization.startsWith("Bearer ")) {
                 send(exchange, 400, "{\"detail\":\"Path, canonical tenant and Authorization are required\"}");
                 return;
             }
@@ -112,7 +113,7 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
     private JsonNode fixture(String tenant) throws IOException {
         try (InputStream input = getClass().getClassLoader().getResourceAsStream(
                 "integration-data/product-api/prod-io-" + tenant.toLowerCase(java.util.Locale.ROOT) + ".json")) {
-            if (input == null) {
+            if (Objects.isNull(input)) {
                 throw new IllegalStateException("Missing HTTP product fixture: " + tenant);
             }
             return mapper.readTree(input);
@@ -128,10 +129,10 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
 
     @Override
     public void stop() {
-        if (server != null) {
+        if (Objects.nonNull(server)) {
             server.stop(0);
         }
-        if (executor != null) {
+        if (Objects.nonNull(executor)) {
             executor.shutdownNow();
         }
     }

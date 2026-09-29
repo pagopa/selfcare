@@ -265,11 +265,11 @@ class OnboardingServiceDefaultTest {
                 productResponse(() -> {
                     String productId = invocation.getArgument(0);
                     Product product = productAzureService.getProduct(productId);
-                    return product != null ? product : productFixtures.get(productId);
+                    return Objects.nonNull(product) ? product : productFixtures.get(productId);
                 }));
         when(productService.getProductExpirationDays(anyString())).thenAnswer(invocation -> {
             Integer days = productAzureService.getProductExpirationDate(invocation.getArgument(0));
-            return Uni.createFrom().item(days != null ? days : 30);
+            return Uni.createFrom().item(Objects.nonNull(days) ? days : 30);
         });
         when(productService.getProduct(anyString(), nullable(String.class))).thenAnswer(invocation ->
                 productService.getProduct(invocation.getArgument(0)));
@@ -295,20 +295,20 @@ class OnboardingServiceDefaultTest {
 
     private Product validProduct(String productId) {
         Product product = productAzureService.getProductIsValid(productId);
-        return product != null ? product : productFixtures.get(productId);
+        return Objects.nonNull(product) ? product : productFixtures.get(productId);
     }
 
     private void rememberProduct(Product product) {
-        if (product != null && product.getId() != null) {
+        if (Objects.nonNull(product) && Objects.nonNull(product.getId())) {
             productFixtures.put(product.getId(), product);
-            if (product.getParent() != null && product.getParent().getId() != null) {
+            if (Objects.nonNull(product.getParent()) && Objects.nonNull(product.getParent().getId())) {
                 productFixtures.put(product.getParent().getId(), product.getParent());
             }
         }
     }
 
     private org.openapi.quarkus.product_json.model.ProductResponse toProductResponse(Product product) {
-        if (product == null) {
+        if (Objects.isNull(product)) {
             return null;
         }
         org.openapi.quarkus.product_json.model.ProductResponse response =
@@ -327,7 +327,7 @@ class OnboardingServiceDefaultTest {
         features.setExpirationDays(product.getExpirationDate());
         features.setAllowedInstitutionTaxCode(product.getAllowedInstitutionTaxCode());
         response.setFeatures(features);
-        if (product.getSigningConfiguration() != null) {
+        if (Objects.nonNull(product.getSigningConfiguration())) {
             org.openapi.quarkus.product_json.model.SigningConfiguration signingConfiguration =
                     new org.openapi.quarkus.product_json.model.SigningConfiguration();
             signingConfiguration.setRequiredSignatures(product.getSigningConfiguration().getRequiredSignatures());
@@ -342,7 +342,7 @@ class OnboardingServiceDefaultTest {
                 .ifPresent(mappingsByInstitutionType -> mappingsByInstitutionType.forEach((institutionType, mappings) ->
                         mappings.forEach((role, info) -> roleMappings.add(toRoleMapping(role, info, institutionType)))));
         response.setRoleMappings(roleMappings);
-        if (product.getInstitutionContractMappings() != null) {
+        if (Objects.nonNull(product.getInstitutionContractMappings())) {
             response.setContracts(product.getInstitutionContractMappings().entrySet().stream().map(entry -> {
                 org.openapi.quarkus.product_json.model.ContractTemplateConfig contract =
                         new org.openapi.quarkus.product_json.model.ContractTemplateConfig();
@@ -365,11 +365,11 @@ class OnboardingServiceDefaultTest {
         org.openapi.quarkus.product_json.model.RoleMapping mapping =
                 new org.openapi.quarkus.product_json.model.RoleMapping();
         mapping.setRole(role.name());
-        if (institutionType != null) {
+        if (Objects.nonNull(institutionType)) {
             mapping.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType));
         }
         mapping.setPhasesAdditionAllowed(info.getPhasesAdditionAllowed());
-        if (info.getRoles() != null) {
+        if (Objects.nonNull(info.getRoles())) {
             mapping.setBackOfficeRoles(info.getRoles().stream().map(productRole -> {
                 org.openapi.quarkus.product_json.model.BackOfficeRole backOfficeRole =
                         new org.openapi.quarkus.product_json.model.BackOfficeRole();

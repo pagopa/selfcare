@@ -197,7 +197,7 @@ class OnboardingServiceIntegrationTest {
     }
 
     private org.openapi.quarkus.product_json.model.ProductResponse toProductResponse(Product product) {
-        if (product == null) {
+        if (Objects.isNull(product)) {
             return null;
         }
         org.openapi.quarkus.product_json.model.ProductResponse response =
@@ -228,11 +228,11 @@ class OnboardingServiceIntegrationTest {
         org.openapi.quarkus.product_json.model.RoleMapping mapping =
                 new org.openapi.quarkus.product_json.model.RoleMapping();
         mapping.setRole(role.name());
-        if (institutionType != null) {
+        if (Objects.nonNull(institutionType)) {
             mapping.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType));
         }
         mapping.setPhasesAdditionAllowed(info.getPhasesAdditionAllowed());
-        if (info.getRoles() != null) {
+        if (Objects.nonNull(info.getRoles())) {
             mapping.setBackOfficeRoles(info.getRoles().stream().map(productRole -> {
                 org.openapi.quarkus.product_json.model.BackOfficeRole backOfficeRole =
                         new org.openapi.quarkus.product_json.model.BackOfficeRole();

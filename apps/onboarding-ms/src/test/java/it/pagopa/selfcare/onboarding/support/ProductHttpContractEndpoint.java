@@ -16,6 +16,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
+import java.util.Objects;
 import org.openapi.quarkus.product_json.model.InstitutionType;
 import org.openapi.quarkus.product_json.model.Origin;
 
@@ -35,7 +36,7 @@ public class ProductHttpContractEndpoint {
         return Uni.createFrom().deferred(() -> {
             Uni<?> result = switch (operation) {
                 case "product" -> productService.getProduct(productId);
-                case "valid" -> explicitTenant == null ? productService.getValidProduct(productId)
+                case "valid" -> Objects.isNull(explicitTenant) ? productService.getValidProduct(productId)
                         : productService.getValidProduct(productId, explicitTenant);
                 case "workflow" -> productService.getWorkflowType(institutionType, origin, ProductId.fromValue(productId));
                 case "documents" -> productService.getRequiredDocuments(ProductId.fromValue(productId), institutionType, origin);

@@ -1,11 +1,15 @@
 package it.pagopa.selfcare.onboarding.service.helper;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.test.InjectMock;
@@ -163,6 +167,87 @@ class OnboardingPgHelperTest {
         //then
         subscriber.awaitFailure()
                 .assertFailedWith(RuntimeException.class, "product-ms unreachable");
+    }
+
+    // --- onboardingUserPg: resolveRoleMappings ---
+
+    @Test
+    void onboardingUserPg_whenProductHasParent_usesParentMappingsAndPreservesTenant() {
+        //given
+        Onboarding onboarding = buildOnboarding();
+        onboarding.setTenantId("AR");
+        List<UserRequest> userRequests = List.of(managerUserRequest());
+        RoleMapping childMapping = managerRoleMapping("child-admin");
+        RoleMapping parentMapping = managerRoleMapping("parent-admin");
+        ProductResponse child = new ProductResponse().productId(onboarding.getProductId())
+                .parentId("prod-pn").roleMappings(List.of(childMapping));
+        ProductResponse parent = new ProductResponse().productId("prod-pn")
+                .roleMappings(List.of(parentMapping));
+        mockPreviousOnboarding();
+        when(productService.getValidProduct(onboarding.getProductId(), "AR"))
+                .thenReturn(Uni.createFrom().item(child));
+        when(productService.getValidProduct("prod-pn", "AR"))
+                .thenReturn(Uni.createFrom().item(parent));
+        mockValidationAndUserRegistry();
+        mockUserNotAlreadyManager();
+        LegalVerificationResult result = new LegalVerificationResult();
+        result.setVerificationResult(true);
+        when(nationalRegistriesApi.verifyLegalUsingGET(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(result));
+        when(persistenceHelper.updateOnboarding(onboarding))
+                .thenReturn(Uni.createFrom().item(onboarding));
+        when(orchestrationService.triggerOrchestrationIfEnabled(onboarding.getId(), "70"))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+        OnboardingResponse expected = new OnboardingResponse();
+        when(onboardingMapper.toResponse(onboarding)).thenReturn(expected);
+
+        //when
+        UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
+                .onboardingUserPg(onboarding, userRequests)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.awaitItem().assertItem(expected);
+        verify(productService).getValidProduct("prod-pn-pg", "AR");
+        verify(productService).getValidProduct("prod-pn", "AR");
+        verify(validationHelper).validationRole(userRequests, List.of(PartyRole.MANAGER));
+        verify(userRegistryHelper).retrieveUserResources(eq(userRequests), eq(Map.of(PartyRole.MANAGER, parentMapping)));
+        verify(persistenceHelper).updateOnboarding(onboarding);
+        verify(orchestrationService).triggerOrchestrationIfEnabled(onboarding.getId(), "70");
+    }
+
+    @Test
+    void onboardingUserPg_whenParentLookupFails_preservesFailureAndStopsOnboarding() {
+        //given
+        Onboarding onboarding = buildOnboarding();
+        onboarding.setTenantId("AR");
+        List<UserRequest> userRequests = List.of(managerUserRequest());
+        ProductResponse child = new ProductResponse().productId(onboarding.getProductId())
+                .parentId("prod-pn").roleMappings(List.of(managerRoleMapping("child-admin")));
+        ResourceNotFoundException failure = new ResourceNotFoundException("Parent product not found");
+        mockPreviousOnboarding();
+        when(productService.getValidProduct(onboarding.getProductId(), "AR"))
+                .thenReturn(Uni.createFrom().item(child));
+        when(productService.getValidProduct("prod-pn", "AR"))
+                .thenReturn(Uni.createFrom().failure(failure));
+        when(validationHelper.validationRole(userRequests, List.of(PartyRole.MANAGER)))
+                .thenReturn(Uni.createFrom().item(userRequests));
+
+        //when
+        UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
+                .onboardingUserPg(onboarding, userRequests)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.awaitFailure().assertFailedWith(ResourceNotFoundException.class, "Parent product not found");
+        assertSame(failure, subscriber.getFailure());
+        verify(productService).getValidProduct("prod-pn-pg", "AR");
+        verify(productService).getValidProduct("prod-pn", "AR");
+        verify(validationHelper).validationRole(userRequests, List.of(PartyRole.MANAGER));
+        verify(persistenceHelper).getOnboardingByFilters("02492030446", null, "ADE", null, "prod-pn-pg");
+        verify(persistenceHelper, never()).updateOnboarding(any());
+        verifyNoInteractions(userRegistryHelper, userService, nationalRegistriesApi, infocamereApi,
+                orchestrationService, onboardingMapper);
     }
 
     // --- onboardingUserPg: checkIfUserIsAlreadyManager ---
@@ -491,12 +576,16 @@ class OnboardingPgHelperTest {
     private void mockValidProduct() {
         ProductResponse product = new ProductResponse();
         product.setProductId("prod-pn-pg");
-        product.setRoleMappings(List.of(new RoleMapping()
+        product.setRoleMappings(List.of(managerRoleMapping("admin")));
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
+    }
+
+    private static RoleMapping managerRoleMapping(String backOfficeRole) {
+        return new RoleMapping()
                 .institutionType(org.openapi.quarkus.product_json.model.InstitutionType.PG)
                 .role(PartyRole.MANAGER.name())
                 .phasesAdditionAllowed(List.of("onboarding"))
-                .backOfficeRoles(List.of(new BackOfficeRole().code("admin")))));
-        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
+                .backOfficeRoles(List.of(new BackOfficeRole().code(backOfficeRole)));
     }
 
     private void mockValidationAndUserRegistry() {

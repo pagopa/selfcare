@@ -438,7 +438,7 @@ public class OnboardingValidationHelper {
     private Uni<Boolean> validateAllowedProductList(String taxCode, String subunitCode,
                                                     String productId, String tenantId) {
         log.info("Validating allowed map for: taxCode {}, subunitCode {}, product {}", taxCode, subunitCode, productId);
-        Uni<ProductResponse> productUni = tenantId == null
+        Uni<ProductResponse> productUni = Objects.isNull(tenantId)
                 ? productService.getValidProduct(productId)
                 : productService.getValidProduct(productId, tenantId);
         return productUni

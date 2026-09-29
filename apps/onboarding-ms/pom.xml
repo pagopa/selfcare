@@ -33,6 +33,7 @@
         <common-sdk-tenant-mongodb-version>0.1.0</common-sdk-tenant-mongodb-version>
         <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
         <owasp.encoder.version>1.4.0</owasp.encoder.version>
+        <jacoco.version>0.8.12</jacoco.version>
     </properties>
 
     <dependencyManagement>
@@ -272,6 +273,24 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-unit-test-coverage</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
+                            <destFile>${project.build.directory}/jacoco.exec</destFile>
+                            <append>true</append>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>${quarkus.platform.group-id}</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>

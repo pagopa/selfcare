@@ -141,7 +141,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                 : null;
         ProductId productId =  ProductId.fromValue(onboarding.getProductId());
 
-        Uni<Boolean> requiredDocuments = onboarding.getTenantId() == null
+        Uni<Boolean> requiredDocuments = Objects.isNull(onboarding.getTenantId())
                 ? productService.isRequiredDocuments(productId, productInstitutionType, productOrigin)
                 : productService.isRequiredDocuments(productId, productInstitutionType, productOrigin,
                         onboarding.getTenantId());
@@ -802,7 +802,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<LocalDateTime> computeExpiry(String productId, String tenantId) {
-        Uni<Integer> expirationDaysUni = tenantId == null
+        Uni<Integer> expirationDaysUni = Objects.isNull(tenantId)
                 ? productService.getProductExpirationDays(productId)
                 : productService.getProductExpirationDays(productId, tenantId);
         return expirationDaysUni
@@ -812,7 +812,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<ProductResponse> productServiceFor(Onboarding onboarding) {
-        return onboarding.getTenantId() == null
+        return Objects.isNull(onboarding.getTenantId())
                 ? productService.getProduct(onboarding.getProductId())
                 : productService.getProduct(onboarding.getProductId(), onboarding.getTenantId());
     }
@@ -956,7 +956,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         var originEnum = org.openapi.quarkus.product_json.model.Origin
                 .valueOf(onboarding.getInstitution().getOrigin().name());
 
-        Uni<List<RequiredDocumentResponse>> requiredDocuments = onboarding.getTenantId() == null
+        Uni<List<RequiredDocumentResponse>> requiredDocuments = Objects.isNull(onboarding.getTenantId())
                 ? productService.getRequiredDocuments(productId, instType, originEnum)
                 : productService.getRequiredDocuments(productId, instType, originEnum, onboarding.getTenantId());
         return requiredDocuments

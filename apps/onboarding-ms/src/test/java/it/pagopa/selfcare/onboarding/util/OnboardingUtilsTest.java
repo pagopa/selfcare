@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
 import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
@@ -170,6 +172,25 @@ class OnboardingUtilsTest {
         assertEquals("signed.pdf", request.fileName);
         assertNull(request.request.getTemplatePath());
         assertNull(request.request.getTemplateVersion());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = OnboardingStatus.class, names = {"TOBEVALIDATED", "PENDING_IN_REVIEW"})
+    void buildUploadSignedContractRequest_requiresProductBeforeBuildingRequest(OnboardingStatus status) {
+        // Given
+        Onboarding onboarding = new Onboarding();
+        onboarding.setStatus(status);
+        onboarding.setInstitution(new it.pagopa.selfcare.onboarding.entity.Institution());
+        onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        FormItem formItem = FormItem.builder().file(new File("signed.pdf")).fileName("signed.pdf").build();
+
+        // When
+        NullPointerException failure = assertThrows(NullPointerException.class,
+                () -> onboardingUtils.buildUploadSignedContractRequest(onboarding, false, formItem, null,
+                        DocumentType.INSTITUTION, Collections.emptyList(), 1));
+
+        // Then
+        assertEquals("Product is required to build a signed contract request", failure.getMessage());
     }
 
     @Test
