@@ -45,6 +45,7 @@ Before running you must set these properties as environment variables.
 ### Product catalog and tenants
 
 The catalog is read through Product MS, not directly from `products.json` on Azure Blob.
+`selfcare-onboarding-sdk-product` is not a dependency, including in test scope.
 The generated client uses the current tenant-aware contract, such as
 `/product/{tenantId}/{productId}/valid`. Keep `src/main/openapi/product.json`
 aligned with `apps/product/src/main/docs/openapi.json`, then regenerate with the
@@ -143,6 +144,10 @@ HTTP server, checking tenant paths, forwarded headers, isolation, response model
 and failures.
 `ProductServiceImplTest` also captures formatted lookup logs to verify that
 identifiers stay on one line without changing the values sent to Product API.
+The onboarding business-service tests use API-native `ProductResponse` fixtures
+and mock the current reactive `ProductService` directly, without a legacy Product
+SDK mock or model conversion layer. HTTP contract tests and Cucumber continue to
+exercise the real adapter and generated client against their HTTP test servers.
 
 ### Coverage
 

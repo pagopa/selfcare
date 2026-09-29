@@ -203,18 +203,6 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selfcare-onboarding-sdk-product</artifactId>
-            <version>${commons-sdk-version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.azure</groupId>
-                    <artifactId>azure-core-http-netty</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-health</artifactId>
             <version>${common-sdk-health-version}</version>
         </dependency>
