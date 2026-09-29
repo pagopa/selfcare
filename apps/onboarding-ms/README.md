@@ -65,6 +65,8 @@ mapping. Mappings for other institution types are not a fallback. Existing contr
 imports and signed uploads retain their optional template metadata.
 Building a signed-contract request requires a Product response, checked with
 `Objects.requireNonNull`; a present product may still have no template metadata.
+Onboarding expiration uses the JVM's system-default time zone explicitly,
+preserving the existing local-time behavior rather than switching to UTC.
 
 Onboarding does not read the catalog from Blob, but tenant SDK **0.2.0** still
 requires `tenant.storage.mandatory-keys` and validates the corresponding

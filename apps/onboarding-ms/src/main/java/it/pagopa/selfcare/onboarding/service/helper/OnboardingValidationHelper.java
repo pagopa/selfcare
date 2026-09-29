@@ -443,7 +443,7 @@ public class OnboardingValidationHelper {
                 : productService.getValidProduct(productId, tenantId);
         return productUni
                 .onItem().transform(product -> isProductEnabledOrTaxCodeAllowed(product, taxCode))
-                .onItem().transformToUni(allowed -> allowed
+                .onItem().transformToUni(allowed -> Boolean.TRUE.equals(allowed)
                         ? Uni.createFrom().item(Boolean.TRUE)
                         : Uni.createFrom().failure(new OnboardingNotAllowedException(
                                 String.format(ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE.getMessage(), taxCode, productId),

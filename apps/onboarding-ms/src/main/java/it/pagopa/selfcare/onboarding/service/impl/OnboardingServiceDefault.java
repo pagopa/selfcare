@@ -40,6 +40,7 @@ import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -755,10 +756,6 @@ public class OnboardingServiceDefault implements OnboardingService {
         return 1;
     }
 
-    private Uni<ProductResponse> product(String productId) {
-        return productService.getValidProduct(productId);
-    }
-
     public Uni<ProductResponse> getProductByOnboarding(Onboarding onboarding) {
         return productService.getValidProduct(onboarding.getProductId(), onboarding.getTenantId())
                 .onFailure().transform(ex -> new OnboardingNotAllowedException(
@@ -806,7 +803,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                 ? productService.getProductExpirationDays(productId)
                 : productService.getProductExpirationDays(productId, tenantId);
         return expirationDaysUni
-                .onItem().transform(expirationDays -> OffsetDateTime.now()
+                .onItem().transform(expirationDays -> OffsetDateTime.now(ZoneId.systemDefault())
                         .plusDays(expirationDays)
                         .toLocalDateTime());
     }

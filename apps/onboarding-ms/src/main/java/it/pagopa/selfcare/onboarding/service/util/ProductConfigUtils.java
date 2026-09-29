@@ -4,6 +4,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
 import org.openapi.quarkus.product_json.model.ContractType;
+import org.openapi.quarkus.product_json.model.Features;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RoleMapping;
 
@@ -29,14 +30,14 @@ public final class ProductConfigUtils {
     public static int expirationDays(ProductResponse product) {
         return Optional.ofNullable(product)
                 .map(ProductResponse::getFeatures)
-                .map(features -> features.getExpirationDays())
+                .map(Features::getExpirationDays)
                 .orElse(DEFAULT_EXPIRATION_DAYS);
     }
 
     public static boolean delegable(ProductResponse product) {
         return Optional.ofNullable(product)
                 .map(ProductResponse::getFeatures)
-                .map(features -> features.getDelegable())
+                .map(Features::getDelegable)
                 .orElse(Boolean.FALSE);
     }
 
@@ -44,7 +45,7 @@ public final class ProductConfigUtils {
         return roleMappings(product, institutionType).values().stream()
                 .filter(mapping -> Optional.ofNullable(mapping.getPhasesAdditionAllowed())
                         .orElse(List.of()).stream()
-                        .anyMatch(phase -> ONBOARDING_PHASE.equalsIgnoreCase(phase)))
+                        .anyMatch(ONBOARDING_PHASE::equalsIgnoreCase))
                 .map(RoleMapping::getRole)
                 .filter(Objects::nonNull)
                 .map(PartyRole::valueOf)
