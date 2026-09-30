@@ -27,9 +27,12 @@ on:
         type: boolean
         required: false
         default: false
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID:
+      notification_trigger_secret_name:
+        type: string
+        description: >-
+          Name of the repository secret holding the Slack trigger ID
+          (e.g. API_NOTIFICATION_TRIGGERS_ID_EXTERNAL). The caller must use "secrets: inherit"
+          so that environment secrets (ARM_CLIENT_ID on "<env>-cd") are available too.
         required: true
 
 env:
@@ -163,7 +166,7 @@ jobs:
         if: ${{ inputs.enable_notification && steps.optic_diff.outputs.changes_detected == 'true' }}
         run: |
           body_content=$(cat changed_operations.txt)
-          curl -X POST https://hooks.slack.com/triggers/${{ secrets.API_NOTIFICATION_TRIGGERS_ID }} \
+          curl -X POST https://hooks.slack.com/triggers/${{ secrets[inputs.notification_trigger_secret_name] }} \
           -H "Content-Type: application/json" \
           -d '{
                 "body": "'"$body_content"'",
