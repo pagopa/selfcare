@@ -79,9 +79,6 @@ jobs:
 
     secrets:
       API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_EXTERNAL }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   update_docs_and_notification_support:
     name: "[Support API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -96,9 +93,6 @@ jobs:
 
     secrets:
       API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   update_docs_and_notification_internal:
     name: "[Internal API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -113,9 +107,6 @@ jobs:
 
     secrets:
       API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_INTERNAL }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   update_docs_and_notification_support_pnpg:
     name: "[Support PNPG API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -131,9 +122,6 @@ jobs:
 
     secrets:
       API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
   update_docs_and_notification_billing_portal:
     name: "[Billing Portal API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -148,6 +136,3 @@ jobs:
 
     secrets:
       API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
