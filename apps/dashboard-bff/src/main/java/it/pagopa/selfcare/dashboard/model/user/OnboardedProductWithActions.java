@@ -24,6 +24,8 @@ public class OnboardedProductWithActions {
 
   private PartyRole role;
 
+  private Boolean partnerTechRole;
+
   private Env env;
 
   private LocalDateTime createdAt;

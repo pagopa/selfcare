@@ -67,6 +67,10 @@ class ProductControllerTest extends BaseControllerTest {
                 .thenReturn(new EnumMap<>(PartyRole.class) {{
                     put(PartyRole.MANAGER, productRoleInfo);
                 }});
+        when(productServiceMock.getPartnerTechRoles(productId, institutionType))
+          .thenReturn(new EnumMap<>(PartyRole.class) {{
+              put(PartyRole.MANAGER, productRoleInfo);
+          }});
         // when
         mockMvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/roles", productId)
@@ -79,6 +83,8 @@ class ProductControllerTest extends BaseControllerTest {
         // then
         verify(productServiceMock, times(1))
                 .getProductRoles(productId, institutionType);
+        verify(productServiceMock, times(1))
+                .getPartnerTechRoles(productId, institutionType);
         verifyNoMoreInteractions(productServiceMock);
     }
 
