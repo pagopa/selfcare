@@ -11,6 +11,7 @@ import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
@@ -30,7 +31,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -382,14 +385,24 @@ public class TokenV2Controller {
                                                  @RequestParam("attachmentName") String attachmentName,
                                                  @RequestPart(value = "attachmentId", required = false) String attachmentId,
                                                  @RequestPart(value = "attachmentDescription", required = false) String attachmentDescription,
-                                                 @RequestPart MultipartFile attachment) {
+                                                  @RequestPart MultipartFile attachment,
+                                                  HttpServletRequest request) {
         log.trace("uploadAttachment start");
         FileValidationUtils.validatePdfOrP7m(attachment);
         String sanitizedFileName = Encode.forJava(attachment.getOriginalFilename());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, attachment, attachmentName, attachmentId, attachmentDescription);
+        tokenService.uploadAttachment(requiredTenantId(request), onboardingId, attachment,
+                attachmentName, attachmentId, attachmentDescription);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    }
+
+    private String requiredTenantId(HttpServletRequest request) {
+        String tenantId = request.getHeader("X-Tenant-Id");
+        if (!StringUtils.hasText(tenantId)) {
+            throw new InvalidRequestException("Tenant context is required");
+        }
+        return tenantId;
     }
 
     @GetMapping(value = "/{onboardingId}/products/{productId}/aggregates-csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)

@@ -37,25 +37,26 @@ class ProductMsConnectorImplTest {
     @Test
     void getOriginsTest_success() {
         // given
+        String tenantId = "AR";
         String productId = "product-test";
 
         ProductOriginResponse productOriginResponse = new ProductOriginResponse();
         OriginResult mappedResult = new OriginResult();
         mappedResult.setOrigins(List.of());
 
-        when(msProductApiClientMock._getProductOriginsById(productId))
+        when(msProductApiClientMock._getProductOriginsById(tenantId, productId))
                 .thenReturn(ResponseEntity.ok(productOriginResponse));
         when(productMapperMock.toOriginResult(productOriginResponse))
                 .thenReturn(mappedResult);
 
         // when
-        OriginResult result = productMsConnector.getOrigins(productId);
+        OriginResult result = productMsConnector.getOrigins(tenantId, productId);
 
         // then
         assertNotNull(result);
         assertSame(mappedResult, result);
 
-        verify(msProductApiClientMock, times(1))._getProductOriginsById(productId);
+        verify(msProductApiClientMock, times(1))._getProductOriginsById(tenantId, productId);
         verify(productMapperMock, times(1)).toOriginResult(productOriginResponse);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -63,9 +64,10 @@ class ProductMsConnectorImplTest {
     @Test
     void getOriginsTest_nullBodyHandled() {
         // given
+        String tenantId = "AR";
         String productId = "product-test";
 
-        when(msProductApiClientMock._getProductOriginsById(productId))
+        when(msProductApiClientMock._getProductOriginsById(tenantId, productId))
                 .thenReturn(ResponseEntity.ok(null));
 
         OriginResult mappedResult = new OriginResult();
@@ -74,13 +76,13 @@ class ProductMsConnectorImplTest {
         when(productMapperMock.toOriginResult(null)).thenReturn(mappedResult);
 
         // when
-        OriginResult result = productMsConnector.getOrigins(productId);
+        OriginResult result = productMsConnector.getOrigins(tenantId, productId);
 
         // then
         assertNotNull(result);
         assertSame(mappedResult, result);
 
-        verify(msProductApiClientMock, times(1))._getProductOriginsById(productId);
+        verify(msProductApiClientMock, times(1))._getProductOriginsById(tenantId, productId);
         verify(productMapperMock, times(1)).toOriginResult(null);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -88,6 +90,7 @@ class ProductMsConnectorImplTest {
     @Test
     void getRequiredDocuments_success() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
@@ -102,20 +105,20 @@ class ProductMsConnectorImplTest {
         model.setName("Statuto");
         model.setRequired(true);
 
-        when(msProductApiClientMock._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA))
                 .thenReturn(ResponseEntity.ok(List.of(dto)));
         when(productMapperMock.toRequiredDocumentModelList(List.of(dto)))
                 .thenReturn(List.of(model));
 
         // when
-        List<RequiredDocumentModel> result = productMsConnector.getRequiredDocuments(productId, institutionType, origin);
+        List<RequiredDocumentModel> result = productMsConnector.getRequiredDocuments(tenantId, productId, institutionType, origin);
 
         // then
         assertNotNull(result);
         assertEquals(1, result.size());
         assertEquals("doc-1", result.get(0).getId());
 
-        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA);
         verify(productMapperMock, times(1)).toRequiredDocumentModelList(List.of(dto));
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -123,81 +126,85 @@ class ProductMsConnectorImplTest {
     @Test
     void getRequiredDocuments_emptyList() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA))
                 .thenReturn(ResponseEntity.ok(List.of()));
         when(productMapperMock.toRequiredDocumentModelList(List.of()))
                 .thenReturn(List.of());
 
         // when
-        List<RequiredDocumentModel> result = productMsConnector.getRequiredDocuments(productId, institutionType, origin);
+        List<RequiredDocumentModel> result = productMsConnector.getRequiredDocuments(tenantId, productId, institutionType, origin);
 
         // then
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA);
     }
 
     @Test
     void isRequiredDocumentsEnabled_returnsTrue() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA))
                 .thenReturn(responseWithFlag("true"));
 
         // when
-        boolean result = productMsConnector.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        boolean result = productMsConnector.isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin);
 
         // then
         assertTrue(result);
 
-        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
 
     @Test
     void isRequiredDocumentsEnabled_returnsFalse() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA))
                 .thenReturn(responseWithFlag("false"));
 
         // when
-        boolean result = productMsConnector.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        boolean result = productMsConnector.isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin);
 
         // then
         assertFalse(result);
 
-        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA);
     }
 
     @Test
     void isRequiredDocumentsEnabled_missingHeaderReturnsFalse() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA))
                 .thenReturn(ResponseEntity.ok().build());
 
         // when
-        boolean result = productMsConnector.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        boolean result = productMsConnector.isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin);
 
         // then
         assertFalse(result);
 
-        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA);
     }
 
     private static ResponseEntity<Void> responseWithFlag(String value) {
