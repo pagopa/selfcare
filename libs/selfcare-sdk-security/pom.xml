@@ -7,7 +7,7 @@
   <artifactId>selfcare-sdk-security</artifactId>
   <name>selfcare-sdk-security</name>
   <packaging>jar</packaging>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
   <parent>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selfcare-sdk-pom</artifactId>
@@ -27,7 +27,7 @@
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.release>17</maven.compiler.release>
-    <common-sdk-tenant-version>0.2.0</common-sdk-tenant-version>
+    <common-sdk-tenant-version>0.3.0</common-sdk-tenant-version>
   </properties>
 
   <dependencyManagement>
@@ -112,4 +112,21 @@
     </dependency>
 
   </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.smallrye</groupId>
+        <artifactId>jandex-maven-plugin</artifactId>
+        <version>3.1.8</version>
+        <executions>
+          <execution>
+            <id>make-index</id>
+            <goals>
+              <goal>jandex</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
 </project>

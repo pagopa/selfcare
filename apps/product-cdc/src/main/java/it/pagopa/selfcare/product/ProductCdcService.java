@@ -14,19 +14,18 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import io.quarkus.mongodb.ChangeStreamOptions;
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.quarkus.mongodb.reactive.ReactiveMongoCollection;
 import io.quarkus.runtime.Quarkus;
 import io.quarkus.runtime.Startup;
 import io.quarkus.runtime.configuration.ConfigUtils;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.product.constant.ProductConstant;
 import it.pagopa.selfcare.product.mapper.ProductMapper;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.TrackEventInput;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.util.*;
 import lombok.extern.slf4j.Slf4j;
@@ -40,10 +39,8 @@ import org.eclipse.microprofile.config.inject.ConfigProperty;
 public class ProductCdcService {
   private final TelemetryClient telemetryClient;
   private final TableClient tableClient;
-  private final String mongodbDatabase;
-  private final ReactiveMongoClient mongoClient;
-  private final ProductService productService;
-  private final AzureBlobClient azureBlobClient;
+  private final TenantProductCdcResourceProvider resourceProvider;
+  private final TenantRegistry tenantRegistry;
   private final ProductMapper productMapper;
   private final String collectionName;
   private final ObjectMapper objectMapper;
@@ -52,23 +49,19 @@ public class ProductCdcService {
   String productsFilePath;
 
   public ProductCdcService(
-      ReactiveMongoClient mongoClient,
-      @ConfigProperty(name = "quarkus.mongodb.database") String mongodbDatabase,
+      TenantProductCdcResourceProvider resourceProvider,
+      TenantRegistry tenantRegistry,
       @ConfigProperty(name = "product-cdc.mongodb.collection") String collectionName,
       @ConfigProperty(name = "product-cdc.mongodb.watch.enabled") Boolean cdcEnable,
       TelemetryClient telemetryClient,
       TableClient tableClient,
-      ProductService productService,
-      AzureBlobClient azureBlobClient,
       ProductMapper productMapper,
       ObjectMapper objectMapper) {
-    this.mongoClient = mongoClient;
-    this.mongodbDatabase = mongodbDatabase;
+    this.resourceProvider = resourceProvider;
+    this.tenantRegistry = tenantRegistry;
     this.collectionName = collectionName;
     this.telemetryClient = telemetryClient;
     this.tableClient = tableClient;
-    this.productService = productService;
-    this.azureBlobClient = azureBlobClient;
     this.productMapper = productMapper;
     this.objectMapper = objectMapper;
     telemetryClient.getContext().getOperation().setName(ProductConstant.OPERATION_NAME);
@@ -78,7 +71,12 @@ public class ProductCdcService {
   }
 
   private void initOrderStream() {
-    log.info("Starting initOrderStream ... ");
+    tenantRegistry.supportedTenantIds().forEach(this::initTenantOrderStream);
+  }
+
+  private void initTenantOrderStream(String tenantId) {
+    TenantProductCdcResources resources = resourceProvider.forTenant(tenantId);
+    log.info("Starting product CDC watcher for tenant {}", tenantId);
 
     // Retrieve last resumeToken for watching collection at specific operation
     String resumeToken = null;
@@ -87,7 +85,7 @@ public class ProductCdcService {
       try {
         TableEntity cdcStartAtEntity =
             tableClient.getEntity(
-                ProductConstant.CDC_START_AT_PARTITION_KEY, ProductConstant.CDC_START_AT_ROW_KEY);
+                ProductConstant.partitionKey(tenantId), ProductConstant.CDC_START_AT_ROW_KEY);
         if (Objects.nonNull(cdcStartAtEntity)) {
           resumeToken =
               (String) cdcStartAtEntity.getProperty(ProductConstant.CDC_START_AT_PROPERTY);
@@ -108,7 +106,7 @@ public class ProductCdcService {
     }
 
     // Initialize watching collection
-    ReactiveMongoCollection<Product> dataCollection = getCollection();
+    ReactiveMongoCollection<Product> dataCollection = getCollection(resources);
     ChangeStreamOptions options =
         new ChangeStreamOptions().fullDocument(FullDocument.UPDATE_LOOKUP);
     if (Objects.nonNull(resumeToken)) {
@@ -125,7 +123,7 @@ public class ProductCdcService {
     publisher
         .subscribe()
         .with(
-            this::consumerEvent,
+            document -> consumerEvent(tenantId, document),
             failure -> {
               log.error(
                   "Error during subscribe collection, exception: {} , message: {}",
@@ -136,28 +134,31 @@ public class ProductCdcService {
               Quarkus.asyncExit();
             });
 
-    log.info("Completed initOrderStream ... ");
+    log.info("Completed product CDC watcher for tenant {}", tenantId);
   }
 
-  private ReactiveMongoCollection<Product> getCollection() {
-    return mongoClient.getDatabase(mongodbDatabase).getCollection(collectionName, Product.class);
+  private ReactiveMongoCollection<Product> getCollection(TenantProductCdcResources resources) {
+    return resources
+        .mongoClient()
+        .getDatabase(resources.database())
+        .getCollection(collectionName, Product.class);
   }
 
-  protected void consumerEvent(ChangeStreamDocument<Product> document) {
+  protected void consumerEvent(String tenantId, ChangeStreamDocument<Product> document) {
     assert document.getFullDocument() != null;
     assert document.getDocumentKey() != null;
 
     log.info("Starting consumerProductEvent ... ");
     log.info("Product CDC update products having id {}", document.getFullDocument().getId());
 
-    invokeCreationDocument(document.getFullDocument())
+    invokeCreationDocument(tenantId, document.getFullDocument())
         .subscribe()
         .with(
             result -> {
               log.info(
                   "Product CDC update products having id: {} successfull",
                   document.getDocumentKey().toJson());
-              updateLastResumeToken(document.getResumeToken());
+              updateLastResumeToken(tenantId, document.getResumeToken());
               constructMapAndTrackEvent(
                   document.getDocumentKey().toJson(),
                   "TRUE",
@@ -176,7 +177,13 @@ public class ProductCdcService {
     log.info("End consumerProductEvent ... ");
   }
 
-  public Uni<Object> invokeCreationDocument(Product product) {
+  public Uni<Object> invokeCreationDocument(String tenantId, Product product) {
+    TenantProductCdcResources resources = resourceProvider.forTenant(tenantId);
+    if (product.getTenantId() != null && !tenantId.equalsIgnoreCase(product.getTenantId())) {
+      return Uni.createFrom()
+          .failure(new IllegalStateException("Product tenant does not match CDC tenant"));
+    }
+    ProductService productService = resources.productService();
     return Uni.createFrom()
         .item(productService.getProducts(false, true))
         .onItem()
@@ -195,18 +202,20 @@ public class ProductCdcService {
             products ->
                 Uni.createFrom()
                     .item(
-                        azureBlobClient.uploadFilePath(
-                            productsFilePath, convertListToJsonBytes(products))));
+                        resources
+                            .azureBlobClient()
+                            .uploadFilePath(
+                                resources.productsFilePath(), convertListToJsonBytes(products))));
   }
 
-  private void updateLastResumeToken(BsonDocument resumeToken) {
+  private void updateLastResumeToken(String tenantId, BsonDocument resumeToken) {
     // Table CdCStartAt will be updated with the last resume token
     Map<String, Object> properties = new HashMap<>();
     properties.put(ProductConstant.CDC_START_AT_PROPERTY, resumeToken.toJson());
 
     TableEntity tableEntity =
         new TableEntity(
-                ProductConstant.CDC_START_AT_PARTITION_KEY, ProductConstant.CDC_START_AT_ROW_KEY)
+                ProductConstant.partitionKey(tenantId), ProductConstant.CDC_START_AT_ROW_KEY)
             .setProperties(properties);
     tableClient.upsertEntity(tableEntity);
   }

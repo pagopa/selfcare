@@ -11,13 +11,13 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ManagingInstitution {
 
-    private String institutionId;
+  private String institutionId;
 
-    private String description;
+  private String description;
 
-    /**
-     * Signing step to which this institution is associated.
-     * Corresponds to the 'order' field of SigningStep.
-     */
-    private int signingStep;
+  /**
+   * Signing step to which this institution is associated. Corresponds to the 'order' field of
+   * SigningStep.
+   */
+  private int signingStep;
 }

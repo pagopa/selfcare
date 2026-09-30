@@ -97,18 +97,26 @@ locals {
       value = "selcProduct"
     },
     {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"AR\":{\"mongo\":{\"account\":\"cosmos-ar\",\"database\":\"selcProduct\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_AR\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_AR\"},\"storages\":{\"contracts\":{\"account\":\"documents-storage\",\"container\":\"sc-${module.local.config.env_short}-documents-blob\",\"pathPrefix\":\"\",\"authentication\":{\"type\":\"CONNECTION_STRING\",\"connectionStringEnvVar\":\"BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE_AR\"}}}}}"
+    },
+    {
       name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
       value = "sc-${module.local.config.env_short}-documents-blob"
     }
   ]
 
   secrets_names_product_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"            = "appinsights-connection-string"
-    "SELFCARE_DATA_ENCRIPTION_KEY"                     = "selfcare-data-encryption-key"
-    "SELFCARE_DATA_ENCRIPTION_IV"                      = "selfcare-data-encryption-iv"
-    "MONGODB_CONNECTION_STRING"                        = "mongodb-connection-string"
-    "JWT_PUBLIC_KEY"                                   = "jwt-public-key"
-    "BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE" = "documents-storage-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"               = "appinsights-connection-string"
+    "SELFCARE_DATA_ENCRIPTION_KEY"                        = "selfcare-data-encryption-key"
+    "SELFCARE_DATA_ENCRIPTION_IV"                         = "selfcare-data-encryption-iv"
+    "MONGODB_CONNECTION_STRING_AR"                        = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_AR"                                   = "jwt-public-key"
+    "BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE_AR" = "documents-storage-connection-string"
   }
 }
 

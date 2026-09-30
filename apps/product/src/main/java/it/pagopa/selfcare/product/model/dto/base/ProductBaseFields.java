@@ -14,6 +14,7 @@ import lombok.experimental.SuperBuilder;
 public class ProductBaseFields {
 
   @NotBlank private String productId;
+  @NotBlank private String tenantId;
 
   private String parentId;
   private String alias;

@@ -11,11 +11,11 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
+import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.Features;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.ProductMetadata;
-import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.RequiredDocumentFilter;
 import it.pagopa.selfcare.product.model.RoleMapping;
@@ -36,6 +36,7 @@ import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.JsonUtils;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
@@ -43,6 +44,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -59,10 +61,18 @@ class ProductServiceImplTest {
 
   @InjectMock JsonUtils jsonUtils;
 
+  @Inject TenantContext tenantContext;
+
+  @BeforeEach
+  void setUpTenant() {
+    tenantContext.setTenantId("AR");
+  }
+
   @Test
   void createProductTest() {
     // given
     ProductCreateRequest productCreateRequest = new ProductCreateRequest();
+    productCreateRequest.setTenantId("AR");
     productCreateRequest.setProductId("prod-test");
 
     Product product = Product.builder().productId("prod-test").status(null).build();
@@ -106,6 +116,7 @@ class ProductServiceImplTest {
   void createProductTest_whenExistProduct_thenIncrementVersionAndPersistsClone() {
     // given
     ProductCreateRequest productCreateRequest = new ProductCreateRequest();
+    productCreateRequest.setTenantId("AR");
     productCreateRequest.setProductId("prod-test");
     productCreateRequest.setStatus(ProductStatus.ACTIVE);
 
@@ -163,10 +174,34 @@ class ProductServiceImplTest {
   }
 
   @Test
-  void createProductTest_throwsBadRequest_whenMissingProduct() {
+  void createProductTest_throwsBadRequest_whenMissingTenant() {
     // given
     ProductCreateRequest productCreateRequest = new ProductCreateRequest();
 
+    Product product = Product.builder().id(UUID.randomUUID().toString()).status(null).build();
+
+    when(productMapperRequest.toProduct(productCreateRequest)).thenReturn(product);
+
+    // when
+    BadRequestException ex =
+        assertThrows(
+            BadRequestException.class,
+            () ->
+                productService
+                    .createProduct(productCreateRequest, "createdBy")
+                    .await()
+                    .indefinitely());
+
+    // then
+    assertTrue(ex.getMessage().contains("Missing tenantId"));
+    verify(productRepository, never()).persist(any(Product.class));
+  }
+
+  @Test
+  void createProductTest_throwsBadRequest_whenMissingProduct() {
+    // given
+    ProductCreateRequest productCreateRequest = new ProductCreateRequest();
+    productCreateRequest.setTenantId("AR");
     Product product = Product.builder().id(UUID.randomUUID().toString()).status(null).build();
 
     when(productMapperRequest.toProduct(productCreateRequest)).thenReturn(product);
@@ -213,7 +248,7 @@ class ProductServiceImplTest {
 
     // when
     ProductResponse productResponse =
-        productService.getProductById("prod-test").await().indefinitely();
+        productService.getProduct("AR", "prod-test").await().indefinitely();
 
     // then
     assertNotNull(productResponse);
@@ -227,7 +262,7 @@ class ProductServiceImplTest {
   void getProductByIdTest_whenThrowsException() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> productService.getProductById(StringUtils.EMPTY).await().indefinitely());
+        () -> productService.getProduct("AR", StringUtils.EMPTY).await().indefinitely());
     verify(productRepository, never()).findProductById(anyString());
   }
 
@@ -236,7 +271,7 @@ class ProductServiceImplTest {
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().nullItem());
     assertThrows(
         NotFoundException.class,
-        () -> productService.getProductById("prod-test").await().indefinitely());
+        () -> productService.getProduct("AR", "prod-test").await().indefinitely());
   }
 
   @Test
@@ -251,7 +286,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .patchProductById("prod-test", "createdBy", null)
+                    .patchProductById("AR", "prod-test", "createdBy", null)
                     .await()
                     .indefinitely());
 
@@ -271,7 +306,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .patchProductById(" ", "createdBy", patchRequest)
+                    .patchProductById("AR", " ", "createdBy", patchRequest)
                     .await()
                     .indefinitely());
 
@@ -292,7 +327,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .patchProductById("prod-test", "createdBy", patchRequest)
+                    .patchProductById("AR", "prod-test", "createdBy", patchRequest)
                     .await()
                     .indefinitely());
 
@@ -336,7 +371,7 @@ class ProductServiceImplTest {
     // when
     ProductResponse out =
         productService
-            .patchProductById("prod-test", "createdBy", patchRequest)
+            .patchProductById("AR", "prod-test", "createdBy", patchRequest)
             .await()
             .indefinitely();
 
@@ -355,7 +390,7 @@ class ProductServiceImplTest {
 
     // when
     Throwable thrown =
-        catchThrowable(() -> productService.deleteProductById(blank).await().indefinitely());
+        catchThrowable(() -> productService.deleteProduct("AR", blank).await().indefinitely());
 
     // then
     assertThat(thrown)
@@ -372,7 +407,7 @@ class ProductServiceImplTest {
 
     // when
     Throwable thrown =
-        catchThrowable(() -> productService.deleteProductById(productId).await().indefinitely());
+        catchThrowable(() -> productService.deleteProduct("AR", productId).await().indefinitely());
 
     // then
     assertThat(thrown)
@@ -400,7 +435,7 @@ class ProductServiceImplTest {
     when(productMapperResponse.toProductBaseResponse(any(Product.class))).thenReturn(mapped);
 
     // when
-    ProductBaseResponse out = productService.deleteProductById(productId).await().indefinitely();
+    ProductBaseResponse out = productService.deleteProduct("AR", productId).await().indefinitely();
 
     // then
     assertThat(out).isSameAs(mapped);
@@ -425,7 +460,7 @@ class ProductServiceImplTest {
 
     // when
     Throwable thrown =
-        catchThrowable(() -> productService.deleteProductById(productId).await().indefinitely());
+        catchThrowable(() -> productService.deleteProduct("AR", productId).await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(RuntimeException.class);
@@ -461,7 +496,7 @@ class ProductServiceImplTest {
 
     // when
     ProductOriginResponse productOriginResponse =
-        productService.getProductOriginsById("prod-test").await().indefinitely();
+        productService.getProductOrigins("AR", "prod-test").await().indefinitely();
 
     // then
     assertNotNull(productOriginResponse);
@@ -477,7 +512,7 @@ class ProductServiceImplTest {
     // when
     assertThrows(
         IllegalArgumentException.class,
-        () -> productService.getProductOriginsById(StringUtils.EMPTY).await().indefinitely());
+        () -> productService.getProductOrigins("AR", StringUtils.EMPTY).await().indefinitely());
 
     // then
     verify(productRepository, never()).findProductById(anyString());
@@ -491,7 +526,7 @@ class ProductServiceImplTest {
     // when
     assertThrows(
         NotFoundException.class,
-        () -> productService.getProductOriginsById("prod-test").await().indefinitely());
+        () -> productService.getProductOrigins("AR", "prod-test").await().indefinitely());
   }
 
   // -------------------------------------------------------------------------
@@ -523,7 +558,7 @@ class ProductServiceImplTest {
     // when
     WorkflowTypeResponse response =
         productService
-            .getWorkflowType("prod-test", InstitutionType.PA, Origin.IPA)
+            .getWorkflowType("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -558,7 +593,7 @@ class ProductServiceImplTest {
     // when
     WorkflowTypeResponse response =
         productService
-            .getWorkflowType("prod-test", InstitutionType.GSP, Origin.SELC)
+            .getWorkflowType("AR", "prod-test", InstitutionType.GSP, Origin.SELC)
             .await()
             .indefinitely();
 
@@ -572,7 +607,11 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getWorkflowType("  ", InstitutionType.PA, Origin.IPA).await().indefinitely());
+            () ->
+                productService
+                    .getWorkflowType("AR", "  ", InstitutionType.PA, Origin.IPA)
+                    .await()
+                    .indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing productId");
@@ -584,10 +623,16 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getWorkflowType("prod-test", null, Origin.IPA).await().indefinitely());
+            () ->
+                productService
+                    .getWorkflowType("AR", "prod-test", null, Origin.IPA)
+                    .await()
+                    .indefinitely());
 
     // then
-    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    assertThat(thrown)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing institutionType");
     verify(productRepository, never()).findProductById(anyString());
   }
 
@@ -596,7 +641,11 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getWorkflowType("prod-test", InstitutionType.PA, null).await().indefinitely());
+            () ->
+                productService
+                    .getWorkflowType("AR", "prod-test", InstitutionType.PA, null)
+                    .await()
+                    .indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing origin");
@@ -613,24 +662,18 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getWorkflowType("prod-missing", InstitutionType.PA, Origin.IPA)
+                    .getWorkflowType("AR", "prod-missing", InstitutionType.PA, Origin.IPA)
                     .await()
                     .indefinitely());
 
     // then
-    assertThat(thrown)
-        .isInstanceOf(NotFoundException.class)
-        .hasMessageContaining("prod-missing");
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
   }
 
   @Test
   void getWorkflowType_throwsNotFound_whenWorkflowRulesIsEmpty() {
     // given
-    Product product =
-        Product.builder()
-            .productId("prod-test")
-            .workflowRules(List.of())
-            .build();
+    Product product = Product.builder().productId("prod-test").workflowRules(List.of()).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -639,7 +682,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getWorkflowType("prod-test", InstitutionType.PA, Origin.IPA)
+                    .getWorkflowType("AR", "prod-test", InstitutionType.PA, Origin.IPA)
                     .await()
                     .indefinitely());
 
@@ -671,7 +714,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getWorkflowType("prod-test", InstitutionType.PA, Origin.SELC)
+                    .getWorkflowType("AR", "prod-test", InstitutionType.PA, Origin.SELC)
                     .await()
                     .indefinitely());
 
@@ -686,11 +729,11 @@ class ProductServiceImplTest {
   void createProductTest_whenChildProduct_thenSetsRequiresParentOnboardingAndValidatesParent() {
     // given
     ProductCreateRequest request = new ProductCreateRequest();
+    request.setTenantId("AR");
     request.setProductId("prod-io-premium");
     request.setParentId("prod-io");
 
-    Product product =
-        Product.builder().productId("prod-io-premium").parentId("prod-io").build();
+    Product product = Product.builder().productId("prod-io-premium").parentId("prod-io").build();
 
     Product parent = Product.builder().productId("prod-io").build();
 
@@ -722,11 +765,11 @@ class ProductServiceImplTest {
   void createProductTest_whenParentNotFound_thenBadRequest() {
     // given
     ProductCreateRequest request = new ProductCreateRequest();
+    request.setTenantId("AR");
     request.setProductId("prod-io-premium");
     request.setParentId("prod-io");
 
-    Product product =
-        Product.builder().productId("prod-io-premium").parentId("prod-io").build();
+    Product product = Product.builder().productId("prod-io-premium").parentId("prod-io").build();
 
     when(productMapperRequest.toProduct(request)).thenReturn(product);
     when(productRepository.findProductById("prod-io")).thenReturn(Uni.createFrom().nullItem());
@@ -747,6 +790,7 @@ class ProductServiceImplTest {
   void createProductTest_whenParentIdEqualsProductId_thenBadRequest() {
     // given
     ProductCreateRequest request = new ProductCreateRequest();
+    request.setTenantId("AR");
     request.setProductId("prod-io");
     request.setParentId("prod-io");
 
@@ -769,8 +813,7 @@ class ProductServiceImplTest {
   @Test
   void patchProductByIdTest_whenSettingParentId_thenAppliesDefaultsAndValidatesParent() {
     // given
-    ProductPatchRequest patchRequest =
-        ProductPatchRequest.builder().parentId("prod-io").build();
+    ProductPatchRequest patchRequest = ProductPatchRequest.builder().parentId("prod-io").build();
 
     Product current = new Product();
     current.setProductId("prod-io-premium");
@@ -794,7 +837,7 @@ class ProductServiceImplTest {
 
     // when
     productService
-        .patchProductById("prod-io-premium", "createdBy", patchRequest)
+        .patchProductById("AR", "prod-io-premium", "createdBy", patchRequest)
         .await()
         .indefinitely();
 
@@ -808,8 +851,7 @@ class ProductServiceImplTest {
   @Test
   void patchProductByIdTest_whenClearingParentId_thenRemovesRequiresParentOnboarding() {
     // given
-    ProductPatchRequest patchRequest =
-        ProductPatchRequest.builder().parentId("").build();
+    ProductPatchRequest patchRequest = ProductPatchRequest.builder().parentId("").build();
 
     Product current = new Product();
     current.setProductId("prod-io-premium");
@@ -832,7 +874,7 @@ class ProductServiceImplTest {
 
     // when
     productService
-        .patchProductById("prod-io-premium", "createdBy", patchRequest)
+        .patchProductById("AR", "prod-io-premium", "createdBy", patchRequest)
         .await()
         .indefinitely();
 
@@ -872,7 +914,7 @@ class ProductServiceImplTest {
     // when
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.GSP, Origin.SELC)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.GSP, Origin.SELC)
             .await()
             .indefinitely();
 
@@ -905,7 +947,7 @@ class ProductServiceImplTest {
     // when
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -916,18 +958,14 @@ class ProductServiceImplTest {
   @Test
   void isRequiredDocumentsEnabled_returnsFalse_whenRequiredDocumentsIsNull() {
     // given
-    Product product =
-        Product.builder()
-            .productId("prod-test")
-            .requiredDocuments(null)
-            .build();
+    Product product = Product.builder().productId("prod-test").requiredDocuments(null).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
     // when
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -938,18 +976,14 @@ class ProductServiceImplTest {
   @Test
   void isRequiredDocumentsEnabled_returnsFalse_whenRequiredDocumentsIsEmpty() {
     // given
-    Product product =
-        Product.builder()
-            .productId("prod-test")
-            .requiredDocuments(List.of())
-            .build();
+    Product product = Product.builder().productId("prod-test").requiredDocuments(List.of()).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
     // when
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -965,11 +999,7 @@ class ProductServiceImplTest {
             .productId("prod-test")
             .requiredDocuments(
                 List.of(
-                    RequiredDocument.builder()
-                        .id("doc-1")
-                        .name("Allegato A")
-                        .filter(null)
-                        .build()))
+                    RequiredDocument.builder().id("doc-1").name("Allegato A").filter(null).build()))
             .build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
@@ -977,7 +1007,7 @@ class ProductServiceImplTest {
     // when
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -1016,7 +1046,7 @@ class ProductServiceImplTest {
     // when
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -1034,14 +1064,13 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .isRequiredDocumentsEnabled("prod-missing", InstitutionType.PA, Origin.IPA)
+                    .isRequiredDocumentsEnabled(
+                        "AR", "prod-missing", InstitutionType.PA, Origin.IPA)
                     .await()
                     .indefinitely());
 
     // then
-    assertThat(thrown)
-        .isInstanceOf(NotFoundException.class)
-        .hasMessageContaining("prod-missing");
+    assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
   }
 
   @Test
@@ -1051,7 +1080,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .isRequiredDocumentsEnabled("  ", InstitutionType.PA, Origin.IPA)
+                    .isRequiredDocumentsEnabled("AR", "  ", InstitutionType.PA, Origin.IPA)
                     .await()
                     .indefinitely());
 
@@ -1067,12 +1096,14 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .isRequiredDocumentsEnabled("prod-test", null, Origin.IPA)
+                    .isRequiredDocumentsEnabled("AR", "prod-test", null, Origin.IPA)
                     .await()
                     .indefinitely());
 
     // then
-    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    assertThat(thrown)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing institutionType");
     verify(productRepository, never()).findProductById(anyString());
   }
 
@@ -1083,7 +1114,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, null)
+                    .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, null)
                     .await()
                     .indefinitely());
 
@@ -1115,7 +1146,7 @@ class ProductServiceImplTest {
     // when â€” origin IPA matches but institutionType PA does not match GSP
     Boolean enabled =
         productService
-            .isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA)
+            .isRequiredDocumentsEnabled("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -1201,7 +1232,7 @@ class ProductServiceImplTest {
     // when
     List<RequiredDocumentResponse> result =
         productService
-            .getRequiredDocuments("prod-test", InstitutionType.GSP, Origin.SELC)
+            .getRequiredDocuments("AR", "prod-test", InstitutionType.GSP, Origin.SELC)
             .await()
             .indefinitely();
 
@@ -1238,7 +1269,7 @@ class ProductServiceImplTest {
     // when
     List<RequiredDocumentResponse> result =
         productService
-            .getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA)
+            .getRequiredDocuments("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -1257,7 +1288,7 @@ class ProductServiceImplTest {
     // when
     List<RequiredDocumentResponse> result =
         productService
-            .getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA)
+            .getRequiredDocuments("AR", "prod-test", InstitutionType.PA, Origin.IPA)
             .await()
             .indefinitely();
 
@@ -1276,7 +1307,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getRequiredDocuments("prod-missing", InstitutionType.PA, Origin.IPA)
+                    .getRequiredDocuments("AR", "prod-missing", InstitutionType.PA, Origin.IPA)
                     .await()
                     .indefinitely());
 
@@ -1291,7 +1322,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getRequiredDocuments("  ", InstitutionType.PA, Origin.IPA)
+                    .getRequiredDocuments("AR", "  ", InstitutionType.PA, Origin.IPA)
                     .await()
                     .indefinitely());
 
@@ -1307,12 +1338,14 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getRequiredDocuments("prod-test", null, Origin.IPA)
+                    .getRequiredDocuments("AR", "prod-test", null, Origin.IPA)
                     .await()
                     .indefinitely());
 
     // then
-    assertThat(thrown).isInstanceOf(IllegalArgumentException.class).hasMessage("Missing institutionType");
+    assertThat(thrown)
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing institutionType");
   }
 
   @Test
@@ -1322,7 +1355,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .getRequiredDocuments("prod-test", InstitutionType.PA, null)
+                    .getRequiredDocuments("AR", "prod-test", InstitutionType.PA, null)
                     .await()
                     .indefinitely());
 
@@ -1337,8 +1370,7 @@ class ProductServiceImplTest {
   @Test
   void getValidProductById_ok_whenProductActiveAndNoParent() {
     // given
-    Product product =
-        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+    Product product = Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -1348,7 +1380,7 @@ class ProductServiceImplTest {
     when(productMapperResponse.toProductResponse(product)).thenReturn(mapped);
 
     // when
-    ProductResponse out = productService.getValidProductById("prod-test").await().indefinitely();
+    ProductResponse out = productService.getValidProduct("AR", "prod-test").await().indefinitely();
 
     // then
     assertNotNull(out);
@@ -1369,7 +1401,8 @@ class ProductServiceImplTest {
     Product parent =
         Product.builder().productId("prod-parent").status(ProductStatus.ACTIVE).build();
 
-    when(productRepository.findProductById("prod-child")).thenReturn(Uni.createFrom().item(product));
+    when(productRepository.findProductById("prod-child"))
+        .thenReturn(Uni.createFrom().item(product));
     when(productRepository.findProductById("prod-parent"))
         .thenReturn(Uni.createFrom().item(parent));
 
@@ -1378,7 +1411,7 @@ class ProductServiceImplTest {
     when(productMapperResponse.toProductResponse(product)).thenReturn(mapped);
 
     // when
-    ProductResponse out = productService.getValidProductById("prod-child").await().indefinitely();
+    ProductResponse out = productService.getValidProduct("AR", "prod-child").await().indefinitely();
 
     // then
     assertNotNull(out);
@@ -1391,7 +1424,7 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getValidProductById(StringUtils.EMPTY).await().indefinitely());
+            () -> productService.getValidProduct("AR", StringUtils.EMPTY).await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
@@ -1406,7 +1439,7 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getValidProductById("prod-missing").await().indefinitely());
+            () -> productService.getValidProduct("AR", "prod-missing").await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(NotFoundException.class).hasMessageContaining("prod-missing");
@@ -1424,7 +1457,7 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getValidProductById("prod-test").await().indefinitely());
+            () -> productService.getValidProduct("AR", "prod-test").await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(NotFoundException.class);
@@ -1443,14 +1476,15 @@ class ProductServiceImplTest {
     Product parent =
         Product.builder().productId("prod-parent").status(ProductStatus.INACTIVE).build();
 
-    when(productRepository.findProductById("prod-child")).thenReturn(Uni.createFrom().item(product));
+    when(productRepository.findProductById("prod-child"))
+        .thenReturn(Uni.createFrom().item(product));
     when(productRepository.findProductById("prod-parent"))
         .thenReturn(Uni.createFrom().item(parent));
 
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getValidProductById("prod-child").await().indefinitely());
+            () -> productService.getValidProduct("AR", "prod-child").await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(NotFoundException.class);
@@ -1464,8 +1498,7 @@ class ProductServiceImplTest {
   @Test
   void getProductExpirationDays_returnsConfiguredValue() {
     // given
-    Product product =
-        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+    Product product = Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -1476,7 +1509,7 @@ class ProductServiceImplTest {
 
     // when
     ProductExpirationResponse out =
-        productService.getProductExpirationDays("prod-test").await().indefinitely();
+        productService.getProductExpirationDays("AR", "prod-test").await().indefinitely();
 
     // then
     assertNotNull(out);
@@ -1486,8 +1519,7 @@ class ProductServiceImplTest {
   @Test
   void getProductExpirationDays_returnsDefault_whenFeaturesIsNull() {
     // given
-    Product product =
-        Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
+    Product product = Product.builder().productId("prod-test").status(ProductStatus.ACTIVE).build();
 
     when(productRepository.findProductById("prod-test")).thenReturn(Uni.createFrom().item(product));
 
@@ -1498,7 +1530,7 @@ class ProductServiceImplTest {
 
     // when
     ProductExpirationResponse out =
-        productService.getProductExpirationDays("prod-test").await().indefinitely();
+        productService.getProductExpirationDays("AR", "prod-test").await().indefinitely();
 
     // then
     assertNotNull(out);
@@ -1516,7 +1548,8 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getProductExpirationDays("prod-test").await().indefinitely());
+            () ->
+                productService.getProductExpirationDays("AR", "prod-test").await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(NotFoundException.class);
@@ -1544,7 +1577,8 @@ class ProductServiceImplTest {
     mockToProductResponseEcho();
 
     // when
-    List<ProductResponse> out = productService.getProducts(false, false).await().indefinitely();
+    List<ProductResponse> out =
+        productService.getProducts("AR", false, false).await().indefinitely();
 
     // then
     assertEquals(3, out.size());
@@ -1566,7 +1600,8 @@ class ProductServiceImplTest {
     mockToProductResponseEcho();
 
     // when
-    List<ProductResponse> out = productService.getProducts(true, false).await().indefinitely();
+    List<ProductResponse> out =
+        productService.getProducts("AR", true, false).await().indefinitely();
 
     // then
     assertEquals(1, out.size());
@@ -1577,8 +1612,7 @@ class ProductServiceImplTest {
   void getProducts_excludesNotValid_whenValidTrue() {
     // given
     Product root = Product.builder().productId("prod-a").status(ProductStatus.ACTIVE).build();
-    Product inactive =
-        Product.builder().productId("prod-b").status(ProductStatus.INACTIVE).build();
+    Product inactive = Product.builder().productId("prod-b").status(ProductStatus.INACTIVE).build();
     Product phaseOut =
         Product.builder().productId("prod-c").status(ProductStatus.PHASE_OUT).build();
 
@@ -1587,7 +1621,8 @@ class ProductServiceImplTest {
     mockToProductResponseEcho();
 
     // when
-    List<ProductResponse> out = productService.getProducts(false, true).await().indefinitely();
+    List<ProductResponse> out =
+        productService.getProducts("AR", false, true).await().indefinitely();
 
     // then
     assertEquals(1, out.size());
@@ -1612,7 +1647,7 @@ class ProductServiceImplTest {
     mockToProductResponseEcho();
 
     // when
-    List<ProductResponse> out = productService.getProducts(true, true).await().indefinitely();
+    List<ProductResponse> out = productService.getProducts("AR", true, true).await().indefinitely();
 
     // then
     assertEquals(1, out.size());
@@ -1643,7 +1678,7 @@ class ProductServiceImplTest {
     // when
     Throwable thrown =
         catchThrowable(
-            () -> productService.getValidProductById("prod-test").await().indefinitely());
+            () -> productService.getValidProduct("AR", "prod-test").await().indefinitely());
 
     // then
     assertThat(thrown).isInstanceOf(NotFoundException.class);
@@ -1661,7 +1696,8 @@ class ProductServiceImplTest {
     mockToProductResponseEcho();
 
     // when
-    List<ProductResponse> out = productService.getProducts(false, true).await().indefinitely();
+    List<ProductResponse> out =
+        productService.getProducts("AR", false, true).await().indefinitely();
 
     // then
     assertEquals(1, out.size());
@@ -1700,7 +1736,7 @@ class ProductServiceImplTest {
     // when
     ProductRoleResponse out =
         productService
-            .validateProductRole("prod-test", UserRole.MANAGER, "ref")
+            .validateProductRole("AR", "prod-test", UserRole.MANAGER, "ref")
             .await()
             .indefinitely();
 
@@ -1720,8 +1756,7 @@ class ProductServiceImplTest {
                 List.of(
                     RoleMapping.builder()
                         .role(UserRole.MANAGER.name())
-                        .backOfficeRoles(
-                            List.of(BackOfficeRole.builder().code("admin").build()))
+                        .backOfficeRoles(List.of(BackOfficeRole.builder().code("admin").build()))
                         .build()))
             .build();
 
@@ -1732,7 +1767,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .validateProductRole("prod-test", UserRole.DELEGATE, "admin")
+                    .validateProductRole("AR", "prod-test", UserRole.DELEGATE, "admin")
                     .await()
                     .indefinitely());
 
@@ -1750,8 +1785,7 @@ class ProductServiceImplTest {
                 List.of(
                     RoleMapping.builder()
                         .role(UserRole.MANAGER.name())
-                        .backOfficeRoles(
-                            List.of(BackOfficeRole.builder().code("admin").build()))
+                        .backOfficeRoles(List.of(BackOfficeRole.builder().code("admin").build()))
                         .build()))
             .build();
 
@@ -1762,7 +1796,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .validateProductRole("prod-test", UserRole.MANAGER, "not-existing")
+                    .validateProductRole("AR", "prod-test", UserRole.MANAGER, "not-existing")
                     .await()
                     .indefinitely());
 
@@ -1781,7 +1815,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .validateProductRole("prod-missing", UserRole.MANAGER, "admin")
+                    .validateProductRole("AR", "prod-missing", UserRole.MANAGER, "admin")
                     .await()
                     .indefinitely());
 
@@ -1796,7 +1830,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .validateProductRole("  ", UserRole.MANAGER, "admin")
+                    .validateProductRole("AR", "  ", UserRole.MANAGER, "admin")
                     .await()
                     .indefinitely());
 
@@ -1812,7 +1846,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .validateProductRole("prod-test", null, "admin")
+                    .validateProductRole("AR", "prod-test", null, "admin")
                     .await()
                     .indefinitely());
 
@@ -1828,7 +1862,7 @@ class ProductServiceImplTest {
         catchThrowable(
             () ->
                 productService
-                    .validateProductRole("prod-test", UserRole.MANAGER, "  ")
+                    .validateProductRole("AR", "prod-test", UserRole.MANAGER, "  ")
                     .await()
                     .indefinitely());
 
@@ -1836,5 +1870,4 @@ class ProductServiceImplTest {
     assertThat(thrown).isInstanceOf(BadRequestException.class).hasMessage("Missing productRole");
     verify(productRepository, never()).findProductById(anyString());
   }
-
 }
