@@ -1,13 +1,12 @@
 package it.pagopa.selfcare.dashboard.model.mapper;
 
 import it.pagopa.selfcare.commons.base.security.SelfCareAuthority;
-import it.pagopa.selfcare.dashboard.model.product.ProductTree;
-import it.pagopa.selfcare.dashboard.model.product.BackOfficeConfigurationsResource;
-import it.pagopa.selfcare.dashboard.model.product.ProductRoleMappingsResource;
-import it.pagopa.selfcare.dashboard.model.product.ProductsResource;
-import it.pagopa.selfcare.dashboard.model.product.SubProductResource;
+import it.pagopa.selfcare.dashboard.model.product.*;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.entity.*;
+import it.pagopa.selfcare.product.entity.BackOfficeConfigurations;
+import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.entity.ProductRole;
+import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 
 import java.util.Collection;
 import java.util.Map;
@@ -81,13 +80,22 @@ public class ProductsMapper {
     }
 
 
-    public static Collection<ProductRoleMappingsResource> toProductRoleMappingsResource(Map<PartyRole, ProductRoleInfo> roleMappings) {
-        Collection<ProductRoleMappingsResource> resource = null;
+    public static ProductRolesResource toProductRolesResource(Map<PartyRole, ProductRoleInfo> roleMappings,
+                                                              Map<PartyRole, ProductRoleInfo> partnerTechRoleMappings) {
+        final ProductRolesResource resource = new ProductRolesResource();
+
         if (roleMappings != null) {
-            resource = roleMappings.entrySet().stream()
-                    .map(ProductsMapper::toProductRoleMappingsResource)
-                    .toList();
+            resource.setRoleMappings(roleMappings.entrySet().stream()
+              .map(ProductsMapper::toProductRoleMappingsResource)
+              .toList());
         }
+
+        if (partnerTechRoleMappings != null) {
+            resource.setPartnerTechRoleMappings(partnerTechRoleMappings.entrySet().stream()
+              .map(ProductsMapper::toProductRoleMappingsResource)
+              .toList());
+        }
+
         return resource;
     }
 

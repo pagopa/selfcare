@@ -1,10 +1,7 @@
 package it.pagopa.selfcare.dashboard.model.mapper;
 
 import it.pagopa.selfcare.commons.base.security.SelfCareAuthority;
-import it.pagopa.selfcare.dashboard.model.product.BackOfficeConfigurationsResource;
-import it.pagopa.selfcare.dashboard.model.product.ProductRoleMappingsResource;
-import it.pagopa.selfcare.dashboard.model.product.ProductTree;
-import it.pagopa.selfcare.dashboard.model.product.ProductsResource;
+import it.pagopa.selfcare.dashboard.model.product.*;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.product.entity.BackOfficeConfigurations;
 import it.pagopa.selfcare.product.entity.Product;
@@ -93,60 +90,71 @@ class ProductMapperTest {
 
 
     @Test
-    void toProductRoleMappingsResource_fromEntry_null() {
+    void toProductRolesResource_fromEntry_null() {
         // given
-        Map<PartyRole, ProductRoleInfo> input = null;
+        Map<PartyRole, ProductRoleInfo> input1 = null;
+        Map<PartyRole, ProductRoleInfo> input2 = null;
         // when
-        ProductRoleMappingsResource output = (ProductRoleMappingsResource) ProductsMapper.toProductRoleMappingsResource(input);
+        ProductRolesResource output = ProductsMapper.toProductRolesResource(input1, input2);
         // then
-        assertNull(output);
+        assertNotNull(output);
+        assertNull(output.getRoleMappings());
+        assertNull(output.getPartnerTechRoleMappings());
     }
 
 
     @Test
-    void toProductRoleMappingsResource_fromEntry_nullRoles() {
+    void toProductRolesResource_fromEntry_nullRoles() {
         // given
         ProductRoleInfo productRoleInfo = new ProductRoleInfo();
         productRoleInfo.setRoles(null);
         Map.Entry<PartyRole, ProductRoleInfo> input = Map.entry(PartyRole.DELEGATE, productRoleInfo);
         // when
-        Collection<ProductRoleMappingsResource> output = ProductsMapper.toProductRoleMappingsResource(Map.of(input.getKey(), input.getValue()));
+        ProductRolesResource output = ProductsMapper.toProductRolesResource(Map.of(input.getKey(), input.getValue()), null);
         // then
         assertNotNull(output);
-        assertTrue(output.stream().allMatch(resource -> resource.getProductRoles() == null || resource.getProductRoles().isEmpty()));
+        assertTrue(output.getRoleMappings().stream().allMatch(resource -> resource.getProductRoles() == null || resource.getProductRoles().isEmpty()));
+        assertNull(output.getPartnerTechRoleMappings());
     }
 
 
     @Test
-    void toProductRoleMappingsResource_fromEntry_notNull() {
+    void toProductRolesResource_fromEntry_notNull() {
         // given
         ProductRoleInfo productRoleInfo = mockInstance(new ProductRoleInfo(), "setRoles");
         productRoleInfo.setRoles(List.of(mockInstance(new ProductRole())));
         Map.Entry<PartyRole, ProductRoleInfo> input = Map.entry(PartyRole.DELEGATE, productRoleInfo);
         // when
-        Collection<ProductRoleMappingsResource> output = ProductsMapper.toProductRoleMappingsResource(Map.of(input.getKey(), input.getValue()));
+        ProductRolesResource output = ProductsMapper.toProductRolesResource(Map.of(input.getKey(), input.getValue()), Map.of(input.getKey(), input.getValue()));
         // then
         assertNotNull(output);
-        assertFalse(output.isEmpty());
-        ProductRoleMappingsResource resource = output.iterator().next();
+        assertFalse(output.getRoleMappings().isEmpty());
+        assertFalse(output.getPartnerTechRoleMappings().isEmpty());
+        ProductRoleMappingsResource resource = output.getRoleMappings().iterator().next();
         assertNotNull(resource.getProductRoles());
         assertEquals(productRoleInfo.getRoles().size(), resource.getProductRoles().size());
         assertEquals(input.getKey().name(), resource.getPartyRole());
         assertEquals(SelfCareAuthority.ADMIN, resource.getSelcRole());
+        ProductRoleMappingsResource resourceTech = output.getPartnerTechRoleMappings().iterator().next();
+        assertNotNull(resourceTech.getProductRoles());
+        assertEquals(productRoleInfo.getRoles().size(), resourceTech.getProductRoles().size());
+        assertEquals(input.getKey().name(), resourceTech.getPartyRole());
+        assertEquals(SelfCareAuthority.ADMIN, resourceTech.getSelcRole());
     }
 
     @Test
-    void toProductRoleMappingsResource_fromMap_notNull() {
+    void toProductRolesResource_fromMap_notNull() {
         // given
         EnumMap<PartyRole, ProductRoleInfo> input = new EnumMap<>(PartyRole.class) {{
             put(PartyRole.MANAGER, mockInstance(new ProductRoleInfo(), 1));
             put(PartyRole.OPERATOR, mockInstance(new ProductRoleInfo(), 2));
         }};
         // when
-        Collection<ProductRoleMappingsResource> output = ProductsMapper.toProductRoleMappingsResource(input);
+        ProductRolesResource output = ProductsMapper.toProductRolesResource(input, input);
         // then
         assertNotNull(output);
-        assertEquals(input.size(), output.size());
+        assertEquals(input.size(), output.getRoleMappings().size());
+        assertEquals(input.size(), output.getPartnerTechRoleMappings().size());
     }
 
 
