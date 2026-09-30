@@ -13,6 +13,7 @@ import java.util.List;
 public class OnboardedProductResource {
     private String productId;
     private String userRole;
+    private Boolean userPartnerTechRole;
 
     @JsonProperty("productOnBoardingStatus")
     private RelationshipState status;
@@ -28,7 +29,7 @@ public class OnboardedProductResource {
 
     private String originId;
 
-    private Boolean isPartnerTech;
+    private Boolean partnerTechRolesEnabled;
 
     private InstitutionType institutionType;
 
