@@ -27,22 +27,18 @@ on:
         type: boolean
         required: false
         default: false
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID:
-        required: true
-      ARM_CLIENT_ID:
-        required: true
-      ARM_SUBSCRIPTION_ID:
-        required: true
-      ARM_TENANT_ID:
+      notification_trigger_secret_name:
+        type: string
+        description: >-
+          Name of the repository secret holding the Slack trigger ID. Allowed values:
+          API_NOTIFICATION_TRIGGERS_ID_EXTERNAL, API_NOTIFICATION_TRIGGERS_ID_SUPPORT,
+          API_NOTIFICATION_TRIGGERS_ID_INTERNAL, API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL.
+          The caller must use "secrets: inherit" so that environment secrets
+          (ARM_CLIENT_ID on "<env>-cd") are available too.
         required: true
 
 env:
   DIR: "./infra/resources/_modules/apim_external_api"
-  ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
-  ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
-  ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
@@ -55,6 +51,10 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
     steps:
 
@@ -166,11 +166,29 @@ jobs:
 
       - name: Send HTTP POST notification using Slack
         if: ${{ inputs.enable_notification && steps.optic_diff.outputs.changes_detected == 'true' }}
+        shell: bash
+        env:
+          # Static secret references (no dynamic secret lookup by name): the runner only receives
+          # the Slack trigger secrets actually used (least privilege).
+          SLACK_TRIGGER_ID: >-
+            ${{
+              inputs.notification_trigger_secret_name == 'API_NOTIFICATION_TRIGGERS_ID_EXTERNAL' && secrets.API_NOTIFICATION_TRIGGERS_ID_EXTERNAL ||
+              inputs.notification_trigger_secret_name == 'API_NOTIFICATION_TRIGGERS_ID_SUPPORT' && secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT ||
+              inputs.notification_trigger_secret_name == 'API_NOTIFICATION_TRIGGERS_ID_INTERNAL' && secrets.API_NOTIFICATION_TRIGGERS_ID_INTERNAL ||
+              inputs.notification_trigger_secret_name == 'API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL' && secrets.API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL ||
+              ''
+            }}
+          API_TITLE: ${{ inputs.api_title }}
+          TRIGGER_NAME: ${{ inputs.notification_trigger_secret_name }}
         run: |
+          if [ -z "$SLACK_TRIGGER_ID" ]; then
+            echo "::error::Unsupported or empty Slack trigger secret: $TRIGGER_NAME"
+            exit 1
+          fi
           body_content=$(cat changed_operations.txt)
-          curl -X POST https://hooks.slack.com/triggers/${{ secrets.API_NOTIFICATION_TRIGGERS_ID }} \
+          curl -X POST "https://hooks.slack.com/triggers/${SLACK_TRIGGER_ID}" \
           -H "Content-Type: application/json" \
           -d '{
                 "body": "'"$body_content"'",
-                "title": "${{ inputs.api_title }}"
+                "title": "'"$API_TITLE"'"
               }'
