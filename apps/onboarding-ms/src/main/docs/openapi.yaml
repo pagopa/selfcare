@@ -19,45 +19,6 @@ tags:
 - name: internal-v1
 - name: support
 paths:
-  /product-http-contract/{operation}/{productId}:
-    get:
-      tags:
-      - Product Http Contract Endpoint
-      operationId: call
-      parameters:
-      - name: operation
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: productId
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: explicitTenant
-        in: query
-        schema:
-          type: string
-      - name: institutionType
-        in: query
-        schema:
-          $ref: "#/components/schemas/InstitutionType1"
-      - name: origin
-        in: query
-        schema:
-          $ref: "#/components/schemas/Origin1"
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
   /v1/aggregates/verification/prod-io:
     post:
       tags:
@@ -1940,24 +1901,6 @@ components:
       - GPU
       - SCEC
       type: string
-    InstitutionType1:
-      enum:
-      - PA
-      - PG
-      - GSP
-      - SA
-      - PT
-      - SCP
-      - PSP
-      - AS
-      - REC
-      - CON
-      - PRV
-      - PRV_PF
-      - GPU
-      - SCEC
-      - DEFAULT
-      type: string
     LocalDateTime:
       format: date-time
       type: string
@@ -2331,16 +2274,6 @@ components:
       - SELC
       - ANAC
       - UNKNOWN
-      - ADE
-      - INFOCAMERE
-      - IVASS
-      - PDND_INFOCAMERE
-      type: string
-    Origin1:
-      enum:
-      - IPA
-      - SELC
-      - ANAC
       - ADE
       - INFOCAMERE
       - IVASS

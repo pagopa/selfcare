@@ -151,6 +151,19 @@ and mock the current reactive `ProductService` directly, without a legacy Produc
 SDK mock or model conversion layer. HTTP contract tests and Cucumber continue to
 exercise the real adapter and generated client against their HTTP test servers.
 
+### Generated OpenAPI
+
+Regenerate the production schemas in `src/main/docs` from the repository root:
+
+```shell
+mvn --projects :onboarding-ms --also-make package -DskipTests
+```
+
+Tests write their schemas to `target/test-openapi`, keeping test-only endpoints
+out of the versioned production contract. This setting is in test resources
+without a `%test` prefix so it also applies to `integrationProfile`. Commit both
+generated production files, `openapi.json` and `openapi.yaml`, not the test output.
+
 ### Coverage
 
 Coverage combines ordinary JUnit tests with `@QuarkusTest`. The Maven JaCoCo agent
