@@ -4,7 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.entity.registry.client.ClientRegistryPDNDInfocamere;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import jakarta.ws.rs.WebApplicationException;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamerePdndApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.PDNDBusinessResource;
@@ -28,7 +28,7 @@ public class RegistryManagerPDNDInfocamere extends ClientRegistryPDNDInfocamere 
     }
 
     @Override
-    public Uni<Onboarding> customValidation(Product product) {
+    public Uni<Onboarding> customValidation(ProductResponse product) {
         if (isIdPayMerchantProduct(product)) {
             return isPrivatePersonInstitution()
                     ? manageTaxCode()
@@ -37,8 +37,8 @@ public class RegistryManagerPDNDInfocamere extends ClientRegistryPDNDInfocamere 
         return Uni.createFrom().item(onboarding);
     }
 
-    private boolean isIdPayMerchantProduct(Product product) {
-        return Objects.nonNull(product) && PROD_IDPAY_MERCHANT.getValue().equals(product.getId());
+    private boolean isIdPayMerchantProduct(ProductResponse product) {
+        return Objects.nonNull(product) && PROD_IDPAY_MERCHANT.getValue().equals(product.getProductId());
     }
 
     private boolean isPrivatePersonInstitution() {

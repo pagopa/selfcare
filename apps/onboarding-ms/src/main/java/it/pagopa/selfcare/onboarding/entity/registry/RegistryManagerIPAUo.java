@@ -13,7 +13,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.registry.client.ClientRegistryIPA;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import jakarta.ws.rs.WebApplicationException;
 import java.util.Objects;
 import java.util.Set;
@@ -42,7 +42,7 @@ public class RegistryManagerIPAUo extends ClientRegistryIPA {
     }
 
     @Override
-    public Uni<Onboarding> customValidation(Product product) {
+    public Uni<Onboarding> customValidation(ProductResponse product) {
         return checkRecipientCode().onItem().transformToUni(unused -> {
             if (isBillingOrRecipientCodeRequired()) {
                 return Uni.createFrom().failure(new InvalidRequestException(BILLING_OR_RECIPIENT_CODE_REQUIRED));

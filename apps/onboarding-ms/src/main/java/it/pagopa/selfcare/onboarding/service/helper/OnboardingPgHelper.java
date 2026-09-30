@@ -14,12 +14,9 @@ import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.UserService;
-import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.service.util.ProductConfigUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -34,8 +31,8 @@ import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.BusinessesResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.GetInstitutionsByLegalDto;
 import org.openapi.quarkus.party_registry_proxy_json.model.GetInstitutionsByLegalFilterDto;
-
-import static it.pagopa.selfcare.product.utils.ProductUtils.validRoles;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 
 /**
  * Helper che gestisce il flusso di onboarding specifico per le
@@ -52,7 +49,7 @@ public class OnboardingPgHelper {
 
     @Inject OnboardingMapper onboardingMapper;
     @Inject OrchestrationService orchestrationService;
-    @Inject ProductService productAzureService;
+    @Inject ProductService productService;
     @Inject UserService userService;
     @Inject
     UserRegistryHelper userRegistryHelper;
@@ -133,9 +130,9 @@ public class OnboardingPgHelper {
         return getProductByOnboarding(onboarding)
                 .flatMap(product ->
                         validationHelper.validationRole(userRequests,
-                                        validRoles(product, PHASE_ADDITION_ALLOWED.ONBOARDING,
+                                        ProductConfigUtils.validRoles(product,
                                                 onboarding.getInstitution().getInstitutionType()))
-                                .map(unused -> resolveRoleMappings(product, onboarding)))
+                                .flatMap(unused -> resolveRoleMappings(product, onboarding)))
                 .flatMap(roleMappings -> userRegistryHelper.retrieveUserResources(userRequests, roleMappings))
                 .onItem().invoke(onboarding::setUsers)
                 .replaceWith(onboarding);
@@ -204,25 +201,25 @@ public class OnboardingPgHelper {
                 .build();
     }
 
-    private static Map<PartyRole, ProductRoleInfo> resolveRoleMappings(Product product, Onboarding onboarding) {
-        return Objects.nonNull(product.getParent())
-                ? product.getParent().getRoleMappings(onboarding.getInstitution().getInstitutionType().name())
-                : product.getRoleMappings(onboarding.getInstitution().getInstitutionType().name());
+    private Uni<Map<PartyRole, RoleMapping>> resolveRoleMappings(ProductResponse product, Onboarding onboarding) {
+        if (Objects.nonNull(product.getParentId())) {
+            return productService.getValidProduct(product.getParentId(), onboarding.getTenantId())
+                    .onItem().transform(parent -> ProductConfigUtils.roleMappings(parent,
+                            onboarding.getInstitution().getInstitutionType()));
+        }
+        return Uni.createFrom().item(ProductConfigUtils.roleMappings(product,
+                onboarding.getInstitution().getInstitutionType()));
     }
 
-    private Uni<Product> getProductByOnboarding(Onboarding onboarding) {
-        return Uni.createFrom()
-                .item(() -> productAzureService.getProductIsValid(onboarding.getProductId()))
-                .onFailure().transform(exception -> {
+    private Uni<ProductResponse> getProductByOnboarding(Onboarding onboarding) {
+        return productService.getValidProduct(onboarding.getProductId(), onboarding.getTenantId())
+                .onFailure(ResourceNotFoundException.class).transform(exception -> {
                     log.error("Failed to retrieve product {} for institution {}: {}",
                             onboarding.getProductId(), onboarding.getInstitution().getTaxCode(), exception.getMessage(), exception);
-                    if (exception instanceof ProductNotFoundException) {
-                        return new OnboardingNotAllowedException(
-                                String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
-                                        onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
-                                DEFAULT_ERROR.getCode());
-                    }
-                    return exception;
+                    return new OnboardingNotAllowedException(
+                            String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
+                                    onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
+                            DEFAULT_ERROR.getCode());
                 });
     }
 

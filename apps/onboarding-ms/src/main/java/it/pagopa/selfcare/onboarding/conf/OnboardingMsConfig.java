@@ -2,10 +2,8 @@ package it.pagopa.selfcare.onboarding.conf;
 
 import io.quarkus.runtime.StartupEvent;
 import it.pagopa.selfcare.onboarding.crypto.*;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
-import jakarta.inject.Inject;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -21,12 +19,8 @@ public class OnboardingMsConfig {
     public static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
     public static final String SIGNATURE_SOURCE_DISABLED = "disabled";
 
-    @Inject
-    ProductService productAzureService;
-
     void onStart(@Observes StartupEvent ev) {
         log.info("Tenant-aware Mongo configuration is starting");
-        log.info("ProductService eagerly initialized: {}", productAzureService.getClass().getSimpleName());
     }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService() {

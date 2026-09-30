@@ -21,19 +21,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public OriginResult getOrigins(String productId) {
+    public OriginResult getOrigins(String tenantId, String productId) {
         log.trace("getOrigins start");
         String productIdSanitized = Encode.forJava(productId);
-        OriginResult originResult = productMsConnector.getOrigins(productIdSanitized);
+        OriginResult originResult = productMsConnector.getOrigins(Encode.forJava(tenantId), productIdSanitized);
         log.debug("getOrigins size = {}", originResult.getOrigins().size());
         log.trace("getOrigins end");
         return originResult;
     }
 
     @Override
-    public List<RequiredDocumentModel> getRequiredDocuments(String productId, String institutionType, String origin) {
+    public List<RequiredDocumentModel> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin) {
         log.trace("getRequiredDocuments start");
         List<RequiredDocumentModel> result = productMsConnector.getRequiredDocuments(
+                Encode.forJava(tenantId),
                 Encode.forJava(productId),
                 Encode.forJava(institutionType),
                 Encode.forJava(origin)
@@ -44,9 +45,10 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin) {
+    public boolean isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin) {
         log.trace("isRequiredDocumentsEnabled start");
         boolean result = productMsConnector.isRequiredDocumentsEnabled(
+                Encode.forJava(tenantId),
                 Encode.forJava(productId),
                 Encode.forJava(institutionType),
                 Encode.forJava(origin)

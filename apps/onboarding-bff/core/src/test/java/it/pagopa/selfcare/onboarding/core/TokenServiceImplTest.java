@@ -266,16 +266,18 @@ public class TokenServiceImplTest {
     @Test
     void uploadAttachment() throws IOException {
         //given
+        final String tenantId = "AR";
         final String onboardingId = "onboardingId";
         final String filename = "filename";
         final String productId = "productId";
         final String templatePath = "templatePath";
         mockAttachmentContext(onboardingId, productId, filename, templatePath);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
-        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString())).thenReturn(List.of());
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString(), anyString())).thenReturn(List.of());
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename, null, null);
+        tokenService.uploadAttachment(tenantId, onboardingId, mockMultipartFile, filename, null, null);
         //then
+        verify(productMsConnector).getRequiredDocuments(tenantId, productId, InstitutionType.AS.name(), "SELC");
         verify(documentMsConnector, times(1))
                 .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
                         argThat(template -> templatePath.equals(template.getTemplatePath())));
@@ -285,6 +287,7 @@ public class TokenServiceImplTest {
     @Test
     void uploadAttachment_userStorage() throws IOException {
         //given
+        final String tenantId = "AR";
         final String onboardingId = "onboardingId";
         final String attachmentName = "attachmentName";
         final String attachmentId = "statuto";
@@ -301,13 +304,14 @@ public class TokenServiceImplTest {
         requiredDocument.setId(attachmentId);
         requiredDocument.setStorageOrigin(StorageOrigin.USER);
         requiredDocument.setMaxDocumentsRequired(maxDocumentsRequired);
-        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString()))
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(List.of(requiredDocument));
 
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
+        tokenService.uploadAttachment(tenantId, onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
 
         //then
+        verify(productMsConnector).getRequiredDocuments(tenantId, productId, InstitutionType.AS.name(), "SELC");
         verify(documentMsConnector, times(1))
                 .uploadUserAttachment(onboardingId, mockMultipartFile, productId, attachmentId,
                         attachmentDescription, attachmentName, maxDocumentsRequired);

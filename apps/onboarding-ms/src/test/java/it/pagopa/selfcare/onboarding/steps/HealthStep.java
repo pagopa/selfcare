@@ -60,6 +60,11 @@ public class HealthStep {
                 .containsKey(dataKey);
     }
 
+    @Then("the readiness response does not contain a check named {string}")
+    public void the_readiness_response_does_not_contain_a_check(String name) {
+        assertThat(findCheck(name)).as("removed readiness check '%s'", name).isNull();
+    }
+
     private Map<String, Object> findCheck(String name) {
         List<Map<String, Object>> checks = response.jsonPath().getList("checks");
         return checks.stream()
@@ -68,4 +73,3 @@ public class HealthStep {
                 .orElse(null);
     }
 }
-

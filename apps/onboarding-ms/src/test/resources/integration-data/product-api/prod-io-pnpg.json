@@ -1,0 +1,40 @@
+{
+  "productId": "prod-io",
+  "tenantId": "PNPG",
+  "title": "IO PNPG contract fixture",
+  "status": "ACTIVE",
+  "features": { "expirationDays": 45, "delegable": true },
+  "roleMappings": [
+    {
+      "role": "MANAGER",
+      "institutionType": "PG",
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [{ "code": "pnpg-admin", "label": "PNPG administrator" }]
+    }
+  ],
+  "partnerTechRoleMappings": [
+    {
+      "role": "DELEGATE",
+      "institutionType": "PT",
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [{ "code": "pnpg-pt", "label": "PNPG technical partner" }]
+    }
+  ],
+  "contracts": [
+    {
+      "institutionType": "PG",
+      "contractType": "CONTRACT",
+      "path": "contracts/pnpg/io.html",
+      "version": "pnpg-2"
+    }
+  ],
+  "workflowRules": [
+    { "institutionType": "PG", "origin": "INFOCAMERE", "workflowType": "FOR_APPROVE" }
+  ],
+  "requiredDocuments": [
+    {
+      "id": "pnpg-doc", "name": "PNPG proof", "required": true, "storageOrigin": "USER",
+      "filter": { "institutionType": ["PG"], "origin": ["INFOCAMERE"] }
+    }
+  ]
+}

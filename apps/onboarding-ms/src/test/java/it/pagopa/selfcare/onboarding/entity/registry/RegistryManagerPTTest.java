@@ -12,30 +12,31 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.openapi.quarkus.product_json.model.Features;
 
 class RegistryManagerPTTest {
 
   private Onboarding onboarding;
   private RegistryManagerPT registryManagerPT;
-  private Product product;
+  private ProductResponse product;
 
   @BeforeEach
   void setUp() {
     onboarding = createDummyOnboarding();
     registryManagerPT = new RegistryManagerPT(onboarding);
-    product = mock(Product.class);
+    product = mock(ProductResponse.class);
   }
 
   @Test
   void customValidationTest() {
     // given
-    when(product.isDelegable()).thenReturn(true);
+    when(product.getFeatures()).thenReturn(new Features().delegable(true));
     onboarding.setWorkflowType(WorkflowType.FOR_APPROVE_PT);
 
     // when
@@ -48,7 +49,7 @@ class RegistryManagerPTTest {
   @Test
   void customValidationTest_shouldThrowNewInvalidRequestException() {
     // given
-    when(product.isDelegable()).thenReturn(true);
+    when(product.getFeatures()).thenReturn(new Features().delegable(true));
     when(product.getParentId()).thenReturn(null);
 
     // when
@@ -61,7 +62,7 @@ class RegistryManagerPTTest {
   @Test
   void customValidationTest_shouldThrowOnboardingNotAllowedException_whenProductIsNotDelegable() {
     // given
-    when(product.isDelegable()).thenReturn(false);
+    when(product.getFeatures()).thenReturn(new Features().delegable(false));
 
     // when
     Uni<Onboarding> result = registryManagerPT.customValidation(product);
