@@ -440,7 +440,7 @@ class TokenV2ControllerTest {
     }
 
     /**
-     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, String, String, MultipartFile)}
+     * Method under test: {@link TokenV2Controller#uploadAttachment(String, String, String, String, MultipartFile, jakarta.servlet.http.HttpServletRequest)}
      */
     @Test
     void uploadAttachment() throws Exception {
@@ -457,13 +457,14 @@ class TokenV2ControllerTest {
         MockHttpServletRequestBuilder requestBuilder = MockMvcRequestBuilders
                 .multipart("/v2/tokens/{onboardingId}/attachment", onboardingId)
                 .file(file)
+                .header("X-Tenant-Id", "AR")
                 .queryParam("attachmentName", filename);
 
         mvc.perform(requestBuilder)
                 .andExpect(MockMvcResultMatchers.status().isNoContent());
 
         verify(tokenService, times(1))
-                .uploadAttachment(onboardingId, file, filename, null, null);
+                .uploadAttachment("AR", onboardingId, file, filename, null, null);
     }
 
 

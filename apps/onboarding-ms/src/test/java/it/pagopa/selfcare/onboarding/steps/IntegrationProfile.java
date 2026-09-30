@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @Slf4j
 @NoArgsConstructor
@@ -30,26 +29,32 @@ public class IntegrationProfile implements QuarkusTestProfile {
   }
 
   @Override
-  public Set<Class<?>> getEnabledAlternatives() {
-    return Set.of(IntegrationProductService.class);
-  }
-
-  @Override
   public Map<String, String> getConfigOverrides() {
     return Map.of(
         "mp.jwt.verify.publickey",
         getPublicKey(),
         "tenant.enforcement.enabled",
         "true",
-        "custom.jwt-token-test",
-        Objects.requireNonNull(
+        "custom.jwt-token-test", tokenForTenant("AR"),
+        "custom.jwt-token-test-pnpg", tokenForTenant("PNPG"));
+  }
+
+  public static String tokenForTenant(String tenantId) {
+    return tokenForTenant(tenantId, "SPID");
+  }
+
+  public static String tokenForTenant(String tenantId, String issuer) {
+    Map<String, String> payload = buildJwtPayload();
+    payload.put("tenant_id", tenantId);
+    payload.put("iss", issuer);
+    return Objects.requireNonNull(
             JwtUtils.generateToken(
                 JwtData.builder()
                     .username("f.rossi")
                     .password("test")
                     .jwtHeader(buildJwtHeader())
-                    .jwtPayload(buildJwtPayload())
-                    .build())));
+                    .jwtPayload(payload)
+                    .build()));
   }
 
   private String getPublicKey() {

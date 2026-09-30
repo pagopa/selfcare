@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.core.ProductService;
 import it.pagopa.selfcare.onboarding.web.config.WebTestConfig;
+import it.pagopa.selfcare.onboarding.web.handler.OnboardingExceptionHandler;
 import it.pagopa.selfcare.onboarding.web.model.OriginResponse;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
 import java.util.List;
@@ -29,10 +30,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(value = {ProductV2Controller.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
-@ContextConfiguration(classes = {ProductV2Controller.class, WebTestConfig.class})
+@ContextConfiguration(classes = {ProductV2Controller.class, WebTestConfig.class, OnboardingExceptionHandler.class})
 class ProductV2ControllerTest {
 
     private static final String BASE_URL = "/v2/product";
+    private static final String TENANT_ID = "AR";
 
     @Autowired
     protected MockMvc mvc;
@@ -59,12 +61,13 @@ class ProductV2ControllerTest {
         OriginResponse originResponse = new OriginResponse();
 
 
-        when(productServiceMock.getOrigins(sanitized)).thenReturn(originResult);
+        when(productServiceMock.getOrigins(TENANT_ID, sanitized)).thenReturn(originResult);
         when(productMapperMock.toOriginResponse(originResult)).thenReturn(originResponse);
 
         // when
         MvcResult result = mvc.perform(
                         MockMvcRequestBuilders.get(BASE_URL)
+                                .header("X-Tenant-Id", TENANT_ID)
                                 .param("productId", productId)
                                 .contentType(APPLICATION_JSON_VALUE)
                                 .accept(APPLICATION_JSON_VALUE))
@@ -79,7 +82,7 @@ class ProductV2ControllerTest {
         );
 
         assertNotNull(response);
-        verify(productServiceMock, times(1)).getOrigins(sanitized);
+        verify(productServiceMock, times(1)).getOrigins(TENANT_ID, sanitized);
         verify(productMapperMock, times(1)).toOriginResponse(originResult);
         verifyNoMoreInteractions(productServiceMock, productMapperMock);
     }
@@ -93,19 +96,20 @@ class ProductV2ControllerTest {
         OriginResult originResult = new OriginResult();
         OriginResponse originResponse = new OriginResponse();
 
-        when(productServiceMock.getOrigins(anyString())).thenReturn(originResult);
+        when(productServiceMock.getOrigins(eq(TENANT_ID), anyString())).thenReturn(originResult);
         when(productMapperMock.toOriginResponse(originResult)).thenReturn(originResponse);
 
         // when
         mvc.perform(
                         MockMvcRequestBuilders.get(BASE_URL)
+                                .header("X-Tenant-Id", TENANT_ID)
                                 .param("productId", rawProductId)
                                 .contentType(APPLICATION_JSON_VALUE)
                                 .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk());
 
         // then
-        verify(productServiceMock, times(1)).getOrigins(sanitized);
+        verify(productServiceMock, times(1)).getOrigins(TENANT_ID, sanitized);
         verify(productMapperMock, times(1)).toOriginResponse(originResult);
         verifyNoMoreInteractions(productServiceMock, productMapperMock);
     }
@@ -124,6 +128,17 @@ class ProductV2ControllerTest {
     }
 
     @Test
+    void getOriginsTest_missingTenant_badRequest() throws Exception {
+        mvc.perform(MockMvcRequestBuilders.get(BASE_URL)
+                        .param("productId", "productId-123")
+                        .contentType(APPLICATION_JSON_VALUE)
+                        .accept(APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(productServiceMock, productMapperMock);
+    }
+
+    @Test
     void getRequiredDocuments_success() throws Exception {
         // given
         String productId = "prod-test";
@@ -135,11 +150,12 @@ class ProductV2ControllerTest {
         doc.setName("Statuto");
         doc.setRequired(true);
 
-        when(productServiceMock.getRequiredDocuments(productId, institutionType, origin)).thenReturn(List.of(doc));
+        when(productServiceMock.getRequiredDocuments(TENANT_ID, productId, institutionType, origin)).thenReturn(List.of(doc));
 
         // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/required-documents", productId)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .param("institutionType", institutionType)
                         .param("origin", origin)
                         .accept(APPLICATION_JSON_VALUE))
@@ -152,7 +168,7 @@ class ProductV2ControllerTest {
         Assertions.assertNotNull(response);
         Assertions.assertEquals(1, response.size());
         Assertions.assertEquals("doc-1", response.get(0).getId());
-        verify(productServiceMock, times(1)).getRequiredDocuments(productId, institutionType, origin);
+        verify(productServiceMock, times(1)).getRequiredDocuments(TENANT_ID, productId, institutionType, origin);
         verifyNoMoreInteractions(productServiceMock);
     }
 
@@ -163,11 +179,12 @@ class ProductV2ControllerTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(productServiceMock.getRequiredDocuments(productId, institutionType, origin)).thenReturn(List.of());
+        when(productServiceMock.getRequiredDocuments(TENANT_ID, productId, institutionType, origin)).thenReturn(List.of());
 
         // when
         MvcResult result = mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/required-documents", productId)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .param("institutionType", institutionType)
                         .param("origin", origin)
                         .accept(APPLICATION_JSON_VALUE))
@@ -188,18 +205,19 @@ class ProductV2ControllerTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(productServiceMock.isRequiredDocumentsEnabled(productId, institutionType, origin)).thenReturn(true);
+        when(productServiceMock.isRequiredDocumentsEnabled(TENANT_ID, productId, institutionType, origin)).thenReturn(true);
 
         // when / then
         mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/required-documents/enabled", productId)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .param("institutionType", institutionType)
                         .param("origin", origin)
                         .accept(APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"requiredDocumentsEnabled\":true}"));
 
-        verify(productServiceMock, times(1)).isRequiredDocumentsEnabled(productId, institutionType, origin);
+        verify(productServiceMock, times(1)).isRequiredDocumentsEnabled(TENANT_ID, productId, institutionType, origin);
         verifyNoMoreInteractions(productServiceMock);
     }
 
@@ -210,11 +228,12 @@ class ProductV2ControllerTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(productServiceMock.isRequiredDocumentsEnabled(productId, institutionType, origin)).thenReturn(false);
+        when(productServiceMock.isRequiredDocumentsEnabled(TENANT_ID, productId, institutionType, origin)).thenReturn(false);
 
         // when / then
         mvc.perform(MockMvcRequestBuilders
                         .get(BASE_URL + "/{productId}/required-documents/enabled", productId)
+                        .header("X-Tenant-Id", TENANT_ID)
                         .param("institutionType", institutionType)
                         .param("origin", origin)
                         .accept(APPLICATION_JSON_VALUE))

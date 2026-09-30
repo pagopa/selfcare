@@ -14,7 +14,6 @@ import it.pagopa.selfcare.onboarding.entity.UserRequester;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -23,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.*;
 
@@ -81,7 +81,7 @@ public class UserRegistryHelper {
      * Cerca ogni utente nella User Registry: se trovato lo aggiorna, altrimenti lo crea.
      * Restituisce la lista degli {@link User} con id, ruolo, UUID email e product role.
      */
-    public Uni<List<User>> retrieveUserResources(List<UserRequest> users, Map<PartyRole, ProductRoleInfo> roleMappings) {
+    public Uni<List<User>> retrieveUserResources(List<UserRequest> users, Map<PartyRole, RoleMapping> roleMappings) {
         return Multi.createFrom().iterable(users)
                 .onItem().transformToUni(user -> {
                     log.debug("Processing user with taxCode: {}", user.getTaxCode());
@@ -192,7 +192,7 @@ public class UserRegistryHelper {
     // -------------------------------------------------------------------------
 
     private Uni<User> buildUserFromFoundResource(UserRequest user, UserResource userResource,
-                                                  Map<PartyRole, ProductRoleInfo> roleMappings) {
+                                                  Map<PartyRole, RoleMapping> roleMappings) {
         Optional<String> optUuid = Optional.ofNullable(user.getEmail())
                 .map(mail -> retrieveUserMailUuid(userResource, mail));
         Optional<MutableUserFieldsDto> optFields = toUpdateUserRequest(user, userResource, optUuid);
@@ -208,7 +208,7 @@ public class UserRegistryHelper {
                         .build());
     }
 
-    private Uni<User> createNewUserInRegistry(UserRequest user, Map<PartyRole, ProductRoleInfo> roleMappings) {
+    private Uni<User> createNewUserInRegistry(UserRequest user, Map<PartyRole, RoleMapping> roleMappings) {
         String mailUuid = ID_MAIL_PREFIX.concat(UUID.randomUUID().toString());
         return userRegistryApi.saveUsingPATCH(buildSaveUserDto(user, mailUuid))
                 .onItem().transform(userId -> User.builder()
@@ -219,18 +219,18 @@ public class UserRegistryHelper {
                         .build());
     }
 
-    private String retrieveProductRole(UserRequest userInfo, Map<PartyRole, ProductRoleInfo> roleMappings) {
+    private String retrieveProductRole(UserRequest userInfo, Map<PartyRole, RoleMapping> roleMappings) {
         try {
             if (Objects.isNull(roleMappings) || roleMappings.isEmpty())
                 throw new IllegalArgumentException("Role mappings is required");
-            ProductRoleInfo roleInfo = roleMappings.get(userInfo.getRole());
+            RoleMapping roleInfo = roleMappings.get(userInfo.getRole());
             if (Objects.isNull(roleInfo))
                 throw new IllegalArgumentException(String.format(AT_LEAST_ONE_PRODUCT_ROLE_REQUIRED.getMessage(), userInfo.getRole()));
-            if (Objects.isNull(roleInfo.getRoles()))
+            if (Objects.isNull(roleInfo.getBackOfficeRoles()))
                 throw new IllegalArgumentException(String.format(AT_LEAST_ONE_PRODUCT_ROLE_REQUIRED.getMessage(), userInfo.getRole()));
-            if (roleInfo.getRoles().size() != 1)
+            if (roleInfo.getBackOfficeRoles().size() != 1)
                 throw new IllegalArgumentException(String.format(MORE_THAN_ONE_PRODUCT_ROLE_AVAILABLE.getMessage(), userInfo.getRole()));
-            return roleInfo.getRoles().get(0).getCode();
+            return roleInfo.getBackOfficeRoles().get(0).getCode();
         } catch (IllegalArgumentException e) {
             throw new OnboardingNotAllowedException(e.getMessage(), DEFAULT_ERROR.getCode());
         }
