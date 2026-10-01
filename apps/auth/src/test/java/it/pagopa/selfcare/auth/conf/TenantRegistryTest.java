@@ -64,6 +64,14 @@ class TenantRegistryTest {
   }
 
   @Test
+  void oneIdentityCredentialsDoNotExposeSecretsInToString() {
+    TenantRegistry.OneIdentityCredentials credentials =
+        new TenantRegistry.OneIdentityCredentials("client-id", "client-secret");
+
+    assertEquals("OneIdentityCredentials[REDACTED]", credentials.toString());
+  }
+
+  @Test
   void enabledAuthenticationTenantsContainOnlyEnabledTenants() {
     assertEquals(
         java.util.List.of("AR"),

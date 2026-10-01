@@ -107,5 +107,6 @@ class IamMsHeadersFactoryTest {
     assertNotNull(result);
     assertEquals(2, result.size());
     assertEquals("Bearer " + testToken, result.getFirst("Authorization"));
+    assertEquals("AR", result.getFirst("X-Tenant-Id"));
   }
 }

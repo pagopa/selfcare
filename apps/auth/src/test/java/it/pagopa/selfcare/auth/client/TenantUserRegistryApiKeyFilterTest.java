@@ -33,6 +33,26 @@ class TenantUserRegistryApiKeyFilterTest {
     assertThrows(UnresolvedTenantException.class, () -> headersAfterFilter(filter));
   }
 
+  @Test
+  void replacesAnyPreviouslyConfiguredApiKey() {
+    TenantContext tenantContext = new TenantContext();
+    tenantContext.setTenantId("AR");
+    TenantRegistry registry = mock(TenantRegistry.class);
+    when(registry.userRegistryApiKey("AR")).thenReturn("ar-key");
+    TenantUserRegistryApiKeyFilter filter = new TenantUserRegistryApiKeyFilter();
+    filter.tenantContext = tenantContext;
+    filter.tenantRegistry = registry;
+    ClientRequestContext requestContext = mock(ClientRequestContext.class);
+    MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+    headers.putSingle("x-api-key", "global-key");
+    when(requestContext.getHeaders()).thenReturn(headers);
+
+    filter.filter(requestContext);
+
+    assertEquals("ar-key", headers.getFirst("x-api-key"));
+    assertEquals(1, headers.get("x-api-key").size());
+  }
+
   private MultivaluedMap<String, Object> headersAfterFilter(
       TenantUserRegistryApiKeyFilter filter) {
     ClientRequestContext requestContext = mock(ClientRequestContext.class);
