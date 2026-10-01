@@ -266,7 +266,7 @@
         ]
       }
     },
-    "/product/origins": {
+    "/product/{tenantId}/origins": {
       "get": {
         "summary": "Get product origins by productId",
         "description": "Retrieve the list of institution origins for the given product.",
@@ -275,6 +275,14 @@
           "Product"
         ],
         "parameters": [
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "productId",
             "required": true,
@@ -331,7 +339,7 @@
         ]
       }
     },
-    "/product/{productId}": {
+    "/product/{tenantId}/{productId}": {
       "patch": {
         "summary": "Partially update a product by ID",
         "description": "Partially updates an existing product identified by its productId. Only the non-null fields provided in the request body will be updated; all other fields will remain unchanged.",
@@ -342,6 +350,14 @@
         "parameters": [
           {
             "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
             "in": "path",
             "required": true,
             "schema": {
@@ -437,6 +453,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tenantId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -495,6 +519,14 @@
         "parameters": [
           {
             "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tenantId",
             "in": "path",
             "required": true,
             "schema": {
@@ -1413,6 +1445,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -1626,6 +1661,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "status": {
             "$ref": "#/components/schemas/ProductStatus"
           }
@@ -1636,7 +1674,9 @@
           "TESTING",
           "ACTIVE",
           "DELETED",
-          "SUSPEND"
+          "SUSPEND",
+          "PHASE_OUT",
+          "INACTIVE"
         ],
         "type": "string"
       },
@@ -1663,11 +1703,16 @@
       },
       "ProductCreateRequest": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -1699,6 +1744,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -2180,11 +2231,16 @@
       },
       "ProductPatchRequest": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -2216,6 +2272,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -2282,11 +2344,16 @@
       },
       "ProductResponse": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -2318,6 +2385,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
