@@ -27,7 +27,7 @@ class TenantRegistryTest {
     assertEquals("selcAuth", resourceRegistry.resolve("AR").mongo().database());
     assertEquals("id", tenantRegistry.oneIdentityCredentials("AR").clientId());
     assertEquals("123", resourceRegistry.userRegistryApiKey("AR"));
-    assertNull(resourceRegistry.resolve("PNPG").mongo());
+    assertEquals("selcAuth", resourceRegistry.resolve("PNPG").mongo().database());
   }
 
   @Test
