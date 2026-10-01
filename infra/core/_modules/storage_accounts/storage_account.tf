@@ -1,10 +1,10 @@
 module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~>1.0"
+  source = "pagopa-dx/azure-storage-account/azurerm"
+  version = ">= 4.0.5, < 5.0.0"
 
-  subnet_pep_id       = azurerm_subnet.storage_account_snet.id
-  tags                = var.tags
-  tier                = "l"
+  subnet_pep_id = azurerm_subnet.storage_account_snet.id
+  tags          = var.tags
+  use_case            = "default"
   environment         = local.environment
   resource_group_name = var.resource_group_name
 
@@ -26,23 +26,16 @@ module "storage_account" {
   blob_features = var.blob_features
 
   # -----------------------------------------------------------------------------
-  # Microsoft Defender for Storage — WAITING FOR UPSTREAM SUPPORT.
+  # Microsoft Defender for Storage.
   #
-  # The pagopa-dx module v1.x creates an
-  # `azurerm_security_center_storage_defender.this` internally but does NOT
-  # expose the malware scanning / subscription override attributes as inputs.
-  # As agreed on review, we asked pagopa-dx to release a new version exposing
-  # these variables. When it lands, UNCOMMENT the lines below and bump
-  # `version = "~> X.Y"` above accordingly. The final upstream variable names
-  # may differ slightly — check the pagopa-dx CHANGELOG / variables.tf and
-  # adapt the mapping (this module already exposes the caller-facing
-  # `defender_*` inputs, so callers won't need any change).
-  #
-  # defender_malware_scanning_on_upload_enabled          = var.defender_malware_scanning_enabled
-  # defender_malware_scanning_on_upload_cap_gb_per_month = coalesce(var.defender_malware_scanning_cap_gb_per_month, -1)
-  # defender_override_subscription_settings_enabled      = var.defender_enabled
-  # defender_sensitive_data_discovery_enabled            = var.defender_sensitive_data_discovery_enabled
+  # pagopa-dx v4.0.5 exposes a single toggle. When true, the upstream module
+  # creates `azurerm_security_center_storage_defender.this` with:
+  #   - override_subscription_settings_enabled      = true
+  #   - malware_scanning_on_upload_enabled          = true
+  #   - malware_scanning_on_upload_cap_gb_per_month = -1 (unlimited)
+  #   - sensitive_data_discovery_enabled            = true
   # -----------------------------------------------------------------------------
+  malware_scanning_enabled = var.malware_scanning_enabled
 }
 
 # Lifecycle Management Policy
@@ -96,19 +89,22 @@ resource "azurerm_management_lock" "storage_account_lock" {
 }
 
 ################################################################################
-# Microsoft Defender for Storage — validation guardrail.
+# Microsoft Defender for Storage — soft-delete guardrail.
 #
-# The upstream `pagopa-dx/azure-storage-account` module v1.x already creates an
-# `azurerm_security_center_storage_defender.this` internally with hardcoded
-# defaults: `malware_scanning_on_upload_enabled = false`,
-# `override_subscription_settings_enabled = false`, etc. It does not expose any
-# input to configure these attributes.
+# Neither pagopa-dx v4.x nor `azurerm_security_center_storage_defender` exposes
+# the "soft-delete malicious blobs" option. This guard only enforces its
+# prerequisite (blob soft-delete retention >= 1 day); the option itself must be
+# enabled on the Defender malware scanning settings outside this module.
 ################################################################################
 
 resource "terraform_data" "defender_soft_delete_guard" {
-  count = var.defender_enabled && var.defender_soft_delete_malicious_blobs ? 1 : 0
+  count = var.defender_soft_delete_malicious_blobs ? 1 : 0
 
   lifecycle {
+    precondition {
+      condition     = var.malware_scanning_enabled
+      error_message = "defender_soft_delete_malicious_blobs=true requires malware_scanning_enabled=true."
+    }
     precondition {
       condition     = var.blob_features.delete_retention_days >= 1
       error_message = "defender_soft_delete_malicious_blobs=true requires blob_features.delete_retention_days >= 1 so that Defender can soft-delete malicious blobs."
