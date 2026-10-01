@@ -28,13 +28,13 @@ Source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Scope: onboarding Functio
 VPN client (vpn.members, Entra ID) ──P2S──► VPN Gateway ─┐
 Container Apps (onboarding-ms/bff/cdc) ──────────────────┤   shared VNet
 APIM (Internal VNet mode) ───────────────────────────────┤──► Private Endpoint (sites) ──► Function App (app + SCM)
-GitHub Actions deploy job ── TO BE DECIDED ──────────────┘                                   │ public access disabled
+GitHub Actions deploy job (self-hosted) ────────────────┘                                   │ public access disabled
                                                                                             └─► VNet integration ─► NAT GW ─► outbound
-DNS: selc-…-onboarding-fn.azurewebsites.net ─CNAME─► privatelink.azurewebsites.net (private zone, A records for app + scm)
-     linked to VNet (+ pair VNet); VPN clients resolve via existing DNS forwarder
+DNS: selc-…-onboarding-fn.azurewebsites.net ─CNAME─► privatelink.azurewebsites.net (private zone, app + scm A records)
+     linked to VNet, pair VNet and AKS VNet; VPN clients resolve via existing DNS forwarder
 ```
 
-1. **Inbound private access:** one private endpoint per Function App (subresource `sites`) in the shared VNet. Covers both app and SCM hostnames.
+1. **Inbound private access:** one private endpoint per Function App (subresource `sites`) in the existing shared private-endpoints subnet. The App Service private DNS zone group manages app and SCM records.
 2. **Public lockdown:** public network access disabled on the Function App (app and SCM).
 3. **Name resolution:** private DNS zone `privatelink.azurewebsites.net` with A records for `<app>` and `<app>.scm`, linked to the shared VNet. The public hostname is unchanged (SELC-2.4).
 4. **VPN path:** existing P2S VPN Gateway + DNS forwarder in the shared VNet deliver routing and private DNS resolution to VPN clients.
@@ -47,27 +47,22 @@ DNS: selc-…-onboarding-fn.azurewebsites.net ─CNAME─► privatelink.azurewe
 - A3. ar and pnpg Function Apps of one environment share the VNet, so one private DNS zone serves both (SELC-1.5).
 - A4. Timer/queue/orchestration triggers depend only on outbound connectivity and are unaffected by inbound lockdown.
 
-**Unknowns / TO BE DECIDED:**
-- U1. Where the `privatelink.azurewebsites.net` zone is owned: `infra/core/_modules/dns_private` (shared) or the functions module. TO BE DECIDED.
-- U2. Which subnet hosts the private endpoint (existing private-endpoint subnet or new one). TO BE DECIDED.
-- U3. **Deploy path conflict:** in `call_release_functions.yml` the infra jobs already use `self-hosted` runners (Container App Jobs in the VNet, `infra/bootstrap/_modules/github_runner`), but the code-deploy jobs run `quarkus:deploy` on GitHub-hosted `ubuntu-24.04`, reaching SCM over the public internet. This conflicts with SELC-1.3 + SELC-4.2. Moving deploy jobs to the self-hosted runners: TO BE DECIDED.
-- U4. Whether the pair-region VNet also needs a zone link. UNKNOWN.
-- U5. How the change is ordered to keep interruptions within SELC-5.3/5.4 (create endpoint + DNS first, verify, then disable public access). TO BE DECIDED.
+**Deployment sequence:** Apply the shared core DNS zone/links first. For each Function App, run a targeted Terraform apply for `module.onboarding_functions.azurerm_private_endpoint.onboarding_fn` with `-var=enable_function_app_public_network_access=true`; verify private DNS and all callers. Then run the full Terraform apply without the override (default `false`) to disable public access. Proceed dev → uat → prod and complete both ar and pnpg before advancing. In prod, perform the public-access cutover in the agreed maintenance window.
 
 ## Requirement Traceability
 
 | Component / boundary | Requirements | Needs more input |
 |---|---|---|
-| Private endpoint + public access disabled | SELC-1.1, 1.2, 1.3, 1.4, 2.7, 2.8 | U2 |
-| Private DNS zone `privatelink.azurewebsites.net` (app + scm) | SELC-2.4, 1.5, 2.1, 2.2, 2.3, 2.6 | U1, U4 |
+| Private endpoint + public access disabled | SELC-1.1, 1.2, 1.3, 1.4, 2.7, 2.8 | — |
+| Private DNS zone `privatelink.azurewebsites.net` (app + scm) | SELC-2.4, 1.5, 2.1, 2.2, 2.3, 2.6 | — |
 | Shared VNet (ar + pnpg) | SELC-1.5, 2.9 | — |
 | VPN Gateway P2S (Entra ID, vpn.members) + DNS forwarder | SELC-1.2, 1.3, 1.6, 2.6, 4.1 | A2 |
 | Container Apps → Function App | SELC-2.1, 2.2, 2.9 | A1 |
 | APIM Internal → Function App | SELC-2.3 | A1 |
 | Function key auth (unchanged) | SELC-2.5 | — |
 | VNet integration + NAT Gateway (unchanged) | SELC-3.1, 3.2, 3.3 | A4 |
-| GitHub Actions deploy → SCM | SELC-4.2 | **U3** |
-| Terraform rollout per environment | SELC-5.1–5.4 | U5 |
+| GitHub Actions self-hosted deploy → SCM | SELC-4.2 | — |
+| Terraform rollout per environment | SELC-5.1–5.4 | Follow the staged deployment sequence above |
 
 ## Dependency Rules
 

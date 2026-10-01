@@ -13,7 +13,7 @@ Inputs: [REQUIREMENTS.md](./REQUIREMENTS.md), [ARCHITECTURE.md](./ARCHITECTURE.m
 - `AuthZ: Azure RBAC via <prefix>-adgroup-* groups; no application-level authorization change in scope`
 - `Secrets: Azure Key Vault (app settings via @Microsoft.KeyVault references, managed identities)`
 - `Data: personal data of institution representatives (GDPR); data model unchanged`
-- `CI/CD: GitHub Actions with OIDC (id-token: write); infra on self-hosted VNet runners; code deploy runner TO BE DECIDED (ARCHITECTURE U3)`
+- `CI/CD: GitHub Actions with OIDC (id-token: write); infra and code deploy on self-hosted runners with VNet access`
 - `Rate limiting / CORS / WAF for Function App: TO BE DECIDED (not stated in requirements)`
 - `AI / agent components: none`
 
@@ -63,7 +63,7 @@ Inputs: [REQUIREMENTS.md](./REQUIREMENTS.md), [ARCHITECTURE.md](./ARCHITECTURE.m
 - S3. Terraform state containing secret values (e.g. key export, APIM policy) MUST stay in the restricted backend; never print secrets in plan output.
 
 ### 5. CI/CD — `/.github/workflows/call_release_functions.yml`, `/infra/bootstrap/_modules/github_runner`
-- C1. Code deploy (`quarkus:deploy` → SCM) MUST run on runners with private network access; GitHub-hosted runners will fail once SCM is private (ARCHITECTURE U3).
+- C1. Code deploy (`quarkus:deploy` → SCM) MUST run on runners with private network access; GitHub-hosted runners will fail once SCM is private.
 - C2. Keep OIDC login (`id-token: write`) with no long-lived Azure credentials in secrets.
 - C3. Pin third-party actions by commit SHA; `pagopa/dx/actions/csp-login@main` is unpinned and SHOULD be pinned.
 - C4. Infra apply MUST keep running on `self-hosted` runners scoped per environment label.
@@ -84,7 +84,6 @@ Inputs: [REQUIREMENTS.md](./REQUIREMENTS.md), [ARCHITECTURE.md](./ARCHITECTURE.m
 
 ### UNRESOLVED / TO BE DECIDED
 - Prompt library location (all `UNRESOLVED in library` slots).
-- Code-deploy runner (C1 / ARCHITECTURE U3).
 - Rate limiting, CORS, WAF in front of the Function App.
 - Log destination for rejected access (L3).
 - GDPR-specific constraints beyond "no new personal data in logs".
