@@ -14,6 +14,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
@@ -67,6 +68,18 @@ class ProductsConnectorImplTest {
         when(productMsConnector.getProducts(anyBoolean())).thenReturn(products);
         assertSame(products, productConnector.getProducts(true));
         verify(productMsConnector).getProducts(anyBoolean());
+    }
+
+    @Test
+    void getProduct_blankIdThrows() {
+        assertThrows(IllegalArgumentException.class, () -> productConnector.getProduct(" ", InstitutionType.PA));
+        verifyNoInteractions(productMsConnector);
+    }
+
+    @Test
+    void getProductValid_blankIdThrows() {
+        assertThrows(IllegalArgumentException.class, () -> productConnector.getProductValid(""));
+        verifyNoInteractions(productMsConnector);
     }
 
     private Product dummyProduct(){

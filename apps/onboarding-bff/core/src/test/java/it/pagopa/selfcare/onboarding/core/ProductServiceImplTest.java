@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.onboarding.core;
 
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
+import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
@@ -199,6 +201,72 @@ class ProductServiceImplTest {
         assertEquals(List.of(enabledActiveProduct), result);
         verify(productMsConnector).getProducts(false);
         verifyNoMoreInteractions(productMsConnector);
+    }
+
+    @Test
+    void getProducts_rootOnlyReturnsEmptyListWhenNoProducts() {
+        when(productMsConnector.getProducts(true)).thenReturn(List.of());
+
+        assertTrue(productService.getProducts(true).isEmpty());
+        verify(productMsConnector).getProducts(true);
+    }
+
+    @Test
+    void getProduct_delegatesToConnectorWithSanitizedId() {
+        Product product = new Product();
+        product.setId("prod-io");
+        when(productMsConnector.getProduct(Encode.forJava("prod-io"))).thenReturn(product);
+
+        Product result = productService.getProduct("prod-io", InstitutionType.PA);
+
+        assertSame(product, result);
+        verify(productMsConnector).getProduct(Encode.forJava("prod-io"));
+        verifyNoMoreInteractions(productMsConnector);
+    }
+
+    @Test
+    void getProduct_sanitizesSpecialCharacters() {
+        String rawProductId = "prod\"io\n";
+        Product product = new Product();
+        when(productMsConnector.getProduct(Encode.forJava(rawProductId))).thenReturn(product);
+
+        assertSame(product, productService.getProduct(rawProductId, null));
+        verify(productMsConnector).getProduct(Encode.forJava(rawProductId));
+    }
+
+    @Test
+    void getProduct_propagatesNotFound() {
+        when(productMsConnector.getProduct("missing")).thenThrow(new ResourceNotFoundException("not found"));
+
+        assertThrows(ResourceNotFoundException.class, () -> productService.getProduct("missing", null));
+    }
+
+    @Test
+    void getProductValid_delegatesToConnector() {
+        Product product = new Product();
+        when(productMsConnector.getValidProduct(Encode.forJava("prod-io"))).thenReturn(product);
+
+        assertSame(product, productService.getProductValid("prod-io"));
+        verify(productMsConnector).getValidProduct(Encode.forJava("prod-io"));
+        verifyNoMoreInteractions(productMsConnector);
+    }
+
+    @Test
+    void isProductEnabled_delegatesToConnector() {
+        when(productMsConnector.isProductEnabled("prod-io")).thenReturn(true);
+        when(productMsConnector.isProductEnabled("prod-disabled")).thenReturn(false);
+
+        assertTrue(productService.isProductEnabled("prod-io"));
+        assertFalse(productService.isProductEnabled("prod-disabled"));
+    }
+
+    @Test
+    void verifyAllowedByInstitutionTaxCode_delegatesToConnector() {
+        when(productMsConnector.isAllowedByInstitutionTaxCode("prod-io", "ABC123")).thenReturn(true);
+        when(productMsConnector.isAllowedByInstitutionTaxCode("prod-io", "XYZ999")).thenReturn(false);
+
+        assertTrue(productService.verifyAllowedByInstitutionTaxCode("prod-io", "ABC123"));
+        assertFalse(productService.verifyAllowedByInstitutionTaxCode("prod-io", "XYZ999"));
     }
 
 }

@@ -854,7 +854,17 @@ db.products.insertMany([
       expirationDays: 30
     },
     roleMappings: [],
-    contracts: [],
+    // USER contract on purpose: the child passes the admin contract filter and is excluded only by rootOnly
+    contracts: [
+      {
+        onboardingType: "USER",
+        enabled: true,
+        institutionType: "DEFAULT",
+        contractType: "CONTRACT",
+        path: "contracts/template/io-premium/user/1.0.0/io-premium-user-contract.html",
+        version: "1.0.0"
+      }
+    ],
     institutionOrigins: [
       { institutionType: "PA", origin: "IPA", labelKey: "pa" }
     ],

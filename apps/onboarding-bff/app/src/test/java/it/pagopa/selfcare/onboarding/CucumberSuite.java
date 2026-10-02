@@ -59,8 +59,9 @@ public class CucumberSuite {
               .withLogConsumer("azure-cli", new Slf4jLogConsumer(log))
               // Use the 3-args overload: the 2-args one also registers the default
               // listening-port wait strategy (60s timeout), which is too short for onboarding-ms
+              // Liveness (not readiness): readiness checks depend on the onboarding-ms image version
               .withExposedService("onboarding-ms", 8080,
-                      Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200)
+                      Wait.forHttp("/q/health/live").forPort(8080).forStatusCode(200)
                               .withStartupTimeout(Duration.ofMinutes(5)))
               .withExposedService("product-ms", 8080,
                       Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200)

@@ -10,7 +10,9 @@ Feature: Product
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v1/products/admin"
     Then The status code is 200
-    And The response body contains the list "status" of size 2
+    And The response body contains the list "status" of size 1
+    And The response body contains:
+      | [0].id | prod-pagopa |
 
   Scenario: Success in getProducts by id
     Given User login with username "j.doe" and password "test"
