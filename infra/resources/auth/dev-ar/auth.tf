@@ -177,7 +177,7 @@ locals {
     },
     {
       name  = "SESSION_TOKEN_AUDIENCE"
-      value = "api.dev.selfcare.pagopa.it"
+      value = "api.${module.local.config.env}.selfcare.pagopa.it"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -193,19 +193,19 @@ locals {
     },
     {
       name  = "INTERNAL_API_URL"
-      value = "https://api.dev.selfcare.pagopa.it/external/internal/v1"
+      value = "https://api.${module.local.config.env}.selfcare.pagopa.it/external/internal/v1"
     },
     {
       name  = "INTERNAL_MS_USER_API_URL"
-      value = "https://api.dev.selfcare.pagopa.it/internal/user"
+      value = "https://api.${module.local.config.env}.selfcare.pagopa.it/internal/user"
     },
     {
       name  = "SAML_SP_ACS_URL"
-      value = "https://dev.selfcare.pagopa.it/saml/acs"
+      value = "https://${module.local.config.env}.selfcare.pagopa.it/saml/acs"
     },
     {
       name  = "SAML_SP_ENTITY_ID"
-      value = "https://dev.selfcare.pagopa.it"
+      value = "https://${module.local.config.env}.selfcare.pagopa.it"
     },
     {
       name  = "IAM_API_URL"
@@ -243,6 +243,7 @@ locals {
     "TENANT_AR_ONE_MAIL_API_KEY"            = "onemail-api-key"
   }
 }
+
 module "container_app_auth_ms" {
   source = "../../_modules/container_app_microservice"
 

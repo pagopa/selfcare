@@ -176,7 +176,7 @@ locals {
     },
     {
       name  = "SESSION_TOKEN_AUDIENCE"
-      value = "api.uat.selfcare.pagopa.it"
+      value = "api.${module.local.config.env}.selfcare.pagopa.it"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -192,19 +192,19 @@ locals {
     },
     {
       name  = "INTERNAL_API_URL"
-      value = "https://api.uat.selfcare.pagopa.it/external/internal/v1"
+      value = "https://api.${module.local.config.env}.selfcare.pagopa.it/external/internal/v1"
     },
     {
       name  = "INTERNAL_MS_USER_API_URL"
-      value = "https://api.uat.selfcare.pagopa.it/internal/user"
+      value = "https://api.${module.local.config.env}.selfcare.pagopa.it/internal/user"
     },
     {
       name  = "SAML_SP_ACS_URL"
-      value = "https://uat.selfcare.pagopa.it/saml/acs"
+      value = "https://${module.local.config.env}.selfcare.pagopa.it/saml/acs"
     },
     {
       name  = "SAML_SP_ENTITY_ID"
-      value = "https://uat.selfcare.pagopa.it"
+      value = "https://${module.local.config.env}.selfcare.pagopa.it"
     },
     {
       name  = "IAM_API_URL"
