@@ -20,7 +20,7 @@ import eu.europa.esig.dss.validation.reports.Reports;
 import eu.europa.esig.validationreport.jaxb.SignatureValidationReportType;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
-import it.pagopa.selfcare.document.config.PagoPaSignatureConfig;
+import it.pagopa.selfcare.document.config.TenantPadesSignServiceResolver;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -28,8 +28,8 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.SignatureService;
 import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
-import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -60,22 +60,21 @@ public class SignatureServiceImpl implements SignatureService {
     Boolean isVerifyEnabled;
 
   private static final Integer CF_MATCHER_GROUP = 2;
-  private static final String PAGOPA_SIGNATURE_DISABLED = "disabled";
   private static final Pattern signatureRegex = Pattern.compile("(TINIT-)(.*)");
 
 
-  private final PagoPaSignatureConfig pagoPaSignatureConfig;
   private final TrustedListsCertificateSource trustedListsCertificateSource;
-  private final PadesSignService padesSignService;
+  private final TenantPadesSignServiceResolver tenantPadesSignServiceResolver;
+  private final TenantContext tenantContext;
   private final DocumentMsTelemetryService telemetryService;
 
   public SignatureServiceImpl(TrustedListsCertificateSource trustedListsCertificateSource,
-                              PagoPaSignatureConfig pagoPaSignatureConfig,
-                              PadesSignService padesSignService,
+                              TenantPadesSignServiceResolver tenantPadesSignServiceResolver,
+                              TenantContext tenantContext,
                               DocumentMsTelemetryService telemetryService) {
     this.trustedListsCertificateSource = trustedListsCertificateSource;
-    this.pagoPaSignatureConfig = pagoPaSignatureConfig;
-    this.padesSignService = padesSignService;
+    this.tenantPadesSignServiceResolver = tenantPadesSignServiceResolver;
+    this.tenantContext = tenantContext;
     this.telemetryService = telemetryService;
   }
 
@@ -485,23 +484,27 @@ public class SignatureServiceImpl implements SignatureService {
 
     @Override
     public Uni<File> signDocument(File pdf, String institutionDescription, String productId) {
+        String tenantId = tenantContext.requiredTenantId();
+        TenantPadesSignServiceResolver.ResolvedPadesSignService signature =
+                tenantPadesSignServiceResolver.resolve(tenantId);
         return Uni.createFrom().item(() -> {
             try {
-                if (PAGOPA_SIGNATURE_DISABLED.equals(pagoPaSignatureConfig.source())) {
-                    log.info("Skipping PagoPA contract pdf sign due to global disabling");
+                if (signature.disabled()) {
+                    log.info("Skipping PagoPA contract pdf sign for tenant {} because source is disabled",
+                            signature.tenantId());
                     return pdf;
                 }
 
                 String signReason =
-                        pagoPaSignatureConfig
-                                .applyOnboardingTemplateReason()
+                        signature.reason()
                                 .replace("${institutionName}", institutionDescription)
                                 .replace("${productName}", productId);
 
-                log.info("Signing input file {} using reason {}", sanitize(pdf.getName()), sanitize(signReason));
+                log.info("Signing input file {} for tenant {} using reason {}",
+                        sanitize(pdf.getName()), signature.tenantId(), sanitize(signReason));
 
                 Path signedPdf = createSafeTempFile("signed", ".pdf");
-                padesSignService.padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signReason));
+                signature.service().padesSign(pdf, signedPdf.toFile(), buildSignatureInfo(signature, signReason));
                 return signedPdf.toFile();
 
             } catch (IOException e) {
@@ -511,8 +514,9 @@ public class SignatureServiceImpl implements SignatureService {
         .runSubscriptionOn(Infrastructure.getDefaultExecutor());
     }
 
-    private SignatureInformation buildSignatureInfo(String signReason) {
+    private SignatureInformation buildSignatureInfo(
+            TenantPadesSignServiceResolver.ResolvedPadesSignService signature, String signReason) {
         return new SignatureInformation(
-                pagoPaSignatureConfig.signer(), pagoPaSignatureConfig.location(), signReason);
+                signature.signer(), signature.location(), signReason);
     }
 }
