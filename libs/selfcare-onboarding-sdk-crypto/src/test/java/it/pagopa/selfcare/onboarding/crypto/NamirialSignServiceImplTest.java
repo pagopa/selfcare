@@ -130,6 +130,25 @@ class NamirialSignServiceImplTest {
     }
 
     @Test
+    void testPkcs7Signhash_UsesConstructorCredentials() throws IOException {
+        byte[] expectedResult = "signed-content".getBytes(StandardCharsets.UTF_8);
+        ArgumentCaptor<SignRequest> signRequestCaptor = ArgumentCaptor.forClass(SignRequest.class);
+        NamirialHttpClient client = mock(NamirialHttpClient.class);
+        when(client.signDocument(any(SignRequest.class))).thenReturn(expectedResult);
+
+        NamiralSignServiceImpl service =
+                new NamiralSignServiceImpl(client, "tenant-user", "tenant-password");
+
+        byte[] result = service.pkcs7Signhash(new ByteArrayInputStream(TEST_PDF_CONTENT.getBytes(StandardCharsets.UTF_8)));
+
+        assertArrayEquals(expectedResult, result);
+        verify(client).signDocument(signRequestCaptor.capture());
+        Credentials credentials = signRequestCaptor.getValue().getCredentials();
+        assertEquals("tenant-user", credentials.getUsername());
+        assertEquals("tenant-password", credentials.getPassword());
+    }
+
+    @Test
     void testPkcs7Signhash_HttpClientThrowsIOException() {
         // Arrange
         InputStream inputStream = new ByteArrayInputStream(TEST_PDF_CONTENT.getBytes(StandardCharsets.UTF_8));
@@ -311,4 +330,3 @@ class NamirialSignServiceImplTest {
         assertEquals("SHA256", capturedRequest.getPreferences().getHashAlgorithm());
     }
 }
-
