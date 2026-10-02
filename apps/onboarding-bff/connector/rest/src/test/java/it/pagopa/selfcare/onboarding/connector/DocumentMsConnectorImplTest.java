@@ -4,9 +4,9 @@ import it.pagopa.selfcare.document.generated.openapi.v1.dto.DocumentBuilderReque
 import it.pagopa.selfcare.document.generated.openapi.v1.dto.UserAttachmentRequest;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.onboarding.connector.model.product.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentContentApiClient;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;

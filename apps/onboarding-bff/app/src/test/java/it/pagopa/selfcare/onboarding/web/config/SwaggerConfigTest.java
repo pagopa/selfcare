@@ -3,13 +3,12 @@ package it.pagopa.selfcare.onboarding.web.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
 import it.pagopa.selfcare.onboarding.connector.rest.client.*;
-import it.pagopa.selfcare.onboarding.connector.rest.config.ProductServiceConfig;
 import it.pagopa.selfcare.onboarding.connector.rest.config.UserRegistryRestClientConfig;
 import it.pagopa.selfcare.onboarding.core.InstitutionService;
 import it.pagopa.selfcare.onboarding.core.ProductAzureService;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import it.pagopa.selfcare.onboarding.core.UserService;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.core.ProductService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -100,8 +99,6 @@ class SwaggerConfigTest {
     @MockBean
     private UserRegistryRestClientConfig userRegistryRestClientConfig;
 
-    @MockBean
-    private ProductServiceConfig productServiceConfig;
 
     @Autowired
     WebApplicationContext context;
