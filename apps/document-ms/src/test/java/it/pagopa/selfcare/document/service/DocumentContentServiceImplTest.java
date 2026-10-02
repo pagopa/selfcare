@@ -854,13 +854,13 @@ class DocumentContentServiceImplTest {
                 .thenAnswer(inv -> Uni.createFrom().item(inv.getArgument(0, Document.class)));
         when(azureBlobClient.uploadFile(anyString(), anyString(), any(byte[].class)))
                 .thenThrow(new RuntimeException("Azure down"));
-        when(documentRepository.delete(any(Document.class)))
-                .thenReturn(Uni.createFrom().voidItem());
+        when(documentRepository.deleteDocument(anyString()))
+                .thenReturn(Uni.createFrom().item(true));
 
         var awaiter = documentContentService.uploadUserAttachment(request, formItem).await();
         assertThrows(Exception.class, awaiter::indefinitely);
 
-        verify(documentRepository).delete(any(Document.class));
+        verify(documentRepository).deleteDocument(anyString());
     }
 
     // ---- getTemplateDigest ----
