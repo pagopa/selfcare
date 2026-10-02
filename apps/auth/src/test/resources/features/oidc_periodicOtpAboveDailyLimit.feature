@@ -39,6 +39,7 @@ Feature: Oidc with periodic OTP flow above daily limit
     And OTP feature flag is set to "BETA"
     And User in the beta user list with the following details:
       | fiscalCode | blbrki80A41H401T |
+      | sameIdp    | true             |
     And The following request body:
       """
       {

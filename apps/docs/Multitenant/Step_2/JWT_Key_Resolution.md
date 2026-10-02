@@ -56,6 +56,26 @@ the canonical registry schema; see `Storage_identification.md`.
 reusing the existing `jwt-public-key` secret per stack (see
 `infra/resources/onboarding-ms/*/onboarding.tf`).
 
+Auth also signs session JWTs with tenant-specific keys. Its `jwt.session` registry object
+contains only the names of the secret-backed variables:
+
+```json
+{
+  "jwt": {
+    "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR",
+    "session": {
+      "privateKeyEnvVar": "TENANT_AR_JWT_SESSION_PRIVATE_KEY",
+      "keyIdEnvVar": "TENANT_AR_JWT_SESSION_KEY_ID"
+    }
+  }
+}
+```
+
+At startup, auth resolves those names from configuration and loads the signing key. The
+private key value and `kid` value remain outside `TENANT_REGISTRY_JSON`; Terraform injects
+them from Key Vault. Missing references or values fail startup, without falling back to
+another tenant's signing key.
+
 `mp.jwt.verify.publickey` is kept as a **legacy fallback only**: it is used solely when
 no tenant in the registry configures a `jwt.publicKeyEnvVar`. Apps that already wire
 the tenant JWT registry (`onboarding-ms`, `product`, `user-group-ms`) resolve keys

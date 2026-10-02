@@ -10,7 +10,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Collection;
 import java.util.Map;
-import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
@@ -19,13 +18,12 @@ public class TenantRegistry {
   public static final String ONE_IDENTITY = "ONE_IDENTITY";
 
   @Inject ObjectMapper objectMapper;
-  @Inject Config config;
+  @Inject it.pagopa.selfcare.tenant.TenantRegistry resourceRegistry;
 
   @ConfigProperty(name = "tenant.registry.json")
   String tenantRegistryJson;
 
   private Map<String, TenantDefinition> tenants;
-  private Map<String, OneIdentityCredentials> oneIdentityCredentials;
 
   @PostConstruct
   void initialize() {
@@ -38,30 +36,6 @@ public class TenantRegistry {
       throw new IllegalStateException("Invalid tenant registry configuration", e);
     }
 
-    oneIdentityCredentials =
-        tenants.entrySet().stream()
-            .filter(entry -> entry.getValue().authEnabled())
-            .filter(entry -> ONE_IDENTITY.equals(entry.getValue().authenticationProvider()))
-            .collect(
-                java.util.stream.Collectors.toUnmodifiableMap(
-                    Map.Entry::getKey,
-                    entry -> {
-                      String propertyPrefix =
-                          "tenant." + entry.getKey().toLowerCase() + ".one-identity.";
-                      return new OneIdentityCredentials(
-                          requiredConfig(propertyPrefix + "client-id", entry.getKey()),
-                          requiredConfig(propertyPrefix + "client-secret", entry.getKey()));
-                    }));
-  }
-
-  private String requiredConfig(String propertyName, String tenantId) {
-    return config
-        .getOptionalValue(propertyName, String.class)
-        .filter(value -> !value.isBlank())
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Missing OneIdentity configuration for tenant " + tenantId));
   }
 
   public Tenant resolveEnabledTenant(String tenantId) {
@@ -81,11 +55,14 @@ public class TenantRegistry {
   }
 
   public OneIdentityCredentials oneIdentityCredentials(String tenantId) {
-    OneIdentityCredentials credentials = oneIdentityCredentials.get(tenantId);
-    if (credentials == null) {
+    Tenant tenant = resolveEnabledTenant(tenantId);
+    if (!ONE_IDENTITY.equals(tenant.definition().authenticationProvider())) {
       throw new ForbiddenException("OneIdentity is not enabled for tenant");
     }
-    return credentials;
+    return resourceRegistry
+        .oneIdentityCredentials(tenantId)
+        .map(credentials -> new OneIdentityCredentials(credentials.clientId(), credentials.clientSecret()))
+        .orElseThrow(() -> new IllegalStateException("OneIdentity is not configured for tenant " + tenantId));
   }
 
   public Collection<Tenant> enabledAuthenticationTenants() {
@@ -97,5 +74,10 @@ public class TenantRegistry {
 
   public record Tenant(String id, TenantDefinition definition) {}
 
-  public record OneIdentityCredentials(String clientId, String clientSecret) {}
+  public record OneIdentityCredentials(String clientId, String clientSecret) {
+    @Override
+    public String toString() {
+      return "OneIdentityCredentials[REDACTED]";
+    }
+  }
 }

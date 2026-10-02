@@ -5,6 +5,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.client.OneMailEmailsApi;
+import it.pagopa.selfcare.auth.conf.TenantRegistry;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
@@ -14,6 +16,7 @@ import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.openapi.quarkus.one_mail_json.model.EmailStatusItemResponseDTO;
 import org.openapi.quarkus.one_mail_json.model.EmailSuccessResponseDTO;
 
@@ -28,9 +31,16 @@ import static org.mockito.Mockito.when;
 public class OtpNotificationServiceTest {
 
   @Inject OtpNotificationService otpNotificationService;
+  @Inject AuthTenantContext tenantContext;
+  @Inject TenantRegistry tenantRegistry;
 
   @RestClient @InjectMock
   OneMailEmailsApi oneMailEmailsApi;
+
+  @BeforeEach
+  void setUpTenant() {
+    tenantContext.setTenant(tenantRegistry.resolveEnabledTenant("AR"));
+  }
 
   private UserClaims getUserClaims() {
     return UserClaims.builder()
@@ -56,7 +66,7 @@ public class OtpNotificationServiceTest {
   }
 
   @Test
-  void fireAndForgetWhileSendingOtpEmail() {
+  void sendingOtpEmailSurfacesOneMailFailure() {
     UserClaims input = getUserClaims();
     String otp = OtpUtils.generateOTP();
     String email = "test@test.com";
@@ -67,7 +77,7 @@ public class OtpNotificationServiceTest {
         .sendOtpEmail(input.getUid(), email, otp, input.getName())
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
-        .assertCompleted();
+        .assertFailedWith(InternalException.class);
   }
 
   @Test

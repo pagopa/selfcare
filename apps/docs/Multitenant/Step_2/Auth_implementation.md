@@ -1,0 +1,57 @@
+# Applying Step 2 to `apps/auth`
+
+This document describes the work **to be done**, not a migration that has already been carried out. `REQUIREMENTS.md`, `ARCHITECTURE.md`, `Database_identification.md` and `JWT_Key_Resolution.md` from this step apply. `auth` handles OIDC/OneIdentity, SAML and OTP flows: not all of them receive a JWT on input. Tenant resolution for these entry points must respect the trust boundary defined in Step 0, without artificially imposing a JWT on the callback or the exchange. All subsequent resource choices use the already-validated tenant, never a parameter or header re-read from the client.
+
+## Current state and objective
+
+- `apps/auth/conf/TenantRegistry` reads the Step 0 `tenant.registry.json`, currently enables only AR for authentication, and delegates the resolution of OneIdentity credentials to the shared registry; `OidcServiceImpl` uses that tenant's credentials. `TenantSessionKeyProvider` already selects the session private key and `kid` per tenant. PNPG is configured with `HUB_SPID_LOGIN` and `auth_enabled=false`: do not enable OIDC or SAML for PNPG merely as a result of unifying the deployment.
+- `auth` uses `selfcare-sdk-tenant` to resolve User Registry credentials and `selfcare-sdk-tenant-mongodb` to select the Mongo client and database from `TenantContext`. The entry filter copies the validated tenant into that context. In the current deployment the Mongo route is configured only for AR; PNPG remains disabled and does not inherit the AR connection. OTP queries and counts use `tenantId`; updates require the AR tenant. In transitional mode, AR reads can still see legacy records without `tenantId`, but verification and resend reject them before modifying them: run the backfill **before** moving OTP traffic.
+- `UserServiceImpl` uses the generated client `user_registry_json` through `TenantUserRegistryApi`: `TenantUserRegistryApiKeyFilter` selects `x-api-key` from the registry based on the validated tenant, on every request. The old property `quarkus.openapi-generator.user_registry_json.auth.api_key.api-key` is no longer used.
+- The OneMail sender and key are explicitly associated with the AR tenant; `auth` receives `TENANT_AR_MAIL_SENDER` and `TENANT_AR_ONE_MAIL_API_KEY` with no fallback. The destinations of the other outbound clients are still single-valued and must be classified before any cutover.
+- `infra/resources/auth/{dev,uat,prod}-ar/auth.tf` exposes a single canonical JSON per tenant: auth metadata and references to resources/credentials. The Mongo, OneIdentity and OneMail routes in `auth` are AR-only; the PNPG User Registry reference remains in the shared registry for the other microservices. PDV routing has not been defined. The Step 2 implementation must keep the tenant's identity separate from the resource topology: shared and dedicated accounts go through the **same** resolution.
+
+## Proposed configuration contract
+
+Extend the shared per-tenant resource definition, without adding secret values to the JSON and without creating a second routing map specific to `auth`. `oneIdentity` and `userRegistry` are top-level dimensions **of each tenant**, reusable by other services as well: they must not be nested under `auth`. This example shows the required content for a tenant that uses both services:
+
+```json
+{
+  "AR": {
+    "mongo": {
+      "account": "cosmos-ar",
+      "database": "selcAuth",
+      "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
+    },
+    "oneIdentity": {
+      "clientIdEnvVar": "TENANT_AR_ONE_IDENTITY_CLIENT_ID",
+      "clientSecretEnvVar": "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"
+    },
+    "userRegistry": {
+      "apiKeyEnvVar": "USER_REGISTRY_API_KEY_AR"
+    }
+  }
+}
+```
+
+PNPG will require a distinct `mongo` entry **only when it uses `auth`**. The `oneIdentity` and `userRegistry` dimensions are configured per tenant and validated as mandatory only by the services/flows that use them: do not invent PNPG credentials for `auth` while `auth_enabled=false`, but do not tie the availability of `userRegistry` to the enabling of `auth` if other services use it. If PNPG login is enabled, first define the provider, the PDV contract and its credentials. Keep the public fields (`frontend_uri`, `api_uri`, `allowed_origins`, `authentication_provider`, `auth_enabled`) in the Step 0 registry, now in the same canonical JSON together with the resource references. `AuthTenantContext` and the libraries' `TenantContext` represent the same verified tenant.
+
+`auth` uses a single `tenant.registry.json`: Terraform merges the Step 0 metadata, the `tenant_credential_resources` references in the `local-env` module, and the AR `selcAuth` Mongo route in the `auth` stack. The SDK registry ignores the auth metadata, while the auth registry ignores the resource fields; both read the same definition. `userRegistry` is also present for PNPG in the shared registry, so that the other microservices can configure their own credential. `auth` exposes only the AR secret, and `tenant.supported-tenants=AR` limits the initialization of clients to the only tenant currently enabled; configure and validate the PNPG secrets and Mongo route before including PNPG in the `auth` deployment.
+
+The local properties `tenant.ar.one-identity.client-id` and `tenant.ar.one-identity.client-secret` have been removed: the shared registry resolves `clientIdEnvVar`/`clientSecretEnvVar` from the secret-backed variables without inserting their values into the JSON. For User Registry, the existing property `quarkus.openapi-generator.user_registry_json.auth.api_key.api-key` is **global**: interpolating a new variable into it is not enough. The generated client now uses a per-request filter to set `x-api-key` from the validated tenant. The copy of `src/main/openapi/user_registry.json` used to generate the client omits `security` on the operations: the Quarkiverse 2.16.0 generator would otherwise automatically register a global authentication provider. The `api_key` schema remains defined in the copy; the remote service's contract still requires `x-api-key`. The global property and the `example-api-key` fallback have been removed. Credentials and API keys go in Key Vault, injected as distinct secret-backed configuration per tenant (SELC-17.2/17.4).
+
+## Tasks ordered by dependency
+
+1. **Completed - libraries - model and registry (`libs/selfcare-sdk-tenant`).** Extend `TenantDefinition`/`TenantRegistry` with two optional top-level dimensions per tenant, `oneIdentity` and `userRegistry` (references to OneIdentity client ID and client secret, and User Registry API key), without restricting them to the `auth` microservice alone. Expose typed accessors that resolve the values from the injected variables and fail if a required mapping is missing/empty. Validate at startup the mandatory references for every service/flow that uses the dimension; do not make OneIdentity mandatory for the disabled PNPG login and do not change the other consumers. Test both tenants, missing configurations, duplicates and the absence of fallbacks.
+2. **Completed for AR - libraries - context and Mongo (`libs/selfcare-sdk-tenant-mongodb`, `libs/selfcare-sdk-security` if necessary).** Reuse the Mongo producer and the resolver to select the `selcAuth` account/database from `TenantContext`. Define the integration with auth entry points that have no JWT: reconcile the trusted tenant from Step 0 before the Panache call, without applying an impossible JWT validation to OIDC/SAML. Verify that the context stays isolated across concurrent requests and that the verification of any JWTs that are present remains correct (SELC-12, SELC-13).
+3. **Completed for AR - outbound clients.** Implement or reuse a request-scoped provider/filter for REST clients that reads the validated tenant and adds `x-api-key` from the registry. Use it in the OpenAPI client `user_registry_json` in place of the generated global authentication; check the order/registration of the generator's filters and prevent a global key from overriding the per-tenant one. Cover interleaved AR/PNPG calls and missing configuration, without logging the key.
+4. **Completed for AR - `apps/auth` - registry and credentials.** Both registries read the same JSON; the auth context feeds the shared one. PNPG login remains disabled. For a possible future PNPG activation, first confirm the PDV instance, URL and credentials and choose the destination per tenant (SELC-15).
+5. **Implemented for AR, backfill mandatory - OTP data and outgoing calls.** OTP reads and counts include the tenant; writes bound to `tenantId=AR` do not modify legacy records. `selfcare.tenant.strict-data-isolation` removes read compatibility after the backfill; in the DEV/UAT/PROD stacks the flag stays `false` until the data has been verified. Do not move unmigrated legacy OTP traffic: verification and resend are rejected and do not produce an apparent success. The tenant is propagated to IAM/user-ms, and the OneMail key and sender are tenant-bound; a sending error fails the flow. URL, templates, OTP flags and SAML/redirect parameters remain single-valued for `auth` AR; classify them before any PNPG entry point (SELC-12.4, SELC-16).
+6. **Partial - infrastructure and AR migration.** The stacks expose the canonical registry, the Mongo route and the necessary secrets for AR; PNPG has only the User Registry reference reusable by the other services, with no Mongo route or login in `auth`. No data migration has been performed. Inventory, backfill and verify `otpFlows` per environment with the Step 1 script, review the `(tenantId, ...)` indexes before merging data, and transfer ownership of any resource IDs to a single Terraform state before the cutover. Do not serialize reserved values in the registry.
+7. **AR verification and release gate.** Publish `selfcare-sdk-tenant` 0.4.0 before deploying `auth`. Verify the queries on real/containerized Mongo, the backfill and the OIDC/OTP/SAML flows on environment data, in addition to the unit tests. Confirm the APIM subscription-to-tenant binding, the PDV contract and Key Vault connectivity: the repository does not allow these to be verified. Enable strict mode only when **all** tenant-owned services in the environment use the same flag and the data has been verified; do not attribute to `auth` a strict isolation of the entire platform. DEV/UAT/PROD cutover and rollback must be tested in the environment, keeping the legacy stacks available (SELC-18).
+
+## Blocking decisions before the cutover
+
+- PNPG does not use `auth` yet: `HUB_SPID_LOGIN` remains disabled; a future login will require a separate project and cutover.
+- Define for AR/PNPG the Personal Data Vault instance/tenant, the User Registry URL, any distinct API key and the credentials model; block the unconfigured flow rather than using the AR key for PNPG.
+- Classify SAML, OneMail/OTP (sender, templates, credentials), IAM/user-ms, JWT audience and operational flags as per-tenant/per-environment/global; define the APIM contracts for machine-to-machine calls and the tenant propagation.
+- Agree on the Cosmos routes and the ownership of the OTP collections for each environment, together with the strategy for indexes, backfill, secret rotation and rollback.

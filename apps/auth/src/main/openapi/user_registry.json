@@ -86,10 +86,7 @@
             "description" : "Forbidden",
             "content" : { }
           }
-        },
-        "security" : [ {
-          "api_key" : [ ]
-        } ]
+        }
       }
     },
     "/users/{id}" : {
@@ -164,10 +161,7 @@
             "description" : "Forbidden",
             "content" : { }
           }
-        },
-        "security" : [ {
-          "api_key" : [ ]
-        } ]
+        }
       },
       "delete" : {
         "tags" : [ "user" ],
@@ -216,10 +210,7 @@
             "description" : "Forbidden",
             "content" : { }
           }
-        },
-        "security" : [ {
-          "api_key" : [ ]
-        } ]
+        }
       },
       "patch" : {
         "tags" : [ "user" ],
@@ -292,10 +283,7 @@
               }
             }
           }
-        },
-        "security" : [ {
-          "api_key" : [ ]
-        } ]
+        }
       }
     },
     "/users/search" : {
@@ -372,10 +360,7 @@
             "description" : "Forbidden",
             "content" : { }
           }
-        },
-        "security" : [ {
-          "api_key" : [ ]
-        } ]
+        }
       }
     }
   },
