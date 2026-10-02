@@ -3,7 +3,6 @@ package it.pagopa.selfcare.auth.conf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,7 +36,7 @@ class TenantSessionKeyProviderTest {
     privateKeyPem = properties.getProperty("jwt.session.private.key");
 
     when(tenantRegistry.enabledAuthenticationTenants())
-        .thenReturn(List.of(new TenantRegistry.Tenant("AR", mock(TenantDefinition.class))));
+        .thenReturn(List.of(tenantWithSigningReferences("AR")));
 
     provider = new TenantSessionKeyProvider();
     provider.tenantRegistry = tenantRegistry;
@@ -46,9 +45,9 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void loadSigningKeysForEveryEnabledTenant() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
-    when(config.getOptionalValue("tenant.ar.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.of("ar-kid"));
 
     provider.initialize();
@@ -59,7 +58,7 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void failStartupWhenSigningKeyIsMissing() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.empty());
 
     assertThrows(IllegalStateException.class, provider::initialize);
@@ -67,9 +66,9 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void failStartupWhenSigningKeyIsInvalid() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of("invalid"));
-    when(config.getOptionalValue("tenant.ar.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.of("ar-kid"));
 
     assertThrows(IllegalStateException.class, provider::initialize);
@@ -77,7 +76,7 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void failStartupWhenSigningKeyIsBlank() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(" "));
 
     assertThrows(IllegalStateException.class, provider::initialize);
@@ -85,9 +84,9 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void failStartupWhenKeyIdIsMissing() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
-    when(config.getOptionalValue("tenant.ar.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.empty());
 
     assertThrows(IllegalStateException.class, provider::initialize);
@@ -95,9 +94,9 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void failStartupWhenKeyIdIsBlank() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
-    when(config.getOptionalValue("tenant.ar.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.of(" "));
 
     assertThrows(IllegalStateException.class, provider::initialize);
@@ -105,9 +104,9 @@ class TenantSessionKeyProviderTest {
 
   @Test
   void getSigningKeyRejectsTenantWithoutConfiguredKey() {
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
-    when(config.getOptionalValue("tenant.ar.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.of("ar-kid"));
     provider.initialize();
 
@@ -119,23 +118,30 @@ class TenantSessionKeyProviderTest {
     when(tenantRegistry.enabledAuthenticationTenants())
         .thenReturn(
             List.of(
-                new TenantRegistry.Tenant("AR", mock(TenantDefinition.class)),
-                new TenantRegistry.Tenant("PNPG", mock(TenantDefinition.class))));
-    when(config.getOptionalValue("tenant.ar.jwt.session.private-key", String.class))
+                tenantWithSigningReferences("AR"), tenantWithSigningReferences("PNPG")));
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
-    when(config.getOptionalValue("tenant.ar.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_AR_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.of("ar-kid"));
-    when(config.getOptionalValue("tenant.pnpg.jwt.session.private-key", String.class))
+    when(config.getOptionalValue("TENANT_PNPG_JWT_SESSION_PRIVATE_KEY", String.class))
         .thenReturn(Optional.of(privateKeyPem));
-    when(config.getOptionalValue("tenant.pnpg.jwt.session.key-id", String.class))
+    when(config.getOptionalValue("TENANT_PNPG_JWT_SESSION_KEY_ID", String.class))
         .thenReturn(Optional.of("pnpg-kid"));
 
     provider.initialize();
 
     assertEquals("ar-kid", provider.getSigningKey("AR").keyId());
     assertEquals("pnpg-kid", provider.getSigningKey("PNPG").keyId());
-    verify(config).getOptionalValue("tenant.ar.jwt.session.private-key", String.class);
-    verify(config).getOptionalValue("tenant.pnpg.jwt.session.private-key", String.class);
+    verify(config).getOptionalValue("TENANT_AR_JWT_SESSION_PRIVATE_KEY", String.class);
+    verify(config).getOptionalValue("TENANT_PNPG_JWT_SESSION_PRIVATE_KEY", String.class);
+  }
+
+  @Test
+  void failStartupWhenTenantRegistryDoesNotConfigureSessionSigningReferences() {
+    when(tenantRegistry.enabledAuthenticationTenants())
+        .thenReturn(List.of(tenantWithoutSigningReferences("AR")));
+
+    assertThrows(IllegalStateException.class, provider::initialize);
   }
 
   @Test
@@ -145,5 +151,27 @@ class TenantSessionKeyProviderTest {
     provider.initialize();
 
     assertThrows(InternalException.class, () -> provider.getSigningKey("AR"));
+  }
+
+  private TenantRegistry.Tenant tenantWithSigningReferences(String tenantId) {
+    return new TenantRegistry.Tenant(
+        tenantId,
+        new TenantDefinition(
+            null,
+            null,
+            List.of(),
+            TenantRegistry.ONE_IDENTITY,
+            true,
+            new TenantDefinition.JwtDefinition(
+                null,
+                new TenantDefinition.SessionDefinition(
+                    "TENANT_" + tenantId + "_JWT_SESSION_PRIVATE_KEY",
+                    "TENANT_" + tenantId + "_JWT_SESSION_KEY_ID"))));
+  }
+
+  private TenantRegistry.Tenant tenantWithoutSigningReferences(String tenantId) {
+    return new TenantRegistry.Tenant(
+        tenantId,
+        new TenantDefinition(null, null, List.of(), TenantRegistry.ONE_IDENTITY, true));
   }
 }

@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.auth.client.ExternalInternalUserApi;
+import it.pagopa.selfcare.auth.client.TenantUserRegistryApi;
 import it.pagopa.selfcare.auth.exception.InternalException;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.model.UserClaims;
@@ -13,7 +14,6 @@ import jakarta.ws.rs.WebApplicationException;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.internal_json.model.UserOtpEmailInfoResponse;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.FamilyNameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.NameCertifiableSchema;
 import org.openapi.quarkus.user_registry_json.model.UserId;
@@ -30,7 +30,7 @@ public class UserServiceTest {
 
   @Inject UserService userService;
 
-  @RestClient @InjectMock UserApi userRegistryApi;
+  @RestClient @InjectMock TenantUserRegistryApi userRegistryApi;
 
   @RestClient @InjectMock ExternalInternalUserApi internalUserApi;
 

@@ -25,7 +25,7 @@ public class TenantSessionKeyProvider {
         tenantRegistry.enabledAuthenticationTenants().stream()
             .collect(
                 Collectors.toUnmodifiableMap(
-                    TenantRegistry.Tenant::id, tenant -> loadSigningKey(tenant.id())));
+                    TenantRegistry.Tenant::id, this::loadSigningKey));
   }
 
   public SigningKey getSigningKey(String tenantId) {
@@ -36,10 +36,13 @@ public class TenantSessionKeyProvider {
     return signingKey;
   }
 
-  private SigningKey loadSigningKey(String tenantId) {
-    String propertyPrefix = "tenant." + tenantId.toLowerCase() + ".jwt.session.";
-    String privateKeyPem = requiredConfig(propertyPrefix + "private-key", tenantId);
-    String keyId = requiredConfig(propertyPrefix + "key-id", tenantId);
+  private SigningKey loadSigningKey(TenantRegistry.Tenant tenant) {
+    String tenantId = tenant.id();
+    TenantDefinition.JwtDefinition jwt = tenant.definition().jwt();
+    TenantDefinition.SessionDefinition session = jwt == null ? null : jwt.session();
+    String privateKeyPem =
+        requiredConfig(session == null ? null : session.privateKeyEnvVar(), tenantId);
+    String keyId = requiredConfig(session == null ? null : session.keyIdEnvVar(), tenantId);
 
     try {
       return new SigningKey(Pkcs8Utils.parseRSAPrivateKeyFromPem(privateKeyPem), keyId);
@@ -48,14 +51,18 @@ public class TenantSessionKeyProvider {
     }
   }
 
-  private String requiredConfig(String propertyName, String tenantId) {
+  private String requiredConfig(String envVarName, String tenantId) {
+    if (envVarName == null || envVarName.isBlank()) {
+      throw missingConfiguration(tenantId);
+    }
     return config
-        .getOptionalValue(propertyName, String.class)
+        .getOptionalValue(envVarName, String.class)
         .filter(value -> !value.isBlank())
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Missing JWT signing configuration for tenant " + tenantId));
+        .orElseThrow(() -> missingConfiguration(tenantId));
+  }
+
+  private IllegalStateException missingConfiguration(String tenantId) {
+    return new IllegalStateException("Missing JWT signing configuration for tenant " + tenantId);
   }
 
   public record SigningKey(PrivateKey privateKey, String keyId) {}

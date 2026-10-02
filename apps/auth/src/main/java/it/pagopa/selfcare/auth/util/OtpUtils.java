@@ -4,6 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.Document;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
@@ -13,6 +14,25 @@ import java.util.List;
 public class OtpUtils {
 
   private OtpUtils() {}
+
+  public static String requireTenantId(String tenantId) {
+    if (tenantId == null || tenantId.isBlank()) {
+      throw new IllegalStateException("OTP tenant context is missing");
+    }
+    return tenantId;
+  }
+
+  public static Document tenantScopedRead(Document filter, String tenantId, boolean legacyArReadEnabled) {
+    requireTenantId(tenantId);
+    if (!legacyArReadEnabled || !"AR".equals(tenantId)) {
+      return filter.append(OtpFlow.Fields.tenantId.name(), tenantId);
+    }
+    // During the AR backfill, historical rows may have no tenantId (or an explicit null).
+    return new Document("$and", List.of(filter,
+        new Document("$or", List.of(
+            new Document(OtpFlow.Fields.tenantId.name(), tenantId),
+            new Document(OtpFlow.Fields.tenantId.name(), null)))));
+  }
 
   private static final SecureRandom random = new SecureRandom();
 
@@ -64,7 +84,9 @@ public class OtpUtils {
    * @param sameIdp: A boolean indicating if a user has changed its IdP since last login
    * @return a Boolean indicating if this user requires a brand new OtpFlow
    */
-  public static Uni<Boolean> isNewOtpFlowRequired(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isNewOtpFlowRequired(OtpFlow lastOtpFlow, Boolean sameIdp, Integer limit,
+      String tenantId, boolean legacyArReadEnabled) {
+    requireTenantId(tenantId);
 
     if (Boolean.FALSE.equals(sameIdp)) {
       boolean isPendingAndNotExpired = lastOtpFlow.getStatus().equals(OtpStatus.PENDING) && lastOtpFlow.getExpiresAt().isAfter(OffsetDateTime.now());
@@ -80,10 +102,12 @@ public class OtpUtils {
       return Uni.createFrom().item(true);
     }
 
-    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, limit);
+    return isPeriodicOtpRequiredWithLastOpt(lastOtpFlow, limit, tenantId, legacyArReadEnabled);
   }
 
-  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(OtpFlow lastOtpFlow, Integer limit) {
+  public static Uni<Boolean> isPeriodicOtpRequiredWithLastOpt(OtpFlow lastOtpFlow, Integer limit,
+      String tenantId, boolean legacyArReadEnabled) {
+      requireTenantId(tenantId);
 
       boolean isCompleted = lastOtpFlow.getStatus().equals(OtpStatus.COMPLETED);
       boolean isOlderThanSixMonths = lastOtpFlow.getCreatedAt().isBefore(OffsetDateTime.now().minusMonths(6));
@@ -92,17 +116,20 @@ public class OtpUtils {
         return Uni.createFrom().item(false);
       }
 
-      return isPeriodicOtpRequired(limit);
+      return isPeriodicOtpRequired(limit, tenantId, legacyArReadEnabled);
     }
 
-  public static Uni<Boolean> isOtpRequiredWithMissingOtpFlow(Boolean sameIdp, Integer limit) {
+  public static Uni<Boolean> isOtpRequiredWithMissingOtpFlow(Boolean sameIdp, Integer limit,
+      String tenantId, boolean legacyArReadEnabled) {
+    requireTenantId(tenantId);
     if (Boolean.FALSE.equals(sameIdp)) {
       return Uni.createFrom().item(true);
     }
-    return isPeriodicOtpRequired(limit);
+    return isPeriodicOtpRequired(limit, tenantId, legacyArReadEnabled);
   }
 
-  public static Uni<Boolean> isPeriodicOtpRequired(Integer limit) {
+  public static Uni<Boolean> isPeriodicOtpRequired(Integer limit, String tenantId, boolean legacyArReadEnabled) {
+    requireTenantId(tenantId);
     if (limit == 0) {
       return Uni.createFrom().item(false);
     }
@@ -111,21 +138,23 @@ public class OtpUtils {
       return Uni.createFrom().item(true);
     }
 
-    return otpCountTodayDistinctUsers()
+    return otpCountTodayDistinctUsers(tenantId, legacyArReadEnabled)
             .map(count ->{
               log.info("OTP count is: {}", count);
               return count < limit;
             });
   }
 
-  private static Uni<Long> otpCountTodayDistinctUsers() {
+  private static Uni<Long> otpCountTodayDistinctUsers(String tenantId, boolean legacyArReadEnabled) {
 
     OffsetDateTime now = OffsetDateTime.now();
     OffsetDateTime startOfDay = now.toLocalDate()
             .atStartOfDay()
             .atOffset(now.getOffset());
 
-    return OtpFlow.<OtpFlow>find("createdAt >= ?1", startOfDay.toInstant())
+    return OtpFlow.<OtpFlow>find(
+            tenantScopedRead(new Document(OtpFlow.Fields.createdAt.name(),
+                new Document("$gte", startOfDay.toInstant())), tenantId, legacyArReadEnabled))
             .list()
             .map(list -> list.stream()
                     .map(OtpFlow::getUserId)

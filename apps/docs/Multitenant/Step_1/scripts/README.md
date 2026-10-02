@@ -92,22 +92,27 @@ Requires `pymongo` (`pip install pymongo`).
 
 Tagging the data is only half the job. Until the services stop accepting untagged documents, an untagged
 document that appears later — from a restored backup, a replayed event, a fixture — is still readable by both
-tenants. Once `--verify` exits `0` for both tenants in an environment, set in `infra/resources/_modules/local-env/locals.tf`:
+tenants. Once `--verify` exits `0` for both tenants in an environment, set the corresponding entry in
+`infra/resources/_modules/local-env/locals.tf`:
 
 ```hcl
-strict_tenant_data_isolation = true
+strict_tenant_data_isolation_by_env = {
+  dev  = true  # only after DEV verification
+  uat  = false
+  prod = false
+}
 ```
 
-and apply that environment. The value is per environment, in one place, because it describes the state of the
-environment's *data*, not of a service: each stack that carries tenant-scoped data passes
-`module.local.config.strict_tenant_data_isolation` to the `container_app_microservice` module, which injects
-`SELFCARE_TENANT_STRICT_DATA_ISOLATION` (property `selfcare.tenant.strict-data-isolation`; the same variable
-name works for both the Quarkus and the Spring services).
+The example is illustrative: do not enable DEV until the verification actually succeeds. Apply only after
+every participating service has been wired to `module.local.config.strict_tenant_data_isolation`
+and verified in that environment. Currently `infra/resources/auth/{dev,uat,prod}-ar/auth.tf` injects
+`SELFCARE_TENANT_STRICT_DATA_ISOLATION` for `auth`; wiring the other services remains a separate rollout
+gate. The property name is `selfcare.tenant.strict-data-isolation`.
 
-It drops the `or tenantId is null` branch in `auth`, `document-ms`, `iam`,
-`user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`, `delegation-cdc` and `user-cdc` — every
-service that has one, so that an environment flipping the variable becomes strict everywhere at once. Flipping
-only some of them would produce an environment that reports isolation it does not have.
+In `auth`, strict mode drops the `or tenantId is null` branch for OTP reads. Before consolidation,
+`document-ms`, `iam`, `user-ms`, `onboarding-ms`, `user-group-ms`, `institution-ms`,
+`delegation-cdc`, `user-cdc` and any other tenant-owned service must use the same environment flag;
+flipping only `auth` would leave the environment partially strict.
 
 It is a flag rather than a code deletion because the backfill lands at a different time in each environment:
 a hardcoded switch would keep the strict build out of PROD until PROD had been migrated. Each environment
