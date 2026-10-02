@@ -432,7 +432,7 @@ Feature: Oidc with no active periodic OTP flow
     Then The status code is 500
     And The response body contains:
       | status | 500       |
-      | detail | Cannot patch user on Personal Data Vault:it.pagopa.selfcare.auth.exception.ResourceNotFoundException: Not Found:Received: 'Not Found, status code 404' when invoking REST Client method: 'org.openapi.quarkus.user_registry_json.api.UserApi#saveUsingPATCH' |
+      | detail | Cannot patch user on Personal Data Vault |
 
   Scenario: Fail getting user info email on external internal APIs
     And OTP feature flag is set to "BETA"
@@ -451,10 +451,10 @@ Feature: Oidc with no active periodic OTP flow
     Then The status code is 500
     And The response body contains:
       | status | 500       |
-      | detail | Cannot Handle OTP Flow:it.pagopa.selfcare.auth.exception.InternalException: Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#getUserOtpEmailInfo' |
+      | detail | Cannot Handle OTP Flow |
 
   @RemoveOtpFlow
-  Scenario: Successful OIDC exchange with OTP feature flag set to "BETA", forced OTP enabled but OTP email not sent
+  Scenario: OIDC exchange fails when OTP email delivery fails
     Given User login with username "r.balboa" and password "test"
     And OTP feature flag is set to "BETA"
     And User in the beta user list with the following details:
@@ -469,9 +469,7 @@ Feature: Oidc with no active periodic OTP flow
     }
     """
     When I send a POST request to "oidc/exchange"
-    Then The status code is 200
+    Then The status code is 500
     And The response body contains:
-      | requiresOtpFlow | true                       |
-      | maskedEmail     | u*****n@regionelazio.it    |
-    And The response body contains field "otpSessionUid"
-    And An OTP flow should be created with status "PENDING" and mailRequestId "null"
+      | status | 500                  |
+      | detail | Cannot Handle OTP Flow |

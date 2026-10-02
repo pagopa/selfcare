@@ -7,6 +7,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.entity.OtpFlow;
 import it.pagopa.selfcare.auth.model.OtpStatus;
+import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -54,61 +55,61 @@ public class OtpUtilsTest {
   @Test
   void completedAndSameIdp_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void completedAndDifferentIdp_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, false, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, false, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void expiredStatus_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.EXPIRED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void rejectedStatus_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.REJECTED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void pendingAndNotExpired_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.PENDING, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now());
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void pendingAndExpired_ShouldRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.PENDING, OffsetDateTime.now().minusMinutes(1), OffsetDateTime.now());
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void completedAndExpired_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().minusMinutes(1), OffsetDateTime.now());
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void completed3monthsAgo_ShouldNotRequireNewOtp() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now().minusMonths(3));
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void completed7monthsAgo_ShouldNotRequireNewOtp_PeriodicOTPNotActive() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now().minusMonths(7));
-    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isNewOtpFlowRequired(flow, true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void completed7monthsAgo_ShouldRequireNewOtp_PeriodicOTPActive() {
     OtpFlow flow = createOtpFlow(OtpStatus.COMPLETED, OffsetDateTime.now().plusMinutes(5), OffsetDateTime.now().minusMonths(7));
-    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, -1).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isNewOtpFlowRequired(flow, true, -1, "AR", true).await().indefinitely());
   }
 
   @Test
@@ -131,13 +132,13 @@ public class OtpUtilsTest {
 
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
 
-    when(OtpFlow.find(Mockito.anyString(), Mockito.<Object[]>any()))
+    when(OtpFlow.find(Mockito.any(Document.class)))
             .thenReturn(query);
 
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 3)
+    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 3, "AR", true)
             .await()
             .indefinitely();
 
@@ -159,13 +160,13 @@ public class OtpUtilsTest {
 
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
 
-    when(OtpFlow.find(Mockito.anyString(), Mockito.<Object[]>any()))
+    when(OtpFlow.find(Mockito.any(Document.class)))
             .thenReturn(query);
 
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 2)
+    Boolean result = OtpUtils.isNewOtpFlowRequired(flow, true, 2, "AR", true)
             .await()
             .indefinitely();
 
@@ -174,12 +175,12 @@ public class OtpUtilsTest {
 
   @Test
   void isOtpRequiredWithMissingOtpFlow_DifferentIdp_ShouldRequireOtp() {
-    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(false, 0).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(false, 0, "AR", true).await().indefinitely());
   }
 
   @Test
   void isOtpRequiredWithMissingOtpFlow_SameIdp_PeriodicOtpNotActive_ShouldNotRequireOtp() {
-    Assertions.assertFalse(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 0).await().indefinitely());
+    Assertions.assertFalse(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 0, "AR", true).await().indefinitely());
   }
 
   @Test
@@ -196,13 +197,13 @@ public class OtpUtilsTest {
 
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
 
-    when(OtpFlow.find(Mockito.anyString(), Mockito.<Object[]>any()))
+    when(OtpFlow.find(Mockito.any(Document.class)))
             .thenReturn(query);
 
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 3)
+    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 3, "AR", true)
             .await()
             .indefinitely();
 
@@ -223,13 +224,13 @@ public class OtpUtilsTest {
 
     ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
 
-    when(OtpFlow.find(Mockito.anyString(), Mockito.<Object[]>any()))
+    when(OtpFlow.find(Mockito.any(Document.class)))
             .thenReturn(query);
 
     when(query.list())
             .thenReturn(Uni.createFrom().item(List.of(f1, f2, f3)));
 
-    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 2)
+    Boolean result = OtpUtils.isOtpRequiredWithMissingOtpFlow(true, 2, "AR", true)
             .await()
             .indefinitely();
 
@@ -239,7 +240,40 @@ public class OtpUtilsTest {
 
   @Test
   void isOtpRequiredWithMissingOtpFlow_SameIdp_PeriodicOtpActive_ShouldRequireOtp() {
-    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, -1).await().indefinitely());
+    Assertions.assertTrue(OtpUtils.isOtpRequiredWithMissingOtpFlow(true, -1, "AR", true).await().indefinitely());
+  }
+
+  @Test
+  void tenantScopedReadOnlyIncludesLegacyForArDuringBackfill() {
+    Document filter = new Document("uuid", "same-uuid");
+    Document ar = OtpUtils.tenantScopedRead(new Document(filter), "AR", true);
+    Assertions.assertEquals(filter, ((List<?>) ar.get("$and")).get(0));
+    Document alternatives = (Document) ((List<?>) ar.get("$and")).get(1);
+    Assertions.assertEquals(List.of(
+        new Document("tenantId", "AR"), new Document("tenantId", null)), alternatives.get("$or"));
+    Assertions.assertEquals(new Document("uuid", "same-uuid").append("tenantId", "AR"),
+        OtpUtils.tenantScopedRead(new Document(filter), "AR", false));
+    Assertions.assertEquals(new Document("uuid", "same-uuid").append("tenantId", "PNPG"),
+        OtpUtils.tenantScopedRead(new Document(filter), "PNPG", true));
+    Assertions.assertThrows(IllegalStateException.class,
+        () -> OtpUtils.tenantScopedRead(new Document(filter), " ", true));
+  }
+
+  @Test
+  void dailyLimitCountIsTenantScoped() {
+    PanacheMock.mock(OtpFlow.class);
+    ReactivePanacheQuery<ReactivePanacheMongoEntityBase> query = Mockito.mock(ReactivePanacheQuery.class);
+    when(OtpFlow.find(Mockito.any(Document.class))).thenAnswer(invocation -> {
+      Document filter = invocation.getArgument(0);
+      Assertions.assertEquals("PNPG", filter.getString("tenantId"));
+      Assertions.assertNotNull(((Document) filter.get("createdAt")).get("$gte"));
+      return query;
+    });
+    when(query.list()).thenReturn(Uni.createFrom().item(List.of()));
+
+    Assertions.assertTrue(OtpUtils.isPeriodicOtpRequired(1, "PNPG", true).await().indefinitely());
+    Assertions.assertThrows(IllegalStateException.class,
+        () -> OtpUtils.isPeriodicOtpRequired(0, null, true));
   }
 
 

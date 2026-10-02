@@ -10,7 +10,9 @@ import java.util.Map;
 public record TenantDefinition(
         @JsonProperty("mongo") MongoDefinition mongo,
         @JsonProperty("jwt") JwtDefinition jwt,
-        @JsonProperty("storages") Map<String, StorageDefinition> storages) {
+        @JsonProperty("storages") Map<String, StorageDefinition> storages,
+        @JsonProperty("oneIdentity") OneIdentityDefinition oneIdentity,
+        @JsonProperty("userRegistry") UserRegistryDefinition userRegistry) {
 
     public TenantDefinition {
         storages = copyStorages(storages);
@@ -18,6 +20,20 @@ public record TenantDefinition(
 
     public TenantDefinition(MongoDefinition mongo, JwtDefinition jwt) {
         this(mongo, jwt, Map.of());
+    }
+
+    public TenantDefinition(MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages) {
+        this(mongo, jwt, storages, null, null);
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record OneIdentityDefinition(
+            @JsonProperty("clientIdEnvVar") String clientIdEnvVar,
+            @JsonProperty("clientSecretEnvVar") String clientSecretEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record UserRegistryDefinition(@JsonProperty("apiKeyEnvVar") String apiKeyEnvVar) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

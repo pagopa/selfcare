@@ -2,6 +2,10 @@
 
 ## Required Architecture Inputs
 
+- `Auth adoption plan:` [Auth_implementation.md](Auth_implementation.md) applies the shared resource
+  registry, tenant-specific OneIdentity credentials, and per-request User Registry API key to `apps/auth`.
+  OIDC/SAML ingress without a JWT must retain its Step 0 tenant trust boundary; PNPG authentication
+  remains disabled until its provider and downstream contracts are defined.
 - `Requirements source: REQUIREMENTS.md` — primary source:
   `apps/docs/Multitenant/Step_2/REQUIREMENTS.md`; inherited context:
   `apps/docs/Multitenant/Step_1/REQUIREMENTS.md`.

@@ -12,7 +12,7 @@
   </parent>
 
   <artifactId>selfcare-sdk-tenant-mongodb</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <name>selfcare-sdk-tenant-mongodb</name>
   <description>Quarkus MongoDB tenant routing for Selfcare services.
   </description>
@@ -25,7 +25,7 @@
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>3.11.2</quarkus.platform.version>
     <maven.compiler.release>17</maven.compiler.release>
-    <common-sdk-tenant-version>0.3.0</common-sdk-tenant-version>
+    <common-sdk-tenant-version>0.4.0</common-sdk-tenant-version>
   </properties>
 
   <dependencyManagement>

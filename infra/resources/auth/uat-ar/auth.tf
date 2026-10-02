@@ -130,8 +130,29 @@ locals {
       value = "auth-ms"
     },
     {
-      name  = "TENANT_REGISTRY_JSON"
-      value = jsonencode(module.local.config.tenant_registry)
+      name = "TENANT_REGISTRY_JSON"
+      value = jsonencode({
+        for tenant_id, tenant in module.local.config.tenant_registry :
+        tenant_id => merge(tenant, module.local.config.tenant_credential_resources[tenant_id], {
+          mongo = tenant_id == "AR" ? {
+            account                = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+            database               = "selcAuth"
+            connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
+          } : null
+          }, tenant.auth_enabled ? {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
+            session = {
+              privateKeyEnvVar = "TENANT_${tenant_id}_JWT_SESSION_PRIVATE_KEY"
+              keyIdEnvVar      = "TENANT_${tenant_id}_JWT_SESSION_KEY_ID"
+            }
+          }
+        } : {})
+      })
+    },
+    {
+      name  = "SELFCARE_TENANT_STRICT_DATA_ISOLATION"
+      value = tostring(module.local.config.strict_tenant_data_isolation)
     },
     {
       name  = "SHARED_ACCESS_KEY_NAME"
@@ -155,7 +176,7 @@ locals {
     },
     {
       name  = "SESSION_TOKEN_AUDIENCE"
-      value = "api.uat.selfcare.pagopa.it"
+      value = "api.${module.local.config.env}.selfcare.pagopa.it"
     },
     {
       name  = "USER_REGISTRY_URL"
@@ -171,19 +192,19 @@ locals {
     },
     {
       name  = "INTERNAL_API_URL"
-      value = "https://api.uat.selfcare.pagopa.it/external/internal/v1"
+      value = "https://api.${module.local.config.env}.selfcare.pagopa.it/external/internal/v1"
     },
     {
       name  = "INTERNAL_MS_USER_API_URL"
-      value = "https://api.uat.selfcare.pagopa.it/internal/user"
+      value = "https://api.${module.local.config.env}.selfcare.pagopa.it/internal/user"
     },
     {
       name  = "SAML_SP_ACS_URL"
-      value = "https://uat.selfcare.pagopa.it/saml/acs"
+      value = "https://${module.local.config.env}.selfcare.pagopa.it/saml/acs"
     },
     {
       name  = "SAML_SP_ENTITY_ID"
-      value = "https://uat.selfcare.pagopa.it"
+      value = "https://${module.local.config.env}.selfcare.pagopa.it"
     },
     {
       name  = "IAM_API_URL"
@@ -198,26 +219,27 @@ locals {
       value = "https://uat.onemail.pagopa.it"
     },
     {
-      name  = "MAIL_SENDER_ADDRESS"
+      name  = "TENANT_AR_MAIL_SENDER"
       value = "noreply@selfcare.pagopa.it"
     }
   ]
 
   secrets_names_auth_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_AR"          = "mongodb-connection-string"
     "TENANT_AR_ONE_IDENTITY_CLIENT_ID"      = "oneidentity-client-id"
     "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
     "TENANT_AR_JWT_SESSION_PRIVATE_KEY"     = "jwt-private-key-pkcs8"
     "TENANT_AR_JWT_SESSION_KEY_ID"          = "jwt-kid"
-    "USER_REGISTRY_API_KEY"                 = "user-registry-api-key"
+    "JWT_PUBLIC_KEY_AR"                     = "jwt-public-key"
+    "USER_REGISTRY_API_KEY_AR"              = "user-registry-api-key"
     "INTERNAL_API_KEY"                      = "internal-api-key"
     "INTERNAL_MS_USER_API_KEY"              = "internal-ms-user-api-key"
     "FEATURE_FLAG_OTP_BETA_USERS"           = "feature-flag-otp-beta-users"
     "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
     "SAML_IDP_METADATA"                     = "saml-idp-metadata"
     "SAML_IDP_CERT"                         = "saml-idp-cert"
-    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
+    "TENANT_AR_ONE_MAIL_API_KEY"            = "onemail-api-key"
   }
 }
 
