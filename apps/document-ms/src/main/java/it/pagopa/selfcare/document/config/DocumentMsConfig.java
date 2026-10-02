@@ -1,10 +1,7 @@
 package it.pagopa.selfcare.document.config;
 
-import io.quarkus.runtime.StartupEvent;
-import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.enterprise.event.Observes;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -29,10 +26,6 @@ public class DocumentMsConfig {
 
     @ConfigProperty(name = "document-ms.blob-storage.path-deleted")
     String deletePath;
-
-    void onStart(@Observes StartupEvent ev) {
-        log.info("Database {} is starting...", Document.mongoDatabase().getName());
-    }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){
         log.info("Signature will be performed using ArubaPkcs7HashSignServiceImpl");
