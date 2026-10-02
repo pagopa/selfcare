@@ -27,6 +27,15 @@ public record TenantDefinition(
         this(mongo, jwt, storages, null, null, null);
     }
 
+    public TenantDefinition(
+            MongoDefinition mongo,
+            JwtDefinition jwt,
+            Map<String, StorageDefinition> storages,
+            OneIdentityDefinition oneIdentity,
+            UserRegistryDefinition userRegistry) {
+        this(mongo, jwt, storages, oneIdentity, userRegistry, null);
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record OneIdentityDefinition(
             @JsonProperty("clientIdEnvVar") String clientIdEnvVar,
