@@ -439,7 +439,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(DocumentType.INSTITUTION)
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();
@@ -460,7 +460,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(DocumentType.INSTITUTION)
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();
@@ -492,7 +492,7 @@ class DocumentServiceImplTest {
                 .productId("prod-io")
                 .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();
@@ -527,7 +527,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(DocumentType.INSTITUTION)
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();
@@ -554,7 +554,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(DocumentType.INSTITUTION)
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();
@@ -589,7 +589,7 @@ class DocumentServiceImplTest {
         request.setContractFilePath("/path/to/contract.pdf");
         request.setContractFileName("contract.pdf");
         request.setContractCreatedAt(now);
-        request.setTemplatePath("/templates/template.pdf");
+        request.setTemplatePath("templates/template.pdf");
         request.setTemplateVersion("1.0");
 
         Document persistedDoc = buildDocument();
@@ -622,7 +622,7 @@ class DocumentServiceImplTest {
         request.setContractFilePath("/imports/signed_contract.pdf");
         request.setContractFileName("signed_contract.pdf");
         request.setContractCreatedAt(contractDate);
-        request.setTemplatePath("/templates/v2/template.pdf");
+        request.setTemplatePath("templates/v2/template.pdf");
         request.setTemplateVersion("2.0");
 
         when(documentRepository.persist(any(Document.class)))
@@ -638,7 +638,7 @@ class DocumentServiceImplTest {
         assertEquals(contractDate, result.getCreatedAt());
         assertEquals(contractDate, result.getUpdatedAt());
         assertEquals(DocumentType.INSTITUTION, result.getType());
-        assertEquals("/templates/v2/template.pdf", result.getContractTemplate());
+        assertEquals("templates/v2/template.pdf", result.getContractTemplate());
         assertEquals("2.0", result.getContractVersion());
     }
 
@@ -674,7 +674,7 @@ class DocumentServiceImplTest {
                 .onboardingId(ONBOARDING_ID)
                 .productId("prod-io")
                 .documentType(DocumentType.USER)
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .productTitle("Product IO")
                 .build();

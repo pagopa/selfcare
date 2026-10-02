@@ -56,9 +56,9 @@ class DocumentContentServiceImplTest {
     private static final String DOCUMENT_ID = new ObjectId().toHexString();
     private static final String INSTITUTION_DESCRIPTION = "Test Institution";
     private static final String PRODUCT_ID = "Product-123";
-    private static final String CONTRACT_TEMPLATE_PATH = "templates/contract.ftl";
+    private static final String CONTRACT_TEMPLATE_PATH = "templates/contract.html";
     private static final String CONTRACT_TEMPLATE_PDF_PATH = "templates/contract.pdf";
-    private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.ftl";
+    private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.html";
     private static final String PRODUCT_NAME = "PagoPA";
     private static final String ATTACHMENT_NAME = "allegato-1";
 
@@ -76,6 +76,7 @@ class DocumentContentServiceImplTest {
     void setupStorageRegistry() {
         reset(azureBlobClient);
         when(blobClientProvider.clientForCurrentTenant(nullable(StorageOrigin.class))).thenReturn(azureBlobClient);
+        when(blobClientProvider.clientForCurrentTenant(anyString())).thenReturn(azureBlobClient);
     }
 
     // ---- retrieveContract ----
@@ -248,7 +249,7 @@ class DocumentContentServiceImplTest {
     @Test
     void retrieveTemplateAttachment_shouldReturnOkResponse() {
         File mockFile = mock(File.class);
-        String templatePath = "/templates/template.pdf";
+        String templatePath = "templates/template.pdf";
         String attachmentName = "template.pdf";
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(mockFile);
@@ -266,7 +267,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveTemplateAttachment_shouldThrowResourceNotFoundWhenFileIsNull() {
-        String templatePath = "/templates/missing.pdf";
+        String templatePath = "templates/missing.pdf";
         String attachmentName = "missing.pdf";
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(null);
@@ -287,7 +288,7 @@ class DocumentContentServiceImplTest {
     void retrieveTemplateAttachment_shouldCallSignDocument() {
         File mockFile = mock(File.class);
         File signedFile = mock(File.class);
-        String templatePath = "/templates/template.pdf";
+        String templatePath = "templates/template.pdf";
         String attachmentName = "template.pdf";
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(mockFile);
@@ -306,7 +307,7 @@ class DocumentContentServiceImplTest {
     @Test
     void retrieveTemplateAttachment_shouldPropagateError_whenSignDocumentFails() {
         File mockFile = mock(File.class);
-        String templatePath = "/templates/template.pdf";
+        String templatePath = "templates/template.pdf";
         String attachmentName = "template.pdf";
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(mockFile);
@@ -575,7 +576,7 @@ class DocumentContentServiceImplTest {
                 .productId("prod-io")
                 .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
@@ -617,7 +618,7 @@ class DocumentContentServiceImplTest {
                 .productId("prod-io")
                 .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
@@ -644,7 +645,7 @@ class DocumentContentServiceImplTest {
                 .productId("prod-io")
                 .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
@@ -687,7 +688,7 @@ class DocumentContentServiceImplTest {
                 .productId("prod-io")
                 .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 
@@ -874,7 +875,7 @@ class DocumentContentServiceImplTest {
     @Test
     void getTemplateDigest_shouldReturnDigest_whenTemplateExists() throws IOException {
         File tempPdf = createTempPdf();
-        String templatePath = "/templates/template.pdf";
+        String templatePath = "templates/template.pdf";
 
         when(azureBlobClient.getFileAsPdf(templatePath)).thenReturn(tempPdf);
         when(signatureService.extractPdfFromSignedContainer(any(), any()))
@@ -907,7 +908,7 @@ class DocumentContentServiceImplTest {
                 .productId("prod-io")
                 .documentType(DocumentType.ATTACHMENT)
                 .attachmentName("myAttachment")
-                .templatePath("/templates/template.pdf")
+                .templatePath("templates/template.pdf")
                 .templateVersion("1.0")
                 .build();
 

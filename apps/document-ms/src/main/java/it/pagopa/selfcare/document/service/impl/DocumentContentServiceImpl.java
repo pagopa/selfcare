@@ -21,6 +21,7 @@ import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.PdfGenerationService;
 import it.pagopa.selfcare.document.service.SignatureService;
+import it.pagopa.selfcare.document.storage.TemplateStorage;
 import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -72,6 +73,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
     private final PdfGenerationService pdfGenerationService;
     private final DocumentMsTelemetryService telemetryService;
     private final TenantBlobClientProvider blobClientProvider;
+    private final TemplateStorage templateStorage;
 
     @ConfigProperty(name = "document-ms.blob-storage.path-contracts")
     String pathContracts;
@@ -93,7 +95,8 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             DocumentService documentService,
             PdfGenerationService pdfGenerationService,
             DocumentMsTelemetryService telemetryService,
-            TenantBlobClientProvider blobClientProvider) {
+            TenantBlobClientProvider blobClientProvider,
+            TemplateStorage templateStorage) {
         this.documentMsConfig = documentMsConfig;
         this.signatureService = signatureService;
         this.documentRepository = documentRepository;
@@ -101,6 +104,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         this.pdfGenerationService = pdfGenerationService;
         this.telemetryService = telemetryService;
         this.blobClientProvider = blobClientProvider;
+        this.templateStorage = templateStorage;
     }
 
     @Override
@@ -171,7 +175,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                                                               String attachmentName, String institutionDescription,
                                                               String productId) {
         return Uni.createFrom()
-                .item(() -> blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsPdf(templatePath))
+                .item(() -> templateStorage.getFileAsPdf(templatePath))
                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Template Attachment not found on storage for onboarding: %s", onboardingId)))
                 .chain(file -> signatureService.signDocument(file, institutionDescription, productId))
@@ -791,7 +795,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         log.info("Retrieving template and computing digest (templatePath={})", sanitize(documentTemplatePath));
         Objects.requireNonNull(documentTemplatePath, "Document template path must not be null");
 
-        File templateFile = blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsPdf(documentTemplatePath);
+        File templateFile = templateStorage.getFileAsPdf(documentTemplatePath);
         DSSDocument templateDocument = new FileDocument(templateFile);
 
         DSSDocument templatePdf = signatureService.extractPdfFromSignedContainer(
@@ -869,9 +873,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
         return Uni.createFrom().item(() -> {
             try {
                 File pdfFile = DocumentFileUtils.isPdfFile(request.getContractTemplatePath())
-                        ? blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsPdf(request.getContractTemplatePath())
+                        ? templateStorage.getFileAsPdf(request.getContractTemplatePath())
                         : pdfGenerationService.generateContractPdf(
-                        blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsText(request.getContractTemplatePath()),
+                        templateStorage.getFileAsText(request.getContractTemplatePath()),
                         request);
 
                 String filename = DocumentFileUtils.buildFilename(PDF_FORMAT_FILENAME, request.getProductName(), null);
@@ -888,9 +892,9 @@ public class DocumentContentServiceImpl implements DocumentContentService {
             try {
                 String filename = DocumentFileUtils.buildFilename("%s", request.getProductName(), request.getAttachmentName());
                 File pdfFile = DocumentFileUtils.isPdfFile(request.getAttachmentTemplatePath())
-                        ? blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsPdf(request.getAttachmentTemplatePath())
+                        ? templateStorage.getFileAsPdf(request.getAttachmentTemplatePath())
                         : pdfGenerationService.generateAttachmentPdf(
-                        blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsText(request.getAttachmentTemplatePath()),
+                        templateStorage.getFileAsText(request.getAttachmentTemplatePath()),
                         request,
                         filename);
 

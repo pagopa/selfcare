@@ -20,6 +20,7 @@ import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.SignatureService;
+import it.pagopa.selfcare.document.storage.TemplateStorage;
 import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -47,6 +48,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentMsTelemetryService telemetryService;
     private final TenantBlobClientProvider blobClientProvider;
     private final DocumentMapper documentMapper;
+    private final TemplateStorage templateStorage;
 
     @Inject
     SignatureService signatureService;
@@ -54,12 +56,14 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
                                DocumentMsTelemetryService telemetryService,
                                TenantBlobClientProvider blobClientProvider,
-                               DocumentMapper documentMapper) {
+                               DocumentMapper documentMapper,
+                               TemplateStorage templateStorage) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
         this.telemetryService = telemetryService;
         this.blobClientProvider = blobClientProvider;
         this.documentMapper = documentMapper;
+        this.templateStorage = templateStorage;
     }
 
     @Override
@@ -187,6 +191,7 @@ public class DocumentServiceImpl implements DocumentService {
     public Uni<Document> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
                 sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
+        templateStorage.validateTemplatePath(request.getTemplatePath());
 
         if (request.isAttachment()) {
             return handleAttachmentDocument(request);
@@ -283,7 +288,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         Document document = createBaseDocument(request.getOnboardingId(),
                 request.getProductId(),
-                request.getTemplatePath(),
+                templateStorage.validateTemplatePath(request.getTemplatePath()),
                 request.getTemplateVersion()
         );
         document.setContractSigned(request.getContractFilePath());
@@ -325,7 +330,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 2. Dati di base
         document.setType(request.getDocumentType());
         document.setProductId(request.getProductId());
-        document.setContractTemplate(request.getTemplatePath());
+        document.setContractTemplate(templateStorage.validateTemplatePath(request.getTemplatePath()));
         document.setContractVersion(request.getTemplateVersion());
         document.setChecksum(digest);
         document.setAttachmentName(request.getAttachmentName());
