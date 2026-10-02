@@ -13,6 +13,7 @@ import jakarta.ws.rs.ext.Provider;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.slf4j.MDC;
 
 /**
  * Resolves the tenant of every business request from the {@code X-Tenant-Id} header and stores it
@@ -26,6 +27,7 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
 
   public static final String TENANT_HEADER = "X-Tenant-Id";
   public static final String INVALID_TENANT_CONTEXT = "Invalid tenant context";
+  public static final String TENANT_MDC_KEY = "tenant";
 
   @Inject TenantRegistry tenantRegistry;
 
@@ -39,6 +41,7 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
+    MDC.remove(TENANT_MDC_KEY);
     if (isTechnicalPath(requestContext.getUriInfo().getPath())) {
       return;
     }
@@ -47,7 +50,9 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
     try {
       String tenant = selectTenant(headerValues);
       tenantRegistry.resolve(tenant);
-      tenantContext.setTenantId(tenantRegistry.normalizeTenantId(tenant));
+      String normalizedTenant = tenantRegistry.normalizeTenantId(tenant);
+      tenantContext.setTenantId(normalizedTenant);
+      MDC.put(TENANT_MDC_KEY, normalizedTenant);
     } catch (RuntimeException exception) {
       log.warn(
           "Rejected request with invalid tenant context: tenant={}",

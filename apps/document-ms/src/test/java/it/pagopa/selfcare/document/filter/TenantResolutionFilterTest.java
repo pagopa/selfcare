@@ -2,6 +2,7 @@ package it.pagopa.selfcare.document.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -31,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.slf4j.MDC;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -147,6 +149,36 @@ class TenantResolutionFilterTest {
     filter.filter(requestContext);
 
     assertBadRequest();
+  }
+
+  @Test
+  void filter_shouldExposeResolvedTenantInMdc() {
+    headers.add(TenantResolutionFilter.TENANT_HEADER, "ar");
+
+    filter.filter(requestContext);
+
+    assertEquals("AR", MDC.get(TenantResolutionFilter.TENANT_MDC_KEY));
+    new TenantMdcCleanupFilter().filter(requestContext, null);
+    assertNull(MDC.get(TenantResolutionFilter.TENANT_MDC_KEY));
+  }
+
+  @Test
+  void filter_shouldNotLeakPreviousTenantInMdcWhenRejected() {
+    MDC.put(TenantResolutionFilter.TENANT_MDC_KEY, "AR");
+    headers.add(TenantResolutionFilter.TENANT_HEADER, "PNPG");
+    doThrow(new UnknownTenantException("PNPG")).when(tenantRegistry).resolve("PNPG");
+
+    filter.filter(requestContext);
+
+    assertNull(MDC.get(TenantResolutionFilter.TENANT_MDC_KEY));
+  }
+
+  @Test
+  void sanitize_shouldNeutralizeUnsafeHeaderValues() {
+    assertEquals("unknown", TenantLogUtils.sanitize(null));
+    assertEquals("unknown", TenantLogUtils.sanitize(" "));
+    assertEquals("AR__FAKE", TenantLogUtils.sanitize("AR\n FAKE"));
+    assertEquals(32, TenantLogUtils.sanitize("A".repeat(100)).length());
   }
 
   private void assertBadRequest() {
