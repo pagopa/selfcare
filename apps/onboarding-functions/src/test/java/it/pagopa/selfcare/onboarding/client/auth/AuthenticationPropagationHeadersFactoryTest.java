@@ -45,8 +45,9 @@ class AuthenticationPropagationHeadersFactoryTest {
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
         outgoingHeaders.put("user-uuid", List.of(UUID.randomUUID().toString()));
         when(jwtSessionService.createJwt(any())).thenReturn(null);
+        when(jwtSessionService.createMachineJwt()).thenReturn("machine-jwt");
         authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
-        assertTrue(outgoingHeaders.containsKey("Authorization"));
+        assertEquals(List.of("Bearer machine-jwt"), outgoingHeaders.get("Authorization"));
     }
 
     @Test
@@ -63,16 +64,19 @@ class AuthenticationPropagationHeadersFactoryTest {
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
         incomingHeaders.put(TenantContext.TENANT_HEADER, List.of("AR"));
+        when(jwtSessionService.createMachineJwt()).thenReturn("machine-jwt");
 
         authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
 
         assertEquals(List.of("AR"), outgoingHeaders.get(TenantContext.TENANT_HEADER));
+        assertEquals(List.of("Bearer machine-jwt"), outgoingHeaders.get("Authorization"));
     }
 
     @Test
     void propagatesTenantFromFunctionContext() {
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
+        when(jwtSessionService.createMachineJwt()).thenReturn("machine-jwt");
 
         try (TenantContext.Scope ignored = TenantContext.open("PNPG")) {
             authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);

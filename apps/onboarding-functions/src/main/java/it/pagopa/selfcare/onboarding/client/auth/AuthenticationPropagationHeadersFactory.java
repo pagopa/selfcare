@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 public class AuthenticationPropagationHeadersFactory implements ClientHeadersFactory {
 
   private static final String USER_ID_HEADER = "user-uuid";
-  private static final String JWT_BEARER_TOKEN_ENV = "JWT_BEARER_TOKEN";
   private static final Logger LOGGER =
       LoggerFactory.getLogger(AuthenticationPropagationHeadersFactory.class);
 
@@ -36,9 +35,12 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
       if (!clientOutgoingHeaders.isEmpty() && clientOutgoingHeaders.containsKey(USER_ID_HEADER)) {
         final String uuid = clientOutgoingHeaders.get(USER_ID_HEADER).get(0);
         final String jwt = tokenService.createJwt(uuid);
-        bearerToken = Objects.nonNull(jwt) ? jwt : System.getenv(JWT_BEARER_TOKEN_ENV);
+        bearerToken = Objects.nonNull(jwt) ? jwt : tokenService.createMachineJwt();
       } else {
-        bearerToken = System.getenv(JWT_BEARER_TOKEN_ENV);
+        bearerToken = tokenService.createMachineJwt();
+      }
+      if (Objects.isNull(bearerToken) || bearerToken.isBlank()) {
+        throw new IllegalStateException("Unable to create tenant-bound bearer token");
       }
       clientOutgoingHeaders.put("Authorization", List.of("Bearer " + bearerToken));
       clientOutgoingHeaders.put(TenantContext.TENANT_HEADER, List.of(resolvedTenant));

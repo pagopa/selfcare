@@ -83,4 +83,13 @@ class JwtSessionServiceDefaultTest {
         assertTrue(Objects.isNull(jwt));
     }
 
+    @Test
+    void createMachineJwt() {
+        String jwt;
+        try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+            jwt = tokenService.createMachineJwt();
+        }
+        assertTrue(Objects.nonNull(jwt));
+    }
+
 }
