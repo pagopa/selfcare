@@ -35,19 +35,18 @@ locals {
     { name = "REST_CLIENT_CONNECT_TIMEOUT", value = "60000" },
     { name = "REST_CLIENT_READ_TIMEOUT", value = "60000" },
     { name = "MS_USER_URL", value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}" },
-    { name = "PRODUCT_STORAGE_CONTAINER", value = "selc-${module.local.config.env_short}-product" },
     { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net" },
     { name = "MS_USER_INSTITUTION_URL", value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "MS_PRODUCT_URL", value = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}" },
+    { name = "PRODUCT_TENANT_ID", value = upper(module.local.config.domain) },
     { name = "MS_DOCUMENT_URL", value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}" }
   ]
 
   secrets_names_onboarding_bff = {
-    "USERVICE_USER_REGISTRY_API_KEY"         = "user-registry-api-key"
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"  = "appinsights-connection-string"
-    "JWT_TOKEN_PUBLIC_KEY"                   = "jwt-public-key"
-    "BLOB_STORAGE_PRODUCT_CONNECTION_STRING" = "blob-storage-product-connection-string"
-    "ONBOARDING-FUNCTIONS-API-KEY"           = "fn-onboarding-primary-key"
+    "USERVICE_USER_REGISTRY_API_KEY"        = "user-registry-api-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_TOKEN_PUBLIC_KEY"                  = "jwt-public-key"
+    "ONBOARDING-FUNCTIONS-API-KEY"          = "fn-onboarding-primary-key"
   }
 }
 

@@ -23,12 +23,10 @@ import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedExceptio
 import it.pagopa.selfcare.onboarding.core.mapper.InstitutionInfoMapper;
 import it.pagopa.selfcare.onboarding.core.mapper.InstitutionInfoMapperImpl;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRole;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.entity.ProductStatus;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductRole;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductRoleInfo;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
 import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -1099,7 +1097,7 @@ class InstitutionServiceImplTest {
         //given
         final String userId = "userId";
         //when
-        when(productService.getProduct("prod-io")).thenThrow(ProductNotFoundException.class);
+        when(productService.getProduct("prod-io", null)).thenThrow(new ResourceNotFoundException("not found"));
         // then
         Executable executable = () -> institutionService.getInstitutions("prod-io", userId);
         //then
@@ -1109,17 +1107,18 @@ class InstitutionServiceImplTest {
 
     @Test
     void getInstitutions_emptyResult() {
-        //given
+        // given
         final String userId = "userId";
-        //when
-        Collection<InstitutionInfo> institutions = institutionService.getInstitutions(null, userId);
-        // then
-        assertNotNull(institutions);
-        assertTrue(institutions.isEmpty());
-        verify(partyConnectorMock, times(1))
-                .getInstitutionsByUser(null, userId);
-        verifyNoMoreInteractions(partyConnectorMock);
-        verifyNoInteractions(productsConnectorMock, userConnectorMock);
+        Product product = new Product();
+        product.setId("prod-test");
+        when(productService.getProduct("prod-test", null)).thenReturn(product);
+        when(partyConnectorMock.getInstitutionsByUser(product, userId)).thenReturn(List.of());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> institutionService.getInstitutions("prod-test", userId));
+
+        assertEquals("No institutions found for product prod-test", exception.getMessage());
+        verify(partyConnectorMock).getInstitutionsByUser(product, userId);
     }
 
     @Test
