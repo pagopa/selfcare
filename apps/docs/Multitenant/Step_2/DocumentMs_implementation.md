@@ -81,7 +81,7 @@ mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}
 |---|---|---|---|---|
 | SELC-DMS-01 ✅ | Dipendenze e configurazione tenant | SELC-17 | – | S |
 | SELC-DMS-02 ✅ | Risoluzione del tenant per richiesta | SELC-12 | 01 | M |
-| SELC-DMS-03 | Routing Mongo per tenant | SELC-13.9–13.13 | 02 | M |
+| SELC-DMS-03 ✅ | Routing Mongo per tenant | SELC-13.9–13.13 | 02 | M |
 | SELC-DMS-04 | Discriminatore `tenantId` e isolamento dati | SELC-13.1–13.8 | 03 | L |
 | SELC-DMS-05 | Routing storage per tenant | SELC-14 | 02 | L |
 | SELC-DMS-06 | Firma PagoPA per tenant | SELC-17.1–17.4 | 02 | L |
@@ -145,14 +145,24 @@ flowchart LR
 - Per i token SPID il confronto claim/header nell'SDK è case-sensitive (`ar` ≠ `AR`, risposta 401); per i token PAGOPA vale la normalizzazione del filtro.
 - Rollout: con `TENANT_ENFORCEMENT_ENABLED=true` (default) i chiamanti senza `X-Tenant-Id` ricevono 400. `onboarding-ms`, `onboarding-functions` e `dashboard-bff` (`DocumentRestClientConfig` → `TenantHeaderInterceptor`, che propaga solo se l'header è presente in ingresso) lo inviano già; la verifica completa resta in `08.03`. In caso di emergenza: `TENANT_ENFORCEMENT_ENABLED=false` con `TENANT_DEFAULT=AR`.
 
-## SELC-DMS-03 – Routing Mongo per tenant
+## SELC-DMS-03 – Routing Mongo per tenant ✅ Completata
 
-| Task | Descrizione | File | Dim. |
-|---|---|---|---|
-| SELC-DMS-03.01 | Aggiungere `selfcare-sdk-tenant-mongodb` 0.3.0 e adottare `TenantMongoClientProducer` e `TenantMongoDatabaseResolver`; non usare `@MongoEntity(clientName)`; rimuovere `quarkus.mongodb.connection-string` e `quarkus.mongodb.database`. | `pom.xml`, `application.properties` | S |
-| SELC-DMS-03.02 | Eliminare `Document.mongoDatabase()` da `DocumentMsConfig.onStart` (all'avvio non c'è un tenant), sostituendolo con un log dei tenant configurati. | `config/DocumentMsConfig.java:33-35` | S |
-| SELC-DMS-03.03 | Rendere `DocumentMongoReadinessCheck` un ping per ogni tenant supportato, senza esporre connection string. | `health/DocumentMongoReadinessCheck.java` | S |
-| SELC-DMS-03.04 | Test: selezione del database per tenant; tenant senza Mongo ⇒ errore. | `src/test/...` | S |
+**Obiettivo:** ogni accesso Mongo usa client e database del tenant della richiesta; senza tenant non si accede a Mongo.
+
+| Task | Stato | Descrizione | File | Dim. |
+|---|---|---|---|---|
+| SELC-DMS-03.01 | ✅ | Aggiunto `selfcare-sdk-tenant-mongodb` 0.3.0 (scoperto via `beans.xml`): `TenantMongoClientProducer` sostituisce il `ReactiveMongoClient` di default con un proxy per tenant (un client per tenant supportato) e `TenantMongoDatabaseResolver` sceglie il database del tenant per le entity Panache. `@MongoEntity` resta senza `clientName`/`database`. Rimossi `quarkus.mongodb.connection-string` e `quarkus.mongodb.database` (anche in test). La readiness legge database e host dal registry nello stesso commit, così l'app continua ad avviarsi. | `pom.xml`, `application.properties`, `health/DocumentMongoReadinessCheck.java` | S |
+| SELC-DMS-03.02 | ✅ | Rimosso `onStart` (`Document.mongoDatabase()`) da `DocumentMsConfig`: all'avvio non c'è un tenant e il resolver fallirebbe. `TenantRegistryStartupValidator` registra nei log, per ogni tenant, il database Mongo usato. | `config/DocumentMsConfig.java`, `config/TenantRegistryStartupValidator.java` | S |
+| SELC-DMS-03.03 | ✅ | `DocumentMongoReadinessCheck` esegue in parallelo un `ping` su ogni tenant supportato (ordine stabile). È UP solo se rispondono tutti; se un tenant fallisce è DOWN con `error` `Tenant <ID> ping failed: …`; senza tenant è DOWN. I dati riportano coppie `tenant=database` e `tenant=host` (host da `hostFromConnectionString`, `n/a` se non parsabile), mai connection string né credenziali. | `health/DocumentMongoReadinessCheck.java` | S |
+| SELC-DMS-03.04 | ✅ | Unit test della readiness (singolo e multi-tenant, fallimento di un tenant, lookup del client che lancia un'eccezione, credenziali non esposte, nessun tenant). `@QuarkusTest` con registry AR (`selcDocument`) + PNPG (`selcDocumentPnpg`): `Document.mongoDatabase()`/`mongoCollection()` seguono il tenant della richiesta nella stessa JVM; client distinti per tenant; senza tenant `UnresolvedTenantException`; `clientForTenant("UNKNOWN")` → `IllegalStateException`; un tenant supportato senza `mongo` blocca il registry (`Missing Mongo configuration for tenant PNPG`). | `src/test/.../health/DocumentMongoReadinessCheckTest.java`, `src/test/.../repository/TenantMongoRoutingTest.java` | S |
+
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 522 test, 0 errori (dopo 02: 514).
+
+**Comportamenti osservati da tenere presenti:**
+
+- Fuori da una richiesta con tenant (avvio, job, thread non propagati) qualsiasi accesso Mongo fallisce con `UnresolvedTenantException`, così il sistema non procede in silenzio (fail-closed). Eventuali scheduler o consumer futuri devono impostare esplicitamente `TenantContext`.
+- Il secret `MONGODB_CONNECTION_STRING` non è più letto dall'app; la connection string arriva solo da `MONGODB_CONNECTION_STRING_AR` (rimozione infra in `07.02`).
+- Panache risolve il database a ogni chiamata (nessuna cache per entity): verificato alternando AR e PNPG nella stessa JVM.
 
 ## SELC-DMS-04 – Discriminatore `tenantId` e isolamento dati
 
