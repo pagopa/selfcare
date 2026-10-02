@@ -10,6 +10,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
@@ -65,6 +67,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     final FilterChain filterChain) throws ServletException, IOException {
         log.trace("doFilterInternal start");
         try {
+            Enumeration<String> tenantHeaders = request.getHeaders(TENANT_HEADER);
+            if (tenantHeaders != null && Collections.list(tenantHeaders).size() > 1) {
+                log.warn("Rejecting request with duplicated {} header", TENANT_HEADER);
+                writeTenantValidationFailure(response);
+                return;
+            }
             try {
                 final Authentication authentication = authenticationManager.authenticate(authenticationConverter.convert(request));
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
@@ -79,10 +87,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
             } catch (TenantValidationException e) {
                 log.warn("Cannot validate tenant context for request {}", request.getRequestURI());
-                response.setStatus(HttpStatus.BAD_REQUEST.value());
-                response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-                final Problem problem = new Problem(HttpStatus.BAD_REQUEST, e.getMessage());
-                response.getOutputStream().print(objectMapper.writeValueAsString(problem));
+                writeTenantValidationFailure(response, e.getMessage());
             } catch (AuthenticationException e) {
                 log.warn("Cannot set user authentication", e);
                 filterChain.doFilter(request, response);
@@ -102,6 +107,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             MDC.clear();
             log.trace("doFilterInternal end");
         }
+    }
+
+    private void writeTenantValidationFailure(HttpServletResponse response) throws IOException {
+        writeTenantValidationFailure(response, "Invalid tenant context");
+    }
+
+    private void writeTenantValidationFailure(HttpServletResponse response, String message)
+            throws IOException {
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        final Problem problem = new Problem(HttpStatus.BAD_REQUEST, message);
+        response.getOutputStream().print(objectMapper.writeValueAsString(problem));
     }
 
 }

@@ -6,21 +6,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 
 public class TenantRegistry {
 
+    private static final Pattern ENV_VAR_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+
     private final ObjectMapper objectMapper;
     private final Environment environment;
     private final String registryJson;
     private final String supportedTenants;
     private final String mandatoryStorageKeys;
+    private final String mandatoryOneIdentityTenants;
+    private final String mandatoryUserRegistryTenants;
     private Map<String, TenantDefinition> tenants = Collections.emptyMap();
 
     public TenantRegistry(
@@ -29,11 +35,24 @@ public class TenantRegistry {
             @Value("${tenant.registry.json:{}}") String registryJson,
             @Value("${tenant.supported-tenants:*}") String supportedTenants,
             @Value("${tenant.storage.mandatory-keys:}") String mandatoryStorageKeys) {
+        this(objectMapper, environment, registryJson, supportedTenants, mandatoryStorageKeys, "", "");
+    }
+
+    public TenantRegistry(
+            ObjectMapper objectMapper,
+            Environment environment,
+            String registryJson,
+            String supportedTenants,
+            String mandatoryStorageKeys,
+            String mandatoryOneIdentityTenants,
+            String mandatoryUserRegistryTenants) {
         this.objectMapper = objectMapper;
         this.environment = environment;
         this.registryJson = registryJson;
         this.supportedTenants = supportedTenants;
         this.mandatoryStorageKeys = mandatoryStorageKeys;
+        this.mandatoryOneIdentityTenants = mandatoryOneIdentityTenants;
+        this.mandatoryUserRegistryTenants = mandatoryUserRegistryTenants;
     }
 
     @PostConstruct
@@ -55,8 +74,11 @@ public class TenantRegistry {
             }
             validateMongo(tenantId, definition.mongo());
             validateJwt(tenantId, definition.jwt());
+            validateCredentials(tenantId, definition);
             validateStorages(tenantId, definition);
         });
+        validateMandatoryCredentials(supportedTenantIds(), mandatoryOneIdentityTenants, true);
+        validateMandatoryCredentials(supportedTenantIds(), mandatoryUserRegistryTenants, false);
     }
 
     public boolean isConfigured() {
@@ -101,6 +123,46 @@ public class TenantRegistry {
         return jwt == null ? Optional.empty() : property(jwt.publicKeyEnvVar());
     }
 
+    public Optional<TenantDefinition.OneIdentityCredentials> oneIdentityCredentials(
+            String tenantId) {
+        TenantDefinition.OneIdentityDefinition definition = resolve(tenantId).oneIdentity();
+        if (definition == null) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                new TenantDefinition.OneIdentityCredentials(
+                        requiredSecret(
+                                definition.clientIdEnvVar(),
+                                tenantId,
+                                "OneIdentity client ID"),
+                        requiredSecret(
+                                definition.clientSecretEnvVar(),
+                                tenantId,
+                                "OneIdentity client secret")));
+    }
+
+    public Optional<TenantDefinition.UserRegistryCredentials> userRegistryCredentials(
+            String tenantId) {
+        TenantDefinition.UserRegistryDefinition definition = resolve(tenantId).userRegistry();
+        if (definition == null) {
+            return Optional.empty();
+        }
+        return Optional.of(
+                new TenantDefinition.UserRegistryCredentials(
+                        requiredSecret(
+                                definition.apiKeyEnvVar(), tenantId, "User Registry API key")));
+    }
+
+    public String userRegistryApiKey(String tenantId) {
+        return userRegistryCredentials(tenantId)
+                .orElseThrow(
+                        () ->
+                                new IllegalStateException(
+                                        "User Registry is not configured for tenant "
+                                                + normalizeTenantId(tenantId)))
+                .apiKey();
+    }
+
     public TenantDefinition.StorageDefinition storage(String tenantId, String logicalKey) {
         String normalizedTenant = normalizeAndValidate(tenantId);
         String normalizedKey = TenantDefinition.normalizeStorageKey(logicalKey);
@@ -143,18 +205,88 @@ public class TenantRegistry {
                 .filter(value -> !value.isBlank());
     }
 
+    private String requiredSecret(String envVarName, String tenantId, String credentialName) {
+        validateEnvVarName(envVarName, tenantId, credentialName);
+        return property(envVarName)
+                .orElseThrow(
+                        () ->
+                                new IllegalStateException(
+                                        "Missing "
+                                                + credentialName
+                                                + " environment variable "
+                                                + envVarName
+                                                + " for tenant "
+                                                + normalizeTenantId(tenantId)));
+    }
+
+    private void validateCredentials(String tenantId, TenantDefinition definition) {
+        if (definition.oneIdentity() != null) {
+            requiredSecret(
+                    definition.oneIdentity().clientIdEnvVar(),
+                    tenantId,
+                    "OneIdentity client ID");
+            requiredSecret(
+                    definition.oneIdentity().clientSecretEnvVar(),
+                    tenantId,
+                    "OneIdentity client secret");
+        }
+        if (definition.userRegistry() != null) {
+            requiredSecret(
+                    definition.userRegistry().apiKeyEnvVar(), tenantId, "User Registry API key");
+        }
+    }
+
+    private void validateMandatoryCredentials(
+            Set<String> supported, String configuredTenants, boolean oneIdentity) {
+        if (configuredTenants == null || configuredTenants.isBlank()) {
+            return;
+        }
+        List<String> mandatoryTenants =
+                Arrays.stream(configuredTenants.split(","))
+                        .filter(value -> !value.isBlank())
+                        .map(TenantRegistry::normalizeTenantId)
+                        .toList();
+        for (String tenantId : mandatoryTenants) {
+            if (!supported.contains(tenantId)) {
+                throw new IllegalStateException(
+                        "Mandatory credential tenant is not supported: " + tenantId);
+            }
+            TenantDefinition definition = tenants.get(tenantId);
+            if (definition == null
+                    || (oneIdentity
+                            ? definition.oneIdentity() == null
+                            : definition.userRegistry() == null)) {
+                throw new IllegalStateException(
+                        "Missing mandatory "
+                                + (oneIdentity ? "OneIdentity" : "User Registry")
+                                + " configuration for tenant "
+                                + tenantId);
+            }
+        }
+    }
+
+    private void validateEnvVarName(String name, String tenantId, String resourceName) {
+        if (name == null || !ENV_VAR_NAME.matcher(name).matches()) {
+            throw new IllegalStateException(
+                    "Invalid " + resourceName + " environment variable reference for tenant "
+                            + normalizeTenantId(tenantId));
+        }
+    }
+
     private void validateMongo(String tenantId, TenantDefinition.MongoDefinition mongo) {
         if (isBlank(mongo.account()) || isBlank(mongo.database())
                 || isBlank(mongo.connectionStringEnvVar())) {
             throw new IllegalStateException("Incomplete Mongo configuration for tenant " + tenantId);
         }
+        validateEnvVarName(mongo.connectionStringEnvVar(), tenantId, "Mongo connection string");
         mongoConnectionString(tenantId).orElseThrow(() -> new IllegalStateException(
                 "Missing Mongo connection string environment variable "
                         + mongo.connectionStringEnvVar() + " for tenant " + tenantId));
     }
 
     private void validateJwt(String tenantId, TenantDefinition.JwtDefinition jwt) {
-        if (jwt != null && !isBlank(jwt.publicKeyEnvVar())) {
+        if (jwt != null) {
+            validateEnvVarName(jwt.publicKeyEnvVar(), tenantId, "JWT public key");
             jwtPublicKey(tenantId).orElseThrow(() -> new IllegalStateException(
                     "Missing JWT public key environment variable "
                             + jwt.publicKeyEnvVar() + " for tenant " + tenantId));
@@ -189,6 +321,8 @@ public class TenantRegistry {
                         "Invalid CONNECTION_STRING storage authentication for tenant "
                                 + tenantId + " and key " + logicalKey);
             }
+            validateEnvVarName(
+                    authentication.connectionStringEnvVar(), tenantId, "Storage connection string");
             storageConnectionString(tenantId, logicalKey).orElseThrow(
                     () -> new IllegalStateException(
                             "Missing storage connection string environment variable "
@@ -199,6 +333,10 @@ public class TenantRegistry {
                     "Invalid MANAGED_IDENTITY storage authentication for tenant "
                             + tenantId + " and key " + logicalKey);
         } else if (clientId) {
+            validateEnvVarName(
+                    authentication.managedIdentityClientIdEnvVar(),
+                    tenantId,
+                    "Managed identity client ID");
             storageManagedIdentityClientId(tenantId, logicalKey).orElseThrow(
                     () -> new IllegalStateException(
                             "Missing managed identity client id environment variable "

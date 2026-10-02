@@ -39,6 +39,49 @@ class TenantJwtServiceTest {
         assertThrows(RuntimeException.class, () -> service.getClaims(token, "PNPG"));
     }
 
+    @Test
+    void tenantKeysDoNotRequireTheLegacyGlobalVerificationKey() throws Exception {
+        KeyPair ar = keyPair();
+        TenantRegistry registry = mock(TenantRegistry.class);
+        when(registry.isConfigured()).thenReturn(true);
+        when(registry.normalizeAndValidate("AR")).thenReturn("AR");
+        when(registry.jwtPublicKey("AR")).thenReturn(java.util.Optional.of(pem(ar.getPublic())));
+        JwtService service = new JwtService("", registry);
+        String token = Jwts.builder()
+                .claim("tenant_id", "AR")
+                .signWith(ar.getPrivate(), SignatureAlgorithm.RS256)
+                .compact();
+
+        Claims claims = service.getClaims(token, "AR");
+
+        assertEquals("AR", claims.get("tenant_id"));
+    }
+
+    @Test
+    void validatesConfiguredIssuerAndAudience() throws Exception {
+        KeyPair ar = keyPair();
+        TenantRegistry registry = mock(TenantRegistry.class);
+        when(registry.isConfigured()).thenReturn(true);
+        when(registry.normalizeAndValidate("AR")).thenReturn("AR");
+        when(registry.jwtPublicKey("AR")).thenReturn(java.util.Optional.of(pem(ar.getPublic())));
+        JwtService service = new JwtService("", registry, "trusted-issuer", "trusted-audience");
+        String validToken = Jwts.builder()
+                .setIssuer("trusted-issuer")
+                .setAudience("trusted-audience")
+                .claim("tenant_id", "AR")
+                .signWith(ar.getPrivate(), SignatureAlgorithm.RS256)
+                .compact();
+        String invalidAudienceToken = Jwts.builder()
+                .setIssuer("trusted-issuer")
+                .setAudience("other-audience")
+                .claim("tenant_id", "AR")
+                .signWith(ar.getPrivate(), SignatureAlgorithm.RS256)
+                .compact();
+
+        assertEquals("AR", service.getClaims(validToken, "AR").get("tenant_id"));
+        assertThrows(RuntimeException.class, () -> service.getClaims(invalidAudienceToken, "AR"));
+    }
+
     private static KeyPair keyPair() throws Exception {
         KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
         generator.initialize(2048);

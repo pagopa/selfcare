@@ -1,14 +1,18 @@
 package it.pagopa.selfcare.commons.tenant;
 
-import java.util.function.Supplier;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public class TenantContext {
 
     private final ThreadLocal<String> currentTenant = new ThreadLocal<>();
 
     public void setTenantId(String tenantId) {
-        currentTenant.set(tenantId);
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new IllegalArgumentException("Tenant id is required");
+        }
+        currentTenant.set(tenantId.trim().toUpperCase(Locale.ROOT));
     }
 
     public String requiredTenantId() {
