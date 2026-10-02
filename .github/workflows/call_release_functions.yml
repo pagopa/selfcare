@@ -37,7 +37,7 @@ jobs:
     name: ${{ inputs.target == 'ar' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     needs: [infra_dev]
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     environment:
       name: dev-cd
       url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
@@ -88,7 +88,7 @@ jobs:
     name: ${{ inputs.target == 'ar' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     needs: [infra_uat]
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     environment:
       name: uat-cd
       url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'u' || 'u-pnpg') }}
@@ -139,7 +139,7 @@ jobs:
     name: ${{ inputs.target == 'ar' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ inputs.env == 'prod' }}
     needs: [infra_prod]
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     environment:
       name: prod-cd
       url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'p' || 'p-pnpg') }}
