@@ -131,6 +131,10 @@ locals {
     {
       name  = "AZURE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.document_storage_blob_identity.client_id
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
     }
   ]
 
@@ -140,6 +144,9 @@ locals {
     "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
+    # Tenant-bound references used by tenant.registry.json (Multitenant Step 2)
+    "MONGODB_CONNECTION_STRING_AR" = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_AR"            = "jwt-public-key"
   }
 }
 
