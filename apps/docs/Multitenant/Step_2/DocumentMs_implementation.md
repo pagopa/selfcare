@@ -80,7 +80,7 @@ mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}
 | Storia | Titolo | Requisiti | Dipende da | Dim. |
 |---|---|---|---|---|
 | SELC-DMS-01 ✅ | Dipendenze e configurazione tenant | SELC-17 | – | S |
-| SELC-DMS-02 | Risoluzione del tenant per richiesta | SELC-12 | 01 | M |
+| SELC-DMS-02 ✅ | Risoluzione del tenant per richiesta | SELC-12 | 01 | M |
 | SELC-DMS-03 | Routing Mongo per tenant | SELC-13.9–13.13 | 02 | M |
 | SELC-DMS-04 | Discriminatore `tenantId` e isolamento dati | SELC-13.1–13.8 | 03 | L |
 | SELC-DMS-05 | Routing storage per tenant | SELC-14 | 02 | L |
@@ -125,19 +125,25 @@ flowchart LR
 
 **Vincolo di rilascio:** applicare il Terraform di `01.05` **prima** di distribuire l'immagine; senza `MONGODB_CONNECTION_STRING_AR` l'avvio fallisce (comportamento voluto).
 
-## SELC-DMS-02 – Risoluzione del tenant per richiesta
+## SELC-DMS-02 – Risoluzione del tenant per richiesta ✅ Completata
 
 **Obiettivo:** ogni richiesta applicativa ha un `TenantContext` validato prima di toccare qualsiasi risorsa.
 
-| Task | Descrizione | File | Dim. |
-|---|---|---|---|
-| SELC-DMS-02.01 | Creare `TenantResolutionFilter` (`@Priority(AUTHENTICATION)`): legge `X-Tenant-Id`, chiama `TenantRegistry.resolve`, imposta `TenantContext`; esclude `/q/*`; nessun default con enforcement attivo. | `filter/TenantResolutionFilter.java` (nuovo) | M |
-| SELC-DMS-02.02 | Indicizzare `selfcare-sdk-security` (`quarkus.index-dependency`): si attivano `JWTCallerPrincipalFactory` (chiave JWT per tenant da `jwt.publicKeyEnvVar`) e `JwtTenantValidationFilter` (riconcilia il claim `tenant_id` con l'header). Impostare `mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}` come fallback legacy. Attenzione: senza claim il filtro assume `PNPG` (vedi `08.05`), quindi i chiamanti AR devono essere verificati prima. | `application.properties` | S |
-| SELC-DMS-02.03 | Mappare `UnknownTenantException` e `UnresolvedTenantException` in `ExceptionHandler` su `Problem` (400/401) senza dettagli interni. | `exception/ExceptionHandler.java` | S |
-| SELC-DMS-02.04 | Aggiungere il tenant all'MDC e ai log (pattern `product`). | `filter/`, `application.properties` | S |
-| SELC-DMS-02.05 | Test: header mancante, sconosciuto, duplicato o in conflitto con il JWT; richieste AR e PNPG interleaved nello stesso processo. | `src/test/...` | M |
+| Task | Stato | Descrizione | File | Dim. |
+|---|---|---|---|---|
+| SELC-DMS-02.01 | ✅ | `TenantResolutionFilter` (`@Priority(AUTHENTICATION)`): legge `X-Tenant-Id`, chiama `TenantRegistry.resolve`, imposta `TenantContext` col tenant normalizzato; esclude `q` e `/q/*`. Rifiuta con `Problem` 400 `Invalid tenant context` (`application/problem+json`) header mancante, sconosciuto, ripetuto o con più valori separati da virgola. Config: `tenant.enforcement.enabled=${TENANT_ENFORCEMENT_ENABLED:true}`, `tenant.default=${TENANT_DEFAULT:AR}` (usato solo con enforcement disattivato, leva di rollout); in `%test` enforcement disattivato. | `filter/TenantResolutionFilter.java`, `filter/TenantLogUtils.java` | M |
+| SELC-DMS-02.02 | ✅ | Indicizzato `selfcare-sdk-security`: attivi `JWTCallerPrincipalFactory` (chiave per tenant da `jwt.publicKeyEnvVar`, issuer ammessi `SPID`/`PAGOPA`, claim `uid` obbligatorio), `JWTSecurityIdentityAugmentor` e `JwtTenantValidationFilter` (claim `tenant_id` dei token SPID = header, altrimenti 401). `mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}` resta solo come fallback legacy. | `application.properties` | S |
+| SELC-DMS-02.03 | ✅ | `ExceptionHandler`: `UnknownTenantException` → 400, `UnresolvedTenantException` → 401, entrambe come `Problem` generico `Invalid tenant context` senza tenant né dettagli interni. | `exception/handler/ExceptionHandler.java` | S |
+| SELC-DMS-02.04 | ✅ | Tenant risolto nell'MDC (`tenant`) e nel formato dei log (`tenant=%X{tenant}`); MDC pulito a inizio richiesta e da `TenantMdcCleanupFilter` dopo la risposta; i valori dell'header vengono sanificati prima di finire nei log. | `filter/`, `application.properties` | S |
+| SELC-DMS-02.05 | ✅ | Test unitari del filtro e test `@QuarkusTest` con enforcement attivo, registry AR+PNPG e chiavi JWT distinte generate a runtime: header mancante, sconosciuto, duplicato o in conflitto col claim; token SPID senza claim; issuer o firma non validi; 40 richieste AR/PNPG concorrenti interleaved, in cui il service vede sempre il tenant della propria richiesta. | `src/test/.../filter/*`, `src/test/.../exception/handler/TenantExceptionHandlerTest.java` | M |
 
-**Definition of Done:** nessun endpoint `/v1/**` è raggiungibile senza un tenant valido; `/q/health` resta accessibile.
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 514 test, 0 errori (dopo 01: 481). Le IT Cucumber esistenti coprono solo `/q/health`, escluso dal filtro.
+
+**Comportamenti osservati da tenere presenti:**
+
+- I token SPID senza claim `tenant_id` sono attribuiti dall'SDK a `DEFAULT_TENANT` (default `PNPG`), quindi con `X-Tenant-Id: AR` ricevono 401. `auth` e `onboarding-functions` (`JwtSessionServiceImpl`) emettono già il claim; restano a rischio i token statici (`JWT_BEARER_TOKEN`) se sono SPID senza claim. Vedi `08.02` e `08.05`.
+- Per i token SPID il confronto claim/header nell'SDK è case-sensitive (`ar` ≠ `AR`, risposta 401); per i token PAGOPA vale la normalizzazione del filtro.
+- Rollout: con `TENANT_ENFORCEMENT_ENABLED=true` (default) i chiamanti senza `X-Tenant-Id` ricevono 400. `onboarding-ms`, `onboarding-functions` e `dashboard-bff` (`DocumentRestClientConfig` → `TenantHeaderInterceptor`, che propaga solo se l'header è presente in ingresso) lo inviano già; la verifica completa resta in `08.03`. In caso di emergenza: `TENANT_ENFORCEMENT_ENABLED=false` con `TENANT_DEFAULT=AR`.
 
 ## SELC-DMS-03 – Routing Mongo per tenant
 
@@ -205,7 +211,7 @@ flowchart LR
 | SELC-DMS-08.02 | `onboarding-functions`: token macchina legato al tenant al posto di `JWT_BEARER_TOKEN` di deployment. | config e infra di onboarding-functions | M |
 | SELC-DMS-08.03 | Verificare che `onboarding-ms` (`AuthenticationPropagationHeadersFactory`) e `dashboard-bff` (`TenantHeaderInterceptor`) inviino `X-Tenant-Id` su **tutti** i client verso document-ms. | client REST | S |
 | SELC-DMS-08.04 | Allineare i lettori diretti del blob documenti (`onboarding-functions`, `BLOB_STORAGE_ACCOUNT_NAME_CONTRACT`) allo stesso binding e prefisso. | onboarding-functions | S |
-| SELC-DMS-08.05 | `selfcare-sdk-security`: `JwtTenantValidator.resolveTokenTenant` usa `PNPG` se manca il claim; renderlo fail-closed (o almeno configurabile). Impatto trasversale: coordinare con gli altri servizi. | `libs/selfcare-sdk-security/.../JwtTenantValidator.java` | M |
+| SELC-DMS-08.05 | `selfcare-sdk-security`: `JwtTenantValidator.resolveTokenTenant` usa `PNPG` se manca il claim; renderlo fail-closed (o almeno configurabile) e allineare la normalizzazione del confronto claim/header (oggi case-sensitive, emerso in `02.05`). Impatto trasversale: coordinare con gli altri servizi. | `libs/selfcare-sdk-security/.../JwtTenantValidator.java` | M |
 | SELC-DMS-08.06 | Documentare l'incoerenza `onboarding-functions/*-pnpg` → `selc-<env>-pnpg-document-ms-ca`, risorsa non provisionata; si risolve in `SELC-DMS-11`. | infra onboarding-functions | S |
 
 ## SELC-DMS-09 – Migrazione dati e strict mode
