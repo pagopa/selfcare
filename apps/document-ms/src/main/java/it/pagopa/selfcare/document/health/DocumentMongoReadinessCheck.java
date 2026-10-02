@@ -1,30 +1,32 @@
 package it.pagopa.selfcare.document.health;
 
-import io.quarkus.mongodb.reactive.ReactiveMongoClient;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.commons.health.AbstractMongoReadinessCheck;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.bson.Document;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.Readiness;
 
 @Readiness
 @ApplicationScoped
 public class DocumentMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
-    private final ReactiveMongoClient mongoClient;
+    private final TenantMongoClientProducer tenantMongoClientProducer;
+    private final String tenantId;
     private final String databaseName;
     private final String host;
 
     @Inject
     public DocumentMongoReadinessCheck(
-            ReactiveMongoClient mongoClient,
-            @ConfigProperty(name = "quarkus.mongodb.database") String databaseName,
-            @ConfigProperty(name = "quarkus.mongodb.connection-string") String connectionString) {
-        this.mongoClient = mongoClient;
-        this.databaseName = databaseName;
-        this.host = hostFromConnectionString(connectionString);
+            TenantRegistry tenantRegistry, TenantMongoClientProducer tenantMongoClientProducer) {
+        this.tenantMongoClientProducer = tenantMongoClientProducer;
+        this.tenantId = tenantRegistry.supportedTenantIds().iterator().next();
+        this.databaseName = tenantRegistry.resolve(tenantId).mongo().database();
+        this.host = tenantRegistry.connectionString(tenantId)
+                .map(AbstractMongoReadinessCheck::hostFromConnectionString)
+                .orElse(HOST_NOT_AVAILABLE);
     }
 
     @Override
@@ -44,7 +46,8 @@ public class DocumentMongoReadinessCheck extends AbstractMongoReadinessCheck {
 
     @Override
     protected Uni<?> probe() {
-        return mongoClient.getDatabase(databaseName)
+        return tenantMongoClientProducer.clientForTenant(tenantId)
+                .getDatabase(databaseName)
                 .runCommand(new Document("ping", 1));
     }
 }
