@@ -3,6 +3,7 @@ name: "Integration Tests (onboarding-ms)"
 permissions:
   contents: read
   actions: write
+  packages: read
 
 on:
   pull_request:
@@ -12,6 +13,7 @@ on:
       - releases/*
     paths:
       - "apps/onboarding-ms/**"
+      - "libs/selfcare-sdk-tenant/**"
       - ".github/workflows/integration_tests_onboarding_ms.yml"
   workflow_dispatch:
 
@@ -50,8 +52,7 @@ jobs:
 
       - name: Run Integration Tests
         id: int_tests
-        working-directory: apps/onboarding-ms
-        run: mvn test -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingStep -Dsurefire.failIfNoSpecifiedTests=false
+        run: mvn --projects :onboarding-ms --also-make test -Dtest=it.pagopa.selfcare.onboarding.steps.OnboardingStep -Dsurefire.failIfNoSpecifiedTests=false
         shell: bash
         env:
           APP_SERVER_PORT: 8082

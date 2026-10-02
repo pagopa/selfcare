@@ -76,12 +76,8 @@ jobs:
       docs_openapi_path: developer/external/v2/ms-external-api.json
       api_title: External API v2
       enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_EXTERNAL }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      notification_trigger_secret_name: API_NOTIFICATION_TRIGGERS_ID_EXTERNAL
+    secrets: inherit
 
   update_docs_and_notification_support:
     name: "[Support API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -93,12 +89,8 @@ jobs:
       docs_openapi_path: developer/support/v1/selc-support-api.json
       api_title: Support API v1
       enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      notification_trigger_secret_name: API_NOTIFICATION_TRIGGERS_ID_SUPPORT
+    secrets: inherit
 
   update_docs_and_notification_internal:
     name: "[Internal API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -110,12 +102,8 @@ jobs:
       docs_openapi_path: developer/internal/v1/selc-internal-api.json
       api_title: Internal API v1
       enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_INTERNAL }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      notification_trigger_secret_name: API_NOTIFICATION_TRIGGERS_ID_INTERNAL
+    secrets: inherit
 
   update_docs_and_notification_support_pnpg:
     name: "[Support PNPG API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -128,12 +116,8 @@ jobs:
       api_title: Support PNPG API v1
       enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
       is_pnpg: true
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_SUPPORT }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      notification_trigger_secret_name: API_NOTIFICATION_TRIGGERS_ID_SUPPORT
+    secrets: inherit
 
   update_docs_and_notification_billing_portal:
     name: "[Billing Portal API] [${{ needs.setup.outputs.env }}] Update Developer Docs and Notify using Slack"
@@ -145,9 +129,5 @@ jobs:
       docs_openapi_path: developer/billing-portal/v1/billing-portal-api.json
       api_title: Billing Portal API v1
       enable_notification: ${{ needs.setup.outputs.notification == 'true' }}
-
-    secrets:
-      API_NOTIFICATION_TRIGGERS_ID: ${{ secrets.API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      notification_trigger_secret_name: API_NOTIFICATION_TRIGGERS_ID_BILLING_PORTAL
+    secrets: inherit

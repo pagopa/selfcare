@@ -638,6 +638,7 @@ db = db.getSiblingDB("selcProduct");
 db.products.insertMany([
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137232",
+    tenantId: "AR",
     productId: "prod-test",
     alias: "prod-test",
     title: "Prod TEST",
@@ -727,6 +728,59 @@ db.products.insertMany([
     metadata: {
       createdBy: "user-apim-name"
     }
+  },
+  {
+    _id: "b05e0ed9-2da1-4814-b6c0-8fd076009a01",
+    tenantId: "AR",
+    productId: "prod-io",
+    alias: "prod-io",
+    title: "IO",
+    status: "ACTIVE",
+    version: 1,
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      delegable: false,
+      invoiceable: true,
+      enabled: true,
+      expirationDays: 30
+    },
+    roleMappings: [],
+    contracts: [
+      {
+        institutionType: "DEFAULT",
+        contractType: "CONTRACT",
+        path: "contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html",
+        version: "2.4.5"
+      }
+    ],
+    institutionOrigins: [
+      { institutionType: "PA", origin: "IPA", labelKey: "pa" }
+    ],
+    requiredDocuments: []
+  },
+  {
+    _id: "7c6e2481-581b-4ed1-b430-7e4887b71c84",
+    tenantId: "AR",
+    productId: "prod-pagopa",
+    alias: "prod-pagopa",
+    title: "Pagamenti pagoPA",
+    status: "ACTIVE",
+    version: 1,
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      delegable: true,
+      invoiceable: true,
+      enabled: true,
+      expirationDays: 30
+    },
+    roleMappings: [],
+    contracts: [],
+    institutionOrigins: [
+      { institutionType: "PA", origin: "IPA", labelKey: "pa" }
+    ],
+    requiredDocuments: []
   }
 ]);
 

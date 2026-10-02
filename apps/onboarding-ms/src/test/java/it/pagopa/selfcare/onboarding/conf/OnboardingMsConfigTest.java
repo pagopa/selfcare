@@ -13,7 +13,6 @@ import it.pagopa.selfcare.onboarding.crypto.ArubaPkcs7HashSignServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.NamirialPkcs7HashSignServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.Pkcs7HashSignService;
-import it.pagopa.selfcare.product.service.ProductService;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,7 +25,6 @@ class OnboardingMsConfigTest {
     @BeforeEach
     void setUp() {
         config = new OnboardingMsConfig();
-        config.productAzureService = mock(ProductService.class);
     }
 
     @Test

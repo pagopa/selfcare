@@ -27,10 +27,6 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapperImpl;
 import it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault;
 import it.pagopa.selfcare.onboarding.steps.IntegrationProfile;
-import it.pagopa.selfcare.product.entity.PHASE_ADDITION_ALLOWED;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRole;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
 import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
@@ -45,6 +41,12 @@ import org.mockito.Spy;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamerePdndApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.PDNDBusinessResource;
+import org.openapi.quarkus.product_json.model.BackOfficeRole;
+import org.openapi.quarkus.product_json.model.Features;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.RoleMapping;
+import org.openapi.quarkus.product_json.model.WorkflowType;
+import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
@@ -52,10 +54,11 @@ import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
 
 import java.util.*;
 
-import static it.pagopa.selfcare.onboarding.common.InstitutionType.PSP;
-import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_DASHBOARD_PSP;
 import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_INTEROP;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -74,9 +77,6 @@ class OnboardingServiceIntegrationTest {
     @InjectMock
     @RestClient
     UserApi userRegistryApi;
-
-    @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
 
     @InjectMock
     ProductService productService;
@@ -167,13 +167,17 @@ class OnboardingServiceIntegrationTest {
         managerResourceWkSpid.setWorkContacts(map);
     }
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     void setupDefaultMocks() {
-        org.openapi.quarkus.product_json.model.WorkflowTypeResponse defaultResponse =
-                new org.openapi.quarkus.product_json.model.WorkflowTypeResponse();
-        defaultResponse.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
+        WorkflowTypeResponse defaultResponse =
+                new WorkflowTypeResponse().workflowType(WorkflowType.CONTRACT_REGISTRATION);
         when(productService.getWorkflowType(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(defaultResponse));
+        when(productService.getWorkflowType(any(), any(), any(), nullable(String.class)))
+                .thenReturn(Uni.createFrom().item(defaultResponse));
+        when(productService.getProductExpirationDays(anyString())).thenReturn(Uni.createFrom().item(30));
+        when(productService.getProductExpirationDays(anyString(), nullable(String.class)))
+                .thenReturn(Uni.createFrom().item(30));
     }
 
     @Test
@@ -211,7 +215,6 @@ class OnboardingServiceIntegrationTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), asserter);
         mockVerifyOnboardingNotFound();
-        mockVerifyisProductEnabled(request.getProductId(), asserter);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -256,40 +259,29 @@ class OnboardingServiceIntegrationTest {
     }
 
     private void mockSimpleProductValidAssert(String productId, UniAsserter asserter) {
-        Product productResource = createDummyProduct(productId);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(productId))
-                .thenReturn(productResource));
+        ProductResponse product = createDummyProduct(productId);
+        asserter.execute(() -> {
+            when(productService.getValidProduct(productId)).thenReturn(Uni.createFrom().item(product));
+            when(productService.getValidProduct(eq(productId), nullable(String.class)))
+                    .thenReturn(Uni.createFrom().item(product));
+        });
     }
 
-    ProductRoleInfo dummyProductRoleInfo(String productRolCode) {
-        ProductRole productRole = new ProductRole();
-        productRole.setCode(productRolCode);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setRoles(List.of(productRole));
-        productRoleInfo.setPhasesAdditionAllowed(List.of(PHASE_ADDITION_ALLOWED.ONBOARDING.value));
-        return productRoleInfo;
+    private RoleMapping roleMapping(PartyRole role, String backOfficeRole,
+                                    org.openapi.quarkus.product_json.model.InstitutionType institutionType) {
+        return new RoleMapping().role(role.name()).institutionType(institutionType)
+                .phasesAdditionAllowed(List.of("onboarding"))
+                .backOfficeRoles(List.of(new BackOfficeRole().code(backOfficeRole)));
     }
 
-    Product createDummyProduct(String productId) {
-
-        Map<PartyRole, ProductRoleInfo> roleMappingByInstitutionType = new HashMap<>();
-        roleMappingByInstitutionType.put(manager.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_PSP_CODE));
-
-        Product productResource = new Product();
-        productResource.setId(productId);
-        Map<PartyRole, ProductRoleInfo> roleMappings = new HashMap<>();
-        roleMappings.put(manager.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_CODE));
-        roleMappings.put(delegate1.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_CODE));
-        productResource.setRoleMappings(roleMappings);
-        productResource.setRoleMappingsByInstitutionType(Map.of(PSP.name(), roleMappingByInstitutionType));
-        productResource.setTitle("title");
-        productResource.setAllowCompanyOnboarding(true);
-        if (PROD_DASHBOARD_PSP.getValue().equals(productId)) {
-            List<String> institutionTypeList = new ArrayList<>();
-            institutionTypeList.add(PSP.name());
-            productResource.setInstitutionTypesAllowed(institutionTypeList);
-        }
-        return productResource;
+    private ProductResponse createDummyProduct(String productId) {
+        return new ProductResponse().productId(productId).tenantId("AR").title("title")
+                .features(new Features().enabled(true).allowIndividualOnboarding(false).allowCompanyOnboarding(true))
+                .roleMappings(List.of(
+                        roleMapping(manager.getRole(), PRODUCT_ROLE_ADMIN_CODE, null),
+                        roleMapping(delegate1.getRole(), PRODUCT_ROLE_ADMIN_CODE, null),
+                        roleMapping(manager.getRole(), PRODUCT_ROLE_ADMIN_PSP_CODE,
+                                org.openapi.quarkus.product_json.model.InstitutionType.PSP)));
     }
 
 
@@ -354,10 +346,6 @@ class OnboardingServiceIntegrationTest {
                     onboarding.setInstitution(((Onboarding) arg.getArguments()[0]).getInstitution());
                     return Uni.createFrom().nullItem();
                 }));
-    }
-
-    void mockVerifyisProductEnabled(String productId, UniAsserter asserter) {
-        asserter.execute(() -> when(productAzureService.isProductEnabled(productId)).thenReturn(true));
     }
 
 }

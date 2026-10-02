@@ -27,60 +27,64 @@ class ProductServiceImplTest {
     @Test
     void getOriginsTest_success() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String sanitized = Encode.forJava(productId);
 
         OriginResult originResult = new OriginResult();
         originResult.setOrigins(List.of());
 
-        when(productMsConnector.getOrigins(sanitized)).thenReturn(originResult);
+        when(productMsConnector.getOrigins(tenantId, sanitized)).thenReturn(originResult);
 
         // when
-        OriginResult result = productService.getOrigins(productId);
+        OriginResult result = productService.getOrigins(tenantId, productId);
 
         // then
         assertNotNull(result);
         assertEquals(originResult, result);
 
-        verify(productMsConnector, times(1)).getOrigins(sanitized);
+        verify(productMsConnector, times(1)).getOrigins(tenantId, sanitized);
         verifyNoMoreInteractions(productMsConnector);
     }
 
     @Test
     void getOriginsTest_handlesSpecialCharacters() {
         // given
+        String tenantId = "AR";
         String rawProductId = "<error>";
         String sanitized = Encode.forJava(rawProductId);
 
         OriginResult originResult = new OriginResult();
         originResult.setOrigins(List.of());
 
-        when(productMsConnector.getOrigins(sanitized)).thenReturn(originResult);
+        when(productMsConnector.getOrigins(tenantId, sanitized)).thenReturn(originResult);
 
         // when
-        OriginResult result = productService.getOrigins(rawProductId);
+        OriginResult result = productService.getOrigins(tenantId, rawProductId);
 
         // then
         assertNotNull(result);
-        verify(productMsConnector).getOrigins(sanitized);
+        verify(productMsConnector).getOrigins(tenantId, sanitized);
     }
 
     @Test
     void getOriginsTest_nullOriginsList_throwsException() {
         // given
+        String tenantId = "AR";
         String productId = "test";
         String sanitized = Encode.forJava(productId);
 
         OriginResult originResult = new OriginResult();
-        when(productMsConnector.getOrigins(sanitized)).thenReturn(originResult);
+        when(productMsConnector.getOrigins(tenantId, sanitized)).thenReturn(originResult);
 
         // then
-        assertThrows(NullPointerException.class, () -> productService.getOrigins(productId));
+        assertThrows(NullPointerException.class, () -> productService.getOrigins(tenantId, productId));
     }
 
     @Test
     void getRequiredDocuments_success() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
@@ -90,11 +94,11 @@ class ProductServiceImplTest {
         List<RequiredDocumentModel> expected = List.of(doc);
 
         when(productMsConnector.getRequiredDocuments(
-                Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
+                tenantId, Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
                 .thenReturn(expected);
 
         // when
-        List<RequiredDocumentModel> result = productService.getRequiredDocuments(productId, institutionType, origin);
+        List<RequiredDocumentModel> result = productService.getRequiredDocuments(tenantId, productId, institutionType, origin);
 
         // then
         assertNotNull(result);
@@ -102,23 +106,24 @@ class ProductServiceImplTest {
         assertEquals("doc-1", result.get(0).getId());
 
         verify(productMsConnector, times(1)).getRequiredDocuments(
-                Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin));
+                tenantId, Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin));
         verifyNoMoreInteractions(productMsConnector);
     }
 
     @Test
     void getRequiredDocuments_empty() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
         when(productMsConnector.getRequiredDocuments(
-                Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
+                tenantId, Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
                 .thenReturn(List.of());
 
         // when
-        List<RequiredDocumentModel> result = productService.getRequiredDocuments(productId, institutionType, origin);
+        List<RequiredDocumentModel> result = productService.getRequiredDocuments(tenantId, productId, institutionType, origin);
 
         // then
         assertNotNull(result);
@@ -128,38 +133,40 @@ class ProductServiceImplTest {
     @Test
     void isRequiredDocumentsEnabled_returnsTrue() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
         when(productMsConnector.isRequiredDocumentsEnabled(
-                Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
+                tenantId, Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
                 .thenReturn(true);
 
         // when
-        boolean result = productService.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        boolean result = productService.isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin);
 
         // then
         assertTrue(result);
 
         verify(productMsConnector, times(1)).isRequiredDocumentsEnabled(
-                Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin));
+                tenantId, Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin));
         verifyNoMoreInteractions(productMsConnector);
     }
 
     @Test
     void isRequiredDocumentsEnabled_returnsFalse() {
         // given
+        String tenantId = "AR";
         String productId = "prod-test";
         String institutionType = "PA";
         String origin = "IPA";
 
         when(productMsConnector.isRequiredDocumentsEnabled(
-                Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
+                tenantId, Encode.forJava(productId), Encode.forJava(institutionType), Encode.forJava(origin)))
                 .thenReturn(false);
 
         // when
-        boolean result = productService.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        boolean result = productService.isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin);
 
         // then
         assertFalse(result);

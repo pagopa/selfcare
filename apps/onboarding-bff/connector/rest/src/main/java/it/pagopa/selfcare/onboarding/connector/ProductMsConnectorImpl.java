@@ -31,9 +31,9 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     }
 
     @Override
-    public OriginResult getOrigins(String productId) {
+    public OriginResult getOrigins(String tenantId, String productId) {
         log.trace("getOrigins start");
-        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(productId);
+        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(tenantId, productId);
         OriginResult entryList = productMapper.toOriginResult(origins.getBody());
         log.debug("getOrigins size = {}", entryList.getOrigins().isEmpty());
         log.trace("getOrigins end");
@@ -41,10 +41,11 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     }
 
     @Override
-    public List<RequiredDocumentModel> getRequiredDocuments(String productId, String institutionType, String origin) {
+    public List<RequiredDocumentModel> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin) {
         log.trace("getRequiredDocuments start");
         ResponseEntity<List<RequiredDocumentResponse>> response = msProductApiClient._getRequiredDocuments(
                 productId,
+                tenantId,
                 InstitutionType.fromValue(institutionType),
                 Origin.fromValue(origin)
         );
@@ -56,10 +57,11 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     }
 
     @Override
-    public boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin) {
+    public boolean isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin) {
         log.trace("isRequiredDocumentsEnabled start");
         ResponseEntity<Void> response = msProductApiClient._isRequiredDocumentsEnabled(
                 productId,
+                tenantId,
                 InstitutionType.fromValue(institutionType),
                 Origin.fromValue(origin)
         );

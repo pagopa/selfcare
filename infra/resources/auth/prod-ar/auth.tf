@@ -220,7 +220,7 @@ locals {
     },
     {
       name  = "ONE_MAIL_URL"
-      value = "https://uat.onemail.pagopa.it"
+      value = "https://onemail.pagopa.it"
     },
     {
       name  = "TENANT_AR_MAIL_SENDER"

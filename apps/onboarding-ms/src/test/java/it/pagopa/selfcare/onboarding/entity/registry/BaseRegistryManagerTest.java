@@ -5,7 +5,7 @@ import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(Origin.IPA);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
             product.setInstitutionTypesAllowed(null);
 
             // when
@@ -55,7 +55,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(Origin.IPA);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
             product.setInstitutionTypesAllowed(List.of());
 
             // when
@@ -70,8 +70,8 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(Origin.IPA);
-            Product product = new Product();
-            product.setId("prod-test");
+            ProductResponse product = new ProductResponse();
+            product.setProductId("prod-test");
             product.setInstitutionTypesAllowed(List.of("PA", "GSP"));
 
             // when
@@ -86,8 +86,8 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.SA);
             institution.setOrigin(Origin.ANAC);
-            Product product = new Product();
-            product.setId("prod-test");
+            ProductResponse product = new ProductResponse();
+            product.setProductId("prod-test");
             product.setInstitutionTypesAllowed(List.of("PA", "GSP"));
 
             // when & then
@@ -106,7 +106,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(null);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
 
             // when
             Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
@@ -120,7 +120,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(null);
             institution.setOrigin(Origin.IPA);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
 
             // when
             Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
@@ -134,7 +134,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(Origin.MOCK);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
 
             // when
             Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
@@ -149,7 +149,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setOrigin(origin);
             institution.setInstitutionType(institutionType);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
 
             // when
             Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
@@ -164,7 +164,7 @@ class BaseRegistryManagerTest {
             // given
             institution.setOrigin(origin);
             institution.setInstitutionType(institutionType);
-            Product product = new Product();
+            ProductResponse product = new ProductResponse();
 
             // when & then
             InvalidRequestException exception = assertThrows(InvalidRequestException.class,

@@ -181,7 +181,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment,
+    public void uploadAttachment(String tenantId, String onboardingId, MultipartFile attachment,
                                  String attachmentName, String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
@@ -190,7 +190,7 @@ public class TokenServiceImpl implements TokenService {
         Assert.notNull(attachment, "file is required");
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
 
-        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(onboarding, attachmentId);
+        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(tenantId, onboarding, attachmentId);
         boolean userStorage = requiredDocument
                 .map(RequiredDocumentModel::getStorageOrigin)
                 .map(so -> so == StorageOrigin.USER)
@@ -220,9 +220,10 @@ public class TokenServiceImpl implements TokenService {
         log.trace("getAttachment end");
     }
 
-    private Optional<RequiredDocumentModel> findRequiredDocument(OnboardingData onboarding, String attachmentId) {
+    private Optional<RequiredDocumentModel> findRequiredDocument(String tenantId, OnboardingData onboarding, String attachmentId) {
       return productMsConnector
           .getRequiredDocuments(
+              Encode.forJava(tenantId),
               onboarding.getProductId(),
               onboarding.getInstitutionType().name(),
               onboarding.getInstitutionUpdate().getOrigin())
