@@ -25,7 +25,7 @@ You can run your application in dev mode that enables live coding using:
 ./mvnw compile quarkus:dev
 ```
 
-For some endpoints 
+For some endpoints
 
 > **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at http://localhost:8083/q/dev/.
 
@@ -79,11 +79,11 @@ Rest client are generated using a quarkus' extension.
 | USER_REGISTRY_URL                       |             |     yes      |
 | MAIL_SUBJECT_PREFIX                     |             |     yes      |
 | ENV_TARGET                              |             |     yes      |
-| NO_REPLY_MAIL                           |             |     yes      |
+| MAIL_SENDER_ADDRESS                     |             |     yes      |
 | AWS_SES_ACCESS_KEY_ID                   |             |     yes      |
 | AWS_SES_SECRET_ACCESS_KEY               |             |     yes      |
 | AWS_SES_REGION                          |             |     yes      |
-| NO_REPLY_MAIL                           |             |     yes      |
+| MAIL_SENDER_ADDRESS                     |             |     yes      |
 | USER_MS_RETRY_MIN_BACKOFF               | 5           |     yes      |
 | USER_MS_RETRY_MAX_BACKOFF               | 60          |     yes      |
 | USER_MS_RETRY                           | 3           |     yes      |

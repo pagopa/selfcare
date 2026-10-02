@@ -228,6 +228,10 @@ locals {
     {
       name  = "MAIL_ENABLED"
       value = false
+    },
+    {
+      name  = "MAIL_SENDER_ADDRESS",
+      value = "noreply@selfcare.pagopa.it"
     }
   ]
 
