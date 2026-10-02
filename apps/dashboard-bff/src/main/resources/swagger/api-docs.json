@@ -3425,10 +3425,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductRoleMappingsResource"
-                  }
+                  "$ref" : "#/components/schemas/ProductRolesResource"
                 }
               }
             }
@@ -4273,6 +4270,9 @@
           "userRole" : {
             "type" : "string"
           },
+          "userPartnerTechRole" : {
+            "type" : "boolean"
+          },
           "status" : {
             "type" : "string",
             "enum" : [ "ACTIVE", "PENDING", "TOBEVALIDATED", "SUSPENDED", "DELETED", "REJECTED" ]
@@ -4298,7 +4298,7 @@
           "originId" : {
             "type" : "string"
           },
-          "isPartnerTech" : {
+          "partnerTechRolesEnabled" : {
             "type" : "boolean"
           },
           "institutionType" : {
@@ -5121,6 +5121,9 @@
           "userRole" : {
             "type" : "string"
           },
+          "userPartnerTechRole" : {
+            "type" : "boolean"
+          },
           "authorized" : {
             "type" : "boolean"
           },
@@ -5142,7 +5145,7 @@
           "originId" : {
             "type" : "string"
           },
-          "isPartnerTech" : {
+          "partnerTechRolesEnabled" : {
             "type" : "boolean"
           },
           "institutionType" : {
@@ -5411,7 +5414,8 @@
               "$ref" : "#/components/schemas/ProductRoleResource"
             }
           }
-        }
+        },
+        "description" : "List of partner technical role mappings"
       },
       "ProductRoleResource" : {
         "type" : "object",
@@ -5438,6 +5442,25 @@
           }
         },
         "description" : "Available product roles"
+      },
+      "ProductRolesResource" : {
+        "type" : "object",
+        "properties" : {
+          "roleMappings" : {
+            "type" : "array",
+            "description" : "List of product role mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRoleMappingsResource"
+            }
+          },
+          "partnerTechRoleMappings" : {
+            "type" : "array",
+            "description" : "List of partner technical role mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductRoleMappingsResource"
+            }
+          }
+        }
       },
       "BrokerResource" : {
         "type" : "object",

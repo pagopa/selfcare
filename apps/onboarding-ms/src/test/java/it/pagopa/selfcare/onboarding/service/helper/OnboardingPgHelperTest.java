@@ -1,11 +1,15 @@
 package it.pagopa.selfcare.onboarding.service.helper;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.test.InjectMock;
@@ -26,10 +30,8 @@ import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.UserService;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -44,6 +46,9 @@ import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.BusinessResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.BusinessesResource;
 import org.openapi.quarkus.party_registry_proxy_json.model.LegalVerificationResult;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.BackOfficeRole;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
 @QuarkusTest
@@ -53,7 +58,7 @@ class OnboardingPgHelperTest {
     OnboardingPgHelper onboardingPgHelper;
 
     @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
+    ProductService productService;
 
     @InjectMock
     OnboardingPersistenceHelper persistenceHelper;
@@ -131,8 +136,8 @@ class OnboardingPgHelperTest {
                 anyString(), isNull(), anyString(), isNull(), anyString()))
                 .thenReturn(Multi.createFrom().item(buildPreviousOnboarding()));
 
-        when(productAzureService.getProductIsValid(anyString()))
-                .thenThrow(new ProductNotFoundException("Product prod-pn-pg not found"));
+        when(productService.getValidProduct(anyString(), any()))
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("Product not found")));
 
         //when
         UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
@@ -145,14 +150,14 @@ class OnboardingPgHelperTest {
     }
 
     @Test
-    void onboardingUserPg_whenStorageError_propagatesOriginalException() {
+    void onboardingUserPg_whenProductApiError_preservesFailure() {
         //given
         when(persistenceHelper.getOnboardingByFilters(
                 anyString(), isNull(), anyString(), isNull(), anyString()))
                 .thenReturn(Multi.createFrom().item(buildPreviousOnboarding()));
 
-        when(productAzureService.getProductIsValid(anyString()))
-                .thenThrow(new RuntimeException("Azure Blob Storage unreachable"));
+        when(productService.getValidProduct(anyString(), any()))
+                .thenReturn(Uni.createFrom().failure(new RuntimeException("product-ms unreachable")));
 
         //when
         UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
@@ -161,7 +166,88 @@ class OnboardingPgHelperTest {
 
         //then
         subscriber.awaitFailure()
-                .assertFailedWith(RuntimeException.class, "Azure Blob Storage unreachable");
+                .assertFailedWith(RuntimeException.class, "product-ms unreachable");
+    }
+
+    // --- onboardingUserPg: resolveRoleMappings ---
+
+    @Test
+    void onboardingUserPg_whenProductHasParent_usesParentMappingsAndPreservesTenant() {
+        //given
+        Onboarding onboarding = buildOnboarding();
+        onboarding.setTenantId("AR");
+        List<UserRequest> userRequests = List.of(managerUserRequest());
+        RoleMapping childMapping = managerRoleMapping("child-admin");
+        RoleMapping parentMapping = managerRoleMapping("parent-admin");
+        ProductResponse child = new ProductResponse().productId(onboarding.getProductId())
+                .parentId("prod-pn").roleMappings(List.of(childMapping));
+        ProductResponse parent = new ProductResponse().productId("prod-pn")
+                .roleMappings(List.of(parentMapping));
+        mockPreviousOnboarding();
+        when(productService.getValidProduct(onboarding.getProductId(), "AR"))
+                .thenReturn(Uni.createFrom().item(child));
+        when(productService.getValidProduct("prod-pn", "AR"))
+                .thenReturn(Uni.createFrom().item(parent));
+        mockValidationAndUserRegistry();
+        mockUserNotAlreadyManager();
+        LegalVerificationResult result = new LegalVerificationResult();
+        result.setVerificationResult(true);
+        when(nationalRegistriesApi.verifyLegalUsingGET(anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(result));
+        when(persistenceHelper.updateOnboarding(onboarding))
+                .thenReturn(Uni.createFrom().item(onboarding));
+        when(orchestrationService.triggerOrchestrationIfEnabled(onboarding.getId(), "70"))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+        OnboardingResponse expected = new OnboardingResponse();
+        when(onboardingMapper.toResponse(onboarding)).thenReturn(expected);
+
+        //when
+        UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
+                .onboardingUserPg(onboarding, userRequests)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.awaitItem().assertItem(expected);
+        verify(productService).getValidProduct("prod-pn-pg", "AR");
+        verify(productService).getValidProduct("prod-pn", "AR");
+        verify(validationHelper).validationRole(userRequests, List.of(PartyRole.MANAGER));
+        verify(userRegistryHelper).retrieveUserResources(eq(userRequests), eq(Map.of(PartyRole.MANAGER, parentMapping)));
+        verify(persistenceHelper).updateOnboarding(onboarding);
+        verify(orchestrationService).triggerOrchestrationIfEnabled(onboarding.getId(), "70");
+    }
+
+    @Test
+    void onboardingUserPg_whenParentLookupFails_preservesFailureAndStopsOnboarding() {
+        //given
+        Onboarding onboarding = buildOnboarding();
+        onboarding.setTenantId("AR");
+        List<UserRequest> userRequests = List.of(managerUserRequest());
+        ProductResponse child = new ProductResponse().productId(onboarding.getProductId())
+                .parentId("prod-pn").roleMappings(List.of(managerRoleMapping("child-admin")));
+        ResourceNotFoundException failure = new ResourceNotFoundException("Parent product not found");
+        mockPreviousOnboarding();
+        when(productService.getValidProduct(onboarding.getProductId(), "AR"))
+                .thenReturn(Uni.createFrom().item(child));
+        when(productService.getValidProduct("prod-pn", "AR"))
+                .thenReturn(Uni.createFrom().failure(failure));
+        when(validationHelper.validationRole(userRequests, List.of(PartyRole.MANAGER)))
+                .thenReturn(Uni.createFrom().item(userRequests));
+
+        //when
+        UniAssertSubscriber<OnboardingResponse> subscriber = onboardingPgHelper
+                .onboardingUserPg(onboarding, userRequests)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        //then
+        subscriber.awaitFailure().assertFailedWith(ResourceNotFoundException.class, "Parent product not found");
+        assertSame(failure, subscriber.getFailure());
+        verify(productService).getValidProduct("prod-pn-pg", "AR");
+        verify(productService).getValidProduct("prod-pn", "AR");
+        verify(validationHelper).validationRole(userRequests, List.of(PartyRole.MANAGER));
+        verify(persistenceHelper).getOnboardingByFilters("02492030446", null, "ADE", null, "prod-pn-pg");
+        verify(persistenceHelper, never()).updateOnboarding(any());
+        verifyNoInteractions(userRegistryHelper, userService, nationalRegistriesApi, infocamereApi,
+                orchestrationService, onboardingMapper);
     }
 
     // --- onboardingUserPg: checkIfUserIsAlreadyManager ---
@@ -488,11 +574,18 @@ class OnboardingPgHelperTest {
     }
 
     private void mockValidProduct() {
-        Product product = new Product();
-        Map<PartyRole, ProductRoleInfo> roleMappings = new HashMap<>();
-        roleMappings.put(PartyRole.MANAGER, new ProductRoleInfo());
-        product.setRoleMappings(roleMappings);
-        when(productAzureService.getProductIsValid(anyString())).thenReturn(product);
+        ProductResponse product = new ProductResponse();
+        product.setProductId("prod-pn-pg");
+        product.setRoleMappings(List.of(managerRoleMapping("admin")));
+        when(productService.getValidProduct(anyString(), any())).thenReturn(Uni.createFrom().item(product));
+    }
+
+    private static RoleMapping managerRoleMapping(String backOfficeRole) {
+        return new RoleMapping()
+                .institutionType(org.openapi.quarkus.product_json.model.InstitutionType.PG)
+                .role(PartyRole.MANAGER.name())
+                .phasesAdditionAllowed(List.of("onboarding"))
+                .backOfficeRoles(List.of(new BackOfficeRole().code(backOfficeRole)));
     }
 
     private void mockValidationAndUserRegistry() {
@@ -507,4 +600,3 @@ class OnboardingPgHelperTest {
                 .thenReturn(Uni.createFrom().item(List.of()));
     }
 }
-

@@ -23,8 +23,6 @@ import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -53,7 +51,7 @@ public class OnboardingValidationHelper {
             Pattern.compile("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
 
     @Inject
-    ProductService productAzureService;
+    it.pagopa.selfcare.onboarding.service.ProductService productService;
 
     @RestClient
     @Inject
@@ -120,16 +118,16 @@ public class OnboardingValidationHelper {
     }
 
     /** Gestisce il caso di conflitto nel flusso di import aggregator. */
-    public Uni<Product> handleConflictForImport(Onboarding onboarding, Product product) {
+    public Uni<ProductResponse> handleConflictForImport(Onboarding onboarding, ProductResponse product) {
         log.info("Handling conflict for import: institutionTaxCode: {}, productId: {}, isAggregator: {}",
-                onboarding.getInstitution().getTaxCode(), product.getId(), onboarding.getIsAggregator());
+                onboarding.getInstitution().getTaxCode(), product.getProductId(), onboarding.getIsAggregator());
         if (!isAggregatorProdIo(onboarding)) {
             return Uni.createFrom().failure(createConflictException(product, onboarding.getInstitution()));
         }
         Institution institution = onboarding.getInstitution();
         String origin = institution.getOrigin() != null ? institution.getOrigin().getValue() : null;
         return verifyOnboarding(institution.getTaxCode(), institution.getSubunitCode(),
-                        origin, institution.getOriginId(), COMPLETED, product.getId(), institution.getInstitutionType())
+                        origin, institution.getOriginId(), COMPLETED, product.getProductId(), institution.getInstitutionType())
                 .onItem().transformToUni(responses -> {
                     boolean hasNonConfirmationAggregate = responses.stream()
                             .anyMatch(r -> !Objects.equals(r.getWorkflowType(),
@@ -315,14 +313,22 @@ public class OnboardingValidationHelper {
      * se è un CF persona fisica richiede {@code allowIndividualOnboarding},
      * altrimenti {@code allowCompanyOnboarding}.
      */
-    public void validateTaxCode(String taxCode, Product product) {
+    public void validateTaxCode(String taxCode, ProductResponse product) {
         if (StringUtils.isBlank(taxCode)) return;
         boolean isIndividual = INDIVIDUAL_CF_PATTERN.matcher(taxCode.toUpperCase(Locale.ITALY)).matches();
-        if (isIndividual && !product.isAllowIndividualOnboarding()) {
+        boolean allowIndividual = Optional.ofNullable(product)
+                .map(ProductResponse::getFeatures)
+                .map(Features::getAllowIndividualOnboarding)
+                .orElse(Boolean.FALSE);
+        boolean allowCompany = Optional.ofNullable(product)
+                .map(ProductResponse::getFeatures)
+                .map(Features::getAllowCompanyOnboarding)
+                .orElse(Boolean.FALSE);
+        if (isIndividual && !allowIndividual) {
             throw new InvalidRequestException(
                     INDIVIDUAL_ONBOARDING_NOT_ALLOWED.getMessage(), INDIVIDUAL_ONBOARDING_NOT_ALLOWED.getCode());
         }
-        if (!isIndividual && !product.isAllowCompanyOnboarding()) {
+        if (!isIndividual && !allowCompany) {
             throw new InvalidRequestException(
                     COMPANY_ONBOARDING_NOT_ALLOWED.getMessage(), COMPANY_ONBOARDING_NOT_ALLOWED.getCode());
         }
@@ -406,7 +412,7 @@ public class OnboardingValidationHelper {
     private Uni<Boolean> checkIfOnboardingNotExistAndValidateAllowedProductList(
             Onboarding onboarding, String productId) {
         return validateAllowedProductList(onboarding.getInstitution().getTaxCode(),
-                        onboarding.getInstitution().getSubunitCode(), productId)
+                        onboarding.getInstitution().getSubunitCode(), productId, onboarding.getTenantId())
                 .flatMap(ignored -> {
                     if (Objects.isNull(onboarding.getReferenceOnboardingId())) {
                         return Uni.createFrom().failure(new InvalidRequestException(
@@ -426,18 +432,34 @@ public class OnboardingValidationHelper {
     }
 
     private Uni<Boolean> validateAllowedProductList(String taxCode, String subunitCode, String productId) {
-        log.info("Validating allowed map for: taxCode {}, subunitCode {}, product {}", taxCode, subunitCode, productId);
-        if (!validateByProductOrInstitutionTaxCode(productId, taxCode)) {
-            return Uni.createFrom().failure(new OnboardingNotAllowedException(
-                    String.format(ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE.getMessage(), taxCode, productId),
-                    DEFAULT_ERROR.getCode()));
-        }
-        return Uni.createFrom().item(Boolean.TRUE);
+        return validateAllowedProductList(taxCode, subunitCode, productId, null);
     }
 
-    private boolean validateByProductOrInstitutionTaxCode(String productId, String taxCode) {
-        return productAzureService.isProductEnabled(productId)
-                || productAzureService.verifyAllowedByInstitutionTaxCode(productId, taxCode);
+    private Uni<Boolean> validateAllowedProductList(String taxCode, String subunitCode,
+                                                    String productId, String tenantId) {
+        log.info("Validating allowed map for: taxCode {}, subunitCode {}, product {}", taxCode, subunitCode, productId);
+        Uni<ProductResponse> productUni = Objects.isNull(tenantId)
+                ? productService.getValidProduct(productId)
+                : productService.getValidProduct(productId, tenantId);
+        return productUni
+                .onItem().transform(product -> isProductEnabledOrTaxCodeAllowed(product, taxCode))
+                .onItem().transformToUni(allowed -> Boolean.TRUE.equals(allowed)
+                        ? Uni.createFrom().item(Boolean.TRUE)
+                        : Uni.createFrom().failure(new OnboardingNotAllowedException(
+                                String.format(ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE.getMessage(), taxCode, productId),
+                                DEFAULT_ERROR.getCode())));
+    }
+
+    private boolean isProductEnabledOrTaxCodeAllowed(ProductResponse product, String taxCode) {
+        boolean enabled = Optional.ofNullable(product)
+                .map(ProductResponse::getFeatures)
+                .map(Features::getEnabled)
+                .orElse(Boolean.FALSE);
+        List<String> allowedTaxCodes = Optional.ofNullable(product)
+                .map(ProductResponse::getFeatures)
+                .map(Features::getAllowedInstitutionTaxCode)
+                .orElse(List.of());
+        return enabled || allowedTaxCodes.stream().anyMatch(current -> current.equalsIgnoreCase(taxCode));
     }
 
     record QueryParams(String taxCode, String originId) {}
@@ -477,15 +499,15 @@ public class OnboardingValidationHelper {
                 && it.pagopa.selfcare.onboarding.common.ProductId.PROD_IO.getValue().equals(onboarding.getProductId());
     }
 
-    public ResourceConflictException createConflictException(Product product, Institution institution) {
+    public ResourceConflictException createConflictException(ProductResponse product, Institution institution) {
         return new ResourceConflictException(
-                String.format(PRODUCT_ALREADY_ONBOARDED.getMessage(), product.getId(), institution.getTaxCode()),
+                String.format(PRODUCT_ALREADY_ONBOARDED.getMessage(), product.getProductId(), institution.getTaxCode()),
                 PRODUCT_ALREADY_ONBOARDED.getCode());
     }
 
-    private IncrementRequiredException createIncrementRequiredException(Product product, Institution institution) {
+    private IncrementRequiredException createIncrementRequiredException(ProductResponse product, Institution institution) {
         return new IncrementRequiredException(
-                String.format(PRODUCT_ALREADY_ONBOARDED.getMessage(), product.getId(), institution.getTaxCode()),
+                String.format(PRODUCT_ALREADY_ONBOARDED.getMessage(), product.getProductId(), institution.getTaxCode()),
                 PRODUCT_ALREADY_ONBOARDED.getCode());
     }
 

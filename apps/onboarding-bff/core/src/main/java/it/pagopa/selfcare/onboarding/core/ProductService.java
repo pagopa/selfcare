@@ -7,10 +7,10 @@ import java.util.List;
 
 public interface ProductService {
 
-    OriginResult getOrigins(String productId);
+    OriginResult getOrigins(String tenantId, String productId);
 
-    List<RequiredDocumentModel> getRequiredDocuments(String productId, String institutionType, String origin);
+    List<RequiredDocumentModel> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin);
 
-    boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin);
+    boolean isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin);
 
 }

@@ -10,6 +10,7 @@ import java.util.List;
 public class OnboardedProduct {
     private String productId;
     private String userRole;
+    private Boolean userPartnerTechRole;
     private RelationshipState status;
     private boolean authorized;
     private Billing billing;
@@ -17,7 +18,7 @@ public class OnboardedProduct {
     private Boolean isAggregator;
     private String origin;
     private String originId;
-    private Boolean isPartnerTech;
+    private Boolean partnerTechRolesEnabled;
     private InstitutionType institutionType;
     private OffsetDateTime createdAt;
     private String tokenId;

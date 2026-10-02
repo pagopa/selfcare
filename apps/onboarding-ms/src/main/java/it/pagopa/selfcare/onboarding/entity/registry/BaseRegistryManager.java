@@ -6,7 +6,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -51,12 +51,12 @@ public abstract class BaseRegistryManager<T> implements RegistryManager<T> {
         return this;
     }
 
-    public Uni<Onboarding> validateInstitutionType(Product product) {
+    public Uni<Onboarding> validateInstitutionType(ProductResponse product) {
         return validateInstitutionTypeByProduct(product)
                 .onItem().transformToUni(onb -> validateInstitutionTypeByOrigin());
     }
 
-    private Uni<Onboarding> validateInstitutionTypeByProduct(Product product) {
+    private Uni<Onboarding> validateInstitutionTypeByProduct(ProductResponse product) {
         if (Objects.nonNull(product.getInstitutionTypesAllowed()) && !product.getInstitutionTypesAllowed().isEmpty()) {
             return product.getInstitutionTypesAllowed().stream()
                     .anyMatch(type -> type.equals(onboarding.getInstitution().getInstitutionType().name()))
@@ -64,7 +64,7 @@ public abstract class BaseRegistryManager<T> implements RegistryManager<T> {
                     : Uni.createFrom().failure(new InvalidRequestException(
                     String.format(NOT_ALLOWED_INSTITUTION_TYPE,
                             onboarding.getInstitution().getInstitutionType().name(),
-                            product.getId())
+                            product.getProductId())
             ));
         }
         return Uni.createFrom().item(onboarding);

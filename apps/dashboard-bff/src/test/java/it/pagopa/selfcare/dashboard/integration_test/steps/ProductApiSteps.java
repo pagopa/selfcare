@@ -11,6 +11,7 @@ import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.commons.base.security.SelfCareAuthority;
 import it.pagopa.selfcare.dashboard.model.product.BrokerResource;
 import it.pagopa.selfcare.dashboard.model.product.ProductRoleMappingsResource;
+import it.pagopa.selfcare.dashboard.model.product.ProductRolesResource;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +45,7 @@ public class ProductApiSteps{
 
         dashboardStepsUtil.status = response.statusCode();
         if(dashboardStepsUtil.status == 200) {
-            dashboardStepsUtil.responses.setProductRoleMappingsResource(response.body().as(new TypeRef<>() {}));
+            dashboardStepsUtil.responses.setProductRolesResource(response.body().as(ProductRolesResource.class));
             dashboardStepsUtil.setResponse(response);
         }else {
             dashboardStepsUtil. errorMessage = response.body().asString();
@@ -177,7 +178,7 @@ public class ProductApiSteps{
 
     @And("the response should contain a list of product roles")
     public void theResponseShouldContainAListOfProductRoles() {
-       List<ProductRoleMappingsResource> roles = dashboardStepsUtil.responses.getProductRoleMappingsResource();
+       List<ProductRoleMappingsResource> roles = List.copyOf(dashboardStepsUtil.responses.getProductRolesResource().getRoleMappings());
         Assertions.assertFalse(roles.isEmpty());
         Assertions.assertEquals(5, roles.size());
         Assertions.assertTrue(roles.stream().anyMatch(role -> role.getPartyRole().equals("MANAGER") && role.getSelcRole().equals(SelfCareAuthority.ADMIN)));
@@ -185,6 +186,15 @@ public class ProductApiSteps{
         Assertions.assertTrue(roles.stream().anyMatch(role -> role.getPartyRole().equals("SUB_DELEGATE") && role.getSelcRole().equals(SelfCareAuthority.ADMIN)));
         Assertions.assertTrue(roles.stream().anyMatch(role -> role.getPartyRole().equals("ADMIN_EA") && role.getSelcRole().equals(SelfCareAuthority.ADMIN)));
         Assertions.assertTrue(roles.stream().anyMatch(role -> role.getPartyRole().equals("OPERATOR") && role.getSelcRole().equals(SelfCareAuthority.LIMITED)));
+    }
+
+    @And("the response should contain a list of partner technical roles")
+    public void theResponseShouldContainAListOfPartnerTechnicalRoles() {
+        List<ProductRoleMappingsResource> roles = List.copyOf(
+                dashboardStepsUtil.responses.getProductRolesResource().getPartnerTechRoleMappings());
+        Assertions.assertFalse(roles.isEmpty());
+        Assertions.assertTrue(roles.stream().anyMatch(role ->
+                role.getPartyRole().equals("OPERATOR") && role.getSelcRole().equals(SelfCareAuthority.LIMITED)));
     }
 
     @And("the response should contain a back-office URL with selfcare token")
@@ -211,7 +221,7 @@ public class ProductApiSteps{
 
     @And("the response should contains {string} as productRole code")
     public void theResponseShouldContainsAsProductRole(String productRoleCode) {
-        ProductRoleMappingsResource productRoleMappingsResource = dashboardStepsUtil.responses.getProductRoleMappingsResource()
+        ProductRoleMappingsResource productRoleMappingsResource = dashboardStepsUtil.responses.getProductRolesResource().getRoleMappings()
                 .stream().filter(resource -> resource.getPartyRole().equals("OPERATOR"))
                 .findFirst()
                 .orElse(null);
