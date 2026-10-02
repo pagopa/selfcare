@@ -39,6 +39,7 @@ import static org.mockito.Mockito.*;
         queryParams.put("vatNumber", "someVatNumber");
         queryParams.put("Authorization", "someToken");
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
@@ -96,6 +97,7 @@ import static org.mockito.Mockito.*;
         queryParams.put("fiscalCode", "fiscalCode");
         queryParams.put("vatNumber", "vatNumber");
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
             return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);

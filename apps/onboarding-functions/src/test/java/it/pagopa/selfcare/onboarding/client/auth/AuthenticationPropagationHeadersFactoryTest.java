@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,15 +29,19 @@ class AuthenticationPropagationHeadersFactoryTest {
     @Test
     void update() {
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
+        incomingHeaders.put(TenantContext.TENANT_HEADER, List.of("AR"));
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
         outgoingHeaders.put("user-uuid", List.of(UUID.randomUUID().toString()));
+        when(jwtSessionService.createJwt(any())).thenReturn("jwt");
         authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
         assertTrue(outgoingHeaders.containsKey("Authorization"));
+        assertEquals(List.of("AR"), outgoingHeaders.get(TenantContext.TENANT_HEADER));
     }
 
     @Test
     void updateWithNullJwt() {
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
+        incomingHeaders.put(TenantContext.TENANT_HEADER, List.of("AR"));
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
         outgoingHeaders.put("user-uuid", List.of(UUID.randomUUID().toString()));
         when(jwtSessionService.createJwt(any())).thenReturn(null);
@@ -45,11 +50,12 @@ class AuthenticationPropagationHeadersFactoryTest {
     }
 
     @Test
-    void emptyHeader() {
+    void rejectsMissingTenant() {
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
-        authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
-        assertTrue(outgoingHeaders.containsKey("Authorization"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders));
     }
 
     @Test

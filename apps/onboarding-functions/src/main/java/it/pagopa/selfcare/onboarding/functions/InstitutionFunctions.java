@@ -98,7 +98,7 @@ public class InstitutionFunctions {
     UserInstitutionFilters filters = getUserInstitutionFilters(onboarding);
     String filtersString = objectMapper.writeValueAsString(filters);
 
-    processDocumentsDeletions(ctx, onboarding.getId());
+    processDocumentsDeletions(ctx, onboarding);
     processOnboardingDeletions(ctx, filtersString);
     processUserDeletions(ctx, filters);
     processSendEmailDeletions(ctx, onboarding.getId());
@@ -163,9 +163,10 @@ public class InstitutionFunctions {
     logger.debug("processUserDeletions completed");
   }
 
-  private void processDocumentsDeletions(TaskOrchestrationContext ctx, String onboardingId) throws JsonProcessingException {
-    logger.info("processDocumentsDeletions started with id: {}", onboardingId);
-    EntityFilter entityFilter = EntityFilter.builder().value(onboardingId).build();
+  private void processDocumentsDeletions(TaskOrchestrationContext ctx, Onboarding onboarding) throws JsonProcessingException {
+    logger.info("processDocumentsDeletions started with id: {}", onboarding.getId());
+    EntityFilter entityFilter =
+        EntityFilter.builder().value(onboarding.getId()).tenantId(onboarding.getTenantId()).build();
     String enrichedFilters = objectMapper.writeValueAsString(entityFilter);
 
     ctx.callActivity(

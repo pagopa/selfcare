@@ -365,6 +365,7 @@ public class NotificationEventServiceDefaultTest {
 
   private Onboarding createOnboarding() {
     Onboarding onboarding = new Onboarding();
+    onboarding.setTenantId("AR");
     onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
     onboarding.setId(onboarding.getId());
     String productId = "prod-io";

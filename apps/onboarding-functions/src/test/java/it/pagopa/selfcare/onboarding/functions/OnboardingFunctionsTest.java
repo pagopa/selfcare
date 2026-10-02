@@ -77,26 +77,26 @@ class OnboardingFunctionsTest {
 
   @Inject ObjectMapper objectMapper;
 
-  final String onboardingStringBase = "{\"id\":\"onboardingId\", \"productId\":\"prod-test\"}";
+  final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";
 
   final String onboardingWorkflowString =
-          "{\"type\":\"INSTITUTION\",\"onboarding\":{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}}";
+          "{\"type\":\"INSTITUTION\",\"onboarding\":{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}}";
 
   final String onboardingString =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String onboardingString2 =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"CONTRACT_REGISTRATION\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"CONTRACT_REGISTRATION\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String onboardingAttachmentString =
-          "{\"onboarding\":{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null},\"attachment\":{"
+          "{\"onboarding\":{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null},\"attachment\":{"
                   + "\"templatePath\": null, \"templateVersion\": null, \"name\": null, \"mandatory\": null, \"generated\": null, \"workflowType\": null, \"workflowState\": null, \"order\": null}}";
 
   final String onboardingWithoutInstitutionIdString =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":null},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":null},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String onboardingWithInstitutionIdString =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String latestDocumentString = "{ \"id\": \"doc-001\", \"type\": \"INSTITUTION\", \"onboardingId\": \"onb-123\", \"productId\": \"prod-456\", \"attachmentName\": \"contract_attachment.pdf\", \"checksum\": \"a3f5c2d1e8b7094f6a2e1d3c5b8f7e2a1\", \"contractVersion\": \"1.0.0\", \"contractTemplate\": \"STANDARD_TEMPLATE\", \"contractSigned\": \"false\", \"contractFilename\": \"contract_2026_05_06.pdf\", \"rootOnboardingId\": \"onb-root-789\", \"createdAt\": \"2026-05-06T09:00:00\", \"updatedAt\": \"2026-05-06T10:30:00\", \"deletedAt\": null, \"activatedAt\": \"2026-05-06T09:15:00\", \"signingStep\": 1 }";
 
@@ -120,6 +120,7 @@ class OnboardingFunctionsTest {
 
     final Optional<String> queryBody = Optional.empty();
     doReturn(queryBody).when(req).getBody();
+    doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -140,7 +141,7 @@ class OnboardingFunctionsTest {
     doReturn(client).when(durableContext).getClient();
     doReturn(scheduleNewOrchestrationInstance)
             .when(client)
-            .scheduleNewOrchestrationInstance("Onboardings", onboardingId);
+            .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
 
     HttpResponseMessage responseMessage = function.startOrchestration(req, durableContext, context);
 
@@ -153,7 +154,9 @@ class OnboardingFunctionsTest {
     final String onboardingId = "onboardingId";
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
 
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboardingId);
+    when(orchestrationContext.getInput(String.class))
+        .thenReturn(
+            orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboardingId, "AR")));
     when(service.getOnboarding(onboardingId)).thenReturn(Optional.empty());
     assertThrows(
             ResourceNotFoundException.class,
@@ -1090,9 +1093,18 @@ class OnboardingFunctionsTest {
             .updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
   }
 
+  private String orchestrationInput(it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput input) {
+    try {
+      return objectMapper.writeValueAsString(input);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   TaskOrchestrationContext mockTaskOrchestrationContext(Onboarding onboarding) {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboarding.getId());
+    onboarding.setTenantId("AR");
+    when(orchestrationContext.getInput(String.class)).thenReturn(orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboarding.getId(), onboarding.getTenantId())));
     when(service.getOnboarding(anyString())).thenReturn(Optional.of(onboarding));
     when(completionService.existsDelegation(any())).thenReturn("false");
 
@@ -1124,7 +1136,8 @@ class OnboardingFunctionsTest {
   TaskOrchestrationContext mockTaskOrchestrationContextForIncrementAggregator(
           Onboarding onboarding, String returnValue) {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboarding.getId());
+    onboarding.setTenantId("AR");
+    when(orchestrationContext.getInput(String.class)).thenReturn(orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboarding.getId(), onboarding.getTenantId())));
     when(service.getOnboarding(onboarding.getId())).thenReturn(Optional.of(onboarding));
     when(completionService.existsDelegation(any())).thenReturn("true");
 
@@ -1140,7 +1153,8 @@ class OnboardingFunctionsTest {
   TaskOrchestrationContext mockTaskOrchestrationContextForUsersEa(
           Onboarding onboarding, List<DelegationResponse> delegationResponseList) {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboarding.getId());
+    onboarding.setTenantId("AR");
+    when(orchestrationContext.getInput(String.class)).thenReturn(orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboarding.getId(), onboarding.getTenantId())));
     when(service.getOnboarding(anyString())).thenReturn(Optional.of(onboarding));
     when(completionService.retrieveAggregates(any())).thenReturn(delegationResponseList);
     String delegationResponseListString =
@@ -1615,7 +1629,8 @@ class OnboardingFunctionsTest {
 
   @Test
   void createAggregateOnboardingRequest() {
-    final String onboardingAggregateOrchestratorInputString = "{\"productId\":\"prod-io\", \"id\":\"onboardingId\"}";
+    final String onboardingAggregateOrchestratorInputString =
+        "{\"productId\":\"prod-io\", \"id\":\"onboardingId\", \"tenantId\":\"AR\"}";
 
     String onboardingId = "id";
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());

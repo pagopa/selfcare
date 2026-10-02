@@ -71,6 +71,7 @@ class NotificationEventServiceAttachmentsTest {
         // given
         Onboarding onboarding = new Onboarding();
         onboarding.setId("onboarding-id");
+        onboarding.setTenantId("AR");
         onboarding.setProductId("product-id");
         onboarding.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
         onboarding.setInstitution(new Institution());

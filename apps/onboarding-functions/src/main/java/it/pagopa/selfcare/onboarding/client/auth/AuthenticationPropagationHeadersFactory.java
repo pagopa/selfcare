@@ -25,31 +25,25 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
   public MultivaluedMap<String, String> update(
       MultivaluedMap<String, String> incomingHeaders,
       MultivaluedMap<String, String> clientOutgoingHeaders) {
-    String bearerToken;
-    // If user is founded on PDV, a bearer token is created starting from it
-    if (!clientOutgoingHeaders.isEmpty() && clientOutgoingHeaders.containsKey(USER_ID_HEADER)) {
-      final String uuid = clientOutgoingHeaders.get(USER_ID_HEADER).get(0);
-      final String jwt = tokenService.createJwt(uuid);
-      bearerToken = Objects.nonNull(jwt) ? jwt : System.getenv(JWT_BEARER_TOKEN_ENV);
-    } else {
-      bearerToken = System.getenv(JWT_BEARER_TOKEN_ENV);
-    }
-    clientOutgoingHeaders.put("Authorization", List.of("Bearer " + bearerToken));
-
     String tenant = incomingHeaders.getFirst(TenantContext.TENANT_HEADER);
     if (tenant == null || tenant.isBlank()) {
       tenant = TenantContext.currentTenant();
     }
-    if (tenant != null && !tenant.isBlank()) {
-      clientOutgoingHeaders.put(
-          TenantContext.TENANT_HEADER, List.of(TenantContext.resolve(tenant)));
-      LOGGER.info("Propagating tenant={}", tenant);
-    } else {
-      // FIXME: This is a temporary solution to avoid the propagation of an empty tenant header. On
-      // the Multitenant PHASE2 shold be removed
-      clientOutgoingHeaders.put(TenantContext.TENANT_HEADER, List.of(TenantContext.resolve("")));
-      LOGGER.warn("Tenant header is missing in the incoming request");
+    String resolvedTenant = TenantContext.resolve(tenant);
+    String bearerToken;
+    try (TenantContext.Scope ignored = TenantContext.open(resolvedTenant)) {
+      // If user is founded on PDV, a bearer token is created starting from it
+      if (!clientOutgoingHeaders.isEmpty() && clientOutgoingHeaders.containsKey(USER_ID_HEADER)) {
+        final String uuid = clientOutgoingHeaders.get(USER_ID_HEADER).get(0);
+        final String jwt = tokenService.createJwt(uuid);
+        bearerToken = Objects.nonNull(jwt) ? jwt : System.getenv(JWT_BEARER_TOKEN_ENV);
+      } else {
+        bearerToken = System.getenv(JWT_BEARER_TOKEN_ENV);
+      }
+      clientOutgoingHeaders.put("Authorization", List.of("Bearer " + bearerToken));
+      clientOutgoingHeaders.put(TenantContext.TENANT_HEADER, List.of(resolvedTenant));
+      LOGGER.info("Propagating tenant={}", resolvedTenant);
+      return clientOutgoingHeaders;
     }
-    return clientOutgoingHeaders;
   }
 }

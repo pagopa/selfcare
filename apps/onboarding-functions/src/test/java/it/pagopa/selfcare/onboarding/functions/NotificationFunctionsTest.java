@@ -79,6 +79,7 @@ public class NotificationFunctionsTest {
 
         final Optional<String> queryBody = Optional.of(onboardinString);
         doReturn(queryBody).when(req).getBody();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
@@ -107,6 +108,7 @@ public class NotificationFunctionsTest {
         final String onboardingId = "onboardingId";
         queryParams.put("onboardingId", onboardingId);
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
@@ -115,7 +117,9 @@ public class NotificationFunctionsTest {
 
         final ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
-        when(onboardingService.getOnboarding(onboardingId)).thenReturn(Optional.of(new Onboarding()));
+        Onboarding onboarding = new Onboarding();
+        onboarding.setTenantId("AR");
+        when(onboardingService.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
 
         // Invoke
         HttpResponseMessage responseMessage = function.resendNotification(req, context);
@@ -134,6 +138,7 @@ public class NotificationFunctionsTest {
 
         final Map<String, String> queryParams = new HashMap<>();
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];

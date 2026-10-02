@@ -58,7 +58,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
                     .claim("fiscal_number", userResource.getFiscalCode())
                     .claim("name", userResource.getName().getValue())
                     .claim("uid", userId)
-                    .claim(TenantContext.TENANT_CLAIM, TenantContext.currentTenantOrDefault())
+                    .claim(TenantContext.TENANT_CLAIM, TenantContext.requiredTenant())
                     .signWith(SignatureAlgorithm.RS256, privateKey)
                     .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
                     .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
