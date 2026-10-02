@@ -191,17 +191,32 @@ flowchart LR
 | SELC-DMS-05.05 | Readiness: un probe per ogni coppia (tenant, chiave mandatory), sostituendo `ContractsBlobStorageReadinessCheck` e `UserAttachmentsBlobStorageReadinessCheck`. | `health/` | S |
 | SELC-DMS-05.06 | Test: configurazioni invalide (MI e CS insieme, env var mancante, chiave sconosciuta), path traversal, prefisso, isolamento tra tenant. | `src/test/...` | M |
 
-## SELC-DMS-06 – Firma PagoPA per tenant
+## SELC-DMS-06 – Firma PagoPA per tenant ✅ Completata
 
 **Obiettivo:** sorgente, firmatario e credenziali della firma PAdES sono selezionati dal tenant, senza fallback (D5).
 
-| Task | Descrizione | File | Dim. |
-|---|---|---|---|
-| SELC-DMS-06.01 | **Libreria** `selfcare-onboarding-sdk-crypto`: aggiungere costruttori che accettano credenziali e base URL (Namirial e Aruba) invece dei `static final System.getenv`, mantenendo retrocompatibili i costruttori esistenti; rilasciare una nuova versione. | `NamiralSignServiceImpl.java:19-20`, `NamirialHttpClient.java:14`, `config/ArubaInitializer.java:14-26` | M |
-| SELC-DMS-06.02 | **Libreria** `selfcare-sdk-tenant`: aggiungere la sezione `signature` a `TenantDefinition` e `TenantRegistry` (`source`, `signer`, `location`, `reason`, env var delle credenziali), con validazione all'avvio e `toString` senza segreti (pattern `oneIdentityCredentials`); rilasciare. | `TenantDefinition.java`, `TenantRegistry.java` | M |
-| SELC-DMS-06.03 | document-ms: sostituire il producer globale `padesSignService` con un `TenantPadesSignServiceResolver` (cache per tenant); `pagopa-signature.signer`, `location` e `reason` letti dal registry. Tenant senza sezione `signature` ⇒ errore (oppure `disabled` solo se dichiarato esplicitamente). | `config/DocumentMsConfig.java:37-73`, servizi di firma | M |
-| SELC-DMS-06.04 | Classificare la verifica della firma (`signature.verify-enabled`, EU LOTL) come **globale**: non usa credenziali tenant. Documentarlo. | `application.properties:32-34` | S |
-| SELC-DMS-06.05 | Test: firma AR con credenziali AR; tenant senza configurazione ⇒ errore; nessun segreto nei log. | `src/test/...` | S |
+| Task | Stato | Descrizione | File | Dim. |
+|---|---|---|---|---|
+| SELC-DMS-06.01 | ✅ | `selfcare-onboarding-sdk-crypto` 0.17.8 → 0.18.0: aggiunti costruttori tenant-aware per Namirial (`NamiralSignServiceImpl`, `NamirialHttpClient`) e Aruba (`ArubaInitializer`, `ArubaSignServiceImpl`) che accettano credenziali/base URL risolti dal chiamante. I costruttori legacy restano compatibili e continuano a leggere le variabili storiche. Allineati anche i moduli del reactor onboarding SDK alla versione 0.18.0 per la release. | `libs/selfcare-onboarding-sdk-*` | M |
+| SELC-DMS-06.02 | ✅ | `selfcare-sdk-tenant` 0.4.0 → 0.5.0: introdotta `signature` opzionale in `TenantDefinition` con `source`, `signer`, `location`, `reason`, credenziali Namirial/Aruba per env var; `TenantRegistry.signatureCredentials` valida all'avvio solo i tenant configurati e redige i secret in `toString`. I tenant senza `signature` restano compatibili per gli altri servizi. | `libs/selfcare-sdk-tenant` | M |
+| SELC-DMS-06.03 | ✅ | `document-ms` usa `TenantPadesSignServiceResolver`: cache dei `PadesSignService` per tenant, nessun fallback su proprietà globali, errore se il tenant non dichiara `signature` (tranne `source=disabled` esplicito). Il registry AR dichiara Namirial con `NAMIRIAL_BASE_URL_AR`, `NAMIRIAL_SIGN_SERVICE_IDENTITY_USER_AR`, `NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD_AR` e metadati PagoPA correnti. | `pom.xml`, `application.properties`, `config/TenantPadesSignServiceResolver.java`, `service/impl/SignatureServiceImpl.java` | M |
+| SELC-DMS-06.04 | ✅ | La verifica firma (`document-ms.signature.verify-enabled`, EU LOTL e official journal URL) resta globale: usa DSS/trust list e non credenziali Namirial/Aruba. Documentato nei commenti di configurazione. | `application.properties` | S |
+| SELC-DMS-06.05 | ✅ | Test del resolver: AR usa credenziali Namirial AR, un tenant senza `signature` fallisce, `toString` non espone segreti. Aggiornati i test del servizio per sorgente tenant-scoped e disabilitazione esplicita. | `src/test/.../TenantPadesSignServiceResolverTest.java`, `SignatureServiceImplTest.java` | S |
+
+**Definition of Done (verificata):**
+
+- `mvn -f libs/selfcare-onboarding-sdk-crypto/pom.xml test` → 30 test, 0 errori.
+- `mvn -f libs/selfcare-sdk-tenant/pom.xml test` → 19 test, 0 errori.
+- `mvn -f libs/selfcare-onboarding-sdk-pom/pom.xml clean install -DskipTests` → successo (SDK onboarding 0.18.0 installato localmente).
+- `mvn -f libs/selfcare-sdk-tenant/pom.xml clean install -DskipTests` → successo (tenant SDK 0.5.0 installato localmente).
+- `mvn -f apps/document-ms/pom.xml test` → 525 test, 0 errori (dopo 03: 522).
+
+**Comportamenti osservati da tenere presenti:**
+
+- Le release remote delle librerie restano un follow-up manuale: `release_onboarding_sdk.yml` è `workflow_dispatch` e pubblica tutto il reactor onboarding SDK; `release-sdk.yml`/`release_sdk_pom.yml` rilasciano `selfcare-sdk-tenant` (anche automaticamente su `main` per i path SDK o manualmente scegliendo il modulo). Finché non sono pubblicate, `document-ms` compila solo dopo `mvn install` locale delle due librerie.
+- `PAGOPA_SIGNATURE_SOURCE`, `PAGOPA_SIGNATURE_SIGNER`, `PAGOPA_SIGNATURE_LOCATION` e `PAGOPA_SIGNATURE_ONBOARDING_REASON_TEMPLATE` non sono più letti da `document-ms`; l'infra di `07.02` deve aggiungere gli env var tenant-specifici Namirial AR e può rimuovere il secret legacy `PAGOPA_SIGNATURE_SOURCE`.
+- `source=disabled` è accettato solo se dichiarato nella sezione `signature`; una sezione assente è un errore applicativo per `document-ms`, ma resta opzionale nel SDK per gli altri servizi.
+- La verifica delle firme caricate resta indipendente dal tenant e continua a usare `SIGNATURE_VALIDATION_ENABLED` e le URL EU LOTL globali.
 
 ## SELC-DMS-07 – Infrastruttura Terraform AR
 
