@@ -46,9 +46,10 @@ public class TenantBlobClientProvider {
 
     public AzureBlobClient clientFor(String tenantId, String logicalStorageKey) {
         TenantDefinition.StorageDefinition storage = tenantRegistry.storage(tenantId, logicalStorageKey);
-        return clients.computeIfAbsent(
+        AzureBlobClient client = clients.computeIfAbsent(
                 clientKey(storage),
                 key -> createClient(tenantId, logicalStorageKey, storage));
+        return new PrefixingAzureBlobClient(client, storage.pathPrefix());
     }
 
     protected AzureBlobClient createClient(
