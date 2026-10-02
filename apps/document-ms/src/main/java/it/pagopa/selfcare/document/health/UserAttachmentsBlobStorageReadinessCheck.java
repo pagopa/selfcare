@@ -4,14 +4,15 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.commons.health.AbstractBlobStorageReadinessCheck;
-import it.pagopa.selfcare.document.config.StorageRegistry;
-import it.pagopa.selfcare.document.model.StorageOrigin;
+import it.pagopa.selfcare.document.storage.StorageKeys;
+import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
+import it.pagopa.selfcare.tenant.TenantDefinition;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.Readiness;
 
-import java.util.Optional;
+import java.util.Comparator;
 
 @Readiness
 @ApplicationScoped
@@ -26,12 +27,16 @@ public class UserAttachmentsBlobStorageReadinessCheck extends AbstractBlobStorag
 
     @Inject
     public UserAttachmentsBlobStorageReadinessCheck(
-            StorageRegistry storageRegistry,
-            @ConfigProperty(name = "document-ms.blob-storage.container-user") String container,
-            @ConfigProperty(name = "document-ms.blob-storage.account-name-user") Optional<String> account) {
-        this.blobClient = storageRegistry.clientFor(StorageOrigin.USER);
-        this.container = container;
-        this.account = account.filter(s -> !s.isBlank()).orElse(ACCOUNT_NOT_APPLICABLE);
+            TenantBlobClientProvider blobClientProvider,
+            TenantRegistry tenantRegistry) {
+        String tenantId = tenantRegistry.supportedTenantIds().stream()
+                .sorted(Comparator.naturalOrder())
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("No tenant configured for storage readiness"));
+        TenantDefinition.StorageDefinition storage = tenantRegistry.storage(tenantId, StorageKeys.USER_ATTACHMENTS);
+        this.blobClient = blobClientProvider.clientFor(tenantId, StorageKeys.USER_ATTACHMENTS);
+        this.container = storage.container();
+        this.account = storage.account() == null || storage.account().isBlank() ? ACCOUNT_NOT_APPLICABLE : storage.account();
     }
 
     @Override

@@ -9,7 +9,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
-import it.pagopa.selfcare.document.config.StorageRegistry;
+import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
@@ -57,12 +57,12 @@ class DocumentServiceImplTest {
     SignatureService signatureService;
 
     @InjectMock
-    StorageRegistry storageRegistry;
+    TenantBlobClientProvider blobClientProvider;
 
     @BeforeEach
     void setupStorageRegistry() {
         reset(azureBlobClient);
-        when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
+        when(blobClientProvider.clientForCurrentTenant(nullable(StorageOrigin.class))).thenReturn(azureBlobClient);
     }
 
     // ---- getDocumentById ----

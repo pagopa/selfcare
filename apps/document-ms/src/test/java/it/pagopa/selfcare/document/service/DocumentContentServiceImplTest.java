@@ -10,7 +10,7 @@ import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
-import it.pagopa.selfcare.document.config.StorageRegistry;
+import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.document.exception.InternalException;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
@@ -69,13 +69,13 @@ class DocumentContentServiceImplTest {
     @InjectMock DocumentService documentService;
     @InjectMock DocumentMsConfig documentMsConfig;
     @InjectMock DocumentMsTelemetryService telemetryService;
-    @InjectMock StorageRegistry storageRegistry;
+    @InjectMock TenantBlobClientProvider blobClientProvider;
     @Inject DocumentContentService documentContentService;
 
     @BeforeEach
     void setupStorageRegistry() {
         reset(azureBlobClient);
-        when(storageRegistry.clientFor(any())).thenReturn(azureBlobClient);
+        when(blobClientProvider.clientForCurrentTenant(nullable(StorageOrigin.class))).thenReturn(azureBlobClient);
     }
 
     // ---- retrieveContract ----

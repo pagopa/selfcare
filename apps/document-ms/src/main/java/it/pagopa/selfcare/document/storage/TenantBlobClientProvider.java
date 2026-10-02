@@ -2,6 +2,7 @@ package it.pagopa.selfcare.document.storage;
 
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
+import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.TenantDefinition;
 import it.pagopa.selfcare.tenant.TenantRegistry;
@@ -42,6 +43,20 @@ public class TenantBlobClientProvider {
 
     public AzureBlobClient clientForCurrentTenant(String logicalStorageKey) {
         return clientFor(tenantContext.requiredTenantId(), logicalStorageKey);
+    }
+
+    public AzureBlobClient clientForCurrentTenant(StorageOrigin storageOrigin) {
+        return clientForCurrentTenant(storageKeyFor(storageOrigin));
+    }
+
+    public static String storageKeyFor(StorageOrigin storageOrigin) {
+        if (storageOrigin == null || StorageOrigin.SYSTEM.equals(storageOrigin)) {
+            return StorageKeys.CONTRACTS;
+        }
+        if (StorageOrigin.USER.equals(storageOrigin)) {
+            return StorageKeys.USER_ATTACHMENTS;
+        }
+        throw new IllegalArgumentException("Unknown storage origin: " + storageOrigin);
     }
 
     public AzureBlobClient clientFor(String tenantId, String logicalStorageKey) {

@@ -1,9 +1,11 @@
 package it.pagopa.selfcare.document.health;
 
-import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.document.config.StorageRegistry;
-import it.pagopa.selfcare.document.model.StorageOrigin;
+import it.pagopa.selfcare.document.storage.StorageKeys;
+import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
+import it.pagopa.selfcare.tenant.StorageAuthenticationType;
+import it.pagopa.selfcare.tenant.TenantDefinition;
+import it.pagopa.selfcare.tenant.TenantRegistry;
 import org.eclipse.microprofile.health.HealthCheckResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,15 +13,15 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@QuarkusTest
 class UserAttachmentsBlobStorageReadinessCheckTest {
 
+    private static final String TENANT_ID = "AR";
     private static final String ACCOUNT = "account-name";
     private static final String CONTAINER = "sc-d-usrattach-blob";
     private static final String PROBE_PREFIX = UserAttachmentsBlobStorageReadinessCheck.READINESS_PROBE_PREFIX;
@@ -30,9 +32,7 @@ class UserAttachmentsBlobStorageReadinessCheckTest {
     @BeforeEach
     void setUp() {
         blobClient = mock(AzureBlobClient.class);
-        StorageRegistry registry = mock(StorageRegistry.class);
-        when(registry.clientFor(StorageOrigin.USER)).thenReturn(blobClient);
-        check = new UserAttachmentsBlobStorageReadinessCheck(registry, CONTAINER, Optional.of(ACCOUNT));
+        check = new UserAttachmentsBlobStorageReadinessCheck(provider(StorageKeys.USER_ATTACHMENTS), registry(StorageKeys.USER_ATTACHMENTS, storage(ACCOUNT)));
     }
 
     @Test
@@ -84,10 +84,8 @@ class UserAttachmentsBlobStorageReadinessCheckTest {
 
     @Test
     void up_whenAccountNameIsNotConfigured_asInLocalConnectionStringMode() {
-        StorageRegistry registry = mock(StorageRegistry.class);
-        when(registry.clientFor(StorageOrigin.USER)).thenReturn(blobClient);
         UserAttachmentsBlobStorageReadinessCheck localCheck =
-                new UserAttachmentsBlobStorageReadinessCheck(registry, CONTAINER, Optional.empty());
+                new UserAttachmentsBlobStorageReadinessCheck(provider(StorageKeys.USER_ATTACHMENTS), registry(StorageKeys.USER_ATTACHMENTS, storage(null)));
         when(blobClient.getFiles(PROBE_PREFIX)).thenReturn(List.of());
 
         HealthCheckResponse response = localCheck.call().await().atMost(Duration.ofSeconds(5));
@@ -97,5 +95,26 @@ class UserAttachmentsBlobStorageReadinessCheckTest {
                 .containsEntry("account", "n/a")
                 .containsEntry("container", CONTAINER)
                 .containsEntry("probeTarget", PROBE_PREFIX);
+    }
+
+    private TenantBlobClientProvider provider(String key) {
+        TenantBlobClientProvider provider = mock(TenantBlobClientProvider.class);
+        when(provider.clientFor(TENANT_ID, key)).thenReturn(blobClient);
+        return provider;
+    }
+
+    private TenantRegistry registry(String key, TenantDefinition.StorageDefinition storage) {
+        TenantRegistry registry = mock(TenantRegistry.class);
+        when(registry.supportedTenantIds()).thenReturn(Set.of(TENANT_ID));
+        when(registry.storage(TENANT_ID, key)).thenReturn(storage);
+        return registry;
+    }
+
+    private TenantDefinition.StorageDefinition storage(String account) {
+        return new TenantDefinition.StorageDefinition(
+                account,
+                CONTAINER,
+                "",
+                new TenantDefinition.StorageAuthentication(StorageAuthenticationType.MANAGED_IDENTITY, "AZURE_CLIENT_ID_AR_DOCUMENTS", null));
     }
 }
