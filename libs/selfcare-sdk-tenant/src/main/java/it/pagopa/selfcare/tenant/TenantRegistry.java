@@ -21,6 +21,9 @@ public class TenantRegistry {
 
   private final ObjectMapper objectMapper = new ObjectMapper();
   private static final Pattern ENV_VAR_NAME = Pattern.compile("[A-Za-z_][A-Za-z0-9_]*");
+  private static final String SIGNATURE_SOURCE_DISABLED = "disabled";
+  private static final String SIGNATURE_SOURCE_NAMIRIAL = "namirial";
+  private static final String SIGNATURE_SOURCE_ARUBA = "aruba";
 
   @ConfigProperty(name = "tenant.registry.json", defaultValue = "{}")
   String tenantRegistryJson;
@@ -214,6 +217,37 @@ public class TenantRegistry {
         .apiKey();
   }
 
+  /** Returns empty only when PagoPA signature is not configured for this tenant. */
+  public Optional<SignatureCredentials> signatureCredentials(String tenantId) {
+    TenantDefinition.SignatureDefinition definition = resolve(tenantId).signature();
+    if (definition == null) {
+      return Optional.empty();
+    }
+
+    String normalizedTenantId = normalize(tenantId);
+    String source = normalizedSignatureSource(definition.source(), normalizedTenantId);
+    if (SIGNATURE_SOURCE_DISABLED.equals(source)) {
+      return Optional.of(new SignatureCredentials(source, definition.signer(), definition.location(),
+          definition.reason(), Optional.empty(), Optional.empty()));
+    }
+
+    String signer = requiredText(definition.signer(), normalizedTenantId, "signature signer");
+    String location = requiredText(definition.location(), normalizedTenantId, "signature location");
+    String reason = requiredText(definition.reason(), normalizedTenantId, "signature reason");
+    return switch (source) {
+      case SIGNATURE_SOURCE_NAMIRIAL -> Optional.of(new SignatureCredentials(
+          source, signer, location, reason,
+          Optional.of(namirialCredentials(normalizedTenantId, definition.namirial())),
+          Optional.empty()));
+      case SIGNATURE_SOURCE_ARUBA -> Optional.of(new SignatureCredentials(
+          source, signer, location, reason,
+          Optional.empty(),
+          Optional.of(arubaCredentials(normalizedTenantId, definition.aruba()))));
+      default -> throw new IllegalStateException(
+          "Unsupported signature source " + definition.source() + " for tenant " + normalizedTenantId);
+    };
+  }
+
   public record OneIdentityCredentials(String clientId, String clientSecret) {
     @Override
     public String toString() {
@@ -225,6 +259,43 @@ public class TenantRegistry {
     @Override
     public String toString() {
       return "UserRegistryCredentials[REDACTED]";
+    }
+  }
+
+  public record SignatureCredentials(
+      String source,
+      String signer,
+      String location,
+      String reason,
+      Optional<NamirialSignatureCredentials> namirial,
+      Optional<ArubaSignatureCredentials> aruba) {
+    @Override
+    public String toString() {
+      return "SignatureCredentials[source=" + source + ", signer=" + signer
+          + ", location=" + location + ", reason=" + reason + ", credentials=REDACTED]";
+    }
+  }
+
+  public record NamirialSignatureCredentials(String baseUrl, String username, String password) {
+    @Override
+    public String toString() {
+      return "NamirialSignatureCredentials[REDACTED]";
+    }
+  }
+
+  public record ArubaSignatureCredentials(
+      String baseUrl,
+      Integer connectTimeoutMs,
+      Integer requestTimeoutMs,
+      String typeOtpAuth,
+      String otpPwd,
+      String user,
+      String delegatedUser,
+      String delegatedPassword,
+      String delegatedDomain) {
+    @Override
+    public String toString() {
+      return "ArubaSignatureCredentials[REDACTED]";
     }
   }
 
@@ -242,6 +313,64 @@ public class TenantRegistry {
       }
     } else {
       userRegistryCredentials(tenantId);
+    }
+    signatureCredentials(tenantId);
+  }
+
+  private NamirialSignatureCredentials namirialCredentials(
+      String tenantId, TenantDefinition.NamirialSignatureDefinition definition) {
+    if (definition == null) {
+      throw new IllegalStateException("Missing Namirial signature configuration for tenant " + tenantId);
+    }
+    return new NamirialSignatureCredentials(
+        requiredSecret(definition.baseUrlEnvVar(), tenantId, "Namirial base URL"),
+        requiredSecret(definition.userEnvVar(), tenantId, "Namirial user"),
+        requiredSecret(definition.passwordEnvVar(), tenantId, "Namirial password"));
+  }
+
+  private ArubaSignatureCredentials arubaCredentials(
+      String tenantId, TenantDefinition.ArubaSignatureDefinition definition) {
+    if (definition == null) {
+      throw new IllegalStateException("Missing Aruba signature configuration for tenant " + tenantId);
+    }
+    return new ArubaSignatureCredentials(
+        requiredSecret(definition.baseUrlEnvVar(), tenantId, "Aruba base URL"),
+        optionalIntegerSecret(definition.connectTimeoutMsEnvVar(), tenantId, "Aruba connect timeout"),
+        optionalIntegerSecret(definition.requestTimeoutMsEnvVar(), tenantId, "Aruba request timeout"),
+        requiredSecret(definition.typeOtpAuthEnvVar(), tenantId, "Aruba type OTP auth"),
+        requiredSecret(definition.otpPwdEnvVar(), tenantId, "Aruba OTP password"),
+        requiredSecret(definition.userEnvVar(), tenantId, "Aruba user"),
+        requiredSecret(definition.delegatedUserEnvVar(), tenantId, "Aruba delegated user"),
+        requiredSecret(definition.delegatedPasswordEnvVar(), tenantId, "Aruba delegated password"),
+        requiredSecret(definition.delegatedDomainEnvVar(), tenantId, "Aruba delegated domain"));
+  }
+
+  private String normalizedSignatureSource(String source, String tenantId) {
+    String normalizedSource = requiredText(source, tenantId, "signature source").toLowerCase(Locale.ROOT);
+    if (!Set.of(SIGNATURE_SOURCE_DISABLED, SIGNATURE_SOURCE_NAMIRIAL, SIGNATURE_SOURCE_ARUBA)
+        .contains(normalizedSource)) {
+      throw new IllegalStateException(
+          "Unsupported signature source " + source + " for tenant " + tenantId);
+    }
+    return normalizedSource;
+  }
+
+  private String requiredText(String value, String tenantId, String dimension) {
+    if (isBlank(value)) {
+      throw new IllegalStateException("Missing " + dimension + " for tenant " + tenantId);
+    }
+    return value;
+  }
+
+  private Integer optionalIntegerSecret(String reference, String tenantId, String dimension) {
+    if (isBlank(reference)) {
+      return 0;
+    }
+    String value = requiredSecret(reference, tenantId, dimension);
+    try {
+      return Integer.parseInt(value);
+    } catch (NumberFormatException exception) {
+      throw new IllegalStateException("Invalid " + dimension + " value for tenant " + tenantId, exception);
     }
   }
 
