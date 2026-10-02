@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.commons.connector.rest.interceptor;
 
 import feign.RequestTemplate;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -105,5 +106,37 @@ class AuthorizationHeaderInterceptorTest {
         assertTrue(headerValue.isPresent());
         assertEquals(authorizationValue, headerValue.get());
         assertEquals("AR", headers.get("X-Tenant-Id").iterator().next());
+    }
+
+    @Test
+    void apply_usesValidatedTenantContextInsteadOfIncomingHeader() {
+        TenantContext tenantContext = new TenantContext();
+        tenantContext.setTenantId("AR");
+        AuthorizationHeaderInterceptor tenantAwareInterceptor =
+                new AuthorizationHeaderInterceptor(tenantContext);
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Tenant-Id", "PNPG");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+        RequestTemplate requestTemplate = new RequestTemplate();
+        requestTemplate.header("X-Tenant-Id", "STALE");
+
+        tenantAwareInterceptor.apply(requestTemplate);
+
+        assertEquals(
+                java.util.List.of("AR"),
+                requestTemplate.headers().get("X-Tenant-Id").stream().toList());
+    }
+
+    @Test
+    void applyRejectsTenantAwareOutboundCallWithoutResolvedTenant() {
+        AuthorizationHeaderInterceptor tenantAwareInterceptor =
+                new AuthorizationHeaderInterceptor(new TenantContext());
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Tenant-Id", "AR");
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
+
+        assertThrows(
+                it.pagopa.selfcare.commons.tenant.UnresolvedTenantException.class,
+                () -> tenantAwareInterceptor.apply(new RequestTemplate()));
     }
 }
