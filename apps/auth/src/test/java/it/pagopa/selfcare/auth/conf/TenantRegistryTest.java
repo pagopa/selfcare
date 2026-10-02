@@ -24,6 +24,14 @@ class TenantRegistryTest {
   @Test
   void authenticationAndResourceRegistriesReadTheSameTenantDefinition() {
     assertEquals("AR", tenantRegistry.resolveEnabledTenant("AR").id());
+    assertEquals(
+        "TENANT_AR_JWT_SESSION_PRIVATE_KEY",
+        tenantRegistry
+            .resolveEnabledTenant("AR")
+            .definition()
+            .jwt()
+            .session()
+            .privateKeyEnvVar());
     assertEquals("selcAuth", resourceRegistry.resolve("AR").mongo().database());
     assertEquals("id", tenantRegistry.oneIdentityCredentials("AR").clientId());
     assertEquals("123", resourceRegistry.userRegistryApiKey("AR"));

@@ -139,7 +139,15 @@ locals {
             database               = "selcAuth"
             connectionStringEnvVar = "MONGODB_CONNECTION_STRING_AR"
           } : null
-        })
+          }, tenant.auth_enabled ? {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
+            session = {
+              privateKeyEnvVar = "TENANT_${tenant_id}_JWT_SESSION_PRIVATE_KEY"
+              keyIdEnvVar      = "TENANT_${tenant_id}_JWT_SESSION_KEY_ID"
+            }
+          }
+        } : {})
       })
     },
     {
@@ -223,6 +231,7 @@ locals {
     "TENANT_AR_ONE_IDENTITY_CLIENT_SECRET"  = "oneidentity-client-secret"
     "TENANT_AR_JWT_SESSION_PRIVATE_KEY"     = "jwt-private-key-pkcs8"
     "TENANT_AR_JWT_SESSION_KEY_ID"          = "jwt-kid"
+    "JWT_PUBLIC_KEY_AR"                     = "jwt-public-key"
     "USER_REGISTRY_API_KEY_AR"              = "user-registry-api-key"
     "INTERNAL_API_KEY"                      = "internal-api-key"
     "INTERNAL_MS_USER_API_KEY"              = "internal-ms-user-api-key"
