@@ -10,7 +10,7 @@
             <value>@((string)context.Variables["productId"])</value>
         </set-query-parameter>
 
-        <send-request mode="new" response-variable-name="onboardingLookupResponse" timeout="20" ignore-error="false">
+        <send-request mode="new" response-variable-name="onboardingLookupResponse" timeout="20" ignore-error="true">
             <set-url>@{
                 var onboardingId = context.Request.MatchedParameters.GetValueOrDefault("onboardingId", "");
                 return "${MS_BACKEND_URL}/onboarding/" + onboardingId;
@@ -19,7 +19,31 @@
             <set-header name="Authorization" exists-action="override">
                 <value>@((string)context.Variables["jwt"])</value>
             </set-header>
+            <set-header name="X-Tenant-Id" exists-action="override">
+                <value>${APP_TENANT_ID}</value>
+            </set-header>
         </send-request>
+
+        <choose>
+            <when condition="@{
+                var response = (IResponse)context.Variables[&quot;onboardingLookupResponse&quot;];
+                return response == null;
+            }">
+                <return-response>
+                    <set-status code="502" reason="Bad Gateway"/>
+                    <set-header name="Content-Type" exists-action="override">
+                        <value>application/problem+json</value>
+                    </set-header>
+                    <set-body>{"title":"Unable to retrieve onboarding","detail":"onboarding-ms did not return a response (connection error or timeout)."}</set-body>
+                </return-response>
+            </when>
+            <when condition="@{
+                var response = (IResponse)context.Variables[&quot;onboardingLookupResponse&quot;];
+                return response.StatusCode != 200;
+            }">
+                <return-response response-variable-name="onboardingLookupResponse"/>
+            </when>
+        </choose>
 
         <set-variable name="onboardingProductIdFromLookup" value="@{
             var response = (IResponse)context.Variables[&quot;onboardingLookupResponse&quot;];
