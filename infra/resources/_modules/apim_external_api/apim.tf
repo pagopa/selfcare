@@ -446,18 +446,21 @@ module "apim_external_api_ms_v2" {
       operation_id = "deleteOnboarding"
       xml_content = templatefile("${path.module}/api/base_ms_url_external_product_onboarding_check_policy.xml.tpl", {
         MS_BACKEND_URL = "https://selc-${var.env_short}-onboarding-ms-ca.${var.ca_suffix_dns_private_name}/v1/"
+        APP_TENANT_ID  = local.tenant_id_ar
       })
     },
     {
       operation_id = "completeOnboardingUsingPUT"
       xml_content = templatefile("${path.module}/api/base_ms_url_external_product_onboarding_check_policy_size.xml.tpl", {
         MS_BACKEND_URL = "https://selc-${var.env_short}-onboarding-ms-ca.${var.ca_suffix_dns_private_name}/v1/"
+        APP_TENANT_ID  = local.tenant_id_ar
       })
     },
     {
       operation_id = "rejectOnboardingUsingPUT"
       xml_content = templatefile("${path.module}/api/base_ms_url_external_product_onboarding_check_policy.xml.tpl", {
         MS_BACKEND_URL = "https://selc-${var.env_short}-onboarding-ms-ca.${var.ca_suffix_dns_private_name}/v1/"
+        APP_TENANT_ID  = local.tenant_id_ar
       })
     },
     {
@@ -465,6 +468,7 @@ module "apim_external_api_ms_v2" {
       xml_content = templatefile("${path.module}/api/base_ms_url_external_document_onboarding_check_policy.xml.tpl", {
         MS_ONBOARDING_BE = "https://selc-${var.env_short}-onboarding-ms-ca.${var.ca_suffix_dns_private_name}/v1/"
         MS_DOCUMENT_BE   = "https://selc-${var.env_short}-document-ms-ca.${var.ca_suffix_dns_private_name}/v1/"
+        APP_TENANT_ID    = local.tenant_id_ar
       })
     }
   ]

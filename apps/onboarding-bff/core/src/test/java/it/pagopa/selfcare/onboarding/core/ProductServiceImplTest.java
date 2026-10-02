@@ -2,6 +2,8 @@ package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -170,6 +172,33 @@ class ProductServiceImplTest {
 
         // then
         assertFalse(result);
+    }
+
+    @Test
+    void getProducts_returnsOnlyActiveAndEnabledProducts() {
+        Product enabledActiveProduct = new Product();
+        enabledActiveProduct.setId("enabled-active");
+        enabledActiveProduct.setStatus(ProductStatus.ACTIVE);
+        enabledActiveProduct.setEnabled(true);
+
+        Product disabledActiveProduct = new Product();
+        disabledActiveProduct.setId("disabled-active");
+        disabledActiveProduct.setStatus(ProductStatus.ACTIVE);
+        disabledActiveProduct.setEnabled(false);
+
+        Product enabledTestingProduct = new Product();
+        enabledTestingProduct.setId("enabled-testing");
+        enabledTestingProduct.setStatus(ProductStatus.TESTING);
+        enabledTestingProduct.setEnabled(true);
+
+        when(productMsConnector.getProducts(false)).thenReturn(
+                List.of(enabledActiveProduct, disabledActiveProduct, enabledTestingProduct));
+
+        List<Product> result = productService.getProducts(false);
+
+        assertEquals(List.of(enabledActiveProduct), result);
+        verify(productMsConnector).getProducts(false);
+        verifyNoMoreInteractions(productMsConnector);
     }
 
 }

@@ -57,6 +57,14 @@ public class CucumberSuite {
               //.withLocalCompose(true)
               .withTailChildContainers(true)
               .withLogConsumer("azure-cli", new Slf4jLogConsumer(log))
+              // Use the 3-args overload: the 2-args one also registers the default
+              // listening-port wait strategy (60s timeout), which is too short for onboarding-ms
+              .withExposedService("onboarding-ms", 8080,
+                      Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200)
+                              .withStartupTimeout(Duration.ofMinutes(5)))
+              .withExposedService("product-ms", 8080,
+                      Wait.forHttp("/q/health/ready").forPort(8080).forStatusCode(200)
+                              .withStartupTimeout(Duration.ofMinutes(5)))
               .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1)
                       .withStartupTimeout(Duration.ofMinutes(5)));
 

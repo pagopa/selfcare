@@ -4,9 +4,9 @@ import static org.apache.commons.lang3.StringUtils.*;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
+import it.pagopa.selfcare.onboarding.connector.model.RelationshipState;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
-import it.pagopa.selfcare.product.entity.ProductStatus;
 import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class UserInstitutionServiceImpl implements UserInstitutionService {
 
     UserInstitutionRequest userInstitutionRequest =
         buildUserInstitutionRequest(
-            institutionId, EMPTY, product, rolesFilter, ProductStatus.ACTIVE.name(), EMPTY);
+            institutionId, EMPTY, product, rolesFilter, RelationshipState.ACTIVE.name(), EMPTY);
     List<UserInstitutionResponse> response =
         userInstitutionConnector.getInstitutionUsersByFilter(userInstitutionRequest);
 

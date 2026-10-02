@@ -775,6 +775,84 @@ db.products.insertMany([
       enabled: true,
       expirationDays: 30
     },
+    roleMappings: [
+      {
+        role: "ADMIN_EA",
+        institutionType: "PRV",
+        phasesAdditionAllowed: ["onboarding"],
+        skipUserCreation: false,
+        backOfficeRoles: [
+          {
+            code: "admin",
+            label: "Referente dei Pagamenti",
+            description: "Ha tutti i permessi e gestisce gli utenti",
+            productLabel: "Amministratore"
+          }
+        ]
+      }
+    ],
+    contracts: [
+      {
+        onboardingType: "INSTITUTION",
+        enabled: true,
+        institutionType: "PRV",
+        contractType: "CONTRACT",
+        path: "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
+        version: "1.0.5"
+      },
+      {
+        onboardingType: "USER",
+        enabled: true,
+        institutionType: "DEFAULT",
+        contractType: "CONTRACT",
+        path: "contracts/template/pagopa/user/1.0.0/pagopa-user-contract.html",
+        version: "1.0.0"
+      }
+    ],
+    institutionOrigins: [
+      { institutionType: "PA", origin: "IPA", labelKey: "pa" }
+    ],
+    requiredDocuments: []
+  },
+  {
+    _id: "d204db2e-f17b-4415-a678-64dffce1d51a",
+    tenantId: "AR",
+    productId: "test-product-2",
+    alias: "test-product-2",
+    title: "Test product disabled",
+    status: "TESTING",
+    version: 1,
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      delegable: false,
+      invoiceable: false,
+      enabled: false,
+      expirationDays: 30,
+      allowedInstitutionTaxCode: []
+    },
+    roleMappings: [],
+    contracts: [],
+    institutionOrigins: [],
+    requiredDocuments: []
+  },
+  {
+    _id: "e1f3b5a2-7c4d-4e8f-9a1b-2c3d4e5f6a7b",
+    tenantId: "AR",
+    productId: "prod-io-premium",
+    alias: "prod-io-premium",
+    parentId: "prod-io",
+    title: "IO Premium",
+    status: "ACTIVE",
+    version: 1,
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      delegable: false,
+      invoiceable: true,
+      enabled: true,
+      expirationDays: 30
+    },
     roleMappings: [],
     contracts: [],
     institutionOrigins: [
