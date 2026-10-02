@@ -199,11 +199,11 @@ locals {
     },
     {
       name  = "ONE_MAIL_URL"
-      value = "https://uat.onemail.pagopa.it"
+      value = "https://onemail.pagopa.it"
     },
     {
       name  = "MAIL_SENDER_ADDRESS"
-      value = "noreply@selfcare.pagopa.it"
+      value = "noreply@areariservata.pagopa.it"
     }
   ]
 
@@ -221,7 +221,7 @@ locals {
     "SAML_IDP_ENTITY_ID"                    = "saml-idp-entity-id"
     "SAML_IDP_METADATA"                     = "saml-idp-metadata"
     "SAML_IDP_CERT"                         = "saml-idp-cert"
-    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
+    "ONE_MAIL_API_KEY"                      = "onemail-api-key-prod"
   }
 }
 
