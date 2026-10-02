@@ -24,4 +24,20 @@ class TenantContextTest {
         assertEquals("PNPG", nested);
         assertEquals("AR", context.requiredTenantId());
     }
+
+    @Test
+    void normalizesTenantIdentifiersWhenSettingContext() {
+        TenantContext context = new TenantContext();
+
+        context.setTenantId(" ar ");
+
+        assertEquals("AR", context.requiredTenantId());
+    }
+
+    @Test
+    void rejectsBlankTenantIdentifiers() {
+        TenantContext context = new TenantContext();
+
+        assertThrows(IllegalArgumentException.class, () -> context.setTenantId(" "));
+    }
 }

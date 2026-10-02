@@ -3,6 +3,8 @@ package it.pagopa.selfcare.commons.web.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.impl.DefaultClaims;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
+import org.springframework.beans.factory.ObjectProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -162,6 +164,25 @@ class PagopaJwtAuthenticationStrategyTest {
         verify(authoritiesRetrieverMock, times(1))
                 .retrieveAuthorities();
         verifyNoMoreInteractions(jwtServiceMock, authoritiesRetrieverMock);
+    }
+
+    @Test
+    void authenticate_rejectsTenantHeaderThatDoesNotMatchJwtClaim() {
+        TenantRegistry tenantRegistry = Mockito.mock(TenantRegistry.class);
+        ObjectProvider<TenantRegistry> tenantRegistryProvider = Mockito.mock(ObjectProvider.class);
+        when(tenantRegistryProvider.getIfAvailable()).thenReturn(tenantRegistry);
+        when(tenantRegistry.isConfigured()).thenReturn(true);
+        when(tenantRegistry.normalizeAndValidate("AR")).thenReturn("AR");
+        when(tenantRegistry.normalizeAndValidate("PNPG")).thenReturn("PNPG");
+        when(jwtServiceMock.getClaims("token", "PNPG"))
+                .thenReturn(new DefaultClaims(Map.of("tenant_id", "AR")));
+        PagopaJwtAuthenticationStrategy strategy =
+                new PagopaJwtAuthenticationStrategy(
+                        jwtServiceMock, authoritiesRetrieverMock, tenantRegistryProvider, "AR");
+        JwtAuthenticationToken authentication = new JwtAuthenticationToken("token", "PNPG");
+
+        assertThrows(TenantValidationException.class, () -> strategy.authenticate(authentication));
+        verifyNoInteractions(authoritiesRetrieverMock);
     }
 
 }
