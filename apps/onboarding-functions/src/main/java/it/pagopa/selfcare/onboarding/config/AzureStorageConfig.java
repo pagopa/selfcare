@@ -7,19 +7,11 @@ import java.util.Optional;
 @ConfigMapping(prefix = "onboarding-functions.blob-storage")
 public interface AzureStorageConfig {
 
-  Optional<String> connectionStringContract();
-
   Optional<String> connectionStringProduct();
-
-  Optional<String> accountNameContract();
 
   Optional<String> accountNameProduct();
 
-  Optional<String> managedIdentityClientIdContract();
-
   Optional<String> managedIdentityClientIdProduct();
-
-  String containerContract();
 
   String containerProduct();
 

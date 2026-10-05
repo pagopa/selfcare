@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.json.jackson.DatabindCodec;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.product.service.ProductService;
@@ -47,24 +45,6 @@ public class OnboardingFunctionConfig {
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);            // custom config
        // mapper.registerModule(new Jdk8Module());                                   // custom config
         return mapper;
-    }
-
-    @ApplicationScoped
-    public AzureBlobClient azureBobClientContract(AzureStorageConfig azureStorageConfig){
-        return azureStorageConfig.connectionStringContract()
-                .filter(connectionString -> !connectionString.isBlank())
-                .map(connectionString -> {
-                    log.info("Contract blob storage client configured with connection string");
-                    return new AzureBlobClientDefault(connectionString, azureStorageConfig.containerContract());
-                })
-                .orElseGet(() -> {
-                    log.info("Contract blob storage client configured with Managed Identity for account {}",
-                            azureStorageConfig.accountNameContract().orElse(""));
-                    return new AzureBlobClientDefault(
-                        azureStorageConfig.containerContract(),
-                        azureStorageConfig.accountNameContract().orElse(""),
-                        azureStorageConfig.managedIdentityClientIdContract().orElse(""));
-                });
     }
 
     @ApplicationScoped

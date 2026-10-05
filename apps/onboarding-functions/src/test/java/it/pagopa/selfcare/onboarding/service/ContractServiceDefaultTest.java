@@ -6,6 +6,7 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.service.impl.ContractServiceImpl;
+import it.pagopa.selfcare.onboarding.storage.ContractBlobClientProvider;
 
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -37,7 +38,9 @@ class ContractServiceDefaultTest {
 
   @InjectMock @RestClient UserApi userRegistryApi;
 
-  @InjectMock AzureBlobClient azureBlobClient;
+  @InjectMock ContractBlobClientProvider contractBlobClientProvider;
+
+  AzureBlobClient azureBlobClient;
 
   @Inject ContractService contractService;
 
@@ -45,7 +48,10 @@ class ContractServiceDefaultTest {
 
   @BeforeEach
   void setup() {
-    contractService = new ContractServiceImpl(azureBlobClient, LOGO_PATH, true, userRegistryApi);
+    azureBlobClient = Mockito.mock(AzureBlobClient.class);
+    Mockito.when(contractBlobClientProvider.forCurrentTenant()).thenReturn(azureBlobClient);
+    contractService =
+        new ContractServiceImpl(contractBlobClientProvider, LOGO_PATH, true, userRegistryApi);
   }
 
   private Onboarding createOnboarding() {
