@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.document.storage;
 
+import io.quarkus.runtime.StartupEvent;
 import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
@@ -361,6 +362,38 @@ class TenantBlobClientProviderTest {
         provider.eagerInit = true;
 
         assertThatThrownBy(provider::initialize).isInstanceOf(InvalidRequestException.class);
+    }
+
+    @Test
+    void startupInitializer_shouldInitializeTheProviderWhenTheApplicationStarts() throws Exception {
+        RecordingProvider provider = new RecordingProvider(twoTenantRegistry(), context);
+        provider.eagerInit = true;
+
+        new TenantBlobClientsStartupInitializer().onStart(new StartupEvent(), provider);
+
+        assertThat(provider.created).hasSize(4);
+    }
+
+    @Test
+    void startupInitializer_shouldCreateNothingWhenEagerInitIsDisabled() throws Exception {
+        RecordingProvider provider = new RecordingProvider(twoTenantRegistry(), context);
+        provider.eagerInit = false;
+
+        new TenantBlobClientsStartupInitializer().onStart(new StartupEvent(), provider);
+
+        assertThat(provider.created).isEmpty();
+    }
+
+    @Test
+    void startupInitializer_shouldFailStartupWhenARegistryPathPrefixEscapesTheContainer() throws Exception {
+        String traversal = binding("stardocs", "ar-documents", "../other-tenant", managedIdentity(null));
+        String ok = binding("starattach", "ar-attachments", "", managedIdentity(null));
+        RecordingProvider provider = new RecordingProvider(
+                registry("{\"AR\":" + tenant(traversal, ok) + "}", "AR", "contracts,user-attachments"), context);
+        provider.eagerInit = true;
+
+        assertThatThrownBy(() -> new TenantBlobClientsStartupInitializer().onStart(new StartupEvent(), provider))
+                .isInstanceOf(InvalidRequestException.class);
     }
 
     // ---- paths seen through the provider-returned client ----

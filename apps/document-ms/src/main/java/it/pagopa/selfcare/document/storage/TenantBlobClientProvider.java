@@ -6,7 +6,6 @@ import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.TenantDefinition;
 import it.pagopa.selfcare.tenant.TenantRegistry;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.Objects;
@@ -31,7 +30,6 @@ public class TenantBlobClientProvider {
         this.tenantContext = tenantContext;
     }
 
-    @PostConstruct
     void initialize() {
         if (!eagerInit) {
             return;
