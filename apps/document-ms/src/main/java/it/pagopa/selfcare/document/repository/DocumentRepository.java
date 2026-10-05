@@ -44,26 +44,26 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
     public Uni<Long> updateContractFiles(String onboardingId, String contractSigned, String contractFilename) {
         return update("contractSigned = ?1 and contractFilename = ?2 and updatedAt = ?3",
                 contractSigned, contractFilename, LocalDateTime.now())
-                .where(scopedForWrite(onboardingAndContractTypes(onboardingId)))
+                .where(scoped(onboardingAndContractTypes(onboardingId)))
                 .invoke(updated -> logIfNoWrite("updateContractFiles", "onboardingId", onboardingId, updated));
     }
 
     public Uni<Long> updateContractFilesById(String documentId, String contractSigned, String contractFilename, Integer signingStep) {
         return update("contractSigned = ?1 and contractFilename = ?2 and signingStep = ?3 and updatedAt = ?4",
                 contractSigned, contractFilename, signingStep, LocalDateTime.now())
-                .where(scopedForWrite(Filters.eq("_id", documentId)))
+                .where(scoped(Filters.eq("_id", documentId)))
                 .invoke(updated -> logIfNoWrite("updateContractFilesById", "documentId", documentId, updated));
     }
 
     public Uni<Long> updateAttachmentPathById(String documentId, String attachmentPath) {
         return update("attachmentPath = ?1 and updatedAt = ?2", attachmentPath, LocalDateTime.now())
-                .where(scopedForWrite(Filters.eq("_id", documentId)))
+                .where(scoped(Filters.eq("_id", documentId)))
                 .invoke(updated -> logIfNoWrite("updateAttachmentPathById", "documentId", documentId, updated));
     }
 
     public Uni<Long> touchUpdatedAtById(String documentId) {
         return update("updatedAt = ?1", LocalDateTime.now())
-                .where(scopedForWrite(Filters.eq("_id", documentId)))
+                .where(scoped(Filters.eq("_id", documentId)))
                 .invoke(updated -> logIfNoWrite("touchUpdatedAtById", "documentId", documentId, updated));
     }
 
@@ -118,32 +118,33 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
 
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
         return update("contractSigned = ?1", contractSignedPath)
-                .where(scopedForWrite(onboardingAndContractTypes(onboardingId)))
+                .where(scoped(onboardingAndContractTypes(onboardingId)))
                 .invoke(updated -> logIfNoWrite("updateContractSignedByOnboardingId", "onboardingId", onboardingId, updated));
     }
 
     public Uni<Long> updateUpdatedAt(String onboardingId, LocalDateTime updatedAt) {
         return update("updatedAt = ?1", updatedAt)
-                .where(scopedForWrite(onboardingAndContractTypes(onboardingId)))
+                .where(scoped(onboardingAndContractTypes(onboardingId)))
                 .invoke(updated -> logIfNoWrite("updateUpdatedAt", "onboardingId", onboardingId, updated));
     }
 
     public Uni<Boolean> deleteDocument(String documentId) {
-        return delete(scopedForWrite(Filters.eq("_id", documentId)))
+        return delete(scoped(Filters.eq("_id", documentId)))
                 .invoke(deleted -> logIfNoWrite("deleteDocument", "documentId", documentId, deleted))
                 .map(deleted -> deleted > 0);
     }
 
+    /**
+     * Single tenant predicate for reads and writes. Until the backfill (SELC-DMS-09) is verified and strict mode is
+     * enabled, documents created before the discriminator ({@code tenantId == null}) stay readable and writable so
+     * in-flight onboardings keep working; they live only in the tenant's own routed database.
+     */
     private Bson scoped(Bson query) {
         String tenantId = tenantContext.requiredTenantId();
         Bson tenantScope = strictDataIsolation
                 ? Filters.eq("tenantId", tenantId)
                 : Filters.or(Filters.eq("tenantId", tenantId), Filters.eq("tenantId", null));
         return Filters.and(query, tenantScope);
-    }
-
-    private Bson scopedForWrite(Bson query) {
-        return Filters.and(query, Filters.eq("tenantId", tenantContext.requiredTenantId()));
     }
 
     private Bson onboardingAndContractTypes(String onboardingId) {

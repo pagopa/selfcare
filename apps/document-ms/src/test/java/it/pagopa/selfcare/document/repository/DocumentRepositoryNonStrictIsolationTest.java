@@ -57,19 +57,35 @@ class DocumentRepositoryNonStrictIsolationTest {
     }
 
     @Test
-    void writesDoNotModifyLegacyRecordsEvenWhenTheyAreReadable() {
+    void writesReachLegacyRecordsUntilStrictIsolationIsEnabled() {
         Long updated = inRequest("AR", () -> documentRepository
                 .updateContractFilesById("legacy-contract", "ar-write.pdf", "ar-contract.pdf", 1)
                 .await().indefinitely());
-        Boolean deleted = inRequest("AR", () -> documentRepository.deleteDocument("legacy-contract").await().indefinitely());
 
-        assertThat(updated).isZero();
-        assertThat(deleted).isFalse();
+        assertThat(updated).isEqualTo(1);
         assertThat(inRequest("AR", () -> documentRepository.findDocumentById("legacy-contract").await().indefinitely()))
                 .satisfies(document -> {
                     assertThat(document.getTenantId()).isNull();
-                    assertThat(document.getContractSigned()).isEqualTo("signed-legacy-contract.pdf");
+                    assertThat(document.getContractSigned()).isEqualTo("ar-write.pdf");
                 });
+
+        Boolean deleted = inRequest("AR", () -> documentRepository.deleteDocument("legacy-attachment").await().indefinitely());
+
+        assertThat(deleted).isTrue();
+    }
+
+    @Test
+    void writesDoNotModifyOtherTenantRecords() {
+        Long updated = inRequest("AR", () -> documentRepository
+                .updateContractFilesById("pnpg-contract", "ar-write.pdf", "ar-contract.pdf", 1)
+                .await().indefinitely());
+        Boolean deleted = inRequest("AR", () -> documentRepository.deleteDocument("pnpg-contract").await().indefinitely());
+
+        assertThat(updated).isZero();
+        assertThat(deleted).isFalse();
+        assertThat(inRequest("PNPG", () -> documentRepository.findDocumentById("pnpg-contract").await().indefinitely()))
+                .extracting(Document::getContractSigned)
+                .isEqualTo("signed-pnpg-contract.pdf");
     }
 
     @Test

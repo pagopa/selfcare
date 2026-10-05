@@ -83,6 +83,17 @@ class DocumentRepositoryStrictIsolationTest {
     }
 
     @Test
+    void writesDoNotModifyLegacyRecords() {
+        Long updated = inRequest("AR", () -> documentRepository
+                .updateContractFilesById("legacy-contract", "ar-write.pdf", "ar-contract.pdf", 1)
+                .await().indefinitely());
+        Boolean deleted = inRequest("AR", () -> documentRepository.deleteDocument("legacy-contract").await().indefinitely());
+
+        assertThat(updated).isZero();
+        assertThat(deleted).isFalse();
+    }
+
+    @Test
     void persistAssignsTenantFromContext() {
         Document document = contract("new-ar-contract", "new-onboarding", "payload-tenant");
 
