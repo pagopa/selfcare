@@ -164,21 +164,28 @@ flowchart LR
 - Il secret `MONGODB_CONNECTION_STRING` non è più letto dall'app; la connection string arriva solo da `MONGODB_CONNECTION_STRING_AR` (rimozione infra in `07.02`).
 - Panache risolve il database a ogni chiamata (nessuna cache per entity): verificato alternando AR e PNPG nella stessa JVM.
 
-## SELC-DMS-04 – Discriminatore `tenantId` e isolamento dati
+## SELC-DMS-04 – Discriminatore `tenantId` e isolamento dati ✅ Completata
 
 **Obiettivo:** nessuna lettura o scrittura può attraversare il confine tra tenant, nemmeno conoscendo un `_id`.
 
-| Task | Descrizione | File | Dim. |
-|---|---|---|---|
-| SELC-DMS-04.01 | Aggiungere il campo `tenantId` a `Document`. | `model/entity/Document.java` | S |
-| SELC-DMS-04.02 | Creare un unico chokepoint in `DocumentRepository` (`scoped(query)`) usato da **tutti** i metodi: `findRelatedDocument`, `findAttachment`, `findAttachments`, `findUserAttachmentsByOnboardingId`, `countUserAttachmentsByDocumentId`, `findByOnboardingId`, `updateContractSignedByOnboardingId`, `updateUpdatedAt`, `updateContractFilesById`, `updateAttachmentPathById`, `touchUpdatedAtById`, `deleteDocument`. | `repository/DocumentRepository.java` | L |
-| SELC-DMS-04.03 | Sostituire `findById`, `deleteById` e `delete(document)` di Panache con varianti scoped (`_id = ? and tenantId = ?`). | `DocumentServiceImpl.java:67`, `DocumentContentServiceImpl.java:256,329`, `DocumentRepository.java:95` | M |
-| SELC-DMS-04.04 | Valorizzare `tenantId` dal `TenantContext` (mai dal payload) in ogni `persist`, incluso `/v1/documents/import`. | `DocumentContentServiceImpl.java:380,833`, `DocumentServiceImpl.java:236,268,297` | M |
-| SELC-DMS-04.05 | Aggiungere `selfcare.tenant.strict-data-isolation=${SELFCARE_TENANT_STRICT_DATA_ISOLATION:false}`. Compatibilità temporanea: con `strict-data-isolation=false` le letture includono `tenantId == null`; le scritture e gli update non modificano mai record legacy di un altro tenant. Il flag va rimosso dopo `SELC-DMS-09`. | repository | S |
-| SELC-DMS-04.06 | Una lettura cross-tenant restituisce 404 indistinguibile da "non trovato"; una scrittura cross-tenant viene rifiutata e loggata. | service, `ExceptionHandler` | S |
-| SELC-DMS-04.07 | Test repository su Mongo containerizzato (Testcontainers) con dati AR, PNPG e `null`, in strict e non-strict. | `src/test/...` | M |
+| Task | Stato | Descrizione | File | Dim. |
+|---|---|---|---|---|
+| SELC-DMS-04.01 | ✅ | Aggiunto `tenantId` a `Document` e rigenerati gli OpenAPI schema tracciati dal modulo. | `model/entity/Document.java`, `src/main/docs/openapi.*` | S |
+| SELC-DMS-04.02 | ✅ | `DocumentRepository` è il chokepoint unico: letture, conteggi, update e delete passano tutti dallo stesso predicato `scoped(...)`; le query per id, onboarding, allegati, conteggi e related document includono sempre il tenant corrente. | `repository/DocumentRepository.java` | L |
+| SELC-DMS-04.03 | ✅ | Rimossi i bypass Panache dai servizi: `getDocumentById` usa `findDocumentById`, i rollback degli upload cancellano con `deleteDocument(documentId)` invece di `delete(document)`. | `DocumentServiceImpl.java`, `DocumentContentServiceImpl.java` | M |
+| SELC-DMS-04.04 | ✅ | Ogni `persist(Document)` valorizza `tenantId` da `TenantContext.requiredTenantId()` nel repository, quindi anche `/v1/documents/import` e gli upload non possono accettare il tenant dal payload. | `DocumentRepository.java` | M |
+| SELC-DMS-04.05 | ✅ | Aggiunto `selfcare.tenant.strict-data-isolation=${SELFCARE_TENANT_STRICT_DATA_ISOLATION:false}`: in non-strict letture **e** scritture includono i record legacy `tenantId == null` (stesso comportamento di `user-group-ms`), così gli onboarding in corso creati prima del discriminatore continuano a firmare/aggiornare i documenti; in strict il ramo `null` sparisce per entrambe. Nessun record di un altro tenant è mai raggiungibile. | `application.properties`, `DocumentRepository.java` | S |
+| SELC-DMS-04.06 | ✅ | Le letture cross-tenant non matchano e continuano a produrre 404 indistinguibili dai not found; le scritture cross-tenant (e, in strict, quelle su record legacy) producono zero match e un warning sanificato con operazione, chiave e tenant. | `DocumentRepository.java`, `DocumentServiceImpl.java` | S |
+| SELC-DMS-04.07 | ✅ | Aggiunti test repository con embedded `MongoTestResource` su database condiviso AR/PNPG, seed di documenti AR, PNPG e legacy `tenantId == null`, profili strict e non-strict; non usato Testcontainers perché Docker non è disponibile sulla macchina. | `src/test/.../repository/*IsolationTest.java` | M |
 
-**Definition of Done:** nessuna query Panache senza `tenantId`, verificato con una revisione grep (`find(`, `update(`, `delete(`, `count(`).
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 531 test, 0 errori. Revisione grep `find(`/`update(`/`delete(`/`count(`: nel main code restano solo chiamate Panache in `DocumentRepository`; `find`/`count`/`delete` e ogni `update(...).where(...)` sono avvolte da `scoped(...)`.
+
+**Comportamenti osservati da tenere presenti:**
+
+- Semantica legacy per il rollout: con `strict-data-isolation=false` i record `tenantId == null` sono leggibili **e** aggiornabili/cancellabili dal tenant corrente, ma non vengono "rivendicati" (il `tenantId` resta `null` fino al backfill di `SELC-DMS-09`). È sicuro perché il routing Mongo di `SELC-DMS-03` porta ogni tenant nel proprio database, che contiene solo i suoi record legacy. Una prima versione rendeva le scritture sempre strict: è stata scartata in review perché, prima del backfill, avrebbe impedito di firmare o aggiornare i documenti degli onboarding già in corso. Strict va abilitato solo dopo il backfill verificato.
+- Il `tenantId` viene imposto nel repository durante `persist`, non nei DTO: i test con repository mock non esercitano questa assegnazione, mentre i nuovi test repository reali la verificano.
+- I test 04.07 usano `MongoTestResource` embedded su `localhost:27017` invece di Testcontainers, in coerenza con il vincolo locale di assenza Docker; i profili AR e PNPG puntano allo stesso database per validare il discriminator oltre al routing Mongo già coperto in `SELC-DMS-03`.
+- La verifica Maven è stata serializzata con un lock locale di worktree e attesa esplicita delle porte 8081/27017 libere; il lock `/tmp/selfcare-mvn-test.lock` indicato nel piano non è stato usato perché le regole operative della sessione vietano scritture sotto `/tmp`.
 
 ## SELC-DMS-05 – Routing storage per tenant
 
