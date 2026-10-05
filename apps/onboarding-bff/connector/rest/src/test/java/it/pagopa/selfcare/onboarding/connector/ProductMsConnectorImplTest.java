@@ -46,7 +46,7 @@ class ProductMsConnectorImplTest {
         OriginResult mappedResult = new OriginResult();
         mappedResult.setOrigins(List.of());
 
-        when(msProductApiClientMock._getProductOriginsById(tenantId, productId))
+        when(msProductApiClientMock._getProductOriginsById(productId, tenantId))
                 .thenReturn(ResponseEntity.ok(productOriginResponse));
         when(productMapperMock.toOriginResult(productOriginResponse))
                 .thenReturn(mappedResult);
@@ -58,7 +58,7 @@ class ProductMsConnectorImplTest {
         assertNotNull(result);
         assertSame(mappedResult, result);
 
-        verify(msProductApiClientMock, times(1))._getProductOriginsById(tenantId, productId);
+        verify(msProductApiClientMock, times(1))._getProductOriginsById(productId, tenantId);
         verify(productMapperMock, times(1)).toOriginResult(productOriginResponse);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -69,7 +69,7 @@ class ProductMsConnectorImplTest {
         String tenantId = "AR";
         String productId = "product-test";
 
-        when(msProductApiClientMock._getProductOriginsById(tenantId, productId))
+        when(msProductApiClientMock._getProductOriginsById(productId, tenantId))
                 .thenReturn(ResponseEntity.ok(null));
 
         OriginResult mappedResult = new OriginResult();
@@ -84,7 +84,7 @@ class ProductMsConnectorImplTest {
         assertNotNull(result);
         assertSame(mappedResult, result);
 
-        verify(msProductApiClientMock, times(1))._getProductOriginsById(tenantId, productId);
+        verify(msProductApiClientMock, times(1))._getProductOriginsById(productId, tenantId);
         verify(productMapperMock, times(1)).toOriginResult(null);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -107,7 +107,7 @@ class ProductMsConnectorImplTest {
         model.setName("Statuto");
         model.setRequired(true);
 
-        when(msProductApiClientMock._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA, tenantId))
                 .thenReturn(ResponseEntity.ok(List.of(dto)));
         when(productMapperMock.toRequiredDocumentModelList(List.of(dto)))
                 .thenReturn(List.of(model));
@@ -120,7 +120,7 @@ class ProductMsConnectorImplTest {
         assertEquals(1, result.size());
         assertEquals("doc-1", result.get(0).getId());
 
-        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA, tenantId);
         verify(productMapperMock, times(1)).toRequiredDocumentModelList(List.of(dto));
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -133,7 +133,7 @@ class ProductMsConnectorImplTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA, tenantId))
                 .thenReturn(ResponseEntity.ok(List.of()));
         when(productMapperMock.toRequiredDocumentModelList(List.of()))
                 .thenReturn(List.of());
@@ -145,7 +145,7 @@ class ProductMsConnectorImplTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
 
-        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, tenantId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._getRequiredDocuments(productId, InstitutionType.PA, Origin.IPA, tenantId);
     }
 
     @Test
@@ -156,7 +156,7 @@ class ProductMsConnectorImplTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA, tenantId))
                 .thenReturn(responseWithFlag("true"));
 
         // when
@@ -165,7 +165,7 @@ class ProductMsConnectorImplTest {
         // then
         assertTrue(result);
 
-        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA, tenantId);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
 
@@ -177,7 +177,7 @@ class ProductMsConnectorImplTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA, tenantId))
                 .thenReturn(responseWithFlag("false"));
 
         // when
@@ -186,7 +186,7 @@ class ProductMsConnectorImplTest {
         // then
         assertFalse(result);
 
-        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA, tenantId);
     }
 
     @Test
@@ -197,7 +197,7 @@ class ProductMsConnectorImplTest {
         String institutionType = "PA";
         String origin = "IPA";
 
-        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA))
+        when(msProductApiClientMock._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA, tenantId))
                 .thenReturn(ResponseEntity.ok().build());
 
         // when
@@ -206,7 +206,7 @@ class ProductMsConnectorImplTest {
         // then
         assertFalse(result);
 
-        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, tenantId, InstitutionType.PA, Origin.IPA);
+        verify(msProductApiClientMock, times(1))._isRequiredDocumentsEnabled(productId, InstitutionType.PA, Origin.IPA, tenantId);
     }
 
     @Test
@@ -242,12 +242,12 @@ class ProductMsConnectorImplTest {
     void getProducts_requestsValidProductsAndMapsThem() {
         ProductResponse response = new ProductResponse();
         Product product = new Product();
-        when(msProductApiClientMock._getProducts("AR", false, true)).thenReturn(ResponseEntity.ok(List.of(response)));
+        when(msProductApiClientMock._getProducts(false, true, "AR")).thenReturn(ResponseEntity.ok(List.of(response)));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertEquals(List.of(product), productMsConnector.getProducts(false));
 
-        verify(msProductApiClientMock)._getProducts("AR", false, true);
+        verify(msProductApiClientMock)._getProducts(false, true, "AR");
         verify(productMapperMock).toProduct(response);
     }
 
@@ -307,17 +307,17 @@ class ProductMsConnectorImplTest {
 
     @Test
     void getProducts_rootOnlyIsPropagated() {
-        when(msProductApiClientMock._getProducts("AR", true, true)).thenReturn(ResponseEntity.ok(List.of()));
+        when(msProductApiClientMock._getProducts(true, true, "AR")).thenReturn(ResponseEntity.ok(List.of()));
 
         assertTrue(productMsConnector.getProducts(true).isEmpty());
 
-        verify(msProductApiClientMock)._getProducts("AR", true, true);
+        verify(msProductApiClientMock)._getProducts(true, true, "AR");
         verifyNoInteractions(productMapperMock);
     }
 
     @Test
     void getProducts_nullBodyThrows() {
-        when(msProductApiClientMock._getProducts("AR", false, true)).thenReturn(ResponseEntity.ok(null));
+        when(msProductApiClientMock._getProducts(false, true, "AR")).thenReturn(ResponseEntity.ok(null));
 
         assertThrows(NullPointerException.class, () -> productMsConnector.getProducts(false));
     }

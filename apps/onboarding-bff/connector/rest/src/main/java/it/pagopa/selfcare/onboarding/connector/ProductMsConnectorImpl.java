@@ -39,7 +39,7 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     @Override
     public OriginResult getOrigins(String tenantId, String productId) {
         log.trace("getOrigins start");
-        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(tenantId, productId);
+        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(productId, tenantId);
         OriginResult entryList = productMapper.toOriginResult(origins.getBody());
         log.debug("getOrigins size = {}", entryList.getOrigins().isEmpty());
         log.trace("getOrigins end");
@@ -51,9 +51,9 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
         log.trace("getRequiredDocuments start");
         ResponseEntity<List<RequiredDocumentResponse>> response = msProductApiClient._getRequiredDocuments(
                 productId,
-                tenantId,
                 InstitutionType.fromValue(institutionType),
-                Origin.fromValue(origin)
+                Origin.fromValue(origin),
+                tenantId
         );
         List<RequiredDocumentModel> result = productMapper.toRequiredDocumentModelList(
                 Objects.requireNonNull(response.getBody()));
@@ -67,9 +67,9 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
         log.trace("isRequiredDocumentsEnabled start");
         ResponseEntity<Void> response = msProductApiClient._isRequiredDocumentsEnabled(
                 productId,
-                tenantId,
                 InstitutionType.fromValue(institutionType),
-                Origin.fromValue(origin)
+                Origin.fromValue(origin),
+                tenantId
         );
         boolean result = Boolean.parseBoolean(response.getHeaders().getFirst(HEADER_REQUIRED_DOCUMENTS_ENABLED));
         log.debug(
@@ -96,7 +96,7 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
 
     @Override
     public List<Product> getProducts(boolean rootOnly) {
-        ResponseEntity<List<ProductResponse>> response = msProductApiClient._getProducts(productTenantId, rootOnly, true);
+        ResponseEntity<List<ProductResponse>> response = msProductApiClient._getProducts(rootOnly, true, productTenantId);
         return Objects.requireNonNull(response.getBody()).stream().map(productMapper::toProduct).toList();
     }
 
