@@ -216,7 +216,7 @@ flowchart LR
 - `mvn -f libs/selfcare-sdk-tenant/pom.xml test` → 19 test, 0 errori.
 - `mvn -f libs/selfcare-onboarding-sdk-pom/pom.xml clean install -DskipTests` → successo (SDK onboarding 0.18.0 installato localmente).
 - `mvn -f libs/selfcare-sdk-tenant/pom.xml clean install -DskipTests` → successo (tenant SDK 0.5.0 installato localmente).
-- `mvn -f apps/document-ms/pom.xml test` → 534 test, 0 errori (dopo 03: 522).
+- `mvn -f apps/document-ms/pom.xml test` → 538 test, 0 errori (dopo 03: 526). Comando CI code-review verde.
 
 **Comportamenti osservati da tenere presenti:**
 
