@@ -41,6 +41,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -148,6 +150,56 @@ class OnboardingFunctionsTest {
 
     verify(client, times(1)).waitForInstanceCompletion(anyString(), any(), anyBoolean());
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), responseMessage.getStatusCode());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"x-tenant-id", "X-Tenant-Id", "X-TENANT-ID"})
+  void startOrchestration_acceptsTenantHeaderCaseInsensitively(String headerName) {
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+    doReturn("instanceId")
+        .when(client)
+        .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+
+    startOrchestrationRequest(Map.of(headerName, "AR"), durableContext);
+
+    ArgumentCaptor<String> input = ArgumentCaptor.forClass(String.class);
+    verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), input.capture());
+    assertTrue(input.getValue().contains("\"tenantId\":\"AR\""));
+  }
+
+  @Test
+  void startOrchestration_rejectsMissingTenantHeader() {
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+
+    HttpResponseMessage responseMessage = startOrchestrationRequest(Map.of(), durableContext);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+    assertEquals("Invalid tenant context", responseMessage.getBody());
+    verify(client, never()).scheduleNewOrchestrationInstance(anyString(), anyString());
+  }
+
+  private HttpResponseMessage startOrchestrationRequest(
+      Map<String, String> headers, DurableClientContext durableContext) {
+    @SuppressWarnings("unchecked")
+    final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    doReturn(Map.of("onboardingId", "onboardingId")).when(req).getQueryParameters();
+    doReturn(headers).when(req).getHeaders();
+    doAnswer(
+            (Answer<HttpResponseMessage.Builder>)
+                invocation ->
+                    new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                        .status((HttpStatus) invocation.getArguments()[0]))
+        .when(req)
+        .createResponseBuilder(any(HttpStatus.class));
+
+    final ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(Logger.getGlobal()).when(context).getLogger();
+
+    return function.startOrchestration(req, durableContext, context);
   }
 
   @Test

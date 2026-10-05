@@ -143,11 +143,7 @@ public class OnboardingFunctions {
 
     final String tenantId;
     try {
-      tenantId =
-          TenantContext.resolve(
-              request.getHeaders() == null
-                  ? null
-                  : request.getHeaders().get(TenantContext.TENANT_HEADER));
+      tenantId = TenantContext.resolve(TenantContext.tenantHeader(request));
     } catch (IllegalArgumentException exception) {
       context.getLogger().warning("Rejected orchestration start with invalid tenant");
       return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Invalid tenant context").build();

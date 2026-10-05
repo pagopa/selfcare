@@ -24,6 +24,8 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -97,6 +99,69 @@ public class NotificationFunctionsTest {
                 .send(any(), any(), any());
         assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
 
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"x-tenant-id", "X-TeNaNt-Id"})
+    public void sendNotificationTriggerAcceptsTenantHeaderCaseInsensitively(String headerName) {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Optional.of(onboardinString)).when(req).getBody();
+        doReturn(Map.of(headerName, "AR")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.sendNotification(req, context);
+
+        Mockito.verify(notificationEventService, times(1)).send(any(), any(), any());
+        assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
+    }
+
+    @Test
+    public void sendNotificationTriggerMissingTenantHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Optional.of(onboardinString)).when(req).getBody();
+        doReturn(Map.of()).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.sendNotification(req, context);
+
+        Mockito.verify(notificationEventService, never()).send(any(), any(), any());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        assertEquals("Invalid tenant context", responseMessage.getBody());
+    }
+
+    @Test
+    public void resendNotificationTriggerLowercaseTenantHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        final String onboardingId = "onboardingId";
+        doReturn(Map.of("onboardingId", onboardingId)).when(req).getQueryParameters();
+        doReturn(Map.of("x-tenant-id", "AR")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+        Onboarding onboarding = new Onboarding();
+        onboarding.setTenantId("AR");
+        when(onboardingService.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
+
+        HttpResponseMessage responseMessage = function.resendNotification(req, context);
+
+        Mockito.verify(notificationEventService, times(1)).send(any(), any(), any());
+        assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
     }
 
     @Test
