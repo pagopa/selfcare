@@ -222,7 +222,20 @@ flowchart LR
 | SELC-DMS-08.03 | Verificare che `onboarding-ms` (`AuthenticationPropagationHeadersFactory`) e `dashboard-bff` (`TenantHeaderInterceptor`) inviino `X-Tenant-Id` su **tutti** i client verso document-ms. | client REST | S |
 | SELC-DMS-08.04 | Allineare i lettori diretti del blob documenti (`onboarding-functions`, `BLOB_STORAGE_ACCOUNT_NAME_CONTRACT`) allo stesso binding e prefisso. | onboarding-functions | S |
 | SELC-DMS-08.05 | `selfcare-sdk-security`: `JwtTenantValidator.resolveTokenTenant` usa `PNPG` se manca il claim; renderlo fail-closed (o almeno configurabile) e allineare la normalizzazione del confronto claim/header (oggi case-sensitive, emerso in `02.05`). Impatto trasversale: coordinare con gli altri servizi. | `libs/selfcare-sdk-security/.../JwtTenantValidator.java` | M |
-| SELC-DMS-08.06 | Documentare l'incoerenza `onboarding-functions/*-pnpg` → `selc-<env>-pnpg-document-ms-ca`, risorsa non provisionata; si risolve in `SELC-DMS-11`. | infra onboarding-functions | S |
+| SELC-DMS-08.06 | Documentare l'incoerenza `onboarding-functions/*-pnpg` → `selc-<env>-pnpg-document-ms-ca`, risorsa non provisionata; si risolve in `SELC-DMS-11`. | `infra/resources/onboarding-functions/{dev,uat,prod}-pnpg/onboarding.tf` (`MS_DOCUMENT_URL`) | S |
+
+> **Nota 08.06 – URL `pnpg-document-ms` non provisionato (nessuna modifica infra, si risolve in `SELC-DMS-11.04`).**
+> I deployment `*-pnpg` di `onboarding-functions` impostano `MS_DOCUMENT_URL = "https://selc-${env_short}-${domain}-document-ms-ca.${private_dns_name_domain}"`, con `domain = "pnpg"` (`_modules/local-<env>-pnpg/locals.tf`), quindi `selc-<env>-pnpg-document-ms-ca`. Sotto `infra/resources/document-ms/` esistono solo `dev-ar`, `uat-ar` e `prod-ar`: la Container App PNPG non è provisionata e le chiamate verso document-ms da questi deployment non hanno un destinatario.
+>
+> | File | Riga | Impostazione |
+> |---|---|---|
+> | `infra/resources/onboarding-functions/dev-pnpg/onboarding.tf` | 82 | `MS_DOCUMENT_URL` |
+> | `infra/resources/onboarding-functions/uat-pnpg/onboarding.tf` | 81 | `MS_DOCUMENT_URL` |
+> | `infra/resources/onboarding-functions/prod-pnpg/onboarding.tf` | 66 | `MS_DOCUMENT_URL` |
+>
+> Stesso URL non provisionato in `external-api` (`infra/resources/external-api/dev-pnpg/locals.tf:86`, `uat-pnpg/locals.tf:86`, `prod-pnpg/locals.tf:91`, `MS_DOCUMENT_URL`). `onboarding-ms-pnpg` (`infra/resources/onboarding-ms/*-pnpg/onboarding.tf`) non imposta alcun `MS_DOCUMENT_URL` e usa quindi il default `http://localhost:8080` di `application.properties`. Numeri di riga riferiti allo stato dopo `SELC-DMS-08.04`, che ha aggiunto le impostazioni `*_CONTRACT_PNPG` nei file di `onboarding-functions`.
+>
+> Il binding contratti di `PNPG` in `onboarding-functions` (`BLOB_STORAGE_*_CONTRACT_PNPG`, `STORAGE_CONTAINER_CONTRACT_PNPG`, introdotto da `08.04`) replica i valori legacy dei deployment `*-pnpg` (`$web` in UAT/PROD, `selc-d-contracts-blob` in DEV, sullo storage `documents_storage` di quel deployment) e va sostituito dallo storage dedicato PNPG (D2) in `SELC-DMS-11.01`/`11.02`.
 
 ## SELC-DMS-09 – Migrazione dati e strict mode
 
