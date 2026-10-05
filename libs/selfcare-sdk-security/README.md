@@ -57,6 +57,21 @@ The custom logic is primarily executed within the overridden ```parse``` method 
   tenant as the `jwt.tenant` security identity attribute and validates it
   against the `X-Tenant-Id` header after authentication.
 
+### Using the SDK in a non tenant-aware application
+
+Since `0.5.0` the jar ships a Jandex index, so every bean of the SDK is discovered
+automatically. An application that is not tenant-aware yet can exclude
+`selfcare-sdk-tenant` from the dependency and keep only `LoggingContextFilter`:
+
+```
+quarkus.arc.exclude-types=it.pagopa.selfcare.security.JWTCallerPrincipalFactory,it.pagopa.selfcare.security.JWTSecurityIdentityAugmentor
+selfcare.security.tenant-validation.enabled=false
+```
+
+`JwtTenantValidationFilter` is a JAX-RS provider: RESTEasy Reactive registers it
+even when excluded from CDI, so it is disabled through the build-time property
+`selfcare.security.tenant-validation.enabled` (default `true`).
+
 ### Logging Context (MDC)
 
 `LoggingContextFilter` is a RESTEasy Reactive request/response filter that is
