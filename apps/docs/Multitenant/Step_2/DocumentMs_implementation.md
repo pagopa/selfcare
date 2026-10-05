@@ -204,6 +204,7 @@ flowchart LR
 | SELC-DMS-06.04 | ✅ | La verifica firma (`document-ms.signature.verify-enabled`, EU LOTL e official journal URL) resta globale: usa DSS/trust list e non credenziali Namirial/Aruba. Documentato nei commenti di configurazione. | `application.properties` | S |
 | SELC-DMS-06.05 | ✅ | Test del resolver: AR usa credenziali Namirial AR, un tenant senza `signature` fallisce, `toString` non espone segreti. Aggiornati i test del servizio per sorgente tenant-scoped e disabilitazione esplicita. La sorgente AR segue `PAGOPA_SIGNATURE_SOURCE` (default `disabled`). | `src/test/.../TenantPadesSignServiceResolverTest.java`, `SignatureServiceImplTest.java`, `TenantSignatureSource*Test.java` | S |
 | SELC-DMS-06.06 | ✅ | Build CI: con `selfcare-sdk-tenant` a 0.5.0 nel repo, `selfcare-sdk-security` e `selfcare-sdk-tenant-mongodb` dichiaravano ancora 0.4.0, che il reactor (`--also-make`) non contiene più. Allineato `common-sdk-tenant-version` a 0.5.0 in entrambe le librerie (vedi `01.07`). | `libs/selfcare-sdk-security/pom.xml`, `libs/selfcare-sdk-tenant-mongodb/pom.xml` | S |
+| SELC-DMS-06.07 | ✅ | Test del resolver per tenant: due tenant con credenziali Namirial diverse ottengono `PadesSignService` distinti, riusati alle chiamate successive (cache per tenant, anche con id in minuscolo); mapping Aruba verso `ArubaSignConfig` (URL, timeout, `Auth`, `COSIGN`) con timeout assenti a 0; `source=disabled` costruisce un firmatario no-op senza client Namirial/Aruba; sorgente non supportata rifiutata e non messa in cache; credenziali mancanti per la sorgente scelta. | `src/test/.../config/TenantPadesSignServiceResolverTest.java` | S |
 
 **Definition of Done (verificata):**
 
@@ -211,7 +212,7 @@ flowchart LR
 - `mvn -f libs/selfcare-sdk-tenant/pom.xml test` → 19 test, 0 errori.
 - `mvn -f libs/selfcare-onboarding-sdk-pom/pom.xml clean install -DskipTests` → successo (SDK onboarding 0.18.0 installato localmente).
 - `mvn -f libs/selfcare-sdk-tenant/pom.xml clean install -DskipTests` → successo (tenant SDK 0.5.0 installato localmente).
-- `mvn -f apps/document-ms/pom.xml test` → 527 test, 0 errori (dopo 03: 522).
+- `mvn -f apps/document-ms/pom.xml test` → 534 test, 0 errori (dopo 03: 522).
 
 **Comportamenti osservati da tenere presenti:**
 
