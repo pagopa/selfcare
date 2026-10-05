@@ -34,8 +34,7 @@ locals {
     { name = "MS_USER_URL", value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-${module.local.config.env_short}-pnpg-onboarding-fn.azurewebsites.net" },
     { name = "MS_USER_INSTITUTION_URL", value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}" },
-    { name = "MS_PRODUCT_URL", value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}" },
-    { name = "PRODUCT_TENANT_ID", value = upper(module.local.config.domain) }
+    { name = "MS_PRODUCT_URL", value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}" }
   ]
 
   secrets_names_onboarding_bff = {
