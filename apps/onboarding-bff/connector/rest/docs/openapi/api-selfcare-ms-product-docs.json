@@ -1922,7 +1922,10 @@
             },
             "headers" : {
               "X-Required-Documents-Enabled" : {
-                "description" : "Whether required documents are enabled (true/false)"
+                "description" : "Whether required documents are enabled (true/false)",
+                "schema" : {
+                  "type" : "boolean"
+                }
               }
             }
           },

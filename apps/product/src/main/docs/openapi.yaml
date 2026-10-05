@@ -1390,6 +1390,8 @@ paths:
           headers:
             X-Required-Documents-Enabled:
               description: Whether required documents are enabled (true/false)
+              schema:
+                type: boolean
         "400":
           description: Bad Request
         "404":
