@@ -55,7 +55,7 @@ mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}
 ```json
 {
   "AR": {
-    "mongo":   { "database": "selcDocument", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR" },
+    "mongo":   { "account": "cosmos-ar", "database": "selcDocument", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR" },
     "jwt":     { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
     "storages": {
       "contracts":        { "account": "<documents-st>",  "container": "sc-<env>-documents-blob", "pathPrefix": "",
@@ -114,13 +114,14 @@ flowchart LR
 
 | Task | Stato | Descrizione | File | Dim. |
 |---|---|---|---|---|
-| SELC-DMS-01.01 | ✅ | `selfcare-sdk-security` 0.3.0 → 0.5.0 (non ancora indicizzata, vedi `02.02`); aggiunta `selfcare-sdk-tenant` 0.4.0 (stesse versioni di `auth`). `selfcare-sdk-tenant-mongodb` spostata in `03.01`: il suo proxy Mongo richiede un `TenantContext`, che esiste solo dopo `SELC-DMS-02`. | `pom.xml` | S |
+| SELC-DMS-01.01 | ✅ | `selfcare-sdk-security` resta 0.3.0: il bump a 0.5.0 è in `02.02` (vedi `01.08`); aggiunta `selfcare-sdk-tenant` 0.4.0 (stesse versioni di `auth`). `selfcare-sdk-tenant-mongodb` spostata in `03.01`: il suo proxy Mongo richiede un `TenantContext`, che esiste solo dopo `SELC-DMS-02`. | `pom.xml` | S |
 | SELC-DMS-01.02 | ✅ | `tenant.registry.json` (solo AR: `mongo` → `selcDocument`/`MONGODB_CONNECTION_STRING_AR`, `jwt` → `JWT_PUBLIC_KEY_AR`) e `tenant.supported-tenants=${TENANT_SUPPORTED_TENANTS:AR}`. Le altre proprietà vengono aggiunte dalla storia che le usa: `enforcement` e `default` in `02`, `strict-data-isolation` in `04`, `storages` e `mandatory-keys` in `05`, `signature` in `06`. | `application.properties` | S |
 | SELC-DMS-01.03 | ✅ | `TenantRegistryStartupValidator`: istanzia il registry (bean lazy) allo `StartupEvent`, così una configurazione invalida blocca l'avvio (fail-closed). Le proprietà legacy (`quarkus.mongodb.*`, `document-ms.blob-storage.*`, `mp.jwt.verify.publickey`) restano finché `03.01`, `05.03` e `02.02` non le sostituiscono. | `config/TenantRegistryStartupValidator.java` | S |
 | SELC-DMS-01.04 | ✅ | Rimossa la dipendenza inutilizzata `quarkus-mailer`. | `pom.xml` | S |
 | SELC-DMS-01.05 | ✅ | Infra: aggiunti i secret `MONGODB_CONNECTION_STRING_AR` e `JWT_PUBLIC_KEY_AR` (stessi secret Key Vault di quelli legacy) e `TENANT_SUPPORTED_TENANTS=AR` in dev/uat/prod-ar. I secret legacy restano fino a `07.02`. | `infra/resources/document-ms/*-ar/main.tf` | S |
 | SELC-DMS-01.06 | ✅ | Test: `TenantRegistryConfigTest` (solo AR supportato, database e secret di AR, PNPG o tenant sconosciuto rifiutati); variabile `MONGODB_CONNECTION_STRING_AR` nelle proprietà di test. | `src/test/...` | S |
-| SELC-DMS-01.07 | ✅ | Build CI: `selfcare-sdk-security` dichiarava `selfcare-sdk-tenant` 0.3.0, ma nel repo la libreria è 0.4.0. Con `security-sdk` 0.5.0 la libreria viene compilata nel reactor (`--also-make`), che però non contiene la 0.3.0: la build falliva. Allineato `common-sdk-tenant-version` a 0.4.0, come aveva fatto `SELC-9300` (#908). | `libs/selfcare-sdk-security/pom.xml` | S |
+| SELC-DMS-01.07 | ✅ | Build CI: `selfcare-sdk-security` dichiarava `selfcare-sdk-tenant` 0.3.0, ma nel repo la libreria è 0.4.0. Da `02.02` document-ms usa `security-sdk` 0.5.0, che viene compilata nel reactor (`--also-make`), che però non contiene la 0.3.0: la build falliva. Allineato `common-sdk-tenant-version` a 0.4.0, come aveva fatto `SELC-9300` (#908). | `libs/selfcare-sdk-security/pom.xml` | S |
+| SELC-DMS-01.08 | ✅ | Review: il jar di `selfcare-sdk-security` 0.5.0 contiene l'indice Jandex (`jandex-maven-plugin`, da #908), quindi il solo bump attivava `JWTCallerPrincipalFactory`, `JWTSecurityIdentityAugmentor` e `JwtTenantValidationFilter`. Il runtime cambiava già in `01` (token SPID senza `X-Tenant-Id` → 401). Il bump torna in `02.02`, dove l'attivazione è voluta. Aggiunto `TenantRegistryStartupValidatorTest`: fallisce se il validator sparisce o non inietta più il registry allo `StartupEvent`. | `pom.xml`, `src/test/.../TenantRegistryStartupValidatorTest.java` | S |
 
 **Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 481 test, 0 errori (baseline 477); con `-Dtenant.supported-tenants=AR,PNPG` l'avvio fallisce con `Missing Mongo configuration for tenant PNPG`.
 
