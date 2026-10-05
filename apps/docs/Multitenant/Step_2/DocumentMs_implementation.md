@@ -55,7 +55,7 @@ mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}
 ```json
 {
   "AR": {
-    "mongo":   { "database": "selcDocument", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR" },
+    "mongo":   { "account": "cosmos-ar", "database": "selcDocument", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR" },
     "jwt":     { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
     "storages": {
       "contracts":        { "account": "<documents-st>",  "container": "sc-<env>-documents-blob", "pathPrefix": "",
@@ -114,15 +114,16 @@ flowchart LR
 
 | Task | Stato | Descrizione | File | Dim. |
 |---|---|---|---|---|
-| SELC-DMS-01.01 | ✅ | `selfcare-sdk-security` 0.3.0 → 0.5.0 (non ancora indicizzata, vedi `02.02`); aggiunta `selfcare-sdk-tenant` 0.4.0 (stesse versioni di `auth`). `selfcare-sdk-tenant-mongodb` spostata in `03.01`: il suo proxy Mongo richiede un `TenantContext`, che esiste solo dopo `SELC-DMS-02`. | `pom.xml` | S |
+| SELC-DMS-01.01 | ✅ | `selfcare-sdk-security` resta 0.3.0: il bump a 0.5.0 è in `02.02` (vedi `01.08`); aggiunta `selfcare-sdk-tenant` 0.4.0 (stesse versioni di `auth`). `selfcare-sdk-tenant-mongodb` spostata in `03.01`: il suo proxy Mongo richiede un `TenantContext`, che esiste solo dopo `SELC-DMS-02`. | `pom.xml` | S |
 | SELC-DMS-01.02 | ✅ | `tenant.registry.json` (solo AR: `mongo` → `selcDocument`/`MONGODB_CONNECTION_STRING_AR`, `jwt` → `JWT_PUBLIC_KEY_AR`) e `tenant.supported-tenants=${TENANT_SUPPORTED_TENANTS:AR}`. Le altre proprietà vengono aggiunte dalla storia che le usa: `enforcement` e `default` in `02`, `strict-data-isolation` in `04`, `storages` e `mandatory-keys` in `05`, `signature` in `06`. | `application.properties` | S |
 | SELC-DMS-01.03 | ✅ | `TenantRegistryStartupValidator`: istanzia il registry (bean lazy) allo `StartupEvent`, così una configurazione invalida blocca l'avvio (fail-closed). Le proprietà legacy (`quarkus.mongodb.*`, `document-ms.blob-storage.*`, `mp.jwt.verify.publickey`) restano finché `03.01`, `05.03` e `02.02` non le sostituiscono. | `config/TenantRegistryStartupValidator.java` | S |
 | SELC-DMS-01.04 | ✅ | Rimossa la dipendenza inutilizzata `quarkus-mailer`. | `pom.xml` | S |
 | SELC-DMS-01.05 | ✅ | Infra: aggiunti i secret `MONGODB_CONNECTION_STRING_AR` e `JWT_PUBLIC_KEY_AR` (stessi secret Key Vault di quelli legacy) e `TENANT_SUPPORTED_TENANTS=AR` in dev/uat/prod-ar. I secret legacy restano fino a `07.02`. | `infra/resources/document-ms/*-ar/main.tf` | S |
 | SELC-DMS-01.06 | ✅ | Test: `TenantRegistryConfigTest` (solo AR supportato, database e secret di AR, PNPG o tenant sconosciuto rifiutati); variabile `MONGODB_CONNECTION_STRING_AR` nelle proprietà di test. | `src/test/...` | S |
-| SELC-DMS-01.07 | ✅ | Build CI: `selfcare-sdk-security` dichiarava `selfcare-sdk-tenant` 0.3.0, ma nel repo la libreria è 0.4.0. Con `security-sdk` 0.5.0 la libreria viene compilata nel reactor (`--also-make`), che però non contiene la 0.3.0: la build falliva. Allineato `common-sdk-tenant-version` a 0.4.0, come aveva fatto `SELC-9300` (#908). | `libs/selfcare-sdk-security/pom.xml` | S |
+| SELC-DMS-01.07 | ✅ | Build CI: `selfcare-sdk-security` dichiarava `selfcare-sdk-tenant` 0.3.0, ma nel repo la libreria è 0.4.0. Da `02.02` document-ms usa `security-sdk` 0.5.0, che viene compilata nel reactor (`--also-make`), che però non contiene la 0.3.0: la build falliva. Allineato `common-sdk-tenant-version` a 0.4.0, come aveva fatto `SELC-9300` (#908). | `libs/selfcare-sdk-security/pom.xml` | S |
+| SELC-DMS-01.08 | ✅ | Review: il jar di `selfcare-sdk-security` 0.5.0 contiene l'indice Jandex (`jandex-maven-plugin`, da #908), quindi il solo bump attivava `JWTCallerPrincipalFactory`, `JWTSecurityIdentityAugmentor` e `JwtTenantValidationFilter`. Il runtime cambiava già in `01` (token SPID senza `X-Tenant-Id` → 401). Il bump torna in `02.02`, dove l'attivazione è voluta. Aggiunto `TenantRegistryStartupValidatorTest`: fallisce se il validator sparisce o non inietta più il registry allo `StartupEvent`. | `pom.xml`, `src/test/.../TenantRegistryStartupValidatorTest.java` | S |
 
-**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 481 test, 0 errori (baseline 477); con `-Dtenant.supported-tenants=AR,PNPG` l'avvio fallisce con `Missing Mongo configuration for tenant PNPG`.
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 483 test, 0 errori (baseline 477); con `-Dtenant.supported-tenants=AR,PNPG` l'avvio fallisce con `Missing Mongo configuration for tenant PNPG`.
 
 **Vincolo di rilascio:** applicare il Terraform di `01.05` **prima** di distribuire l'immagine; senza `MONGODB_CONNECTION_STRING_AR` l'avvio fallisce (comportamento voluto).
 
@@ -133,18 +134,19 @@ flowchart LR
 | Task | Stato | Descrizione | File | Dim. |
 |---|---|---|---|---|
 | SELC-DMS-02.01 | ✅ | `TenantResolutionFilter` (`@Priority(AUTHENTICATION)`): legge `X-Tenant-Id`, chiama `TenantRegistry.resolve`, imposta `TenantContext` col tenant normalizzato; esclude `q` e `/q/*`. Rifiuta con `Problem` 400 `Invalid tenant context` (`application/problem+json`) header mancante, sconosciuto, ripetuto o con più valori separati da virgola. Config: `tenant.enforcement.enabled=${TENANT_ENFORCEMENT_ENABLED:true}`, `tenant.default=${TENANT_DEFAULT:AR}` (usato solo con enforcement disattivato, leva di rollout); in `%test` enforcement disattivato. | `filter/TenantResolutionFilter.java`, `filter/TenantLogUtils.java` | M |
-| SELC-DMS-02.02 | ✅ | Indicizzato `selfcare-sdk-security`: attivi `JWTCallerPrincipalFactory` (chiave per tenant da `jwt.publicKeyEnvVar`, issuer ammessi `SPID`/`PAGOPA`, claim `uid` obbligatorio), `JWTSecurityIdentityAugmentor` e `JwtTenantValidationFilter` (claim `tenant_id` dei token SPID = header, altrimenti 401). `mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}` resta solo come fallback legacy. | `application.properties` | S |
+| SELC-DMS-02.02 | ✅ | `selfcare-sdk-security` 0.3.0 → 0.5.0 (il jar include già l'indice Jandex, vedi `01.08`) e indicizzato anche in modo esplicito: attivi `JWTCallerPrincipalFactory` (chiave per tenant da `jwt.publicKeyEnvVar`, issuer ammessi `SPID`/`PAGOPA`, claim `uid` obbligatorio), `JWTSecurityIdentityAugmentor` e `JwtTenantValidationFilter` (claim `tenant_id` dei token SPID = header, altrimenti 401). `mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}` resta solo come fallback legacy. | `application.properties` | S |
 | SELC-DMS-02.03 | ✅ | `ExceptionHandler`: `UnknownTenantException` → 400, `UnresolvedTenantException` → 401, entrambe come `Problem` generico `Invalid tenant context` senza tenant né dettagli interni. | `exception/handler/ExceptionHandler.java` | S |
 | SELC-DMS-02.04 | ✅ | Tenant risolto nell'MDC (`tenant`) e nel formato dei log (`tenant=%X{tenant}`); MDC pulito a inizio richiesta e da `TenantMdcCleanupFilter` dopo la risposta; i valori dell'header vengono sanificati prima di finire nei log. | `filter/`, `application.properties` | S |
 | SELC-DMS-02.05 | ✅ | Test unitari del filtro e test `@QuarkusTest` con enforcement attivo, registry AR+PNPG e chiavi JWT distinte generate a runtime: header mancante, sconosciuto, duplicato o in conflitto col claim; token SPID senza claim; issuer o firma non validi; 40 richieste AR/PNPG concorrenti interleaved, in cui il service vede sempre il tenant della propria richiesta. | `src/test/.../filter/*`, `src/test/.../exception/handler/TenantExceptionHandlerTest.java` | M |
+| SELC-DMS-02.06 | ✅ | Review: `selfcare-cucumber-sdk` 0.1.2 → 0.1.3, che invia `X-Tenant-Id` dal claim `tenant_id` del token (AR per `j.doe`). Con 0.1.2 le feature `document_content`, `document_signature` e `document_endpoints_validation` chiamano `/v1/**` senza header: `JwtTenantValidationFilter` risponde 401 e la CI di integrazione su `main` fallirebbe. Il test interleaved legge ora il tenant dopo un salto sul worker pool (`emitOn`), come le catene reattive reali. | `pom.xml`, `src/test/.../filter/TenantResolutionIntegrationTest.java` | S |
 
-**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 514 test, 0 errori (dopo 01: 481). Le IT Cucumber esistenti coprono solo `/q/health`, escluso dal filtro.
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 516 test, 0 errori (dopo 01: 483). Le IT Cucumber chiamano anche `/v1/**` col token SPID `j.doe` (`tenant_id=AR`): con `selfcare-cucumber-sdk` 0.1.3 inviano `X-Tenant-Id` (`02.06`). Non eseguite in locale (serve Docker): vanno verificate dalla CI.
 
 **Comportamenti osservati da tenere presenti:**
 
 - I token SPID senza claim `tenant_id` sono attribuiti dall'SDK a `DEFAULT_TENANT` (default `PNPG`), quindi con `X-Tenant-Id: AR` ricevono 401. `auth` e `onboarding-functions` (`JwtSessionServiceImpl`) emettono già il claim; restano a rischio i token statici (`JWT_BEARER_TOKEN`) se sono SPID senza claim. Vedi `08.02` e `08.05`.
 - Per i token SPID il confronto claim/header nell'SDK è case-sensitive (`ar` ≠ `AR`, risposta 401); per i token PAGOPA vale la normalizzazione del filtro.
-- Rollout: con `TENANT_ENFORCEMENT_ENABLED=true` (default) i chiamanti senza `X-Tenant-Id` ricevono 400. `onboarding-ms`, `onboarding-functions` e `dashboard-bff` (`DocumentRestClientConfig` → `TenantHeaderInterceptor`, che propaga solo se l'header è presente in ingresso) lo inviano già; la verifica completa resta in `08.03`. In caso di emergenza: `TENANT_ENFORCEMENT_ENABLED=false` con `TENANT_DEFAULT=AR`.
+- Rollout: con `TENANT_ENFORCEMENT_ENABLED=true` (default) i chiamanti senza `X-Tenant-Id` ricevono 400. `onboarding-ms`, `onboarding-functions` e `dashboard-bff` (`DocumentRestClientConfig` → `TenantHeaderInterceptor`, che propaga solo se l'header è presente in ingresso) lo inviano già; la verifica completa resta in `08.03`. In caso di emergenza: `TENANT_ENFORCEMENT_ENABLED=false` con `TENANT_DEFAULT=AR`. La leva copre solo i token PAGOPA: per i token SPID `JwtTenantValidationFilter` (SDK) richiede comunque l'header e risponde 401 senza.
 
 ## SELC-DMS-03 – Routing Mongo per tenant ✅ Completata
 
@@ -156,14 +158,16 @@ flowchart LR
 | SELC-DMS-03.02 | ✅ | Rimosso `onStart` (`Document.mongoDatabase()`) da `DocumentMsConfig`: all'avvio non c'è un tenant e il resolver fallirebbe. `TenantRegistryStartupValidator` registra nei log, per ogni tenant, il database Mongo usato. | `config/DocumentMsConfig.java`, `config/TenantRegistryStartupValidator.java` | S |
 | SELC-DMS-03.03 | ✅ | `DocumentMongoReadinessCheck` esegue in parallelo un `ping` su ogni tenant supportato (ordine stabile). È UP solo se rispondono tutti; se un tenant fallisce è DOWN con `error` `Tenant <ID> ping failed: …`; senza tenant è DOWN. I dati riportano coppie `tenant=database` e `tenant=host` (host da `hostFromConnectionString`, `n/a` se non parsabile), mai connection string né credenziali. | `health/DocumentMongoReadinessCheck.java` | S |
 | SELC-DMS-03.04 | ✅ | Unit test della readiness (singolo e multi-tenant, fallimento di un tenant, lookup del client che lancia un'eccezione, credenziali non esposte, nessun tenant). `@QuarkusTest` con registry AR (`selcDocument`) + PNPG (`selcDocumentPnpg`): `Document.mongoDatabase()`/`mongoCollection()` seguono il tenant della richiesta nella stessa JVM; client distinti per tenant; senza tenant `UnresolvedTenantException`; `clientForTenant("UNKNOWN")` → `IllegalStateException`; un tenant supportato senza `mongo` blocca il registry (`Missing Mongo configuration for tenant PNPG`). | `src/test/.../health/DocumentMongoReadinessCheckTest.java`, `src/test/.../repository/TenantMongoRoutingTest.java` | S |
+| SELC-DMS-03.05 | ✅ | Review: ogni `ping` ha un timeout proprio (2 s) e il timeout complessivo della readiness è 2,5 s, così un tenant lento compare per nome nell'`error` (`Tenant <ID> ping failed: TimeoutException…`) invece del generico timeout del check. `quarkus.mongodb.devservices.enabled=false`: senza connection string di default il dev mode avvierebbe un Mongo inutilizzato. | `health/DocumentMongoReadinessCheck.java`, `application.properties`, test | S |
 
-**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 522 test, 0 errori (dopo 02: 514).
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 526 test, 0 errori (dopo 02: 516).
 
 **Comportamenti osservati da tenere presenti:**
 
 - Fuori da una richiesta con tenant (avvio, job, thread non propagati) qualsiasi accesso Mongo fallisce con `UnresolvedTenantException`, così il sistema non procede in silenzio (fail-closed). Eventuali scheduler o consumer futuri devono impostare esplicitamente `TenantContext`.
 - Il secret `MONGODB_CONNECTION_STRING` non è più letto dall'app; la connection string arriva solo da `MONGODB_CONNECTION_STRING_AR` (rimozione infra in `07.02`).
 - Panache risolve il database a ogni chiamata (nessuna cache per entity): verificato alternando AR e PNPG nella stessa JVM.
+- Il campo `error` della readiness riporta il messaggio del driver Mongo (host e stato del cluster, mai credenziali): `/q/health` non va esposto fuori dalla rete interna.
 
 ## SELC-DMS-04 – Discriminatore `tenantId` e isolamento dati
 
@@ -286,4 +290,5 @@ flowchart LR
 - **Librerie condivise:** `SELC-DMS-06.01`, `06.02` e `08.05` modificano SDK usati da altri servizi; servono release coordinate e retrocompatibili.
 - **Binding `contracts` condiviso con `product`:** ogni modifica all'account, al container o al prefisso va fatta su entrambi i servizi.
 - **Firma per tenant:** occorre confermare che per PNPG esistano credenziali Namirial o Aruba distinte; altrimenti la sezione `signature` PNPG punterà agli stessi secret, ma con env var distinte.
+- **Chiavi JWT non legate al tenant (SDK):** se il token non ha `kid`, `JWTCallerPrincipalFactory` prova le chiavi di tutti i tenant; un token SPID firmato con la chiave PNPG e con `tenant_id=AR` passa la verifica. Oggi non è sfruttabile, perché è abilitato solo AR; va chiuso nell'SDK prima di abilitare PNPG (`SELC-DMS-11`).
 - **Unicità degli indici:** oggi non ci sono indici unique; se ne verranno introdotti, dovranno includere `tenantId`.
