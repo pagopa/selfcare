@@ -34,6 +34,8 @@ public class LoggingContextFilter {
 
   private static final Logger LOG = Logger.getLogger(LoggingContextFilter.class);
   private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x1F\\x7F]");
+  private static final Pattern NON_LOG_SAFE_CHARS = Pattern.compile("[^\\p{Print}]");
+  private static final int MAX_LOG_VALUE_LENGTH = 512;
 
   @Inject CurrentIdentityAssociation identityAssociation;
 
@@ -104,9 +106,16 @@ public class LoggingContextFilter {
     return normalized.equals("q") || normalized.startsWith("q/");
   }
 
-  /** Prevents log forging by neutralizing control characters from user-controlled values. */
+  /** Prevents log forging by neutralizing unsafe characters from user-controlled values. */
   private static String sanitize(String value) {
-    return value == null ? null : CONTROL_CHARS.matcher(value).replaceAll("_");
+    if (value == null) {
+      return null;
+    }
+    String sanitized = CONTROL_CHARS.matcher(value).replaceAll("_");
+    sanitized = NON_LOG_SAFE_CHARS.matcher(sanitized).replaceAll("_");
+    return sanitized.length() > MAX_LOG_VALUE_LENGTH
+        ? sanitized.substring(0, MAX_LOG_VALUE_LENGTH)
+        : sanitized;
   }
 }
 
