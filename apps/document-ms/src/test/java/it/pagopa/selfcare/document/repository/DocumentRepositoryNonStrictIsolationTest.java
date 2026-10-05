@@ -96,6 +96,15 @@ class DocumentRepositoryNonStrictIsolationTest {
                 .isEqualTo(1);
     }
 
+    @Test
+    void scopedListsIncludeLegacyRecords() {
+        assertThat(inRequest("AR", () -> documentRepository.findAttachments("legacy-onboarding").await().indefinitely()))
+                .extracting(Document::getId)
+                .containsExactly("legacy-attachment");
+        assertThat(inRequest("AR", () -> documentRepository.findAttachments("shared-onboarding").await().indefinitely()))
+                .isEmpty();
+    }
+
     private <T> T inRequest(String tenantId, Supplier<T> action) {
         ManagedContext requestContext = Arc.container().requestContext();
         requestContext.activate();

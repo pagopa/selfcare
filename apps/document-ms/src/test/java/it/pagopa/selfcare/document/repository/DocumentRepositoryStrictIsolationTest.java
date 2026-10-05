@@ -83,6 +83,64 @@ class DocumentRepositoryStrictIsolationTest {
     }
 
     @Test
+    void remainingScopedReadsExcludeOtherTenants() {
+        assertThat(inRequest("AR", () -> documentRepository
+                .findAttachment("shared-onboarding", DocumentType.ATTACHMENT.name(), "required-doc").await().indefinitely()))
+                .extracting(Document::getId)
+                .isEqualTo("ar-attachment");
+        assertThat(inRequest("PNPG", () -> documentRepository
+                .findAttachment("shared-onboarding", DocumentType.ATTACHMENT.name(), "required-doc").await().indefinitely()))
+                .extracting(Document::getId)
+                .isEqualTo("pnpg-attachment");
+        assertThat(inRequest("AR", () -> documentRepository
+                .findRelatedDocument("shared-onboarding", "ar-contract").await().indefinitely()))
+                .extracting(Document::getId)
+                .isEqualTo("ar-contract");
+        assertThat(inRequest("AR", () -> documentRepository
+                .findRelatedDocument("shared-onboarding", "pnpg-contract").await().indefinitely()))
+                .isNull();
+        assertThat(inRequest("AR", () -> documentRepository
+                .findUserAttachmentsByOnboardingId("shared-onboarding").await().indefinitely()))
+                .extracting(Document::getId)
+                .containsExactly("ar-attachment");
+    }
+
+    @Test
+    void remainingScopedWritesTouchOnlyCurrentTenant() {
+        assertThat(inRequest("AR", () -> documentRepository
+                .updateContractFiles("shared-onboarding", "ar-signed.pdf", "ar.pdf").await().indefinitely()))
+                .isEqualTo(1);
+        assertThat(inRequest("AR", () -> documentRepository
+                .updateContractSignedByOnboardingId("shared-onboarding", "ar-signed-2.pdf").await().indefinitely()))
+                .isEqualTo(1);
+        assertThat(inRequest("AR", () -> documentRepository
+                .updateUpdatedAt("shared-onboarding", LocalDateTime.now()).await().indefinitely()))
+                .isEqualTo(1);
+        assertThat(inRequest("AR", () -> documentRepository
+                .updateAttachmentPathById("pnpg-attachment", "ar-path").await().indefinitely()))
+                .isZero();
+        assertThat(inRequest("AR", () -> documentRepository
+                .updateAttachmentPathById("ar-attachment", "ar-path").await().indefinitely()))
+                .isEqualTo(1);
+        assertThat(inRequest("AR", () -> documentRepository
+                .touchUpdatedAtById("pnpg-contract").await().indefinitely()))
+                .isZero();
+        assertThat(inRequest("AR", () -> documentRepository
+                .touchUpdatedAtById("ar-contract").await().indefinitely()))
+                .isEqualTo(1);
+
+        assertThat(inRequest("AR", () -> documentRepository.findDocumentById("ar-contract").await().indefinitely()))
+                .extracting(Document::getContractSigned)
+                .isEqualTo("ar-signed-2.pdf");
+        assertThat(inRequest("PNPG", () -> documentRepository.findDocumentById("pnpg-contract").await().indefinitely()))
+                .extracting(Document::getContractSigned)
+                .isEqualTo("signed-pnpg-contract.pdf");
+        assertThat(inRequest("PNPG", () -> documentRepository.findDocumentById("pnpg-attachment").await().indefinitely()))
+                .extracting(Document::getAttachmentPath)
+                .isNull();
+    }
+
+    @Test
     void writesDoNotModifyLegacyRecords() {
         Long updated = inRequest("AR", () -> documentRepository
                 .updateContractFilesById("legacy-contract", "ar-write.pdf", "ar-contract.pdf", 1)
