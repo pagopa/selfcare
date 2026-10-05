@@ -265,7 +265,8 @@ public class OnboardingServiceDefault implements OnboardingService {
                                 .replaceWith(onboarding))
             .onItem().call(onboarding ->
                     queryHelper.updateApproverUserUuid(onboardingId, approveRequest))
-            .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(onboardingId, null))
+            .onItem().call(onboarding -> orchestrationService.triggerOrchestrationIfEnabled(
+                    onboardingId, null, approveRequest.getUserUid()))
                 .flatMap(onboardingResponseFactory::toGetResponse);
     }
 
