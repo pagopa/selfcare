@@ -12,7 +12,6 @@ import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductOriginResponse
 import it.pagopa.selfcare.product.generated.openapi.v1.dto.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -26,8 +25,8 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     private final MsProductApiClient msProductApiClient;
     private final ProductMapper productMapper;
 
-    @Value("${onboarding-bff.product.tenant-id:AR}")
-    private String productTenantId = "AR";
+    // No tenantId query param: ms-product resolves the tenant from the X-Tenant-Id header propagated by TenantHeaderInterceptor
+    private static final String TENANT_FROM_HEADER = null;
 
     static final String HEADER_REQUIRED_DOCUMENTS_ENABLED = "X-Required-Documents-Enabled";
 
@@ -84,19 +83,19 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
 
     @Override
     public Product getProduct(String productId) {
-        ResponseEntity<ProductResponse> response = msProductApiClient._getProductById(productId, productTenantId);
+        ResponseEntity<ProductResponse> response = msProductApiClient._getProductById(productId, TENANT_FROM_HEADER);
         return productMapper.toProduct(Objects.requireNonNull(response.getBody()));
     }
 
     @Override
     public Product getValidProduct(String productId) {
-        ResponseEntity<ProductResponse> response = msProductApiClient._getValidProductById(productId, productTenantId);
+        ResponseEntity<ProductResponse> response = msProductApiClient._getValidProductById(productId, TENANT_FROM_HEADER);
         return productMapper.toProduct(Objects.requireNonNull(response.getBody()));
     }
 
     @Override
     public List<Product> getProducts(boolean rootOnly) {
-        ResponseEntity<List<ProductResponse>> response = msProductApiClient._getProducts(rootOnly, true, productTenantId);
+        ResponseEntity<List<ProductResponse>> response = msProductApiClient._getProducts(rootOnly, true, TENANT_FROM_HEADER);
         return Objects.requireNonNull(response.getBody()).stream().map(productMapper::toProduct).toList();
     }
 

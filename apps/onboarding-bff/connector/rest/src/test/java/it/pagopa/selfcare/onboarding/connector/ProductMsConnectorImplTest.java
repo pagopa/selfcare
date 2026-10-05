@@ -210,16 +210,16 @@ class ProductMsConnectorImplTest {
     }
 
     @Test
-    void getProduct_mapsResponseAndUsesConfiguredTenant() {
+    void getProduct_mapsResponseAndDelegatesTenantToHeader() {
         String productId = "prod-test";
         ProductResponse response = new ProductResponse();
         Product product = new Product();
-        when(msProductApiClientMock._getProductById(productId, "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getProductById(productId, null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertSame(product, productMsConnector.getProduct(productId));
 
-        verify(msProductApiClientMock)._getProductById(productId, "AR");
+        verify(msProductApiClientMock)._getProductById(productId, null);
         verify(productMapperMock).toProduct(response);
         verifyNoMoreInteractions(msProductApiClientMock, productMapperMock);
     }
@@ -229,12 +229,12 @@ class ProductMsConnectorImplTest {
         String productId = "prod-test";
         ProductResponse response = new ProductResponse();
         Product product = new Product();
-        when(msProductApiClientMock._getValidProductById(productId, "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getValidProductById(productId, null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertSame(product, productMsConnector.getValidProduct(productId));
 
-        verify(msProductApiClientMock)._getValidProductById(productId, "AR");
+        verify(msProductApiClientMock)._getValidProductById(productId, null);
         verify(productMapperMock).toProduct(response);
     }
 
@@ -242,12 +242,12 @@ class ProductMsConnectorImplTest {
     void getProducts_requestsValidProductsAndMapsThem() {
         ProductResponse response = new ProductResponse();
         Product product = new Product();
-        when(msProductApiClientMock._getProducts(false, true, "AR")).thenReturn(ResponseEntity.ok(List.of(response)));
+        when(msProductApiClientMock._getProducts(false, true, null)).thenReturn(ResponseEntity.ok(List.of(response)));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertEquals(List.of(product), productMsConnector.getProducts(false));
 
-        verify(msProductApiClientMock)._getProducts(false, true, "AR");
+        verify(msProductApiClientMock)._getProducts(false, true, null);
         verify(productMapperMock).toProduct(response);
     }
 
@@ -256,7 +256,7 @@ class ProductMsConnectorImplTest {
         Product product = new Product();
         product.setEnabled(true);
         ProductResponse response = new ProductResponse();
-        when(msProductApiClientMock._getValidProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getValidProductById("prod-test", null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertTrue(productMsConnector.isProductEnabled("prod-test"));
@@ -267,7 +267,7 @@ class ProductMsConnectorImplTest {
         Product product = new Product();
         product.setAllowedInstitutionTaxCode(List.of("ABC123"));
         ProductResponse response = new ProductResponse();
-        when(msProductApiClientMock._getValidProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getValidProductById("prod-test", null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertTrue(productMsConnector.isAllowedByInstitutionTaxCode("prod-test", "abc123"));
@@ -278,7 +278,7 @@ class ProductMsConnectorImplTest {
         Product product = new Product();
         product.setAllowedInstitutionTaxCode(List.of("ABC123"));
         ProductResponse response = new ProductResponse();
-        when(msProductApiClientMock._getValidProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getValidProductById("prod-test", null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertFalse(productMsConnector.isAllowedByInstitutionTaxCode("prod-test", "XYZ999"));
@@ -288,7 +288,7 @@ class ProductMsConnectorImplTest {
     void isAllowedByInstitutionTaxCode_returnsFalseWhenListIsNull() {
         Product product = new Product();
         ProductResponse response = new ProductResponse();
-        when(msProductApiClientMock._getValidProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getValidProductById("prod-test", null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertFalse(productMsConnector.isAllowedByInstitutionTaxCode("prod-test", "ABC123"));
@@ -299,7 +299,7 @@ class ProductMsConnectorImplTest {
         Product product = new Product();
         product.setEnabled(false);
         ProductResponse response = new ProductResponse();
-        when(msProductApiClientMock._getValidProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(response));
+        when(msProductApiClientMock._getValidProductById("prod-test", null)).thenReturn(ResponseEntity.ok(response));
         when(productMapperMock.toProduct(response)).thenReturn(product);
 
         assertFalse(productMsConnector.isProductEnabled("prod-test"));
@@ -307,24 +307,24 @@ class ProductMsConnectorImplTest {
 
     @Test
     void getProducts_rootOnlyIsPropagated() {
-        when(msProductApiClientMock._getProducts(true, true, "AR")).thenReturn(ResponseEntity.ok(List.of()));
+        when(msProductApiClientMock._getProducts(true, true, null)).thenReturn(ResponseEntity.ok(List.of()));
 
         assertTrue(productMsConnector.getProducts(true).isEmpty());
 
-        verify(msProductApiClientMock)._getProducts(true, true, "AR");
+        verify(msProductApiClientMock)._getProducts(true, true, null);
         verifyNoInteractions(productMapperMock);
     }
 
     @Test
     void getProducts_nullBodyThrows() {
-        when(msProductApiClientMock._getProducts(false, true, "AR")).thenReturn(ResponseEntity.ok(null));
+        when(msProductApiClientMock._getProducts(false, true, null)).thenReturn(ResponseEntity.ok(null));
 
         assertThrows(NullPointerException.class, () -> productMsConnector.getProducts(false));
     }
 
     @Test
     void getProduct_nullBodyThrows() {
-        when(msProductApiClientMock._getProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(null));
+        when(msProductApiClientMock._getProductById("prod-test", null)).thenReturn(ResponseEntity.ok(null));
 
         assertThrows(NullPointerException.class, () -> productMsConnector.getProduct("prod-test"));
         verifyNoInteractions(productMapperMock);
@@ -332,7 +332,7 @@ class ProductMsConnectorImplTest {
 
     @Test
     void getValidProduct_nullBodyThrows() {
-        when(msProductApiClientMock._getValidProductById("prod-test", "AR")).thenReturn(ResponseEntity.ok(null));
+        when(msProductApiClientMock._getValidProductById("prod-test", null)).thenReturn(ResponseEntity.ok(null));
 
         assertThrows(NullPointerException.class, () -> productMsConnector.getValidProduct("prod-test"));
         verifyNoInteractions(productMapperMock);
