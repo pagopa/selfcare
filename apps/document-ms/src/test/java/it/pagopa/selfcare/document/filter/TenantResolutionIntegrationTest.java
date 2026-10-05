@@ -13,6 +13,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.tenant.TenantContext;
@@ -45,14 +46,19 @@ class TenantResolutionIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    // Echo the tenant seen by the service layer as the document id.
+    // Echo the tenant seen by the service layer as the document id, read after a worker-pool hop
+    // like the real reactive chains do.
     Mockito.when(documentService.getDocumentById(anyString()))
         .thenAnswer(
-            invocation -> {
-              Document document = new Document();
-              document.setId(tenantContext.requiredTenantId());
-              return Uni.createFrom().item(document);
-            });
+            invocation ->
+                Uni.createFrom().voidItem()
+                    .emitOn(Infrastructure.getDefaultWorkerPool())
+                    .map(
+                        ignored -> {
+                          Document document = new Document();
+                          document.setId(tenantContext.requiredTenantId());
+                          return document;
+                        }));
   }
 
   @Test
