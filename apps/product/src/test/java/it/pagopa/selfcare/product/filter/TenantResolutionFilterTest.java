@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.product.filter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -9,6 +10,8 @@ import static org.mockito.Mockito.when;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.ws.rs.container.ContainerRequestContext;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +38,7 @@ class TenantResolutionFilterTest {
   void setUp() {
     filter = new TenantResolutionFilter(tenantRegistry, tenantContext, true, "AR");
     when(requestContext.getUriInfo()).thenReturn(uriInfo);
+    lenient().when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<>());
   }
 
   @Test
@@ -70,8 +74,9 @@ class TenantResolutionFilterTest {
   }
 
   @Test
-  void filter_shouldPreferProductPathTenantOverHeaderWhenPresent() {
-    when(uriInfo.getPath()).thenReturn("product/pnpg/prod-test");
+  void filter_shouldPreferQueryTenantOverHeaderWhenPresent() {
+    when(uriInfo.getPath()).thenReturn("product/prod-test");
+    when(uriInfo.getQueryParameters()).thenReturn(queryParameters("pnpg"));
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("pnpg");
     when(tenantRegistry.normalizeTenantId("pnpg")).thenReturn("PNPG");
 
@@ -83,8 +88,9 @@ class TenantResolutionFilterTest {
   }
 
   @Test
-  void filter_shouldResolveContractTemplatePathTenant() {
-    when(uriInfo.getPath()).thenReturn("contract-template/ar/123");
+  void filter_shouldResolveQueryTenantWithoutHeader() {
+    when(uriInfo.getPath()).thenReturn("contract-template/123");
+    when(uriInfo.getQueryParameters()).thenReturn(queryParameters("ar"));
     when(tenantRegistry.normalizeTenantId("ar")).thenReturn("AR");
 
     filter.filter(requestContext);
@@ -95,8 +101,21 @@ class TenantResolutionFilterTest {
   }
 
   @Test
-  void filter_shouldAbortWhenPathTenantConflictsWithHeaderTenant() {
-    when(uriInfo.getPath()).thenReturn("product/ar/prod-test");
+  void filter_shouldIgnoreProductPathWhenQueryTenantIsAbsent() {
+    when(uriInfo.getPath()).thenReturn("product/prod-test");
+    when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("AR");
+    when(tenantRegistry.normalizeTenantId("AR")).thenReturn("AR");
+
+    filter.filter(requestContext);
+
+    verify(tenantRegistry).resolve("AR");
+    verify(tenantContext).setTenantId("AR");
+  }
+
+  @Test
+  void filter_shouldAbortWhenQueryTenantConflictsWithHeaderTenant() {
+    when(uriInfo.getPath()).thenReturn("product/prod-test");
+    when(uriInfo.getQueryParameters()).thenReturn(queryParameters("ar"));
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("PNPG");
     when(tenantRegistry.normalizeTenantId("ar")).thenReturn("AR");
     when(tenantRegistry.normalizeTenantId("PNPG")).thenReturn("PNPG");
@@ -165,5 +184,11 @@ class TenantResolutionFilterTest {
     assertEquals("Invalid tenant context", response.getEntity());
     assertEquals("application/problem+json", response.getMediaType().toString());
     verify(tenantContext, never()).setTenantId(org.mockito.ArgumentMatchers.any());
+  }
+
+  private static MultivaluedMap<String, String> queryParameters(String tenantId) {
+    MultivaluedMap<String, String> parameters = new MultivaluedHashMap<>();
+    parameters.add("tenantId", tenantId);
+    return parameters;
   }
 }

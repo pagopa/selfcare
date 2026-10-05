@@ -45,19 +45,19 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
       return;
     }
 
-    Optional<String> pathTenant = tenantFromPath(path);
+    Optional<String> queryTenant = tenantFromQuery(requestContext);
     String headerTenant = requestContext.getHeaderString(TENANT_HEADER);
     try {
-      if (pathTenant.isPresent()
+      if (queryTenant.isPresent()
           && headerTenant != null
           && !headerTenant.isBlank()
           && !tenantRegistry
-              .normalizeTenantId(pathTenant.get())
+              .normalizeTenantId(queryTenant.get())
               .equals(tenantRegistry.normalizeTenantId(headerTenant))) {
         throw new IllegalArgumentException("Conflicting tenant context");
       }
       String tenant =
-          pathTenant.orElseGet(
+          queryTenant.orElseGet(
               () ->
                   tenantEnforcementEnabled
                       ? headerTenant
@@ -75,13 +75,14 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
     }
   }
 
-  private Optional<String> tenantFromPath(String path) {
-    String[] segments = path.split("/");
-    if (segments.length >= 2
-        && ("product".equals(segments[0]) || "contract-template".equals(segments[0]))
-        && !segments[1].isBlank()) {
-      return Optional.of(segments[1]);
+  private Optional<String> tenantFromQuery(ContainerRequestContext requestContext) {
+    if (requestContext.getUriInfo() == null) {
+      return Optional.empty();
     }
-    return Optional.empty();
+    String tenantId = requestContext.getUriInfo().getQueryParameters().getFirst("tenantId");
+    if (tenantId == null || tenantId.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(tenantId);
   }
 }
