@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.security;
 
+import io.quarkus.security.AuthenticationFailedException;
 import io.quarkus.security.identity.AuthenticationRequestContext;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
@@ -12,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.Principal;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -330,5 +332,38 @@ class JWTSecurityIdentityAugmentorTest {
     // Then
     assertNotNull(result);
     assertEquals(longIssuer, result.getAttribute("jwt.issuer"));
+  }
+
+  @Test
+  void testAugment_WithLowercaseTenantClaim_ShouldExposeNormalizedTenant() {
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn("ar");
+
+    SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+        .setPrincipal(jsonWebToken)
+        .build();
+
+    SecurityIdentity result = augmentor.augment(identity, authContext)
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertCompleted()
+        .getItem();
+
+    assertEquals("AR", result.getAttribute("jwt.tenant"));
+  }
+
+  @Test
+  void testAugment_WithSPIDTokenWithoutTenant_ShouldFailWhenClaimIsRequired() {
+    augmentor.tenantValidator =
+        JwtTenantValidator.fromEnvironment(Map.of("JWT_TENANT_CLAIM_REQUIRED", "true")::get);
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn(null);
+
+    SecurityIdentity identity = QuarkusSecurityIdentity.builder()
+        .setPrincipal(jsonWebToken)
+        .build();
+
+    augmentor.augment(identity, authContext)
+        .subscribe().withSubscriber(UniAssertSubscriber.create())
+        .assertFailedWith(AuthenticationFailedException.class);
   }
 }
