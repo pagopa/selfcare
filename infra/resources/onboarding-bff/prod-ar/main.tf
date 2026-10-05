@@ -38,7 +38,6 @@ locals {
     { name = "ONBOARDING_FUNCTIONS_URL", value = "https://selc-${module.local.config.env_short}-onboarding-fn.azurewebsites.net" },
     { name = "MS_USER_INSTITUTION_URL", value = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}" },
     { name = "MS_PRODUCT_URL", value = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}" },
-    { name = "PRODUCT_TENANT_ID", value = upper(module.local.config.domain) },
     { name = "MS_DOCUMENT_URL", value = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}" }
   ]
 

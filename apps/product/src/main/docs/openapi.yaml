@@ -666,7 +666,7 @@ components:
       bearerFormat: JWT
       description: Authentication
 paths:
-  /contract-template/{tenantId}:
+  /contract-template:
     post:
       summary: Upload a new contract template version
       description: Upload an html file as a new contract template version to be used
@@ -676,11 +676,6 @@ paths:
       - ContractTemplate
       - external-v2
       parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: createdBy
         in: query
         schema:
@@ -700,6 +695,12 @@ paths:
         schema:
           type: string
         required: true
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       - name: version
         in: query
         schema:
@@ -757,16 +758,17 @@ paths:
       - ContractTemplate
       - external-v2
       parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: name
         in: query
         schema:
           type: string
       - name: productId
+        in: query
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
           type: string
@@ -799,7 +801,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /contract-template/{tenantId}/{contractTemplateId}:
+  /contract-template/{contractTemplateId}:
     get:
       summary: Download a contract template version
       description: Download the html file of a specific contract template version
@@ -813,17 +815,18 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: fileType
         in: query
         schema:
           default: HTML
           type: string
       - name: productId
+        in: query
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
           type: string
@@ -860,6 +863,57 @@ paths:
       security:
       - SecurityScheme: []
   /product:
+    get:
+      summary: Get products (latest version per productId)
+      description: "Returns the list of products, one entry per productId (latest\
+        \ version). Both query params rootOnly and valid are required."
+      operationId: getProducts
+      tags:
+      - Product
+      parameters:
+      - name: rootOnly
+        required: true
+        in: query
+        schema:
+          type: boolean
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
+      - name: valid
+        required: true
+        in: query
+        schema:
+          type: boolean
+      responses:
+        "200":
+          description: Products retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResponse"
+        "400":
+          description: Bad Request - missing required query params
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
     post:
       summary: Create or update a product configuration
       description: Creates a new product configuration or updates the existing one
@@ -905,83 +959,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/ping:
-    get:
-      summary: Ping endpoint
-      operationId: ping
-      tags:
-      - Product
-      responses:
-        "200":
-          description: OK
-          content:
-            application/problem+json:
-              schema:
-                type: string
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /product/{tenantId}:
-    get:
-      summary: Get products (latest version per productId)
-      description: "Returns the list of products, one entry per productId (latest\
-        \ version). Both query params rootOnly and valid are required."
-      operationId: getProducts
-      tags:
-      - Product
-      parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: rootOnly
-        required: true
-        in: query
-        schema:
-          type: boolean
-      - name: valid
-        required: true
-        in: query
-        schema:
-          type: boolean
-      responses:
-        "200":
-          description: Products retrieved
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/ProductResponse"
-        "400":
-          description: Bad Request - missing required query params
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "500":
-          description: Internal Server Error
-          content:
-            application/problem+json:
-              schema:
-                $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      security:
-      - SecurityScheme: []
-  /product/{tenantId}/origins:
+  /product/origins:
     get:
       summary: Get product origins by productId
       description: Retrieve the list of institution origins for the given product.
@@ -991,13 +969,14 @@ paths:
       - external-v2
       - external-pnpg
       parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: productId
         required: true
+        in: query
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
           type: string
@@ -1026,7 +1005,32 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/workflow-type:
+  /product/ping:
+    get:
+      summary: Ping endpoint
+      operationId: ping
+      tags:
+      - Product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/problem+json:
+              schema:
+                type: string
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /product/workflow-type:
     get:
       summary: Resolve workflow type for a product
       description: "Returns the WorkflowType to use for the given combination of productId,\
@@ -1036,11 +1040,6 @@ paths:
       tags:
       - Product
       parameters:
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: institutionType
         required: true
         in: query
@@ -1053,6 +1052,12 @@ paths:
           $ref: "#/components/schemas/Origin"
       - name: productId
         required: true
+        in: query
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
           type: string
@@ -1087,7 +1092,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/{productId}:
+  /product/{productId}:
     patch:
       summary: Partially update a product by ID
       description: Partially updates an existing product identified by its productId.
@@ -1104,12 +1109,13 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
+      - name: createdBy
+        in: query
         schema:
           type: string
-      - name: createdBy
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
           type: string
@@ -1166,9 +1172,10 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:
@@ -1210,9 +1217,10 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:
@@ -1246,7 +1254,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/{productId}/expiration-days:
+  /product/{productId}/expiration-days:
     get:
       summary: Get product expiration days
       description: Returns the expiration days configured for a valid product; defaults
@@ -1260,9 +1268,10 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:
@@ -1290,7 +1299,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/{productId}/required-documents:
+  /product/{productId}/required-documents:
     get:
       summary: Get required documents for a product
       description: "Returns the list of required documents for the given combination\
@@ -1304,11 +1313,6 @@ paths:
         in: path
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: institutionType
         required: true
         in: query
@@ -1319,6 +1323,12 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/Origin"
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Required documents retrieved
@@ -1352,7 +1362,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/{productId}/required-documents/enabled:
+  /product/{productId}/required-documents/enabled:
     head:
       summary: Check if required documents are enabled
       description: "Returns HTTP 200 with header X-Required-Documents-Enabled set\
@@ -1367,11 +1377,6 @@ paths:
         in: path
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: institutionType
         required: true
         in: query
@@ -1382,6 +1387,12 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/Origin"
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Check completed
@@ -1404,7 +1415,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/{productId}/role-mappings/validate:
+  /product/{productId}/role-mappings/validate:
     get:
       summary: Validate a product role
       description: "Validates that the given productRole (product-specific role code)\
@@ -1419,11 +1430,6 @@ paths:
         in: path
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
-        schema:
-          type: string
       - name: productRole
         required: true
         in: query
@@ -1434,6 +1440,12 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/UserRole"
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Product role is valid
@@ -1465,7 +1477,7 @@ paths:
           description: Not Allowed
       security:
       - SecurityScheme: []
-  /product/{tenantId}/{productId}/valid:
+  /product/{productId}/valid:
     get:
       summary: Get product only if valid for onboarding
       description: Retrieve a product by its identifier only when neither the product
@@ -1479,9 +1491,10 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
-        in: path
-        required: true
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:

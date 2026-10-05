@@ -10,6 +10,7 @@ import io.quarkus.test.common.QuarkusTestResourceLifecycleManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetSocketAddress;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +57,16 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
             }
             String tenant = exchange.getRequestHeaders().getFirst("X-Tenant-Id");
             String authorization = exchange.getRequestHeaders().getFirst("Authorization");
+            String rawQuery = exchange.getRequestURI().getRawQuery();
+            String queryTenant = queryParam(rawQuery, "tenantId");
             requests.add(Map.of("path", path, "method", exchange.getRequestMethod(),
                     "tenant", Objects.isNull(tenant) ? "" : tenant,
                     "authorization", Objects.isNull(authorization) ? "" : authorization,
-                    "query", Objects.isNull(exchange.getRequestURI().getRawQuery()) ? "" : exchange.getRequestURI().getRawQuery()));
+                    "query", Objects.isNull(rawQuery) ? "" : rawQuery));
             if (Objects.isNull(tenant) || !List.of("AR", "PNPG").contains(tenant)
-                    || !path.startsWith("/product/" + tenant + "/")
+                    || !path.startsWith("/product/")
+                    || path.startsWith("/product/" + tenant + "/")
+                    || (Objects.nonNull(queryTenant) && !queryTenant.equalsIgnoreCase(tenant))
                     || Objects.isNull(authorization) || !authorization.startsWith("Bearer ")) {
                 send(exchange, 400, "{\"detail\":\"Path, canonical tenant and Authorization are required\"}");
                 return;
@@ -84,7 +89,7 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
                 return;
             }
             JsonNode product = fixture(tenant);
-            String root = "/product/" + tenant;
+            String root = "/product";
             if (path.equals(root + "/workflow-type") && "GET".equals(exchange.getRequestMethod())) {
                 send(exchange, 200, "{\"workflowType\":\""
                         + product.path("workflowRules").get(0).path("workflowType").asText() + "\"}");
@@ -108,6 +113,20 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
                 send(exchange, 404, "{\"detail\":\"Unexpected Product API route\"}");
             }
         }
+    }
+
+    private static String queryParam(String rawQuery, String name) {
+        if (Objects.isNull(rawQuery) || rawQuery.isBlank()) {
+            return null;
+        }
+        for (String part : rawQuery.split("&")) {
+            int separator = part.indexOf('=');
+            String key = separator < 0 ? part : part.substring(0, separator);
+            if (name.equals(key)) {
+                return separator < 0 ? "" : URLDecoder.decode(part.substring(separator + 1), StandardCharsets.UTF_8);
+            }
+        }
+        return null;
     }
 
     private JsonNode fixture(String tenant) throws IOException {

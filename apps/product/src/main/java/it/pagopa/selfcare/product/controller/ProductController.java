@@ -52,6 +52,7 @@ public class ProductController {
 
   // SERVICE
   private final ProductService productService;
+  private final EffectiveTenant effectiveTenant;
 
   private static final String PRODUCT_NOT_FOUND = "Product not found";
   private static final String PRODUCT_NOT_FOUND_WITH_PRODUCTID =
@@ -128,7 +129,7 @@ public class ProductController {
   }
 
   @GET
-  @Path("/{tenantId}/{productId}")
+  @Path("/{productId}")
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
@@ -161,7 +162,11 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProductById(
-      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
+      @PathParam("productId") String productId) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return productService
         .getProduct(tenantId, productId)
         .onItem()
@@ -181,7 +186,7 @@ public class ProductController {
   }
 
   @DELETE
-  @Path("/{tenantId}/{productId}")
+  @Path("/{productId}")
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
@@ -222,7 +227,11 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> deleteProductById(
-      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
+      @PathParam("productId") String productId) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return productService
         .deleteProduct(tenantId, productId)
         .map(product -> Response.ok(product).build())
@@ -253,7 +262,7 @@ public class ProductController {
   }
 
   @PATCH
-  @Path("/{tenantId}/{productId}")
+  @Path("/{productId}")
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
@@ -299,10 +308,13 @@ public class ProductController {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> patchProductById(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @PathParam("productId") String productId,
       @QueryParam("createdBy") String createdBy,
       ProductPatchRequest productPatchRequest) {
+    tenantId = effectiveTenant.resolve(tenantId);
 
     String sanitizedProductId = Encode.forJava(productId);
 
@@ -377,7 +389,7 @@ public class ProductController {
   @Tag(name = "Product")
   @Tag(name = "external-v2")
   @Tag(name = "external-pnpg")
-  @Path("/{tenantId}/origins")
+  @Path("/origins")
   @Operation(
       summary = "Get product origins by productId",
       description = "Retrieve the list of institution origins for the given product.",
@@ -407,8 +419,11 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProductOriginsById(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @Parameter(name = "productId", required = true) @QueryParam("productId") String productId) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return productService
         .getProductOrigins(tenantId, productId)
         .onItem()
@@ -429,7 +444,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{tenantId}/workflow-type")
+  @Path("/workflow-type")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Resolve workflow type for a product",
@@ -469,11 +484,14 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getWorkflowType(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @Parameter(name = "productId", required = true) @QueryParam("productId") String productId,
       @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
           InstitutionType institutionType,
       @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+    tenantId = effectiveTenant.resolve(tenantId);
 
     return productService
         .getWorkflowType(tenantId, productId, institutionType, origin)
@@ -509,7 +527,7 @@ public class ProductController {
 
   @HEAD
   @Tag(name = "Product")
-  @Path("/{tenantId}/{productId}/required-documents/enabled")
+  @Path("/{productId}/required-documents/enabled")
   @Operation(
       summary = "Check if required documents are enabled",
       description =
@@ -532,11 +550,14 @@ public class ProductController {
         @APIResponse(responseCode = "500", description = "Internal Server Error")
       })
   public Uni<Response> isRequiredDocumentsEnabled(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
       @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
           InstitutionType institutionType,
       @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+    tenantId = effectiveTenant.resolve(tenantId);
 
     return productService
         .isRequiredDocumentsEnabled(tenantId, productId, institutionType, origin)
@@ -550,7 +571,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{tenantId}/{productId}/required-documents")
+  @Path("/{productId}/required-documents")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get required documents for a product",
@@ -594,11 +615,14 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getRequiredDocuments(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
       @Parameter(name = "institutionType", required = true) @QueryParam("institutionType")
           InstitutionType institutionType,
       @Parameter(name = "origin", required = true) @QueryParam("origin") Origin origin) {
+    tenantId = effectiveTenant.resolve(tenantId);
 
     String sanitizedProductId = Encode.forJava(productId);
 
@@ -636,7 +660,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{tenantId}/{productId}/valid")
+  @Path("/{productId}/valid")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get product only if valid for onboarding",
@@ -669,7 +693,11 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getValidProductById(
-      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
+      @PathParam("productId") String productId) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return productService
         .getValidProduct(tenantId, productId)
         .onItem()
@@ -691,7 +719,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{tenantId}/{productId}/expiration-days")
+  @Path("/{productId}/expiration-days")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get product expiration days",
@@ -723,7 +751,11 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProductExpirationDays(
-      @PathParam("tenantId") String tenantId, @PathParam("productId") String productId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
+      @PathParam("productId") String productId) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return productService
         .getProductExpirationDays(tenantId, productId)
         .onItem()
@@ -745,7 +777,6 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{tenantId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Get products (latest version per productId)",
@@ -783,9 +814,12 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> getProducts(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @Parameter(name = "rootOnly", required = true) @QueryParam("rootOnly") Boolean rootOnly,
       @Parameter(name = "valid", required = true) @QueryParam("valid") Boolean valid) {
+    tenantId = effectiveTenant.resolve(tenantId);
 
     if (rootOnly == null || valid == null) {
       return Uni.createFrom()
@@ -810,7 +844,7 @@ public class ProductController {
 
   @GET
   @Tag(name = "Product")
-  @Path("/{tenantId}/{productId}/role-mappings/validate")
+  @Path("/{productId}/role-mappings/validate")
   @Produces(MediaType.APPLICATION_JSON)
   @Operation(
       summary = "Validate a product role",
@@ -850,11 +884,14 @@ public class ProductController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> validateProductRole(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @Parameter(name = "productId", required = true) @PathParam("productId") String productId,
       @Parameter(name = "role", required = true) @QueryParam("role") UserRole role,
       @Parameter(name = "productRole", required = true) @QueryParam("productRole")
           String productRole) {
+    tenantId = effectiveTenant.resolve(tenantId);
 
     String sanitizedProductId = Encode.forJava(productId);
 

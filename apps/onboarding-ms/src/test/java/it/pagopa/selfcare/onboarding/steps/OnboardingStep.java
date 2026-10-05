@@ -159,11 +159,25 @@ public class OnboardingStep extends CucumberQuarkusTest {
       assertEquals("matched", firstHeader(exchange.path("httpResponse").path("headers"), "X-Product-Mock"),
               () -> "Unexpected Product request: " + request.path("method").asText() + " " + path);
       String tenant = firstHeader(request.path("headers"), "X-Tenant-Id");
-      assertTrue(path.startsWith("/product/" + tenant + "/"), "Product path and tenant header must agree");
+      assertTrue(path.startsWith("/product/") && !path.startsWith("/product/" + tenant + "/"),
+              "Product path must not embed tenantId");
+      assertEquals(tenant, firstQuery(request.path("queryStringParameters"), "tenantId"),
+              "Product tenantId query must match the tenant header");
       String expectedToken = "PNPG".equals(tenant) ? tokenTestPnpg : tokenTest;
       assertTrue(("Bearer " + expectedToken).equals(firstHeader(request.path("headers"), "Authorization")),
               "Product Authorization must match the request tenant");
     }
+  }
+
+  private static String firstQuery(JsonNode parameters, String name) {
+    if (parameters == null || parameters.isMissingNode() || parameters.isNull()) {
+      return null;
+    }
+    JsonNode value = parameters.get(name);
+    if (value == null || value.isNull() || value.isMissingNode()) {
+      return null;
+    }
+    return value.isArray() ? value.path(0).asText() : value.asText();
   }
 
   private static String firstHeader(JsonNode headers, String name) {

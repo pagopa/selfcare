@@ -59,12 +59,14 @@ Before running you must set these properties as environment variables.
 The catalog is read through Product MS, not directly from `products.json` on Azure Blob.
 `selfcare-onboarding-sdk-product` is not a dependency, including in test scope.
 The generated client uses the current tenant-aware contract, such as
-`/product/{tenantId}/{productId}/valid`. Keep `src/main/openapi/product.json`
-aligned with `apps/product/src/main/docs/openapi.json`, then regenerate with the
-existing Maven build; do not edit generated Java sources.
+`/product/{productId}/valid?tenantId=`. `tenantId` is an optional query parameter
+and defaults to `X-Tenant-Id`, or to the JWT `tenant_id` claim when the header is
+absent. Keep `src/main/openapi/product.json` aligned with
+`apps/product/src/main/docs/openapi.json`, then regenerate with the existing Maven
+build; do not edit generated Java sources.
 
 The resolved tenant is validated against the registry and used consistently in
-the API path and `X-Tenant-Id`. Authorization is forwarded unchanged. An explicit
+the `tenantId` query and `X-Tenant-Id`. Authorization is forwarded unchanged. An explicit
 tenant must match an already initialized request context; a missing or conflicting
 tenant must not cause a fallback to another tenant or to Blob.
 
