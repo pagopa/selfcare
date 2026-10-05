@@ -45,8 +45,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<WorkflowTypeResponse> getWorkflowType(InstitutionType institutionType, Origin origin,
                                                      ProductId productId, String tenantId) {
-        return mapNotFound(productController.getWorkflowType(canonicalTenant(tenantId), institutionType, origin,
-                productId.getValue()), productId.getValue());
+        return mapNotFound(productController.getWorkflowType(institutionType, origin, productId.getValue(),
+                canonicalTenant(tenantId)), productId.getValue());
     }
 
     @Override
@@ -59,8 +59,8 @@ public class ProductServiceImpl implements ProductService {
     public Uni<List<RequiredDocumentResponse>> getRequiredDocuments(ProductId productId,
                                                                      InstitutionType institutionType,
                                                                      Origin origin, String tenantId) {
-        return mapNotFound(productController.getRequiredDocuments(productId.getValue(), canonicalTenant(tenantId),
-                institutionType, origin), productId.getValue());
+        return mapNotFound(productController.getRequiredDocuments(productId.getValue(), institutionType, origin,
+                canonicalTenant(tenantId)), productId.getValue());
     }
 
     @Override
@@ -72,8 +72,8 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType,
                                              Origin origin, String tenantId) {
-        return mapNotFound(productController.isRequiredDocumentsEnabled(productId.getValue(), canonicalTenant(tenantId),
-                institutionType, origin), productId.getValue())
+        return mapNotFound(productController.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin,
+                canonicalTenant(tenantId)), productId.getValue())
                 .onItem()
                 .transform(response -> {
                     try (response) {
