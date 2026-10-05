@@ -8,6 +8,7 @@ import jakarta.json.JsonString;
 import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
@@ -32,6 +33,7 @@ import org.jboss.resteasy.reactive.server.ServerResponseFilter;
 public class LoggingContextFilter {
 
   private static final Logger LOG = Logger.getLogger(LoggingContextFilter.class);
+  private static final Pattern CONTROL_CHARS = Pattern.compile("[\\x00-\\x1F\\x7F]");
 
   @Inject CurrentIdentityAssociation identityAssociation;
 
@@ -102,9 +104,9 @@ public class LoggingContextFilter {
     return normalized.equals("q") || normalized.startsWith("q/");
   }
 
-  /** Prevents log forging by neutralizing line breaks coming from user-controlled values. */
+  /** Prevents log forging by neutralizing control characters from user-controlled values. */
   private static String sanitize(String value) {
-    return value == null ? null : value.replaceAll("[\\r\\n\\t]", "_");
+    return value == null ? null : CONTROL_CHARS.matcher(value).replaceAll("_");
   }
 }
 
