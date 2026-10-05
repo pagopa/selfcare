@@ -59,14 +59,26 @@ public class PrefixingAzureBlobClient implements AzureBlobClient {
 
     @Override
     public List<String> getFiles() {
-        return delegate.getFiles(pathPrefix).stream()
-                .map(this::unprefixed)
-                .toList();
+        if (pathPrefix.isBlank()) {
+            return delegate.getFiles();
+        }
+        return listWithinPrefix(pathPrefix + "/");
     }
 
     @Override
     public List<String> getFiles(String path) {
-        return delegate.getFiles(prefixed(path)).stream()
+        String prefixedPath = prefixed(path);
+        if (pathPrefix.isBlank()) {
+            return delegate.getFiles(prefixedPath);
+        }
+        // the trailing separator keeps sibling prefixes (e.g. "ar2" for "ar") out of the listing
+        return listWithinPrefix(prefixedPath.equals(pathPrefix) ? pathPrefix + "/" : prefixedPath);
+    }
+
+    private List<String> listWithinPrefix(String listPrefix) {
+        String boundary = pathPrefix + "/";
+        return delegate.getFiles(listPrefix).stream()
+                .filter(name -> name != null && name.startsWith(boundary))
                 .map(this::unprefixed)
                 .toList();
     }
