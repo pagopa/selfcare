@@ -86,7 +86,7 @@ mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}
 | SELC-DMS-05 | Routing storage per tenant | SELC-14 | 02 | L |
 | SELC-DMS-06 | Firma PagoPA per tenant | SELC-17.1–17.4 | 02 | L |
 | SELC-DMS-07 | Infrastruttura Terraform AR | SELC-13.6, 17.2 | 04, 05, 06 | M |
-| SELC-DMS-08 | Chiamanti e propagazione del tenant | SELC-12.2–12.4 | 02 | M |
+| SELC-DMS-08 ✅ | Chiamanti e propagazione del tenant | SELC-12.2–12.4 | 02 | M |
 | SELC-DMS-09 | Migrazione dati e strict mode | SELC-13.2–13.5 | 07, 08 | M |
 | SELC-DMS-10 | Test end-to-end, documentazione e rilascio | SELC-18 | 09 | M |
 | SELC-DMS-11 | Abilitazione PNPG (fase successiva) | SELC-12…18 | 10 | L |
@@ -213,16 +213,40 @@ flowchart LR
 | SELC-DMS-07.04 | Indici Cosmos composti sulla collection `documents`: `(tenantId, onboardingId)`, `(tenantId, rootOnboardingId)`, `(tenantId, productId)`, `(tenantId, type)`; da applicare **prima** del deploy dell'app. | `main.tf` (~29–60) | S |
 | SELC-DMS-07.05 | `terraform validate` e `terraform plan` per dev/uat/prod-ar, verificando che non ci siano ricreazioni di risorse. | – | S |
 
-## SELC-DMS-08 – Chiamanti e propagazione del tenant
+## SELC-DMS-08 – Chiamanti e propagazione del tenant ✅ Completata
 
-| Task | Descrizione | File | Dim. |
-|---|---|---|---|
-| SELC-DMS-08.01 | `onboarding-functions`: rimuovere `DEFAULT_TENANT=PNPG` e il FIXME sulla propagazione; il tenant deriva dal payload dell'orchestrazione e, se manca, si ha un errore. | `apps/onboarding-functions/.../context/TenantContext.java` | M |
-| SELC-DMS-08.02 | `onboarding-functions`: token macchina legato al tenant al posto di `JWT_BEARER_TOKEN` di deployment. | config e infra di onboarding-functions | M |
-| SELC-DMS-08.03 | Verificare che `onboarding-ms` (`AuthenticationPropagationHeadersFactory`) e `dashboard-bff` (`TenantHeaderInterceptor`) inviino `X-Tenant-Id` su **tutti** i client verso document-ms. | client REST | S |
-| SELC-DMS-08.04 | Allineare i lettori diretti del blob documenti (`onboarding-functions`, `BLOB_STORAGE_ACCOUNT_NAME_CONTRACT`) allo stesso binding e prefisso. | onboarding-functions | S |
-| SELC-DMS-08.05 | `selfcare-sdk-security`: `JwtTenantValidator.resolveTokenTenant` usa `PNPG` se manca il claim; renderlo fail-closed (o almeno configurabile) e allineare la normalizzazione del confronto claim/header (oggi case-sensitive, emerso in `02.05`). Impatto trasversale: coordinare con gli altri servizi. | `libs/selfcare-sdk-security/.../JwtTenantValidator.java` | M |
-| SELC-DMS-08.06 | Documentare l'incoerenza `onboarding-functions/*-pnpg` → `selc-<env>-pnpg-document-ms-ca`, risorsa non provisionata; si risolve in `SELC-DMS-11`. | `infra/resources/onboarding-functions/{dev,uat,prod}-pnpg/onboarding.tf` (`MS_DOCUMENT_URL`) | S |
+**Obiettivo:** ogni chiamante di document-ms invia un tenant valido e coerente col token, senza fallback impliciti su `PNPG`.
+
+| Task | Stato | Descrizione | File | Dim. |
+|---|---|---|---|---|
+| SELC-DMS-08.01 | ✅ | `onboarding-functions`: rimossi `DEFAULT_TENANT`/`currentTenantOrDefault` e il FIXME. `TenantContext.resolve` normalizza (`trim` + maiuscolo) e rifiuta un tenant vuoto o non supportato; `AuthenticationPropagationHeadersFactory` fallisce senza tenant. Il tenant viaggia nei payload durable (`OnboardingOrchestrationInput`, `EntityFilter`, `UserInstitutionFilters`, `ManagingInstitutionGetEmailRequest`, `ManagingInstitutionSendEmail`) e ogni activity riapre lo scope prima delle chiamate REST/blob. Fix emerso in review: le activity di notifica all'ente gestore, ricerca email e cancellazione ente/utenti non aprivano lo scope (la mail all'ente gestore veniva persa in silenzio, perché `UserServiceImpl.sendMailRequest` registra solo l'errore nei log). | `context/TenantContext.java`, `functions/*`, `dto/*`, `workflow/*`, `client/auth/AuthenticationPropagationHeadersFactory.java` | M |
+| SELC-DMS-08.02 | ✅ | `JwtSessionService.createMachineJwt()`: JWT RS256 firmato con `JWT_TOKEN_PRIVATE_KEY`, issuer `JWT_TOKEN_ISSUER` (default `SPID`), `uid=onboarding-functions` e claim `tenant_id` del contesto. Sostituisce `JWT_BEARER_TOKEN` (non più letto) sia senza utente, sia quando la creazione del token utente fallisce; se il token risulta vuoto → `IllegalStateException`. | `service/impl/JwtSessionServiceImpl.java`, `client/auth/AuthenticationPropagationHeadersFactory.java` | M |
+| SELC-DMS-08.03 | ✅ | Audit di tutti i client verso document-ms: l'header era già propagato ovunque, quindi nessuna modifica al codice. Test di contratto: in `onboarding-ms` ogni client generato `document_json` registra `AuthenticationPropagationHeadersFactory` e i client usati puntano a `MS_DOCUMENT_URL`; in `dashboard-bff` entrambi i client Feign usano `DocumentRestClientConfig` → `TenantHeaderInterceptor`. | `onboarding-ms/.../DocumentClientTenantPropagationConfigTest.java`, `dashboard-bff/.../DocumentRestClientConfigTest.java` | S |
+| SELC-DMS-08.04 | ✅ | `ContractStorageConfig` (`onboarding-functions.contract-storage.tenants.<T>.{account-name,container,path-prefix,managed-identity-client-id}`) e `ContractBlobClientProvider.forCurrentTenant()`, fail-closed se il binding è incompleto. È stato portato `PrefixingAzureBlobClient` con le stesse regole di path-safety di document-ms. `NotificationServiceImpl` e `ContractServiceImpl` usano il provider; `CompletionServiceImpl.sendDeletedEmail` apre il tenant dell'onboarding persistito. AR ricade sulle variabili legacy; in infra sono stati aggiunti gli alias `*_CONTRACT_AR`/`*_CONTRACT_PNPG` nei 6 `onboarding.tf`. | `config/ContractStorageConfig.java`, `storage/*`, `service/impl/*`, `infra/resources/onboarding-functions/*/onboarding.tf` | S |
+| SELC-DMS-08.05 | ✅ | `selfcare-sdk-security` 0.5.0 → 0.6.0: `JwtTenantValidator` diventa un'istanza configurabile (`fromEnvironment()`). Claim, header, `DEFAULT_TENANT` e `SUPPORTED_TENANTS` vengono normalizzati (`trim` + maiuscolo). Il nuovo flag `JWT_TENANT_CLAIM_REQUIRED` (default `false`) rende fail-closed (401) i token SPID senza `tenant_id`; un valore non valido → `IllegalArgumentException`. In document-ms `security-sdk.version` passa a 0.6.0. | `libs/selfcare-sdk-security/...`, `apps/document-ms/pom.xml` | M |
+| SELC-DMS-08.06 | ✅ | Incoerenza `*-pnpg` → `selc-<env>-pnpg-document-ms-ca` documentata (vedi nota sotto); nessuna modifica infra, si risolve in `SELC-DMS-11`. | questo documento | S |
+
+**Definition of Done (verificata):**
+
+- `mvn -f apps/onboarding-functions/pom.xml test` → 419 test, 0 errori, 1 skipped (dopo 08.01: 381).
+- `mvn -f apps/onboarding-ms/pom.xml test` → 567 test, 0 errori.
+- `mvn -f apps/dashboard-bff/pom.xml test` → 380 test, 0 errori.
+- `mvn -f libs/selfcare-sdk-security/pom.xml install` → 69 test, 0 errori.
+- `mvn -f apps/document-ms/pom.xml test` → 522 test, 0 errori (stesso numero di 03: un test è stato riscritto, `shouldNormalizeHeaderForSpidTokens`).
+- `terraform fmt` OK.
+
+Non eseguiti: IT Cucumber (Docker non disponibile) e `terraform plan`.
+
+**Comportamenti osservati da tenere presenti:**
+
+- **Rilascio della libreria:** `selfcare-sdk-security` 0.6.0 va pubblicata (`.github/workflows/release_security_sdk.yml`) **prima** di fare merge del bump in document-ms. Gli altri consumatori (product 0.5.0, iam/webhook 0.3.0, onboarding-ms 0.4.0, user-ms 0.3.0) restano invariati finché non aggiornano.
+- **Claim `tenant_id` mancante:** `JWT_TENANT_CLAIM_REQUIRED=false` mantiene l'attribuzione dei token SPID senza claim a `DEFAULT_TENANT` (`PNPG`), perché l'hub SPID PNPG non emette il claim. Va attivato per servizio solo quando tutti gli emittenti lo includono. I bean dell'SDK sono lazy: una configurazione non valida emerge alla prima richiesta, non all'avvio.
+- **Token macchina (`08.02`):** core, user, party-registry-proxy e document ricevono ora un token SPID con `uid=onboarding-functions`, senza `name`/`fiscal_number`, al posto del secret statico. Prima del rilascio va verificato in DEV che i servizi a valle non richiedano altri claim. In `onboarding-functions` il secret `jwt-bearer-token-functions` resta referenziato nei 6 `onboarding.tf`, ma non è più letto: la rimozione è prevista in `07`/`10`.
+- **Onboarding senza `tenantId`:** orchestrazioni e activity falliscono, con retry, invece di usare `PNPG`. Prima del deploy vanno verificate le istanze durable in volo o da riprendere (vedi backfill in `SELC-DMS-09`).
+- **Header grezzo:** `dashboard-bff` (`TenantHeaderInterceptor`), `external-api`, `onboarding-bff` e il fallback di `onboarding-ms` inoltrano l'`X-Tenant-Id` ricevuto, non quello validato. document-ms lo valida comunque (400 su valori sconosciuti), ma resta un punto da allineare.
+- **Gap non coperto da 08.04:** `institution-send-mail-scheduler` legge direttamente il container contratti (`STORAGE_CONTAINER_CONTRACT`).
+- **IT `onboarding-functions`:** i payload non hanno `tenantId` e `test-integration-function.env` imposta ancora `DEFAULT_TENANT=AR`; vanno aggiornati in `SELC-DMS-10`, quando le IT sono eseguibili. Anche `DEFAULT_TENANT` nei 6 `onboarding.tf` non è più letto.
+- **Diff Terraform:** `terraform fmt` ha riallineato le chiavi dei 6 `onboarding.tf`, quindi il diff è più ampio delle sole aggiunte.
 
 > **Nota 08.06 – URL `pnpg-document-ms` non provisionato (nessuna modifica infra, si risolve in `SELC-DMS-11.04`).**
 > I deployment `*-pnpg` di `onboarding-functions` impostano `MS_DOCUMENT_URL = "https://selc-${env_short}-${domain}-document-ms-ca.${private_dns_name_domain}"`, con `domain = "pnpg"` (`_modules/local-<env>-pnpg/locals.tf`), quindi `selc-<env>-pnpg-document-ms-ca`. Sotto `infra/resources/document-ms/` esistono solo `dev-ar`, `uat-ar` e `prod-ar`: la Container App PNPG non è provisionata e le chiamate verso document-ms da questi deployment non hanno un destinatario.
