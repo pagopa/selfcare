@@ -145,6 +145,7 @@ class DocumentRepositoryNonStrictIsolationTest {
                             + "\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcDocument\","
                             + "\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"}}}",
                     "tenant.supported-tenants", "AR,PNPG",
+                    "tenant.storage.mandatory-keys", "",
                     "MONGODB_CONNECTION_STRING_PNPG", "mongodb://localhost:27017",
                     "selfcare.tenant.strict-data-isolation", "false");
         }
