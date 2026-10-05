@@ -26,7 +26,11 @@ public class ArubaSignServiceImpl implements ArubaSignService {
     private final ArubaSignServiceService arubaSignServiceService;
 
     public ArubaSignServiceImpl() {
-        this.config = ArubaInitializer.initializeConfig();
+        this(ArubaInitializer.initializeConfig());
+    }
+
+    public ArubaSignServiceImpl(ArubaSignConfig config) {
+        this.config = config;
         this.soapLoggingHandler = new SoapLoggingHandler();
 
         this.arubaSignServiceService = new ArubaSignServiceService(getClass().getClassLoader().getResource("docs/aruba/ArubaSignService.wsdl"));
