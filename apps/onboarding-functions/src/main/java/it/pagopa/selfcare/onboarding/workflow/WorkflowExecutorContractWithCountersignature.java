@@ -213,6 +213,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 .managingInstitutionId(managingInstitution.getInstitutionId())
                 .productId(document.getProductId())
                 .onboardingId(onboarding.getId())
+                .tenantId(onboarding.getTenantId())
                 .build();
 
         String emailsString =
@@ -232,6 +233,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                 .managingInstitutionId(managingInstitution.getInstitutionId())
                 .onboardingInstitutionDescription(onboarding.getInstitution().getDescription())
                 .productId(document.getProductId())
+                .tenantId(onboarding.getTenantId())
                 .build();
 
         userMails.forEach(

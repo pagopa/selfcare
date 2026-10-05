@@ -754,7 +754,9 @@ public class OnboardingFunctions {
                     MANAGING_INSTITUTION_ID, managingInstitutionSendEmail.getManagingInstitutionId(),
                     MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getOnboardingInstitutionDescription(),
                     USER_MAIL_UUID, managingInstitutionSendEmail.getUserMailUuid()));
-    onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
+    try (TenantContext.Scope ignored = TenantContext.open(managingInstitutionSendEmail.getTenantId())) {
+      onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
+    }
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
@@ -1153,9 +1155,12 @@ public class OnboardingFunctions {
                     ONBOARDING_ID, request.getOnboardingId(),
                     PRODUCT_ID, request.getProductId(),
                     MANAGING_INSTITUTION_ID, request.getManagingInstitutionId()));
-    List<UserMail> emails = userService.findEmailByInstitutionAndProducts(
-        request.getManagingInstitutionId(),
-        List.of(request.getProductId()));
+    List<UserMail> emails;
+    try (TenantContext.Scope ignored = TenantContext.open(request.getTenantId())) {
+      emails = userService.findEmailByInstitutionAndProducts(
+          request.getManagingInstitutionId(),
+          List.of(request.getProductId()));
+    }
 
     return getEmailListString(objectMapper, emails);
   }

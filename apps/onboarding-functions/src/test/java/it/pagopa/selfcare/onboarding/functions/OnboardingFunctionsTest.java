@@ -17,6 +17,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
@@ -1359,8 +1360,29 @@ class OnboardingFunctionsTest {
   @Test
   void sendMailNotificationManagerInstitution() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    doNothing().when(service).sendMailManagingInstitution(any());
+    List<String> tenants = new ArrayList<>();
+    doAnswer(invocation -> tenants.add(TenantContext.currentTenant()))
+        .when(service).sendMailManagingInstitution(any());
 
+    ManagingInstitutionSendEmail institutionSendEmail =
+        ManagingInstitutionSendEmail.builder()
+            .managingInstitutionId("id")
+            .productId("productId")
+            .onboardingInstitutionDescription("description")
+            .userMailUuid("mailUuid")
+            .tenantId("pnpg")
+            .build();
+
+    function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext);
+
+    verify(service, times(1)).sendMailManagingInstitution(any());
+    assertEquals(List.of("PNPG"), tenants);
+    assertNull(TenantContext.currentTenant());
+  }
+
+  @Test
+  void sendMailNotificationManagerInstitution_failsClosedWithoutTenant() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
     ManagingInstitutionSendEmail institutionSendEmail =
         ManagingInstitutionSendEmail.builder()
             .managingInstitutionId("id")
@@ -1369,9 +1391,11 @@ class OnboardingFunctionsTest {
             .userMailUuid("mailUuid")
             .build();
 
-    function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext));
 
-    verify(service, times(1)).sendMailManagingInstitution(any());
+    verify(service, never()).sendMailManagingInstitution(any());
   }
 
   @Test
@@ -1431,7 +1455,31 @@ class OnboardingFunctionsTest {
   @Test
   void getUserEmailUuid() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    when(userService.findEmailByInstitutionAndProducts(any(), anyList())).thenReturn(List.of(UserMail.builder().build()));
+    List<String> tenants = new ArrayList<>();
+    when(userService.findEmailByInstitutionAndProducts(any(), anyList()))
+        .thenAnswer(
+            invocation -> {
+              tenants.add(TenantContext.currentTenant());
+              return List.of(UserMail.builder().build());
+            });
+    ManagingInstitutionGetEmailRequest managingInstitutionEmailRequest =
+          ManagingInstitutionGetEmailRequest.builder()
+                  .managingInstitutionId("id")
+                  .productId("productId")
+                  .onboardingId("onboardingId")
+                  .tenantId("AR")
+                  .build();
+
+    function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext);
+
+    verify(userService, times(1)).findEmailByInstitutionAndProducts(any(), any());
+    assertEquals(List.of("AR"), tenants);
+    assertNull(TenantContext.currentTenant());
+  }
+
+  @Test
+  void getUserEmailUuid_failsClosedWithoutTenant() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
     ManagingInstitutionGetEmailRequest managingInstitutionEmailRequest =
           ManagingInstitutionGetEmailRequest.builder()
                   .managingInstitutionId("id")
@@ -1439,9 +1487,11 @@ class OnboardingFunctionsTest {
                   .onboardingId("onboardingId")
                   .build();
 
-    function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext));
 
-    verify(userService, times(1)).findEmailByInstitutionAndProducts(any(), any());
+    verify(userService, never()).findEmailByInstitutionAndProducts(any(), any());
   }
 
   @Test
@@ -2012,7 +2062,18 @@ class OnboardingFunctionsTest {
     verify(orchestrationContext).callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class));
     verify(orchestrationContext).callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class));
     verify(orchestrationContext).callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class));
-    verify(orchestrationContext).callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(
+        eq(GET_USER_EMAIL_UUID_ACTIVITY),
+        argThat(request -> request instanceof ManagingInstitutionGetEmailRequest emailRequest
+            && "AR".equals(emailRequest.getTenantId())),
+        any(),
+        eq(String.class));
+    verify(orchestrationContext).callActivity(
+        eq(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION),
+        argThat(request -> request instanceof ManagingInstitutionSendEmail sendEmail
+            && "AR".equals(sendEmail.getTenantId())),
+        any(),
+        eq(String.class));
 
     // since executePendingInReviewState should return Optional.empty(), onboarding status must NOT be updated
     verify(service, times(0)).updateOnboardingStatus(eq(onboarding.getId()), any());
