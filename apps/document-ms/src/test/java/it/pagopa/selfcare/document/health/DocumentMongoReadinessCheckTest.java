@@ -111,6 +111,29 @@ class DocumentMongoReadinessCheckTest {
     }
 
     @Test
+    void down_whenOneTenantPingHangs_namesTimedOutTenant() {
+        supported("AR", "PNPG");
+        pingOk(tenant("AR", "selcDocument", "mongodb://ar-host:27017"));
+        when(tenant("PNPG", "selcDocumentPnpg", "mongodb://pnpg-host:27017").runCommand(Mockito.any(Document.class)))
+                .thenReturn(Uni.createFrom().nothing());
+
+        HealthCheckResponse response = new DocumentMongoReadinessCheck(registry, producer, Duration.ofMillis(100))
+                .call().await().atMost(Duration.ofSeconds(5));
+
+        assertThat(response.getStatus()).isEqualTo(HealthCheckResponse.Status.DOWN);
+        assertThat(String.valueOf(response.getData().orElseThrow().get("error")))
+                .contains("Tenant PNPG ping failed")
+                .contains("TimeoutException");
+    }
+
+    @Test
+    void timeout_leavesRoomForPerTenantTimeout() {
+        DocumentMongoReadinessCheck check = new DocumentMongoReadinessCheck(registry, producer);
+
+        assertThat(check.timeout()).isGreaterThan(DocumentMongoReadinessCheck.PING_TIMEOUT);
+    }
+
+    @Test
     void down_whenClientLookupThrows() {
         supported("AR");
         tenant("AR", "selcDocument", "mongodb://localhost:27017");
