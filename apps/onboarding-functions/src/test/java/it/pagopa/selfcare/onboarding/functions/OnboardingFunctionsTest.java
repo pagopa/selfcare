@@ -109,8 +109,10 @@ class OnboardingFunctionsTest {
 
   @Test
   void startAndWaitOrchestration_failedOrchestration() throws Exception {
+    // given
     @SuppressWarnings("unchecked")
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     final Map<String, String> queryParams = new HashMap<>();
     final String onboardingId = "onboardingId";
@@ -142,10 +144,35 @@ class OnboardingFunctionsTest {
             .when(client)
             .scheduleNewOrchestrationInstance("Onboardings", onboardingId);
 
+    // when
     HttpResponseMessage responseMessage = function.startOrchestration(req, durableContext, context);
 
+    // then
     verify(client, times(1)).waitForInstanceCompletion(anyString(), any(), anyBoolean());
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), responseMessage.getStatusCode());
+  }
+
+  @Test
+  void startOrchestration_missingRequester_returnsBadRequestWithoutStartingOrchestration() {
+    // given
+    @SuppressWarnings("unchecked")
+    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    when(req.getQueryParameters()).thenReturn(Map.of("onboardingId", "onboarding-id"));
+    when(req.getHeaders()).thenReturn(Map.of());
+    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
+        .thenReturn(
+            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                .status(HttpStatus.BAD_REQUEST));
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+    ExecutionContext context = mock(ExecutionContext.class);
+
+    // when
+    HttpResponseMessage response = function.startOrchestration(req, durableContext, context);
+
+    // then
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
+    assertEquals("x-selfcare-uid header cannot be null or blank", response.getBody());
+    verifyNoInteractions(durableContext);
   }
 
   @Test
@@ -1165,9 +1192,10 @@ class OnboardingFunctionsTest {
 
   @Test
   void buildAttachmentsAndSaveTokens_validBody_returnsAccepted() {
-    // Mock HttpRequestMessage with valid body
+    // given
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
     doReturn(Optional.of(onboardingString)).when(req).getBody();
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -1196,19 +1224,20 @@ class OnboardingFunctionsTest {
                             .status(HttpStatus.ACCEPTED)
                             .build());
 
-    // Invoke
+    // when
     HttpResponseMessage responseMessage =
             function.buildAttachmentsAndSaveTokens(req, durableContext, context);
 
-    // Verify
+    // then
     assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
   }
 
   @Test
   void buildAttachmentsAndSaveTokens_emptyBody_returnsBadRequest() {
-    // Mock HttpRequestMessage with empty body
+    // given
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
     doReturn(Optional.empty()).when(req).getBody();
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -1225,13 +1254,33 @@ class OnboardingFunctionsTest {
 
     final DurableClientContext durableContext = mock(DurableClientContext.class);
 
-    // Invoke
+    // when
     HttpResponseMessage responseMessage =
             function.buildAttachmentsAndSaveTokens(req, durableContext, context);
 
-    // Verify
+    // then
     assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     assertEquals("Body can not be empty", responseMessage.getBody());
+  }
+
+  @Test
+  void buildAttachmentsAndSaveTokens_missingRequester_doesNotStartOrchestration() {
+    // given
+    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    when(req.getHeaders()).thenReturn(Map.of());
+    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
+        .thenReturn(
+            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                .status(HttpStatus.BAD_REQUEST));
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+
+    // when
+    HttpResponseMessage response =
+        function.buildAttachmentsAndSaveTokens(req, durableContext, executionContext);
+
+    // then
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
+    verifyNoInteractions(durableContext);
   }
 
   @Test
