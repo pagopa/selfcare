@@ -240,7 +240,8 @@ flowchart LR
 - `mvn -f apps/onboarding-cdc/pom.xml test` → 37 test, 0 errori.
 - `mvn -f apps/dashboard-bff/pom.xml test` → 380 test, 0 errori.
 - `mvn -f libs/selfcare-sdk-security/pom.xml install` → 69 test, 0 errori.
-- `mvn -f apps/document-ms/pom.xml test` → 522 test, 0 errori (stesso numero di 03: un test è stato riscritto, `shouldNormalizeHeaderForSpidTokens`).
+- `mvn -f apps/document-ms/pom.xml test` → 526 test, 0 errori (stesso numero di 03: un test è stato riscritto, `shouldNormalizeHeaderForSpidTokens`).
+- Comando CI code-review (`mvn --projects :test-coverage --also-make verify -P <modulo>,report -DskipITs`) verde per `document-ms`, `onboarding-ms`, `onboarding-functions` e `onboarding-cdc`.
 - `terraform fmt` OK.
 
 Non eseguiti: IT Cucumber (Docker non disponibile) e `terraform plan`.
