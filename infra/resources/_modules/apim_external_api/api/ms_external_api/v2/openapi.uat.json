@@ -1093,13 +1093,73 @@
         ]
       }
     },
+    "/institutions/ipa/{taxCode}": {
+      "get": {
+        "tags": [
+          "institution"
+        ],
+        "summary": "Find IPA institution by tax code",
+        "description": "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
+        "operationId": "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters": [
+          {
+            "name": "taxCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InstitutionResource1"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyHeader": [
+              "global"
+            ]
+          }
+        ]
+      }
+    },
     "/institutions/ipa": {
       "get": {
         "tags": [
           "institution"
         ],
         "summary": "Retrieve IPA institutions",
-        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and category filter",
+        "description": "Retrieves a list of IPA institutions from the Azure AI Search index with optional text search and comma-separated category filter",
         "operationId": "searchIpaInstitutionsOnSearchEngine",
         "parameters": [
           {
@@ -1115,7 +1175,7 @@
           {
             "name": "category",
             "in": "query",
-            "description": "Filter from origin category",
+            "description": "Filter from origin category. Multiple comma-separated values are supported",
             "required": false,
             "schema": {
               "type": "string"
@@ -1389,6 +1449,14 @@
             "required": true
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "version",
             "in": "query",
             "schema": {
@@ -1496,6 +1564,14 @@
             }
           },
           {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "version",
             "in": "query",
             "schema": {
@@ -1577,6 +1653,14 @@
           },
           {
             "name": "productId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -1731,6 +1815,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1799,6 +1891,14 @@
           },
           {
             "name": "createdBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -1886,6 +1986,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1946,6 +2054,14 @@
             "name": "productId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -4246,6 +4362,9 @@
           },
           "originId": {
             "type": "string"
+          },
+          "isPartnerTech": {
+            "type": "boolean"
           }
         }
       },
@@ -4821,25 +4940,6 @@
           }
         }
       },
-      "InstitutionsResource": {
-        "required": [
-          "count",
-          "items"
-        ],
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/InstitutionResource1"
-            }
-          },
-          "count": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
       "InstitutionResource1": {
         "type": "object",
         "properties": {
@@ -4891,6 +4991,25 @@
           },
           "updateDate": {
             "type": "string"
+          }
+        }
+      },
+      "InstitutionsResource": {
+        "required": [
+          "count",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InstitutionResource1"
+            }
+          },
+          "count": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -5159,6 +5278,9 @@
           "contractTemplateVersion": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "productId": {
             "type": "string"
           },
@@ -5232,6 +5354,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "status": {
             "$ref": "#/components/schemas/ProductStatus"
           }
@@ -5242,17 +5367,24 @@
           "TESTING",
           "ACTIVE",
           "DELETED",
-          "SUSPEND"
+          "SUSPEND",
+          "PHASE_OUT",
+          "INACTIVE"
         ],
         "type": "string"
       },
       "ProductCreateRequest": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -5284,6 +5416,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -5765,11 +5903,16 @@
       },
       "ProductPatchRequest": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -5801,6 +5944,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
@@ -5867,11 +6016,16 @@
       },
       "ProductResponse": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -5903,6 +6057,12 @@
             "$ref": "#/components/schemas/Features"
           },
           "roleMappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RoleMapping"
