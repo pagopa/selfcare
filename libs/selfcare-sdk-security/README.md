@@ -13,8 +13,15 @@ Conditional Role Assignment: It conditionally augments the authenticated user's 
 
 Tenant Consistency Validation: For tokens issued by SPID, the validated
 `tenant_id` claim is reconciled with the trusted `X-Tenant-Id` request header.
-When the claim is absent, the effective tenant is `PNPG`; a missing, unknown,
-or mismatching header is rejected.
+Claim, header and configured tenants are compared after `trim()` and
+upper-casing, and the normalized tenant is exposed downstream. When the claim
+is absent, the effective tenant is `DEFAULT_TENANT` unless
+`JWT_TENANT_CLAIM_REQUIRED=true`; a missing, unknown, or mismatching header is
+rejected with `401`.
+
+Logging Context Enrichment: `LoggingContextFilter` copies a configurable set of
+JWT claims into the logging context (MDC) of every REST request, so that every
+log line written while serving the request reports who performed it.
 
 Logging Context Enrichment: `LoggingContextFilter` copies a configurable set of
 JWT claims into the logging context (MDC) of every REST request, so that every
@@ -44,6 +51,16 @@ The SDK requires a single mandatory configuration property: the public key used 
 Add the following property to your src/main/resources/application.properties file:
 
 ```mp.jwt.verify.publickey=${JWT-PUBLIC-KEY}```
+
+The SPID tenant validation reads these optional environment variables:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DEFAULT_TENANT` | `PNPG` | Tenant of SPID tokens without the `tenant_id` claim. Must be in `SUPPORTED_TENANTS`. |
+| `SUPPORTED_TENANTS` | `AR,PNPG` | Comma-separated tenants accepted in the claim and in `X-Tenant-Id`. |
+| `JWT_TENANT_CLAIM_REQUIRED` | `false` | When `true`, SPID tokens without the `tenant_id` claim are rejected with `401` instead of being attributed to `DEFAULT_TENANT`. Enable it only once every SPID issuer of the environment emits the claim (the PNPG SPID hub does not). |
+
+Invalid values are never replaced with defaults: tenant validation fails when it is first initialized.
 
 ### How it Works (Technical Details)
 The custom logic is primarily executed within the overridden ```parse``` method of ```JWTCallerPrincipalFactory```.

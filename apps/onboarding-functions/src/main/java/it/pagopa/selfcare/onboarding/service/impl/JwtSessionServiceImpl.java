@@ -42,6 +42,7 @@ public class JwtSessionServiceImpl implements JwtSessionService {
 
     private static final String PRIVATE_KEY_HEADER_TEMPLATE = "-----BEGIN %s-----";
     private static final String PRIVATE_KEY_FOOTER_TEMPLATE = "-----END %s-----";
+    private static final String MACHINE_UID = "onboarding-functions";
     private final Logger logger = LoggerFactory.getLogger(JwtSessionServiceImpl.class.getName());
 
     @Override
@@ -58,13 +59,36 @@ public class JwtSessionServiceImpl implements JwtSessionService {
                     .claim("fiscal_number", userResource.getFiscalCode())
                     .claim("name", userResource.getName().getValue())
                     .claim("uid", userId)
-                    .claim(TenantContext.TENANT_CLAIM, TenantContext.currentTenantOrDefault())
+                    .claim(TenantContext.TENANT_CLAIM, TenantContext.requiredTenant())
                     .signWith(SignatureAlgorithm.RS256, privateKey)
                     .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
                     .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
                     .compact();
         } catch (Exception e) {
             logger.error("Impossible to create jwt token. Error: {}", e.getMessage(), e);
+            return null;
+        }
+    }
+
+    @Override
+    public String createMachineJwt() {
+        try {
+            PrivateKey privateKey = getPrivateKey(tokenConfig.signingKey());
+            String tenant = TenantContext.requiredTenant();
+            return Jwts.builder()
+                    .setId(UUID.randomUUID().toString())
+                    .setIssuedAt(new Date())
+                    .setIssuer(tokenConfig.issuer())
+                    .setSubject(MACHINE_UID)
+                    .setExpiration(Date.from(new Date().toInstant().plus(Duration.parse(tokenConfig.duration()))))
+                    .claim("uid", MACHINE_UID)
+                    .claim(TenantContext.TENANT_CLAIM, tenant)
+                    .signWith(SignatureAlgorithm.RS256, privateKey)
+                    .setHeaderParam(JwsHeader.KEY_ID, tokenConfig.kid())
+                    .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
+                    .compact();
+        } catch (Exception e) {
+            logger.error("Impossible to create machine jwt token. Error: {}", e.getMessage(), e);
             return null;
         }
     }

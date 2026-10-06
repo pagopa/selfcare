@@ -39,6 +39,7 @@ import static org.mockito.Mockito.*;
         queryParams.put("vatNumber", "someVatNumber");
         queryParams.put("Authorization", "someToken");
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
@@ -49,6 +50,83 @@ import static org.mockito.Mockito.*;
         when(checkOrganizationService.checkOrganization(any(), any(), any())).thenReturn(true);
         HttpResponseMessage responseMessage = function.checkOrganization(req, context);
         assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
+    }
+
+    @Test
+    void testTokenAcceptsLowercaseTenantHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Map.of("x-tenant-id", "AR")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+        when(checkOrganizationService.testToken(any())).thenReturn("token");
+
+        HttpResponseMessage responseMessage = function.testToken(req, context);
+
+        assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
+        assertEquals("token", responseMessage.getBody());
+    }
+
+    @Test
+    void testTokenMissingTenantHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Map.of()).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.testToken(req, context);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        verify(checkOrganizationService, never()).testToken(any());
+    }
+
+    @Test
+    void checkOrganizationLowercaseTenantHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        final Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("fiscalCode", "someFiscalCode");
+        queryParams.put("vatNumber", "someVatNumber");
+        doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("x-tenant-id", "AR")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+        when(checkOrganizationService.checkOrganization(any(), any(), any())).thenReturn(true);
+
+        HttpResponseMessage responseMessage = function.checkOrganization(req, context);
+
+        assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
+    }
+
+    @Test
+    void checkOrganizationMissingTenantHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        final Map<String, String> queryParams = new HashMap<>();
+        queryParams.put("fiscalCode", "someFiscalCode");
+        queryParams.put("vatNumber", "someVatNumber");
+        doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of()).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.checkOrganization(req, context);
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        verify(checkOrganizationService, never()).checkOrganization(any(), any(), any());
     }
 
     @Test
@@ -96,6 +174,7 @@ import static org.mockito.Mockito.*;
         queryParams.put("fiscalCode", "fiscalCode");
         queryParams.put("vatNumber", "vatNumber");
         doReturn(queryParams).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
         doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
             HttpStatus status = (HttpStatus) invocation.getArguments()[0];
             return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);

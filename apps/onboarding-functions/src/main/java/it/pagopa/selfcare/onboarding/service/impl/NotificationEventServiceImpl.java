@@ -88,6 +88,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
     @Override
     public void send(ExecutionContext context, Onboarding onboarding, QueueEvent queueEvent,
             String notificationEventTraceId) {
+        try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
         context.getLogger()
                 .info(() -> String.format("Starting send method for onboarding with ID %s", onboarding.getId()));
         if (isNotInstitutionOnboarding(onboarding)) {
@@ -131,6 +132,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
                     notificationEventTraceId);
             // prepareAndSendUserNotification(context, product, consumerConfig,
             // notificationsResources, notificationEventTraceId);
+        }
         }
     }
 
@@ -285,7 +287,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         }
 
         webhookRestClient.sendNotification(NotificationRequest.builder().productId(notificationToSend.getProduct())
-                .payload(message).tenantId(TenantContext.currentTenantOrDefault()).topic("SC-Contracts").build());
+                .payload(message).tenantId(TenantContext.requiredTenant()).topic("SC-Contracts").build());
         telemetryService.trackEvent(EVENT_ONBOARDING_FN_NAME,
                 notificationEventMap(notificationToSend, "WEBHOOK", notificationEventTraceId),
                 Map.of(EVENT_ONBOARDING_INSTTITUTION_FN_SUCCESS, 1D));

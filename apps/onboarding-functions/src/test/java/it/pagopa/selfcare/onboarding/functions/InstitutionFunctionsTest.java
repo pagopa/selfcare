@@ -1,7 +1,12 @@
 package it.pagopa.selfcare.onboarding.functions;
 
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME;
+import static it.pagopa.selfcare.onboarding.functions.utils.ActivityName.DELETE_USER_ONBOARDING_ACTIVITY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -17,6 +22,7 @@ import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
@@ -28,6 +34,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
@@ -49,7 +56,8 @@ public class InstitutionFunctionsTest {
   @InjectMock
   UserService userService;
 
-  final String institutionUserFilters = "{\"userId\":\"userId\",\"productId\":\"productId\",\"institutionId\":\"institutionId\"}";
+  final String institutionUserFilters = "{\"userId\":\"userId\",\"productId\":\"productId\",\"institutionId\":\"institutionId\",\"tenantId\":\"ar\"}";
+  final String institutionUserFiltersWithoutTenant = "{\"userId\":\"userId\",\"productId\":\"productId\",\"institutionId\":\"institutionId\"}";
 
   static ExecutionContext executionContext;
 
@@ -141,6 +149,7 @@ public class InstitutionFunctionsTest {
     institution.setId("institutionId");
     onboarding.setInstitution(institution);
     onboarding.setProductId(productId);
+    onboarding.setTenantId("PNPG");
     User user = new User();
     user.setId("userId");
     onboarding.setUsers(List.of(user));
@@ -151,6 +160,14 @@ public class InstitutionFunctionsTest {
 
     // then
     Mockito.verify(orchestrationContext, times(5)).callActivity(any(), any(), any(), any());
+    ArgumentCaptor<Object> institutionPayload = ArgumentCaptor.forClass(Object.class);
+    Mockito.verify(orchestrationContext)
+        .callActivity(eq(DELETE_INSTITUTION_ONBOARDING_ACTIVITY_NAME), institutionPayload.capture(), any(), any());
+    assertTrue(institutionPayload.getValue().toString().contains("\"tenantId\":\"PNPG\""));
+    ArgumentCaptor<Object> userPayload = ArgumentCaptor.forClass(Object.class);
+    Mockito.verify(orchestrationContext)
+        .callActivity(eq(DELETE_USER_ONBOARDING_ACTIVITY_NAME), userPayload.capture(), any(), any());
+    assertTrue(userPayload.getValue().toString().contains("\"tenantId\":\"PNPG\""));
   }
 
   @Test
@@ -174,22 +191,46 @@ public class InstitutionFunctionsTest {
 
   @Test
   void deleteInstitution() throws JsonProcessingException {
-
-    doNothing().when(institutionService).deleteByIdAndProductId(any(), any());
+    List<String> tenants = new ArrayList<>();
+    doAnswer(invocation -> tenants.add(TenantContext.currentTenant()))
+        .when(institutionService).deleteByIdAndProductId(any(), any());
 
     function.deleteInstitutionOnboarding(institutionUserFilters, executionContext);
 
-    verify(institutionService, times(1)).deleteByIdAndProductId(any(), any());
+    verify(institutionService, times(1)).deleteByIdAndProductId("institutionId", "productId");
+    assertEquals(List.of("AR"), tenants);
+    assertNull(TenantContext.currentTenant());
+  }
+
+  @Test
+  void deleteInstitution_failsClosedWithoutTenant() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> function.deleteInstitutionOnboarding(institutionUserFiltersWithoutTenant, executionContext));
+
+    verify(institutionService, never()).deleteByIdAndProductId(any(), any());
   }
 
   @Test
   void deleteUser() throws JsonProcessingException {
-
-    doNothing().when(userService).deleteByIdAndInstitutionIdAndProductId(any(), any());
+    List<String> tenants = new ArrayList<>();
+    doAnswer(invocation -> tenants.add(TenantContext.currentTenant()))
+        .when(userService).deleteByIdAndInstitutionIdAndProductId(any(), any());
 
     function.deleteUserOnboarding(institutionUserFilters, executionContext);
 
-    verify(userService, times(1)).deleteByIdAndInstitutionIdAndProductId(any(), any());
+    verify(userService, times(1)).deleteByIdAndInstitutionIdAndProductId("institutionId", "productId");
+    assertEquals(List.of("AR"), tenants);
+    assertNull(TenantContext.currentTenant());
+  }
+
+  @Test
+  void deleteUser_failsClosedWithoutTenant() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> function.deleteUserOnboarding(institutionUserFiltersWithoutTenant, executionContext));
+
+    verify(userService, never()).deleteByIdAndInstitutionIdAndProductId(any(), any());
   }
 
 }

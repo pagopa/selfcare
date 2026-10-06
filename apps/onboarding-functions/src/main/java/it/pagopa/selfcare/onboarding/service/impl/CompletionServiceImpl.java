@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import it.pagopa.selfcare.onboarding.common.*;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -236,7 +237,10 @@ public class CompletionServiceImpl implements CompletionService {
             List<String> destinationMails = getDestinationMails(onboarding);
             destinationMails.add(onboarding.getInstitution().getDigitalAddress());
             Product product = productService.getProductIsValid(onboarding.getProductId());
-            notificationService.sendDeletedEmail(destinationMails, product, onboarding);
+            // the activity only receives the onboarding id: the mail template is read from the tenant storage
+            try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
+                notificationService.sendDeletedEmail(destinationMails, product, onboarding);
+            }
         }
     }
 

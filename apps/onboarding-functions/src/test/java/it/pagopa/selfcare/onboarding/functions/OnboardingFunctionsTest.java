@@ -17,6 +17,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
@@ -40,6 +41,8 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -77,26 +80,26 @@ class OnboardingFunctionsTest {
 
   @Inject ObjectMapper objectMapper;
 
-  final String onboardingStringBase = "{\"id\":\"onboardingId\", \"productId\":\"prod-test\"}";
+  final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";
 
   final String onboardingWorkflowString =
-          "{\"type\":\"INSTITUTION\",\"onboarding\":{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}}";
+          "{\"type\":\"INSTITUTION\",\"onboarding\":{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}}";
 
   final String onboardingString =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String onboardingString2 =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"CONTRACT_REGISTRATION\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"CONTRACT_REGISTRATION\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String onboardingAttachmentString =
-          "{\"onboarding\":{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null},\"attachment\":{"
+          "{\"onboarding\":{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":null,\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null},\"attachment\":{"
                   + "\"templatePath\": null, \"templateVersion\": null, \"name\": null, \"mandatory\": null, \"generated\": null, \"workflowType\": null, \"workflowState\": null, \"order\": null}}";
 
   final String onboardingWithoutInstitutionIdString =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":null},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":null},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String onboardingWithInstitutionIdString =
-          "{\"id\":\"id\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
+          "{\"id\":\"id\",\"tenantId\":\"AR\",\"productId\":\"prod-test\",\"testEnvProductIds\":null,\"workflowType\":\"FOR_APPROVE\",\"institution\":{\"id\":\"inst123\"},\"users\":null,\"aggregates\":null,\"pricingPlan\":null,\"billing\":null,\"signContract\":null,\"expiringDate\":null,\"status\":\"REQUEST\",\"workflowInstanceId\":null,\"createdAt\":null,\"updatedAt\":null,\"activatedAt\":null,\"deletedAt\":null,\"reasonForReject\":null,\"isAggregator\":null}";
 
   final String latestDocumentString = "{ \"id\": \"doc-001\", \"type\": \"INSTITUTION\", \"onboardingId\": \"onb-123\", \"productId\": \"prod-456\", \"attachmentName\": \"contract_attachment.pdf\", \"checksum\": \"a3f5c2d1e8b7094f6a2e1d3c5b8f7e2a1\", \"contractVersion\": \"1.0.0\", \"contractTemplate\": \"STANDARD_TEMPLATE\", \"contractSigned\": \"false\", \"contractFilename\": \"contract_2026_05_06.pdf\", \"rootOnboardingId\": \"onb-root-789\", \"createdAt\": \"2026-05-06T09:00:00\", \"updatedAt\": \"2026-05-06T10:30:00\", \"deletedAt\": null, \"activatedAt\": \"2026-05-06T09:15:00\", \"signingStep\": 1 }";
 
@@ -120,6 +123,7 @@ class OnboardingFunctionsTest {
 
     final Optional<String> queryBody = Optional.empty();
     doReturn(queryBody).when(req).getBody();
+    doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
 
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -140,7 +144,7 @@ class OnboardingFunctionsTest {
     doReturn(client).when(durableContext).getClient();
     doReturn(scheduleNewOrchestrationInstance)
             .when(client)
-            .scheduleNewOrchestrationInstance("Onboardings", onboardingId);
+            .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
 
     HttpResponseMessage responseMessage = function.startOrchestration(req, durableContext, context);
 
@@ -148,12 +152,64 @@ class OnboardingFunctionsTest {
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), responseMessage.getStatusCode());
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"x-tenant-id", "X-Tenant-Id", "X-TENANT-ID"})
+  void startOrchestration_acceptsTenantHeaderCaseInsensitively(String headerName) {
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+    doReturn("instanceId")
+        .when(client)
+        .scheduleNewOrchestrationInstance(eq("Onboardings"), anyString());
+
+    startOrchestrationRequest(Map.of(headerName, "AR"), durableContext);
+
+    ArgumentCaptor<String> input = ArgumentCaptor.forClass(String.class);
+    verify(client).scheduleNewOrchestrationInstance(eq("Onboardings"), input.capture());
+    assertTrue(input.getValue().contains("\"tenantId\":\"AR\""));
+  }
+
+  @Test
+  void startOrchestration_rejectsMissingTenantHeader() {
+    final DurableTaskClient client = mock(DurableTaskClient.class);
+    final DurableClientContext durableContext = mock(DurableClientContext.class);
+    doReturn(client).when(durableContext).getClient();
+
+    HttpResponseMessage responseMessage = startOrchestrationRequest(Map.of(), durableContext);
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+    assertEquals("Invalid tenant context", responseMessage.getBody());
+    verify(client, never()).scheduleNewOrchestrationInstance(anyString(), anyString());
+  }
+
+  private HttpResponseMessage startOrchestrationRequest(
+      Map<String, String> headers, DurableClientContext durableContext) {
+    @SuppressWarnings("unchecked")
+    final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    doReturn(Map.of("onboardingId", "onboardingId")).when(req).getQueryParameters();
+    doReturn(headers).when(req).getHeaders();
+    doAnswer(
+            (Answer<HttpResponseMessage.Builder>)
+                invocation ->
+                    new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                        .status((HttpStatus) invocation.getArguments()[0]))
+        .when(req)
+        .createResponseBuilder(any(HttpStatus.class));
+
+    final ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(Logger.getGlobal()).when(context).getLogger();
+
+    return function.startOrchestration(req, durableContext, context);
+  }
+
   @Test
   void onboardingsOrchestrator_throwExceptionIfOnboardingNotPresent() {
     final String onboardingId = "onboardingId";
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
 
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboardingId);
+    when(orchestrationContext.getInput(String.class))
+        .thenReturn(
+            orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboardingId, "AR")));
     when(service.getOnboarding(onboardingId)).thenReturn(Optional.empty());
     assertThrows(
             ResourceNotFoundException.class,
@@ -1090,9 +1146,18 @@ class OnboardingFunctionsTest {
             .updateOnboardingStatus(onboarding.getId(), OnboardingStatus.COMPLETED);
   }
 
+  private String orchestrationInput(it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput input) {
+    try {
+      return objectMapper.writeValueAsString(input);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   TaskOrchestrationContext mockTaskOrchestrationContext(Onboarding onboarding) {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboarding.getId());
+    onboarding.setTenantId("AR");
+    when(orchestrationContext.getInput(String.class)).thenReturn(orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboarding.getId(), onboarding.getTenantId())));
     when(service.getOnboarding(anyString())).thenReturn(Optional.of(onboarding));
     when(completionService.existsDelegation(any())).thenReturn("false");
 
@@ -1124,7 +1189,8 @@ class OnboardingFunctionsTest {
   TaskOrchestrationContext mockTaskOrchestrationContextForIncrementAggregator(
           Onboarding onboarding, String returnValue) {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboarding.getId());
+    onboarding.setTenantId("AR");
+    when(orchestrationContext.getInput(String.class)).thenReturn(orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboarding.getId(), onboarding.getTenantId())));
     when(service.getOnboarding(onboarding.getId())).thenReturn(Optional.of(onboarding));
     when(completionService.existsDelegation(any())).thenReturn("true");
 
@@ -1140,7 +1206,8 @@ class OnboardingFunctionsTest {
   TaskOrchestrationContext mockTaskOrchestrationContextForUsersEa(
           Onboarding onboarding, List<DelegationResponse> delegationResponseList) {
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
-    when(orchestrationContext.getInput(String.class)).thenReturn(onboarding.getId());
+    onboarding.setTenantId("AR");
+    when(orchestrationContext.getInput(String.class)).thenReturn(orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboarding.getId(), onboarding.getTenantId())));
     when(service.getOnboarding(anyString())).thenReturn(Optional.of(onboarding));
     when(completionService.retrieveAggregates(any())).thenReturn(delegationResponseList);
     String delegationResponseListString =
@@ -1345,8 +1412,29 @@ class OnboardingFunctionsTest {
   @Test
   void sendMailNotificationManagerInstitution() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    doNothing().when(service).sendMailManagingInstitution(any());
+    List<String> tenants = new ArrayList<>();
+    doAnswer(invocation -> tenants.add(TenantContext.currentTenant()))
+        .when(service).sendMailManagingInstitution(any());
 
+    ManagingInstitutionSendEmail institutionSendEmail =
+        ManagingInstitutionSendEmail.builder()
+            .managingInstitutionId("id")
+            .productId("productId")
+            .onboardingInstitutionDescription("description")
+            .userMailUuid("mailUuid")
+            .tenantId("pnpg")
+            .build();
+
+    function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext);
+
+    verify(service, times(1)).sendMailManagingInstitution(any());
+    assertEquals(List.of("PNPG"), tenants);
+    assertNull(TenantContext.currentTenant());
+  }
+
+  @Test
+  void sendMailNotificationManagerInstitution_failsClosedWithoutTenant() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
     ManagingInstitutionSendEmail institutionSendEmail =
         ManagingInstitutionSendEmail.builder()
             .managingInstitutionId("id")
@@ -1355,9 +1443,11 @@ class OnboardingFunctionsTest {
             .userMailUuid("mailUuid")
             .build();
 
-    function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> function.sendMailNotificationManagerInstitution(institutionSendEmail, executionContext));
 
-    verify(service, times(1)).sendMailManagingInstitution(any());
+    verify(service, never()).sendMailManagingInstitution(any());
   }
 
   @Test
@@ -1417,7 +1507,31 @@ class OnboardingFunctionsTest {
   @Test
   void getUserEmailUuid() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    when(userService.findEmailByInstitutionAndProducts(any(), anyList())).thenReturn(List.of(UserMail.builder().build()));
+    List<String> tenants = new ArrayList<>();
+    when(userService.findEmailByInstitutionAndProducts(any(), anyList()))
+        .thenAnswer(
+            invocation -> {
+              tenants.add(TenantContext.currentTenant());
+              return List.of(UserMail.builder().build());
+            });
+    ManagingInstitutionGetEmailRequest managingInstitutionEmailRequest =
+          ManagingInstitutionGetEmailRequest.builder()
+                  .managingInstitutionId("id")
+                  .productId("productId")
+                  .onboardingId("onboardingId")
+                  .tenantId("AR")
+                  .build();
+
+    function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext);
+
+    verify(userService, times(1)).findEmailByInstitutionAndProducts(any(), any());
+    assertEquals(List.of("AR"), tenants);
+    assertNull(TenantContext.currentTenant());
+  }
+
+  @Test
+  void getUserEmailUuid_failsClosedWithoutTenant() {
+    when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
     ManagingInstitutionGetEmailRequest managingInstitutionEmailRequest =
           ManagingInstitutionGetEmailRequest.builder()
                   .managingInstitutionId("id")
@@ -1425,9 +1539,11 @@ class OnboardingFunctionsTest {
                   .onboardingId("onboardingId")
                   .build();
 
-    function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> function.getUserEmailUuid(managingInstitutionEmailRequest, executionContext));
 
-    verify(userService, times(1)).findEmailByInstitutionAndProducts(any(), any());
+    verify(userService, never()).findEmailByInstitutionAndProducts(any(), any());
   }
 
   @Test
@@ -1615,7 +1731,8 @@ class OnboardingFunctionsTest {
 
   @Test
   void createAggregateOnboardingRequest() {
-    final String onboardingAggregateOrchestratorInputString = "{\"productId\":\"prod-io\", \"id\":\"onboardingId\"}";
+    final String onboardingAggregateOrchestratorInputString =
+        "{\"productId\":\"prod-io\", \"id\":\"onboardingId\", \"tenantId\":\"AR\"}";
 
     String onboardingId = "id";
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
@@ -1997,7 +2114,18 @@ class OnboardingFunctionsTest {
     verify(orchestrationContext).callActivity(eq(GET_LATEST_DOCUMENT_ACTIVITY), any(), any(), eq(String.class));
     verify(orchestrationContext).callActivity(eq(GET_SIGNING_CONFIGURATION_ACTIVITY), any(), any(), eq(SigningConfiguration.class));
     verify(orchestrationContext).callActivity(eq(GET_MANAGING_INSTITUTION_ACTIVITY), any(), any(), eq(ManagingInstitution[].class));
-    verify(orchestrationContext).callActivity(eq(GET_USER_EMAIL_UUID_ACTIVITY), any(), any(), eq(String.class));
+    verify(orchestrationContext).callActivity(
+        eq(GET_USER_EMAIL_UUID_ACTIVITY),
+        argThat(request -> request instanceof ManagingInstitutionGetEmailRequest emailRequest
+            && "AR".equals(emailRequest.getTenantId())),
+        any(),
+        eq(String.class));
+    verify(orchestrationContext).callActivity(
+        eq(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION),
+        argThat(request -> request instanceof ManagingInstitutionSendEmail sendEmail
+            && "AR".equals(sendEmail.getTenantId())),
+        any(),
+        eq(String.class));
 
     // since executePendingInReviewState should return Optional.empty(), onboarding status must NOT be updated
     verify(service, times(0)).updateOnboardingStatus(eq(onboarding.getId()), any());

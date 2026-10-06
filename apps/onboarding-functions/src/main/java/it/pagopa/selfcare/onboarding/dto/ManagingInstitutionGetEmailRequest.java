@@ -16,5 +16,6 @@ public class ManagingInstitutionGetEmailRequest {
     private String managingInstitutionId;
     private String productId;
     private String onboardingId;
+    private String tenantId;
 }
 

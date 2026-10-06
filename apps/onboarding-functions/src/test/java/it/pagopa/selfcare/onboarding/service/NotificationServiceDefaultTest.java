@@ -14,6 +14,7 @@ import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.dto.SendMailInput;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.service.impl.NotificationServiceImpl;
+import it.pagopa.selfcare.onboarding.storage.ContractBlobClientProvider;
 
 import it.pagopa.selfcare.product.entity.EmailTemplate;
 import it.pagopa.selfcare.product.entity.Product;
@@ -39,6 +40,7 @@ import static org.mockito.Mockito.when;
 class NotificationServiceDefaultTest {
 
     @InjectMock
+    ContractBlobClientProvider contractBlobClientProvider;
     AzureBlobClient azureBlobClient;
     @InjectMock
     ContractService contractService;
@@ -56,8 +58,10 @@ class NotificationServiceDefaultTest {
     @BeforeEach
     void startup() {
         mailer = mock(Mailer.class);
+        azureBlobClient = mock(AzureBlobClient.class);
+        when(contractBlobClientProvider.forCurrentTenant()).thenReturn(azureBlobClient);
         this.notificationService = new NotificationServiceImpl(templatePlaceholdersConfig, templatePathConfig,
-                azureBlobClient, objectMapper, mailer, contractService, notificationAdminMail, "senderMail", false, "destinationMailTestAddress", true);
+                contractBlobClientProvider, objectMapper, mailer, contractService, notificationAdminMail, "senderMail", false, "destinationMailTestAddress", true);
     }
 
     @Test

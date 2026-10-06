@@ -33,16 +33,28 @@ Before running you must set these properties as environment variables.
 ### Blob storage authentication
 
 The application supports both connection-string and Managed Identity authentication for product and contract/document blob storage.
-When `BLOB_STORAGE_CONN_STRING_CONTRACT` or `BLOB_STORAGE_CONN_STRING_PRODUCT` is set, the connection string is used.
 When the connection string is empty, configure the corresponding storage account name and managed identity client id:
 
 | **Storage** | **Account Environment Variable** | **Managed Identity Client ID Environment Variable** |
 |-------------|----------------------------------|-----------------------------------------------------|
-| Contract/documents | BLOB_STORAGE_ACCOUNT_NAME_CONTRACT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT |
 | Product | BLOB_STORAGE_ACCOUNT_NAME_PRODUCT | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT |
 
 Before enabling this in Azure, the Function App must have the referenced user-assigned managed identities attached by infrastructure.
-Local and Cucumber integration tests must set connection strings explicitly for Azurite; Azure environments must leave `BLOB_STORAGE_CONN_STRING_CONTRACT` and `BLOB_STORAGE_CONN_STRING_PRODUCT` unset. The main `application.properties` does not declare connection-string properties, while test properties provide them explicitly.
+Local and Cucumber integration tests must set connection strings explicitly for Azurite; Azure environments must leave them unset. The main `application.properties` does not declare connection-string properties, while test properties provide them explicitly.
+
+#### Contract/document storage (per tenant)
+
+The contract blob container (mail templates under `contracts/template/mail/...`, logo under `resources/logo.png`) is read through the binding of the tenant of the running orchestration (`onboarding-functions.contract-storage.tenants.<TENANT>.*`), mirroring the `storages.contracts` binding of `document-ms`. The tenant comes from the orchestration payload (or from the persisted onboarding for activities that receive only its id).
+If the tenant has no complete binding (container plus account name or connection string) the read fails closed with `No contract storage binding configured for tenant <TENANT>`; there is no fallback to another tenant.
+
+| **Setting** | **Environment Variable (tenant `AR`)** | **Legacy fallback (AR only)** |
+|-------------|----------------------------------------|-------------------------------|
+| account-name | BLOB_STORAGE_ACCOUNT_NAME_CONTRACT_AR | BLOB_STORAGE_ACCOUNT_NAME_CONTRACT |
+| container | STORAGE_CONTAINER_CONTRACT_AR | STORAGE_CONTAINER_CONTRACT (default `sc-d-documents-blob`) |
+| path-prefix | BLOB_STORAGE_PATH_PREFIX_CONTRACT_AR | none (default empty) |
+| managed-identity-client-id | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_AR | BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT |
+
+Other tenants (e.g. `PNPG`) use the same variables with their own suffix (`..._CONTRACT_PNPG`) and no legacy fallback. The optional path prefix is applied to every blob path with the same rules as `document-ms` (normalized, `..`, absolute paths and control characters are rejected). A `connection-string` can be set per tenant only for local/Azurite tests.
 
 
 ### Custom settings

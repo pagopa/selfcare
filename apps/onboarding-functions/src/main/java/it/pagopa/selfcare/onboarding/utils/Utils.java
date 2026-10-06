@@ -9,6 +9,7 @@ import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
 import it.pagopa.selfcare.onboarding.dto.AggregatesBatchOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
+import it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput;
 import it.pagopa.selfcare.onboarding.dto.ResendNotificationsFilters;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
@@ -47,6 +48,16 @@ public class Utils {
     try {
       return objectMapper.readValue(
           onboardingAggregateOrchestratorInputString, OnboardingAggregateOrchestratorInput.class);
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
+  }
+
+  public static OnboardingOrchestrationInput readOnboardingOrchestrationInputValue(
+      ObjectMapper objectMapper, String onboardingOrchestrationInputString) {
+    try {
+      return objectMapper.readValue(
+          onboardingOrchestrationInputString, OnboardingOrchestrationInput.class);
     } catch (JsonProcessingException e) {
       throw new FunctionOrchestratedException(e);
     }
@@ -141,6 +152,16 @@ public class Utils {
       throw new FunctionOrchestratedException(e);
     }
     return onboardingAggregateString;
+  }
+
+  public static String getOnboardingOrchestrationInputString(
+      ObjectMapper objectMapper, OnboardingOrchestrationInput onboarding) {
+
+    try {
+      return objectMapper.writeValueAsString(onboarding);
+    } catch (JsonProcessingException e) {
+      throw new FunctionOrchestratedException(e);
+    }
   }
 
   public static String getAggregatesBatchInputString(

@@ -4,10 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
 import io.quarkus.mailer.Mail;
 import io.quarkus.mailer.Mailer;
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
+import it.pagopa.selfcare.onboarding.storage.ContractBlobClientProvider;
 import it.pagopa.selfcare.onboarding.dto.FileMailData;
 import it.pagopa.selfcare.onboarding.dto.NotificationMailRequest;
 import it.pagopa.selfcare.onboarding.dto.NotificationMailType;
@@ -42,7 +42,7 @@ public class NotificationServiceImpl implements NotificationService {
     public static final String PAGOPA_LOGO_FILENAME = "pagopa-logo.png";
     private final MailTemplatePlaceholdersConfig templatePlaceholdersConfig;
     private final MailTemplatePathConfig templatePathConfig;
-    private final AzureBlobClient azureBlobClient;
+    private final ContractBlobClientProvider contractBlobClientProvider;
     private final ObjectMapper objectMapper;
     private final ContractService contractService;
     private final String senderMail;
@@ -54,7 +54,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final boolean isEmailServiceAvailable;
 
     public NotificationServiceImpl(MailTemplatePlaceholdersConfig templatePlaceholdersConfig, MailTemplatePathConfig templatePathConfig,
-                                      AzureBlobClient azureBlobClient, ObjectMapper objectMapper, Mailer mailer, ContractService contractService,
+                                      ContractBlobClientProvider contractBlobClientProvider, ObjectMapper objectMapper, Mailer mailer, ContractService contractService,
                                       @ConfigProperty(name = "onboarding-functions.notification-admin-email") String notificationAdminMail,
                                       @ConfigProperty(name = "onboarding-functions.sender-mail") String senderMail,
                                       @ConfigProperty(name = "onboarding-functions.destination-mail-test") Boolean destinationMailTest,
@@ -62,7 +62,7 @@ public class NotificationServiceImpl implements NotificationService {
                                       @ConfigProperty(name = "onboarding-functions.email.service.available") boolean isEmailServiceAvailable) {
         this.templatePlaceholdersConfig = templatePlaceholdersConfig;
         this.templatePathConfig = templatePathConfig;
-        this.azureBlobClient = azureBlobClient;
+        this.contractBlobClientProvider = contractBlobClientProvider;
         this.objectMapper = objectMapper;
         this.contractService = contractService;
         this.senderMail = senderMail;
@@ -110,7 +110,7 @@ public class NotificationServiceImpl implements NotificationService {
                     templateName,
                     destination,
                     Objects.nonNull(prefixSubject));
-            String template = azureBlobClient.getFileAsText(templateName);
+            String template = contractBlobClientProvider.forCurrentTenant().getFileAsText(templateName);
             MailTemplate mailTemplate = objectMapper.readValue(template, MailTemplate.class);
             String html = StringSubstitutor.replace(mailTemplate.getBody(), mailParameters);
 

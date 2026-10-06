@@ -15,9 +15,11 @@ import com.microsoft.durabletask.azurefunctions.DurableOrchestrationTrigger;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.config.AggregateBatchConfig;
 import it.pagopa.selfcare.onboarding.config.RetryPolicyConfig;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
+import it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingAttachment;
@@ -139,8 +141,20 @@ public class OnboardingFunctions {
         SeverityLevel.Information,
         properties);
 
+    final String tenantId;
+    try {
+      tenantId = TenantContext.resolve(TenantContext.tenantHeader(request));
+    } catch (IllegalArgumentException exception) {
+      context.getLogger().warning("Rejected orchestration start with invalid tenant");
+      return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Invalid tenant context").build();
+    }
+
     DurableTaskClient client = durableContext.getClient();
-    String instanceId = client.scheduleNewOrchestrationInstance("Onboardings", onboardingId);
+    String instanceId =
+        client.scheduleNewOrchestrationInstance(
+            "Onboardings",
+            getOnboardingOrchestrationInputString(
+                objectMapper, new OnboardingOrchestrationInput(onboardingId, tenantId)));
 
     telemetryService.trackFunction(
         START_ONBOARDING_ORCHESTRATION,
@@ -182,9 +196,11 @@ public class OnboardingFunctions {
       ExecutionContext functionContext) {
     String onboardingId = null;
     String onboardingAggregate = ctx.getInput(String.class);
+    OnboardingAggregateOrchestratorInput aggregateInput =
+        readOnboardingAggregateOrchestratorInputValue(objectMapper, onboardingAggregate);
     boolean existsDelegation;
-    try {
-      onboardingId = readOnboardingAggregateOrchestratorInputValue(objectMapper, onboardingAggregate).getId();
+    try (TenantContext.Scope ignored = TenantContext.open(aggregateInput.getTenantId())) {
+      onboardingId = aggregateInput.getId();
       existsDelegation =
           Boolean.parseBoolean(
               ctx.callActivity(
@@ -198,7 +214,7 @@ public class OnboardingFunctions {
           Map.of(ONBOARDING_ID, onboardingId == null ? "unknown" : onboardingId));
       existsDelegation = true;
     }
-    try {
+    try (TenantContext.Scope ignored = TenantContext.open(aggregateInput.getTenantId())) {
       if (!existsDelegation) {
         onboardingId =
             ctx.callActivity(
@@ -207,7 +223,12 @@ public class OnboardingFunctions {
                     optionsRetry,
                     String.class)
                 .await();
-        ctx.callSubOrchestrator("Onboardings", onboardingId, String.class).await();
+        ctx.callSubOrchestrator(
+                "Onboardings",
+                getOnboardingOrchestrationInputString(
+                    objectMapper, new OnboardingOrchestrationInput(onboardingId, aggregateInput.getTenantId())),
+                String.class)
+            .await();
       }
     } catch (TaskFailedException | ResourceNotFoundException ex) {
       handleOrchestratorException(ctx, functionContext, onboardingId, ex);
@@ -308,7 +329,9 @@ public class OnboardingFunctions {
   public void onboardingsOrchestrator(
       @DurableOrchestrationTrigger(name = "taskOrchestrationContext") TaskOrchestrationContext ctx,
       ExecutionContext functionContext) {
-    String onboardingId = ctx.getInput(String.class);
+    OnboardingOrchestrationInput orchestrationInput =
+        readOnboardingOrchestrationInputValue(objectMapper, ctx.getInput(String.class));
+    String onboardingId = orchestrationInput.getOnboardingId();
     Onboarding onboarding;
     WorkflowExecutor workflowExecutor;
 
@@ -318,7 +341,7 @@ public class OnboardingFunctions {
         SeverityLevel.Information,
         Map.of(ONBOARDING_ID, onboardingId));
 
-    try {
+    try (TenantContext.Scope ignored = TenantContext.open(orchestrationInput.getTenantId())) {
       onboarding =
           onboardingService
               .getOnboarding(onboardingId)
@@ -326,6 +349,9 @@ public class OnboardingFunctions {
                   () ->
                       new ResourceNotFoundException(
                           String.format("Onboarding with id %s not found!", onboardingId)));
+      if (!TenantContext.resolve(onboarding.getTenantId()).equals(TenantContext.requiredTenant())) {
+        throw new IllegalArgumentException("Conflicting tenant context");
+      }
 
       switch (onboarding.getWorkflowType()) {
         case CONTRACT_REGISTRATION ->
@@ -407,7 +433,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         Map.of("onboardingWorkflow", onboardingWorkflowString));
-    onboardingService.createContract(readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
+    OnboardingWorkflow onboardingWorkflow = readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString);
+    runWithTenant(onboardingWorkflow, () -> onboardingService.createContract(onboardingWorkflow));
   }
 
   /** This HTTP-triggered function invokes an orchestration to build attachments and save tokens */
@@ -457,6 +484,7 @@ public class OnboardingFunctions {
 
     String onboardingString = ctx.getInput(String.class);
     Onboarding onboarding = objectMapper.readValue(onboardingString, Onboarding.class);
+    try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
     Product product = productService.getProductIsValid(onboarding.getProductId());
 
     product
@@ -493,6 +521,7 @@ public class OnboardingFunctions {
         SeverityLevel.Information,
         "BuildAttachmentAndSaveToken orchestration completed",
         Map.of(ONBOARDING_ID, onboarding.getId(), PRODUCT_ID, onboarding.getProductId()));
+    }
   }
 
   private void log(
@@ -517,6 +546,37 @@ public class OnboardingFunctions {
     if (!ctx.getIsReplaying()) {
       fCtx.getLogger().info(message);
       telemetryService.trackFunction(fCtx.getFunctionName(), message, severityLevel, properties);
+    }
+  }
+
+  private void runWithTenant(Onboarding onboarding, Runnable runnable) {
+    try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
+      runnable.run();
+    }
+  }
+
+  private <T> T callWithTenant(Onboarding onboarding, Supplier<T> supplier) {
+    try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
+      return supplier.get();
+    }
+  }
+
+  private void runWithTenant(OnboardingWorkflow onboardingWorkflow, Runnable runnable) {
+    runWithTenant(onboardingWorkflow.getOnboarding(), runnable);
+  }
+
+  private <T> T callWithTenant(OnboardingWorkflow onboardingWorkflow, Supplier<T> supplier) {
+    return callWithTenant(onboardingWorkflow.getOnboarding(), supplier);
+  }
+
+  private void runWithTenant(OnboardingAttachment onboardingAttachment, Runnable runnable) {
+    runWithTenant(onboardingAttachment.getOnboarding(), runnable);
+  }
+
+  private <T> T callWithTenant(
+      OnboardingAggregateOrchestratorInput onboarding, Supplier<T> supplier) {
+    try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
+      return supplier.get();
     }
   }
 
@@ -550,7 +610,7 @@ public class OnboardingFunctions {
             onboardingAttachmentString),
         SeverityLevel.Information,
         properties);
-    onboardingService.createAttachment(onboardingAttachment);
+    runWithTenant(onboardingAttachment, () -> onboardingService.createAttachment(onboardingAttachment));
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -572,8 +632,8 @@ public class OnboardingFunctions {
             onboardingWorkflowString),
         SeverityLevel.Information,
         properties);
-    onboardingService.saveTokenWithContract(
-        readOnboardingWorkflowValue(objectMapper, onboardingWorkflowString));
+    runWithTenant(
+        onboardingWorkflow, () -> onboardingService.saveTokenWithContract(onboardingWorkflow));
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -594,7 +654,8 @@ public class OnboardingFunctions {
             onboardingAttachmentString),
         SeverityLevel.Information,
         properties);
-    onboardingService.saveTokenWithAttachment(onboardingAttachment);
+    runWithTenant(
+        onboardingAttachment, () -> onboardingService.saveTokenWithAttachment(onboardingAttachment));
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -613,7 +674,9 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
             PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
-    onboardingService.sendMailRegistrationForContract(onboardingWorkflow);
+    runWithTenant(
+        onboardingWorkflow,
+        () -> onboardingService.sendMailRegistrationForContract(onboardingWorkflow));
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_CONTRACT_WHEN_APPROVE_ACTIVITY)
@@ -631,7 +694,9 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
             PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
-    onboardingService.sendMailRegistrationForContractWhenApprove(onboardingWorkflow);
+    runWithTenant(
+        onboardingWorkflow,
+        () -> onboardingService.sendMailRegistrationForContractWhenApprove(onboardingWorkflow));
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_REQUEST_ACTIVITY)
@@ -649,7 +714,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    onboardingService.sendMailRegistration(onboarding);
+    runWithTenant(onboarding, () -> onboardingService.sendMailRegistration(onboarding));
   }
 
   /** This is the activity function that gets invoked by the orchestrator function. */
@@ -666,7 +731,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    onboardingService.sendMailRegistrationForUser(onboarding);
+    runWithTenant(onboarding, () -> onboardingService.sendMailRegistrationForUser(onboarding));
   }
 
   @FunctionName(SEND_MAIL_NOTIFICATION_MANAGING_INSTITUTION)
@@ -685,7 +750,9 @@ public class OnboardingFunctions {
                     MANAGING_INSTITUTION_ID, managingInstitutionSendEmail.getManagingInstitutionId(),
                     MANAGING_INSTITUTION_DESCRIPTION, managingInstitutionSendEmail.getOnboardingInstitutionDescription(),
                     USER_MAIL_UUID, managingInstitutionSendEmail.getUserMailUuid()));
-    onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
+    try (TenantContext.Scope ignored = TenantContext.open(managingInstitutionSendEmail.getTenantId())) {
+      onboardingService.sendMailManagingInstitution(managingInstitutionSendEmail);
+    }
   }
 
   @FunctionName(SEND_MAIL_REGISTRATION_FOR_USER_REQUESTER)
@@ -703,7 +770,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    onboardingService.sendMailRegistrationForUserRequester(onboarding);
+    runWithTenant(onboarding, () -> onboardingService.sendMailRegistrationForUserRequester(onboarding));
   }
 
 
@@ -722,7 +789,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    onboardingService.sendMailRegistrationApprove(onboarding);
+    runWithTenant(onboarding, () -> onboardingService.sendMailRegistrationApprove(onboarding));
   }
 
   @FunctionName(SEND_MAIL_ONBOARDING_APPROVE_ACTIVITY)
@@ -740,7 +807,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    onboardingService.sendMailOnboardingApprove(onboarding);
+    runWithTenant(onboarding, () -> onboardingService.sendMailOnboardingApprove(onboarding));
   }
 
   @FunctionName(CREATE_INSTITUTION_ACTIVITY)
@@ -756,7 +823,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return completionService.createInstitutionAndPersistInstitutionId(onboarding);
+    return callWithTenant(onboarding, () -> completionService.createInstitutionAndPersistInstitutionId(onboarding));
   }
 
   @FunctionName(STORE_ONBOARDING_ACTIVATEDAT)
@@ -772,7 +839,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    completionService.persistActivatedAt(readOnboardingValue(objectMapper, onboardingString));
+    runWithTenant(onboarding, () -> completionService.persistActivatedAt(onboarding));
   }
 
   @FunctionName(REJECT_OUTDATED_ONBOARDINGS)
@@ -788,7 +855,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    completionService.rejectOutdatedOnboardings(onboarding);
+    runWithTenant(onboarding, () -> completionService.rejectOutdatedOnboardings(onboarding));
   }
 
   @FunctionName(OVERRIDE_PENDING_ONBOARDINGS)
@@ -804,7 +871,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    completionService.overridePendingOnboardings(onboarding);
+    runWithTenant(onboarding, () -> completionService.overridePendingOnboardings(onboarding));
   }
 
   @FunctionName(CREATE_ONBOARDING_ACTIVITY)
@@ -820,7 +887,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    completionService.persistOnboarding(onboarding);
+    runWithTenant(onboarding, () -> completionService.persistOnboarding(onboarding));
   }
 
   @FunctionName(SEND_MAIL_COMPLETION_ACTIVITY)
@@ -838,7 +905,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
             PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
-    completionService.sendCompletedEmail(onboardingWorkflow);
+    runWithTenant(onboardingWorkflow, () -> completionService.sendCompletedEmail(onboardingWorkflow));
   }
 
   @FunctionName(SEND_MAIL_REJECTION_ACTIVITY)
@@ -854,7 +921,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    completionService.sendMailRejection(context, onboarding);
+    runWithTenant(onboarding, () -> completionService.sendMailRejection(context, onboarding));
   }
 
   @FunctionName(CREATE_USERS_ACTIVITY)
@@ -869,7 +936,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    completionService.persistUsers(onboarding);
+    runWithTenant(onboarding, () -> completionService.persistUsers(onboarding));
   }
 
   @FunctionName(CREATE_AGGREGATE_ONBOARDING_REQUEST_ACTIVITY)
@@ -890,7 +957,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return completionService.createAggregateOnboardingRequest(onboarding);
+    return callWithTenant(onboarding, () -> completionService.createAggregateOnboardingRequest(onboarding));
   }
 
   @FunctionName(CREATE_DELEGATION_ACTIVITY)
@@ -906,7 +973,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return completionService.createDelegation(onboarding);
+    return callWithTenant(onboarding, () -> completionService.createDelegation(onboarding));
   }
 
   @FunctionName(EXISTS_DELEGATION_ACTIVITY)
@@ -923,7 +990,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return completionService.existsDelegation(onboarding);
+    return callWithTenant(onboarding, () -> completionService.existsDelegation(onboarding));
   }
 
   @FunctionName(VERIFY_ONBOARDING_AGGREGATE_ACTIVITY)
@@ -942,7 +1009,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return completionService.verifyOnboardingAggregate(onboarding);
+    return callWithTenant(onboarding, () -> completionService.verifyOnboardingAggregate(onboarding));
   }
 
   /**
@@ -978,12 +1045,16 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboardingWorkflow.getOnboarding().getId(),
             PRODUCT_ID, onboardingWorkflow.getOnboarding().getProductId()));
-    DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
-        contractService.requestUploadAggregatesCsv(onboardingWorkflow);
-    String onboardingId = onboardingWorkflow.getOnboarding().getId();
-    try (Response response = documentService.uploadAggregatesCsv(request)) {
-      ensureSuccessfulDocumentResponse(response, "upload aggregates csv", onboardingId);
-    }
+    runWithTenant(
+        onboardingWorkflow,
+        () -> {
+          DocumentContentControllerApi.UploadAggregatesCsvMultipartForm request =
+              contractService.requestUploadAggregatesCsv(onboardingWorkflow);
+          String onboardingId = onboardingWorkflow.getOnboarding().getId();
+          try (Response response = documentService.uploadAggregatesCsv(request)) {
+            ensureSuccessfulDocumentResponse(response, "upload aggregates csv", onboardingId);
+          }
+        });
   }
 
   @FunctionName(RETRIEVE_AGGREGATES_ACTIVITY)
@@ -1000,7 +1071,7 @@ public class OnboardingFunctions {
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
     List<DelegationResponse> delegationResponseList =
-        completionService.retrieveAggregates(onboarding);
+        callWithTenant(onboarding, () -> completionService.retrieveAggregates(onboarding));
     return getDelegationResponseListString(objectMapper, delegationResponseList);
   }
 
@@ -1019,7 +1090,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    onboardingService.updateOnboardingExpiringDate(onboarding);
+    runWithTenant(onboarding, () -> onboardingService.updateOnboardingExpiringDate(onboarding));
   }
 
   @FunctionName(GET_SIGNING_CONFIGURATION_ACTIVITY)
@@ -1037,7 +1108,9 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
+    return callWithTenant(
+        onboarding,
+        () -> productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration());
   }
 
   @FunctionName(GET_MANAGING_INSTITUTION_ACTIVITY)
@@ -1055,7 +1128,10 @@ public class OnboardingFunctions {
             Map.of(
                     ONBOARDING_ID, onboarding.getId(),
                     PRODUCT_ID, onboarding.getProductId()));
-      List<ManagingInstitution> managingInstitutions = productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
+      List<ManagingInstitution> managingInstitutions =
+          callWithTenant(
+              onboarding,
+              () -> productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions());
       context.getLogger().info(String.format("Found %d managing institution(s) for product %s - %s", managingInstitutions.size(), onboarding.getProductId(), managingInstitutions.get(0).getInstitutionId()));
       return managingInstitutions;
   }
@@ -1075,9 +1151,12 @@ public class OnboardingFunctions {
                     ONBOARDING_ID, request.getOnboardingId(),
                     PRODUCT_ID, request.getProductId(),
                     MANAGING_INSTITUTION_ID, request.getManagingInstitutionId()));
-    List<UserMail> emails = userService.findEmailByInstitutionAndProducts(
-        request.getManagingInstitutionId(),
-        List.of(request.getProductId()));
+    List<UserMail> emails;
+    try (TenantContext.Scope ignored = TenantContext.open(request.getTenantId())) {
+      emails = userService.findEmailByInstitutionAndProducts(
+          request.getManagingInstitutionId(),
+          List.of(request.getProductId()));
+    }
 
     return getEmailListString(objectMapper, emails);
   }
