@@ -20,15 +20,14 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthorizationService {
 
-    private static final String PAGOPA_ISSUER = "PAGOPA";
-
     /**
-     * Permissions that, for users authenticated with a non-PAGOPA issuer (e.g. SPID/CIE citizens
-     * coming from the public FE), can also be granted - as a fallback when IAM denies access - if the
-     * user is one of the onboarding's own users, matched by id (e.g. the citizen who submitted the
-     * onboarding request, who legitimately has no IAM institution role yet). Management permissions
-     * (approve/reject) are intentionally excluded from this fallback and always require a positive IAM
-     * check, regardless of issuer.
+     * Permissions that can also be granted - as a fallback when IAM denies access - if the
+     * authenticated user is one of the onboarding's own users, matched by id (e.g. the citizen who
+     * submitted the onboarding request, who legitimately has no IAM institution role yet). This
+     * fallback is issuer-agnostic: it is evaluated purely on IAM outcome and onboarding membership,
+     * regardless of whether the user authenticated via PAGOPA (Google) or SPID/CIE. Management
+     * permissions (approve/reject) are intentionally excluded from this fallback and always require
+     * a positive IAM check.
      */
     private static final Set<String> VIEW_PERMISSIONS_BYPASSABLE_WITHOUT_IAM = Set.of(
             PermissionConstants.SELC_VIEW_ACCOUNT_PAGE,
@@ -53,11 +52,9 @@ public class AuthorizationService {
         log.info("IAM permission check result: onboardingId={}, userId={}, permission={}, productId={}, authorized={}",
                 onboardingId, selfCareUser.getId(), permission, productId, hasPermission);
 
-        if (!hasPermission
-                && !PAGOPA_ISSUER.equalsIgnoreCase(selfCareUser.getIssuer())
-                && VIEW_PERMISSIONS_BYPASSABLE_WITHOUT_IAM.contains(permission)) {
+        if (!hasPermission && VIEW_PERMISSIONS_BYPASSABLE_WITHOUT_IAM.contains(permission)) {
             hasPermission = isOnboardingRequester(selfCareUser, onboardingData);
-            log.info("IAM denied but non-PAGOPA issuer: applying onboarding-requester fallback, onboardingId={}, userId={}, permission={}, isOnboardingRequester={}",
+            log.info("IAM denied: applying onboarding-requester fallback, onboardingId={}, userId={}, permission={}, isOnboardingRequester={}",
                     onboardingId, selfCareUser.getId(), permission, hasPermission);
         }
 
