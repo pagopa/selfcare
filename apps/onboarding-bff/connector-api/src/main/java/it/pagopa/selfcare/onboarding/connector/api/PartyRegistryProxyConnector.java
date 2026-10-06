@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.Ins
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 
 public interface PartyRegistryProxyConnector {
@@ -23,5 +24,9 @@ public interface PartyRegistryProxyConnector {
     GeographicTaxonomies getExtById(String code);
 
     InstitutionProxyInfo getInstitutionProxyById(String externalId);
+
+    InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category);
+
+    IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize);
 
 }

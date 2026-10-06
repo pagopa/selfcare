@@ -10,7 +10,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.DefaultClaims;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.security.KeyFactory;
@@ -66,9 +65,6 @@ class JwtAuthenticationStrategyFactoryImplTest {
 
     @Test
     void create_UnknownIssuer() throws Exception {
-        Field signingKeyField = JwtAuthenticationStrategyFactoryImpl.class.getDeclaredField("signingKey");
-        signingKeyField.setAccessible(true);
-        signingKeyField.set(jwtAuthenticationStrategyFactory, getSigningKey());
         // given
         final DefaultClaims claims = new DefaultClaims();
         claims.setIssuer("invalid issuer");
@@ -93,9 +89,6 @@ class JwtAuthenticationStrategyFactoryImplTest {
     @ParameterizedTest(name = "{0}")
     @MethodSource("getJwtAuthenticationStrategyArgumentsProvider")
     void create(Class<?> clazz, String issuer) throws Exception {
-        Field signingKeyField = JwtAuthenticationStrategyFactoryImpl.class.getDeclaredField("signingKey");
-        signingKeyField.setAccessible(true);
-        signingKeyField.set(jwtAuthenticationStrategyFactory, getSigningKey());
         // given
         final DefaultClaims claims = new DefaultClaims();
         claims.setIssuer(issuer);

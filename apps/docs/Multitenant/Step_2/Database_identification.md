@@ -1,5 +1,9 @@
 # Mongo Database Identification
 
+This document defines the common tenant-aware Mongo routing contract for Quarkus
+and Spring services. The resource-selection rules are shared; the framework
+integration is implementation-specific.
+
 The correct Mongo database is identified through the following chain:
 
 ```text
@@ -11,15 +15,15 @@ TenantRegistry
         ↓
 connectionStringEnvVar + database
         ↓
-Tenant-aware ReactiveMongoClient
+Tenant-aware Mongo client/factory
 ```
 
-1. Tenant resolution
+## 1. Tenant resolution
 
-The tenant is obtained from:
+The tenant is obtained from the validated security boundary:
 
-- the JWT tenant_id claim, through JwtTenantValidationFilter ;
-- the X-Tenant-Id header, through TenantResolutionFilter .
+- the reconciled JWT `tenant_id` claim and `X-Tenant-Id` header;
+- the authenticated `TenantContext` populated by the framework security integration.
 
 The value is normalized, validated against the tenant registry, and stored in
 TenantContext:
@@ -28,16 +32,10 @@ TenantContext:
 TenantContext.tenantId = AR
 ```
 
-In production, with:
+A missing, unknown, inconsistent, or unmapped tenant causes an error. Resource
+selection MUST NOT fall back to AR, PNPG, a legacy client, or a generic default.
 
-```
-tenant.enforcement.enabled=true
-```
-
-a missing or unknown tenant causes an error. The application does not
-automatically fall back to AR .
-
-2. Tenant registry lookup
+## 2. Tenant registry lookup
 
 ```
 The current configuration is:
@@ -47,14 +45,54 @@ The current configuration is:
       "account": "cosmos-ar",
       "database": "selcOnboarding",
       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
-    } }, "PNPG": {
+    },
+    "jwt": {
+      "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR"
+    },
+    "storages": {
+      "products": {
+        "account": "stselcarproducts",
+        "container": "selc-d-product",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_AR_PRODUCTS"
+        }
+      }
+    }
+  }, "PNPG": {
     "mongo": {
       "account": "cosmos-pnpg",
       "database": "selcOnboarding",
       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"
-    } }
+    },
+    "jwt": {
+      "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG"
+    },
+    "storages": {
+      "products": {
+        "account": "stpnpgproducts",
+        "container": "selc-d-product",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_PNPG_PRODUCTS"
+        }
+      }
+    }
+  }
 }
 ```
+
+The `storages` dimension is independent from Mongo routing and is described in
+`Storage_identification.md`. It is included here to show the canonical registry shape: each tenant has one
+Mongo definition and can have multiple logical storage bindings.
+
+Tenant credentials are separate top-level registry dimensions, not nested under a service-specific `auth`
+object. `oneIdentity` references the client ID and client secret; `userRegistry` references its API key.
+The shared Spring and Quarkus tenant registries resolve these environment-variable references and fail
+startup when a declared reference is missing or empty. A service can mark tenant IDs as requiring either
+credential through `tenant.one-identity.mandatory-tenants` or
+`tenant.user-registry.mandatory-tenants`; disabled authentication tenants need not declare OneIdentity
+credentials.
 
 For AR , the registry resolves:
 
@@ -63,7 +101,8 @@ connectionStringEnvVar = MONGODB_CONNECTION_STRING_AR
 database              = selcOnboarding
 ```
 
-The value of the environment variable is read through MicroProfile Config:
+The value of the environment variable is resolved by the application's
+configuration system:
 
 ```
 MONGODB_CONNECTION_STRING_AR = mongodb://...
@@ -73,13 +112,13 @@ The account field is currently descriptive metadata. It is validated, but it is
 not used to build the connection string. The actual Mongo/Cosmos account is the
 one specified by the connection string.
 
-3. Client creation
+## 3. Client creation
 
-At startup, TenantMongoClientProducer:
+At startup, the service-specific Mongo configuration:
 
 1. reads all supported tenants from TenantRegistry ;
 2. retrieves the connection string from the configured environment variable;
-3. creates one ReactiveMongoClient for each tenant;
+3. creates one Mongo client/factory for each tenant;
 4. stores the clients in a map:
 
 ```
@@ -90,23 +129,48 @@ PNPG → client created with MONGODB_CONNECTION_STRING_PNPG
 If a connection string is missing for a configured tenant, the application fails
 to start.
 
-Do not set `@MongoEntity(clientName)`: Panache would also create a synthetic
-named client and CDI would have two beans for the same name.
+For Quarkus services, do not set `@MongoEntity(clientName)`: Panache would also
+create a synthetic named client and CDI would have two beans for the same name.
 
-The producer instead replaces the **default** Panache `ReactiveMongoClient`
-with an `@Alternative` proxy. `TenantMongoDatabaseResolver` supplies the
-database name for the current `TenantContext`.
+Quarkus services may expose the tenant-aware client through the default Panache
+client/factory. Spring services MUST replace the default Mongo auto-configuration
+with a tenant-aware `MongoDatabaseFactory`/`MongoTemplate` integration so that
+repository code cannot select a tenant database directly.
 
-4. Client and database selection during a query
+### Quarkus implementation (`onboarding-ms`, `product`)
 
-When Panache opens a collection it:
+`TenantMongoClientProducer` (`selfcare-sdk-tenant-mongodb`) creates one reactive
+Mongo client per supported tenant and replaces the default Panache
+`ReactiveMongoClient`. `TenantMongoDatabaseResolver` selects
+`registry[tenant].mongo.database` from `TenantContext`.
 
-1. looks up the default reactive client (the tenant-aware alternative);
-2. asks `TenantMongoDatabaseResolver` for the database name of the current
-   `TenantContext`;
-3. calls `getDatabase(name)` on the tenant-aware proxy.
+`product` receives the tenant as a controller path variable and stores it in
+`Product` and `ContractTemplate` as `tenantId`. Product repository reads and
+contract-template list/count queries are constrained by `TenantContext.tenantId`
+in addition to physical routing through the tenant registry. Do not set
+`quarkus.mongodb.connection-string` or `@MongoEntity(clientName)`.
 
-The proxy:
+### Spring implementation (`user-group-ms`)
+
+`user-group-ms` imports the shared configurations from `selc-commons-tenant` and
+excludes `MongoAutoConfiguration`. `TenantMongoDatabaseFactory` creates one
+`MongoClient` and one `SimpleMongoClientDatabaseFactory` per supported tenant.
+The primary `MongoTemplate` delegates to that factory.
+
+The factory ignores the database name supplied by a caller and always selects the
+database declared in the current tenant's registry entry. A request without a
+resolved `TenantContext` therefore cannot access Mongo data. Clients are closed
+when the application context is destroyed.
+
+## 4. Client and database selection during a query
+
+When a repository opens a collection it:
+
+1. looks up the tenant-aware Mongo client/factory;
+2. reads the current tenant from `TenantContext`;
+3. selects the client's configured database for that tenant.
+
+The tenant-aware factory:
 
 1. reads the tenant from TenantContext ;
 2. retrieves the corresponding definition from TenantRegistry ;
@@ -133,9 +197,9 @@ TenantContext = PNPG
 Therefore, even if the database name is the same, the two tenants can point to
 different Cosmos/Mongo accounts.
 
-5. Additional logical isolation
+## 5. Additional logical isolation
 
-In addition to physical client/database routing, OnboardingRepository applies
+In addition to physical client/database routing, tenant-owned repositories apply
 the tenantId discriminator to Mongo queries:
 
 ```
@@ -149,12 +213,19 @@ the tenantId discriminator to Mongo queries:
 }
 ```
 
-Updates are constrained by both the entity identifier and the tenant:
+In Spring Data repositories and services, updates are constrained by both the
+entity identifier and the tenant:
 
 ```
 tenantId = ?1 and _id = ?2
 ```
 
-This ensures that tenant isolation remains enforced even when multiple tenants
-share the same Mongo database.
+Writes and upserts explicitly set `tenantId`; upserts also set it through
+`$setOnInsert`, because a top-level tenant query does not populate the inserted
+document. Migration mode may temporarily include `tenantId IS NULL` in reads,
+controlled by `tenant.strict-data-isolation`; strict mode removes that
+compatibility path.
 
+This ensures that tenant isolation remains enforced even when multiple tenants
+share the same Mongo database. Tenant-qualified unique indexes remain an
+infrastructure and migration requirement.

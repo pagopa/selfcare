@@ -2,6 +2,8 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.auth.client.OneMailEmailsApi;
+import it.pagopa.selfcare.auth.conf.TenantOutboundMailConfig;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.auth.util.GeneralUtils;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -34,8 +36,8 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
   @ConfigProperty(name = "auth-ms.retry")
   Integer maxRetry;
 
-  @ConfigProperty(name = "auth-ms.mail-sender")
-  String senderMail;
+  @Inject TenantOutboundMailConfig mailConfig;
+  @Inject AuthTenantContext tenantContext;
 
   @RestClient @Inject
   OneMailEmailsApi oneMailEmailsApi;
@@ -43,10 +45,8 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
   @Override
   public Uni<String> sendOtpEmail(String userId, String email, String otp, String name) {
 
-    log.info("Sending OTP email. userId={}, email={}", userId, email);
-
     EmailHighPriorityBodyDTO emailRequest = EmailHighPriorityBodyDTO.builder()
-      .from(new EmailAddress().email(senderMail))
+      .from(new EmailAddress().email(mailConfig.sender(tenantContext.getTenantId())))
       .to(new EmailAddress().email(email))
       .templateContent(Map.of(
         "templateId", SELFCARE_USER_OTP_TEMPLATE,
@@ -60,17 +60,15 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
     return oneMailEmailsApi
       .v1EmailsSendHighPost(false, emailRequest)
       .map(EmailSuccessResponseDTO::getRequestId)
-      .invoke(() -> log.info("OneMail call completed successfully for {}", email))
+      .invoke(() -> log.info("event=otp_email_send_completed tenant={}", tenantContext.getTenantId()))
       .onFailure()
-      .invoke(t -> log.error("OneMail call failed for {}: {}", email, t.getMessage(), t))
+      .invoke(t -> log.error("event=otp_email_send_failed tenant={}", tenantContext.getTenantId()))
       .onFailure(GeneralUtils::checkIfIsRetryableException)
       .retry()
       .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))
       .atMost(maxRetry)
       .onFailure(WebApplicationException.class)
-      .transform(GeneralUtils::extractExceptionFromWebAppException)
-      .onFailure()
-      .recoverWithNull();
+      .transform(GeneralUtils::extractExceptionFromWebAppException);
   }
 
   @Override
@@ -78,7 +76,7 @@ public class OtpNotificationServiceImpl implements OtpNotificationService {
     return oneMailEmailsApi
       .v1EmailsStatusesGet(mailRequestId)
       .onFailure()
-      .invoke(t -> log.error("OneMail call failed for requestId {}: {}", mailRequestId, t.getMessage(), t))
+      .invoke(t -> log.error("event=otp_mail_status_failed tenant={}", tenantContext.getTenantId()))
       .onFailure(GeneralUtils::checkIfIsRetryableException)
       .retry()
       .withBackOff(Duration.ofSeconds(retryMinBackOff), Duration.ofSeconds(retryMaxBackOff))

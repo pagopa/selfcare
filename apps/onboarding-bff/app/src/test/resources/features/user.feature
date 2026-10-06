@@ -187,6 +187,9 @@ Feature: User
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v1/users/onboarding/37f7609b-5a4b-4200-82e7-2117756d64aa/manager"
     Then The status code is 200
+    And The response body contains:
+      | name    | Tizio |
+      | surname | Caio  |
 
   Scenario: Failed to retrive manager infos when onboardingId not exist
     Given User login with username "j.doe" and password "test"

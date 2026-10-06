@@ -1,5 +1,15 @@
 Feature: Institution-V2
 
+  Scenario: Search IPA institutions
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/v2/institutions/ipa?search=Ferrara&category=L6&page=0&pageSize=20"
+    Then The status code is 200
+    And The response body contains:
+      | count                | 1                  |
+      | items[0].id          | ipa-c-d548         |
+      | items[0].description | Comune di Ferrara  |
+      | items[0].taxCode     | 00297110389        |
+
   #Scenario: Success to complete onboarding
   #  Given User login with username "j.doe" and password "test"
   #  And The following request body:

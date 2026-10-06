@@ -5006,6 +5006,7 @@ Feature: User
       | products[0].status                | ACTIVE                                      |
       | products[0].productRole           | referente amministrativo                    |
       | products[0].role                  | MANAGER                                     |
+      | products[0].partnerTechRole       | true                                        |
       | products[0].env                   | ROOT                                        |
     And The response body contains the list "products" of size 1
     And The response body doesn't contain field "products[0].roleId"

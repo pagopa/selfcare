@@ -606,7 +606,7 @@ locals {
 
   auth_ms_private_dns_suffix = "lemonpond-bb0b750e.westeurope.azurecontainerapps.io"
 
-  vpn_sku     = "VpnGw1"
+  vpn_sku     = "VpnGw1AZ"
   vpn_pip_sku = "Standard"
 
   private_endpoint_network_policies = "Enabled"

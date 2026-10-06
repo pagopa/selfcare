@@ -3,12 +3,15 @@ package it.pagopa.selfcare.commons.web.security;
 import static it.pagopa.selfcare.commons.web.handler.RestExceptionsHandler.UNHANDLED_EXCEPTION;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.commons.web.model.Problem;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Enumeration;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpHeaders;
@@ -41,12 +44,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final AuthenticationManager authenticationManager;
     private final ObjectMapper objectMapper;
+    private final TenantContext tenantContext;
 
 
     public JwtAuthenticationFilter(final AuthenticationManager authenticationManager,
                                    final ObjectMapper objectMapper) {
+        this(authenticationManager, objectMapper, null);
+    }
+
+    public JwtAuthenticationFilter(
+            final AuthenticationManager authenticationManager,
+            final ObjectMapper objectMapper,
+            final TenantContext tenantContext) {
         this.authenticationManager = authenticationManager;
         this.objectMapper = objectMapper;
+        this.tenantContext = tenantContext;
     }
 
     @Override
@@ -55,18 +67,27 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     final FilterChain filterChain) throws ServletException, IOException {
         log.trace("doFilterInternal start");
         try {
+            Enumeration<String> tenantHeaders = request.getHeaders(TENANT_HEADER);
+            if (tenantHeaders != null && Collections.list(tenantHeaders).size() > 1) {
+                log.warn("Rejecting request with duplicated {} header", TENANT_HEADER);
+                writeTenantValidationFailure(response);
+                return;
+            }
             try {
                 final Authentication authentication = authenticationManager.authenticate(authenticationConverter.convert(request));
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 context.setAuthentication(authentication);
                 SecurityContextHolder.setContext(context);
+                if (tenantContext != null && authentication instanceof JwtAuthenticationToken jwtToken) {
+                    if (!StringUtils.hasText(jwtToken.getTenantId())) {
+                        throw new TenantValidationException();
+                    }
+                    tenantContext.setTenantId(jwtToken.getTenantId());
+                }
                 filterChain.doFilter(request, response);
             } catch (TenantValidationException e) {
                 log.warn("Cannot validate tenant context for request {}", request.getRequestURI());
-                response.setStatus(HttpStatus.BAD_REQUEST.value());
-                response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
-                final Problem problem = new Problem(HttpStatus.BAD_REQUEST, e.getMessage());
-                response.getOutputStream().print(objectMapper.writeValueAsString(problem));
+                writeTenantValidationFailure(response, e.getMessage());
             } catch (AuthenticationException e) {
                 log.warn("Cannot set user authentication", e);
                 filterChain.doFilter(request, response);
@@ -79,10 +100,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
         } finally {
+            if (tenantContext != null) {
+                tenantContext.clear();
+            }
             SecurityContextHolder.clearContext();
             MDC.clear();
             log.trace("doFilterInternal end");
         }
+    }
+
+    private void writeTenantValidationFailure(HttpServletResponse response) throws IOException {
+        writeTenantValidationFailure(response, "Invalid tenant context");
+    }
+
+    private void writeTenantValidationFailure(HttpServletResponse response, String message)
+            throws IOException {
+        response.setStatus(HttpStatus.BAD_REQUEST.value());
+        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        final Problem problem = new Problem(HttpStatus.BAD_REQUEST, message);
+        response.getOutputStream().print(objectMapper.writeValueAsString(problem));
     }
 
 }

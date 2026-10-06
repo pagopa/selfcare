@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - './libs/selfcare-user-sdk-pom/**'
+      - './libs/selfcare-user-sdk-model/**'
+      - './libs/selfcare-user-sdk-event/**'
 
   workflow_dispatch:
 

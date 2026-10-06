@@ -6,6 +6,8 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.quarkus.test.security.TestSecurity;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import io.smallrye.mutiny.Uni;
@@ -29,6 +31,9 @@ import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.filter.TenantResolutionFilter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -63,6 +68,18 @@ class OnboardingControllerTest {
 
     @InjectMock
     OnboardingService onboardingService;
+
+    @BeforeEach
+    void withTenantHeader() {
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+                .addHeader(TenantResolutionFilter.TENANT_HEADER, "AR")
+                .build();
+    }
+
+    @AfterEach
+    void resetRestAssured() {
+        RestAssured.reset();
+    }
 
     static {
         onboardingBaseValid = new OnboardingDefaultRequest();

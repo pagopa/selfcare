@@ -13,6 +13,7 @@ import it.pagopa.selfcare.product.model.enums.ContractTemplateFileType;
 import it.pagopa.selfcare.product.repository.ContractTemplateRepository;
 import it.pagopa.selfcare.product.storage.ContractTemplateStorage;
 import it.pagopa.selfcare.product.util.HtmlUtils;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,7 +31,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
   private static final String BASE_TEMPLATE_FRAGMENT_PLACEHOLDER = "${contractTemplateFragment}";
   private static final String BASE_TEMPLATE_LOGO_PLACEHOLDER = "${contractTemplateLogo}";
   private static final String BASE_TEMPLATE_LOGO_PATH =
-      "%s/%s/logo.png"; // {contractTemplateLogoBaseUrl}/{productId}/logo.png
+      "%s/%s/%s/logo.png"; // {contractTemplateLogoBaseUrl}/{productId}/logo.png
 
   private static final String BASE_TEMPLATE_HTML;
 
@@ -50,18 +51,21 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
   private final ContractTemplateRepository contractTemplateRepository;
   private final ContractTemplateStorage contractTemplateStorage;
   private final ContractTemplateMapper contractTemplateMapper;
+  private final TenantContext tenantContext;
   private final String contractTemplateLogoBaseUrl;
 
   public ContractTemplateServiceImpl(
       ContractTemplateRepository contractTemplateRepository,
       ContractTemplateStorage contractTemplateStorage,
       ContractTemplateMapper contractTemplateMapper,
+      TenantContext tenantContext,
       @ConfigProperty(name = "product-ms.contract-template.logo-base-url")
           String contractTemplateLogoBaseUrl)
       throws IOException {
     this.contractTemplateRepository = contractTemplateRepository;
     this.contractTemplateStorage = contractTemplateStorage;
     this.contractTemplateMapper = contractTemplateMapper;
+    this.tenantContext = tenantContext;
     this.contractTemplateLogoBaseUrl = contractTemplateLogoBaseUrl;
   }
 
@@ -69,10 +73,12 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
   public Uni<ContractTemplateResponse> upload(ContractTemplateUploadRequest request) {
     final ContractTemplate contractTemplate = contractTemplateMapper.toContractTemplate(request);
     final ContractTemplateFile contractTemplateFile =
-        buildContractTemplateFile(contractTemplate.getProductId(), request.getFile());
+        buildContractTemplateFile(
+            contractTemplate.getTenantId(), contractTemplate.getProductId(), request.getFile());
     contractTemplate.setFileType(contractTemplateFile.getType());
     return contractTemplateRepository
-        .countWithFilters(request.getProductId(), request.getName(), request.getVersion())
+        .countWithFilters(
+            request.getTenantId(), request.getProductId(), request.getName(), request.getVersion())
         .onItem()
         .transformToUni(
             count -> {
@@ -129,14 +135,18 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
 
   @Override
   public Uni<ContractTemplateFile> download(
-      String productId, String contractTemplateId, ContractTemplateFileType fileType) {
+      String tenantId,
+      String productId,
+      String contractTemplateId,
+      ContractTemplateFileType fileType) {
     return contractTemplateStorage.download(productId, contractTemplateId, fileType);
   }
 
   @Override
-  public Uni<ContractTemplateResponseList> list(String productId, String name, String version) {
+  public Uni<ContractTemplateResponseList> list(
+      String tenantId, String productId, String name, String version) {
     return contractTemplateRepository
-        .listWithFilters(productId, name, version)
+        .listWithFilters(tenantId, productId, name, version)
         .onItem()
         .transform(
             l -> {
@@ -156,9 +166,10 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
             });
   }
 
-  private ContractTemplateFile buildContractTemplateFile(String productId, FileUpload fileUpload) {
+  private ContractTemplateFile buildContractTemplateFile(
+      String tenantId, String productId, FileUpload fileUpload) {
     if (fileUpload.contentType().equals(ContractTemplateFileType.HTML.getContentType())) {
-      return buildContractTemplateFileFromHTML(productId, fileUpload);
+      return buildContractTemplateFileFromHTML(tenantId, productId, fileUpload);
     } else if (fileUpload.contentType().equals(ContractTemplateFileType.PDF.getContentType())) {
       return ContractTemplateFile.builder()
           .file(fileUpload.uploadedFile().toFile())
@@ -171,7 +182,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
   }
 
   private ContractTemplateFile buildContractTemplateFileFromHTML(
-      String productId, FileUpload fileUpload) {
+      String tenantId, String productId, FileUpload fileUpload) {
     return Optional.ofNullable(HtmlUtils.getCleanHTML(fileUpload.uploadedFile().toFile()))
         .map(
             htmlFragment -> {
@@ -181,7 +192,10 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
                   html.replace(
                       BASE_TEMPLATE_LOGO_PLACEHOLDER,
                       String.format(
-                          BASE_TEMPLATE_LOGO_PATH, contractTemplateLogoBaseUrl, productId));
+                          BASE_TEMPLATE_LOGO_PATH,
+                          contractTemplateLogoBaseUrl,
+                          tenantId,
+                          productId));
               return ContractTemplateFile.builder()
                   .data(html.getBytes(StandardCharsets.UTF_8))
                   .type(ContractTemplateFileType.HTML)

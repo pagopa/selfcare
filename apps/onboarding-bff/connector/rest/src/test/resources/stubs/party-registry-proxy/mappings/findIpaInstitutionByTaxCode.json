@@ -1,0 +1,22 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPath": "/external/ur/v1/institutions/ipa/12345678901",
+    "queryParameters": {
+      "category": { "equalTo": "C17,C16" }
+    }
+  },
+  "response": {
+    "status": 200,
+    "jsonBody": {
+      "id": "ipa-id",
+      "taxCode": "12345678901",
+      "description": "Comune di esempio",
+      "category": "C17",
+      "origin": "IPA"
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

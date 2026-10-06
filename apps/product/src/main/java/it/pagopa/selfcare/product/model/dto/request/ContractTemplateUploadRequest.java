@@ -12,6 +12,8 @@ public class ContractTemplateUploadRequest {
 
   private String productId;
 
+  private String tenantId;
+
   private String name;
 
   private String version;

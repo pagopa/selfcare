@@ -1,0 +1,2829 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-io\",\"title\":\"IO\",\"description\":\"Offri ai cittadini i servizi del tuo ente in un unico canale\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"productId\":\"prod-io\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":false,\"invoiceable\":true,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente operativo\",\"description\":\"Operatore\",\"label\":\"Operatore\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\",\"dashboard-aggregator\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html\",\"version\":\"2.4.5\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SCP\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"SCP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-io\",\"title\":\"IO\",\"description\":\"Offri ai cittadini i servizi del tuo ente in un unico canale\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"productId\":\"prod-io\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":false,\"invoiceable\":true,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente operativo\",\"description\":\"Operatore\",\"label\":\"Operatore\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\",\"dashboard-aggregator\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html\",\"version\":\"2.4.5\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SCP\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"SCP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-io"
+        ],
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-io"
+        ],
+        "institutionType": [
+          "SCP"
+        ],
+        "origin": [
+          "PDND_INFOCAMERE"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-io/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PT"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-io/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PT"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "SCP"
+        ],
+        "origin": [
+          "PDND_INFOCAMERE"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-io/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "SCP"
+        ],
+        "origin": [
+          "PDND_INFOCAMERE"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-pagopa\",\"title\":\"Pagamenti pagoPA\",\"description\":\"Gestisci gli incassi in modo centralizzato, efficiente e immediato\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"productId\":\"prod-pagopa\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":true,\"invoiceable\":true,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"operator-psp\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Responsabile Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Ha tutti i permessi e gestisce gli utenti. Possono essere al massimo 4.\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\",\"dashboard-aggregator\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html\",\"version\":\"1.0.0\"},{\"institutionType\":\"PA\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html\",\"version\":\"1.0.0\"},{\"institutionType\":\"PRV\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html\",\"version\":\"1.0.4\"},{\"institutionType\":\"PSP\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_psp-v.1.0.0.html\",\"version\":\"1.0.0\"},{\"institutionType\":\"GPU\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html\",\"version\":\"1.0.4\"},{\"name\":\"Dichiarazione_sostitutiva_certificazione\",\"mandatory\":true,\"workflowType\":[\"FOR_APPROVE_GPU\"],\"workflowState\":\"REQUEST\",\"order\":1,\"generated\":true,\"institutionType\":\"GPU\",\"contractType\":\"ATTACHMENT\",\"path\":\"contracts/template/pagopa/attachments/1.0.0/pagopa-checklist-v1.0.0.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"GPU\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE_GPU\"},{\"institutionType\":\"PRV\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"PSP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"CON\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"REC\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"SCP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"PG\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"}],\"requiredDocuments\":[{\"id\":\"prod-pagopa-required-1\",\"name\":\"Integration required document\",\"required\":true,\"filter\":{\"institutionType\":[\"GSP\"],\"origin\":[\"SELC\"]}}]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-pagopa\",\"title\":\"Pagamenti pagoPA\",\"description\":\"Gestisci gli incassi in modo centralizzato, efficiente e immediato\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"productId\":\"prod-pagopa\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":true,\"invoiceable\":true,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"operator-psp\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Responsabile Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Ha tutti i permessi e gestisce gli utenti. Possono essere al massimo 4.\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"PSP\",\"backOfficeRoles\":[{\"code\":\"admin-psp\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"PA\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"GSP\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"GPU\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\",\"dashboard-aggregator\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"PRV\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html\",\"version\":\"1.0.0\"},{\"institutionType\":\"PA\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_ec-v.1.0.0.html\",\"version\":\"1.0.0\"},{\"institutionType\":\"PRV\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html\",\"version\":\"1.0.4\"},{\"institutionType\":\"PSP\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.0/pagopa-accordo_di_adesione_psp-v.1.0.0.html\",\"version\":\"1.0.0\"},{\"institutionType\":\"GPU\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa/1.0.4/pagopa-accordo_di_adesione_prv-v.1.0.4.html\",\"version\":\"1.0.4\"},{\"name\":\"Dichiarazione_sostitutiva_certificazione\",\"mandatory\":true,\"workflowType\":[\"FOR_APPROVE_GPU\"],\"workflowState\":\"REQUEST\",\"order\":1,\"generated\":true,\"institutionType\":\"GPU\",\"contractType\":\"ATTACHMENT\",\"path\":\"contracts/template/pagopa/attachments/1.0.0/pagopa-checklist-v1.0.0.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"GPU\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE_GPU\"},{\"institutionType\":\"PRV\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"PSP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"CON\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"REC\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"SCP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"},{\"institutionType\":\"PG\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"}],\"requiredDocuments\":[{\"id\":\"prod-pagopa-required-1\",\"name\":\"Integration required document\",\"required\":true,\"filter\":{\"institutionType\":[\"GSP\"],\"origin\":[\"SELC\"]}}]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "GSP"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "GSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "GPU"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE_GPU\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "PRV"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "PSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "CON"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "REC"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pagopa"
+        ],
+        "institutionType": [
+          "PG"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "CON"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "CON"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "GPU"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "GPU"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "GSP"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "GSP"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "GSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[{\"id\":\"prod-pagopa-required-1\",\"name\":\"Integration required document\",\"required\":true}]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "GSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "true"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PG"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PG"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PRV"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PRV"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PT"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PT"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "REC"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pagopa/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "REC"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-dashboard-psp",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"parentId\":\"prod-pagopa\",\"alias\":\"prod-dashboard-psp\",\"title\":\"pagoPA Insights\",\"description\":\"Ottimizza al meglio la gestione delle tue attivit\\u00e0 su pagoPA: accedi ai dati transazionali della piattaforma e analizzali con una dashboard dinamica, intuitiva e aggiornata quotidianamente.\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"institutionTypesAllowed\":[\"PSP\"],\"productId\":\"prod-dashboard-psp\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":true,\"enabled\":false},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"skipUserCreation\":true,\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa-insights/1.0.0/pagopa-insights-accordo-di-adesione-v.1.0.0.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PSP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-dashboard-psp/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"parentId\":\"prod-pagopa\",\"alias\":\"prod-dashboard-psp\",\"title\":\"pagoPA Insights\",\"description\":\"Ottimizza al meglio la gestione delle tue attivit\\u00e0 su pagoPA: accedi ai dati transazionali della piattaforma e analizzali con una dashboard dinamica, intuitiva e aggiornata quotidianamente.\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"institutionTypesAllowed\":[\"PSP\"],\"productId\":\"prod-dashboard-psp\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":true,\"enabled\":false},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"skipUserCreation\":true,\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Gestisce l\\u2019integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\",\"productLabel\":\"Referente Tecnico\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Referente dei Pagamenti\",\"productLabel\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/pagopa-insights/1.0.0/pagopa-insights-accordo-di-adesione-v.1.0.0.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PSP\",\"origin\":\"SELC\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-dashboard-psp/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-dashboard-psp"
+        ],
+        "institutionType": [
+          "PSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-dashboard-psp/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-dashboard-psp/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PSP"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-interop\",\"title\":\"Interoperabilit\\u00e0\",\"description\":\"Scambia informazioni con altri enti in modo semplice e sicuro\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"testEnvProductIds\":[\"prod-interop-coll\",\"prod-interop-atst\"],\"productId\":\"prod-interop\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"api\",\"description\":\"Gestisce il ciclo di vita degli e-service\",\"label\":\"Operatore API\"},{\"code\":\"security\",\"description\":\"Gestisce il ciclo di vita dei client di connessione\",\"label\":\"Operatore Sicurezza\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"AS\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/interop/ivass/2.1.1/interop-accordo_di_adesione_as-v.2.1.1.html\",\"version\":\"2.1.1\"},{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/interop/2.3.2/interop-accordo_di_adesione-v.2.3.2.html\",\"version\":\"2.3.2\"},{\"institutionType\":\"PRV\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/interop/prv/1.0.2/interop-accordo_di_adesione_prv-v.1.0.2.html\",\"version\":\"1.0.2\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"PA\",\"origin\":\"SELC\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SA\",\"origin\":\"ANAC\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"PRV\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SCEC\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"AS\",\"origin\":\"IVASS\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SCP\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-interop\",\"title\":\"Interoperabilit\\u00e0\",\"description\":\"Scambia informazioni con altri enti in modo semplice e sicuro\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"testEnvProductIds\":[\"prod-interop-coll\",\"prod-interop-atst\"],\"productId\":\"prod-interop\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"api\",\"description\":\"Gestisce il ciclo di vita degli e-service\",\"label\":\"Operatore API\"},{\"code\":\"security\",\"description\":\"Gestisce il ciclo di vita dei client di connessione\",\"label\":\"Operatore Sicurezza\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"AS\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/interop/ivass/2.1.1/interop-accordo_di_adesione_as-v.2.1.1.html\",\"version\":\"2.1.1\"},{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/interop/2.3.2/interop-accordo_di_adesione-v.2.3.2.html\",\"version\":\"2.3.2\"},{\"institutionType\":\"PRV\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/interop/prv/1.0.2/interop-accordo_di_adesione_prv-v.1.0.2.html\",\"version\":\"1.0.2\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"PA\",\"origin\":\"SELC\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"GSP\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SA\",\"origin\":\"ANAC\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"PRV\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SCEC\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"AS\",\"origin\":\"IVASS\",\"workflowType\":\"CONTRACT_REGISTRATION\"},{\"institutionType\":\"SCP\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-interop"
+        ],
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-interop"
+        ],
+        "institutionType": [
+          "SA"
+        ],
+        "origin": [
+          "ANAC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-interop"
+        ],
+        "institutionType": [
+          "SCEC"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-interop"
+        ],
+        "institutionType": [
+          "AS"
+        ],
+        "origin": [
+          "IVASS"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "AS"
+        ],
+        "origin": [
+          "IVASS"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-interop/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "AS"
+        ],
+        "origin": [
+          "IVASS"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-interop/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "SA"
+        ],
+        "origin": [
+          "ANAC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-interop/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "SA"
+        ],
+        "origin": [
+          "ANAC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-interop/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "SCEC"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-interop/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "SCEC"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io-premium",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"parentId\":\"prod-io\",\"alias\":\"prod-io-premium\",\"title\":\"IO Premium\",\"description\":\"Accedi alle funzionalit\\u00e0 avanzate per i messaggi dell'app IO\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"productId\":\"prod-io-premium\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Referente Amministrativo\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Referente Amministrativo\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Referente Operativo\",\"label\":\"Operatore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io-premium/1.1.1/io-premium-accordo_di_adesione-v.1.1.1.html\",\"version\":\"1.1.1\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io-premium/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"parentId\":\"prod-io\",\"alias\":\"prod-io-premium\",\"title\":\"IO Premium\",\"description\":\"Accedi alle funzionalit\\u00e0 avanzate per i messaggi dell'app IO\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"productId\":\"prod-io-premium\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Referente Amministrativo\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"admin\",\"description\":\"Referente Amministrativo\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operator\",\"description\":\"Referente Operativo\",\"label\":\"Operatore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io-premium/1.1.1/io-premium-accordo_di_adesione-v.1.1.1.html\",\"version\":\"1.1.1\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_REGISTRATION\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io-premium/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-io-premium"
+        ],
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_REGISTRATION\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io-premium/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-io-premium/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pn-pg",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-pn-pg\",\"title\":\"SEND\",\"description\":\"SEND - Notifiche Digitali\",\"status\":\"ACTIVE\",\"productId\":\"prod-pn-pg\",\"tenantId\":\"PNPG\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"pg-admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"pg-operator\",\"description\":\"Gestisce l'integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Gestore Notifiche\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"pg-admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/dummy-accordo_di_adesione.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PG\",\"origin\":\"INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pn-pg/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-pn-pg\",\"title\":\"SEND\",\"description\":\"SEND - Notifiche Digitali\",\"status\":\"ACTIVE\",\"productId\":\"prod-pn-pg\",\"tenantId\":\"PNPG\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"pg-admin\",\"description\":\"Stipula il contratto e identifica gli amministratori\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"pg-operator\",\"description\":\"Gestisce l'integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Gestore Notifiche\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"pg-admin\",\"description\":\"Ha tutti i permessi e gestisce gli utenti\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/dummy-accordo_di_adesione.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PG\",\"origin\":\"INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pn-pg/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-pn-pg"
+        ],
+        "institutionType": [
+          "PG"
+        ],
+        "origin": [
+          "INFOCAMERE"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"FOR_APPROVE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pn-pg/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PG"
+        ],
+        "origin": [
+          "INFOCAMERE"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-pn-pg/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PG"
+        ],
+        "origin": [
+          "INFOCAMERE"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-registro-beni",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-registro-beni\",\"title\":\"Registro dei beni\",\"description\":\"Crea e gestisce il registro dei beni per il bonus elettrodomestici\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"productId\":\"prod-registro-beni\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operatore_beni\",\"description\":\"Gestisce l'integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/dummy-accordo_di_adesione.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PRV\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"CONTRACT_REGISTRATION\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-registro-beni/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-registro-beni\",\"title\":\"Registro dei beni\",\"description\":\"Crea e gestisce il registro dei beni per il bonus elettrodomestici\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\"],\"productId\":\"prod-registro-beni\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"operatore_beni\",\"description\":\"Gestisce l'integrazione tecnologica e/o l'operativit\\u00e0 dei servizi\",\"label\":\"Operatore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/dummy-accordo_di_adesione.html\",\"version\":\"1.0.0\"}],\"workflowRules\":[{\"institutionType\":\"PRV\",\"origin\":\"PDND_INFOCAMERE\",\"workflowType\":\"CONTRACT_REGISTRATION\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-registro-beni/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-registro-beni/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PRV"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-registro-beni/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PRV"
+        ],
+        "origin": [
+          "SELC"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-ced",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-ced\",\"title\":\"IO\",\"description\":\"Offri ai cittadini i servizi del tuo ente in un unico canale\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"signingConfiguration\":{\"requiredSignatures\":2},\"productId\":\"prod-ced\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":false,\"invoiceable\":true,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente operativo\",\"description\":\"Operatore\",\"label\":\"Operatore\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\",\"dashboard-aggregator\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html\",\"version\":\"2.4.5\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_WITH_COUNTERSIGNATURE\"},{\"institutionType\":\"PRV\",\"origin\":\"SELC\",\"workflowType\":\"CONTRACT_WITH_COUNTERSIGNATURE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-ced/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"alias\":\"prod-ced\",\"title\":\"IO\",\"description\":\"Offri ai cittadini i servizi del tuo ente in un unico canale\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"signingConfiguration\":{\"requiredSignatures\":2},\"productId\":\"prod-ced\",\"tenantId\":\"AR\",\"features\":{\"allowCompanyOnboarding\":true,\"allowIndividualOnboarding\":false,\"delegable\":false,\"invoiceable\":true,\"enabled\":true},\"roleMappings\":[{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"dashboard\"],\"role\":\"OPERATOR\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente operativo\",\"description\":\"Operatore\",\"label\":\"Operatore\"}]},{\"phasesAdditionAllowed\":[\"dashboard-async\",\"dashboard-aggregator\"],\"role\":\"SUB_DELEGATE\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]},{\"phasesAdditionAllowed\":[\"onboarding\"],\"role\":\"ADMIN_EA\",\"institutionType\":\"DEFAULT\",\"backOfficeRoles\":[{\"code\":\"referente amministrativo\",\"description\":\"Amministratore\",\"label\":\"Amministratore\"}]}],\"contracts\":[{\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.5/io-accordo_di_adesione-v.2.4.5.html\",\"version\":\"2.4.5\"}],\"workflowRules\":[{\"institutionType\":\"PA\",\"origin\":\"IPA\",\"workflowType\":\"CONTRACT_WITH_COUNTERSIGNATURE\"},{\"institutionType\":\"PRV\",\"origin\":\"SELC\",\"workflowType\":\"CONTRACT_WITH_COUNTERSIGNATURE\"}],\"requiredDocuments\":[]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-ced/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":30}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/workflow-type",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "productId": [
+          "prod-ced"
+        ],
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"workflowType\":\"CONTRACT_WITH_COUNTERSIGNATURE\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-ced/required-documents",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "[]"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "HEAD",
+      "path": "/product/prod-ced/required-documents/enabled",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      },
+      "queryStringParameters": {
+        "institutionType": [
+          "PA"
+        ],
+        "origin": [
+          "IPA"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "X-Required-Documents-Enabled": [
+          "false"
+        ]
+      }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"productId\":\"prod-io\",\"tenantId\":\"PNPG\",\"title\":\"IO PNPG contract fixture\",\"status\":\"ACTIVE\",\"features\":{\"expirationDays\":45,\"delegable\":true},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"PG\",\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[{\"code\":\"pnpg-admin\",\"label\":\"PNPG administrator\"}]}],\"partnerTechRoleMappings\":[{\"role\":\"DELEGATE\",\"institutionType\":\"PT\",\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[{\"code\":\"pnpg-pt\",\"label\":\"PNPG technical partner\"}]}],\"contracts\":[{\"institutionType\":\"PG\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/pnpg/io.html\",\"version\":\"pnpg-2\"}],\"workflowRules\":[{\"institutionType\":\"PG\",\"origin\":\"INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[{\"id\":\"pnpg-doc\",\"name\":\"PNPG proof\",\"required\":true,\"storageOrigin\":\"USER\",\"filter\":{\"institutionType\":[\"PG\"],\"origin\":[\"INFOCAMERE\"]}}]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/valid",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"productId\":\"prod-io\",\"tenantId\":\"PNPG\",\"title\":\"IO PNPG contract fixture\",\"status\":\"ACTIVE\",\"features\":{\"expirationDays\":45,\"delegable\":true},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"PG\",\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[{\"code\":\"pnpg-admin\",\"label\":\"PNPG administrator\"}]}],\"partnerTechRoleMappings\":[{\"role\":\"DELEGATE\",\"institutionType\":\"PT\",\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[{\"code\":\"pnpg-pt\",\"label\":\"PNPG technical partner\"}]}],\"contracts\":[{\"institutionType\":\"PG\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/pnpg/io.html\",\"version\":\"pnpg-2\"}],\"workflowRules\":[{\"institutionType\":\"PG\",\"origin\":\"INFOCAMERE\",\"workflowType\":\"FOR_APPROVE\"}],\"requiredDocuments\":[{\"id\":\"pnpg-doc\",\"name\":\"PNPG proof\",\"required\":true,\"storageOrigin\":\"USER\",\"filter\":{\"institutionType\":[\"PG\"],\"origin\":[\"INFOCAMERE\"]}}]}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-io/expiration-days",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"expirationDays\":45}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pn-pg",
+      "headers": {
+        "X-Tenant-Id": [
+          "AR"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 404,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"title\":\"Not Found\",\"status\":404,\"detail\":\"Product not found with id: prod-pn-pg\"}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-pagopa",
+      "headers": {
+        "X-Tenant-Id": [
+          "PNPG"
+        ],
+        "Authorization": [
+          "Bearer .+"
+        ]
+      }
+    },
+    "httpResponse": {
+      "statusCode": 404,
+      "headers": {
+        "X-Product-Mock": [
+          "matched"
+        ],
+        "Content-Type": [
+          "application/json"
+        ]
+      },
+      "body": "{\"title\":\"Not Found\",\"status\":404,\"detail\":\"Product not found with id: prod-pagopa\"}"
+    }
+  }
+]

@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.connector.api;
 
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.connector.model.product.AttachmentTemplate;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.multipart.MultipartFile;

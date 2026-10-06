@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.web.model;
 
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import it.pagopa.selfcare.product.entity.ProductStatus;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
 import lombok.Data;
 
 @Data

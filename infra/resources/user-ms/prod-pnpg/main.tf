@@ -156,7 +156,15 @@ locals {
     },
     {
       name  = "ONE_MAIL_URL"
-      value = "https://uat.onemail.pagopa.it"
+      value = "https://onemail.pagopa.it"
+    },
+    {
+      name  = "MAIL_ENABLED"
+      value = true
+    },
+    {
+      name  = "MAIL_SENDER_ADDRESS",
+      value = "noreply@areariservata.pagopa.it"
     }
   ]
 
@@ -167,7 +175,7 @@ locals {
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
     "AWS-SES-ACCESS-KEY-ID"                 = "aws-ses-access-key-id"
     "AWS-SES-SECRET-ACCESS-KEY"             = "aws-ses-secret-access-key"
-    "ONE_MAIL_API_KEY"                      = "onemail-api-key"
+    "ONE_MAIL_API_KEY"                      = "onemail-api-key-prod"
   }
 }
 

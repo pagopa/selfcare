@@ -324,6 +324,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveSignedFile_shouldReturnOkResponse_whenContractSignedIsPdf() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
         File tempPdf = createTempPdf();
@@ -332,15 +333,18 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempPdf);
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
     }
 
     @Test
     void retrieveSignedFile_shouldReturnNotFoundResponse_whenAzureStorageThrowsException() {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
 
@@ -349,15 +353,18 @@ class DocumentContentServiceImplTest {
         when(azureBlobClient.retrieveFile(anyString()))
                 .thenThrow(new SelfcareAzureStorageException("Storage error", "500"));
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     void retrieveSignedFile_shouldReturnNotFoundResponse_whenPdfIsInvalid() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
         File invalidFile = Files.createTempFile("invalid", ".pdf").toFile();
@@ -367,30 +374,64 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(anyString())).thenReturn(invalidFile);
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     void retrieveSignedFile_shouldReturnOkResponse_whenContractSignedIsP7m() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
-        File tempPdf = createTempPdf();
+        File tempP7m = Files.createTempFile("signed-contract", ".p7m").toFile();
+        File extractedPdf = createTempPdf();
 
         when(documentRepository.findByOnboardingId(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
-        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempPdf);
-        when(signatureService.verifySignature(any(File.class))).thenReturn(true);
-        when(signatureService.extractFile(any(File.class))).thenReturn(tempPdf);
+        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
+        when(signatureService.verifySignature(tempP7m)).thenReturn(true);
+        when(signatureService.extractFile(tempP7m)).thenReturn(extractedPdf);
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        assertSame(extractedPdf, response.getEntity());
+        verify(signatureService).verifySignature(tempP7m);
+        verify(signatureService).extractFile(tempP7m);
+    }
+
+    @Test
+    void retrieveSignedFile_shouldReturnOriginalP7m_whenRequested() throws IOException {
+        // given
+        Document doc = buildDocument();
+        doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
+        File tempP7m = Files.createTempFile("signed-contract", ".p7m").toFile();
+        File extractedPdf = createTempPdf();
+
+        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().item(doc));
+        when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
+        when(signatureService.verifySignature(tempP7m)).thenReturn(true);
+        when(signatureService.extractFile(tempP7m)).thenReturn(extractedPdf);
+
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, true)
+                .await().indefinitely();
+
+        // then
+        assertEquals(RestResponse.Status.OK.getStatusCode(), response.getStatus());
+        assertSame(tempP7m, response.getEntity());
+        verify(signatureService).verifySignature(tempP7m);
+        verify(signatureService).extractFile(tempP7m);
     }
 
     // ---- isPdfValid (static method) ----
@@ -429,6 +470,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveSignedFile_shouldReturnNotFound_whenP7mExtractionFails() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
         File tempP7m = createTempPdf();
@@ -440,15 +482,18 @@ class DocumentContentServiceImplTest {
         when(signatureService.extractFile(any(File.class)))
                 .thenThrow(new RuntimeException("Extraction failed"));
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     void retrieveSignedFile_shouldReturnNotFound_whenExtractedPdfFromP7mIsInvalid() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
         File tempP7m = createTempPdf();
@@ -461,15 +506,18 @@ class DocumentContentServiceImplTest {
         when(signatureService.verifySignature(any(File.class))).thenReturn(true);
         when(signatureService.extractFile(any(File.class))).thenReturn(invalidPdf);
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
 
     @Test
     void retrieveSignedFile_shouldReturnNotFound_whenP7mSignatureVerificationFails() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
         File tempP7m = createTempPdf();
@@ -480,9 +528,11 @@ class DocumentContentServiceImplTest {
         when(signatureService.verifySignature(any(File.class)))
                 .thenThrow(new RuntimeException("Signature verification failed"));
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }
@@ -491,6 +541,7 @@ class DocumentContentServiceImplTest {
 
     @Test
     void retrieveSignedFile_shouldReturnNotFound_whenPdfIsInvalid() throws IOException {
+        // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
         File invalidPdf = Files.createTempFile("invalid", ".pdf").toFile();
@@ -500,9 +551,11 @@ class DocumentContentServiceImplTest {
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(invalidPdf);
 
-        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID)
+        // when
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
                 .await().indefinitely();
 
+        // then
         assertNotNull(response);
         assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
     }

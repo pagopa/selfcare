@@ -1,7 +1,7 @@
 # JWT Verification Key Resolution
 
-The JWT verification key used by `onboarding-ms` (and, optionally, any other app that
-adopts the same pattern) is resolved through the same `TenantRegistry` already used
+The JWT verification key used by tenant-aware services is resolved through the same
+`TenantRegistry` already used
 for Mongo database identification (see `Database_identification.md`), instead of a
 single flat `mp.jwt.verify.publickey` property:
 
@@ -26,28 +26,67 @@ existing `mongo` one:
 {
   "AR": {
     "mongo": { "account": "cosmos-ar", "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR" },
-    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" }
+    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
+    "storages": {
+      "products": {
+        "account": "stselcarproducts",
+        "container": "selc-d-product",
+        "authentication": { "type": "MANAGED_IDENTITY", "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_AR_PRODUCTS" }
+      }
+    }
   },
   "PNPG": {
     "mongo": { "account": "cosmos-pnpg", "database": "selcOnboarding", "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG" },
-    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" }
+    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" },
+    "storages": {
+      "products": {
+        "account": "stpnpgproducts",
+        "container": "selc-d-product",
+        "authentication": { "type": "MANAGED_IDENTITY", "managedIdentityClientIdEnvVar": "AZURE_CLIENT_ID_PNPG_PRODUCTS" }
+      }
+    }
   }
 }
 ```
+
+The optional `storages` map is orthogonal to JWT verification. It is shown to keep all examples aligned with
+the canonical registry schema; see `Storage_identification.md`.
 
 `JWT_PUBLIC_KEY_AR` / `JWT_PUBLIC_KEY_PNPG` are populated from Key Vault via Terraform,
 reusing the existing `jwt-public-key` secret per stack (see
 `infra/resources/onboarding-ms/*/onboarding.tf`).
 
+Auth also signs session JWTs with tenant-specific keys. Its `jwt.session` registry object
+contains only the names of the secret-backed variables:
+
+```json
+{
+  "jwt": {
+    "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR",
+    "session": {
+      "privateKeyEnvVar": "TENANT_AR_JWT_SESSION_PRIVATE_KEY",
+      "keyIdEnvVar": "TENANT_AR_JWT_SESSION_KEY_ID"
+    }
+  }
+}
+```
+
+At startup, auth resolves those names from configuration and loads the signing key. The
+private key value and `kid` value remain outside `TENANT_REGISTRY_JSON`; Terraform injects
+them from Key Vault. Missing references or values fail startup, without falling back to
+another tenant's signing key.
+
 `mp.jwt.verify.publickey` is kept as a **legacy fallback only**: it is used solely when
-no tenant in the registry configures a `jwt.publicKeyEnvVar`. This keeps the other five
-apps sharing `selfcare-sdk-security` (`document-ms`, `iam`, `product`, `user-ms`,
-`webhook`) fully backward compatible, since none of them configure a tenant JWT
-registry today.
+no tenant in the registry configures a `jwt.publicKeyEnvVar`. Apps that already wire
+the tenant JWT registry (`onboarding-ms`, `product`, `user-group-ms`) resolve keys
+from `jwt.publicKeyEnvVar`. Remaining apps sharing `selfcare-sdk-security`
+(`document-ms`, `iam`, `user-ms`, `webhook`) stay backward compatible until they
+configure a tenant JWT registry.
 
 ## Key selection at verification time
 
-`JWTCallerPrincipalFactory` (in `selfcare-sdk-security`) builds a `kid -> PublicKey` map
+Quarkus implementations may build a `kid -> PublicKey` map through
+`JWTCallerPrincipalFactory` (in `selfcare-sdk-security`):
 at startup:
 
 - for every tenant with a configured `jwt.publicKeyEnvVar`, the referenced value is
@@ -71,6 +110,33 @@ practice (via `JWTCallerPrincipalFactory.selectPublicKey`, which requires an exa
 `kid` match whenever more than one key is configured) — no code changes are needed to
 migrate, only supplying JWKS-formatted key material per tenant.
 
-This mirrors, on the JWT side, the same per-tenant/env-var-indirection pattern already
-used for Mongo connection strings, keeping both concerns consistent and driven by the
-same `tenant.registry.json`.
+### Spring implementation (`selc-commons-web`)
+
+Spring services use `JwtService` from `selc-commons-web`. When the tenant registry is
+configured, the service:
+
+1. obtains the tenant from the request header before signature verification;
+2. normalizes and validates it against the registry;
+3. resolves that tenant's `jwt.publicKeyEnvVar`;
+4. parses the referenced RSA PEM public key and verifies the JWT with that key;
+5. propagates the authenticated tenant through `JwtAuthenticationToken` into
+   `TenantContext`.
+
+The Spring implementation currently expects an RSA public key in PEM/X.509 form and
+does not use a multi-key `kid` map. If a consolidated deployment requires multiple
+keys per tenant, the Spring resolver must be extended with an explicit JWKS/kid
+strategy before enabling that topology; it MUST NOT silently select a first or
+global key.
+
+`JwtAuthenticationFilter` clears both `TenantContext` and the Spring security context
+in a `finally` block, preventing tenant identity from leaking between reused request
+threads. A missing authenticated tenant is rejected when tenant-aware security is
+enabled.
+
+When no tenant registry is configured, Spring retains the legacy global
+`jwt.signingKey` fallback for backward compatibility. Once a registry is configured,
+missing or invalid tenant keys fail closed and never fall back to another tenant's
+key.
+
+This keeps the per-tenant/env-var-indirection pattern consistent across JWT and Mongo
+while allowing framework-specific key material and verification implementations.

@@ -99,8 +99,7 @@ public class OidcServiceImpl implements OidcService {
                     .onFailure()
                     .transform(
                         failure ->
-                            new InternalException(
-                                "Cannot patch user on Personal Data Vault:" + failure.toString()))
+                            new InternalException("Cannot patch user on Personal Data Vault"))
                     .invoke(userClaims -> userClaims.setTenantId(tenantId)))
         .chain(
             userClaims ->
@@ -109,7 +108,7 @@ public class OidcServiceImpl implements OidcService {
                     .onFailure()
                     .transform(
                         failure ->
-                            new InternalException("Cannot Handle OTP Flow:" + failure.toString()))
+                            new InternalException("Cannot Handle OTP Flow"))
                     .chain(
                         maybeOtpInfo ->
                             maybeOtpInfo
@@ -122,9 +121,7 @@ public class OidcServiceImpl implements OidcService {
                                         .onFailure()
                                         .transform(
                                             failure ->
-                                                new InternalException(
-                                                    "Cannot generate session token:"
-                                                        + failure.toString()))
+                                                new InternalException("Cannot generate session token"))
                                         .map(this::newOidcExchangeTokenResponse))));
   }
 

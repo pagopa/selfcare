@@ -41,8 +41,12 @@ The application requires the following configurations to function correctly:
 2.  MongoDB records the change and emits a change stream event.
 3.  This module consumes the event.
 4.  The module fetches the latest product data, converts it to the standard JSON format.
-5.  The `products.json` file is regenerated with the latest product data and uploaded to the configured Blob Storage container, replacing the previous version.
+5.  The tenant-specific `products.json` file is regenerated with the latest product data and uploaded to the Blob Storage binding configured for that tenant, replacing the previous version.
 6.  Other services and applications can now consume the updated `products.json` file from Blob Storage, ensuring they have access to the most current product information.
+
+The CDC process starts one Mongo change-stream watcher per configured tenant. Mongo connection strings,
+database names, product storage bindings, and Blob credentials are resolved from the dynamic tenant
+registry; resume tokens are stored with tenant-qualified Azure Table partition keys.
 
 ## 🧩 Error Handling & Logging
 

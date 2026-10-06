@@ -6,6 +6,7 @@ import it.pagopa.selfcare.commons.web.model.mapper.ProblemMapper;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.BadGatewayException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.InvalidRequestException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.party.registry_proxy.core.exception.TooManyResourceFoundException;
 import it.pagopa.selfcare.party.registry_proxy.web.exception.ValidationFailedException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -32,6 +33,12 @@ public class PartyRegistryProxyExceptionHandler {
     ResponseEntity<Problem> handleResourceNotFoundException(ResourceNotFoundException e) {
         log.warn(e.toString());
         return ProblemMapper.toResponseEntity(new Problem(NOT_FOUND, e.getMessage()));
+    }
+
+    @ExceptionHandler({TooManyResourceFoundException.class})
+    ResponseEntity<Problem> handleTooManyResourceFoundException(TooManyResourceFoundException e) {
+        log.warn(e.toString());
+        return ProblemMapper.toResponseEntity(new Problem(CONFLICT, e.getMessage()));
     }
 
     @ExceptionHandler({InvalidRequestException.class})

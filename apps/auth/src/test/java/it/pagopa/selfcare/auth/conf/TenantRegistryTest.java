@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.auth.conf;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -11,13 +12,31 @@ import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
 import jakarta.inject.Inject;
 import java.util.Optional;
-import org.eclipse.microprofile.config.Config;
 import org.junit.jupiter.api.Test;
 
 @QuarkusTest
 class TenantRegistryTest {
 
   @Inject TenantRegistry tenantRegistry;
+
+  @Inject it.pagopa.selfcare.tenant.TenantRegistry resourceRegistry;
+
+  @Test
+  void authenticationAndResourceRegistriesReadTheSameTenantDefinition() {
+    assertEquals("AR", tenantRegistry.resolveEnabledTenant("AR").id());
+    assertEquals(
+        "TENANT_AR_JWT_SESSION_PRIVATE_KEY",
+        tenantRegistry
+            .resolveEnabledTenant("AR")
+            .definition()
+            .jwt()
+            .session()
+            .privateKeyEnvVar());
+    assertEquals("selcAuth", resourceRegistry.resolve("AR").mongo().database());
+    assertEquals("id", tenantRegistry.oneIdentityCredentials("AR").clientId());
+    assertEquals("123", resourceRegistry.userRegistryApiKey("AR"));
+    assertEquals("selcAuth", resourceRegistry.resolve("PNPG").mongo().database());
+  }
 
   @Test
   void resolveEnabledTenantReturnsAr() {
@@ -53,6 +72,14 @@ class TenantRegistryTest {
   }
 
   @Test
+  void oneIdentityCredentialsDoNotExposeSecretsInToString() {
+    TenantRegistry.OneIdentityCredentials credentials =
+        new TenantRegistry.OneIdentityCredentials("client-id", "client-secret");
+
+    assertEquals("OneIdentityCredentials[REDACTED]", credentials.toString());
+  }
+
+  @Test
   void enabledAuthenticationTenantsContainOnlyEnabledTenants() {
     assertEquals(
         java.util.List.of("AR"),
@@ -69,40 +96,42 @@ class TenantRegistryTest {
 
   @Test
   void initializeRejectsInvalidRegistryJson() {
-    TenantRegistry registry = registry("{invalid", mock(Config.class));
+    TenantRegistry registry = registry("{invalid", mock(it.pagopa.selfcare.tenant.TenantRegistry.class));
 
     assertThrows(IllegalStateException.class, registry::initialize);
   }
 
   @Test
-  void initializeRejectsMissingOneIdentityClientId() {
-    Config tenantConfig = mock(Config.class);
-    when(tenantConfig.getOptionalValue("tenant.ar.one-identity.client-id", String.class))
-        .thenReturn(Optional.empty());
-    TenantRegistry registry = registry(enabledOneIdentityTenantJson(), tenantConfig);
+  void oneIdentityCredentialsRejectMissingSharedConfiguration() {
+    it.pagopa.selfcare.tenant.TenantRegistry resources =
+        mock(it.pagopa.selfcare.tenant.TenantRegistry.class);
+    when(resources.oneIdentityCredentials("AR")).thenReturn(Optional.empty());
+    TenantRegistry registry = registry(enabledOneIdentityTenantJson(), resources);
+    registry.initialize();
 
-    assertThrows(IllegalStateException.class, registry::initialize);
+    assertThrows(IllegalStateException.class, () -> registry.oneIdentityCredentials("AR"));
   }
 
   @Test
-  void initializeRejectsBlankOneIdentityClientSecret() {
-    Config tenantConfig = mock(Config.class);
-    when(tenantConfig.getOptionalValue("tenant.ar.one-identity.client-id", String.class))
-        .thenReturn(Optional.of("client-id"));
-    when(tenantConfig.getOptionalValue("tenant.ar.one-identity.client-secret", String.class))
-        .thenReturn(Optional.of(" "));
-    TenantRegistry registry = registry(enabledOneIdentityTenantJson(), tenantConfig);
+  void oneIdentityCredentialsRejectInvalidSharedConfiguration() {
+    it.pagopa.selfcare.tenant.TenantRegistry resources =
+        mock(it.pagopa.selfcare.tenant.TenantRegistry.class);
+    when(resources.oneIdentityCredentials("AR"))
+        .thenThrow(new IllegalStateException("Missing OneIdentity configuration for tenant AR"));
+    TenantRegistry registry = registry(enabledOneIdentityTenantJson(), resources);
+    registry.initialize();
 
-    assertThrows(IllegalStateException.class, registry::initialize);
+    assertThrows(IllegalStateException.class, () -> registry.oneIdentityCredentials("AR"));
   }
 
   @Test
   void initializeRequiresCredentialsOnlyForEnabledOneIdentityTenants() {
-    Config tenantConfig = mock(Config.class);
-    when(tenantConfig.getOptionalValue("tenant.ar.one-identity.client-id", String.class))
-        .thenReturn(Optional.of("ar-client"));
-    when(tenantConfig.getOptionalValue("tenant.ar.one-identity.client-secret", String.class))
-        .thenReturn(Optional.of("ar-secret"));
+    it.pagopa.selfcare.tenant.TenantRegistry resources =
+        mock(it.pagopa.selfcare.tenant.TenantRegistry.class);
+    when(resources.oneIdentityCredentials("AR"))
+        .thenReturn(
+            Optional.of(new it.pagopa.selfcare.tenant.TenantRegistry.OneIdentityCredentials(
+                "ar-client", "ar-secret")));
     TenantRegistry registry =
         registry(
             """
@@ -121,7 +150,7 @@ class TenantRegistryTest {
               }
             }
             """,
-            tenantConfig);
+            resources);
 
     registry.initialize();
 
@@ -136,10 +165,11 @@ class TenantRegistryTest {
     assertThrows(ForbiddenException.class, () -> registry.oneIdentityCredentials("DISABLED"));
   }
 
-  private TenantRegistry registry(String registryJson, Config tenantConfig) {
+  private TenantRegistry registry(
+      String registryJson, it.pagopa.selfcare.tenant.TenantRegistry resources) {
     TenantRegistry registry = new TenantRegistry();
     registry.objectMapper = new ObjectMapper();
-    registry.config = tenantConfig;
+    registry.resourceRegistry = resources;
     registry.tenantRegistryJson = registryJson;
     return registry;
   }

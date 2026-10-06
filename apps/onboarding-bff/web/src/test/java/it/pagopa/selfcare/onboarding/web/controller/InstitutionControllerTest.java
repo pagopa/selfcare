@@ -268,7 +268,6 @@ class InstitutionControllerTest {
         verifyNoMoreInteractions(institutionServiceMock);
     }
 
-
     @Test
     void verifyOnboarding() throws Exception {
         final String externalInstitutionId = "externalInstitutionId";

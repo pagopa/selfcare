@@ -3,10 +3,12 @@ package it.pagopa.selfcare.onboarding.connector.rest.mapper;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 import it.pagopa.selfcare.onboarding.connector.rest.model.AooResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.GeographicTaxonomiesResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.ProxyInstitutionResponse;
+import it.pagopa.selfcare.onboarding.connector.rest.model.IpaInstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.UoResponse;
 import org.mapstruct.Mapper;
 
@@ -16,6 +18,8 @@ public interface RegistryProxyMapper {
     GeographicTaxonomies toGeographicTaxonomies(GeographicTaxonomiesResponse entity);
 
     InstitutionProxyInfo toInstitutionProxyInfo(ProxyInstitutionResponse entity);
+
+    IpaInstitutionsSearchResult toIpaInstitutionsSearchResult(IpaInstitutionsSearchResponse entity);
 
     HomogeneousOrganizationalArea toAOO(AooResponse entity);
 

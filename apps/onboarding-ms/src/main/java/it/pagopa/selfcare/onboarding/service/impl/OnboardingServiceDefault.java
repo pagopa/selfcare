@@ -26,8 +26,6 @@ import it.pagopa.selfcare.onboarding.service.OrchestrationService;
 import it.pagopa.selfcare.onboarding.service.helper.*;
 import it.pagopa.selfcare.onboarding.service.util.*;
 import it.pagopa.selfcare.onboarding.util.QueryUtils;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -37,10 +35,12 @@ import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,7 +66,6 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     @Inject OnboardingMapper onboardingMapper;
     @Inject OnboardingResponseFactory onboardingResponseFactory;
-    @Inject ProductService productAzureService;
     @Inject OnboardingDocumentMapper onboardingDocumentMapper;
     @Inject RegistryResourceFactory registryResourceFactory;
     @Inject OrchestrationService orchestrationService;
@@ -118,7 +117,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                     log.info("Resolved required-documents flag={} for institution {}: initial onboarding status set to {}",
                             requiredDocumentsEnabled, onboarding.getInstitution().getDescription(), initialStatus);
                 })
-                .onItem().transformToUni(ignored -> computeExpiry(onboarding.getProductId()))
+                .onItem().transformToUni(ignored -> computeExpiry(onboarding.getProductId(), onboarding.getTenantId()))
                 .onItem().transformToUni(expiry -> {
                     onboarding.setExpiringDate(expiry);
                     return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester);
@@ -143,7 +142,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                 : null;
         ProductId productId =  ProductId.fromValue(onboarding.getProductId());
 
-        return productService.isRequiredDocuments(productId, productInstitutionType, productOrigin)
+        Uni<Boolean> requiredDocuments = Objects.isNull(onboarding.getTenantId())
+                ? productService.isRequiredDocuments(productId, productInstitutionType, productOrigin)
+                : productService.isRequiredDocuments(productId, productInstitutionType, productOrigin,
+                        onboarding.getTenantId());
+        return requiredDocuments
                 .onFailure().recoverWithItem(throwable -> {
                     log.warn("Falling back to legacy flow: isRequiredDocumentsEnabled failed for productId={}, institutionType={}, origin={}: {}",
                             onboarding.getProductId(), institutionType, origin, throwable.getMessage());
@@ -161,7 +164,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Starting onboardingIncrement: description={}, origin={}, institutionType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
                 onboarding.getInstitution().getInstitutionType());
-        return computeExpiry(onboarding.getProductId())
+        return computeExpiry(onboarding.getProductId(), onboarding.getTenantId())
                 .onItem().transformToUni(expiry -> {
                     onboarding.setExpiringDate(expiry);
                     return persistenceHelper.addReferencedOnboardingId(onboarding)
@@ -174,7 +177,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                     WorkflowType workflowType) {
         log.info("Starting onboardingUsers: origin={}, institutionType={}, workflowType={}",
                 request.getOrigin(), request.getInstitutionType(), workflowType);
-        return computeExpiry(request.getProductId())
+        return computeExpiry(request.getProductId(), null)
                 .onItem().transformToUni(expiringDate -> {
                     Onboarding onboarding = onboardingMapper.toEntity(request, userId, workflowType);
                     onboarding.setInstitution(buildInstitutionFromUserRequest(request));
@@ -255,10 +258,10 @@ public class OnboardingServiceDefault implements OnboardingService {
         return queryHelper.retrieveOnboardingAndCheckIfExpired(onboardingId)
                 .onItem().transformToUni(queryHelper::checkIfToBeValidated)
                 .onItem().transformToUni(onboarding ->
-                        product(onboarding.getProductId())
+                        getProductByOnboarding(onboarding)
                                 .onItem().transformToUni(product ->
                                         validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
-                                                onboarding.getInstitution(), product.getId(), product.getParentId()))
+                                                onboarding.getInstitution(), product.getProductId(), product.getParentId()))
                                 .replaceWith(onboarding))
             .onItem().call(onboarding ->
                     queryHelper.updateApproverUserUuid(onboardingId, approveRequest))
@@ -531,17 +534,17 @@ public class OnboardingServiceDefault implements OnboardingService {
                         handleOnboarding(onboarding, userRequests, aggregates, product, userRequester));
     }
 
-    private Uni<Product> verifyExistingOnboarding(Onboarding onboarding, boolean isAggregatesIncrement) {
+    private Uni<ProductResponse> verifyExistingOnboarding(Onboarding onboarding, boolean isAggregatesIncrement) {
         return getProductByOnboarding(onboarding)
                 .onItem().transformToUni(product ->
                         validationHelper.verifyAlreadyOnboarding(onboarding.getInstitution(),
-                                        product.getId(), product.getParentId(), isAggregatesIncrement)
+                                        product.getProductId(), product.getParentId(), isAggregatesIncrement)
                                 .replaceWith(product));
     }
 
     private Uni<OnboardingResponse> handleOnboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                                       List<AggregateInstitutionRequest> aggregates,
-                                                      Product product, UserRequesterDto userRequester) {
+                                                      ProductResponse product, UserRequesterDto userRequester) {
         return Uni.createFrom()
                 .item(registryResourceFactory.create(onboarding, getManagerTaxCode(userRequests)))
                 .onItem().invoke(rm -> rm.setResource(rm.retrieveInstitution()))
@@ -553,7 +556,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     private Uni<OnboardingResponse> validateAndPersistOnboarding(RegistryManager<?> rm, Onboarding onboarding,
                                                                    List<UserRequest> userRequests,
                                                                    List<AggregateInstitutionRequest> aggregates,
-                                                                   Product product, UserRequesterDto userRequester) {
+                                                                    ProductResponse product, UserRequesterDto userRequester) {
         log.info("Starting validateAndPersistOnboarding for institution: {}",
                 onboarding.getInstitution().getDescription());
         return rm.isValid()
@@ -561,7 +564,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().invoke(() -> validationHelper.validateTaxCode(onboarding.getInstitution().getTaxCode(), product))
                 .onItem().transformToUni(ignored -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
                 .onItem().transformToUni(ignored ->
-                        productService.getProduct(onboarding.getProductId())
+                        productServiceFor(onboarding)
                                 .onItem().transformToUni(pr ->
                                         validationHelper.verifySameUserManagerAndDelegate(userRequests, pr)
                                                 .onItem().transformToUni(ignoredInner ->
@@ -596,11 +599,11 @@ public class OnboardingServiceDefault implements OnboardingService {
                 });
     }
 
-    private Uni<Product> verifyExistingOnboardingForImport(Onboarding onboarding) {
+    private Uni<ProductResponse> verifyExistingOnboardingForImport(Onboarding onboarding) {
         return getProductByOnboarding(onboarding)
                 .onItem().transformToUni(product ->
                         validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
-                                        onboarding.getInstitution(), product.getId(), product.getParentId())
+                                        onboarding.getInstitution(), product.getProductId(), product.getParentId())
                                 .replaceWith(product)
                                 .onFailure(ResourceConflictException.class)
                                 .recoverWithUni(throwable ->
@@ -609,7 +612,7 @@ public class OnboardingServiceDefault implements OnboardingService {
 
     private Uni<OnboardingResponse> handleOnboardingForImport(Onboarding onboarding, List<UserRequest> userRequests,
                                                                List<AggregateInstitutionRequest> aggregates,
-                                                               Product product,
+                                                                ProductResponse product,
                                                                OnboardingImportContract contract) {
         return Uni.createFrom()
                 .item(registryResourceFactory.create(onboarding, getManagerTaxCode(userRequests)))
@@ -623,7 +626,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                             Onboarding onboarding,
                                                                             List<UserRequest> userRequests,
                                                                             List<AggregateInstitutionRequest> aggregates,
-                                                                            Product product,
+                                                                             ProductResponse product,
                                                                             OnboardingImportContract contract) {
         return rm.isValid()
                 .onItem().transformToUni(ignored -> rm.customValidation(product))
@@ -684,13 +687,13 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<Boolean> verifyCompletionPreconditions(Onboarding onboarding, boolean isUsersFlow) {
-        return product(onboarding.getProductId())
+        return getProductByOnboarding(onboarding)
                 .onItem().transformToUni(product ->
                         isUsersFlow
-                                ? validationHelper.verifyOnboardingNotExistForProductAndProductParent(
-                                        onboarding, product.getId(), product.getParentId())
+                        ? validationHelper.verifyOnboardingNotExistForProductAndProductParent(
+                                        onboarding, product.getProductId(), product.getParentId())
                                 : validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
-                                        onboarding.getInstitution(), product.getId(), product.getParentId()));
+                                        onboarding.getInstitution(), product.getProductId(), product.getParentId()));
     }
 
     private Uni<Onboarding> triggerOrchestrationIfEnabled(Onboarding onboarding) {
@@ -721,7 +724,7 @@ public class OnboardingServiceDefault implements OnboardingService {
      * @return the next signing step (1-based)
      * @throws InvalidRequestException if all required signatures have already been collected
      */
-    private Uni<Integer> resolveNextSigningStep(String onboardingId, Product product) {
+    private Uni<Integer> resolveNextSigningStep(String onboardingId, ProductResponse product) {
         return documentService.getDocumentByOnboardingId(onboardingId)
                 .onItem().transform(doc -> {
                     if (doc == null || doc.getSigningStep() == null) {
@@ -746,21 +749,15 @@ public class OnboardingServiceDefault implements OnboardingService {
                 });
     }
 
-    private int resolveRequiredSignatures(Product product) {
+    private int resolveRequiredSignatures(ProductResponse product) {
         if (product.getSigningConfiguration() != null) {
             return product.getSigningConfiguration().getRequiredSignatures();
         }
         return 1;
     }
 
-    private Uni<Product> product(String productId) {
-        return Uni.createFrom()
-                .item(() -> productAzureService.getProductIsValid(productId))
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
-    }
-
-    public Uni<Product> getProductByOnboarding(Onboarding onboarding) {
-        return product(onboarding.getProductId())
+    public Uni<ProductResponse> getProductByOnboarding(Onboarding onboarding) {
+        return productService.getValidProduct(onboarding.getProductId(), onboarding.getTenantId())
                 .onFailure().transform(ex -> new OnboardingNotAllowedException(
                         String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED.getMessage(),
                                 onboarding.getInstitution().getTaxCode(), onboarding.getProductId()),
@@ -801,12 +798,20 @@ public class OnboardingServiceDefault implements OnboardingService {
         }
     }
 
-    private Uni<LocalDateTime> computeExpiry(String productId) {
-        return Uni.createFrom()
-                .item(() -> OffsetDateTime.now()
-                        .plusDays(productAzureService.getProductExpirationDate(productId))
-                        .toLocalDateTime())
-                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
+    private Uni<LocalDateTime> computeExpiry(String productId, String tenantId) {
+        Uni<Integer> expirationDaysUni = Objects.isNull(tenantId)
+                ? productService.getProductExpirationDays(productId)
+                : productService.getProductExpirationDays(productId, tenantId);
+        return expirationDaysUni
+                .onItem().transform(expirationDays -> OffsetDateTime.now(ZoneId.systemDefault())
+                        .plusDays(expirationDays)
+                        .toLocalDateTime());
+    }
+
+    private Uni<ProductResponse> productServiceFor(Onboarding onboarding) {
+        return Objects.isNull(onboarding.getTenantId())
+                ? productService.getProduct(onboarding.getProductId())
+                : productService.getProduct(onboarding.getProductId(), onboarding.getTenantId());
     }
 
     // -------------------------------------------------------------------------
@@ -948,7 +953,18 @@ public class OnboardingServiceDefault implements OnboardingService {
         var originEnum = org.openapi.quarkus.product_json.model.Origin
                 .valueOf(onboarding.getInstitution().getOrigin().name());
 
-        return productService.getRequiredDocuments(productId, instType, originEnum)
+        Uni<List<RequiredDocumentResponse>> requiredDocuments = Objects.isNull(onboarding.getTenantId())
+                ? productService.getRequiredDocuments(productId, instType, originEnum)
+                : productService.getRequiredDocuments(productId, instType, originEnum, onboarding.getTenantId());
+        return requiredDocuments
+                .onFailure(ResourceNotFoundException.class)
+                .transform(ex -> {
+                    log.warn("triggerDocumentGate: product-ms returned 404 for onboarding {}, no required documents configured",
+                            onboarding.getId());
+                    return new InvalidRequestException(
+                            String.format("No required documents configuration found on product-ms for onboarding %s",
+                                    onboarding.getId()));
+                })
                 .onItem().transform(docs -> docs.stream()
                         .filter(doc -> Boolean.TRUE.equals(doc.getRequired()))
                         .map(RequiredDocumentResponse::getId)

@@ -13,4 +13,3 @@ import lombok.NoArgsConstructor;
 public class WorkflowTypeResponse {
   private WorkflowType workflowType;
 }
-

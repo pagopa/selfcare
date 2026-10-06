@@ -5,6 +5,7 @@ import com.azure.data.tables.TableClientBuilder;
 import com.azure.identity.DefaultAzureCredentialBuilder;
 import com.microsoft.applicationinsights.TelemetryClient;
 import com.microsoft.applicationinsights.connectionstring.ConnectionString;
+import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -59,11 +60,16 @@ public class UserCdcConfig {
     }
 
     @ApplicationScoped
-    public ProductService productService() {
+    public ProductService productService(AzureBlobClientDefault productBlobClient) {
+        return new ProductServiceCacheable(productBlobClient, filepathProduct);
+    }
+
+    @ApplicationScoped
+    public AzureBlobClientDefault productBlobClient() {
         return storageConnectionString
           .filter(cs -> !cs.isBlank())
-          .map(cs -> new ProductServiceCacheable(cs, containerProduct, filepathProduct))
-          .orElseGet(() -> new ProductServiceCacheable(containerProduct, filepathProduct,
+          .map(cs -> new AzureBlobClientDefault(cs, containerProduct))
+          .orElseGet(() -> new AzureBlobClientDefault(containerProduct,
             storageAccountName.orElse(""), storageManagedIdentityClientId.orElse("")));
     }
 

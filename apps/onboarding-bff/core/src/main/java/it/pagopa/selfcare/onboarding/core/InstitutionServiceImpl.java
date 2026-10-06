@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 import it.pagopa.selfcare.onboarding.connector.model.user.*;
 import it.pagopa.selfcare.onboarding.connector.model.user.mapper.CertifiedFieldMapper;
@@ -24,11 +25,9 @@ import it.pagopa.selfcare.onboarding.core.exception.OnboardingNotAllowedExceptio
 import it.pagopa.selfcare.onboarding.core.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.onboarding.core.mapper.InstitutionInfoMapper;
 import it.pagopa.selfcare.onboarding.core.utils.PgManagerVerifier;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.entity.ProductStatus;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductRoleInfo;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
 import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -40,7 +39,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 
-import static io.netty.util.internal.StringUtil.isNullOrEmpty;
 import static it.pagopa.selfcare.onboarding.connector.model.user.User.Fields.*;
 
 @Slf4j
@@ -92,9 +90,9 @@ class InstitutionServiceImpl implements InstitutionService {
         this.onboardingMsConnector = onboardingMsConnector;
         this.partyConnector = partyConnector;
         this.productService = productService;
+        this.productsConnector = productsConnector;
         this.onboardingFunctionsConnector = onboardingFunctionsConnector;
         this.partyRegistryProxyConnector = partyRegistryProxyConnector;
-        this.productsConnector = productsConnector;
         this.userConnector = userConnector;
         this.institutionMapper = institutionMapper;
         this.pgManagerVerifier = pgManagerVerifier;
@@ -282,10 +280,10 @@ class InstitutionServiceImpl implements InstitutionService {
                         product.getId(),
                         baseProduct.getId()));
             }
-            roleMappings = baseProduct.getRoleMappings(onboardingData.getProductId());
+            roleMappings = baseProduct.getRoleMappings(onboardingData.getInstitutionType().name());
         } else {
             validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), product.getId());
-            roleMappings = product.getRoleMappings(onboardingData.getProductId());
+            roleMappings = product.getRoleMappings(onboardingData.getInstitutionType().name());
         }
 
         validateProductRole(onboardingData.getUsers(), roleMappings);
@@ -360,14 +358,27 @@ class InstitutionServiceImpl implements InstitutionService {
         log.trace("getInstitutions start");
         Product product;
         try {
-            product = productService.getProduct(productId);
-        } catch (ProductNotFoundException e) {
+            product = productService.getProduct(productId, null);
+        } catch (ResourceNotFoundException e) {
             throw new ResourceNotFoundException("No product found with id " + productId);
         }
         List<InstitutionInfo> result = partyConnector.getInstitutionsByUser(product, userId);
+        if (result.isEmpty()) {
+            throw new ResourceNotFoundException("No institutions found for product " + productId);
+        }
         log.debug("getInstitutions result = {}", result);
         log.trace("getInstitutions end");
         return result;
+    }
+
+    @Override
+    public IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize) {
+        return partyRegistryProxyConnector.searchIpaInstitutions(search, category, page, pageSize);
+    }
+
+    @Override
+    public InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category) {
+        return partyRegistryProxyConnector.findIpaInstitutionByTaxCode(taxCode, category);
     }
 
     @Override
@@ -489,6 +500,10 @@ class InstitutionServiceImpl implements InstitutionService {
             log.error("other parameters are missing while only productId is provided");
             throw new InvalidRequestException(String.format(ONE_OTHER_PARAMETER_PROVIDED));
         }
+    }
+
+    private static boolean isNullOrEmpty(String value) {
+        return value == null || value.isEmpty();
     }
 
     @Override

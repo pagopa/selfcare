@@ -29,8 +29,7 @@ public class CucumberSuite extends CucumberQuarkusTest {
     // By default, quarkus starts the ms on port 8081
     RestAssured.baseURI = "http://localhost";
     RestAssured.port = 8081;
-    RestAssured.requestSpecification =
-        new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
+    RestAssured.requestSpecification = new RequestSpecBuilder().build();
 
     log.info(
         "\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n",

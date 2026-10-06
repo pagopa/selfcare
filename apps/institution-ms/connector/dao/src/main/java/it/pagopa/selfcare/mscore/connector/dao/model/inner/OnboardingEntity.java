@@ -26,4 +26,5 @@ public class OnboardingEntity {
     private InstitutionType institutionType;
     private String origin;
     private String originId;
+    private Boolean isPartnerTech;
 }

@@ -53,7 +53,13 @@
         "operationSelection": {
           "includeTags": ["support"]
         }
+      },
+      {
+        "inputFile": "../../../../../../../../../docs/pagopa/selfcare-auth-ms/openapi.json",
+        "operationSelection": {
+          "includeTags": ["support"]
+        }
       }
-    ], 
+    ],
     "output": "../openapi.json"
   }

@@ -15,5 +15,5 @@ BLOB_STORAGE_CONN_STRING_CONTRACT=DefaultEndpointsProtocol=http;AccountName=devs
 BLOB-STORAGE-CONTRACT-CONNECTION-STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
 JAVA_TOOL_OPTIONS=-Duser.timezone=GMT -Duser.language=en -Duser.country=US
 TENANT_SUPPORTED_TENANTS=AR
-TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"cosmos-ar","database":"selcOnboarding","connectionStringEnvVar":"MONGODB_CONNECTION_STRING_AR"},"jwt":{"publicKeyEnvVar":"JWT_PUBLIC_KEY_AR"}}}
+TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"cosmos-ar","database":"selcOnboarding","connectionStringEnvVar":"MONGODB_CONNECTION_STRING_AR"},"jwt":{"publicKeyEnvVar":"JWT_PUBLIC_KEY_AR"},"storages":{"products":{"account":"devstoreaccount1","container":"products","pathPrefix":"","authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"BLOB_STORAGE_CONN_STRING_PRODUCT"}}}}}
 tenant.supported-tenants=AR

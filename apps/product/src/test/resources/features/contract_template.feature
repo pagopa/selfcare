@@ -5,8 +5,8 @@ Feature: Contract Template API
   Scenario: Successfully upload a contract template
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
-      | createdBy | testuser  |
+      | productId   | prod-test           |
+      | createdBy   | testuser            |
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -27,8 +27,8 @@ Feature: Contract Template API
   Scenario: Bad request when uploading a contract template with invalid tags
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
-      | createdBy | testuser  |
+      | productId   | prod-test           |
+      | createdBy   | testuser            |
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -39,8 +39,8 @@ Feature: Contract Template API
   Scenario: Bad request when uploading a pdf contract template
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
-      | createdBy | testuser  |
+      | productId   | prod-test           |
+      | createdBy   | testuser            |
       | name        | accordo di adesione |
       | version     | 0.0.1               |
       | description | Upload test         |
@@ -51,11 +51,11 @@ Feature: Contract Template API
   Scenario: Bad request when uploading with invalid name
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
-      | createdBy | testuser  |
-      | name        | accordo & adesione  |
-      | version     | 0.0.1               |
-      | description | Upload test         |
+      | productId   | prod-test          |
+      | createdBy   | testuser           |
+      | name        | accordo & adesione |
+      | version     | 0.0.1              |
+      | description | Upload test        |
     And Upload the file at path "blobStorage/contract-template.html" with form key "file" and content type "text/html"
     When I send a POST request to "/contract-template" with form data and multi-part file
     Then The status code is 400
@@ -63,8 +63,8 @@ Feature: Contract Template API
   Scenario: Bad request when uploading with invalid version
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
-      | createdBy | testuser  |
+      | productId   | prod-test           |
+      | createdBy   | testuser            |
       | name        | accordo di adesione |
       | version     | v0.0.1              |
       | description | Upload test         |
@@ -75,7 +75,7 @@ Feature: Contract Template API
   Scenario: Bad request when uploading with missing params
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | createdBy | testuser  |
+      | createdBy   | testuser    |
       | description | Upload test |
     And Upload the file at path "blobStorage/contract-template.html" with form key "file" and content type "text/html"
     When I send a POST request to "/contract-template" with form data and multi-part file
@@ -84,8 +84,8 @@ Feature: Contract Template API
   Scenario: Conflict when uploading the same contract template version
     Given User login with username "j.doe" and password "test"
     And The following query params:
-      | productId | prod-test |
-      | createdBy | testuser  |
+      | productId   | prod-test           |
+      | createdBy   | testuser            |
       | name        | accordo di adesione |
       | version     | 0.0.2               |
       | description | Upload test         |

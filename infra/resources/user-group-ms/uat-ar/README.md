@@ -10,7 +10,9 @@
 
 ## Providers
 
-No providers.
+| Name | Version |
+| ---- | ------- |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.72.0 |
 
 ## Modules
 
@@ -23,7 +25,9 @@ No providers.
 
 ## Resources
 
-No resources.
+| Name | Type |
+| ---- | ---- |
+| [azurerm_user_assigned_identity.internal_events_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 
 ## Inputs
 

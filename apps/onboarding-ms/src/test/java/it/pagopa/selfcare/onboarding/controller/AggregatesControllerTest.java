@@ -6,12 +6,17 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.quarkus.test.security.TestSecurity;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.model.VerifyAggregateResponse;
 import it.pagopa.selfcare.onboarding.service.AggregatesService;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestResponse;
+import it.pagopa.selfcare.onboarding.filter.TenantResolutionFilter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -28,6 +33,18 @@ class AggregatesControllerTest {
 
     @InjectMock
     AggregatesService aggregatesService;
+
+    @BeforeEach
+    void withTenantHeader() {
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+                .addHeader(TenantResolutionFilter.TENANT_HEADER, "AR")
+                .build();
+    }
+
+    @AfterEach
+    void resetRestAssured() {
+        RestAssured.reset();
+    }
 
     @TestSecurity(user = "userJwt")
     @Test

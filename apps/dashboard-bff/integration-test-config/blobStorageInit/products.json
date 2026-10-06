@@ -360,6 +360,36 @@
         ]
       }
     },
+    "partnerTechRoleMappings": {
+      "OPERATOR": {
+        "phasesAdditionAllowed": [
+          "dashboard"
+        ],
+        "roles": [
+          {
+            "code": "partner-operator",
+            "description": "Gestisce l'integrazione tecnologica per conto dell'ente",
+            "label": "Operatore Partner Tecnologico"
+          }
+        ]
+      }
+    },
+    "partnerTechRoleMappingsByInstitutionType": {
+      "PSP": {
+        "OPERATOR": {
+          "phasesAdditionAllowed": [
+            "dashboard"
+          ],
+          "roles": [
+            {
+              "code": "partner-operator-psp",
+              "description": "Gestisce l'integrazione tecnologica per conto del PSP",
+              "label": "Operatore Partner Tecnologico"
+            }
+          ]
+        }
+      }
+    },
     "roleMappingsByInstitutionType": {
       "PSP": {
         "DELEGATE": {

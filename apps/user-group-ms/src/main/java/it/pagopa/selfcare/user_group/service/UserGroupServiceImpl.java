@@ -2,6 +2,7 @@ package it.pagopa.selfcare.user_group.service;
 
 import com.mongodb.client.result.UpdateResult;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.user_group.api.UserGroupOperations;
 import it.pagopa.selfcare.user_group.dao.UserGroupRepository;
 import it.pagopa.selfcare.user_group.exception.ResourceAlreadyExistsException;
@@ -53,15 +54,23 @@ public class UserGroupServiceImpl implements UserGroupService {
     private final UserGroupRepository repository;
     private final MongoTemplate mongoTemplate;
     private final AuditorAware<String> auditorAware;
+    private final TenantContext tenantContext;
+    private final boolean strictTenantIsolation;
     private static final String COULD_NOT_UPDATE_MESSAGE = "Couldn't update resource";
 
     @Autowired
     UserGroupServiceImpl(@Value("${user-group.allowed.sorting.parameters}") String[] allowedSortingParams,
-                         UserGroupRepository repository, MongoTemplate mongoTemplate, AuditorAware<String> auditorAware) {
+                         UserGroupRepository repository,
+                         MongoTemplate mongoTemplate,
+                         AuditorAware<String> auditorAware,
+                         TenantContext tenantContext,
+                         @Value("${tenant.strict-data-isolation:true}") boolean strictTenantIsolation) {
         this.allowedSortingParams = Arrays.asList(allowedSortingParams);
         this.repository = repository;
         this.mongoTemplate = mongoTemplate;
         this.auditorAware = auditorAware;
+        this.tenantContext = tenantContext;
+        this.strictTenantIsolation = strictTenantIsolation;
     }
 
     @Override
@@ -100,12 +109,13 @@ public class UserGroupServiceImpl implements UserGroupService {
         Assert.notNull(userGroupOperations.getParentInstitutionId(), USER_GROUP_PARENT_INSTITUTION_ID_REQUIRED_MESSAGE);
         Assert.notNull(userGroupOperations.getMembers(), MEMBERS_REQUIRED);
 
-        Query query = new Query(Criteria.where(UserGroupEntity.Fields.institutionId).is(userGroupOperations.getInstitutionId())
+        Query query = tenantQuery(Criteria.where(UserGroupEntity.Fields.institutionId).is(userGroupOperations.getInstitutionId())
                 .and(UserGroupEntity.Fields.productId).is(userGroupOperations.getProductId())
                 .and(UserGroupEntity.Fields.parentInstitutionId).is(userGroupOperations.getParentInstitutionId())
                 .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED)));
 
         Update update = new Update()
+                .setOnInsert(UserGroupEntity.Fields.tenantId, tenantContext.requiredTenantId())
                 .setOnInsert(UserGroupEntity.Fields.name, ENTE_AGGREGATORE_PLACEHOLDER + userGroupOperations.getName())
                 .setOnInsert(UserGroupEntity.Fields.description, userGroupOperations.getDescription())
                 .setOnInsert(UserGroupEntity.Fields.status, UserGroupStatus.ACTIVE)
@@ -242,7 +252,9 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.debug("insert entity = {}", group);
         UserGroupEntity insert;
         try {
-            insert = repository.insert(new UserGroupEntity(group));
+            UserGroupEntity entity = new UserGroupEntity(group);
+            entity.setTenantId(tenantContext.requiredTenantId());
+            insert = repository.insert(entity);
         } catch (DuplicateKeyException e) {
             throw new ResourceAlreadyExistsException("Failed _id or unique index constraint.", e);
         }
@@ -256,7 +268,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         Assert.notNull(groupName, GROUP_NAME_REQUIRED);
         Assert.isTrue(!groupName.startsWith(ENTE_AGGREGATORE_PLACEHOLDER), GROUP_NAME_FORBIDDEN);
 
-        Query query = new Query(
+        Query query = tenantQuery(
                 Criteria.where(UserGroupEntity.Fields.institutionId).is(institutionId)
                         .and(UserGroupEntity.Fields.productId).is(productId)
                         .and(UserGroupEntity.Fields.status).in(List.of(UserGroupStatus.ACTIVE, UserGroupStatus.SUSPENDED))
@@ -273,7 +285,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         }    }
 
     private Query createActiveGroupQuery(String id) {
-        return Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)
+        return tenantQuery(Criteria.where(UserGroupEntity.Fields.ID).is(id)
                 .and(UserGroupEntity.Fields.status).is(UserGroupStatus.ACTIVE));
     }
 
@@ -352,7 +364,7 @@ public class UserGroupServiceImpl implements UserGroupService {
                 Encode.forJava(memberId), Encode.forJava(institutionId), Encode.forJava(productId));
 
         UpdateResult updateResult = mongoTemplate.updateMulti(
-                Query.query(Criteria.where(UserGroupEntity.Fields.members).is(memberId)
+                tenantQuery(Criteria.where(UserGroupEntity.Fields.members).is(memberId)
                         .and(UserGroupEntity.Fields.institutionId).is(institutionId)
                         .and(UserGroupEntity.Fields.productId).is(productId)),
                 new Update().pull(UserGroupEntity.Fields.members, memberId)
@@ -368,7 +380,9 @@ public class UserGroupServiceImpl implements UserGroupService {
     private Optional<UserGroupOperations> findById(String id) {
         log.trace("findById start");
         log.debug("findById id = {} ", Encode.forJava(id));
-        Optional<UserGroupOperations> result = repository.findById(id).map(Function.identity());
+        Optional<UserGroupOperations> result = Optional.ofNullable(mongoTemplate.findOne(
+                tenantQuery(Criteria.where(UserGroupEntity.Fields.ID).is(id)),
+                UserGroupEntity.class)).map(Function.identity());
         log.debug("findById result = {}", result);
         log.trace("findById end");
 
@@ -386,7 +400,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         if (Optional.ofNullable(filter.getStatus()).map(List::size).orElse(0) == 1 && !StringUtils.hasText(filter.getUserId()) && !StringUtils.hasText(filter.getProductId()) && !StringUtils.hasText(filter.getInstitutionId())) {
             throw new ValidationException("At least one of productId, institutionId and userId must be provided with status filter");
         }
-        Query query = new Query(constructCriteria(filter));
+        Query query = tenantQuery(constructCriteria(filter));
         long count = this.mongoTemplate.count(query, UserGroupEntity.class);
         List<UserGroupOperations> userGroupOperations = new ArrayList<>(mongoTemplate.find(query.with(pageable), UserGroupEntity.class));
         final Page<UserGroupOperations> result = PageableExecutionUtils.getPage(userGroupOperations, pageable, () -> count);
@@ -432,7 +446,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.trace("updateUserById start");
         log.debug("updateUserById id = {}, status = {}", Encode.forJava(id), status);
         UpdateResult updateResult = mongoTemplate.updateFirst(
-                Query.query(Criteria.where(UserGroupEntity.Fields.ID).is(id)),
+                tenantQuery(Criteria.where(UserGroupEntity.Fields.ID).is(id)),
                 Update.update(UserGroupEntity.Fields.status, status)
                         .set(UserGroupEntity.Fields.modifiedBy, auditorAware.getCurrentAuditor().orElse(null))
                         .currentDate(UserGroupEntity.Fields.modifiedAt),
@@ -448,12 +462,32 @@ public class UserGroupServiceImpl implements UserGroupService {
         log.debug("save entity = {}", group);
         UserGroupEntity result;
         try {
-            result = repository.save(new UserGroupEntity(group));
+            UserGroupEntity entity = new UserGroupEntity(group);
+            entity.setTenantId(tenantContext.requiredTenantId());
+            result = repository.save(entity);
         } catch (DuplicateKeyException e) {
             throw new ResourceAlreadyExistsException("Failed _id or unique index constraint.", e);
         }
         log.debug("save result = {}", result);
         log.trace("save end");
         return result;
+    }
+
+    private Query tenantQuery(Criteria criteria) {
+        Query query = Query.query(tenantCriteria());
+        if (criteria != null && !criteria.getCriteriaObject().isEmpty()) {
+            query.addCriteria(criteria);
+        }
+        return query;
+    }
+
+    private Criteria tenantCriteria() {
+        String tenantId = tenantContext.requiredTenantId();
+        if (strictTenantIsolation) {
+            return Criteria.where(UserGroupEntity.Fields.tenantId).is(tenantId);
+        }
+        return new Criteria().orOperator(
+                Criteria.where(UserGroupEntity.Fields.tenantId).is(tenantId),
+                Criteria.where(UserGroupEntity.Fields.tenantId).is(null));
     }
 }

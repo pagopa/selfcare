@@ -79,6 +79,8 @@ components:
           type: string
         contractTemplateVersion:
           type: string
+        tenantId:
+          type: string
         productId:
           type: string
         name:
@@ -231,14 +233,20 @@ components:
           type: string
         productId:
           type: string
+        tenantId:
+          type: string
         status:
           $ref: "#/components/schemas/ProductStatus"
     ProductCreateRequest:
       required:
       - productId
+      - tenantId
       type: object
       properties:
         productId:
+          pattern: \S
+          type: string
+        tenantId:
           pattern: \S
           type: string
         parentId:
@@ -260,6 +268,10 @@ components:
         features:
           $ref: "#/components/schemas/Features"
         roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        partnerTechRoleMappings:
           type: array
           items:
             $ref: "#/components/schemas/RoleMapping"
@@ -324,9 +336,13 @@ components:
     ProductPatchRequest:
       required:
       - productId
+      - tenantId
       type: object
       properties:
         productId:
+          pattern: \S
+          type: string
+        tenantId:
           pattern: \S
           type: string
         parentId:
@@ -348,6 +364,10 @@ components:
         features:
           $ref: "#/components/schemas/Features"
         roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        partnerTechRoleMappings:
           type: array
           items:
             $ref: "#/components/schemas/RoleMapping"
@@ -392,9 +412,13 @@ components:
     ProductResponse:
       required:
       - productId
+      - tenantId
       type: object
       properties:
         productId:
+          pattern: \S
+          type: string
+        tenantId:
           pattern: \S
           type: string
         parentId:
@@ -416,6 +440,10 @@ components:
         features:
           $ref: "#/components/schemas/Features"
         roleMappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/RoleMapping"
+        partnerTechRoleMappings:
           type: array
           items:
             $ref: "#/components/schemas/RoleMapping"
@@ -667,6 +695,12 @@ paths:
         schema:
           type: string
         required: true
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       - name: version
         in: query
         schema:
@@ -732,6 +766,12 @@ paths:
         in: query
         schema:
           type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       - name: version
         in: query
         schema:
@@ -784,6 +824,12 @@ paths:
         in: query
         schema:
           type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: OK
@@ -830,6 +876,12 @@ paths:
         in: query
         schema:
           type: boolean
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       - name: valid
         required: true
         in: query
@@ -922,6 +974,12 @@ paths:
         in: query
         schema:
           type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Origins found
@@ -997,6 +1055,12 @@ paths:
         in: query
         schema:
           type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: WorkflowType resolved
@@ -1046,6 +1110,12 @@ paths:
         schema:
           type: string
       - name: createdBy
+        in: query
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
           type: string
@@ -1102,6 +1172,12 @@ paths:
         required: true
         schema:
           type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Product found
@@ -1139,6 +1215,12 @@ paths:
       - name: productId
         in: path
         required: true
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:
@@ -1184,6 +1266,12 @@ paths:
       - name: productId
         in: path
         required: true
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:
@@ -1235,6 +1323,12 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/Origin"
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Required documents retrieved
@@ -1293,6 +1387,12 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/Origin"
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Check completed
@@ -1338,6 +1438,12 @@ paths:
         in: query
         schema:
           $ref: "#/components/schemas/UserRole"
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
       responses:
         "200":
           description: Product role is valid
@@ -1381,6 +1487,12 @@ paths:
       - name: productId
         in: path
         required: true
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
         schema:
           type: string
       responses:

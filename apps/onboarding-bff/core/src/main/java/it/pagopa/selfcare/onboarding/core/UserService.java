@@ -16,7 +16,5 @@ public interface UserService {
 
   User getManagerInfo(String onboardingId, String userTaxCode);
 
-  boolean isAllowedUserByUid(String uid);
-
   UserId searchUser(String taxCode);
 }

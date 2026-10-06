@@ -8,10 +8,10 @@ import it.pagopa.selfcare.document.generated.openapi.v1.dto.UserAttachmentReques
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.onboarding.connector.model.product.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsDocumentContentApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.DocumentMapper;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;

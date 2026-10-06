@@ -6,10 +6,10 @@ import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
+import it.pagopa.selfcare.onboarding.connector.model.product.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.StorageOrigin;
+import it.pagopa.selfcare.onboarding.connector.model.product.StorageOrigin;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
 import org.springframework.core.io.Resource;
@@ -181,14 +181,7 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public boolean verifyAllowedUserByRole(String onboardingId, String uid) {
-        log.trace("verifyAllowedUserRole for {} - {}", onboardingId, uid);
-        OnboardingData onboardingData = getOnboardingWithUserInfo(onboardingId);
-        return onboardingData.getUsers().stream().anyMatch(user -> uid.equalsIgnoreCase(user.getId()));
-    }
-
-    @Override
-    public void uploadAttachment(String onboardingId, MultipartFile attachment,
+    public void uploadAttachment(String tenantId, String onboardingId, MultipartFile attachment,
                                  String attachmentName, String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
@@ -197,7 +190,7 @@ public class TokenServiceImpl implements TokenService {
         Assert.notNull(attachment, "file is required");
         OnboardingData onboarding = onboardingMsConnector.getOnboarding(onboardingId);
 
-        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(onboarding, attachmentId);
+        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(tenantId, onboarding, attachmentId);
         boolean userStorage = requiredDocument
                 .map(RequiredDocumentModel::getStorageOrigin)
                 .map(so -> so == StorageOrigin.USER)
@@ -227,9 +220,10 @@ public class TokenServiceImpl implements TokenService {
         log.trace("getAttachment end");
     }
 
-    private Optional<RequiredDocumentModel> findRequiredDocument(OnboardingData onboarding, String attachmentId) {
+    private Optional<RequiredDocumentModel> findRequiredDocument(String tenantId, OnboardingData onboarding, String attachmentId) {
       return productMsConnector
           .getRequiredDocuments(
+              Encode.forJava(tenantId),
               onboarding.getProductId(),
               onboarding.getInstitutionType().name(),
               onboarding.getInstitutionUpdate().getOrigin())

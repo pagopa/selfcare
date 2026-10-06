@@ -26,6 +26,7 @@
         "status": "ACTIVE",
         "productRole": "referente amministrativo",
         "role": "MANAGER",
+        "partnerTechRole": true,
         "env": "ROOT",
         "createdAt": {
           "$date": "2023-03-10T10:15:45.123Z"

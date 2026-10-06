@@ -5,6 +5,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.auth.context.TokenContext;
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,12 +17,14 @@ import org.mockito.MockitoAnnotations;
 class IamMsHeadersFactoryTest {
 
   @Mock TokenContext tokenContext;
+  @Mock AuthTenantContext tenantContext;
 
   @InjectMocks IamMsHeadersFactory headersFactory;
 
   @BeforeEach
   void setUp() {
     MockitoAnnotations.openMocks(this);
+    when(tenantContext.getTenantId()).thenReturn("AR");
   }
 
   @Test
@@ -41,6 +44,7 @@ class IamMsHeadersFactoryTest {
     assertNotNull(result);
     assertEquals("application/json", result.getFirst("Content-Type"));
     assertEquals("Bearer " + testToken, result.getFirst("Authorization"));
+    assertEquals("AR", result.getFirst("X-Tenant-Id"));
   }
 
   @Test
@@ -59,6 +63,7 @@ class IamMsHeadersFactoryTest {
     assertNotNull(result);
     assertEquals("application/json", result.getFirst("Content-Type"));
     assertFalse(result.containsKey("Authorization"));
+    assertEquals("AR", result.getFirst("X-Tenant-Id"));
     verify(tokenContext).getToken();
   }
 
@@ -79,7 +84,7 @@ class IamMsHeadersFactoryTest {
 
     // Assert
     assertNotNull(result);
-    assertEquals(4, result.size());
+    assertEquals(5, result.size());
     assertEquals("application/json", result.getFirst("Content-Type"));
     assertEquals("application/json", result.getFirst("Accept"));
     assertEquals("custom-value", result.getFirst("Custom-Header"));
@@ -100,7 +105,8 @@ class IamMsHeadersFactoryTest {
 
     // Assert
     assertNotNull(result);
-    assertEquals(1, result.size());
+    assertEquals(2, result.size());
     assertEquals("Bearer " + testToken, result.getFirst("Authorization"));
+    assertEquals("AR", result.getFirst("X-Tenant-Id"));
   }
 }

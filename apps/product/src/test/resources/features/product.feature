@@ -5,6 +5,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following request body:
     """
      {
+      "tenantId": "AR",
       "productId": "prod-test",
       "alias": "prod-test",
       "title": "Prod TEST",
@@ -126,19 +127,20 @@ Feature: Product API end-to-end onboarding and lifecycle
     }
     """
     And The following query params:
-      | productId | prod-test |
       | createdBy | user-test |
     When I send a POST request to "/product"
     Then The status code is 201
     And The response body contains:
+      | tenantId  | AR        |
       | productId | prod-test |
       | status    | TESTING   |
 
-  Scenario: GET /product - successfully retrieve product after creation
+  Scenario: GET /tenant/product - successfully retrieve product after creation
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
+      | tenantId  | AR        |
       | productId | prod-test |
       | status    | TESTING   |
       | version   | 1         |
@@ -159,6 +161,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     And The following request body:
     """
      {
+      "tenantId": "AR",
       "productId": "prod-test",
       "alias": "prod-test",
       "title": "Prod TEST 2 - Patched",
@@ -319,6 +322,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a GET request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
+      | tenantId  | AR        |
       | productId | prod-test |
       | status    | ACTIVE    |
       | version   | 2         |
@@ -338,6 +342,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a PATCH request to "/product/prod-test" with content type "application/json"
     Then The status code is 200
     And The response body contains:
+      | tenantId         | AR                            |
       | productId        | prod-test                     |
       | description      | Description updated via PATCH |
       | features.enabled | false                         |
@@ -348,6 +353,7 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a GET request to "/product/prod-test"
     Then The status code is 200
     And The response body contains:
+      | tenantId         | AR                            |
       | productId        | prod-test                     |
       | description      | Description updated via PATCH |
       | features.enabled | false                         |
@@ -388,18 +394,18 @@ Feature: Product API end-to-end onboarding and lifecycle
     When I send a GET request to "/product/prod-test/required-documents"
     Then The status code is 200
     And The response body contains:
-      | [0].id                   | doc-statuto       |
-      | [0].name                 | Statuto Ente      |
-      | [0].labelKey             | statuto           |
-      | [0].required             | true              |
-      | [0].mimeType             | application/pdf   |
-      | [0].maxDocumentsRequired | 1                 |
-      | [1].id                   | doc-visura        |
-      | [1].name                 | Visura Camerale   |
-      | [1].labelKey             | visura            |
-      | [1].required             | true              |
-      | [1].mimeType             | application/pdf   |
-      | [1].maxDocumentsRequired | 3                 |
+      | [0].id                   | doc-statuto     |
+      | [0].name                 | Statuto Ente    |
+      | [0].labelKey             | statuto         |
+      | [0].required             | true            |
+      | [0].mimeType             | application/pdf |
+      | [0].maxDocumentsRequired | 1               |
+      | [1].id                   | doc-visura      |
+      | [1].name                 | Visura Camerale |
+      | [1].labelKey             | visura          |
+      | [1].required             | true            |
+      | [1].mimeType             | application/pdf |
+      | [1].maxDocumentsRequired | 3               |
 
   Scenario: GET /product/{productId}/required-documents - returns empty list when no document matches context
     Given User login with username "j.doe" and password "test"

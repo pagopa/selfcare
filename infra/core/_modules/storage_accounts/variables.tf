@@ -166,39 +166,18 @@ variable "lifecycle_prefix_match" {
 # Microsoft Defender for Storage (per-account). Disabled by default so existing
 # callers keep working; new callers can opt in.
 #
-# NOTE: as of pagopa-dx/azure-storage-account v1.x, these values are ACCEPTED
-# but NOT enforced at the ARM level — the upstream module does not expose the
-# needed inputs. See storage_account.tf for the full rationale. When the new
-# pagopa-dx version is released with the corresponding inputs, storage_account.tf
-# will start wiring these caller-facing variables to the upstream module and
-# they will take effect without any change on callers' side.
+# Passed through to pagopa-dx/azure-storage-account `malware_scanning_enabled`
+# (>= 4.0.5), which always applies an unlimited monthly cap and enables
+# sensitive data discovery. See storage_account.tf for details.
 # -----------------------------------------------------------------------------
-variable "defender_enabled" {
+variable "malware_scanning_enabled" {
   type        = bool
-  description = "Enable Microsoft Defender for Storage on this storage account."
-  default     = false
-}
-
-variable "defender_malware_scanning_enabled" {
-  type        = bool
-  description = "Enable on-upload malware scanning by Defender for Storage. Requires defender_enabled = true."
-  default     = false
-}
-
-variable "defender_malware_scanning_cap_gb_per_month" {
-  type        = number
-  description = "Monthly cap (GB) for malware scanning. Set to -1 for unlimited. Only used when malware scanning is enabled."
-  default     = null
-}
-
-variable "defender_sensitive_data_discovery_enabled" {
-  type        = bool
-  description = "Enable Sensitive Data Discovery by Defender for Storage. Requires defender_enabled = true."
+  description = "Enable Microsoft Defender for Storage with on-upload malware scanning (unlimited monthly cap) and sensitive data discovery."
   default     = false
 }
 
 variable "defender_soft_delete_malicious_blobs" {
   type        = bool
-  description = "When true, malicious blobs detected by malware scanning are soft-deleted. Requires blob_features.delete_retention_days >= 1."
+  description = "Declares that malicious blobs detected by malware scanning are soft-deleted (setting applied outside Terraform). Requires malware_scanning_enabled = true and blob_features.delete_retention_days >= 1."
   default     = false
 }

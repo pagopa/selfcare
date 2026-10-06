@@ -9,12 +9,14 @@ import it.pagopa.selfcare.onboarding.connector.model.institutions.infocamere.Ins
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.GeographicTaxonomies;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.HomogeneousOrganizationalArea;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.connector.model.registry_proxy.OrganizationUnit;
 import it.pagopa.selfcare.onboarding.connector.rest.client.PartyRegistryProxyRestClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.RegistryProxyMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.model.AooResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.GeographicTaxonomiesResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.ProxyInstitutionResponse;
+import it.pagopa.selfcare.onboarding.connector.rest.model.IpaInstitutionsSearchResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.UoResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequest;
 import it.pagopa.selfcare.onboarding.connector.rest.model.institution_pnpg.InstitutionByLegalTaxIdRequestDto;
@@ -129,6 +131,30 @@ class PartyRegistryProxyConnectorImpl implements PartyRegistryProxyConnector {
         log.debug("getInstitutionProxyById result = {}", institutionProxyInfo);
         log.trace("getInstitutionProxyById end");
         return institutionProxyInfo;
+    }
+
+    @Override
+    @Retry(name = "retryTimeout")
+    public InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category) {
+        log.trace("findIpaInstitutionByTaxCode start");
+        log.debug("findIpaInstitutionByTaxCode taxCode = {}", taxCode);
+        Assert.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+        ProxyInstitutionResponse response = restClient.findIpaInstitutionByTaxCode(taxCode, category);
+        InstitutionProxyInfo result = proxyMapper.toInstitutionProxyInfo(response);
+        log.debug("findIpaInstitutionByTaxCode result = {}", result);
+        log.trace("findIpaInstitutionByTaxCode end");
+        return result;
+    }
+
+    @Override
+    @Retry(name = "retryTimeout")
+    public IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize) {
+        log.trace("searchIpaInstitutions start");
+        IpaInstitutionsSearchResponse response = restClient.searchIpaInstitutions(search, category, page, pageSize);
+        IpaInstitutionsSearchResult result = proxyMapper.toIpaInstitutionsSearchResult(response);
+        log.debug("searchIpaInstitutions result count = {}", result.getCount());
+        log.trace("searchIpaInstitutions end");
+        return result;
     }
 
 }

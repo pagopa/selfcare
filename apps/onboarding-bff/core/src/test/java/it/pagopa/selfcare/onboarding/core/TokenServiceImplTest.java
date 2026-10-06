@@ -2,7 +2,6 @@ package it.pagopa.selfcare.onboarding.core;
 
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
@@ -10,12 +9,11 @@ import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
-import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
+import it.pagopa.selfcare.onboarding.connector.model.product.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.connector.model.product.ContractTemplate;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.StorageOrigin;
+import it.pagopa.selfcare.onboarding.connector.model.product.StorageOrigin;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -268,16 +266,18 @@ public class TokenServiceImplTest {
     @Test
     void uploadAttachment() throws IOException {
         //given
+        final String tenantId = "AR";
         final String onboardingId = "onboardingId";
         final String filename = "filename";
         final String productId = "productId";
         final String templatePath = "templatePath";
         mockAttachmentContext(onboardingId, productId, filename, templatePath);
         MockMultipartFile mockMultipartFile = new MockMultipartFile("example", new ByteArrayInputStream("example".getBytes(StandardCharsets.UTF_8)));
-        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString())).thenReturn(List.of());
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString(), anyString())).thenReturn(List.of());
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, filename, null, null);
+        tokenService.uploadAttachment(tenantId, onboardingId, mockMultipartFile, filename, null, null);
         //then
+        verify(productMsConnector).getRequiredDocuments(tenantId, productId, InstitutionType.AS.name(), "SELC");
         verify(documentMsConnector, times(1))
                 .uploadAttachment(eq(onboardingId), eq(mockMultipartFile), eq(filename), eq(productId),
                         argThat(template -> templatePath.equals(template.getTemplatePath())));
@@ -287,6 +287,7 @@ public class TokenServiceImplTest {
     @Test
     void uploadAttachment_userStorage() throws IOException {
         //given
+        final String tenantId = "AR";
         final String onboardingId = "onboardingId";
         final String attachmentName = "attachmentName";
         final String attachmentId = "statuto";
@@ -303,13 +304,14 @@ public class TokenServiceImplTest {
         requiredDocument.setId(attachmentId);
         requiredDocument.setStorageOrigin(StorageOrigin.USER);
         requiredDocument.setMaxDocumentsRequired(maxDocumentsRequired);
-        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString()))
+        when(productMsConnector.getRequiredDocuments(anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(List.of(requiredDocument));
 
         // when
-        tokenService.uploadAttachment(onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
+        tokenService.uploadAttachment(tenantId, onboardingId, mockMultipartFile, attachmentName, attachmentId, attachmentDescription);
 
         //then
+        verify(productMsConnector).getRequiredDocuments(tenantId, productId, InstitutionType.AS.name(), "SELC");
         verify(documentMsConnector, times(1))
                 .uploadUserAttachment(onboardingId, mockMultipartFile, productId, attachmentId,
                         attachmentDescription, attachmentName, maxDocumentsRequired);
@@ -328,59 +330,6 @@ public class TokenServiceImplTest {
         //then
         verify(documentMsConnector, times(1))
                 .getAggregatesCsv(onboardingId, productId);
-    }
-
-    @Test
-    void verifyAllowedUserByRoleTest() {
-        //given
-        final String onboardingId = "onboardingId";
-        final String uid = "uid1";
-        OnboardingData onboardingData = new OnboardingData();
-
-        User userManager = new User();
-        userManager.setRole(PartyRole.MANAGER);
-        userManager.setId(uid);
-
-        User userDelegate = new User();
-        userDelegate.setRole(PartyRole.DELEGATE);
-        userDelegate.setId("uid2");
-
-        onboardingData.setUsers(List.of(userManager, userDelegate));
-
-        when(onboardingMsConnector.getOnboardingWithUserInfo(anyString())).thenReturn(onboardingData);
-
-        // when
-        boolean result = tokenService.verifyAllowedUserByRole(onboardingId, uid);
-
-        //then
-        assertTrue(result);
-        verify(onboardingMsConnector, times(1))
-            .getOnboardingWithUserInfo(anyString());
-    }
-
-    @Test
-    void verifyAllowedUserByRoleTest_CaseKO() {
-        //given
-        final String onboardingId = "onboardingId";
-        final String uid = "uid1";
-
-        OnboardingData onboardingData = new OnboardingData();
-
-        User user = new User();
-        user.setRole(PartyRole.DELEGATE);
-        user.setId("uid2");
-
-        onboardingData.setUsers(List.of(user));
-
-        when(onboardingMsConnector.getOnboardingWithUserInfo(anyString())).thenReturn(onboardingData);
-
-        // when
-        boolean result = tokenService.verifyAllowedUserByRole(onboardingId, uid);
-
-        //then
-        assertFalse(result);
-        verify(onboardingMsConnector, times(1))
-            .getOnboardingWithUserInfo(anyString());
     }
 
     private OnboardingData mockAttachmentContext(String onboardingId, String productId, String filename, String templatePath) {

@@ -19,6 +19,8 @@ public class Product {
 
   @BsonId @Builder.Default private String id = UUID.randomUUID().toString();
 
+  private String tenantId;
+
   private String productId;
   private String parentId;
   private String alias;
@@ -37,6 +39,8 @@ public class Product {
   private Features features;
 
   private List<RoleMapping> roleMappings;
+
+  private List<RoleMapping> partnerTechRoleMappings;
 
   private List<ContractTemplateConfig> contracts;
 
@@ -58,5 +62,4 @@ public class Product {
   private List<WorkflowRule> workflowRules;
 
   private List<RequiredDocument> requiredDocuments;
-
 }

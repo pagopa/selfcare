@@ -19,6 +19,7 @@ public class Product {
 
   @BsonId @Builder.Default private String id = UUID.randomUUID().toString();
 
+  private String tenantId;
   private String productId;
   private String parentId;
   private String alias;
@@ -38,6 +39,8 @@ public class Product {
 
   private List<RoleMapping> roleMappings;
 
+  private List<RoleMapping> partnerTechRoleMappings;
+
   private List<ContractTemplate> contracts;
 
   private List<OriginEntry> institutionOrigins;
@@ -54,5 +57,4 @@ public class Product {
   private SigningConfiguration signingConfiguration;
 
   private List<ManagingInstitution> managingInstitutions;
-
 }

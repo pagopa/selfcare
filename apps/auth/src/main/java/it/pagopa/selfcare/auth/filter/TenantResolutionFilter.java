@@ -5,6 +5,7 @@ import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import it.pagopa.selfcare.auth.controller.response.Problem;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import it.pagopa.selfcare.auth.exception.InvalidRequestException;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.annotation.Priority;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Priorities;
@@ -25,6 +26,7 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
 
   @Inject TenantRegistry tenantRegistry;
   @Inject AuthTenantContext tenantContext;
+  @Inject TenantContext resourceTenantContext;
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -33,8 +35,10 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
     }
 
     try {
-      tenantContext.setTenant(
-          tenantRegistry.resolveEnabledTenant(requestContext.getHeaderString(TENANT_HEADER)));
+      TenantRegistry.Tenant tenant =
+          tenantRegistry.resolveEnabledTenant(requestContext.getHeaderString(TENANT_HEADER));
+      tenantContext.setTenant(tenant);
+      resourceTenantContext.setTenantId(tenant.id());
     } catch (InvalidRequestException exception) {
       String reason =
           isMissing(requestContext.getHeaderString(TENANT_HEADER))

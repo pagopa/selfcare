@@ -14,6 +14,7 @@ import it.pagopa.selfcare.auth.model.otp.OtpDailyLimit;
 import it.pagopa.selfcare.auth.model.otp.OtpFeatureFlag;
 import it.pagopa.selfcare.auth.service.JwtService;
 import it.pagopa.selfcare.cucumber.utils.SharedStepData;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,8 @@ public class AuthSteps {
 
   @Inject JwtService jwtService;
 
+  @Inject TenantContext tenantContext;
+
   @Inject OtpFeatureFlag otpFeatureFlag;
 
   @Inject OtpDailyLimit otpDailyLimit;
@@ -42,6 +45,11 @@ public class AuthSteps {
   @Before(order = 0)
   public void setUp() {
     resetTestState();
+  }
+
+  @Before(order = Integer.MAX_VALUE)
+  public void setDefaultTenant() {
+    sharedStepData.setTenantId("AR");
   }
 
   @Before(value = "@OidcBelowLimit", order = 10)
@@ -68,16 +76,25 @@ public class AuthSteps {
 
   @After
   public void tearDown() {
-    resetTestState();
+    try {
+      resetTestState();
+    } finally {
+      tenantContext.clear();
+    }
   }
 
   @After("@RemoveOtpFlow")
   public void removeOtpFlowAfterScenario(Scenario scenario) {
+    setArTenantContext();
     String otpSessionUid =
         sharedStepData.getResponse().body().jsonPath().getString("otpSessionUid");
-    final String uiidField = OtpFlow.Fields.uuid.name();
-
-    Long l = OtpFlow.delete(new Document(uiidField, otpSessionUid)).await().indefinitely();
+    Document filter =
+        otpSessionUid == null
+            ? new Document(OtpFlow.Fields.userId.name(), "35a78332-d038-4bfa-8e85-2cba7f6b7bf7")
+                .append(OtpFlow.Fields.tenantId.name(), "AR")
+            : new Document(OtpFlow.Fields.uuid.name(), otpSessionUid)
+                .append(OtpFlow.Fields.tenantId.name(), "AR");
+    Long l = OtpFlow.delete(filter).await().indefinitely();
 
     if (l == 0) {
       log.info("No OTP flow found for session UID: {}", otpSessionUid);
@@ -129,6 +146,7 @@ public class AuthSteps {
 
   @And("An OTP flow should be created with status {string} and mailRequestId {string}")
   public void anOtpFlowShouldBeCreatedWithStatusAndRequestId(String status, String requestId) {
+    setArTenantContext();
     String otpSessionUid =
         sharedStepData.getResponse().body().jsonPath().getString("otpSessionUid");
     final String uiidField = OtpFlow.Fields.uuid.name();
@@ -150,6 +168,7 @@ public class AuthSteps {
 
   @And("An OTP flow with uuid {string} already exists with status {string} and attempts {int}")
   public void anOTPFlowWithUuidAlreadyExistsWithStatus(String uuid, String status, int attempts) {
+    setArTenantContext();
 
     OtpFlow otpFlow =
       OtpFlow.<OtpFlow>find(OtpFlow.Fields.uuid.name(), uuid)
@@ -175,6 +194,7 @@ public class AuthSteps {
       OtpFlow newOtpFlow =
         OtpFlow.builder()
           .uuid(uuid)
+          .tenantId("AR")
           .status(OtpStatus.valueOf(status))
           .attempts(attempts)
           .createdAt(OffsetDateTime.now())
@@ -191,6 +211,7 @@ public class AuthSteps {
 
   @And("An OTP flow with uuid {string} for user {string} was COMPLETED {int} months ago")
   public void anOTPFlowWithUuidWasCompletedMonthsAgo(String uuid, String userId, int months) {
+    setArTenantContext();
 
     OtpFlow otpFlow =
       OtpFlow.<OtpFlow>find(OtpFlow.Fields.uuid.name(), uuid)
@@ -215,6 +236,7 @@ public class AuthSteps {
     } else {
       OtpFlow newOtpFlow = OtpFlow.builder()
         .uuid(uuid)
+        .tenantId("AR")
         .userId(userId)
         .status(OtpStatus.valueOf("COMPLETED"))
         .attempts(1)
@@ -232,6 +254,7 @@ public class AuthSteps {
 
   @And("The OTP flow with uuid {string} has been updated to status {string}")
   public void theOTPFlowStatusHasBeenUpdatedTo(String uuid, String status) {
+    setArTenantContext();
     OtpFlow otpFlow =
         OtpFlow.<OtpFlow>find(new Document(OtpFlow.Fields.uuid.name(), uuid))
             .firstResult()
@@ -247,6 +270,7 @@ public class AuthSteps {
   }
 
   private void resetTestState() {
+    setArTenantContext();
     otpFeatureFlag.setFeatureFlag(FeatureFlagEnum.NONE);
     otpFeatureFlag.setOtpBetaUsers(List.of());
     otpDailyLimit.setDailyLimit(0);
@@ -254,10 +278,12 @@ public class AuthSteps {
   }
 
   private void writeOptFlowToDatabase() {
+    setArTenantContext();
     OffsetDateTime now = OffsetDateTime.now();
 
     OtpFlow otpFlow =
             OtpFlow.builder()
+                    .tenantId("AR")
                     .userId("35a78332-d038-4bfa-8e85-2cba7f6b7323")
                     .status(OtpStatus.PENDING)
                     .attempts(0)
@@ -268,6 +294,7 @@ public class AuthSteps {
 
     OtpFlow otpFlow2 =
             OtpFlow.builder()
+                    .tenantId("AR")
                     .userId("35a78332-d038-4bfa-8e85-2cba7f6b7322")
                     .status(OtpStatus.PENDING)
                     .attempts(0)
@@ -278,6 +305,7 @@ public class AuthSteps {
 
     OtpFlow otpFlowSameUser =
             OtpFlow.builder()
+                    .tenantId("AR")
                     .userId("35a78332-d038-4bfa-8e85-2cba7f6b7322")
                     .status(OtpStatus.PENDING)
                     .attempts(0)
@@ -292,6 +320,7 @@ public class AuthSteps {
   }
 
   private void deleteOtpFlowFromDatabase() {
+    setArTenantContext();
     OtpFlow.delete("userId", "35a78332-d038-4bfa-8e85-2cba7f6b7323")
             .await()
             .indefinitely();
@@ -302,11 +331,13 @@ public class AuthSteps {
   }
 
   private void deleteAllOtpFlowsFromDatabase() {
+    setArTenantContext();
     OtpFlow.deleteAll().await().indefinitely();
   }
 
   @And("An OTP flow with uuid {string} does not exist")
   public void anOTPFlowWithUuidDoesNotExist(String uuid) {
+    setArTenantContext();
     Long deletedCount = OtpFlow.delete("uuid", uuid).await().indefinitely();
     if (deletedCount > 0) {
       log.info("Deleted {} OTP flow(s) with UUID: {}", deletedCount, uuid);
@@ -317,10 +348,12 @@ public class AuthSteps {
 
   @Given("The following OTP flows exist:")
   public void theFollowingOtpFlowsExist(DataTable dataTable) {
+    setArTenantContext();
     dataTable.asMaps().forEach(row -> {
       OtpFlow otpFlow =
         OtpFlow.builder()
           .uuid(row.get("uuid"))
+          .tenantId("AR")
           .userId(row.get("userId"))
           .status(OtpStatus.valueOf(row.get("status")))
           .attempts(Integer.parseInt(row.get("attempts")))
@@ -335,5 +368,8 @@ public class AuthSteps {
     });
   }
 
+  private void setArTenantContext() {
+    tenantContext.setTenantId("AR");
+  }
 
 }

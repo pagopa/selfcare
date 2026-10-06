@@ -115,6 +115,9 @@
           "contractTemplateVersion" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "productId" : {
             "type" : "string"
           },
@@ -289,16 +292,23 @@
           "productId" : {
             "type" : "string"
           },
+          "tenantId" : {
+            "type" : "string"
+          },
           "status" : {
             "$ref" : "#/components/schemas/ProductStatus"
           }
         }
       },
       "ProductCreateRequest" : {
-        "required" : [ "productId" ],
+        "required" : [ "productId", "tenantId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "tenantId" : {
             "pattern" : "\\S",
             "type" : "string"
           },
@@ -330,6 +340,12 @@
             "$ref" : "#/components/schemas/Features"
           },
           "roleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/RoleMapping"
@@ -426,10 +442,14 @@
         }
       },
       "ProductPatchRequest" : {
-        "required" : [ "productId" ],
+        "required" : [ "productId", "tenantId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "tenantId" : {
             "pattern" : "\\S",
             "type" : "string"
           },
@@ -461,6 +481,12 @@
             "$ref" : "#/components/schemas/Features"
           },
           "roleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/RoleMapping"
@@ -526,10 +552,14 @@
         }
       },
       "ProductResponse" : {
-        "required" : [ "productId" ],
+        "required" : [ "productId", "tenantId" ],
         "type" : "object",
         "properties" : {
           "productId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "tenantId" : {
             "pattern" : "\\S",
             "type" : "string"
           },
@@ -561,6 +591,12 @@
             "$ref" : "#/components/schemas/Features"
           },
           "roleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RoleMapping"
+            }
+          },
+          "partnerTechRoleMappings" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/RoleMapping"
@@ -861,6 +897,14 @@
         "operationId" : "uploadContractTemplate",
         "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "createdBy",
           "in" : "query",
           "schema" : {
@@ -971,6 +1015,14 @@
         "operationId" : "listContractTemplates",
         "tags" : [ "ContractTemplate", "external-v2" ],
         "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "name",
           "in" : "query",
           "schema" : {
@@ -1046,6 +1098,14 @@
             "type" : "string"
           }
         }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "fileType",
           "in" : "query",
           "schema" : {
@@ -1114,71 +1174,6 @@
       }
     },
     "/product" : {
-      "get" : {
-        "summary" : "Get products (latest version per productId)",
-        "description" : "Returns the list of products, one entry per productId (latest version). Both query params rootOnly and valid are required.",
-        "operationId" : "getProducts",
-        "tags" : [ "Product" ],
-        "parameters" : [ {
-          "name" : "rootOnly",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "valid",
-          "required" : true,
-          "in" : "query",
-          "schema" : {
-            "type" : "boolean"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Products retrieved",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request - missing required query params",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "application/problem+json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Problem"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Not Authorized"
-          },
-          "403" : {
-            "description" : "Not Allowed"
-          }
-        },
-        "security" : [ {
-          "SecurityScheme" : [ ]
-        } ]
-      },
       "post" : {
         "summary" : "Create or update a product configuration",
         "description" : "Creates a new product configuration or updates the existing one when a match is found",
@@ -1242,35 +1237,51 @@
         "security" : [ {
           "SecurityScheme" : [ ]
         } ]
-      }
-    },
-    "/product/origins" : {
+      },
       "get" : {
-        "summary" : "Get product origins by productId",
-        "description" : "Retrieve the list of institution origins for the given product.",
-        "operationId" : "getProductOriginsById",
-        "tags" : [ "Product", "external-v2", "external-pnpg" ],
+        "summary" : "Get products (latest version per productId)",
+        "description" : "Returns the list of products, one entry per productId (latest version). Both query params rootOnly and valid are required.",
+        "operationId" : "getProducts",
+        "tags" : [ "Product" ],
         "parameters" : [ {
-          "name" : "productId",
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "rootOnly",
           "required" : true,
           "in" : "query",
           "schema" : {
-            "type" : "string"
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "valid",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "boolean"
           }
         } ],
         "responses" : {
           "200" : {
-            "description" : "Origins found",
+            "description" : "Products retrieved",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ProductOriginResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductResponse"
+                  }
                 }
               }
             }
           },
-          "404" : {
-            "description" : "Product not found",
+          "400" : {
+            "description" : "Bad Request - missing required query params",
             "content" : {
               "application/problem+json" : {
                 "schema" : {
@@ -1339,6 +1350,71 @@
         } ]
       }
     },
+    "/product/origins" : {
+      "get" : {
+        "summary" : "Get product origins by productId",
+        "description" : "Retrieve the list of institution origins for the given product.",
+        "operationId" : "getProductOriginsById",
+        "tags" : [ "Product", "external-v2", "external-pnpg" ],
+        "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "required" : true,
+          "in" : "query",
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Origins found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductOriginResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Product not found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/product/workflow-type" : {
       "get" : {
         "summary" : "Resolve workflow type for a product",
@@ -1346,6 +1422,14 @@
         "operationId" : "getWorkflowType",
         "tags" : [ "Product" ],
         "parameters" : [ {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "institutionType",
           "required" : true,
           "in" : "query",
@@ -1434,6 +1518,14 @@
             "type" : "string"
           }
         }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "createdBy",
           "in" : "query",
           "schema" : {
@@ -1514,6 +1606,14 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1566,6 +1666,14 @@
           "name" : "productId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "schema" : {
             "type" : "string"
           }
@@ -1636,6 +1744,14 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1690,6 +1806,14 @@
           "name" : "productId",
           "required" : true,
           "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "schema" : {
             "type" : "string"
           }
@@ -1778,6 +1902,14 @@
             "type" : "string"
           }
         }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "institutionType",
           "required" : true,
           "in" : "query",
@@ -1835,6 +1967,14 @@
           "name" : "productId",
           "required" : true,
           "in" : "path",
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "schema" : {
             "type" : "string"
           }
@@ -1916,6 +2056,14 @@
           "name" : "productId",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "tenantId",
+          "in" : "query",
+          "required" : false,
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "schema" : {
             "type" : "string"
           }

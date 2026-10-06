@@ -24,6 +24,9 @@ info:
     version: "@project.version@"
 
 management:
+  health:
+    mongo:
+      enabled: false
   endpoint:
     health:
       show-details: always

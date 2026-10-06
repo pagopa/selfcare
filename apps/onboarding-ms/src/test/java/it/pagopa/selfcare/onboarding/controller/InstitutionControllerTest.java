@@ -6,12 +6,17 @@ import io.quarkus.test.common.http.TestHTTPEndpoint;
 import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.mongodb.MongoTestResource;
 import io.quarkus.test.security.TestSecurity;
+import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Multi;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.controller.request.GetInstitutionRequest;
 import it.pagopa.selfcare.onboarding.controller.response.InstitutionResponse;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
+import it.pagopa.selfcare.onboarding.filter.TenantResolutionFilter;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -26,6 +31,18 @@ import static org.mockito.ArgumentMatchers.any;
 class InstitutionControllerTest {
 
     @InjectMock InstitutionService institutionService;
+
+    @BeforeEach
+    void withTenantHeader() {
+        RestAssured.requestSpecification = new RequestSpecBuilder()
+                .addHeader(TenantResolutionFilter.TENANT_HEADER, "AR")
+                .build();
+    }
+
+    @AfterEach
+    void resetRestAssured() {
+        RestAssured.reset();
+    }
 
     @Test
     @TestSecurity(user = "userJwt")

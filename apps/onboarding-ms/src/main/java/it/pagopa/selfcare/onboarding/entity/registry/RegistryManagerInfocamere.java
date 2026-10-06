@@ -4,7 +4,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.registry.client.ClientRegistryInfocamere;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,7 +20,7 @@ public class RegistryManagerInfocamere extends ClientRegistryInfocamere {
   }
 
   @Override
-  public Uni<Onboarding> customValidation(Product product) {
+  public Uni<Onboarding> customValidation(ProductResponse product) {
     return Uni.createFrom().item(onboarding);
   }
 

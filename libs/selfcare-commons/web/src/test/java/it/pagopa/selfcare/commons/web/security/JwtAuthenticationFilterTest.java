@@ -20,6 +20,7 @@ import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collections;
 
 import static org.mockito.Mockito.*;
 
@@ -203,6 +204,24 @@ class JwtAuthenticationFilterTest {
         verify(RESPONSE_MOCK).setStatus(HttpStatus.BAD_REQUEST.value());
         verify(RESPONSE_MOCK).setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         verifyNoInteractions(FILTER_CHAIN_MOCK);
+    }
+
+    @Test
+    void doFilterInternal_rejectsDuplicatedTenantHeaderBeforeAuthentication()
+            throws ServletException, IOException {
+        HttpServletRequest requestMock = mock(HttpServletRequest.class);
+        HttpServletResponse responseMock = mock(HttpServletResponse.class);
+        FilterChain filterChain = mock(FilterChain.class);
+        when(requestMock.getHeaders("X-Tenant-Id"))
+                .thenReturn(Collections.enumeration(java.util.List.of("AR", "PNPG")));
+        when(responseMock.getOutputStream())
+                .thenReturn(new DelegatingServletOutputStream(ServletOutputStream.nullOutputStream()));
+
+        jwtAuthenticationFilter.doFilterInternal(requestMock, responseMock, filterChain);
+
+        verify(responseMock).setStatus(HttpStatus.BAD_REQUEST.value());
+        verify(responseMock).setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
+        verifyNoInteractions(authenticationManagerMock, filterChain);
     }
 
 }
