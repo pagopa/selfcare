@@ -1,11 +1,9 @@
 package it.pagopa.selfcare.onboarding.core;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
 import it.pagopa.selfcare.onboarding.connector.exceptions.ResourceNotFoundException;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductStatus;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +25,7 @@ class ProductAzureServiceImplTest {
     private ProductAzureServiceImpl productService;
 
     @Mock
-    private ProductsConnector productsConnectorMock;
+    private ProductService productServiceMock;
 
     @Test
     void getProduct_nullProductId() {
@@ -39,7 +37,7 @@ class ProductAzureServiceImplTest {
         //then
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, executable);
         Assertions.assertEquals("ProductId is required", e.getMessage());
-        Mockito.verifyNoInteractions(productsConnectorMock);
+        Mockito.verifyNoInteractions(productServiceMock);
     }
 
     @Test
@@ -51,7 +49,7 @@ class ProductAzureServiceImplTest {
         //then
         Exception e = Assertions.assertThrows(IllegalArgumentException.class, executable);
         Assertions.assertEquals("ProductId is required", e.getMessage());
-        Mockito.verifyNoInteractions(productsConnectorMock);
+        Mockito.verifyNoInteractions(productServiceMock);
     }
 
     @Test
@@ -60,15 +58,15 @@ class ProductAzureServiceImplTest {
         String productId = "productId";
         InstitutionType institutionType = InstitutionType.PA;
         Product productMock = Mockito.mock(Product.class);
-        Mockito.when(productsConnectorMock.getProduct(productId, institutionType))
+        Mockito.when(productServiceMock.getProduct(productId, institutionType))
                 .thenReturn(productMock);
         //when
         Product product = productService.getProduct(productId, institutionType);
         //then
         Assertions.assertSame(productMock, product);
-        Mockito.verify(productsConnectorMock, Mockito.times(1))
+        Mockito.verify(productServiceMock, Mockito.times(1))
                 .getProduct(productId, institutionType);
-        Mockito.verifyNoMoreInteractions(productsConnectorMock);
+        Mockito.verifyNoMoreInteractions(productServiceMock);
     }
 
     @Test
@@ -76,16 +74,16 @@ class ProductAzureServiceImplTest {
         //given
         final String productId = "productId";
         InstitutionType institutionType = InstitutionType.PA;
-        Mockito.when(productsConnectorMock.getProduct(productId, institutionType))
-                .thenThrow(ProductNotFoundException.class);
+        Mockito.when(productServiceMock.getProduct(productId, institutionType))
+                .thenThrow(new ResourceNotFoundException("not found"));
         //when
         Executable executable = () -> productService.getProduct(productId, institutionType);
         //then
         ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class, executable);
         assertEquals("No product found with id " + productId, e.getMessage());
-        Mockito.verify(productsConnectorMock, Mockito.times(1))
+        Mockito.verify(productServiceMock, Mockito.times(1))
                 .getProduct(productId, institutionType);
-        Mockito.verifyNoMoreInteractions(productsConnectorMock);
+        Mockito.verifyNoMoreInteractions(productServiceMock);
     }
 
     @Test
@@ -94,15 +92,15 @@ class ProductAzureServiceImplTest {
         String productId = "productId";
         InstitutionType institutionType = null;
         Product productMock = Mockito.mock(Product.class);
-        Mockito.when(productsConnectorMock.getProduct(productId, institutionType))
+        Mockito.when(productServiceMock.getProduct(productId, institutionType))
                 .thenReturn(productMock);
         //when
         Product product = productService.getProduct(productId, institutionType);
         //then
         Assertions.assertSame(productMock, product);
-        Mockito.verify(productsConnectorMock, Mockito.times(1))
+        Mockito.verify(productServiceMock, Mockito.times(1))
                 .getProduct(productId, institutionType);
-        Mockito.verifyNoMoreInteractions(productsConnectorMock);
+        Mockito.verifyNoMoreInteractions(productServiceMock);
     }
 
     @Test
@@ -110,15 +108,15 @@ class ProductAzureServiceImplTest {
         //given
         String productId = "productId";
         Product productMock = Mockito.mock(Product.class);
-        Mockito.when(productsConnectorMock.getProductValid(productId))
+        Mockito.when(productServiceMock.getProductValid(productId))
                 .thenReturn(productMock);
         //when
         Product product = productService.getProductValid(productId);
         //then
         Assertions.assertSame(productMock, product);
-        Mockito.verify(productsConnectorMock, Mockito.times(1))
+        Mockito.verify(productServiceMock, Mockito.times(1))
                 .getProductValid(productId);
-        Mockito.verifyNoMoreInteractions(productsConnectorMock);
+        Mockito.verifyNoMoreInteractions(productServiceMock);
     }
 
     @Test
@@ -128,13 +126,13 @@ class ProductAzureServiceImplTest {
         product1.setStatus(ProductStatus.TESTING);
         Product product2 = new Product();
         product2.setStatus(ProductStatus.ACTIVE);
-        Mockito.when(productsConnectorMock.getProducts(true))
-                .thenReturn(List.of(product1, product2));
+        Mockito.when(productServiceMock.getProducts(true)).thenReturn(List.of(product2));
         List<Product> products = productService.getProducts(true);
         //then
         Assertions.assertNotNull(products);
-        Assertions.assertEquals(1, products.size());
-        Mockito.verifyNoMoreInteractions(productsConnectorMock);
+        Assertions.assertEquals(List.of(product2), products);
+        Mockito.verify(productServiceMock).getProducts(true);
+        Mockito.verifyNoMoreInteractions(productServiceMock);
     }
 
 }

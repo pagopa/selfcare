@@ -29,7 +29,7 @@ import it.pagopa.selfcare.onboarding.connector.rest.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.InstitutionMapperImpl;
 import it.pagopa.selfcare.onboarding.connector.rest.model.*;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionType;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductState;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
@@ -341,7 +341,6 @@ class PartyConnectorImplTest {
         when(responseEntity.getBody()).thenReturn(List.of());
         when(userApiClient._usersGet(null, null, null, null, null, 500, List.of(ACTIVE.name()), null))
                 .thenReturn(responseEntity);
-        when(institutionApiClient._getInstitutions(any())).thenReturn(ResponseEntity.ok(List.of()));
         // when
         Collection<InstitutionInfo> institutionInfos = partyConnector.getInstitutionsByUser(new Product(), null);
         //then
@@ -349,6 +348,7 @@ class PartyConnectorImplTest {
         assertTrue(institutionInfos.isEmpty());
         verify(userApiClient, times(1))
                 ._usersGet(isNull(), isNull(), isNull(), isNull(), isNull(), Mockito.isNotNull(), Mockito.isNotNull(), isNull());
+        verifyNoInteractions(institutionApiClient);
         verifyNoMoreInteractions(restClientMock);
     }
 
@@ -359,7 +359,6 @@ class PartyConnectorImplTest {
         when(responseEntity.getBody()).thenReturn(List.of());
         when(userApiClient._usersGet(null, null, null, null, null, 500, List.of(ACTIVE.name()), null))
                 .thenReturn(responseEntity);
-        when(institutionApiClient._getInstitutions(any())).thenReturn(ResponseEntity.ok(null));
         // when
         Collection<InstitutionInfo> institutionInfos = partyConnector.getInstitutionsByUser(new Product(), null);
         //then
@@ -367,6 +366,7 @@ class PartyConnectorImplTest {
         assertTrue(institutionInfos.isEmpty());
         verify(userApiClient, times(1))
                 ._usersGet(isNull(), isNull(), isNull(), isNull(), isNull(), Mockito.isNotNull(), Mockito.isNotNull(), isNull());
+        verifyNoInteractions(institutionApiClient);
         verifyNoMoreInteractions(restClientMock);
     }
 

@@ -30,7 +30,7 @@
     </quarkus-openapi-generator.version>
     <quarkus-cucumber-version>1.3.0</quarkus-cucumber-version>
     <selfcare-cucumber-sdk.version>0.1.3</selfcare-cucumber-sdk.version>
-    <security-sdk.version>0.5.0</security-sdk.version>
+    <security-sdk.version>0.6.0</security-sdk.version>
     <selfcare-sdk-tenant.version>0.4.0</selfcare-sdk-tenant.version>
     <selfcare-sdk-tenant-mongodb.version>0.3.0</selfcare-sdk-tenant-mongodb.version>
     <selfcare-onboarding-sdk.version>0.17.5</selfcare-onboarding-sdk.version>
@@ -246,6 +246,15 @@
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-sdk-security</artifactId>
       <version>${security-sdk.version}</version>
+      <exclusions>
+        <!-- document-ms is not tenant-aware yet: only LoggingContextFilter is used from this SDK.
+             The tenant-aware beans depending on selfcare-sdk-tenant are disabled through
+             quarkus.arc.exclude-types in application.properties. -->
+        <exclusion>
+          <groupId>it.pagopa.selfcare</groupId>
+          <artifactId>selfcare-sdk-tenant</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>

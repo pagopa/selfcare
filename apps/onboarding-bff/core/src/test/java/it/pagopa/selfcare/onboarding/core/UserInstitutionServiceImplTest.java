@@ -7,9 +7,9 @@ import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.connector.api.UserInstitutionConnector;
+import it.pagopa.selfcare.onboarding.connector.model.RelationshipState;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
-import it.pagopa.selfcare.product.entity.ProductStatus;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -146,7 +146,7 @@ class UserInstitutionServiceImplTest {
         .roles(
             List.of(
                 PartyRole.MANAGER.name(), PartyRole.DELEGATE.name(), PartyRole.SUB_DELEGATE.name()))
-        .states(List.of(ProductStatus.ACTIVE.name()))
+        .states(List.of(RelationshipState.ACTIVE.name()))
         .userId(StringUtils.EMPTY)
         .build();
   }
