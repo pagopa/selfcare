@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.entity;
 
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 
 public class OnboardingAttachment {
   private Onboarding onboarding;
