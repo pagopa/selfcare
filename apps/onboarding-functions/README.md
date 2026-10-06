@@ -7,6 +7,20 @@ These functions handle all asynchronous activities related to preparing and comp
 
 It is triggered by http request at GET or POST `/api/StartOnboardingOrchestration?onboardingId={onboardingId}` where onboardingId is a reference to onboarding which you want to process.
 
+### HTTP requester traceability
+
+Every HTTP-triggered function reads the requester identity from the
+`x-selfcare-uid` header and writes it to Application Insights as the structured
+`userId` property. Missing or blank values are recorded as `unknown` with warning
+severity, so invocations can still be diagnosed without losing the function name.
+
+The HTTP triggers that start Durable orchestrations require a non-blank requester:
+`StartOnboardingOrchestration`, `TriggerBuildAttachmentsAndSaveTokens`,
+`ResendNotifications` and `TriggerDeleteInstitutionAndUser`. They return `400 Bad
+Request` and do not schedule an orchestration when the header is absent or blank.
+Human requests use the authenticated user identifier; service-to-service callers
+use a stable identity such as `m2m:onboarding-ms` or `m2m:onboarding-cdc`.
+
 ### Contract Signature
 
 You can enable the signature inside contracts when there are builded setting PAGOPA_SIGNATURE_SOURCE env (default value is `disabled`) as `local` if you want to use Pkcs7HashSignService or `aruba` for ArubaPkcs7HashSignService. Look at this [README](../../libs/onboarding-sdk-crypto/README.md) for more informations.

@@ -108,10 +108,6 @@ locals {
     {
       name  = "TENANT_REGISTRY_JSON"
       value = "{\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcProduct\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"}}}"
-    },
-    {
-      name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
-      value = "sc-${module.local.config.env_short}-documents-blob"
     }
   ]
 
@@ -121,7 +117,6 @@ locals {
     "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
     "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string"
     "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
-    # "BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE" = "documents-storage-connection-string"
   }
 }
 
