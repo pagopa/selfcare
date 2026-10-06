@@ -20,8 +20,8 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.NotificationService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
+import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -36,6 +36,8 @@ import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
@@ -215,7 +217,7 @@ public class CompletionServiceImpl implements CompletionService {
         }
         List<String> destinationMails = getDestinationMails(onboarding);
         destinationMails.add(onboarding.getInstitution().getDigitalAddress());
-        Product product = productService.getProductIsValid(onboarding.getProductId());
+        ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         notificationService.sendCompletedEmail(destinationMails, product, onboardingWorkflow);
     }
 
@@ -235,21 +237,22 @@ public class CompletionServiceImpl implements CompletionService {
         if (PROD_CED.getValue().equalsIgnoreCase(onboarding.getProductId())) {
             List<String> destinationMails = getDestinationMails(onboarding);
             destinationMails.add(onboarding.getInstitution().getDigitalAddress());
-            Product product = productService.getProductIsValid(onboarding.getProductId());
+            ProductResponse product = productService.getValidProduct(onboarding.getProductId());
             notificationService.sendDeletedEmail(destinationMails, product, onboarding);
         }
     }
 
     @Override
     public void persistUsers(Onboarding onboarding) {
-        Product product = productService.getProduct(onboarding.getProductId());
+        ProductResponse product = productService.getProduct(onboarding.getProductId());
         if (Boolean.TRUE.equals(onboarding.getIsAggregator()) && !PROD_PN.getValue().equals(onboarding.getProductId()) && verifyAllowedOnboardingByWorkflowType(onboarding.getWorkflowType())) {
             onboarding.setToAddOnAggregates(Boolean.TRUE);
         }
         for (User user : onboarding.getUsers()) {
 
-            if (!product.getRoleMappings(onboarding.getInstitution().getInstitutionType().name())
-                    .get(user.getRole()).isSkipUserCreation()) {
+            RoleMapping roleMapping = ProductConfigUtils.roleMappings(
+                    product, onboarding.getInstitution().getInstitutionType().name()).get(user.getRole());
+            if (!Boolean.TRUE.equals(roleMapping != null ? roleMapping.getSkipUserCreation() : null)) {
 
                 AddUserRoleDto userRoleDto = userMapper.toUserRole(onboarding);
                 userRoleDto.hasToSendEmail(hasToSendEmail);
@@ -293,7 +296,7 @@ public class CompletionServiceImpl implements CompletionService {
     @Override
     public void sendMailRejection(ExecutionContext context, Onboarding onboarding) {
         List<String> destinationMails = Collections.singletonList(onboarding.getInstitution().getDigitalAddress());
-        Product product = productService.getProductIsValid(onboarding.getProductId());
+        ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         notificationService.sendMailRejection(destinationMails, product, onboarding);
     }
 
