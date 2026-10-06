@@ -22,8 +22,20 @@ public class TenantConfiguration {
             @org.springframework.beans.factory.annotation.Value("${tenant.supported-tenants:*}")
                     String supportedTenants,
             @org.springframework.beans.factory.annotation.Value("${tenant.storage.mandatory-keys:}")
-                    String mandatoryStorageKeys) {
+                    String mandatoryStorageKeys,
+            @org.springframework.beans.factory.annotation.Value(
+                            "${tenant.one-identity.mandatory-tenants:}")
+                    String mandatoryOneIdentityTenants,
+            @org.springframework.beans.factory.annotation.Value(
+                            "${tenant.user-registry.mandatory-tenants:}")
+                    String mandatoryUserRegistryTenants) {
         return new TenantRegistry(
-                objectMapper, environment, registryJson, supportedTenants, mandatoryStorageKeys);
+                objectMapper,
+                environment,
+                registryJson,
+                supportedTenants,
+                mandatoryStorageKeys,
+                mandatoryOneIdentityTenants,
+                mandatoryUserRegistryTenants);
     }
 }
