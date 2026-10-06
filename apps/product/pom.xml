@@ -32,8 +32,8 @@
     <security-sdk.version>0.6.0</security-sdk.version>
     <selfcare-onboarding-sdk.version>0.17.8</selfcare-onboarding-sdk.version>
     <common-sdk-health.version>0.2.0</common-sdk-health.version>
-    <common-sdk-tenant.version>0.3.0</common-sdk-tenant.version>
-    <common-sdk-tenant-mongodb.version>0.2.0</common-sdk-tenant-mongodb.version>
+    <common-sdk-tenant.version>0.5.0</common-sdk-tenant.version>
+    <common-sdk-tenant-mongodb.version>0.3.0</common-sdk-tenant-mongodb.version>
     <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
   </properties>
   <dependencyManagement>
