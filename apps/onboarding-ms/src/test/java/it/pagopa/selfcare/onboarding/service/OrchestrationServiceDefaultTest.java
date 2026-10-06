@@ -30,7 +30,7 @@ class OrchestrationServiceDefaultTest {
         String onboardingId = "onb-123";
         OrchestrationResponse response = mock(OrchestrationResponse.class);
         when(orchestrationApi.apiStartOnboardingOrchestrationGet(
-                onboardingId, null))
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null))
                 .thenReturn(Uni.createFrom().item(response));
 
         // when
@@ -41,7 +41,7 @@ class OrchestrationServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
         sub.assertCompleted().assertItem(response);
         verify(orchestrationApi).apiStartOnboardingOrchestrationGet(
-                onboardingId, null);
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null);
         verifyNoMoreInteractions(orchestrationApi);
     }
 
@@ -51,7 +51,7 @@ class OrchestrationServiceDefaultTest {
         String onboardingId = "onb-err";
         RuntimeException boom = new RuntimeException("boom");
         when(orchestrationApi.apiStartOnboardingOrchestrationGet(
-                onboardingId, null))
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null))
                 .thenReturn(Uni.createFrom().failure(boom));
 
         // when
@@ -62,7 +62,7 @@ class OrchestrationServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
         sub.assertFailedWith(RuntimeException.class);
         verify(orchestrationApi).apiStartOnboardingOrchestrationGet(
-                onboardingId, null);
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null);
         verifyNoMoreInteractions(orchestrationApi);    }
 
     @Test
@@ -87,11 +87,28 @@ class OrchestrationServiceDefaultTest {
     }
 
     @Test
+    void triggerOrchestrationIfEnabled_skipsHttpCall_whenRequesterUserIdIsMissing() {
+        // given
+        String onboardingId = "onb-missing-requester";
+
+        // when
+        Uni<OrchestrationResponse> uni =
+                orchestrationServiceDefault.triggerOrchestrationIfEnabled(onboardingId, null, null);
+
+        // then
+        UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        sub.assertCompleted().assertItem(null);
+        verifyNoInteractions(orchestrationApi);
+    }
+
+    @Test
     void triggerOrchestrationDeleteInstitutionAndUser_success() {
         // given
         String onboardingId = "onb-del-123";
         OrchestrationResponse response = mock(OrchestrationResponse.class);
-        when(orchestrationApi.apiTriggerDeleteInstitutionAndUserGet(onboardingId))
+        when(orchestrationApi.apiTriggerDeleteInstitutionAndUserGet(
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID))
                 .thenReturn(Uni.createFrom().item(response));
 
         // when
@@ -101,7 +118,8 @@ class OrchestrationServiceDefaultTest {
         UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
         sub.assertCompleted().assertItem(response);
-        verify(orchestrationApi).apiTriggerDeleteInstitutionAndUserGet(onboardingId);
+        verify(orchestrationApi).apiTriggerDeleteInstitutionAndUserGet(
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID);
         verifyNoMoreInteractions(orchestrationApi);    }
 
     @Test
@@ -109,7 +127,8 @@ class OrchestrationServiceDefaultTest {
         // given
         String onboardingId = "onb-del-err";
         IllegalStateException failure = new IllegalStateException("cannot delete");
-        when(orchestrationApi.apiTriggerDeleteInstitutionAndUserGet(onboardingId))
+        when(orchestrationApi.apiTriggerDeleteInstitutionAndUserGet(
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID))
                 .thenReturn(Uni.createFrom().failure(failure));
 
         // when
@@ -119,7 +138,25 @@ class OrchestrationServiceDefaultTest {
         UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
         sub.assertFailedWith(IllegalStateException.class);
-        verify(orchestrationApi).apiTriggerDeleteInstitutionAndUserGet(onboardingId);
+        verify(orchestrationApi).apiTriggerDeleteInstitutionAndUserGet(
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID);
         verifyNoMoreInteractions(orchestrationApi);
+    }
+
+    @Test
+    void triggerDeleteInstitutionAndUser_skipsHttpCall_whenRequesterUserIdIsMissing() {
+        // given
+        String onboardingId = "onb-del-missing-requester";
+
+        // when
+        Uni<OrchestrationResponse> uni =
+                orchestrationServiceDefault.triggerOrchestrationDeleteInstitutionAndUser(
+                        onboardingId, " ");
+
+        // then
+        UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        sub.assertCompleted().assertItem(null);
+        verifyNoInteractions(orchestrationApi);
     }
 }

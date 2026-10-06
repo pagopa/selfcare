@@ -326,10 +326,11 @@ public class NotificationFunctionsTest {
 
     @Test
     void resendNotification_shouldCallOrchestratorAndTerminate() throws JsonProcessingException {
+        // given
         final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
         final Map<String, String> queryParams = new HashMap<>();
-        final String filtersAsJson = "{\"productId\":\"prod-pagoPa\", \"status\":\"[COMPLETED]\"}";
         queryParams.put("productId", "prod-pagoPa");
         queryParams.put("status", "COMPLETED");
         doReturn(queryParams).when(req).getQueryParameters();
@@ -349,19 +350,44 @@ public class NotificationFunctionsTest {
         final DurableTaskClient client = mock(DurableTaskClient.class);
         final String scheduleNewOrchestrationInstance = "scheduleNewOrchestrationInstance";
         doReturn(client).when(durableContext).getClient();
-        doReturn(scheduleNewOrchestrationInstance).when(client).scheduleNewOrchestrationInstance("NotificationsSender", filtersAsJson);
+        doReturn(scheduleNewOrchestrationInstance)
+                .when(client)
+                .scheduleNewOrchestrationInstance(eq("NotificationsSender"), anyString());
         when(durableContext.createCheckStatusResponse(any(), any())).thenReturn(new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(HttpStatus.ACCEPTED).build());
 
-        // Invoke
+        // when
         HttpResponseMessage responseMessage = function.resendNotifications(req, durableContext, context);
 
-        // Verify
+        // then
         assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
     }
 
     @Test
+    void resendNotifications_missingRequester_doesNotStartOrchestration()
+            throws JsonProcessingException {
+        // given
+        HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        when(req.getHeaders()).thenReturn(Map.of());
+        when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
+                .thenReturn(
+                        new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                                .status(HttpStatus.BAD_REQUEST));
+        DurableClientContext durableContext = mock(DurableClientContext.class);
+
+        // when
+        HttpResponseMessage response =
+                function.resendNotifications(req, durableContext, executionContext);
+
+        // then
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
+        verifyNoInteractions(durableContext);
+    }
+
+    @Test
     void resendNotification_shouldThrowBadRequestWhenFieldStatusIsNotAllowed() throws JsonProcessingException {
+        // given
         final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
         final Map<String, String> queryParams = new HashMap<>();
         queryParams.put("productId", "prod-pagoPa");
@@ -378,16 +404,18 @@ public class NotificationFunctionsTest {
 
         final DurableClientContext durableContext = mock(DurableClientContext.class);
 
-        // Invoke
+        // when
         HttpResponseMessage responseMessage = function.resendNotifications(req, durableContext, context);
 
-        // Verify
+        // then
         assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     }
 
     @Test
     void resendNotification_shouldThrowBadRequestWhenFieldsDateHaveWrongFormat() throws JsonProcessingException {
+        // given
         final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
         final Map<String, String> queryParams = new HashMap<>();
         queryParams.put("productId", "prod-pagoPa");
@@ -405,10 +433,10 @@ public class NotificationFunctionsTest {
 
         final DurableClientContext durableContext = mock(DurableClientContext.class);
 
-        // Invoke
+        // when
         HttpResponseMessage responseMessage = function.resendNotifications(req, durableContext, context);
 
-        // Verify
+        // then
         assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     }
 

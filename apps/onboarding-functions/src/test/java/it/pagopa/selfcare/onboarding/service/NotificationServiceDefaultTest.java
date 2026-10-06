@@ -16,14 +16,13 @@ import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.service.impl.NotificationServiceImpl;
 import it.pagopa.selfcare.onboarding.storage.ContractBlobClientProvider;
 
-import it.pagopa.selfcare.product.entity.EmailTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.openapi.quarkus.product_json.model.EmailTemplateConfig;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 import java.io.File;
 import java.util.List;
@@ -163,9 +162,9 @@ class NotificationServiceDefaultTest {
 
         final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
         final String destination = "test@test.it";
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         product.setTitle("productName");
-        product.setId("prod-id");
+        product.setProductId("prod-id");
 
         final File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("application.properties")).getFile());
 
@@ -202,17 +201,14 @@ class NotificationServiceDefaultTest {
         final String destination = "test@test.it";
 
         // Mock EmailTemplate
-        EmailTemplate emailTemplate = new EmailTemplate();
+        EmailTemplateConfig emailTemplate = new EmailTemplateConfig();
         emailTemplate.setPath(mailTemplate);
-
-        // Mock Product
-        Product product = Mockito.mock(Product.class);
-        when(product.getTitle()).thenReturn("productName");
-        when(product.getEmailTemplate(
-                eq(InstitutionType.PA.name()),
-                eq(WorkflowType.IMPORT.name()),
-                eq(OnboardingStatus.COMPLETED.name()))
-        ).thenReturn(Optional.of(emailTemplate));
+        emailTemplate.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.PA);
+        emailTemplate.setType(org.openapi.quarkus.product_json.model.WorkflowType.IMPORT);
+        emailTemplate.setStatus(org.openapi.quarkus.product_json.model.OnboardingStatus.COMPLETED);
+        ProductResponse product = new ProductResponse();
+        product.setTitle("productName");
+        product.setEmailTemplates(List.of(emailTemplate));
 
         // Mock file
         final File file = new File(Objects.requireNonNull(getClass().getClassLoader().getResource("application.properties")).getFile());
@@ -250,9 +246,9 @@ class NotificationServiceDefaultTest {
         final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
 
         final String destination = "test@test.it";
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         product.setTitle("productName");
-        product.setId("prod-id");
+        product.setProductId("prod-id");
         Institution institution = new Institution();
         institution.setInstitutionType(InstitutionType.PA);
         Onboarding onboarding = new Onboarding();
@@ -390,9 +386,9 @@ class NotificationServiceDefaultTest {
         final String mailTemplate = "{\"subject\":\"example\",\"body\":\"example\"}";
         final String destination = "test@test.it";
 
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         product.setTitle("prod");
-        product.setId("prod-id");
+        product.setProductId("prod-id");
 
         SendMailInput sendMailInput = new SendMailInput();
         sendMailInput.setProduct(product);

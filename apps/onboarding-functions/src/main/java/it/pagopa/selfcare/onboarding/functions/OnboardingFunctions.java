@@ -31,17 +31,20 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
+import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
+import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
-import it.pagopa.selfcare.product.entity.ManagingInstitution;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.ws.rs.core.Response;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.product_json.model.ManagingInstitution;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -76,6 +79,7 @@ public class OnboardingFunctions {
   private final DocumentService documentService;
   private final UserService userService;
   private final TelemetryService telemetryService;
+  private final FunctionInvocationLogger functionInvocationLogger;
   private final ProductService productService;
 
   private final ObjectMapper objectMapper;
@@ -95,7 +99,8 @@ public class OnboardingFunctions {
       AggregateBatchConfig aggregateBatchConfig,
       DocumentService documentService,
       TelemetryService telemetryService,
-      UserService userService) {
+      UserService userService,
+      FunctionInvocationLogger functionInvocationLogger) {
     this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
@@ -106,6 +111,7 @@ public class OnboardingFunctions {
     this.documentService = documentService;
     this.telemetryService = telemetryService;
     this.userService = userService;
+    this.functionInvocationLogger = functionInvocationLogger;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -130,16 +136,13 @@ public class OnboardingFunctions {
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
 
+    String userId = functionInvocationLogger.logInvocation(START_ONBOARDING_ORCHESTRATION, request);
+    if (FunctionInvocationLogger.isMissingUserId(userId)) {
+      return missingRequesterResponse(request);
+    }
+
     final String onboardingId = request.getQueryParameters().get(ONBOARDING_ID);
     final String timeoutString = request.getQueryParameters().get("timeout");
-
-    Map<String, String> properties = Map.of(ONBOARDING_ID, onboardingId);
-
-    telemetryService.trackFunction(
-        START_ONBOARDING_ORCHESTRATION,
-        "StartOnboardingOrchestration trigger processed a request",
-        SeverityLevel.Information,
-        properties);
 
     final String tenantId;
     try {
@@ -161,7 +164,10 @@ public class OnboardingFunctions {
         String.format(
             "%s %s", CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
         SeverityLevel.Information,
-        properties);
+        Map.of(
+            ONBOARDING_ID, onboardingId,
+            FunctionInvocationLogger.USER_ID_PROPERTY, userId,
+            "instanceId", instanceId));
 
     try {
 
@@ -447,7 +453,11 @@ public class OnboardingFunctions {
           HttpRequestMessage<Optional<String>> request,
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
-    context.getLogger().info("buildAttachmentsAndSaveTokens trigger processed a request");
+    String userId =
+        functionInvocationLogger.logInvocation(TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS, request);
+    if (FunctionInvocationLogger.isMissingUserId(userId)) {
+      return missingRequesterResponse(request);
+    }
     Optional<String> onboardingString = request.getBody();
 
     if (onboardingString.isEmpty()) {
@@ -466,9 +476,19 @@ public class OnboardingFunctions {
         String.format(
             "%s %s", CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
         SeverityLevel.Information,
-        Map.of("instanceId", instanceId));
+        Map.of(
+            "instanceId", instanceId,
+            FunctionInvocationLogger.USER_ID_PROPERTY, userId));
 
     return durableContext.createCheckStatusResponse(request, instanceId);
+  }
+
+  private HttpResponseMessage missingRequesterResponse(
+      HttpRequestMessage<Optional<String>> request) {
+    return request
+        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
+        .build();
   }
 
   /**
@@ -485,11 +505,10 @@ public class OnboardingFunctions {
     String onboardingString = ctx.getInput(String.class);
     Onboarding onboarding = objectMapper.readValue(onboardingString, Onboarding.class);
     try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
-    Product product = productService.getProductIsValid(onboarding.getProductId());
+    ProductResponse product = productService.getValidProduct(onboarding.getProductId());
 
-    product
-        .getInstitutionContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getAttachments()
+    ProductConfigUtils.attachments(product, OnboardingType.INSTITUTION,
+        InstitutionUtils.getCurrentInstitutionType(onboarding))
         .stream()
         .filter(
             attachment ->
@@ -1024,7 +1043,7 @@ public class OnboardingFunctions {
               authLevel = AuthorizationLevel.FUNCTION)
           HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context) {
-    context.getLogger().info("TestSendEmail trigger processed a request");
+    functionInvocationLogger.logInvocation("TestSendEmail", request);
     completionService.sendTestEmail(context);
     request.createResponseBuilder(HttpStatus.OK).build();
   }
@@ -1110,7 +1129,7 @@ public class OnboardingFunctions {
             PRODUCT_ID, onboarding.getProductId()));
     return callWithTenant(
         onboarding,
-        () -> productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration());
+        () -> productService.getValidProduct(onboarding.getProductId()).getSigningConfiguration());
   }
 
   @FunctionName(GET_MANAGING_INSTITUTION_ACTIVITY)
@@ -1131,8 +1150,8 @@ public class OnboardingFunctions {
       List<ManagingInstitution> managingInstitutions =
           callWithTenant(
               onboarding,
-              () -> productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions());
-      context.getLogger().info(String.format("Found %d managing institution(s) for product %s - %s", managingInstitutions.size(), onboarding.getProductId(), managingInstitutions.get(0).getInstitutionId()));
+              () -> productService.getValidProduct(onboarding.getProductId()).getManagingInstitutions());
+      context.getLogger().info(String.format("Found %d managing institution(s) for product %s", managingInstitutions.size(), onboarding.getProductId()));
       return managingInstitutions;
   }
 

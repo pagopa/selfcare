@@ -17,8 +17,6 @@ import it.pagopa.selfcare.onboarding.entity.UserRequester;
 import it.pagopa.selfcare.onboarding.service.impl.NotificationEventServiceImpl;
 import it.pagopa.selfcare.onboarding.utils.NotificationBuilder;
 import it.pagopa.selfcare.onboarding.utils.NotificationBuilderFactory;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
@@ -28,6 +26,7 @@ import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
 import org.openapi.quarkus.document_json.model.DocumentType;
 import org.openapi.quarkus.document_json.model.RelatedDocumentResponse;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -78,7 +77,7 @@ class NotificationEventServiceAttachmentsTest {
         onboarding.setUsers(List.of());
         onboarding.setUserRequester(UserRequester.builder().userRequestUid("fake-user-id").build());
 
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         product.setConsumers(List.of("Standard"));
         when(productService.getProduct("product-id")).thenReturn(product);
         when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());

@@ -85,6 +85,7 @@ locals {
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_PRODUCT_URL"                                     = "https://selc-${module.local.config.env_short}-product-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
       "USER_MS_SEND_MAIL"                                  = "true"
       "EVENT_HUB_BASE_PATH"                                = "https://selc-p-eventhub-ns.servicebus.windows.net"

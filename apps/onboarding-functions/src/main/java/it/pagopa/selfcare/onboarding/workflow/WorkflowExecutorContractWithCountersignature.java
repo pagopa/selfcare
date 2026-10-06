@@ -13,10 +13,10 @@ import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflowInstitution;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
-import it.pagopa.selfcare.product.entity.ManagingInstitution;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.product_json.model.ManagingInstitution;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 import java.util.Collections;
 import java.util.List;
@@ -158,6 +158,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
                         : DEFAULT_SIGNING_STEP;
         int requiredSignatures =
                 Objects.nonNull(signingConfiguration)
+                        && signingConfiguration.getRequiredSignatures() != null
                         ? signingConfiguration.getRequiredSignatures()
                         : DEFAULT_REQUIRED_SIGNATURES;
 
@@ -187,7 +188,7 @@ public class WorkflowExecutorContractWithCountersignature implements WorkflowExe
             int signingStep,
             String productId) {
         return managingInstitutions.stream()
-                .filter(mi -> mi.getSigningStep() == signingStep + 1)
+                .filter(mi -> Objects.equals(mi.getSigningStep(), signingStep + 1))
                 .findFirst()
                 .orElseThrow(
                         () -> new GenericOnboardingException(
