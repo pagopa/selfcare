@@ -8,7 +8,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.core.ProductAzureService;
 import it.pagopa.selfcare.onboarding.web.model.ProductResource;
 import it.pagopa.selfcare.onboarding.web.model.mapper.ProductMapper;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

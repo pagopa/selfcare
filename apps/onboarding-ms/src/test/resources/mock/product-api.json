@@ -2,7 +2,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io",
+      "path": "/product/prod-io",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -28,7 +28,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io/valid",
+      "path": "/product/prod-io/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -54,7 +54,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io/expiration-days",
+      "path": "/product/prod-io/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -80,7 +80,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -117,7 +117,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -154,7 +154,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io/required-documents",
+      "path": "/product/prod-io/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -188,7 +188,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-io/required-documents/enabled",
+      "path": "/product/prod-io/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -221,7 +221,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io/required-documents",
+      "path": "/product/prod-io/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -255,7 +255,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-io/required-documents/enabled",
+      "path": "/product/prod-io/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -288,7 +288,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io/required-documents",
+      "path": "/product/prod-io/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -322,7 +322,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-io/required-documents/enabled",
+      "path": "/product/prod-io/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -355,7 +355,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa",
+      "path": "/product/prod-pagopa",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -381,7 +381,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/valid",
+      "path": "/product/prod-pagopa/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -407,7 +407,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/expiration-days",
+      "path": "/product/prod-pagopa/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -433,7 +433,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -470,7 +470,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -507,7 +507,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -544,7 +544,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -581,7 +581,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -618,7 +618,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -655,7 +655,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -692,7 +692,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -729,7 +729,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -763,7 +763,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -796,7 +796,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -830,7 +830,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -863,7 +863,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -897,7 +897,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -930,7 +930,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -964,7 +964,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -997,7 +997,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1031,7 +1031,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1064,7 +1064,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1098,7 +1098,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1131,7 +1131,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1165,7 +1165,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1198,7 +1198,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1232,7 +1232,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1265,7 +1265,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pagopa/required-documents",
+      "path": "/product/prod-pagopa/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1299,7 +1299,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-pagopa/required-documents/enabled",
+      "path": "/product/prod-pagopa/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1332,7 +1332,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-dashboard-psp",
+      "path": "/product/prod-dashboard-psp",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1358,7 +1358,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-dashboard-psp/valid",
+      "path": "/product/prod-dashboard-psp/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1384,7 +1384,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-dashboard-psp/expiration-days",
+      "path": "/product/prod-dashboard-psp/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1410,7 +1410,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1447,7 +1447,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-dashboard-psp/required-documents",
+      "path": "/product/prod-dashboard-psp/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1481,7 +1481,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-dashboard-psp/required-documents/enabled",
+      "path": "/product/prod-dashboard-psp/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1514,7 +1514,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop",
+      "path": "/product/prod-interop",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1540,7 +1540,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop/valid",
+      "path": "/product/prod-interop/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1566,7 +1566,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop/expiration-days",
+      "path": "/product/prod-interop/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1592,7 +1592,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1629,7 +1629,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1666,7 +1666,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1703,7 +1703,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1740,7 +1740,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop/required-documents",
+      "path": "/product/prod-interop/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1774,7 +1774,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-interop/required-documents/enabled",
+      "path": "/product/prod-interop/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1807,7 +1807,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop/required-documents",
+      "path": "/product/prod-interop/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1841,7 +1841,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-interop/required-documents/enabled",
+      "path": "/product/prod-interop/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1874,7 +1874,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop/required-documents",
+      "path": "/product/prod-interop/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1908,7 +1908,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-interop/required-documents/enabled",
+      "path": "/product/prod-interop/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1941,7 +1941,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-interop/required-documents",
+      "path": "/product/prod-interop/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -1975,7 +1975,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-interop/required-documents/enabled",
+      "path": "/product/prod-interop/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2008,7 +2008,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io-premium",
+      "path": "/product/prod-io-premium",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2034,7 +2034,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io-premium/valid",
+      "path": "/product/prod-io-premium/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2060,7 +2060,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io-premium/expiration-days",
+      "path": "/product/prod-io-premium/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2086,7 +2086,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2123,7 +2123,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-io-premium/required-documents",
+      "path": "/product/prod-io-premium/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2157,7 +2157,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-io-premium/required-documents/enabled",
+      "path": "/product/prod-io-premium/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2190,7 +2190,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-pn-pg",
+      "path": "/product/prod-pn-pg",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2216,7 +2216,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-pn-pg/valid",
+      "path": "/product/prod-pn-pg/valid",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2242,7 +2242,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-pn-pg/expiration-days",
+      "path": "/product/prod-pn-pg/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2268,7 +2268,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2305,7 +2305,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-pn-pg/required-documents",
+      "path": "/product/prod-pn-pg/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2339,7 +2339,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/PNPG/prod-pn-pg/required-documents/enabled",
+      "path": "/product/prod-pn-pg/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2372,7 +2372,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-registro-beni",
+      "path": "/product/prod-registro-beni",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2398,7 +2398,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-registro-beni/valid",
+      "path": "/product/prod-registro-beni/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2424,7 +2424,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-registro-beni/expiration-days",
+      "path": "/product/prod-registro-beni/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2450,7 +2450,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-registro-beni/required-documents",
+      "path": "/product/prod-registro-beni/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2484,7 +2484,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-registro-beni/required-documents/enabled",
+      "path": "/product/prod-registro-beni/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2517,7 +2517,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-ced",
+      "path": "/product/prod-ced",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2543,7 +2543,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-ced/valid",
+      "path": "/product/prod-ced/valid",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2569,7 +2569,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-ced/expiration-days",
+      "path": "/product/prod-ced/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2595,7 +2595,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/workflow-type",
+      "path": "/product/workflow-type",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2632,7 +2632,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-ced/required-documents",
+      "path": "/product/prod-ced/required-documents",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2666,7 +2666,7 @@
   {
     "httpRequest": {
       "method": "HEAD",
-      "path": "/product/AR/prod-ced/required-documents/enabled",
+      "path": "/product/prod-ced/required-documents/enabled",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2699,7 +2699,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-io",
+      "path": "/product/prod-io",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2725,7 +2725,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-io/valid",
+      "path": "/product/prod-io/valid",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2751,7 +2751,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-io/expiration-days",
+      "path": "/product/prod-io/expiration-days",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"
@@ -2777,7 +2777,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/AR/prod-pn-pg",
+      "path": "/product/prod-pn-pg",
       "headers": {
         "X-Tenant-Id": [
           "AR"
@@ -2803,7 +2803,7 @@
   {
     "httpRequest": {
       "method": "GET",
-      "path": "/product/PNPG/prod-pagopa",
+      "path": "/product/prod-pagopa",
       "headers": {
         "X-Tenant-Id": [
           "PNPG"

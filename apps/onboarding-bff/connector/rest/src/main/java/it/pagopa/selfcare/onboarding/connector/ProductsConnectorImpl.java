@@ -2,23 +2,22 @@ package it.pagopa.selfcare.onboarding.connector;
 
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.ProductsConnector;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @Service
 public class ProductsConnectorImpl implements ProductsConnector {
-    private final ProductService productService;
+    private final ProductMsConnector productMsConnector;
 
-    public ProductsConnectorImpl(ProductService productService) {
-        this.productService = productService;
+    public ProductsConnectorImpl(ProductMsConnector productMsConnector) {
+        this.productMsConnector = productMsConnector;
     }
 
     @Override
@@ -27,7 +26,7 @@ public class ProductsConnectorImpl implements ProductsConnector {
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProduct id = {}", id);
         }
         Assert.hasText(id, "A productId is required");
-        Product product = productService.getProduct(id);
+        Product product = productMsConnector.getProduct(id);
 
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProduct result = {}", product);
         return product;
@@ -38,14 +37,14 @@ public class ProductsConnectorImpl implements ProductsConnector {
             log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProductValid id = {}", id);
         }
         Assert.hasText(id, "A productId is required");
-        Product result = productService.getProductIsValid(id);
+        Product result = productMsConnector.getValidProduct(id);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProductValid result = {}", result);
         return result;
     }
 
     @Override
     public List<Product> getProducts(boolean rootOnly) {
-        List<Product> result = productService.getProducts(rootOnly, true);
+        List<Product> result = productMsConnector.getProducts(rootOnly);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getProducts result = {}", result);
         return result;
     }
