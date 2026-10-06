@@ -69,18 +69,22 @@ class ProductConfigUtilsTest {
   }
 
   @Test
-  void contractTemplateSkipsDisabledEntriesAndReturnsEmptyWhenNoMatchExists() {
+  void contractTemplateIgnoresEnabledFlagAndReturnsEmptyWhenNoMatchExists() {
     ProductResponse product = new ProductResponse();
-    ContractTemplateConfig disabledSpecific = contract(OnboardingType.INSTITUTION, ContractType.CONTRACT,
-        org.openapi.quarkus.product_json.model.InstitutionType.PA, "disabled.html");
-    disabledSpecific.setEnabled(false);
+    // Product MS serializes the primitive "enabled" as false when it is not persisted
+    ContractTemplateConfig notFlaggedSpecific = contract(OnboardingType.INSTITUTION, ContractType.CONTRACT,
+        org.openapi.quarkus.product_json.model.InstitutionType.PA, "pa.html");
+    notFlaggedSpecific.setEnabled(false);
     ContractTemplateConfig defaultContract = contract(OnboardingType.INSTITUTION, ContractType.CONTRACT,
         org.openapi.quarkus.product_json.model.InstitutionType.DEFAULT, "default.html");
+    defaultContract.setEnabled(false);
     ContractTemplateConfig wrongWorkflow = contract(OnboardingType.USER, ContractType.CONTRACT,
         org.openapi.quarkus.product_json.model.InstitutionType.PA, "user.html");
-    product.setContracts(List.of(disabledSpecific, defaultContract, wrongWorkflow));
+    product.setContracts(List.of(notFlaggedSpecific, defaultContract, wrongWorkflow));
 
-    assertEquals("default.html", ProductConfigUtils.contractTemplate(product, OnboardingType.INSTITUTION, "PA")
+    assertEquals("pa.html", ProductConfigUtils.contractTemplate(product, OnboardingType.INSTITUTION, "PA")
+        .orElseThrow().getPath());
+    assertEquals("default.html", ProductConfigUtils.contractTemplate(product, OnboardingType.INSTITUTION, "PG")
         .orElseThrow().getPath());
     assertTrue(ProductConfigUtils.contractTemplate(product, OnboardingType.USER, "PG").isEmpty());
     assertTrue(ProductConfigUtils.contractTemplate(new ProductResponse(), OnboardingType.USER, "PG").isEmpty());
@@ -145,13 +149,14 @@ class ProductConfigUtilsTest {
     first.setVersion("v2");
     first.setWorkflowType(List.of(org.openapi.quarkus.product_json.model.WorkflowType.IMPORT));
     first.setWorkflowState("REQUEST");
-    ContractTemplateConfig disabled = attachment("disabled.pdf", 0);
-    disabled.setEnabled(false);
-    product.setContracts(List.of(later, disabled, first));
+    ContractTemplateConfig notFlagged = attachment("not-flagged.pdf", 3);
+    notFlagged.setEnabled(false);
+    product.setContracts(List.of(later, notFlagged, first));
 
     var attachments = ProductConfigUtils.attachments(product, OnboardingType.INSTITUTION, "PA");
 
-    assertEquals(List.of("first.pdf", "later.pdf"), attachments.stream().map(a -> a.getTemplatePath()).toList());
+    assertEquals(List.of("first.pdf", "later.pdf", "not-flagged.pdf"),
+        attachments.stream().map(a -> a.getTemplatePath()).toList());
     assertEquals("v2", attachments.get(0).getTemplateVersion());
     assertEquals("Identity document", attachments.get(0).getName());
     assertTrue(attachments.get(0).isMandatory());
@@ -264,6 +269,8 @@ class ProductConfigUtilsTest {
     return config;
   }
 }
+
+
 
 
 

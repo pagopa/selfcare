@@ -48,13 +48,13 @@ public final class ProductConfigUtils {
       ProductResponse product, OnboardingType onboardingType, String institutionType) {
     List<ContractTemplateConfig> contracts = contracts(product);
     return contracts.stream()
-        .filter(ProductConfigUtils::isEnabled)
+        .filter(ProductConfigUtils::isConfigured)
         .filter(config -> config.getContractType() == ContractType.CONTRACT)
         .filter(config -> config.getOnboardingType() == onboardingType)
         .filter(config -> matchesInstitutionType(config.getInstitutionType(), institutionType))
         .findFirst()
         .or(() -> contracts.stream()
-            .filter(ProductConfigUtils::isEnabled)
+            .filter(ProductConfigUtils::isConfigured)
             .filter(config -> config.getContractType() == ContractType.CONTRACT)
             .filter(config -> config.getOnboardingType() == onboardingType)
             .filter(config -> isDefault(config.getInstitutionType()))
@@ -65,13 +65,13 @@ public final class ProductConfigUtils {
       ProductResponse product, OnboardingType onboardingType, String institutionType) {
     List<ContractTemplateConfig> contracts = contracts(product);
     boolean hasSpecificConfiguration = contracts.stream()
-        .filter(ProductConfigUtils::isEnabled)
+        .filter(ProductConfigUtils::isConfigured)
         .filter(config -> config.getOnboardingType() == onboardingType)
         .anyMatch(config -> matchesInstitutionType(config.getInstitutionType(), institutionType));
     String resolvedInstitutionType = hasSpecificConfiguration ? institutionType : DEFAULT_INSTITUTION_TYPE;
 
     return contracts.stream()
-        .filter(ProductConfigUtils::isEnabled)
+        .filter(ProductConfigUtils::isConfigured)
         .filter(config -> config.getContractType() == ContractType.ATTACHMENT)
         .filter(config -> config.getOnboardingType() == onboardingType)
         .filter(config -> hasSpecificConfiguration
@@ -133,8 +133,13 @@ public final class ProductConfigUtils {
     return product == null || product.getContracts() == null ? new ArrayList<>() : product.getContracts();
   }
 
-  private static boolean isEnabled(ContractTemplateConfig config) {
-    return config != null && !Boolean.FALSE.equals(config.getEnabled());
+  /**
+   * Product MS exposes {@code enabled} as a primitive boolean, so contracts persisted without the
+   * flag are returned as {@code enabled=false}. Like product-cdc and onboarding-ms, the flag is not
+   * used to select templates: only null entries are discarded.
+   */
+  private static boolean isConfigured(ContractTemplateConfig config) {
+    return config != null;
   }
 
   private static boolean matchesInstitutionType(Enum<?> actual, String expected) {
@@ -153,4 +158,5 @@ public final class ProductConfigUtils {
     return product == null ? null : product.getProductId();
   }
 }
+
 
