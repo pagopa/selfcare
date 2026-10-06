@@ -4,5 +4,5 @@
     "Subject": "un ente ti ha scelto come Partner tecnologico",
     "Text": "Un ente ti ha scelto come Partner tecnologico\nCiao,\nl'ente {{institutionName}} ha aggiunto {{partnerName}} come Partner tecnologico per la gestione del prodotto {{productName}}.\nPer operare sul prodotto, entra in Area Riservata (https://selfcare.pagopa.it/auth/login). Se sei un Amministratore, potrai anche aggiungere nuovi utenti.\nSe hai problemi tecnici o domande in merito al funzionamento dell'Area Riservata, scrivi a areariservata@assistenza.pagopa.it (mailto:areariservata@assistenza.pagopa.it).\nA presto,\nil team di PagoPA S.p.A.\nRicevi questo messaggio perché hai un’utenza attiva nell’Area Riservata dell’ente."
   },
-  "TemplateName": "selfcare_pt_delegation"
+  "TemplateName": "selfcare_user_pt_delegation"
 }
