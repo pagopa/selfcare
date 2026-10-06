@@ -21,7 +21,7 @@ class ProductOpenApiContractTest {
 
         // when
         String requiredDocumentsHeaderType = serverContract
-                .at("/paths/~1product~1{tenantId}~1{productId}~1required-documents~1enabled/head/responses/200/headers/X-Required-Documents-Enabled/schema/type")
+                .at("/paths/~1product~1{productId}~1required-documents~1enabled/head/responses/200/headers/X-Required-Documents-Enabled/schema/type")
                 .asText();
 
         // then
