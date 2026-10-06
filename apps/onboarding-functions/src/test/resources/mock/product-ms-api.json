@@ -1,6 +1,6 @@
 [
   {
-    "httpRequest": { "method": "GET", "path": "/product/{productId}/valid" },
+    "httpRequest": { "method": "GET", "path": "/product/{productId}/valid", "pathParameters": { "productId": ["^(?!missing$).+$"] } },
     "httpResponseTemplate": {
       "templateType": "VELOCITY",
       "template": "{\"statusCode\":200,\"headers\":{\"Content-Type\":[\"application/json\"]},\"body\":{\"id\":\"integration-product\",\"productId\":\"$!request.pathParameters.productId[0]\",\"title\":\"Integration product\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"testEnvProductIds\":[],\"features\":{\"enabled\":true,\"expirationDays\":30},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"skipUserCreation\":false,\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[]}],\"contracts\":[{\"onboardingType\":\"INSTITUTION\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]}],\"emailTemplates\":[],\"managingInstitutions\":[],\"signingConfiguration\":{\"requiredSignatures\":1,\"skipSignerIdentityCheck\":false,\"steps\":[]}}}"
@@ -15,7 +15,7 @@
     }
   },
   {
-    "httpRequest": { "method": "GET", "path": "/product/{productId}" },
+    "httpRequest": { "method": "GET", "path": "/product/{productId}", "pathParameters": { "productId": [".+"] } },
     "httpResponseTemplate": {
       "templateType": "VELOCITY",
       "template": "{\"statusCode\":200,\"headers\":{\"Content-Type\":[\"application/json\"]},\"body\":{\"id\":\"integration-product\",\"productId\":\"$!request.pathParameters.productId[0]\",\"title\":\"Integration product\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"testEnvProductIds\":[],\"features\":{\"enabled\":true,\"expirationDays\":30},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"skipUserCreation\":false,\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[]}],\"contracts\":[{\"onboardingType\":\"INSTITUTION\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]}],\"emailTemplates\":[],\"managingInstitutions\":[],\"signingConfiguration\":{\"requiredSignatures\":1,\"skipSignerIdentityCheck\":false,\"steps\":[]}}}"
@@ -39,3 +39,4 @@
     }
   }
 ]
+
