@@ -29,6 +29,7 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
+import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
@@ -76,6 +77,7 @@ public class OnboardingFunctions {
   private final DocumentService documentService;
   private final UserService userService;
   private final TelemetryService telemetryService;
+  private final FunctionInvocationLogger functionInvocationLogger;
   private final ProductService productService;
 
   private final ObjectMapper objectMapper;
@@ -95,7 +97,8 @@ public class OnboardingFunctions {
       AggregateBatchConfig aggregateBatchConfig,
       DocumentService documentService,
       TelemetryService telemetryService,
-      UserService userService) {
+      UserService userService,
+      FunctionInvocationLogger functionInvocationLogger) {
     this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
@@ -106,6 +109,7 @@ public class OnboardingFunctions {
     this.documentService = documentService;
     this.telemetryService = telemetryService;
     this.userService = userService;
+    this.functionInvocationLogger = functionInvocationLogger;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -130,16 +134,13 @@ public class OnboardingFunctions {
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
 
+    String userId = functionInvocationLogger.logInvocation(START_ONBOARDING_ORCHESTRATION, request);
+    if (FunctionInvocationLogger.isMissingUserId(userId)) {
+      return missingRequesterResponse(request);
+    }
+
     final String onboardingId = request.getQueryParameters().get(ONBOARDING_ID);
     final String timeoutString = request.getQueryParameters().get("timeout");
-
-    Map<String, String> properties = Map.of(ONBOARDING_ID, onboardingId);
-
-    telemetryService.trackFunction(
-        START_ONBOARDING_ORCHESTRATION,
-        "StartOnboardingOrchestration trigger processed a request",
-        SeverityLevel.Information,
-        properties);
 
     DurableTaskClient client = durableContext.getClient();
     String instanceId = client.scheduleNewOrchestrationInstance("Onboardings", onboardingId);
@@ -149,7 +150,10 @@ public class OnboardingFunctions {
         String.format(
             "%s %s", CREATED_NEW_ONBOARDING_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
         SeverityLevel.Information,
-        properties);
+        Map.of(
+            ONBOARDING_ID, onboardingId,
+            FunctionInvocationLogger.USER_ID_PROPERTY, userId,
+            "instanceId", instanceId));
 
     try {
 
@@ -422,7 +426,11 @@ public class OnboardingFunctions {
           HttpRequestMessage<Optional<String>> request,
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
-    context.getLogger().info("buildAttachmentsAndSaveTokens trigger processed a request");
+    String userId =
+        functionInvocationLogger.logInvocation(TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS, request);
+    if (FunctionInvocationLogger.isMissingUserId(userId)) {
+      return missingRequesterResponse(request);
+    }
     Optional<String> onboardingString = request.getBody();
 
     if (onboardingString.isEmpty()) {
@@ -441,9 +449,19 @@ public class OnboardingFunctions {
         String.format(
             "%s %s", CREATED_NEW_BUILD_ATTACHMENTS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId),
         SeverityLevel.Information,
-        Map.of("instanceId", instanceId));
+        Map.of(
+            "instanceId", instanceId,
+            FunctionInvocationLogger.USER_ID_PROPERTY, userId));
 
     return durableContext.createCheckStatusResponse(request, instanceId);
+  }
+
+  private HttpResponseMessage missingRequesterResponse(
+      HttpRequestMessage<Optional<String>> request) {
+    return request
+        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
+        .build();
   }
 
   /**
@@ -958,7 +976,7 @@ public class OnboardingFunctions {
               authLevel = AuthorizationLevel.FUNCTION)
           HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context) {
-    context.getLogger().info("TestSendEmail trigger processed a request");
+    functionInvocationLogger.logInvocation("TestSendEmail", request);
     completionService.sendTestEmail(context);
     request.createResponseBuilder(HttpStatus.OK).build();
   }
