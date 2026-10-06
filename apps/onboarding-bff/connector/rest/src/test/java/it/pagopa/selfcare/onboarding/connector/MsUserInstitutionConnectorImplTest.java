@@ -10,7 +10,6 @@ import static org.mockito.Mockito.when;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.connector.model.userInstitution.UserInstitutionResponse;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsUserInstitutionApiClient;
-import it.pagopa.selfcare.product.entity.ProductStatus;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -80,7 +79,7 @@ class MsUserInstitutionConnectorImplTest {
         .productRoles(List.of(""))
         .products(List.of("product"))
         .roles(List.of(""))
-        .states(List.of(ProductStatus.ACTIVE.name()))
+        .states(List.of("ACTIVE"))
         .userId(StringUtils.EMPTY)
         .build();
   }

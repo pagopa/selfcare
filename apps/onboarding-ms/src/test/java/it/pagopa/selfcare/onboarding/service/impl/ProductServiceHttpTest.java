@@ -119,7 +119,7 @@ class ProductServiceHttpTest {
         for (int offset : List.of(0, 4)) {
             String tenant = offset == 0 ? "AR" : "PNPG";
             Map<String, String> query = Map.of("institutionType", offset == 0 ? "PA" : "PG",
-                    "origin", offset == 0 ? "IPA" : "INFOCAMERE");
+                    "origin", offset == 0 ? "IPA" : "INFOCAMERE", "tenantId", tenant);
             assertWire(calls.get(offset), tenant, "GET", "/workflow-type");
             assertEquals("prod-io", query(calls.get(offset)).get("productId"));
             assertTrue(query(calls.get(offset)).entrySet().containsAll(query.entrySet()));
@@ -228,8 +228,9 @@ class ProductServiceHttpTest {
 
     private void assertWire(Map<String, String> call, String tenant, String method, String suffix, String token) {
         assertEquals(method, call.get("method"));
-        assertEquals("/product/" + tenant + suffix, call.get("path"));
+        assertEquals("/product" + suffix, call.get("path"));
         assertEquals(tenant, call.get("tenant"));
+        assertEquals(tenant, query(call).get("tenantId"));
         assertEquals("Bearer " + token, call.get("authorization"));
     }
 
