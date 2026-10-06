@@ -15,6 +15,7 @@ import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
 import jakarta.inject.Inject;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -53,6 +54,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
 
     private static final long STATUS_POLL_TIMEOUT_MS = 40_000L;
     private static final long STATUS_POLL_INTERVAL_MS = 1_000L;
+    private static final String INTEGRATION_TEST_CALLER_ID = "m2m:onboarding-functions-it";
 
     private ValidatableResponse validatableResponse;
     private static ObjectMapper objectMapper;
@@ -132,6 +134,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
                 given()
                         .log()
                         .all()
+                        .header(FunctionInvocationLogger.USER_ID_HEADER, INTEGRATION_TEST_CALLER_ID)
                         .queryParam("onboardingId", getOnboardingId())
                         // .queryParam("timeout", 55000)
                         .when()

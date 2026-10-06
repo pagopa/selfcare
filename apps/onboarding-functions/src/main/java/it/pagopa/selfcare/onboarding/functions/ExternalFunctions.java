@@ -10,6 +10,7 @@ import com.microsoft.azure.functions.annotation.HttpTrigger;
 import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.service.CheckOrganizationService;
+import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
 import it.pagopa.selfcare.onboarding.utils.AckStatus;
 import org.apache.commons.lang3.StringUtils;
 
@@ -20,10 +21,13 @@ import static it.pagopa.selfcare.onboarding.utils.Utils.readAckPayloadValue;
 public class ExternalFunctions {
     private final CheckOrganizationService checkOrganizationService;
     private final ObjectMapper objectMapper;
+    private final FunctionInvocationLogger functionInvocationLogger;
 
-    public ExternalFunctions(CheckOrganizationService checkOrganizationService, ObjectMapper objectMapper) {
+    public ExternalFunctions(CheckOrganizationService checkOrganizationService, ObjectMapper objectMapper,
+                             FunctionInvocationLogger functionInvocationLogger) {
         this.checkOrganizationService = checkOrganizationService;
         this.objectMapper = objectMapper;
+        this.functionInvocationLogger = functionInvocationLogger;
     }
 
     @FunctionName("TestToken")
@@ -31,7 +35,7 @@ public class ExternalFunctions {
             @HttpTrigger(name = "req", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
 
-        context.getLogger().info("testToken trigger processed a request");
+        functionInvocationLogger.logInvocation("TestToken", request);
 
         TenantContext.Scope tenantScope;
         try {
@@ -50,7 +54,7 @@ public class ExternalFunctions {
             @HttpTrigger(name = "req", methods = {HttpMethod.HEAD}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
 
-        context.getLogger().info("checkOrganization trigger processed a request");
+        functionInvocationLogger.logInvocation("CheckOrganization", request);
 
         String fiscalCode = request.getQueryParameters().get("fiscalCode");
         String vatNumber = request.getQueryParameters().get("vatNumber");
@@ -83,7 +87,7 @@ public class ExternalFunctions {
     public HttpResponseMessage messageAcknowledgment(
             @HttpTrigger(name = "req", methods = {HttpMethod.POST}, route = "acknowledgment/{productId}/message/{messageId}/status/{status}", authLevel = AuthorizationLevel.FUNCTION)
             HttpRequestMessage<Optional<String>> request, @BindingName("productId") String productId, @BindingName("messageId") String messageId, @BindingName("status") String status, final ExecutionContext context) {
-        context.getLogger().info("messageAcknowledgment trigger processed a request");
+        functionInvocationLogger.logInvocation("messageAcknowledgment", request);
 
         final AckPayloadRequest ackPayloadRequest;
         try {
@@ -128,7 +132,7 @@ public class ExternalFunctions {
   public HttpResponseMessage webhookTest(
           @HttpTrigger(name = "req", methods = {HttpMethod.POST}, route = "webhookTest", authLevel = AuthorizationLevel.FUNCTION)
           HttpRequestMessage<Optional<String>> request, final ExecutionContext context) {
-    context.getLogger().info("webhookTest trigger processed a request");
+    functionInvocationLogger.logInvocation("webhookTest", request);
 
     try {
       String body = request.getBody().orElseThrow(() -> new IllegalArgumentException("Request body cannot be empty."));
