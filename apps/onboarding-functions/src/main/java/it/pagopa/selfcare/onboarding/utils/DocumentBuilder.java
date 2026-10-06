@@ -5,8 +5,8 @@ import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.mapper.AttachmentPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.ContractPdfRequestMapper;
 import it.pagopa.selfcare.onboarding.mapper.DocumentBuilderRequestMapper;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.util.List;
@@ -37,7 +37,7 @@ public class DocumentBuilder {
     Onboarding onboarding,
     UserResource manager,
     List<UserResource> delegates,
-    Product product,
+    ProductResponse product,
     String contractTemplatePath,
     String rejectOnboardingUrl) {
     return contractPdfRequestMapper.toRequest(
@@ -52,21 +52,21 @@ public class DocumentBuilder {
   public AttachmentPdfRequest toAttachmentPdfRequest(
     Onboarding onboarding,
     AttachmentTemplate attachmentTemplate,
-    Product product,
+    ProductResponse product,
     UserResource manager) {
     return attachmentPdfRequestMapper.toRequest(onboarding, attachmentTemplate, product, manager);
   }
 
   public DocumentBuilderRequest toContractDocumentBuilderRequest(
     Onboarding onboarding,
-    Product product,
+    ProductResponse product,
     OnboardingWorkflow onboardingWorkflow) {
     return documentBuilderRequestMapper.toRequest(onboarding, product, onboardingWorkflow);
   }
 
   public DocumentBuilderRequest toAttachmentDocumentBuilderRequest(
     Onboarding onboarding,
-    Product product,
+    ProductResponse product,
     AttachmentTemplate attachmentTemplate,
     DocumentType documentType) {
     return documentBuilderRequestMapper.toRequest(onboarding, product, attachmentTemplate, documentType);

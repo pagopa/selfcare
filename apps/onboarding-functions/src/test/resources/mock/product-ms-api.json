@@ -1,0 +1,41 @@
+[
+  {
+    "httpRequest": { "method": "GET", "path": "/product/{productId}/valid" },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"headers\":{\"Content-Type\":[\"application/json\"]},\"body\":{\"id\":\"integration-product\",\"productId\":\"$!request.pathParameters.productId[0]\",\"title\":\"Integration product\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"testEnvProductIds\":[],\"features\":{\"enabled\":true,\"expirationDays\":30},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"skipUserCreation\":false,\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[]}],\"contracts\":[{\"onboardingType\":\"INSTITUTION\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]}],\"emailTemplates\":[],\"managingInstitutions\":[],\"signingConfiguration\":{\"requiredSignatures\":1,\"skipSignerIdentityCheck\":false,\"steps\":[]}}}"
+    }
+  },
+  {
+    "httpRequest": { "method": "GET", "path": "/product/[^/]+/expiration-days" },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": { "Content-Type": ["application/json"] },
+      "body": { "expirationDays": 30 }
+    }
+  },
+  {
+    "httpRequest": { "method": "GET", "path": "/product/{productId}" },
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"headers\":{\"Content-Type\":[\"application/json\"]},\"body\":{\"id\":\"integration-product\",\"productId\":\"$!request.pathParameters.productId[0]\",\"title\":\"Integration product\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"testEnvProductIds\":[],\"features\":{\"enabled\":true,\"expirationDays\":30},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"skipUserCreation\":false,\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[]}],\"contracts\":[{\"onboardingType\":\"INSTITUTION\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]}],\"emailTemplates\":[],\"managingInstitutions\":[],\"signingConfiguration\":{\"requiredSignatures\":1,\"skipSignerIdentityCheck\":false,\"steps\":[]}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product",
+      "queryStringParameters": { "rootOnly": ["false"], "valid": ["false"] }
+    },
+    "httpResponse": { "statusCode": 200, "headers": { "Content-Type": ["application/json"] }, "body": [] }
+  },
+  {
+    "httpRequest": { "method": "GET", "path": "/product/missing/valid" },
+    "priority": 10,
+    "httpResponse": {
+      "statusCode": 404,
+      "headers": { "Content-Type": ["application/problem+json"] },
+      "body": { "title": "Product not found" }
+    }
+  }
+]

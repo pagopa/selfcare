@@ -31,15 +31,17 @@ import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
+import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
 import it.pagopa.selfcare.onboarding.workflow.*;
-import it.pagopa.selfcare.product.entity.ManagingInstitution;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.ws.rs.core.Response;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.product_json.model.ManagingInstitution;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -457,11 +459,10 @@ public class OnboardingFunctions {
 
     String onboardingString = ctx.getInput(String.class);
     Onboarding onboarding = objectMapper.readValue(onboardingString, Onboarding.class);
-    Product product = productService.getProductIsValid(onboarding.getProductId());
+    ProductResponse product = productService.getValidProduct(onboarding.getProductId());
 
-    product
-        .getInstitutionContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getAttachments()
+    ProductConfigUtils.attachments(product, OnboardingType.INSTITUTION,
+        InstitutionUtils.getCurrentInstitutionType(onboarding))
         .stream()
         .filter(
             attachment ->
@@ -1037,7 +1038,7 @@ public class OnboardingFunctions {
         Map.of(
             ONBOARDING_ID, onboarding.getId(),
             PRODUCT_ID, onboarding.getProductId()));
-    return productService.getProductIsValid(onboarding.getProductId()).getSigningConfiguration();
+    return productService.getValidProduct(onboarding.getProductId()).getSigningConfiguration();
   }
 
   @FunctionName(GET_MANAGING_INSTITUTION_ACTIVITY)
@@ -1055,8 +1056,8 @@ public class OnboardingFunctions {
             Map.of(
                     ONBOARDING_ID, onboarding.getId(),
                     PRODUCT_ID, onboarding.getProductId()));
-      List<ManagingInstitution> managingInstitutions = productService.getProductIsValid(onboarding.getProductId()).getManagingInstitutions();
-      context.getLogger().info(String.format("Found %d managing institution(s) for product %s - %s", managingInstitutions.size(), onboarding.getProductId(), managingInstitutions.get(0).getInstitutionId()));
+      List<ManagingInstitution> managingInstitutions = productService.getValidProduct(onboarding.getProductId()).getManagingInstitutions();
+      context.getLogger().info(String.format("Found %d managing institution(s) for product %s", managingInstitutions.size(), onboarding.getProductId()));
       return managingInstitutions;
   }
 

@@ -17,14 +17,13 @@ import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.utils.*;
 import it.pagopa.selfcare.onboarding.service.impl.NotificationEventServiceImpl;
 
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_json.model.*;
 
 import java.util.*;
@@ -60,7 +59,7 @@ public class NotificationEventServiceDefaultTest {
   void sendMessage() {
     // given
     final Onboarding onboarding = createOnboarding();
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
 
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
@@ -89,7 +88,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void sendMessageWithoutQueueEvent() {
     final Onboarding onboarding = createOnboarding();
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
     when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
@@ -114,7 +113,7 @@ public class NotificationEventServiceDefaultTest {
   void sendMessageWithoutToken() {
     final Onboarding onboarding = createOnboarding();
     onboarding.setId("123");
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
     when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
@@ -130,7 +129,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void sendMessageDoesntSendNotificationIfFilterDoesntAllow() {
     final Onboarding onboarding = createOnboarding();
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
     when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
@@ -145,7 +144,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void sendMessageWithTestEnvProducts() {
     final Onboarding onboarding = createOnboarding();
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
     product.setTestEnvProductIds(List.of("prod-interop-coll", "prod-interop-atst"));
     when(productService.getProduct(any())).thenReturn(product);
     mockNotificationMapper(true);
@@ -162,7 +161,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void sendMessageWithError() {
     final Onboarding onboarding = createOnboarding();
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
     when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
     when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
@@ -179,7 +178,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void sendMessageNullConsumers() {
     final Onboarding onboarding = createOnboarding();
-    Product test = new Product();
+    ProductResponse test = new ProductResponse();
     test.setConsumers(List.of());
     when(productService.getProduct(any())).thenReturn(test);
     ExecutionContext context = mock(ExecutionContext.class);
@@ -339,7 +338,7 @@ public class NotificationEventServiceDefaultTest {
   @Test
   void sendNotificationsJsonError() {
     final Onboarding onboarding = createOnboarding();
-    final Product product = createProduct();
+    final ProductResponse product = createProduct();
     when(productService.getProduct(any())).thenReturn(product);
 
     when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
@@ -383,8 +382,8 @@ public class NotificationEventServiceDefaultTest {
     return onboarding;
   }
 
-  private Product createProduct() {
-    var product = new Product();
+  private ProductResponse createProduct() {
+    var product = new ProductResponse();
     product.setConsumers(List.of("STANDARD", "SAP", "FD"));
     return product;
   }
