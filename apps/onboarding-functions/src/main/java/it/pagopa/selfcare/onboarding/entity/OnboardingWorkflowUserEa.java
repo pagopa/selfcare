@@ -1,7 +1,9 @@
 package it.pagopa.selfcare.onboarding.entity;
 
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 public class OnboardingWorkflowUserEa extends OnboardingWorkflowUser {
   private String type;
@@ -14,17 +16,15 @@ public class OnboardingWorkflowUserEa extends OnboardingWorkflowUser {
   public OnboardingWorkflowUserEa() {}
 
   @Override
-  public String getContractTemplatePath(Product product) {
-    return product
-        .getUserAggregatorContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getContractTemplatePath();
+  public String getContractTemplatePath(ProductResponse product) {
+    return ProductConfigUtils.contractTemplate(product, OnboardingType.USER_AGGREGATOR,
+        InstitutionUtils.getCurrentInstitutionType(onboarding)).map(config -> config.getPath()).orElse(null);
   }
 
   @Override
-  public String getContractTemplateVersion(Product product) {
-    return product
-        .getUserAggregatorContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getContractTemplateVersion();
+  public String getContractTemplateVersion(ProductResponse product) {
+    return ProductConfigUtils.contractTemplate(product, OnboardingType.USER_AGGREGATOR,
+        InstitutionUtils.getCurrentInstitutionType(onboarding)).map(config -> config.getVersion()).orElse(null);
   }
 
   @Override

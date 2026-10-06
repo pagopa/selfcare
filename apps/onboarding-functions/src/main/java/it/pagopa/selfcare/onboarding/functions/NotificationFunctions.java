@@ -18,6 +18,7 @@ import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.exception.NotificationException;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
+import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
 import it.pagopa.selfcare.onboarding.service.NotificationEventResenderService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
@@ -38,26 +39,28 @@ import static it.pagopa.selfcare.onboarding.utils.Utils.*;
 
 public class NotificationFunctions {
 
-  private static final String CREATED_NEW_RESEND_NOTIFICATIONS_ORCHESTRATION_WITH_INSTANCE_ID_MSG = "Created new Resend Notifications orchestration with instance ID = ";
   private final NotificationEventService notificationEventService;
   private final OnboardingService onboardingService;
   private final NotificationEventResenderService notificationEventResenderService;
   private final ObjectMapper objectMapper;
   private final TelemetryService telemetryService;
   private final CompletionService completionService;
+  private final FunctionInvocationLogger functionInvocationLogger;
 
   public NotificationFunctions(ObjectMapper objectMapper,
                                NotificationEventService notificationEventService,
                                OnboardingService onboardingService,
                                NotificationEventResenderService notificationEventResenderService,
                                TelemetryService telemetryService,
-                               CompletionService completionService) {
+                               CompletionService completionService,
+                               FunctionInvocationLogger functionInvocationLogger) {
     this.objectMapper = objectMapper;
     this.notificationEventService = notificationEventService;
     this.onboardingService = onboardingService;
     this.notificationEventResenderService = notificationEventResenderService;
     this.telemetryService = telemetryService;
     this.completionService = completionService;
+    this.functionInvocationLogger = functionInvocationLogger;
   }
 
   /**
@@ -68,7 +71,7 @@ public class NotificationFunctions {
   public HttpResponseMessage sendNotification(
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    context.getLogger().info("sendNotifications trigger processed a request");
+    functionInvocationLogger.logInvocation("Notification", request);
 
     String onboardingString = request.getBody().orElseThrow(() -> new IllegalArgumentException("Request body cannot be empty."));
     final String queueEventString = request.getQueryParameters().get("queueEvent");
@@ -105,7 +108,7 @@ public class NotificationFunctions {
   public HttpResponseMessage resendNotification(
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    context.getLogger().info("sendNotifications trigger processed a request");
+    functionInvocationLogger.logInvocation("ResendNotification", request);
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");
     if (Objects.isNull(onboardingId)) {
@@ -153,7 +156,7 @@ public class NotificationFunctions {
   public HttpResponseMessage countNotifications(
     @HttpTrigger(name = "req", route = "onboardings/notifications/count", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     final ExecutionContext context) {
-    context.getLogger().info("count trigger processed a request");
+    functionInvocationLogger.logInvocation("CountNotifications", request);
 
     String from = request.getQueryParameters().get("from");
     String to = request.getQueryParameters().get("to");
@@ -174,7 +177,13 @@ public class NotificationFunctions {
     @HttpTrigger(name = "req", methods = {HttpMethod.POST}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
     final ExecutionContext context) throws JsonProcessingException {
-    context.getLogger().info("resendNotifications trigger processed a request");
+    String userId = functionInvocationLogger.logInvocation("ResendNotifications", request);
+    if (FunctionInvocationLogger.isMissingUserId(userId)) {
+      return request
+          .createResponseBuilder(HttpStatus.BAD_REQUEST)
+          .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
+          .build();
+    }
 
     ResendNotificationsFilters filters = getResendNotificationsFilters(request);
     try {
@@ -188,7 +197,7 @@ public class NotificationFunctions {
     String filtersInJson = objectMapper.writeValueAsString(filters);
     DurableTaskClient client = durableContext.getClient();
     String instanceId = client.scheduleNewOrchestrationInstance("NotificationsSender", filtersInJson);
-    context.getLogger().info(() -> String.format("%s %s", CREATED_NEW_RESEND_NOTIFICATIONS_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId));
+    functionInvocationLogger.logOrchestrationStarted("ResendNotifications", userId, instanceId);
 
     return durableContext.createCheckStatusResponse(request, instanceId);
   }
