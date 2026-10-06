@@ -2,8 +2,8 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
@@ -21,7 +21,7 @@ public interface DocumentBuilderRequestMapper {
     @Mapping(target = "templateVersion", expression = "java(onboardingWorkflow.getContractTemplateVersion(product))")
     @Mapping(target = "productTitle", source = "product.title")
     @Mapping(target = "rootOnboardingId", source = "onboarding.referenceOnboardingId")
-    DocumentBuilderRequest toRequest(Onboarding onboarding, Product product, OnboardingWorkflow onboardingWorkflow);
+    DocumentBuilderRequest toRequest(Onboarding onboarding, ProductResponse product, OnboardingWorkflow onboardingWorkflow);
 
     @Mapping(target = "onboardingId", source = "onboarding.id")
     @Mapping(target = "productId", source = "onboarding.productId")
@@ -30,5 +30,5 @@ public interface DocumentBuilderRequestMapper {
     @Mapping(target = "templatePath", source = "attachmentTemplate.templatePath")
     @Mapping(target = "templateVersion", source = "attachmentTemplate.templateVersion")
     @Mapping(target = "productTitle", source = "product.title")
-    DocumentBuilderRequest toRequest(Onboarding onboarding, Product product, AttachmentTemplate attachmentTemplate, DocumentType documentType);
+    DocumentBuilderRequest toRequest(Onboarding onboarding, ProductResponse product, AttachmentTemplate attachmentTemplate, DocumentType documentType);
 }

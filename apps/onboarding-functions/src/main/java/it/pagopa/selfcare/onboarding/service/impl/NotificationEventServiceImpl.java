@@ -21,8 +21,7 @@ import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.utils.*;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import java.time.ZoneOffset;
@@ -32,6 +31,7 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.InstitutionResponse;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.UserDataResponse;
 
@@ -99,7 +99,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
 
         context.getLogger().info(() -> String.format("Getting product info for onboarding with ID %s and productId %s",
                 onboarding.getId(), onboarding.getProductId()));
-        Product product = productService.getProduct(onboarding.getProductId());
+        ProductResponse product = productService.getProduct(onboarding.getProductId());
         if (product.getConsumers() == null || product.getConsumers().isEmpty()) {
             context.getLogger().warning(() -> String.format("Node consumers is null or empty for product with ID %s",
                     onboarding.getProductId()));
@@ -134,7 +134,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
         }
     }
 
-    private void prepareAndSendNotification(ExecutionContext context, Product product,
+    private void prepareAndSendNotification(ExecutionContext context, ProductResponse product,
             NotificationConfig.Consumer consumer, NotificationsResources notificationsResources,
             String notificationEventTraceId) {
         NotificationBuilder notificationBuilder = notificationBuilderFactory.create(consumer);
@@ -191,7 +191,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
      * context.getLogger().info(() ->
      * String.format("[APZ] prepareAndSendUserNotification %s [%s]",
      * notificationsResources.getInstitution().getDescription(), consumer.topic()));
-     * 
+     *
      * notificationsResources.getOnboarding().getUsers().forEach(onboardingUser -> {
      * context.getLogger().info(() -> String.format("[APZ] onboardingUser %s [%s]",
      * onboardingUser.getId(), consumer.topic()));
@@ -222,8 +222,8 @@ public class NotificationEventServiceImpl implements NotificationEventService {
      * });
      * });
      * });
-     * 
-     * 
+     *
+     *
      * } else {
      * context.getLogger().info(() -> String.
      * format("It was not necessary to send a notification on the topic %s because the onboarding with ID %s did not pass filter verification"
@@ -306,7 +306,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
      * String.format("Sending notification user on topic: %s with message: %s",
      * topic, finalMessage));
      * }
-     * 
+     *
      * eventHubRestClient.sendMessage(topic, message);
      * telemetryClient.trackEvent(EVENT_ONBOARDING_FN_NAME,
      * notificationUserEventMap(notificationUserToSend, topic,
@@ -315,7 +315,7 @@ public class NotificationEventServiceImpl implements NotificationEventService {
      * }
      */
 
-    private void sendTestEnvProductsNotification(ExecutionContext context, Product product, String topic,
+    private void sendTestEnvProductsNotification(ExecutionContext context, ProductResponse product, String topic,
             NotificationToSend notificationToSend, String notificationEventTraceId) {
         context.getLogger().info(() -> String.format("Starting sendTestEnvProductsNotification with testEnv %s",
                 product.getTestEnvProductIds()));

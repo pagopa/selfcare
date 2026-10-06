@@ -542,7 +542,8 @@ public class ProductController {
             headers = {
               @org.eclipse.microprofile.openapi.annotations.headers.Header(
                   name = "X-Required-Documents-Enabled",
-                  description = "Whether required documents are enabled (true/false)")
+                  description = "Whether required documents are enabled (true/false)",
+                  schema = @Schema(implementation = Boolean.class))
             }),
         @APIResponse(responseCode = "400", description = "Bad Request"),
         @APIResponse(responseCode = "404", description = "Product not found"),

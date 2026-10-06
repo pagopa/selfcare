@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
@@ -39,9 +39,9 @@ public abstract class OnboardingWorkflow {
 
   public abstract String getRejectTokenUrl(MailTemplatePlaceholdersConfig config);
 
-  public abstract String getContractTemplatePath(Product product);
+  public abstract String getContractTemplatePath(ProductResponse product);
 
-  public abstract String getContractTemplateVersion(Product product);
+  public abstract String getContractTemplateVersion(ProductResponse product);
 
   @JsonProperty("onboarding")
   public Onboarding getOnboarding() {

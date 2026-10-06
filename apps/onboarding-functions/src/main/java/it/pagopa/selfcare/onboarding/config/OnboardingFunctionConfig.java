@@ -11,8 +11,6 @@ import it.pagopa.selfcare.azurestorage.AzureBlobClient;
 import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.onboarding.crypto.*;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
-import it.pagopa.selfcare.product.service.ProductService;
-import it.pagopa.selfcare.product.service.ProductServiceCacheable;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.Produces;
@@ -67,27 +65,6 @@ public class OnboardingFunctionConfig {
                 });
     }
 
-    @ApplicationScoped
-    public ProductService productService(AzureStorageConfig azureStorageConfig){
-       return azureStorageConfig.connectionStringProduct()
-               .filter(connectionString -> !connectionString.isBlank())
-               .map(connectionString -> {
-                   log.info("Product blob storage client configured with connection string");
-                   return new ProductServiceCacheable(
-                       connectionString,
-                       azureStorageConfig.containerProduct(),
-                       azureStorageConfig.productFilepath());
-               })
-               .orElseGet(() -> {
-                   log.info("Product blob storage client configured with Managed Identity for account {}",
-                           azureStorageConfig.accountNameProduct().orElse(""));
-                   return new ProductServiceCacheable(
-                       azureStorageConfig.containerProduct(),
-                       azureStorageConfig.productFilepath(),
-                       azureStorageConfig.accountNameProduct().orElse(""),
-                       azureStorageConfig.managedIdentityClientIdProduct().orElse(""));
-               });
-    }
 
     public Pkcs7HashSignService arubaPkcs7HashSignService(){
         log.info("Signature will be performed using ArubaPkcs7HashSignServiceImpl");

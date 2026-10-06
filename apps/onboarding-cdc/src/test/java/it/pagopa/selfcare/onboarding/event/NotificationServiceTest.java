@@ -40,61 +40,73 @@ class NotificationServiceTest {
     @Test
     @DisplayName("Should handle Invoke Notification API Success passing event ADD")
     void shouldHandleInvokeNotificationApiSuccessForQueueEventAdd() {
+        // given
         Onboarding onboarding = new Onboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setUpdatedAt(LocalDateTime.now());
         onboarding.setActivatedAt(LocalDateTime.now());
 
-        when(notificationsApi.apiNotificationPost(any(), any()))
+        when(notificationsApi.apiNotificationPost(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
+        // when
         UniAssertSubscriber<OrchestrationResponse> subscriber = notificationService
                 .invokeNotificationApi(onboarding)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
+        // then
         subscriber.assertCompleted().awaitItem();
 
-        verify(notificationsApi, times(1)).apiNotificationPost(eq(QueueEvent.ADD.name()), any());
+        verify(notificationsApi, times(1))
+                .apiNotificationPost(eq(QueueEvent.ADD.name()), eq("m2m:onboarding-cdc"), any());
     }
 
     @Test
     @DisplayName("Should handle Invoke Notification API Success passing event UPDATE")
     void shouldHandleInvokeNotificationApiSuccessForQueueEventUpdate() {
+        // given
         Onboarding onboarding = new Onboarding();
         onboarding.setStatus(OnboardingStatus.COMPLETED);
         onboarding.setUpdatedAt(LocalDateTime.now().plusMinutes(10)); // 5 minutes should be the threshold
         onboarding.setActivatedAt(LocalDateTime.now());
 
-        when(notificationsApi.apiNotificationPost(any(), any()))
+        when(notificationsApi.apiNotificationPost(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
+        // when
         UniAssertSubscriber<OrchestrationResponse> subscriber = notificationService
                 .invokeNotificationApi(onboarding)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
+        // then
         subscriber.assertCompleted().awaitItem();
 
-        verify(notificationsApi, times(1)).apiNotificationPost(eq(QueueEvent.UPDATE.name()), any());
+        verify(notificationsApi, times(1))
+                .apiNotificationPost(eq(QueueEvent.UPDATE.name()), eq("m2m:onboarding-cdc"), any());
     }
 
     @Test
     @DisplayName("Should handle Invoke Notification API Success passing event UPDATE with status DELETED")
     void shouldHandleInvokeNotificationApiSuccessForQueueEventUpdateWithStatusDeleted() {
+        // given
         Onboarding onboarding = new Onboarding();
         onboarding.setStatus(OnboardingStatus.DELETED);
         onboarding.setUpdatedAt(LocalDateTime.now()); // 5 minutes should be the threshold
         onboarding.setActivatedAt(LocalDateTime.now());
 
-        when(notificationsApi.apiNotificationPost(any(), any()))
+        when(notificationsApi.apiNotificationPost(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
+        // when
         UniAssertSubscriber<OrchestrationResponse> subscriber = notificationService
                 .invokeNotificationApi(onboarding)
                 .subscribe().withSubscriber(UniAssertSubscriber.create());
 
+        // then
         subscriber.assertCompleted().awaitItem();
 
-        verify(notificationsApi, times(1)).apiNotificationPost(eq(QueueEvent.UPDATE.name()), any());
+        verify(notificationsApi, times(1))
+                .apiNotificationPost(eq(QueueEvent.UPDATE.name()), eq("m2m:onboarding-cdc"), any());
     }
 
 }

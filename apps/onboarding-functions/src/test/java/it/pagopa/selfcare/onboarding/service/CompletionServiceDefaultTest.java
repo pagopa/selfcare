@@ -19,10 +19,6 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.impl.CompletionServiceImpl;
 
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -35,6 +31,11 @@ import org.openapi.quarkus.core_json.api.DelegationApi;
 import org.openapi.quarkus.core_json.api.InstitutionApi;
 import org.openapi.quarkus.core_json.model.*;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ContractType;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.party_registry_proxy_json.api.AooApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamereApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.NationalRegistriesApi;
@@ -832,7 +833,7 @@ public class CompletionServiceDefaultTest {
     @Test
     void sendCompletedEmail() {
 
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setDigitalAddress("test@pec.it");
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
@@ -841,7 +842,7 @@ public class CompletionServiceDefaultTest {
         ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
 
-        when(productService.getProductIsValid(onboarding.getProductId()))
+        when(productService.getValidProduct(onboarding.getProductId()))
                 .thenReturn(product);
         when(userRegistryApi.findByIdUsingGET(USERS_FIELD_LIST, user.getId()))
                 .thenReturn(userResource);
@@ -865,13 +866,13 @@ public class CompletionServiceDefaultTest {
         Mockito.verify(notificationService, times(0))
                 .sendCompletedEmail(any(), any(), any());
         Mockito.verify(productService, times(0))
-                .getProductIsValid(any());
+                .getValidProduct(any());
     }
 
     @Test
     void sendMailRejection() {
 
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
         createDummyUser(onboarding);
 
@@ -912,11 +913,7 @@ public class CompletionServiceDefaultTest {
 
     @Test
     void persistUsers() {
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(false);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(false);
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
         createDummyUser(onboarding);
@@ -933,11 +930,7 @@ public class CompletionServiceDefaultTest {
 
     @Test
     void persistUsers_skip() {
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(true);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(true);
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
         createDummyUser(onboarding);
@@ -953,11 +946,7 @@ public class CompletionServiceDefaultTest {
     void persistUsersWithException() {
         Onboarding onboarding = createOnboarding();
         createDummyUser(onboarding);
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(true);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(true);
 
         Response response = new ServerResponse(null, 500, null);
         when(userControllerApi.createUserByUserId(any(), any())).thenReturn(response);
@@ -970,11 +959,7 @@ public class CompletionServiceDefaultTest {
     @Test
     void persistUsers_withAggregatorAndNotProdPNAndWorkflowTypeIsImport() {
         // Given
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(false);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(false);
 
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("product-not-pn");
@@ -1003,11 +988,7 @@ public class CompletionServiceDefaultTest {
     @Test
     void persistUsers_withAggregatorAndNotProdPNAndWorkflowTypeIsNotImport() {
         // Given
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(false);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(false);
 
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("product-not-pn");
@@ -1035,11 +1016,7 @@ public class CompletionServiceDefaultTest {
     @Test
     void persistUsers_withAggregatorAndProdPN() {
         // Given
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(false);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(false);
 
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("prod-pn");
@@ -1067,11 +1044,7 @@ public class CompletionServiceDefaultTest {
     @Test
     void persistUsers_withoutAggregator() {
         // Given
-        Product product = mock(Product.class);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setSkipUserCreation(false);
-        Map<PartyRole, ProductRoleInfo> roleMappings = Map.of(PartyRole.MANAGER, productRoleInfo);
-        when(product.getRoleMappings(anyString())).thenReturn(roleMappings);
+        ProductResponse product = createProductWithRoleMapping(false);
 
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("any-product");
@@ -1607,22 +1580,35 @@ public class CompletionServiceDefaultTest {
         return onboarding;
     }
 
-    private Product createDummyProduct() {
-        Product product = new Product();
-        product.setInstitutionContractMappings(createDummyContractTemplateInstitution());
-        product.setUserContractMappings(createDummyContractTemplateInstitution());
+    private ProductResponse createDummyProduct() {
+        ProductResponse product = createProductWithRoleMapping(false);
         product.setTitle("Title");
-        product.setId(productId);
+        product.setProductId(productId);
         return product;
     }
 
-    private static Map<String, ContractTemplate> createDummyContractTemplateInstitution() {
-        Map<String, ContractTemplate> institutionTemplate = new HashMap<>();
-        ContractTemplate conctractTemplate = new ContractTemplate();
-        conctractTemplate.setContractTemplatePath("example");
-        conctractTemplate.setContractTemplateVersion("version");
-        institutionTemplate.put(Product.CONTRACT_TYPE_DEFAULT, conctractTemplate);
-        return institutionTemplate;
+    private ProductResponse createProductWithRoleMapping(boolean skipUserCreation) {
+        ProductResponse product = new ProductResponse();
+        RoleMapping roleMapping = new RoleMapping();
+        roleMapping.setRole(PartyRole.MANAGER.name());
+        roleMapping.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.DEFAULT);
+        roleMapping.setSkipUserCreation(skipUserCreation);
+        product.setRoleMappings(List.of(roleMapping));
+        ContractTemplateConfig institutionContract = contract(OnboardingType.INSTITUTION);
+        ContractTemplateConfig userContract = contract(OnboardingType.USER);
+        product.setContracts(List.of(institutionContract, userContract));
+        return product;
+    }
+
+    private ContractTemplateConfig contract(OnboardingType onboardingType) {
+        ContractTemplateConfig config = new ContractTemplateConfig();
+        config.setOnboardingType(onboardingType);
+        config.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.DEFAULT);
+        config.setContractType(ContractType.CONTRACT);
+        config.setEnabled(true);
+        config.setPath("example");
+        config.setVersion("version");
+        return config;
     }
 
 }
