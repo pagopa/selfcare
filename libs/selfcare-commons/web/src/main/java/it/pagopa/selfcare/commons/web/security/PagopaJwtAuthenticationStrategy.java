@@ -90,6 +90,9 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
             Optional.ofNullable(claims.get(CLAIM_SURNAME, String.class)).ifPresent(userBuilder::surname);
             
             user = userBuilder.build();        
+        } catch (TenantValidationException e) {
+            MDC.remove(MDC_UID);
+            throw e;
         } catch (Exception e) {
             MDC.remove(MDC_UID);
             throw new JwtAuthenticationException(e.getMessage(), e);

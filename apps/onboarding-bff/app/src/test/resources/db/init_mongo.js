@@ -489,6 +489,36 @@ db.onboardings.insertMany([
       },
     ],
     workflowType: "CONTRACT_REGISTRATION",
+  },
+  {
+    _id: "b2c3d4e5-6f70-4a81-92b3-c4d5e6f70a81",
+    tenantId: "AR",
+    createdAt: ISODate("2024-10-18T12:24:50.050Z"),
+    institution: {
+      address: "sede leg",
+      city: "Milano",
+      country: "IT",
+      county: "MI",
+      description: "Token No IAM Requester Fallback Test",
+      digitalAddress: "pec@pectest.com",
+      geographicTaxonomies: [],
+      id: "c2808e95-59a7-44fb-a6df-64faf4ff3ed3",
+      imported: false,
+      institutionType: "PT",
+      origin: "INFOCAMERE",
+      taxCode: "11223345661",
+      zipCode: "11223",
+    },
+    productId: "prod-interop",
+    status: "PENDING",
+    users: [
+      {
+        _id: "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+        role: "MANAGER",
+        userMailUuid: "ID_MAIL#49e16aa5-bc28-40c7-9844-6886e4647e22",
+      },
+    ],
+    workflowType: "FOR_APPROVE",
   }
 ]);
 
@@ -775,8 +805,96 @@ db.products.insertMany([
       enabled: true,
       expirationDays: 30
     },
+    roleMappings: [
+      {
+        role: "ADMIN_EA",
+        institutionType: "PRV",
+        phasesAdditionAllowed: ["onboarding"],
+        skipUserCreation: false,
+        backOfficeRoles: [
+          {
+            code: "admin",
+            label: "Referente dei Pagamenti",
+            description: "Ha tutti i permessi e gestisce gli utenti",
+            productLabel: "Amministratore"
+          }
+        ]
+      }
+    ],
+    contracts: [
+      {
+        onboardingType: "INSTITUTION",
+        enabled: true,
+        institutionType: "PRV",
+        contractType: "CONTRACT",
+        path: "contracts/template/pagopa/1.0.5/pagopa-accordo_di_adesione_prv-v.1.0.5.html",
+        version: "1.0.5"
+      },
+      {
+        onboardingType: "USER",
+        enabled: true,
+        institutionType: "DEFAULT",
+        contractType: "CONTRACT",
+        path: "contracts/template/pagopa/user/1.0.0/pagopa-user-contract.html",
+        version: "1.0.0"
+      }
+    ],
+    institutionOrigins: [
+      { institutionType: "PA", origin: "IPA", labelKey: "pa" }
+    ],
+    requiredDocuments: []
+  },
+  {
+    _id: "d204db2e-f17b-4415-a678-64dffce1d51a",
+    tenantId: "AR",
+    productId: "test-product-2",
+    alias: "test-product-2",
+    title: "Test product disabled",
+    status: "TESTING",
+    version: 1,
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      delegable: false,
+      invoiceable: false,
+      enabled: false,
+      expirationDays: 30,
+      allowedInstitutionTaxCode: []
+    },
     roleMappings: [],
     contracts: [],
+    institutionOrigins: [],
+    requiredDocuments: []
+  },
+  {
+    _id: "e1f3b5a2-7c4d-4e8f-9a1b-2c3d4e5f6a7b",
+    tenantId: "AR",
+    productId: "prod-io-premium",
+    alias: "prod-io-premium",
+    parentId: "prod-io",
+    title: "IO Premium",
+    status: "ACTIVE",
+    version: 1,
+    features: {
+      allowCompanyOnboarding: true,
+      allowIndividualOnboarding: false,
+      delegable: false,
+      invoiceable: true,
+      enabled: true,
+      expirationDays: 30
+    },
+    roleMappings: [],
+    // USER contract on purpose: the child passes the admin contract filter and is excluded only by rootOnly
+    contracts: [
+      {
+        onboardingType: "USER",
+        enabled: true,
+        institutionType: "DEFAULT",
+        contractType: "CONTRACT",
+        path: "contracts/template/io-premium/user/1.0.0/io-premium-user-contract.html",
+        version: "1.0.0"
+      }
+    ],
     institutionOrigins: [
       { institutionType: "PA", origin: "IPA", labelKey: "pa" }
     ],
