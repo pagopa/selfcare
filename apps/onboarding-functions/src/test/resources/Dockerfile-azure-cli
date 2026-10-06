@@ -1,6 +1,7 @@
 FROM mcr.microsoft.com/azure-cli@sha256:5ecf42d8362e25717b35c994aa714ed399be7b4e6f6c2df2ba3591b717598f76
 COPY infra/core/resources /workspace/resources/resources
 COPY infra/core/contracts_template/contracts/template /workspace/contracts-blob
+COPY apps/onboarding-functions/src/test/resources/blobStorageInit/products.json /workspace/products.json
 
 COPY apps/onboarding-functions/src/test/resources/fn/dummy-accordo_di_adesione.html /workspace/dummy-accordo_di_adesione.html
 

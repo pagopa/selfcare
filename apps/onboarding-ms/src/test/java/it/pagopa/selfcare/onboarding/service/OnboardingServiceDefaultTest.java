@@ -2754,6 +2754,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void approve() {
+        // given
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         ApproveRequest approveRequest = new ApproveRequest();
@@ -2768,17 +2769,21 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
-        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
+        // when
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
+        // then
         OnboardingGet actual = subscriber.awaitItem().getItem();
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
+        verify(orchestrationService)
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
     }
 
     @Test
@@ -2801,6 +2806,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void approveCompletion() {
+        // given
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         PanacheMock.mock(Onboarding.class);
@@ -2815,17 +2821,22 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+
+        // when
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
+        // then
         OnboardingGet actual = subscriber.awaitItem().getItem();
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
 
         verify(orchestrationService, times(1))
-                .triggerOrchestrationIfEnabled(any(), any());
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
     }
 
     @Test

@@ -50,6 +50,6 @@ class NotificationServiceWithDisabledWatcherTest {
 
         // then
         subscriber.assertCompleted().awaitItem();
-        verify(notificationsApi, times(0)).apiNotificationPost(any(), any());
+        verify(notificationsApi, times(0)).apiNotificationPost(any(), any(), any());
     }
 }
