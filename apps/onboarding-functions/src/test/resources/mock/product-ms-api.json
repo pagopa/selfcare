@@ -86,5 +86,27 @@
         "title": "Product not found"
       }
     }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-ced/valid"
+    },
+    "priority": 10,
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"headers\":{\"Content-Type\":[\"application/json\"]},\"body\":{\"id\":\"integration-product\",\"productId\":\"prod-ced\",\"title\":\"Integration product\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"testEnvProductIds\":[],\"features\":{\"enabled\":true,\"expirationDays\":30},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"skipUserCreation\":false,\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[]}],\"contracts\":[{\"onboardingType\":\"INSTITUTION\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]},{\"onboardingType\":\"INSTITUTION_AGGREGATOR\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]},{\"onboardingType\":\"USER\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]},{\"onboardingType\":\"USER_AGGREGATOR\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]}],\"emailTemplates\":[],\"managingInstitutions\":[{\"institutionId\":\"0ba32016-2dfa-4dd8-a063-969592456d79\",\"description\":\"Integration managing institution\",\"signingStep\":2}],\"signingConfiguration\":{\"requiredSignatures\":2,\"skipSignerIdentityCheck\":false,\"steps\":[]}}}"
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/product/prod-ced"
+    },
+    "priority": 10,
+    "httpResponseTemplate": {
+      "templateType": "VELOCITY",
+      "template": "{\"statusCode\":200,\"headers\":{\"Content-Type\":[\"application/json\"]},\"body\":{\"id\":\"integration-product\",\"productId\":\"prod-ced\",\"title\":\"Integration product\",\"status\":\"ACTIVE\",\"consumers\":[\"Standard\",\"SAP\"],\"testEnvProductIds\":[],\"features\":{\"enabled\":true,\"expirationDays\":30},\"roleMappings\":[{\"role\":\"MANAGER\",\"institutionType\":\"DEFAULT\",\"skipUserCreation\":false,\"phasesAdditionAllowed\":[\"onboarding\"],\"backOfficeRoles\":[]}],\"contracts\":[{\"onboardingType\":\"INSTITUTION\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]},{\"onboardingType\":\"INSTITUTION_AGGREGATOR\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]},{\"onboardingType\":\"USER\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]},{\"onboardingType\":\"USER_AGGREGATOR\",\"enabled\":true,\"institutionType\":\"DEFAULT\",\"contractType\":\"CONTRACT\",\"path\":\"contracts/template/io/2.4.6/io-accordo_di_adesione-v.2.4.6.html\",\"version\":\"2.4.6\",\"workflowType\":[]}],\"emailTemplates\":[],\"managingInstitutions\":[{\"institutionId\":\"0ba32016-2dfa-4dd8-a063-969592456d79\",\"description\":\"Integration managing institution\",\"signingStep\":2}],\"signingConfiguration\":{\"requiredSignatures\":2,\"skipSignerIdentityCheck\":false,\"steps\":[]}}}"
+    }
   }
 ]
