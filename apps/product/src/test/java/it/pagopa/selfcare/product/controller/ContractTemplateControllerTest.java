@@ -62,7 +62,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template-fragment.html").toURI()),
             "text/html")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(201);
 
@@ -87,7 +87,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template-fragment.html").toURI()),
             "text/html")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(409);
 
@@ -98,13 +98,13 @@ public class ContractTemplateControllerTest {
   @Test
   @TestSecurity(user = "userJwt")
   void upload_shouldReturnBadRequest() throws URISyntaxException {
-    given().contentType("multipart/form-data").when().post("/AR").then().statusCode(400);
+    given().contentType("multipart/form-data").when().post("/").then().statusCode(400);
 
     given()
         .contentType("multipart/form-data")
         .queryParam("productId", "prod-test")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(400);
 
@@ -113,7 +113,7 @@ public class ContractTemplateControllerTest {
         .queryParam("productId", "prod-test")
         .queryParam("name", "Test template")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(400);
 
@@ -123,7 +123,7 @@ public class ContractTemplateControllerTest {
         .queryParam("name", "Test template")
         .queryParam("version", "1.0.0")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(400);
 
@@ -137,7 +137,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template-invalid.html").toURI()),
             "text/html")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(400);
 
@@ -151,7 +151,7 @@ public class ContractTemplateControllerTest {
             new File(getClass().getResource("/request/contract-template.pdf").toURI()),
             "application/pdf")
         .when()
-        .post("/AR")
+        .post("/")
         .then()
         .statusCode(400);
 
@@ -182,7 +182,7 @@ public class ContractTemplateControllerTest {
         .queryParam("productId", "prod-test")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/AR/{contractTemplateId}")
+        .get("/{contractTemplateId}")
         .then()
         .statusCode(200)
         .contentType("text/html");
@@ -212,7 +212,7 @@ public class ContractTemplateControllerTest {
         .queryParam("fileType", "pdf")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/AR/{contractTemplateId}")
+        .get("/{contractTemplateId}")
         .then()
         .statusCode(200)
         .contentType("application/pdf");
@@ -233,7 +233,7 @@ public class ContractTemplateControllerTest {
         .queryParam("productId", "prod-test")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/AR/{contractTemplateId}")
+        .get("/{contractTemplateId}")
         .then()
         .statusCode(404);
 
@@ -249,7 +249,7 @@ public class ContractTemplateControllerTest {
         .queryParam("fileType", "json")
         .pathParam("contractTemplateId", "123")
         .when()
-        .get("/AR/{contractTemplateId}")
+        .get("/{contractTemplateId}")
         .then()
         .statusCode(400);
 
@@ -292,7 +292,7 @@ public class ContractTemplateControllerTest {
         .queryParam("version", "1.0.0")
         .queryParam("name", "test")
         .when()
-        .get("/AR")
+        .get("/")
         .then()
         .statusCode(200);
 

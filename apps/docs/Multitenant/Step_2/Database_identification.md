@@ -86,6 +86,14 @@ The `storages` dimension is independent from Mongo routing and is described in
 `Storage_identification.md`. It is included here to show the canonical registry shape: each tenant has one
 Mongo definition and can have multiple logical storage bindings.
 
+Tenant credentials are separate top-level registry dimensions, not nested under a service-specific `auth`
+object. `oneIdentity` references the client ID and client secret; `userRegistry` references its API key.
+The shared Spring and Quarkus tenant registries resolve these environment-variable references and fail
+startup when a declared reference is missing or empty. A service can mark tenant IDs as requiring either
+credential through `tenant.one-identity.mandatory-tenants` or
+`tenant.user-registry.mandatory-tenants`; disabled authentication tenants need not declare OneIdentity
+credentials.
+
 For AR , the registry resolves:
 
 ```
