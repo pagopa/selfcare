@@ -18,11 +18,13 @@ import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
 
 public class TenantMongoDatabaseFactory implements MongoDatabaseFactory {
 
+    private final TenantRegistry tenantRegistry;
     private final TenantContext tenantContext;
     private final Map<String, MongoClient> clients = new ConcurrentHashMap<>();
     private final Map<String, MongoDatabaseFactory> factories = new ConcurrentHashMap<>();
 
     public TenantMongoDatabaseFactory(TenantRegistry tenantRegistry, TenantContext tenantContext) {
+        this.tenantRegistry = tenantRegistry;
         this.tenantContext = tenantContext;
         tenantRegistry.supportedTenantIds().forEach(tenantId -> {
             TenantDefinition.MongoDefinition mongo = tenantRegistry.resolve(tenantId).mongo();
@@ -78,7 +80,7 @@ public class TenantMongoDatabaseFactory implements MongoDatabaseFactory {
     }
 
     private MongoDatabaseFactory currentFactory() {
-        String tenantId = tenantContext.requiredTenantId();
+        String tenantId = tenantRegistry.normalizeAndValidate(tenantContext.requiredTenantId());
         MongoDatabaseFactory factory = factories.get(tenantId);
         if (factory == null) {
             throw new IllegalStateException("Mongo client is not configured for tenant " + tenantId);

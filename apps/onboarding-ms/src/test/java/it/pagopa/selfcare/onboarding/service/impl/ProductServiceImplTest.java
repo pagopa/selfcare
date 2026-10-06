@@ -188,7 +188,7 @@ class ProductServiceImplTest {
         WorkflowTypeResponse expected = new WorkflowTypeResponse();
         expected.setWorkflowType(WorkflowType.CONTRACT_REGISTRATION);
 
-        when(productApi.getWorkflowType("AR", institutionType, origin, productId.getValue()))
+        when(productApi.getWorkflowType(institutionType, origin, productId.getValue(), "AR"))
                 .thenReturn(Uni.createFrom().item(expected));
 
         // When
@@ -199,7 +199,7 @@ class ProductServiceImplTest {
         // Then
         assertNotNull(result);
         assertEquals(WorkflowType.CONTRACT_REGISTRATION, result.getWorkflowType());
-        verify(productApi).getWorkflowType("AR", institutionType, origin, productId.getValue());
+        verify(productApi).getWorkflowType(institutionType, origin, productId.getValue(), "AR");
         verifyNoMoreInteractions(productApi);
     }
 
@@ -215,7 +215,7 @@ class ProductServiceImplTest {
         doc.setName("Atto costitutivo");
         doc.setRequired(true);
 
-        when(productApi.getRequiredDocuments(productId.getValue(), "AR", institutionType, origin))
+        when(productApi.getRequiredDocuments(productId.getValue(), institutionType, origin, "AR"))
                 .thenReturn(Uni.createFrom().item(List.of(doc)));
 
         // When
@@ -228,7 +228,7 @@ class ProductServiceImplTest {
         assertEquals(1, result.size());
         assertEquals("doc-1", result.get(0).getId());
         assertEquals("Atto costitutivo", result.get(0).getName());
-        verify(productApi).getRequiredDocuments(productId.getValue(), "AR", institutionType, origin);
+        verify(productApi).getRequiredDocuments(productId.getValue(), institutionType, origin, "AR");
         verifyNoMoreInteractions(productApi);
     }
 
@@ -241,7 +241,7 @@ class ProductServiceImplTest {
 
         Response expectedResponse = Response.ok().header("X-Required-Documents-Enabled", "true").build();
 
-        when(productApi.isRequiredDocumentsEnabled(productId.getValue(), "AR", institutionType, origin))
+        when(productApi.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin, "AR"))
                 .thenReturn(Uni.createFrom().item(expectedResponse));
 
         // When
@@ -252,7 +252,7 @@ class ProductServiceImplTest {
         // Then
         assertNotNull(result);
         assertEquals(Boolean.TRUE, result);
-        verify(productApi).isRequiredDocumentsEnabled(productId.getValue(), "AR", institutionType, origin);
+        verify(productApi).isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin, "AR");
         verifyNoMoreInteractions(productApi);
     }
 
@@ -364,7 +364,7 @@ class ProductServiceImplTest {
 
     @Test
     void isRequiredDocuments_shouldKeepFalseForMissingHeader() {
-        when(productApi.isRequiredDocumentsEnabled("prod-io", "AR", InstitutionType.PA, Origin.IPA))
+        when(productApi.isRequiredDocumentsEnabled("prod-io", InstitutionType.PA, Origin.IPA, "AR"))
                 .thenReturn(Uni.createFrom().item(Response.ok().build()));
 
         assertFalse(productService.isRequiredDocuments(ProductId.PROD_IO, InstitutionType.PA, Origin.IPA, "AR")

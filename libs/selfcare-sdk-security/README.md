@@ -19,6 +19,10 @@ is absent, the effective tenant is `DEFAULT_TENANT` unless
 `JWT_TENANT_CLAIM_REQUIRED=true`; a missing, unknown, or mismatching header is
 rejected with `401`.
 
+Logging Context Enrichment: `LoggingContextFilter` copies a configurable set of
+JWT claims into the logging context (MDC) of every REST request, so that every
+log line written while serving the request reports who performed it.
+
 ## Configuration and Usage
 
 The core functionality is implemented within the custom
@@ -34,7 +38,7 @@ To use the SDK, add the following dependency to your consuming project's pom.xml
 <dependency>
     <groupId>it.pagopa.selfcare</groupId>
     <artifactId>selfcare-sdk-security</artifactId>
-    <version>0.0.1</version> 
+    <version>0.0.1</version>
 </dependency>
 ```
 ### Application Properties Setup
@@ -65,3 +69,46 @@ The custom logic is primarily executed within the overridden ```parse``` method 
 - Tenant Validation: For a verified `SPID` token, the SDK exposes the effective
   tenant as the `jwt.tenant` security identity attribute and validates it
   against the `X-Tenant-Id` header after authentication.
+
+### Using the SDK in a non tenant-aware application
+
+Since `0.5.0` the jar ships a Jandex index, so every bean of the SDK is discovered
+automatically. An application that is not tenant-aware yet can exclude
+`selfcare-sdk-tenant` from the dependency and keep only `LoggingContextFilter`:
+
+```
+quarkus.arc.exclude-types=it.pagopa.selfcare.security.JWTCallerPrincipalFactory,it.pagopa.selfcare.security.JWTSecurityIdentityAugmentor
+selfcare.security.tenant-validation.enabled=false
+```
+
+`JwtTenantValidationFilter` is a JAX-RS provider: RESTEasy Reactive registers it
+even when excluded from CDI, so it is disabled through the build-time property
+`selfcare.security.tenant-validation.enabled` (default `true`).
+
+### Logging Context (MDC)
+
+`LoggingContextFilter` is a RESTEasy Reactive request/response filter that is
+registered automatically (the consuming application must index this dependency,
+see `quarkus.index-dependency.*`). For each request it:
+
+- resolves the caller identity (it works with both proactive and lazy
+  authentication, without blocking the event loop);
+- copies every claim listed in `selfcare.logging.mdc.claims` (comma separated,
+  default `uid`) into the MDC, using the claim name as key;
+- logs a `WARN` when a configured claim is missing in the JWT and a `DEBUG`
+  when the request carries no JWT; in both cases nothing is put in the MDC;
+- skips Quarkus internal paths (`/q/*`) and never aborts the request;
+- removes the claims from the MDC when the response is produced.
+
+To print the claims, reference them in the log format, e.g.:
+
+```
+quarkus.log.console.format=%d{yyyy-MM-dd HH:mm:ss,SSS} %-5p [%c{3.}] (%t) trace_id=%X{trace_id} span_id=%X{span_id} uid=%X{uid} - %s%e%n
+```
+
+To log additional claims in the future, extend the property:
+
+```
+selfcare.logging.mdc.claims=uid,tenant_id
+```
+

@@ -246,6 +246,15 @@
       <groupId>it.pagopa.selfcare</groupId>
       <artifactId>selfcare-sdk-security</artifactId>
       <version>${security-sdk.version}</version>
+      <exclusions>
+        <!-- document-ms is not tenant-aware yet: only LoggingContextFilter is used from this SDK.
+             The tenant-aware beans depending on selfcare-sdk-tenant are disabled through
+             quarkus.arc.exclude-types in application.properties. -->
+        <exclusion>
+          <groupId>it.pagopa.selfcare</groupId>
+          <artifactId>selfcare-sdk-tenant</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>it.pagopa.selfcare</groupId>

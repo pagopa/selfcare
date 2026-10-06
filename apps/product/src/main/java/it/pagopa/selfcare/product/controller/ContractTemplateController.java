@@ -17,6 +17,7 @@ import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.util.Optional;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -32,13 +33,15 @@ import org.owasp.encoder.Encode;
 public class ContractTemplateController {
 
   private final ContractTemplateService contractTemplateService;
+  private final EffectiveTenant effectiveTenant;
 
-  public ContractTemplateController(ContractTemplateService contractTemplateService) {
+  public ContractTemplateController(
+      ContractTemplateService contractTemplateService, EffectiveTenant effectiveTenant) {
     this.contractTemplateService = contractTemplateService;
+    this.effectiveTenant = effectiveTenant;
   }
 
   @POST
-  @Path("/{tenantId}")
   @Consumes(MediaType.MULTIPART_FORM_DATA)
   @Produces(MediaType.APPLICATION_JSON)
   @Tag(name = "ContractTemplate")
@@ -80,7 +83,9 @@ public class ContractTemplateController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> upload(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @QueryParam("productId") @NotNull String productId,
       @QueryParam("name")
           @NotNull
@@ -102,6 +107,7 @@ public class ContractTemplateController {
               value = {AllowedFileTypes.HTML},
               message = "Only static HTML files without images are allowed")
           FileUpload file) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return contractTemplateService
         .upload(
             ContractTemplateUploadRequest.builder()
@@ -118,7 +124,7 @@ public class ContractTemplateController {
   }
 
   @GET
-  @Path("/{tenantId}/{contractTemplateId}")
+  @Path("/{contractTemplateId}")
   @Tag(name = "ContractTemplate")
   @Tag(name = "external-v2")
   @Operation(
@@ -157,13 +163,16 @@ public class ContractTemplateController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> download(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @QueryParam("productId") String productId,
       @QueryParam("fileType") @DefaultValue("HTML") String fileType,
       @PathParam("contractTemplateId") String contractTemplateId) {
     productId = Optional.ofNullable(productId).map(Encode::forJava).orElse(null);
     fileType = Optional.ofNullable(fileType).map(Encode::forJava).orElse(null);
     contractTemplateId = Optional.ofNullable(contractTemplateId).map(Encode::forJava).orElse(null);
+    tenantId = effectiveTenant.resolve(tenantId);
     return contractTemplateService
         .download(tenantId, productId, contractTemplateId, ContractTemplateFileType.from(fileType))
         .onItem()
@@ -171,7 +180,6 @@ public class ContractTemplateController {
   }
 
   @GET
-  @Path("/{tenantId}")
   @Produces(MediaType.APPLICATION_JSON)
   @Tag(name = "ContractTemplate")
   @Tag(name = "external-v2")
@@ -204,10 +212,13 @@ public class ContractTemplateController {
                     schema = @Schema(implementation = Problem.class)))
       })
   public Uni<Response> list(
-      @PathParam("tenantId") String tenantId,
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
       @QueryParam("productId") String productId,
       @QueryParam("name") String name,
       @QueryParam("version") String version) {
+    tenantId = effectiveTenant.resolve(tenantId);
     return contractTemplateService
         .list(tenantId, productId, name, version)
         .onItem()
