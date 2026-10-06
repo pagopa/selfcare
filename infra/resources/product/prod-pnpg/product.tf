@@ -106,10 +106,6 @@ locals {
       value = "PNPG"
     },
     {
-      name  = "TENANT_STORAGE_MANDATORY_KEYS"
-      value = ""
-    },
-    {
       name  = "TENANT_REGISTRY_JSON"
       value = "{\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcProduct\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"}}}"
     },
