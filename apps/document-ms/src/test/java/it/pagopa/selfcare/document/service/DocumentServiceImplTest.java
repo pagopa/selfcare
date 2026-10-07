@@ -70,7 +70,7 @@ class DocumentServiceImplTest {
     @Test
     void getDocumentById_shouldReturnDocument() {
         Document doc = buildDocument();
-        when(documentRepository.findById(anyString()))
+        when(documentRepository.findDocumentById(anyString()))
                 .thenReturn(Uni.createFrom().item(doc));
 
         Document result = documentService.getDocumentById(DOCUMENT_ID)
@@ -82,7 +82,7 @@ class DocumentServiceImplTest {
 
     @Test
     void getDocumentById_shouldThrowResourceNotFoundWhenDocumentIsNull() {
-        when(documentRepository.findById(anyString()))
+        when(documentRepository.findDocumentById(anyString()))
                 .thenReturn(Uni.createFrom().nullItem());
 
         var awaiter = documentService.getDocumentById(DOCUMENT_ID).await();
