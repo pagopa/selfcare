@@ -81,7 +81,7 @@ public class ProductServiceImpl implements ProductService {
     public List<Product> getProducts(boolean rootOnly) {
         log.trace("getProducts start");
         List<Product> result = productMsConnector.getProducts(rootOnly).stream()
-                .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()) && product.isEnabled())
+                .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()))
                 .toList();
         log.debug("getProducts size = {}", result.size());
         log.trace("getProducts end");

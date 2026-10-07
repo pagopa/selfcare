@@ -57,6 +57,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-selfcare-uid",
+            "in": "header",
+            "description": "Identifier of the user requesting the operation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -94,6 +103,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "x-selfcare-uid",
+            "in": "header",
+            "description": "Identifier of the user requesting the operation",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -127,6 +145,15 @@
             "name": "queueEvent",
             "in": "query",
             "description": "Queue event type to process (ADD/UPDATE)",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-selfcare-uid",
+            "in": "header",
+            "description": "Identifier of the user requesting the operation",
             "required": false,
             "schema": {
               "type": "string"
