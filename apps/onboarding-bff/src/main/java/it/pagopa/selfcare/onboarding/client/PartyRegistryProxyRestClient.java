@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.client;
 
+import it.pagopa.selfcare.onboarding.client.transport.ReplayOnConnectionDrop;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.ws.rs.*;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
@@ -8,6 +9,7 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @RegisterRestClient(configKey = "party_registry_proxy")
+@ReplayOnConnectionDrop
 @RegisterClientHeaders(it.pagopa.selfcare.onboarding.security.AuthenticationPropagationHeadersFactory.class)
 public interface PartyRegistryProxyRestClient {
 

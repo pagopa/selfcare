@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.client;
 
+import it.pagopa.selfcare.onboarding.client.transport.ReplayOnConnectionDrop;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.ws.rs.*;
@@ -13,6 +14,7 @@ import java.util.List;
 import static jakarta.ws.rs.core.MediaType.APPLICATION_JSON;
 
 @RegisterRestClient(configKey = "party_process")
+@ReplayOnConnectionDrop
 @RegisterClientHeaders(it.pagopa.selfcare.onboarding.security.AuthenticationPropagationHeadersFactory.class)
 public interface PartyProcessRestClient extends OnboardingApi {
 

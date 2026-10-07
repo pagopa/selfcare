@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.client;
 
+import it.pagopa.selfcare.onboarding.client.transport.ReplayOnConnectionDrop;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -14,6 +15,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RegisterRestClient(configKey = "user_registry_json")
+@ReplayOnConnectionDrop
 @ClientHeaderParam(name = "x-api-key", value = "${rest-client.user-registry.api-key}")
 public interface UserRegistryRestClient extends UserApi {
 
