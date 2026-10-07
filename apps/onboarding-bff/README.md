@@ -54,24 +54,25 @@ Everything is configured through environment variables, read from `src/main/reso
 
 #### Downstream services
 
-In the `prod` profile the URLs set by the infrastructure in every environment are mandatory: the application fails to
-start listing the missing ones, instead of routing the calls to its own `localhost` default.
+As in the Spring BFF, every URL has a default in every profile, `prod` included: a missing variable does not stop
+the startup, the calls go to the default. The infrastructure sets the URLs in every environment (the PNPG environments
+do not set `MS_DOCUMENT_URL`).
 
-| **Environment variable** | **Downstream** | **Default (not `prod`)** | **Required in `prod`** |
-|--------------------------|----------------|--------------------------|:----------------------:|
-|MS_ONBOARDING_URL|onboarding-ms|http://localhost:8085| yes |
-|MS_USER_URL|user-ms|http://localhost:8080| yes |
-|MS_USER_INSTITUTION_URL|user-ms, institution API|http://localhost:8080| yes |
-|MS_PRODUCT_URL|product-ms|http://localhost:8080| yes |
-|MS_CORE_URL|institution-ms|http://10.1.1.250:80/ms-core/v1| yes |
-|MS_IAM_URL|iam|http://localhost:8080| yes |
-|MS_DOCUMENT_URL|document-ms|http://localhost:8080| no (the PNPG environments do not set it) |
-|USERVICE_PARTY_PROCESS_URL|party process|http://localhost:8080/pdnd-interop-uservice-party-process/0.0.1| yes |
-|USERVICE_PARTY_REGISTRY_PROXY_URL|party registry proxy|http://localhost:8080/external/ur/v1| yes |
-|USERVICE_USER_REGISTRY_URL|user registry|http://localhost:8080/pdnd-interop-uservice-user-registry/0.0.1| yes |
-|ONBOARDING_FUNCTIONS_URL|onboarding functions|https://localhost:8080| yes |
-|USERVICE_USER_REGISTRY_API_KEY (alias `USER-REGISTRY-API-KEY`)|user registry key|api-key| no |
-|ONBOARDING-FUNCTIONS-API-KEY|onboarding functions key|example-api-key| no |
+| **Environment variable** | **Downstream** | **Default** |
+|--------------------------|----------------|-------------|
+|MS_ONBOARDING_URL|onboarding-ms|http://localhost:8085|
+|MS_USER_URL|user-ms|http://localhost:8080|
+|MS_USER_INSTITUTION_URL|user-ms, institution API|http://localhost:8080|
+|MS_PRODUCT_URL|product-ms|http://localhost:8080|
+|MS_CORE_URL|institution-ms|http://10.1.1.250:80/ms-core/v1|
+|MS_IAM_URL|iam|http://localhost:8080|
+|MS_DOCUMENT_URL|document-ms|http://localhost:8080|
+|USERVICE_PARTY_PROCESS_URL|party process|http://localhost:8080/pdnd-interop-uservice-party-process/0.0.1|
+|USERVICE_PARTY_REGISTRY_PROXY_URL|party registry proxy|http://localhost:8080/external/ur/v1|
+|USERVICE_USER_REGISTRY_URL|user registry|http://localhost:8080/pdnd-interop-uservice-user-registry/0.0.1|
+|ONBOARDING_FUNCTIONS_URL|onboarding functions|https://localhost:8080|
+|USERVICE_USER_REGISTRY_API_KEY (alias `USER-REGISTRY-API-KEY`)|user registry key|api-key|
+|ONBOARDING-FUNCTIONS-API-KEY|onboarding functions key|example-api-key|
 
 #### REST client timeouts (milliseconds)
 
