@@ -172,7 +172,7 @@ Feature: Otp
     Then The status code is 500
     And The response body contains:
       | status | 500                     |
-      | detail | Cannot get User from PDVit.pagopa.selfcare.auth.exception.ResourceNotFoundException: Not Found:Received: 'Not Found, status code 404' when invoking REST Client method: 'org.openapi.quarkus.user_registry_json.api.UserApi#findByIdUsingGET' |
+      | detail | Cannot get User from PDV |
 
 
   Scenario: Unsuccessfully get user info email on External Internal API
@@ -188,7 +188,7 @@ Feature: Otp
     Then The status code is 500
     And The response body contains:
       | status | 500                     |
-      | detail | Cannot get User Info Email on External Internal APIs:it.pagopa.selfcare.auth.exception.InternalException: Internal server error:Received: 'Internal Server Error, status code 500' when invoking REST Client method: 'org.openapi.quarkus.internal_json.api.UserApi#getUserOtpEmailInfo' |
+      | detail | Cannot get User Info Email |
 
   @RemoveOtpFlow
   Scenario: Successfully resend otp flow
@@ -211,7 +211,11 @@ Feature: Otp
 
     ######################## BEGIN GET /otp/mail-info #########################
 
+  @NoOtpFlows
   Scenario: Successfully get otp mail info
+    Given The following OTP flows exist:
+      | uuid                                 | userId                               | status  | attempts | mailRequestId                         |
+      | 7a3c5e8b-1d42-4f21-9f21-8b6a4c2e5d13 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | PENDING | 0        | f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e |
     Given User login with username "r.balboa" and password "test"
     When I send a GET request to "otp/mail-info/f1a8d4c3-5b72-4a6d-98ef-2d2fd7d53c4e"
     Then The status code is 200
@@ -226,15 +230,20 @@ Feature: Otp
       | history[1].status | Dispatched |
       | history[2].status | Queued     |
 
+  @NoOtpFlows
   Scenario: Mail info not found
     Given User login with username "r.balboa" and password "test"
     When I send a GET request to "otp/mail-info/not-found-request-id"
     Then The status code is 404
     And The response body contains:
       | status | 404                                                        |
-      | detail | Mail status not found for requestId not-found-request-id   |
+      | detail | Cannot find OtpFlow |
 
+  @NoOtpFlows
   Scenario: OneMail internal server error retrieving mail info
+    Given The following OTP flows exist:
+      | uuid                                 | userId                               | status  | attempts | mailRequestId               |
+      | 7a3c5e8b-1d42-4f21-9f21-8b6a4c2e5d14 | 97a511a7-2acc-47b9-afed-2f3c65753b4a | PENDING | 0        | internal-error-request-id |
     Given User login with username "r.balboa" and password "test"
     When I send a GET request to "otp/mail-info/internal-error-request-id"
     Then The status code is 500

@@ -190,7 +190,7 @@ public class OidcServiceTest {
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
-        .assertFailedWith(Exception.class, exceptionDesc);
+        .assertFailedWith(InternalException.class, "Cannot patch user on Personal Data Vault");
   }
 
   @Test
@@ -215,7 +215,7 @@ public class OidcServiceTest {
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
-        .assertFailedWith(Exception.class, exceptionDesc);
+        .assertFailedWith(InternalException.class, "Cannot Handle OTP Flow");
   }
 
   @Test
@@ -240,6 +240,6 @@ public class OidcServiceTest {
         .subscribe()
         .withSubscriber(UniAssertSubscriber.create())
         .assertFailed()
-        .assertFailedWith(Exception.class, exceptionDesc);
+        .assertFailedWith(InternalException.class, "Cannot generate session token");
   }
 }

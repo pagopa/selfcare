@@ -5,6 +5,10 @@ the shared tenant registry, tenant propagation, the Cosmos DB discriminator roll
 tooling. Step 2 completes the runtime routing to shared or dedicated resources and defines the gates that
 must be satisfied before a single backend deployment can safely serve both tenants.
 
+For the `auth` microservice, including OneIdentity credentials and the tenant-specific User Registry API
+key, see [the ordered implementation activities](Auth_implementation.md). The document distinguishes the
+existing AR-only authentication flows from the shared-deployment resource-routing work.
+
 The current tenants are:
 
 - `AR`: `selfcare.pagopa.it`
@@ -16,8 +20,8 @@ The following decisions are already established and are not reopened by this ste
 
 - Incoming requests use the tenant already validated by the Step 0 header/JWT reconciliation and exposed
   through `TenantContext`; data-access components MUST NOT derive the tenant again from raw request data.
-- Tenant-scoped Cosmos DB entities use a `tenantId` discriminator. `product` uses
-  a tenant path variable and persists `tenantId` on product and contract-template
+- Tenant-scoped Cosmos DB entities use a `tenantId` discriminator. `product` takes
+  an optional `tenantId` query parameter and persists `tenantId` on product and contract-template
   documents; the IAM role catalogue remains global because it contains shared
   platform configuration rather than tenant-owned data.
 - Product-driven dedicated database routing in `onboarding-ms` is an independent isolation dimension. A

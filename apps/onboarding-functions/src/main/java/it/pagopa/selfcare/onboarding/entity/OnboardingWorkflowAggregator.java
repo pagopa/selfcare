@@ -4,7 +4,9 @@ import it.pagopa.selfcare.onboarding.common.DocumentType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePathConfig;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import it.pagopa.selfcare.onboarding.utils.InstitutionUtils;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 public class OnboardingWorkflowAggregator extends OnboardingWorkflow {
 
@@ -38,17 +40,15 @@ public class OnboardingWorkflowAggregator extends OnboardingWorkflow {
   }
 
   @Override
-  public String getContractTemplatePath(Product product) {
-    return product
-        .getInstitutionAggregatorContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getContractTemplatePath();
+  public String getContractTemplatePath(ProductResponse product) {
+    return ProductConfigUtils.contractTemplate(product, OnboardingType.INSTITUTION_AGGREGATOR,
+        InstitutionUtils.getCurrentInstitutionType(onboarding)).map(config -> config.getPath()).orElse(null);
   }
 
   @Override
-  public String getContractTemplateVersion(Product product) {
-    return product
-        .getInstitutionAggregatorContractTemplate(InstitutionUtils.getCurrentInstitutionType(onboarding))
-        .getContractTemplateVersion();
+  public String getContractTemplateVersion(ProductResponse product) {
+    return ProductConfigUtils.contractTemplate(product, OnboardingType.INSTITUTION_AGGREGATOR,
+        InstitutionUtils.getCurrentInstitutionType(onboarding)).map(config -> config.getVersion()).orElse(null);
   }
 
   @Override

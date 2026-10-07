@@ -6,7 +6,7 @@ import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -61,7 +61,7 @@ class RegistryManagerSELCTest {
         when(onboarding.getWorkflowType()).thenReturn(workflowType);
 
         // when
-        Uni<Onboarding> result = registryManagerSELC.customValidation(mock(Product.class));
+        Uni<Onboarding> result = registryManagerSELC.customValidation(mock(ProductResponse.class));
 
         // then
         assertEquals(onboarding, result.await().indefinitely());
@@ -119,7 +119,7 @@ class RegistryManagerSELCTest {
         when(onboarding.getWorkflowType()).thenReturn(WorkflowType.CONTRACT_REGISTRATION);
 
         // when
-        Uni<Onboarding> result = registryManagerSELC.customValidation(mock(Product.class));
+        Uni<Onboarding> result = registryManagerSELC.customValidation(mock(ProductResponse.class));
 
         // then
         assertThrows(InvalidRequestException.class, () -> result.await().indefinitely());

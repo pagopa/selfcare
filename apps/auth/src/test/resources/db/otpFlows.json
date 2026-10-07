@@ -10,6 +10,7 @@
     "expiresAt": {
       "$date": "2025-07-25T07:48:41.170Z"
     },
+    "tenantId": "AR",
     "otp": "d39c88f0354eb91cea46d036fd2ac9d5",
     "status": "PENDING",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7ccc",
@@ -26,6 +27,7 @@
     "expiresAt": {
       "$date": "2025-07-25T07:48:41.170Z"
     },
+    "tenantId": "AR",
     "otp": "d39c88f0354eb91cea46d036fd2ac7g4",
     "status": "PENDING",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b784c",
@@ -42,6 +44,7 @@
     "expiresAt": {
       "$date": "2025-07-25T07:48:41.170Z"
     },
+    "tenantId": "AR",
     "otp": "d39c88f0354eb91cea46d036fd2ac6d6",
     "status": "PENDING",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7321",
@@ -58,6 +61,7 @@
     "expiresAt": {
       "$date": "2025-07-25T07:48:41.170Z"
     },
+    "tenantId": "AR",
     "otp": "e10adc3949ba59abbe56e057f20f883e",
     "status": "PENDING",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6b4bfa",
@@ -74,6 +78,7 @@
     "expiresAt": {
       "$date": "2025-07-25T07:48:41.170Z"
     },
+    "tenantId": "AR",
     "otp": "e10adc3949ba59abbe56e057f20f883e",
     "status": "PENDING",
     "userId": "35a78332-d038-4bfa-8e85-2cba7f6c3fa",

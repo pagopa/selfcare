@@ -2,14 +2,15 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.controller.request.OnboardingImportContract;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.service.util.ProductConfigUtils;
 import it.pagopa.selfcare.onboarding.util.InstitutionUtils;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapi.quarkus.document_json.model.OnboardingDocumentRequest;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 @Mapper(componentModel = "cdi")
 public interface OnboardingDocumentMapper {
@@ -23,20 +24,20 @@ public interface OnboardingDocumentMapper {
     @Mapping(target = "productId", source = "onboarding.productId")
     OnboardingDocumentRequest toRequest(
             Onboarding onboarding,
-            Product product,
+            ProductResponse product,
             OnboardingImportContract contractImported
     );
 
-    default String getContractTemplatePath(Onboarding onboarding, Product product) {
-        ContractTemplate contractTemplate = product.getInstitutionContractTemplate(
+    default String getContractTemplatePath(Onboarding onboarding, ProductResponse product) {
+        ContractTemplateConfig contractTemplate = ProductConfigUtils.institutionContractTemplate(product,
                 InstitutionUtils.getCurrentInstitutionType(onboarding));
-        return contractTemplate.getContractTemplatePath();
+        return contractTemplate.getPath();
     }
 
-    default String getContractTemplateVersion(Onboarding onboarding, Product product) {
-        ContractTemplate contractTemplate = product.getInstitutionContractTemplate(
+    default String getContractTemplateVersion(Onboarding onboarding, ProductResponse product) {
+        ContractTemplateConfig contractTemplate = ProductConfigUtils.institutionContractTemplate(product,
                 InstitutionUtils.getCurrentInstitutionType(onboarding));
-        return contractTemplate.getContractTemplateVersion();
+        return contractTemplate.getVersion();
     }
 
     default LocalDateTime toLocalDateTime(OnboardingImportContract contractImported) {

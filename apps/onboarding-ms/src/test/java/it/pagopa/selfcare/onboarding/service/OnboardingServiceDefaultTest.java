@@ -45,8 +45,6 @@ import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.service.impl.OnboardingServiceDefault;
 import it.pagopa.selfcare.onboarding.service.profile.OnboardingTestProfile;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
-import it.pagopa.selfcare.product.entity.*;
-import it.pagopa.selfcare.product.exception.ProductNotFoundException;
 import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
@@ -69,6 +67,11 @@ import org.openapi.quarkus.core_json.api.OnboardingApi;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
+import org.openapi.quarkus.product_json.model.BackOfficeRole;
+import org.openapi.quarkus.product_json.model.Features;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.RoleMapping;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 import org.openapi.quarkus.party_registry_proxy_json.api.*;
 import org.openapi.quarkus.party_registry_proxy_json.model.*;
@@ -101,9 +104,6 @@ class OnboardingServiceDefaultTest {
     @InjectMock
     @RestClient
     InsuranceCompaniesApi insuranceCompaniesApi;
-
-    @InjectMock
-    it.pagopa.selfcare.product.service.ProductService productAzureService;
 
     @InjectMock
     ProductService productService;
@@ -241,16 +241,26 @@ class OnboardingServiceDefaultTest {
         when(tenantContext.getTenantId()).thenReturn("AR");
         when(tenantContext.isInitialized()).thenReturn(true);
         when(productService.getWorkflowType(any(), any(), any()))
-                .thenAnswer(invocation -> {
-                    org.openapi.quarkus.product_json.model.Origin origin = invocation.getArgument(1);
-                    WorkflowTypeResponse response = new WorkflowTypeResponse();
-                    if (origin == org.openapi.quarkus.product_json.model.Origin.SELC) {
-                        response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE);
-                    } else {
-                        response.setWorkflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION);
-                    }
-                    return Uni.createFrom().item(response);
-                });
+                .thenReturn(Uni.createFrom().item(new WorkflowTypeResponse()
+                        .workflowType(org.openapi.quarkus.product_json.model.WorkflowType.CONTRACT_REGISTRATION)));
+        when(productService.getWorkflowType(any(), eq(org.openapi.quarkus.product_json.model.Origin.SELC), any()))
+                .thenReturn(Uni.createFrom().item(new WorkflowTypeResponse()
+                        .workflowType(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE)));
+        when(productService.getWorkflowType(any(), any(), any(), nullable(String.class)))
+                .thenAnswer(invocation -> productService.getWorkflowType(
+                        invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2)));
+        when(productService.getValidProduct(anyString(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getValidProduct(invocation.getArgument(0)));
+        when(productService.getProduct(anyString(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getProduct(invocation.getArgument(0)));
+        when(productService.getProductExpirationDays(anyString(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getProductExpirationDays(invocation.getArgument(0)));
+        when(productService.isRequiredDocuments(any(), any(), any(), nullable(String.class))).thenAnswer(invocation ->
+                productService.isRequiredDocuments(invocation.getArgument(0), invocation.getArgument(1),
+                        invocation.getArgument(2)));
+        when(productService.getRequiredDocuments(any(), any(), any(), nullable(String.class))).thenAnswer(invocation ->
+                productService.getRequiredDocuments(invocation.getArgument(0), invocation.getArgument(1),
+                        invocation.getArgument(2)));
     }
 
     @Test
@@ -260,13 +270,22 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingRequest.setProductId(PROD_IO.getValue());
 
-        Product productResource = new Product();
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboardingRequest.getProductId()))
-                .thenReturn(productResource) // Prima chiamata: ritorna un valore valido
-                .thenThrow(new IllegalArgumentException()) // Seconda chiamata: lancia un'eccezione
-        );
+        ProductResponse product = createDummyProduct(onboardingRequest.getProductId(), false, false, true);
+        asserter.execute(() -> when(productService.getProductExpirationDays(onboardingRequest.getProductId()))
+                .thenReturn(Uni.createFrom().item(30)));
+        // Workflow resolution succeeds; the subsequent onboarding validation lookup fails.
+        asserter.execute(() -> {
+            doReturn(Uni.createFrom().item(product),
+                    Uni.createFrom().failure(new IllegalArgumentException()))
+                    .when(productService).getValidProduct(
+                            onboardingRequest.getProductId(), onboardingRequest.getTenantId());
+        });
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null), OnboardingNotAllowedException.class);
+        asserter.execute(() -> {
+            verify(productService, times(2)).getValidProduct(
+                    onboardingRequest.getProductId(), onboardingRequest.getTenantId());
+        });
     }
 
 
@@ -277,13 +296,22 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingRequest.setProductId(PROD_IO.getValue());
 
-        Product productResource = new Product();
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboardingRequest.getProductId()))
-                .thenReturn(productResource) // Prima chiamata: ritorna un valore valido
-                .thenThrow(new ProductNotFoundException()) // Seconda chiamata: lancia un'eccezione
-        );
+        ProductResponse product = createDummyProduct(onboardingRequest.getProductId(), false, false, true);
+        asserter.execute(() -> when(productService.getProductExpirationDays(onboardingRequest.getProductId()))
+                .thenReturn(Uni.createFrom().item(30)));
+        // Workflow resolution succeeds; the subsequent onboarding validation lookup fails.
+        asserter.execute(() -> {
+            doReturn(Uni.createFrom().item(product),
+                    Uni.createFrom().failure(new ResourceNotFoundException("Product not found")))
+                    .when(productService).getValidProduct(
+                            onboardingRequest.getProductId(), onboardingRequest.getTenantId());
+        });
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null), OnboardingNotAllowedException.class);
+        asserter.execute(() -> {
+            verify(productService, times(2)).getValidProduct(
+                    onboardingRequest.getProductId(), onboardingRequest.getTenantId());
+        });
     }
 
     @Test
@@ -298,7 +326,6 @@ class OnboardingServiceDefaultTest {
         onboardingRequest.setInstitution(institutionBaseRequest);
 
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), false, asserter, false, true);
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         mockVerifyOnboardingNotEmpty(asserter);
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(onboardingRequest, users, null, null), ResourceConflictException.class);
@@ -342,7 +369,6 @@ class OnboardingServiceDefaultTest {
         aggregateInstitutionRequest.setTaxCode("taxCode");
 
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), false, asserter, false, true);
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         mockVerifyOnboardingNotEmpty(asserter);
 
         InstitutionResource institutionResource = new InstitutionResource();
@@ -439,7 +465,6 @@ class OnboardingServiceDefaultTest {
         aggregateInstitutionRequest.setTaxCode("taxCode");
 
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), false, asserter, false, true);
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         mockVerifyOnboardingNotFound();
 
         UOResource uoResource = new UOResource();
@@ -490,10 +515,9 @@ class OnboardingServiceDefaultTest {
         institutionBaseRequest.setInstitutionType(InstitutionType.PT);
         onboardingRequest.setInstitution(institutionBaseRequest);
 
-        Product productResource = new Product();
-        productResource.setDelegable(Boolean.FALSE);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboardingRequest.getProductId()))
-                .thenReturn(productResource));
+        ProductResponse productResource = new ProductResponse().productId(onboardingRequest.getProductId())
+                .features(new Features().enabled(false).delegable(false)).roleMappings(List.of());
+        asserter.execute(() -> stubProduct(productResource));
 
         mockVerifyOnboardingNotFound();
 
@@ -508,10 +532,9 @@ class OnboardingServiceDefaultTest {
         onboardingRequest.setProductId("prod-pn");
         onboardingRequest.getInstitution().setInstitutionType(InstitutionType.PG);
 
-        Product productResource = new Product();
-        productResource.setRoleMappings(new HashMap<>());
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboardingRequest.getProductId()))
-                .thenReturn(productResource));
+        ProductResponse productResource = new ProductResponse().productId(onboardingRequest.getProductId())
+                .features(new Features().enabled(false)).roleMappings(List.of());
+        asserter.execute(() -> stubProduct(productResource));
 
         mockVerifyOnboardingNotFound();
         mockPersistOnboarding(asserter);
@@ -529,13 +552,13 @@ class OnboardingServiceDefaultTest {
         List<UserRequest> users = List.of(manager);
         onboardingRequest.setProductId(PROD_IO.getValue());
 
-        Product productResource = new Product();
-        Product productParent = new Product();
-        productParent.setRoleMappings(new HashMap<>());
-        productResource.setParent(productParent);
-
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboardingRequest.getProductId()))
-                .thenReturn(productResource));
+        ProductResponse productResource = createDummyProduct(onboardingRequest.getProductId(), true, false, true);
+        ProductResponse productParent = new ProductResponse().productId(productResource.getParentId())
+                .features(new Features().enabled(false)).roleMappings(List.of());
+        asserter.execute(() -> {
+            stubProduct(productResource);
+            stubProduct(productParent);
+        });
 
         mockVerifyOnboardingNotFound();
         mockPersistOnboarding(asserter);
@@ -576,7 +599,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleProductValidAssert(onboardingDefaultRequest.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
         mockPersistOnboarding(asserter);
-        mockVerifyAllowedProductList(onboardingDefaultRequest.getProductId(), asserter, true);
 
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
@@ -620,7 +642,6 @@ class OnboardingServiceDefaultTest {
         request.setUserRequester(userRequester);
 
         mockPersistOnboarding(asserter);
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -666,7 +687,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         AOOResource aooResource = new AOOResource();
         aooResource.setDenominazioneEnte("TEST");
@@ -700,7 +720,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         AOOResource aooResource = new AOOResource();
         aooResource.setDenominazioneEnte("TEST");
@@ -758,7 +777,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         UOResource uoResource = new UOResource();
         uoResource.setDenominazioneEnte("TEST");
@@ -794,7 +812,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         ResourceNotFoundException resourceNotFoundException = new ResourceNotFoundException("Resource not found");
 
@@ -828,7 +845,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         WebApplicationException exception = mock(WebApplicationException.class);
         Response response = mock(Response.class);
@@ -872,7 +888,6 @@ class OnboardingServiceDefaultTest {
         request.setBilling(billing);
 
         mockPersistOnboarding(asserter);
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -935,7 +950,6 @@ class OnboardingServiceDefaultTest {
         request.setBilling(billing);
 
         mockPersistOnboarding(asserter);
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -981,7 +995,6 @@ class OnboardingServiceDefaultTest {
         request.setBilling(billing);
 
         mockPersistOnboarding(asserter);
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -1061,7 +1074,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -1123,9 +1135,7 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
-        mockAllowedProductByInstitutionTaxCodeList(asserter, false);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), Assertions::assertNotNull);
 
@@ -1180,7 +1190,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), Assertions::assertNotNull);
 
@@ -1229,7 +1238,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         // onboardingCompletion will set the workflowType to CONFIRMATION, which is allowed for GSP
         asserter.assertThat(() -> onboardingService.onboardingCompletion(request, users, userRequesterDto), Assertions::assertNotNull);
@@ -1263,7 +1271,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null), InvalidRequestException.class);
 
@@ -1297,7 +1304,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null), InvalidRequestException.class);
 
@@ -1332,7 +1338,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, users, null, null), ResourceNotFoundException.class);
 
@@ -1388,7 +1393,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIPA");
@@ -1469,7 +1473,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         UOResource uoResource = new UOResource();
         uoResource.setCodiceIpa("codiceIPA");
@@ -1519,7 +1522,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
 
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
@@ -1538,52 +1540,48 @@ class OnboardingServiceDefaultTest {
     }
 
 
-    Product mockSimpleProductValidAssert(String productId, boolean hasParent, UniAsserter asserter, boolean allowIndividualOnboarding, boolean allowCompanyOnboarding) {
-        Product productResource = createDummyProduct(productId, hasParent, allowIndividualOnboarding, allowCompanyOnboarding);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(productId))
-                .thenReturn(productResource));
+    ProductResponse mockSimpleProductValidAssert(String productId, boolean hasParent, UniAsserter asserter, boolean allowIndividualOnboarding, boolean allowCompanyOnboarding) {
+        ProductResponse productResource = createDummyProduct(productId, hasParent, allowIndividualOnboarding, allowCompanyOnboarding);
+        asserter.execute(() -> {
+            if (hasParent) {
+                stubProduct(new ProductResponse().productId(productResource.getParentId())
+                        .features(new Features().enabled(true))
+                        .roleMappings(List.of(onboardingRole(PartyRole.MANAGER, PRODUCT_ROLE_ADMIN_CODE))));
+            }
+            stubProduct(productResource);
+        });
         return productResource;
     }
 
-    ProductRoleInfo dummyProductRoleInfo(String productRolCode) {
-        ProductRole productRole = new ProductRole();
-        productRole.setCode(productRolCode);
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setRoles(List.of(productRole));
-        productRoleInfo.setPhasesAdditionAllowed(List.of(PHASE_ADDITION_ALLOWED.ONBOARDING.value));
-        return productRoleInfo;
+    private void stubProduct(ProductResponse product) {
+        when(productService.getValidProduct(product.getProductId())).thenReturn(Uni.createFrom().item(product));
+        when(productService.getProduct(product.getProductId())).thenReturn(Uni.createFrom().item(product));
+        when(productService.getProductExpirationDays(product.getProductId())).thenReturn(Uni.createFrom().item(30));
     }
 
-    Product createDummyProduct(String productId, boolean hasParent,
-                               boolean allowIndividualOnboarding,
-                               boolean allowCompanyOnboarding) {
-        Map<PartyRole, ProductRoleInfo> roleMappingByInstitutionType = new HashMap<>();
-        roleMappingByInstitutionType.put(manager.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_PSP_CODE));
+    private RoleMapping onboardingRole(PartyRole role, String backOfficeRole) {
+        return new RoleMapping().role(role.name()).phasesAdditionAllowed(List.of("onboarding"))
+                .backOfficeRoles(List.of(new BackOfficeRole().code(backOfficeRole)));
+    }
 
-        Product productResource = new Product();
-        productResource.setId(productId);
-        Map<PartyRole, ProductRoleInfo> roleMappings = new HashMap<>();
-        roleMappings.put(manager.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_CODE));
-        roleMappings.put(delegate1.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_CODE));
-        productResource.setRoleMappings(roleMappings);
-        productResource.setRoleMappingsByInstitutionType(Map.of(PSP.name(), roleMappingByInstitutionType));
-        productResource.setTitle("title");
-        productResource.setAllowIndividualOnboarding(allowIndividualOnboarding);
-        productResource.setAllowCompanyOnboarding(allowCompanyOnboarding);
-        productResource.setEnabled(true);
+    ProductResponse createDummyProduct(String productId, boolean hasParent,
+                                      boolean allowIndividualOnboarding,
+                                      boolean allowCompanyOnboarding) {
+        ProductResponse productResource = new ProductResponse().productId(productId).title("title")
+                .features(new Features().allowIndividualOnboarding(allowIndividualOnboarding)
+                        .allowCompanyOnboarding(allowCompanyOnboarding).enabled(true).delegable(false))
+                .roleMappings(List.of(
+                        onboardingRole(PartyRole.MANAGER, PRODUCT_ROLE_ADMIN_CODE),
+                        onboardingRole(PartyRole.DELEGATE, PRODUCT_ROLE_ADMIN_CODE),
+                        onboardingRole(PartyRole.MANAGER, PRODUCT_ROLE_ADMIN_PSP_CODE)
+                                .institutionType(org.openapi.quarkus.product_json.model.InstitutionType.PSP)));
 
         if (PROD_DASHBOARD_PSP.getValue().equals(productId)) {
-            List<String> institutionTypeList = new ArrayList<>();
-            institutionTypeList.add(PSP.name());
-            productResource.setInstitutionTypesAllowed(institutionTypeList);
+            productResource.setInstitutionTypesAllowed(List.of(PSP.name()));
         }
 
         if (hasParent) {
-            Product parent = new Product();
-            parent.setId("productParentId");
-            parent.setRoleMappings(Map.of(manager.getRole(), dummyProductRoleInfo(PRODUCT_ROLE_ADMIN_CODE)));
-            productResource.setParentId(parent.getId());
-            productResource.setParent(parent);
+            productResource.setParentId("productParentId");
         }
 
         return productResource;
@@ -1613,7 +1611,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(any(), any()))
                         .thenReturn(Uni.createFrom().item(managerResourceWk)));
@@ -1653,10 +1650,6 @@ class OnboardingServiceDefaultTest {
         mockPersistOnboarding(asserter);
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), true, asserter, false, true);
-
-        // mock verify allowed Map
-        asserter.execute(() ->
-            when(productAzureService.isProductEnabled(any())).thenReturn(true));
 
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
@@ -1711,10 +1704,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboardingRequest.getProductId(), true, asserter, false, true);
 
-        // mock verify allowed product
-        asserter.execute(() ->
-            when(productAzureService.isProductEnabled(anyString())).thenReturn(true));
-
         PanacheMock.mock(Onboarding.class);
         ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
 
@@ -1755,7 +1744,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(onboardingDefaultRequest.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingDefaultRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -1804,7 +1792,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
 
@@ -1873,7 +1860,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
 
@@ -1927,7 +1913,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
 
@@ -1994,7 +1979,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -2041,7 +2025,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboardingDefaultRequest.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingDefaultRequest.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.searchUsingPOST(any(), any()))
@@ -2112,7 +2095,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.assertThat(() -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2139,7 +2121,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.assertThat(() -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
                 Assertions::assertNotNull);
@@ -2184,13 +2165,12 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -2225,7 +2205,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> when(documentControllerApi.getDocumentByOnboardingId(any()))
                 .thenReturn(Uni.createFrom().nullItem()));
@@ -2252,7 +2231,6 @@ class OnboardingServiceDefaultTest {
         asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                 .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
         mockSimpleProductValidAssert(onboarding.getProductId(), true, asserter, false, true);
         mockVerifyOnboardingNotFound();
 
@@ -2272,15 +2250,13 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
         // Product with SigningConfiguration requiring 2 signatures
-        Product product = createDummyProduct(onboarding.getProductId(), false, false, true);
-        SigningConfiguration signingConfig = new SigningConfiguration();
+        ProductResponse product = createDummyProduct(onboarding.getProductId(), false, false, true);
+        SigningConfiguration signingConfig = new SigningConfiguration().skipSignerIdentityCheck(false);
         signingConfig.setRequiredSignatures(2);
         product.setSigningConfiguration(signingConfig);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboarding.getProductId()))
-                .thenReturn(product));
+        asserter.execute(() -> stubProduct(product));
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         // Mock find manager user fiscal code
         String actualUserUid = onboarding.getUsers().get(0).getId();
@@ -2313,21 +2289,19 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
         // Product with SigningConfiguration requiring 2 signatures
-        Product product = createDummyProduct(onboarding.getProductId(), false, false, true);
-        SigningConfiguration signingConfig = new SigningConfiguration();
+        ProductResponse product = createDummyProduct(onboarding.getProductId(), false, false, true);
+        SigningConfiguration signingConfig = new SigningConfiguration().skipSignerIdentityCheck(false);
         signingConfig.setRequiredSignatures(2);
         product.setSigningConfiguration(signingConfig);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(onboarding.getProductId()))
-                .thenReturn(product));
+        asserter.execute(() -> stubProduct(product));
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -2363,13 +2337,12 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         when(onboardingUtils.buildUploadSignedContractRequest(
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -2393,7 +2366,6 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         String actualUserUid = onboarding.getUsers().get(0).getId();
         UserResource actualUserResource = new UserResource();
@@ -2420,7 +2392,6 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.assertFailedWith(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 InvalidRequestException.class);
@@ -2436,8 +2407,8 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
 
-        asserter.execute(() ->
-            when(productAzureService.isProductEnabled(anyString())).thenReturn(false));
+        asserter.execute(() -> when(productService.getValidProduct(eq(onboarding.getProductId()), any()))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(Response.status(404).build()))));
 
         asserter.assertFailedWith(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 OnboardingNotAllowedException.class);
@@ -2452,7 +2423,6 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
 
         mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.assertFailedWith(() -> onboardingService.completeOnboardingUsers(onboarding.getId(), TEST_FORM_ITEM),
                 InvalidRequestException.class);
@@ -2784,6 +2754,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void approve() {
+        // given
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         ApproveRequest approveRequest = new ApproveRequest();
@@ -2794,25 +2765,25 @@ class OnboardingServiceDefaultTest {
 
         mockUpdateOnboarding(onboarding.getId(), 1L);
 
-        when(productAzureService.getProductIsValid(onboarding.getProductId()))
-                .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
+        stubProduct(createDummyProduct(onboarding.getProductId(), false, false, true));
 
         mockVerifyOnboardingNotFound();
 
-        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
-        when(productAzureService.isProductEnabled(onboarding.getProductId()))
-                .thenReturn(true);
-
+        // when
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
+        // then
         OnboardingGet actual = subscriber.awaitItem().getItem();
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
+        verify(orchestrationService)
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
     }
 
     @Test
@@ -2824,8 +2795,7 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.findByIdOptional(any()))
                 .thenReturn(Uni.createFrom().item(Optional.of(onboarding)));
 
-        when(productAzureService.getProductIsValid(onboarding.getProductId()))
-                .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
+        stubProduct(createDummyProduct(onboarding.getProductId(), false, false, true));
 
         onboardingService
                 .approve(onboarding.getId(), approveRequest)
@@ -2836,6 +2806,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void approveCompletion() {
+        // given
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         PanacheMock.mock(Onboarding.class);
@@ -2846,25 +2817,26 @@ class OnboardingServiceDefaultTest {
 
         mockUpdateOnboarding(onboarding.getId(), 1L);
 
-        when(productAzureService.getProductIsValid(onboarding.getProductId()))
-                .thenReturn(createDummyProduct(onboarding.getProductId(), false, false, true));
+        stubProduct(createDummyProduct(onboarding.getProductId(), false, false, true));
 
         mockVerifyOnboardingNotFound();
 
-        when(productAzureService.isProductEnabled(onboarding.getProductId()))
-                .thenReturn(true);
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
+        // when
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
+        // then
         OnboardingGet actual = subscriber.awaitItem().getItem();
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
 
         verify(orchestrationService, times(1))
-                .triggerOrchestrationIfEnabled(any(), any());
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
     }
 
     @Test
@@ -2894,7 +2866,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -2957,7 +2928,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
         asserter.execute(() -> when(documentControllerApi.persistDocumentForImport(any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
 
@@ -2994,7 +2964,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -3020,7 +2989,7 @@ class OnboardingServiceDefaultTest {
     @RunOnVertxContext
     void onboardingCompletion(UniAsserter asserter) {
         Onboarding request = new Onboarding();
-        Product product = createDummyProduct(PROD_INTEROP.getValue(), false, false, true);
+        ProductResponse product = createDummyProduct(PROD_INTEROP.getValue(), false, false, true);
         List<UserRequest> users = List.of(manager);
         request.setProductId(PROD_INTEROP.getValue());
         Institution institutionBaseRequest = new Institution();
@@ -3035,9 +3004,9 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
-        asserter.execute(() -> when(productAzureService.getProduct(any())).thenReturn(product));
+        asserter.execute(() -> when(productService.getProduct(product.getProductId()))
+                .thenReturn(Uni.createFrom().item(product)));
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -3063,7 +3032,7 @@ class OnboardingServiceDefaultTest {
     @RunOnVertxContext
     void onboardingCompletion_shouldFailWhenInstitutionTypeNotAllowedForOrigin(UniAsserter asserter) {
         Onboarding request = new Onboarding();
-        Product product = createDummyProduct(PROD_INTEROP.getValue(), false, false, true);
+        ProductResponse product = createDummyProduct(PROD_INTEROP.getValue(), false, false, true);
         List<UserRequest> users = List.of(manager);
         request.setProductId(PROD_INTEROP.getValue());
         Institution institutionBaseRequest = new Institution();
@@ -3076,9 +3045,9 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
-        asserter.execute(() -> when(productAzureService.getProduct(any())).thenReturn(product));
+        asserter.execute(() -> when(productService.getProduct(product.getProductId()))
+                .thenReturn(Uni.createFrom().item(product)));
 
         InstitutionResource institutionResource = new InstitutionResource();
         institutionResource.setCategory("L37");
@@ -3095,7 +3064,7 @@ class OnboardingServiceDefaultTest {
     @RunOnVertxContext
     void onboardingPgCompletion(UniAsserter asserter) {
         Onboarding request = new Onboarding();
-        Product product = createDummyProduct(PROD_PN.getValue(), false, false, true);
+        ProductResponse product = createDummyProduct(PROD_PN.getValue(), false, false, true);
         List<UserRequest> users = List.of(manager);
         request.setProductId(PROD_PN.getValue());
         Institution institutionBaseRequest = new Institution();
@@ -3109,9 +3078,9 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
-        asserter.execute(() -> when(productAzureService.getProduct(any())).thenReturn(product));
+        asserter.execute(() -> when(productService.getProduct(product.getProductId()))
+                .thenReturn(Uni.createFrom().item(product)));
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -3473,7 +3442,6 @@ class OnboardingServiceDefaultTest {
             asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(USERS_FIELD_TAXCODE, actualUseUid))
                     .thenReturn(Uni.createFrom().item(actualUserResource)));
 
-            mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
             mockSimpleProductValidAssert(onboarding.getProductId(), true, asserter, false, true);
             mockVerifyOnboardingNotFound();
 
@@ -3500,7 +3468,6 @@ class OnboardingServiceDefaultTest {
 
             mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
             mockVerifyOnboardingNotFound();
-            mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
             asserter.assertThat(() -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
                     Assertions::assertNotNull);
@@ -3516,14 +3483,6 @@ class OnboardingServiceDefaultTest {
                     onboarding.setInstitution(((Onboarding) arg.getArguments()[0]).getInstitution());
                     return Uni.createFrom().nullItem();
                 }));
-    }
-
-    void mockVerifyAllowedProductList(String productId, UniAsserter asserter, boolean expectedResult) {
-        asserter.execute(() -> when(productAzureService.isProductEnabled(productId)).thenReturn(expectedResult));
-    }
-
-    void mockAllowedProductByInstitutionTaxCodeList(UniAsserter asserter, boolean expectedResult) {
-        asserter.execute(() -> when(productAzureService.verifyAllowedByInstitutionTaxCode(anyString(), anyString())).thenReturn(expectedResult));
     }
 
     private void mockUpdateOnboardingInfo(String onboardingId, Long updatedItemCount) {
@@ -3817,7 +3776,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -4069,13 +4027,11 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
-        product.setAllowedInstitutionTaxCode(List.of("taxCode-OK"));
+        ProductResponse product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        product.getFeatures().setEnabled(false);
+        product.getFeatures().setAllowedInstitutionTaxCode(List.of("taxCode-OK"));
 
         mockVerifyOnboardingNotFound();
-
-        mockAllowedProductByInstitutionTaxCodeList(asserter, true);
-        mockVerifyAllowedProductList(request.getProductId(), asserter, false);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), Assertions::assertNotNull);
 
@@ -4127,16 +4083,13 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
-        product.setExpirationDate(Integer.valueOf("30"));
+        ProductResponse product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        product.getFeatures().setExpirationDays(Integer.valueOf("30"));
 
-        asserter.execute(() -> when(productAzureService.getProductExpirationDate(request.getProductId()))
-                .thenReturn(Integer.valueOf("30")));
+        asserter.execute(() -> when(productService.getProductExpirationDays(request.getProductId()))
+                .thenReturn(Uni.createFrom().item(30)));
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
-
-        mockAllowedProductByInstitutionTaxCodeList(asserter, false);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), Assertions::assertNotNull);
 
@@ -4357,8 +4310,9 @@ class OnboardingServiceDefaultTest {
 
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
-        product.setAllowedInstitutionTaxCode(List.of("taxCode-OK"));
+        ProductResponse product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        product.getFeatures().setEnabled(false);
+        product.getFeatures().setAllowedInstitutionTaxCode(List.of("taxCode-OK"));
 
         mockVerifyOnboardingNotFound();
 
@@ -4376,9 +4330,6 @@ class OnboardingServiceDefaultTest {
         geographicTaxonomyResource.setDesc("desc");
         asserter.execute(() -> when(geographicTaxonomiesApi.retrieveGeoTaxonomiesByCodeUsingGET(any()))
                 .thenReturn(Uni.createFrom().item(geographicTaxonomyResource)));
-
-        mockAllowedProductByInstitutionTaxCodeList(asserter, true);
-        mockVerifyAllowedProductList(request.getProductId(), asserter, false);
 
         asserter.assertThat(() -> onboardingService.onboarding(request, users, null, userRequesterDto), onboardingResponse -> {
             assertNotNull(onboardingResponse);
@@ -4431,7 +4382,6 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.find(any())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(createDummyOnboarding()));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -4502,7 +4452,6 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.find(any())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(onboarding));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -4577,7 +4526,6 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.find(any())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(onboarding2));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -4677,7 +4625,6 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.find(any(Document.class), any(Document.class))).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().iterable(onboardingList));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -4779,7 +4726,6 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.find(any())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(onboarding2));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> {
             when(userRegistryApi.updateUsingPATCH(any(), any()))
@@ -4865,7 +4811,6 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.find(any())).thenReturn(query);
         when(query.stream()).thenReturn(Multi.createFrom().item(onboarding2));
 
-        mockVerifyAllowedProductList(onboarding.getProductId(), asserter, true);
 
         asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build())));
@@ -4997,7 +4942,7 @@ class OnboardingServiceDefaultTest {
                 any(Onboarding.class),
                 anyBoolean(),
                 any(FormItem.class),
-                any(Product.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
                 any(DocumentType.class),
                 anyList(),
                 anyInt()))
@@ -5107,10 +5052,9 @@ class OnboardingServiceDefaultTest {
         mockPersistOnboarding(asserter);
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        ProductResponse product = createDummyProduct(PROD_IO.getValue(), false, true, true);
         asserter.execute(() -> {
-            when(productAzureService.getProductIsValid(PROD_IO.getValue()))
-                    .thenReturn(product);
+            stubProduct(product);
             when(userRegistryApi.updateUsingPATCH(any(), any()))
                     .thenReturn(Uni.createFrom().item(Response.noContent().build()));
             when(userRegistryApi.findByIdUsingGET(any(), any()))
@@ -5118,7 +5062,6 @@ class OnboardingServiceDefaultTest {
         });
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5152,11 +5095,8 @@ class OnboardingServiceDefaultTest {
         mockVerifyOnboardingNotFound();
         mockSimpleSearchPOSTAndPersist(asserter);
 
-        Product product = createDummyProduct(PROD_IO.getValue(), false, false, true);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(PROD_IO.getValue()))
-                .thenReturn(product));
-
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
+        ProductResponse product = createDummyProduct(PROD_IO.getValue(), false, false, true);
+        asserter.execute(() -> stubProduct(product));
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5196,12 +5136,10 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create product that allows company onboarding
-        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(PROD_IO.getValue()))
-                .thenReturn(product));
+        ProductResponse product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        asserter.execute(() -> stubProduct(product));
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5237,11 +5175,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create product that disallows company onboarding
-        Product product = createDummyProduct(PROD_IO.getValue(), false, true, false);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(PROD_IO.getValue()))
-                .thenReturn(product));
-
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
+        ProductResponse product = createDummyProduct(PROD_IO.getValue(), false, true, false);
+        asserter.execute(() -> stubProduct(product));
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5288,9 +5223,8 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create a product that allows company onboarding
-        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(PROD_IO.getValue()))
-                .thenReturn(product));
+        ProductResponse product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        asserter.execute(() -> stubProduct(product));
 
         // Product-ms flag: same user MANAGER+DELEGATE is allowed for this product
         org.openapi.quarkus.product_json.model.Features features =
@@ -5304,7 +5238,6 @@ class OnboardingServiceDefaultTest {
                 .thenReturn(Uni.createFrom().item(productResponse)));
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5400,12 +5333,10 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
 
         // Create a product that allows company onboarding
-        Product product = createDummyProduct(PROD_IO.getValue(), false, true, true);
-        asserter.execute(() -> when(productAzureService.getProductIsValid(PROD_IO.getValue()))
-                .thenReturn(product));
+        ProductResponse product = createDummyProduct(PROD_IO.getValue(), false, true, true);
+        asserter.execute(() -> stubProduct(product));
 
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(onboardingRequest.getProductId(), asserter, true);
         InsuranceCompanyResource insuranceCompanyResource = new InsuranceCompanyResource();
         insuranceCompanyResource.setDescription(DESCRIPTION_FIELD);
         insuranceCompanyResource.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
@@ -5718,7 +5649,8 @@ class OnboardingServiceDefaultTest {
         when(Onboarding.findById(onboarding.getId()))
                 .thenReturn(Uni.createFrom().item(onboarding));
         when(productService.getRequiredDocuments(any(), any(), any()))
-                .thenReturn(Uni.createFrom().failure(new ClientWebApplicationException(404)));
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException(
+                        "Product not found with id: " + PROD_IO.getValue())));
 
         UniAssertSubscriber<Void> subscriber = onboardingService
                 .triggerDocumentGate(onboarding.getId())
@@ -5726,6 +5658,9 @@ class OnboardingServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
 
         subscriber.assertFailedWith(InvalidRequestException.class);
+        assertEquals("No required documents configuration found on product-ms for onboarding " + onboarding.getId(),
+                subscriber.getFailure().getMessage());
+        verify(documentControllerApi, never()).getAttachments(anyString());
     }
 
     @Test
@@ -6045,7 +5980,6 @@ class OnboardingServiceDefaultTest {
         mockSimpleSearchPOSTAndPersist(asserter);
         mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
         mockVerifyOnboardingNotFound();
-        mockVerifyAllowedProductList(request.getProductId(), asserter, true);
 
         PDNDBusinessResource pdndBusinessResource = new PDNDBusinessResource();
         pdndBusinessResource.setBusinessName("name");

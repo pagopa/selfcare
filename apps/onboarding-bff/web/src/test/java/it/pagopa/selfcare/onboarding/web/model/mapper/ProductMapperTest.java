@@ -1,9 +1,9 @@
 package it.pagopa.selfcare.onboarding.web.model.mapper;
 
 import it.pagopa.selfcare.commons.utils.TestUtils;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import it.pagopa.selfcare.onboarding.web.model.ProductResource;
-import it.pagopa.selfcare.product.entity.ProductStatus;
+import it.pagopa.selfcare.onboarding.connector.model.product.ProductStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

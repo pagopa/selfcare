@@ -1,0 +1,41 @@
+{
+  "productId": "prod-io",
+  "tenantId": "AR",
+  "title": "IO AR contract fixture",
+  "status": "ACTIVE",
+  "features": { "expirationDays": 15, "delegable": false },
+  "institutionOrigins": [{ "institutionType": "PA", "origin": "IPA" }],
+  "roleMappings": [
+    {
+      "role": "MANAGER",
+      "institutionType": "PA",
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [{ "code": "ar-admin", "label": "AR administrator" }]
+    }
+  ],
+  "partnerTechRoleMappings": [
+    {
+      "role": "DELEGATE",
+      "institutionType": "PT",
+      "phasesAdditionAllowed": ["onboarding"],
+      "backOfficeRoles": [{ "code": "ar-pt", "label": "AR technical partner" }]
+    }
+  ],
+  "contracts": [
+    {
+      "institutionType": "PA",
+      "contractType": "CONTRACT",
+      "path": "contracts/ar/io.html",
+      "version": "ar-1"
+    }
+  ],
+  "workflowRules": [
+    { "institutionType": "PA", "origin": "IPA", "workflowType": "CONTRACT_REGISTRATION" }
+  ],
+  "requiredDocuments": [
+    {
+      "id": "ar-doc", "name": "AR proof", "required": true, "storageOrigin": "USER",
+      "filter": { "institutionType": ["PA"], "origin": ["IPA"] }
+    }
+  ]
+}

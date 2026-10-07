@@ -5,7 +5,7 @@ import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 import java.util.Objects;
 
@@ -26,7 +26,7 @@ public class RegistryManagerSELC extends BaseRegistryManager<Object> {
     }
 
     @Override
-    public Uni<Onboarding> customValidation(Product product) {
+    public Uni<Onboarding> customValidation(ProductResponse product) {
         if (isWorkflowTypeAllowed(onboarding.getWorkflowType()) || Objects.nonNull(product.getParentId())) {
             return Uni.createFrom().item(onboarding);
         }

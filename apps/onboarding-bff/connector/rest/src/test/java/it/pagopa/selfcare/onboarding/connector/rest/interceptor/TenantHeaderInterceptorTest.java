@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 
 import feign.RequestTemplate;
 import java.util.Collection;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -18,6 +19,10 @@ class TenantHeaderInterceptorTest {
     @BeforeEach
     void setUp() {
         interceptor = new TenantHeaderInterceptor();
+    }
+
+    @AfterEach
+    void tearDown() {
         RequestContextHolder.resetRequestAttributes();
     }
 
@@ -36,7 +41,7 @@ class TenantHeaderInterceptorTest {
     }
 
     @Test
-    void doesNotAddTenantHeaderWhenRequestContextIsMissing() {
+    void doesNotAddTenantHeaderWhenTenantIsUnavailable() {
         RequestTemplate template = new RequestTemplate();
 
         interceptor.apply(template);

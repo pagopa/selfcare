@@ -21,9 +21,6 @@ import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.service.RegistryProxyService;
 import it.pagopa.selfcare.onboarding.service.util.OnboardingUtils;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
@@ -33,8 +30,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
 import org.openapi.quarkus.party_registry_proxy_json.model.UOResource;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ContractType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 @QuarkusTest
 class OnboardingUtilsTest {
@@ -116,15 +119,15 @@ class OnboardingUtilsTest {
         onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
         onboarding.setStatus(OnboardingStatus.PENDING_IN_REVIEW);
 
-        Product product = new Product();
-        product.setId("productId");
+        ProductResponse product = new ProductResponse();
+        product.setProductId("productId");
         product.setTitle("productTitle");
-        ContractTemplate contractTemplate = new ContractTemplate();
-        contractTemplate.setContractTemplatePath("path");
-        contractTemplate.setContractTemplateVersion("version");
-        Map<String, ContractTemplate> contractMappings = new HashMap<>();
-        contractMappings.put("PA", contractTemplate);
-        product.setInstitutionContractMappings(contractMappings);
+        ContractTemplateConfig contractTemplate = new ContractTemplateConfig();
+        contractTemplate.setPath("path");
+        contractTemplate.setVersion("version");
+        contractTemplate.setContractType(ContractType.CONTRACT);
+        contractTemplate.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.PA);
+        product.setContracts(Collections.singletonList(contractTemplate));
         SigningConfiguration signingConfiguration = new SigningConfiguration();
         signingConfiguration.setSkipSignerIdentityCheck(true);
         product.setSigningConfiguration(signingConfiguration);
@@ -148,6 +151,46 @@ class OnboardingUtilsTest {
         assertEquals(1, form.signingStep);
         assertNotNull(form.request);
         assertEquals(onboarding.getId(), form.request.getOnboardingId());
+    }
+
+    @Test
+    void buildUploadSignedContractRequest_keepsMissingTemplateMetadataOptional() {
+        Onboarding onboarding = new Onboarding();
+        onboarding.setId("onboarding-id");
+        onboarding.setInstitution(new it.pagopa.selfcare.onboarding.entity.Institution());
+        onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        ProductResponse product = new ProductResponse().productId("prod-io").title("IO");
+        FormItem formItem = FormItem.builder().file(new File("signed.pdf")).fileName("signed.pdf").build();
+
+        DocumentContentControllerApi.UploadSignedContractMultipartForm request = onboardingUtils
+                .buildUploadSignedContractRequest(onboarding, false, formItem, product,
+                        DocumentType.INSTITUTION, Collections.emptyList(), 1)
+                .await().indefinitely();
+
+        assertEquals("onboarding-id", request.request.getOnboardingId());
+        assertEquals(formItem.getFile(), request._file);
+        assertEquals("signed.pdf", request.fileName);
+        assertNull(request.request.getTemplatePath());
+        assertNull(request.request.getTemplateVersion());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = OnboardingStatus.class, names = {"TOBEVALIDATED", "PENDING_IN_REVIEW"})
+    void buildUploadSignedContractRequest_requiresProductBeforeBuildingRequest(OnboardingStatus status) {
+        // Given
+        Onboarding onboarding = new Onboarding();
+        onboarding.setStatus(status);
+        onboarding.setInstitution(new it.pagopa.selfcare.onboarding.entity.Institution());
+        onboarding.getInstitution().setInstitutionType(it.pagopa.selfcare.onboarding.common.InstitutionType.PA);
+        FormItem formItem = FormItem.builder().file(new File("signed.pdf")).fileName("signed.pdf").build();
+
+        // When
+        NullPointerException failure = assertThrows(NullPointerException.class,
+                () -> onboardingUtils.buildUploadSignedContractRequest(onboarding, false, formItem, null,
+                        DocumentType.INSTITUTION, Collections.emptyList(), 1));
+
+        // Then
+        assertEquals("Product is required to build a signed contract request", failure.getMessage());
     }
 
     @Test

@@ -3,12 +3,14 @@ package it.pagopa.selfcare.onboarding.connector;
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
 import it.pagopa.selfcare.onboarding.connector.model.product.OriginResult;
 import it.pagopa.selfcare.onboarding.connector.model.product.RequiredDocumentModel;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import it.pagopa.selfcare.onboarding.connector.rest.client.MsProductApiClient;
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.ProductMapper;
 import it.pagopa.selfcare.product.generated.openapi.v1.dto.InstitutionType;
 import it.pagopa.selfcare.product.generated.openapi.v1.dto.Origin;
 import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductOriginResponse;
 import it.pagopa.selfcare.product.generated.openapi.v1.dto.RequiredDocumentResponse;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -23,6 +25,9 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     private final MsProductApiClient msProductApiClient;
     private final ProductMapper productMapper;
 
+    // No tenantId query param: ms-product resolves the tenant from the X-Tenant-Id header propagated by TenantHeaderInterceptor
+    private static final String TENANT_FROM_HEADER = null;
+
     static final String HEADER_REQUIRED_DOCUMENTS_ENABLED = "X-Required-Documents-Enabled";
 
     public ProductMsConnectorImpl(MsProductApiClient msProductApiClient, ProductMapper productMapper) {
@@ -31,9 +36,9 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     }
 
     @Override
-    public OriginResult getOrigins(String productId) {
+    public OriginResult getOrigins(String tenantId, String productId) {
         log.trace("getOrigins start");
-        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(productId);
+        ResponseEntity<ProductOriginResponse> origins = msProductApiClient._getProductOriginsById(productId, tenantId);
         OriginResult entryList = productMapper.toOriginResult(origins.getBody());
         log.debug("getOrigins size = {}", entryList.getOrigins().isEmpty());
         log.trace("getOrigins end");
@@ -41,12 +46,13 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     }
 
     @Override
-    public List<RequiredDocumentModel> getRequiredDocuments(String productId, String institutionType, String origin) {
+    public List<RequiredDocumentModel> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin) {
         log.trace("getRequiredDocuments start");
         ResponseEntity<List<RequiredDocumentResponse>> response = msProductApiClient._getRequiredDocuments(
                 productId,
                 InstitutionType.fromValue(institutionType),
-                Origin.fromValue(origin)
+                Origin.fromValue(origin),
+                tenantId
         );
         List<RequiredDocumentModel> result = productMapper.toRequiredDocumentModelList(
                 Objects.requireNonNull(response.getBody()));
@@ -56,12 +62,13 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
     }
 
     @Override
-    public boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin) {
+    public boolean isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin) {
         log.trace("isRequiredDocumentsEnabled start");
         ResponseEntity<Void> response = msProductApiClient._isRequiredDocumentsEnabled(
                 productId,
                 InstitutionType.fromValue(institutionType),
-                Origin.fromValue(origin)
+                Origin.fromValue(origin),
+                tenantId
         );
         boolean result = Boolean.parseBoolean(response.getHeaders().getFirst(HEADER_REQUIRED_DOCUMENTS_ENABLED));
         log.debug(
@@ -72,5 +79,35 @@ public class ProductMsConnectorImpl implements ProductMsConnector {
             result);
         log.trace("isRequiredDocumentsEnabled end");
         return result;
+    }
+
+    @Override
+    public Product getProduct(String productId) {
+        ResponseEntity<ProductResponse> response = msProductApiClient._getProductById(productId, TENANT_FROM_HEADER);
+        return productMapper.toProduct(Objects.requireNonNull(response.getBody()));
+    }
+
+    @Override
+    public Product getValidProduct(String productId) {
+        ResponseEntity<ProductResponse> response = msProductApiClient._getValidProductById(productId, TENANT_FROM_HEADER);
+        return productMapper.toProduct(Objects.requireNonNull(response.getBody()));
+    }
+
+    @Override
+    public List<Product> getProducts(boolean rootOnly) {
+        ResponseEntity<List<ProductResponse>> response = msProductApiClient._getProducts(rootOnly, true, TENANT_FROM_HEADER);
+        return Objects.requireNonNull(response.getBody()).stream().map(productMapper::toProduct).toList();
+    }
+
+    @Override
+    public boolean isProductEnabled(String productId) {
+        return getValidProduct(productId).isEnabled();
+    }
+
+    @Override
+    public boolean isAllowedByInstitutionTaxCode(String productId, String institutionTaxCode) {
+        List<String> allowedInstitutionTaxCodes = getValidProduct(productId).getAllowedInstitutionTaxCode();
+        return allowedInstitutionTaxCodes != null && allowedInstitutionTaxCodes.stream()
+                .anyMatch(allowedTaxCode -> allowedTaxCode.equalsIgnoreCase(institutionTaxCode));
     }
 }

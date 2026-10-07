@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.auth.client;
 
+import it.pagopa.selfcare.auth.context.AuthTenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.MultivaluedHashMap;
@@ -14,6 +15,7 @@ public class ExternalInternalUserHeaderFactory implements ClientHeadersFactory {
   @Inject
   @ConfigProperty(name = "internal.user-api.key")
   String apiKey;
+  @Inject AuthTenantContext tenantContext;
 
   @Override
   public MultivaluedMap<String, String> update(
@@ -21,6 +23,7 @@ public class ExternalInternalUserHeaderFactory implements ClientHeadersFactory {
       MultivaluedMap<String, String> multivaluedMap1) {
     MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
     headers.putSingle(HEADER_NAME, apiKey);
+    headers.putSingle("X-Tenant-Id", tenantContext.getTenantId());
     return headers;
   }
 }

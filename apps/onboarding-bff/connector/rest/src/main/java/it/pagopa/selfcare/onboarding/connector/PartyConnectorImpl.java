@@ -20,7 +20,7 @@ import it.pagopa.selfcare.onboarding.connector.rest.client.PartyProcessRestClien
 import it.pagopa.selfcare.onboarding.connector.rest.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.connector.rest.model.*;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.GetInstitutionRequest;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.connector.model.product.Product;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,6 +55,9 @@ class PartyConnectorImpl implements PartyConnector {
     };
 
     private Map<String, it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
+        if (result.isEmpty()) {
+            return Map.of();
+        }
         GetInstitutionRequest request = new GetInstitutionRequest();
         request.setInstitutionIds(result.stream().map(InstitutionInfo::getId).toList());
         List<it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.InstitutionResponse> response = institutionApiClient._getInstitutions(request).getBody();

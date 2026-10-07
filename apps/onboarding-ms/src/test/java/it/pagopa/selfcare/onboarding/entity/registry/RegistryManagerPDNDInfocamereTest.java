@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamerePdndApi;
 import org.openapi.quarkus.user_registry_json.api.UserApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 
 @QuarkusTest
 class RegistryManagerPDNDInfocamereTest {
@@ -37,18 +37,18 @@ class RegistryManagerPDNDInfocamereTest {
 
     private Onboarding onboarding;
     private RegistryManagerPDNDInfocamere registryManager;
-    private Product product;
+    private ProductResponse product;
 
     @BeforeEach
     void setUp() {
         onboarding = createDummyOnboarding();
-        product = mock(Product.class);
+        product = mock(ProductResponse.class);
     }
 
     @Test
     void customValidation_withIdPayMerchantProduct_nonPrivatePerson_returnsOnboarding() {
         // given
-        when(product.getId()).thenReturn("prod-idpay-merchant");
+        when(product.getProductId()).thenReturn("prod-idpay-merchant");
         onboarding.getInstitution().setInstitutionType(InstitutionType.GSP);
         registryManager = new RegistryManagerPDNDInfocamere(
                 onboarding,
@@ -72,7 +72,7 @@ class RegistryManagerPDNDInfocamereTest {
         onboarding.getInstitution().setInstitutionType(InstitutionType.PRV_PF);
         onboarding.getInstitution().setTaxCode(taxCode);
 
-        when(product.getId()).thenReturn("prod-idpay-merchant");
+        when(product.getProductId()).thenReturn("prod-idpay-merchant");
 
         registryManager = new RegistryManagerPDNDInfocamere(
                 onboarding,
@@ -105,7 +105,7 @@ class RegistryManagerPDNDInfocamereTest {
         onboarding.getInstitution().setInstitutionType(InstitutionType.PRV_PF);
         onboarding.getInstitution().setTaxCode(taxCode);
 
-        when(product.getId()).thenReturn("prod-idpay-merchant");
+        when(product.getProductId()).thenReturn("prod-idpay-merchant");
 
         registryManager = new RegistryManagerPDNDInfocamere(
                 onboarding,
@@ -131,7 +131,7 @@ class RegistryManagerPDNDInfocamereTest {
     void customValidation_withOtherInstitutionType_returnsOnboarding() {
         // given
         onboarding.getInstitution().setInstitutionType(InstitutionType.PA);
-        when(product.getId()).thenReturn("OTHER_PRODUCT");
+        when(product.getProductId()).thenReturn("OTHER_PRODUCT");
         registryManager = new RegistryManagerPDNDInfocamere(
                 onboarding,
                 infocamerePdndApi,

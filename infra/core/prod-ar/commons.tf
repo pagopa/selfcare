@@ -643,12 +643,9 @@ module "storage_user_attachments" {
   version_change_tier_to_cool_after_days_since_creation = 90
   version_delete_after_days_since_creation              = 3651
 
-  # Defender for Storage
-  defender_enabled                           = true
-  defender_malware_scanning_enabled          = true
-  defender_malware_scanning_cap_gb_per_month = 500
-  defender_sensitive_data_discovery_enabled  = false
-  defender_soft_delete_malicious_blobs       = true
+  # Defender for Storage (malware scanning: unlimited cap + sensitive data discovery)
+  malware_scanning_enabled             = true
+  defender_soft_delete_malicious_blobs = true
 
   key_vault_resource_group_name = module.key_vault.key_vault_resource_group_name
   key_vault_name                = module.key_vault.key_vault_name
