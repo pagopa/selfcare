@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.onboarding.runtime;
 
+import static io.restassured.RestAssured.given;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -32,6 +34,21 @@ class RuntimeWiringTest {
 
     @Inject
     DownstreamApiKeyFilter downstreamApiKeyFilter;
+
+    @Test
+    void registryClient_doesNotActivateTheIgnoredSpringTraceInterceptor() {
+        stub.reset();
+        stub.on(DownstreamStub.PARTY_REGISTRY_PROXY, "GET", "/institutions/inst1",
+                DownstreamStub.Reply.json(200, "{\"id\":\"inst1\"}"));
+
+        given().header("Authorization", "Bearer " + RuntimeJwt.sign(RuntimeJwt.spid(RuntimeJwt.UID)))
+                .header("X-Tenant-Id", "PNPG")
+                .get("/runtime-test/registry").then().statusCode(200);
+
+        assertEquals(1, stub.calls().size());
+        assertNull(stub.calls().get(0).header("X-Correlation-Id"));
+        assertEquals(RuntimeTestEnvironment.USER_REGISTRY_API_KEY, stub.calls().get(0).header("x-api-key"));
+    }
 
     @Test
     void jwtCallerPrincipalFactory_isTheOnlyOneAndBelongsToTheBff() throws ClassNotFoundException {
