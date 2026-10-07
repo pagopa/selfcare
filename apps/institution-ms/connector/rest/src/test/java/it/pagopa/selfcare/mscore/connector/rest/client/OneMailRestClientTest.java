@@ -21,6 +21,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 
 import java.util.Map;
+import java.util.Objects;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -80,7 +81,7 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
 
         ResponseEntity<EmailSuccessResponseDTO> response = restClient._v1EmailsSendHighPost(false, body);
 
-        assertEquals("request-id", response.getBody().getRequestId());
+        assertEquals("request-id", Objects.requireNonNull(response.getBody()).getRequestId());
         wm.verify(postRequestedFor(urlPathEqualTo("/v1/emails/send/high"))
                 .withQueryParam("dryRun", equalTo("false"))
                 .withHeader("x-api-key", equalTo("test-api-key"))
