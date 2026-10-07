@@ -3,6 +3,9 @@ package it.pagopa.selfcare.onboarding.exception.handler;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,6 +59,17 @@ public final class ProblemResponses {
         }
         Response.Status resolved = Response.Status.fromStatusCode(status);
         return resolved == null ? null : resolved.getReasonPhrase();
+    }
+
+    public static Map<String, Object> servletError(int status, String error, String path) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSxxx")));
+        body.put("status", status);
+        body.put("error", error);
+        if (path != null) {
+            body.put("path", path);
+        }
+        return body;
     }
 
     /** Status a downstream failure is re-exposed with; unknown and 2xx statuses become a 500. */

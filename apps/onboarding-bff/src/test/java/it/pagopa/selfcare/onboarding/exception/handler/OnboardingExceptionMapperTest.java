@@ -38,6 +38,7 @@ import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,6 +62,27 @@ class OnboardingExceptionMapperTest {
     void setUp() {
         uriInfo = mock(UriInfo.class);
         when(uriInfo.getRequestUri()).thenReturn(URI.create("http://localhost:8080/v1/institutions/abc?productId=prod-io"));
+    }
+
+    @Test
+    void servletRejectionHasTheSpringErrorShape() {
+        Map<String, Object> body = ProblemResponses.servletError(400, "Bad Request", "/v1//products");
+
+        assertEquals(Set.of("timestamp", "status", "error", "path"), body.keySet());
+        assertEquals(400, body.get("status"));
+        assertEquals("Bad Request", body.get("error"));
+        assertEquals("/v1//products", body.get("path"));
+        assertNotNull(OffsetDateTime.parse(body.get("timestamp").toString()));
+    }
+
+    @Test
+    void directErrorEndpointKeepsTheSpringSentinelAndOmitsThePath() {
+        Map<String, Object> body = ProblemResponses.servletError(999, "None", null);
+
+        assertEquals(Set.of("timestamp", "status", "error"), body.keySet());
+        assertEquals(999, body.get("status"));
+        assertEquals("None", body.get("error"));
+        assertNotNull(OffsetDateTime.parse(body.get("timestamp").toString()));
     }
 
     @Test
