@@ -187,6 +187,7 @@ class TenantResolutionIntegrationTest {
               + "\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},"
               + "\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"}}}",
           "tenant.supported-tenants", "AR,PNPG",
+          "tenant.storage.mandatory-keys", "",
           "tenant.enforcement.enabled", "true",
           "MONGODB_CONNECTION_STRING_PNPG", "mongodb://localhost:27017",
           "JWT_PUBLIC_KEY_AR", TenantJwtTestSupport.pem(AR_KEYS.getPublic()),
