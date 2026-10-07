@@ -103,19 +103,6 @@ class SecurityGateRulesTest {
         assertTrue(outgoing.isEmpty());
     }
 
-    @Test
-    void functionsHeadersFactory_addsTheFunctionsKey() {
-        OnboardingFunctionsHeadersFactory factory = new OnboardingFunctionsHeadersFactory();
-        factory.functionsKey = "functions-key";
-        MultivaluedMap<String, String> incoming = new MultivaluedHashMap<>();
-        incoming.add("Authorization", "Bearer token");
-
-        MultivaluedMap<String, String> outgoing = factory.update(incoming, new MultivaluedHashMap<>());
-
-        assertEquals("Bearer token", outgoing.getFirst("Authorization"));
-        assertEquals("functions-key", outgoing.getFirst("x-functions-key"));
-    }
-
     private static DefaultJWTCallerPrincipal spid(Object tenant) {
         JwtClaims claims = new JwtClaims();
         claims.setIssuer("SPID");

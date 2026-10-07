@@ -59,7 +59,6 @@ public final class ParityTargets {
       config.put("rest-client." + client[0] + ".base-url", stub.url(client[1]));
     }
     config.put("rest-client.user-registry.api-key", USER_REGISTRY_API_KEY);
-    config.put("rest-client.onboarding-functions.api-key", ONBOARDING_FUNCTIONS_API_KEY);
     return config;
   }
 }

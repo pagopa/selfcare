@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,6 +43,15 @@ class RuntimeAuthorizationHttpTest {
     @BeforeEach
     void resetStub() {
         stub.reset();
+    }
+
+    @AfterEach
+    void downstreamApiHeadersMatchSpring() {
+        for (Call call : stub.calls()) {
+            assertEquals(List.of(RuntimeTestEnvironment.USER_REGISTRY_API_KEY), call.headers().get("x-api-key"),
+                    "configured API key on " + call);
+            assertNull(call.header("x-functions-key"), "unexpected Functions key on " + call);
+        }
     }
 
     @Test
