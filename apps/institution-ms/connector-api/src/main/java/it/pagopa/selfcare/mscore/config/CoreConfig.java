@@ -24,9 +24,7 @@ public class CoreConfig {
     private boolean infoCamereEnable;
     private boolean enableSendDelegationMail;
     private BlobStorage blobStorage;
-    private String awsSesSecretId;
-    private String awsSesSecretKey;
-    private String awsSesRegion;
+    private boolean mailEnabled;
 
     @Data
     public static class BlobStorage {

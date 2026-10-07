@@ -23,7 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -91,7 +95,25 @@ class MailNotificationServiceImplTest {
         when(userApiConnector.getUserEmails(institution.getId(), product.getId())).thenReturn(userEmails);
         when(coreConfig.isSendEmailToInstitution()).thenReturn(true);
         when(coreConfig.isEnableSendDelegationMail()).thenReturn(true);
+        when(coreConfig.isMailEnabled()).thenReturn(true);
         Assertions.assertDoesNotThrow(() -> notificationService.sendMailForDelegation("institutionName", "productId", "partnerId"));
+        verify(userNotificationService).sendDelegationUserNotification(eq(userEmails), any());
+    }
+
+    @Test
+    void sendNotificationDelegationMail_userMailDisabled() {
+        Product product = new Product();
+        product.setId("productId");
+        product.setTitle("test");
+        Institution institution = new Institution();
+        institution.setId("institutionID");
+        institution.setDigitalAddress("test@test.com");
+
+        when(productConnector.getProductById(anyString())).thenReturn(product);
+        when(institutionConnector.findById(anyString())).thenReturn(institution);
+        when(coreConfig.isMailEnabled()).thenReturn(false);
+        Assertions.assertDoesNotThrow(() -> notificationService.sendMailForDelegation("institutionName", "productId", "partnerId"));
+        verifyNoInteractions(userNotificationService, userApiConnector);
     }
 
     @Test
