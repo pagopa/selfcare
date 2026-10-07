@@ -1,14 +1,16 @@
 package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -18,7 +20,6 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -44,12 +45,16 @@ public class ProductController {
                                       String id,
                                       @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                       @QueryParam("institutionType")
-                                      Optional<InstitutionType> institutionType) {
+                                      String institutionType) {
         log.trace("getProduct start");
-        log.debug("getProduct id = {}, institutionType = {}",
-                Encode.forJava(id),
-                Encode.forJava(institutionType.map(Enum::name).orElse(null)));
-        Product product = productService.getProduct(id, institutionType.orElse(null));
+        InstitutionType type = RequestParams.optionalEnum("institutionType", institutionType, InstitutionType.class);
+        log.debug("getProduct id = {}, institutionType = {}", Encode.forJava(id), type);
+        Product product;
+        try {
+            product = productService.getProduct(id, type);
+        } catch (ResourceNotFoundException e) {
+            throw new ResourceNotFoundException("No product found with id " + id);
+        }
         ProductResource resource = productMapper.toResource(product);
         log.debug("getProduct result = {}", resource);
         log.trace("getProduct end");

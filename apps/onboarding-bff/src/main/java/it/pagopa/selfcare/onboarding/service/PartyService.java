@@ -1,267 +1,259 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.PartyProcessRestClient;
-import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.client.model.BillingDataResponse;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy;
+import it.pagopa.selfcare.onboarding.client.model.Institution;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionFromIpaPost;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionInfo;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionResponse;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionSeed;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionUpdate;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionsResponse;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingContract;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingInstitutionRequest;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingResource;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingsResponse;
+import it.pagopa.selfcare.onboarding.client.model.Product;
+import it.pagopa.selfcare.onboarding.client.model.User;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.util.Preconditions;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.ProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import java.io.IOException;
-import jakarta.ws.rs.ProcessingException;
-import java.time.temporal.ChronoUnit;
 import org.openapi.quarkus.onboarding_json.api.InstitutionControllerApi;
 import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
 import org.openapi.quarkus.user_json.api.UserControllerApi;
+import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 
-import java.util.*;
+import java.io.IOException;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static it.pagopa.selfcare.onboarding.client.model.RelationshipState.ACTIVE;
-
+/**
+ * Institution operations on party-process, user-ms and ms-onboarding.
+ */
 @ApplicationScoped
 @Slf4j
 public class PartyService {
 
+    protected static final String REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE = "An Institution external id is required";
+    protected static final String REQUIRED_INSTITUTION_ID_MESSAGE = "An Institution id is required";
+    protected static final String REQUIRED_PRODUCT_ID_MESSAGE = "A product Id is required";
+    protected static final String REQUIRED_INSTITUTION_TAXCODE_MESSAGE = "An Institution tax code is required";
+    private static final String ACTIVE = "ACTIVE";
+    private static final int USER_INSTITUTIONS_PAGE_SIZE = 500;
 
     private final PartyProcessRestClient restClient;
     private final InstitutionMapper institutionMapper;
     private final UserControllerApi userApiClient;
     private final InstitutionControllerApi institutionApiClient;
 
-    private final Function<RelationshipInfo, UserInfo> relationshipInfoToUserInfo = relationshipInfo -> {
-        UserInfo userInfo = new UserInfo();
-        userInfo.setId(relationshipInfo.getFrom());
-        userInfo.setRole(relationshipInfo.getRole());
-        userInfo.setStatus(relationshipInfo.getState().name());
-        userInfo.setInstitutionId(relationshipInfo.getTo());
-        return userInfo;
-    };
-
-    private Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
-        GetInstitutionRequest request = new GetInstitutionRequest();
-        request.setInstitutionIds(result.stream().map(InstitutionInfo::getId).toList());
-        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response = institutionApiClient.getInstitutions(request).await().indefinitely();
-        return Objects.isNull(response) ? Map.of() : response.stream().collect(Collectors.toMap(org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
-    }
     public PartyService(@RestClient PartyProcessRestClient restClient,
-                              InstitutionMapper institutionMapper,
-                              @RestClient UserControllerApi userApiClient,
-                              @RestClient InstitutionControllerApi institutionApiClient) {
+                        InstitutionMapper institutionMapper,
+                        @RestClient UserControllerApi userApiClient,
+                        @RestClient InstitutionControllerApi institutionApiClient) {
         this.restClient = restClient;
         this.institutionMapper = institutionMapper;
         this.userApiClient = userApiClient;
         this.institutionApiClient = institutionApiClient;
     }
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+
     public void onboardingOrganization(OnboardingData onboardingData) {
-        java.util.Objects.requireNonNull(onboardingData, "Onboarding data is required");
-        OnboardingInstitutionRequest onboardingInstitutionRequest = new OnboardingInstitutionRequest();
-        onboardingInstitutionRequest.setInstitutionExternalId(onboardingData.getInstitutionExternalId());
-        onboardingInstitutionRequest.setPricingPlan(onboardingData.getPricingPlan());
-        onboardingInstitutionRequest.setBilling(onboardingData.getBilling());
-        onboardingInstitutionRequest.setProductId(onboardingData.getProductId());
-        onboardingInstitutionRequest.setProductName(onboardingData.getProductName());
+        Preconditions.notNull(onboardingData, "Onboarding data is required");
+        OnboardingInstitutionRequest request = new OnboardingInstitutionRequest();
+        request.setInstitutionExternalId(onboardingData.getInstitutionExternalId());
+        request.setPricingPlan(onboardingData.getPricingPlan());
+        request.setBilling(onboardingData.getBilling());
+        request.setProductId(onboardingData.getProductId());
+        request.setProductName(onboardingData.getProductName());
+
+        InstitutionUpdate source = onboardingData.getInstitutionUpdate();
         InstitutionUpdate institutionUpdate = new InstitutionUpdate();
         institutionUpdate.setInstitutionType(onboardingData.getInstitutionType());
-        institutionUpdate.setAddress(onboardingData.getInstitutionUpdate().getAddress());
-        institutionUpdate.setDescription(onboardingData.getInstitutionUpdate().getDescription());
-        institutionUpdate.setDigitalAddress(onboardingData.getInstitutionUpdate().getDigitalAddress());
-        institutionUpdate.setTaxCode(onboardingData.getInstitutionUpdate().getTaxCode());
-        institutionUpdate.setZipCode(onboardingData.getInstitutionUpdate().getZipCode());
-        institutionUpdate.setPaymentServiceProvider(onboardingData.getInstitutionUpdate().getPaymentServiceProvider());
-        institutionUpdate.setDataProtectionOfficer(onboardingData.getInstitutionUpdate().getDataProtectionOfficer());
+        institutionUpdate.setAddress(source.getAddress());
+        institutionUpdate.setDescription(source.getDescription());
+        institutionUpdate.setDigitalAddress(source.getDigitalAddress());
+        institutionUpdate.setTaxCode(source.getTaxCode());
+        institutionUpdate.setZipCode(source.getZipCode());
+        institutionUpdate.setPaymentServiceProvider(source.getPaymentServiceProvider());
+        institutionUpdate.setDataProtectionOfficer(source.getDataProtectionOfficer());
         if (onboardingData.getLocation() != null) {
             institutionUpdate.setCity(onboardingData.getLocation().getCity());
             institutionUpdate.setCounty(onboardingData.getLocation().getCounty());
             institutionUpdate.setCountry(onboardingData.getLocation().getCountry());
         }
-        if (Objects.nonNull(onboardingData.getInstitutionUpdate()) && Objects.nonNull(onboardingData.getInstitutionUpdate().getGeographicTaxonomies())) {
-            institutionUpdate.setGeographicTaxonomyCodes(onboardingData.getInstitutionUpdate().getGeographicTaxonomies().stream()
+        if (Objects.nonNull(source.getGeographicTaxonomies())) {
+            institutionUpdate.setGeographicTaxonomyCodes(source.getGeographicTaxonomies().stream()
                     .map(GeographicTaxonomy::getCode).toList());
         }
-        institutionUpdate.setRea(onboardingData.getInstitutionUpdate().getRea());
-        institutionUpdate.setShareCapital(onboardingData.getInstitutionUpdate().getShareCapital());
-        institutionUpdate.setBusinessRegisterPlace(onboardingData.getInstitutionUpdate().getBusinessRegisterPlace());
-        institutionUpdate.setSupportEmail(onboardingData.getInstitutionUpdate().getSupportEmail());
-        institutionUpdate.setSupportPhone(onboardingData.getInstitutionUpdate().getSupportPhone());
-        institutionUpdate.setImported(onboardingData.getInstitutionUpdate().getImported());
-        onboardingInstitutionRequest.setInstitutionUpdate(institutionUpdate);
-        onboardingInstitutionRequest.setUsers(onboardingData.getUsers().stream()
-                .map(user -> {
-                    User userRequest = new User();
-                    userRequest.setTaxCode(user.getTaxCode());
-                    userRequest.setRole(user.getRole());
-                    userRequest.setEmail(user.getEmail());
-                    userRequest.setName(user.getName());
-                    userRequest.setSurname(user.getSurname());
-                    userRequest.setProductRole(user.getProductRole());
-                    return userRequest;
+        institutionUpdate.setRea(source.getRea());
+        institutionUpdate.setShareCapital(source.getShareCapital());
+        institutionUpdate.setBusinessRegisterPlace(source.getBusinessRegisterPlace());
+        institutionUpdate.setSupportEmail(source.getSupportEmail());
+        institutionUpdate.setSupportPhone(source.getSupportPhone());
+        institutionUpdate.setImported(source.getImported());
+        institutionUpdate.setAdditionalInformations(source.getAdditionalInformations());
+        request.setInstitutionUpdate(institutionUpdate);
+
+        request.setUsers(onboardingData.getUsers().stream()
+                .map(userInfo -> {
+                    User user = new User();
+                    user.setId(userInfo.getId());
+                    user.setName(userInfo.getName());
+                    user.setSurname(userInfo.getSurname());
+                    user.setTaxCode(userInfo.getTaxCode());
+                    user.setEmail(userInfo.getEmail());
+                    user.setRole(userInfo.getRole());
+                    user.setProductRole(userInfo.getProductRole());
+                    return user;
                 }).toList());
-        restClient.onboardingOrganization(onboardingInstitutionRequest);
+
+        OnboardingContract contract = new OnboardingContract();
+        contract.setPath(onboardingData.getContractPath());
+        contract.setVersion(onboardingData.getContractVersion());
+        request.setContract(contract);
+
+        restClient.onboardingOrganization(request);
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public OnboardingContract getOnboardingContract(String institutionId, String productId) {
-        return restClient.getOnboardingContract(institutionId, productId);
-    }
-
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public List<InstitutionInfo> getOnboardings(String userId) {
-        log.trace("getOnboardings start");
-        log.debug("getOnboardings userId = {}", userId);
-        RelationshipsResponse response = restClient.getUserInstitutions(userId, null,
-                EnumSet.of(ACTIVE),
-                null, null, null);
-        List<InstitutionInfo> result = Collections.emptyList();
-        if (response != null) {
-            result = response.stream()
-                    .map(relationshipInfoToUserInfo)
-                    .map(userInfo -> {
-                        InstitutionInfo institutionInfo = new InstitutionInfo();
-                        institutionInfo.setId(userInfo.getInstitutionId());
-                        institutionInfo.setStatus(userInfo.getStatus());
-                        return institutionInfo;
-                    })
-                    .collect(Collectors.groupingBy(InstitutionInfo::getId))
-                    .values().stream()
-                    .map(institutionInfos -> institutionInfos.get(0))
-                    .toList();
-        }
-        log.debug("getOnboardings result = {}", result);
-        log.trace("getOnboardings end");
-        return result;
-    }
-
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    /**
+     * The institutions of the user for the product. When the product has a parent, the institutions onboarded
+     * on the parent product that are not yet onboarded on the product itself are returned.
+     */
     public List<InstitutionInfo> getInstitutionsByUser(Product product, String userId) {
         log.trace("getInstitutionsByUser start");
-        log.debug("getInstitutionsByUser product = {}, userId = {}", product, userId);
-        RelationshipsResponse response = restClient.getUserInstitutions(userId, null,
-                EnumSet.of(ACTIVE),
-                List.of(product.getId()),
-                null, null);
-        List<InstitutionInfo> result = Collections.emptyList();
-        if (response != null) {
-            result = response.stream()
-                    .map(relationshipInfoToUserInfo)
-                    .map(userInfo -> {
-                        InstitutionInfo institutionInfo = new InstitutionInfo();
-                        institutionInfo.setId(userInfo.getInstitutionId());
-                        institutionInfo.setUserRole(userInfo.getRole());
-                        institutionInfo.setStatus(userInfo.getStatus());
-                        return institutionInfo;
-                    })
+        List<UserInstitutionResponse> userInstitutions = findActiveUserInstitutions(product.getId(), userId);
+
+        List<InstitutionInfo> result;
+        if (Objects.nonNull(product.getParentId())) {
+            List<UserInstitutionResponse> parentUserInstitutions = findActiveUserInstitutions(product.getParentId(), userId);
+            List<String> childInstitutionIds = userInstitutions.stream()
+                    .map(UserInstitutionResponse::getInstitutionId)
                     .toList();
-            if (!result.isEmpty()) {
-                Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> institutionMap = buildInstitutionMap(result);
-                result.forEach(institutionInfo -> {
-                    org.openapi.quarkus.onboarding_json.model.InstitutionResponse institutionResponse = institutionMap.get(institutionInfo.getId());
-                    if (Objects.nonNull(institutionResponse)) {
-                        institutionInfo.setDescription(institutionResponse.getDescription());
-                        institutionInfo.setExternalId(institutionInfo.getId());
-                        institutionInfo.setTaxCode(institutionResponse.getTaxCode());
-                        institutionInfo.setOrigin(institutionResponse.getOrigin() != null ? institutionResponse.getOrigin().name() : null);
-                        institutionInfo.setOriginId(institutionResponse.getOriginId());
-                        institutionInfo.setDigitalAddress(institutionResponse.getDigitalAddress());
-                        institutionInfo.setZipCode(institutionResponse.getZipCode());
-                        institutionInfo.setAddress(institutionResponse.getAddress());
-                        institutionInfo.setInstitutionType(InstitutionType.valueOf(institutionResponse.getInstitutionType()));
-                    }
-                });
-            }
+            result = parentUserInstitutions.stream()
+                    .filter(parentInstitution -> !childInstitutionIds.contains(parentInstitution.getInstitutionId()))
+                    .map(institutionMapper::toInstitutionInfo)
+                    .toList();
+        } else {
+            result = Objects.requireNonNull(userInstitutions).stream()
+                    .map(institutionMapper::toInstitutionInfo)
+                    .toList();
         }
-        log.debug("getInstitutionsByUser result = {}", result);
+
+        Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> institutionsById = buildInstitutionMap(result);
+
+        List<String> allowedTypes = product.getInstitutionTypesAllowed();
+        List<InstitutionInfo> allowedInstitutions = Objects.isNull(allowedTypes) || allowedTypes.isEmpty()
+                ? result
+                : result.stream()
+                .filter(institutionInfo -> institutionsById.containsKey(institutionInfo.getId())
+                        && allowedTypes.contains(institutionsById.get(institutionInfo.getId()).getInstitutionType()))
+                .toList();
         log.trace("getInstitutionsByUser end");
-        return result;
+        return allowedInstitutions;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public List<Institution> getInstitutionsByTaxCodeAndSubunitCode(String taxCode, String subunitCode) {
-        return restClient.getInstitutionsByTaxCodeAndSubunitCode(taxCode, subunitCode);
+        Preconditions.hasText(taxCode, REQUIRED_INSTITUTION_TAXCODE_MESSAGE);
+        InstitutionsResponse response = restClient.getInstitutions(taxCode, subunitCode);
+        return response.getInstitutions().stream()
+                .map(institutionMapper::toEntity)
+                .toList();
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public Institution getInstitutionByExternalId(String externalId) {
-        return restClient.getInstitutionByExternalId(externalId);
+    public Institution getInstitutionByExternalId(String externalInstitutionId) {
+        Preconditions.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        InstitutionResponse response = restClient.getInstitutionByExternalId(externalInstitutionId);
+        return institutionMapper.toEntity(response);
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public Institution getInstitutionById(String id) {
-        return restClient.getInstitutionById(id);
+    public Institution getInstitutionById(String institutionId, String productId) {
+        Preconditions.hasText(institutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
+        InstitutionResponse response = restClient.getInstitutionById(institutionId, productId);
+        return institutionMapper.toEntity(response);
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public List<OnboardingResource> getOnboardings(String institutionId, String productId) {
-        return restClient.getOnboardings(institutionId, productId);
+        Preconditions.hasText(institutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
+        OnboardingsResponse onboardings = restClient.getOnboardings(institutionId, productId);
+        return onboardings.getOnboardings().stream()
+                .map(institutionMapper::toResource)
+                .toList();
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public Institution createInstitutionFromIpa(String taxCode, String subunitCode, it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType subunitType) {
+    public Institution createInstitutionFromIpa(String taxCode, String subunitCode, String subunitType) {
+        Preconditions.hasText(taxCode, REQUIRED_INSTITUTION_TAXCODE_MESSAGE);
         InstitutionFromIpaPost institutionFromIpaPost = new InstitutionFromIpaPost();
-        institutionFromIpaPost.setTaxCode(taxCode);
         institutionFromIpaPost.setSubunitCode(subunitCode);
-        if (subunitType != null) {
-            institutionFromIpaPost.setSubunitType(subunitType.name());
-        }
-        return restClient.createInstitutionFromIpa(institutionFromIpaPost);
+        institutionFromIpaPost.setTaxCode(taxCode);
+        institutionFromIpaPost.setSubunitType(subunitType);
+        return institutionMapper.toEntity(restClient.createInstitutionFromIpa(institutionFromIpaPost));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public Institution createInstitution(OnboardingData onboardingData) {
-        InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
-        return restClient.createInstitution(institutionSeed);
-    }
-
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromANAC(OnboardingData onboardingData) {
-        InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
-        return restClient.createInstitutionFromANAC(institutionSeed);
+        Preconditions.notNull(onboardingData, "An OnboardingData is required");
+        return institutionMapper.toEntity(restClient.createInstitutionFromANAC(new InstitutionSeed(onboardingData)));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromIVASS(OnboardingData onboardingData) {
-        InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
-        return restClient.createInstitutionFromIVASS(institutionSeed);
+        Preconditions.notNull(onboardingData, "An OnboardingData is required");
+        return institutionMapper.toEntity(restClient.createInstitutionFromIVASS(new InstitutionSeed(onboardingData)));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public Institution createInstitutionFromInfocamere(OnboardingData onboardingData) {
-        InstitutionSeed institutionSeed = institutionMapper.toInstitutionSeed(onboardingData);
-        return restClient.createInstitutionFromInfocamere(institutionSeed);
+        Preconditions.notNull(onboardingData, "An OnboardingData is required");
+        return institutionMapper.toEntity(restClient.createInstitutionFromInfocamere(new InstitutionSeed(onboardingData)));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public void verifyOnboarding(String externalId, String productId) {
-        restClient.verifyOnboarding(externalId, productId);
+    public Institution createInstitution(OnboardingData onboardingData) {
+        Preconditions.notNull(onboardingData, "An OnboardingData is required");
+        return institutionMapper.toEntity(restClient.createInstitution(new InstitutionSeed(onboardingData)));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    public InstitutionInfo getInstitutionBillingData(String externalInstitutionId, String productId) {
+        Preconditions.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        Preconditions.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        BillingDataResponse response = restClient.getInstitutionBillingData(externalInstitutionId, productId);
+        return institutionMapper.toInstitutionInfo(response);
+    }
+
+    public void verifyOnboarding(String externalInstitutionId, String productId) {
+        Preconditions.hasText(externalInstitutionId, REQUIRED_INSTITUTION_EXTERNAL_ID_MESSAGE);
+        Preconditions.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        restClient.verifyOnboarding(externalInstitutionId, productId);
+    }
+
     public void verifyOnboarding(String productId, String externalId, String taxCode, String origin, String originId, String subunitCode) {
-        restClient.verifyOnboarding(productId, externalId, taxCode, origin, originId, subunitCode);
+        Preconditions.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
+        restClient.verifyOnboardingInfoByFilters(productId, externalId, taxCode, origin, originId, subunitCode);
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public InstitutionInfo getInstitutionBillingData(String externalId, String productId) {
-        BillingDataResponse response = restClient.getInstitutionBillingData(externalId, productId);
-        if (response != null) {
-            InstitutionInfo institutionInfo = new InstitutionInfo();
-            institutionInfo.setId(response.getInstitutionId());
-            institutionInfo.setExternalId(response.getExternalId());
-            institutionInfo.setTaxCode(response.getTaxCode());
-            institutionInfo.setDescription(response.getDescription());
-            institutionInfo.setAddress(response.getAddress());
-            institutionInfo.setDigitalAddress(response.getDigitalAddress());
-            institutionInfo.setZipCode(response.getZipCode());
-            institutionInfo.setBilling(response.getBilling());
-            return institutionInfo;
+    private List<UserInstitutionResponse> findActiveUserInstitutions(String productId, String userId) {
+        List<String> products = Objects.isNull(productId) ? null : List.of(productId);
+        return userApiClient.usersGet(null, null, null, products, null, USER_INSTITUTIONS_PAGE_SIZE, List.of(ACTIVE), userId)
+                .await().indefinitely();
+    }
+
+    private Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
+        if (result.isEmpty()) {
+            return Map.of();
         }
-        return null;
+        GetInstitutionRequest request = new GetInstitutionRequest();
+        request.setInstitutionIds(result.stream().map(InstitutionInfo::getId).toList());
+        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response =
+                institutionApiClient.getInstitutions(request).await().indefinitely();
+        return Objects.isNull(response)
+                ? Map.of()
+                : response.stream().collect(Collectors.toMap(
+                        org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
     }
 }

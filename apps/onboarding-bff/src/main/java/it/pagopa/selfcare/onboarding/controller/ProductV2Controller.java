@@ -1,17 +1,20 @@
 package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.pagopa.selfcare.onboarding.client.model.RequiredDocumentModel;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.client.model.OriginResult;
-import it.pagopa.selfcare.onboarding.service.ProductService;
+import it.pagopa.selfcare.onboarding.client.model.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.controller.response.OriginResponse;
 import it.pagopa.selfcare.onboarding.controller.response.RequiredDocumentsEnabledResource;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
+import it.pagopa.selfcare.onboarding.service.ProductService;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
@@ -32,6 +35,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductV2Controller {
 
+    static final String TENANT_HEADER = "X-Tenant-Id";
+
     private final ProductService productService;
     private final InstitutionMapper productMapper;
 
@@ -40,11 +45,14 @@ public class ProductV2Controller {
             description = "${openapi.product.ms.api.getOrigins.description}", operationId = "getOrigins")
     public OriginResponse getOrigins(@Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                       @QueryParam("productId")
-                                      String productId) {
+                                      String productId,
+                                      @Parameter(hidden = true) @HeaderParam(TENANT_HEADER)
+                                      String tenantHeader) {
         log.trace("getOrigins start");
+        RequestParams.requiredQuery("productId", productId);
         String productIdSanitized = Encode.forJava(productId);
         log.debug("getOrigins productId = {}", productIdSanitized);
-        OriginResult originEntries = productService.getOrigins(productId);
+        OriginResult originEntries = productService.getOrigins(requiredTenantId(tenantHeader), productId);
         OriginResponse response = productMapper.toOriginResponse(originEntries);
         log.trace("getOrigins end");
         return response;
@@ -55,15 +63,20 @@ public class ProductV2Controller {
     @Operation(summary = "Get required documents for a product",
             description = "Returns the list of required documents for the given product, institutionType and origin.",
             operationId = "getRequiredDocuments")
-    public List<RequiredDocumentModel> getRequiredDocuments(@PathParam("productId") String productId,
+    public List<RequiredDocumentModel> getRequiredDocuments(@Parameter(description = "The product id")
+                                                            @PathParam("productId") String productId,
                                                             @QueryParam("institutionType") String institutionType,
-                                                            @QueryParam("origin") String origin) {
+                                                            @QueryParam("origin") String origin,
+                                                            @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantHeader) {
         log.trace("getRequiredDocuments start");
+        RequestParams.requiredQuery("institutionType", institutionType);
+        RequestParams.requiredQuery("origin", origin);
         log.debug("getRequiredDocuments productId = {}, institutionType = {}, origin = {}",
                 Encode.forJava(productId),
                 Encode.forJava(institutionType),
                 Encode.forJava(origin));
-        List<RequiredDocumentModel> result = productService.getRequiredDocuments(productId, institutionType, origin);
+        List<RequiredDocumentModel> result = productService.getRequiredDocuments(
+                requiredTenantId(tenantHeader), productId, institutionType, origin);
         log.debug("getRequiredDocuments size = {}", result.size());
         log.trace("getRequiredDocuments end");
         return result;
@@ -74,18 +87,30 @@ public class ProductV2Controller {
     @Operation(summary = "Check if required documents are enabled for a product",
             description = "Returns an object with the boolean flag requiredDocumentsEnabled = true when required documents are configured for the given product, institutionType and origin.",
             operationId = "isRequiredDocumentsEnabled")
-    public RequiredDocumentsEnabledResource isRequiredDocumentsEnabled(@PathParam("productId") String productId,
+    public RequiredDocumentsEnabledResource isRequiredDocumentsEnabled(@Parameter(description = "The product id")
+                                                                       @PathParam("productId") String productId,
                                                                        @QueryParam("institutionType") String institutionType,
-                                                                       @QueryParam("origin") String origin) {
+                                                                       @QueryParam("origin") String origin,
+                                                                       @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantHeader) {
         log.trace("isRequiredDocumentsEnabled start");
+        RequestParams.requiredQuery("institutionType", institutionType);
+        RequestParams.requiredQuery("origin", origin);
         log.debug("isRequiredDocumentsEnabled productId = {}, institutionType = {}, origin = {}",
                 Encode.forJava(productId),
                 Encode.forJava(institutionType),
                 Encode.forJava(origin));
-        boolean result = productService.isRequiredDocumentsEnabled(productId, institutionType, origin);
+        boolean result = productService.isRequiredDocumentsEnabled(
+                requiredTenantId(tenantHeader), productId, institutionType, origin);
         log.debug("isRequiredDocumentsEnabled result = {}", result);
         log.trace("isRequiredDocumentsEnabled end");
         return new RequiredDocumentsEnabledResource(result);
+    }
+
+    private static String requiredTenantId(String tenantId) {
+        if (tenantId == null || tenantId.isBlank()) {
+            throw new InvalidRequestException("Tenant context is required");
+        }
+        return tenantId;
     }
 
 }

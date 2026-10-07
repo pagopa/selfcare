@@ -5,7 +5,6 @@ import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.model.UserAuthority;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
-import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductState;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
@@ -108,20 +107,19 @@ public interface InstitutionMapper {
 
     GeographicTaxonomyResource toResource(GeographicTaxonomy model);
 
-    ProductResource toResource(it.pagopa.selfcare.product.entity.Product model);
+    ProductResource toResource(Product model);
 
     OriginResponse toOriginResponse(OriginResult originEntries);
 
-    @Mapping(target = "institution", source = ".")
+    @Mapping(target = "institution", expression = "java(toInstitutionData(model.getInstitution(), model.getAssistanceContacts(), model.getCompanyInformations()))")
     InstitutionOnboardingInfoResource toResource(InstitutionOnboardingData model);
 
-    @Mapping(target = "billingData", source = "institution", qualifiedByName = "toBilling")
-    @Mapping(target = "city", source = "institution.institutionLocation.city")
-    @Mapping(target = "country", source = "institution.institutionLocation.country")
-    @Mapping(target = "county", source = "institution.institutionLocation.county")
-    @Mapping(target = "assistanceContacts", source = "assistanceContacts")
-    @Mapping(target = "companyInformations", source = "companyInformations")
-    InstitutionData toInstitutionData(InstitutionOnboardingData model);
+    @Mapping(target = "billingData", source = "model", qualifiedByName = "toBilling")
+    @Mapping(target = "city", source = "model.institutionLocation.city")
+    @Mapping(target = "country", source = "model.institutionLocation.country")
+    @Mapping(target = "county", source = "model.institutionLocation.county")
+    @Mapping(target = "institutionType", source = "model.institutionType")
+    InstitutionData toInstitutionData(InstitutionInfo model, AssistanceContacts assistanceContacts, CompanyInformations companyInformations);
 
     @Named("toBilling")
     @Mapping(target = "publicServices", source = "model.billing.publicServices")
@@ -151,10 +149,9 @@ public interface InstitutionMapper {
         return id != null ? UUID.fromString(id) : null;
     }
 
-    InstitutionSeed toInstitutionSeed(OnboardingData onboardingData);
-
     InstitutionInfo toInstitutionInfo(Institution model);
 
+    // Only the fields carried by the former InstitutionUpdate projection are returned: location and subunit are not
     default Institution toInstitution(org.openapi.quarkus.onboarding_json.model.InstitutionResponse model) {
         if (model == null) {
             return null;
@@ -168,11 +165,7 @@ public interface InstitutionMapper {
         institution.setZipCode(model.getZipCode());
         institution.setOrigin(model.getOrigin() != null ? model.getOrigin().name() : null);
         institution.setOriginId(model.getOriginId());
-        institution.setSubunitCode(model.getSubunitCode());
-        institution.setSubunitType(model.getSubunitType() != null ? model.getSubunitType().name() : null);
-        institution.setCity(model.getCity());
-        institution.setCounty(model.getCounty());
-        institution.setCountry(model.getCountry());
+        institution.setParentDescription(model.getParentDescription());
         if (model.getInstitutionType() != null) {
             institution.setInstitutionType(InstitutionType.valueOf(model.getInstitutionType()));
         }

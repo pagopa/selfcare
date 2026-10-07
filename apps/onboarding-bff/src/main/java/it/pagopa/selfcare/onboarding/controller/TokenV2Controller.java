@@ -2,47 +2,49 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import it.pagopa.selfcare.onboarding.util.LogUtils;
-import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
-import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
-import it.pagopa.selfcare.onboarding.controller.response.AvailableDocumentsResource;
-import it.pagopa.selfcare.onboarding.service.TokenService;
-import it.pagopa.selfcare.onboarding.service.UserInstitutionService;
-import it.pagopa.selfcare.onboarding.service.UserService;
-import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
-import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
+import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.controller.request.DownloadDocumentType;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
+import it.pagopa.selfcare.onboarding.controller.response.AvailableDocumentsResource;
+import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
+import it.pagopa.selfcare.onboarding.exception.AccessDeniedException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
-import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.security.AuthorizationService;
+import it.pagopa.selfcare.onboarding.service.TokenService;
+import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.util.PermissionConstants;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
 import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HEAD;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
@@ -63,11 +65,12 @@ import org.owasp.encoder.Encode;
 public class TokenV2Controller {
 
     private static final String ACCESS_CONTROL_EXPOSE_HEADERS = "Access-Control-Expose-Headers";
-    private final TokenService tokenService;
-    private final UserService userService;
-    private final UserInstitutionService userInstitutionService;
-    private final OnboardingMapper onboardingResourceMapper;
+    private static final String TENANT_HEADER = "X-Tenant-Id";
     private static final String SANITIZIER = "[^a-zA-Z0-9-_]";
+    private static final String FORBIDDEN_DOCUMENTS = "Forbidden - user does not have permission to view account documents";
+
+    private final TokenService tokenService;
+    private final OnboardingMapper onboardingResourceMapper;
 
     @Inject
     SecurityIdentity securityIdentity;
@@ -83,7 +86,7 @@ public class TokenV2Controller {
                              @PathParam("onboardingId") String onboardingId,
                              @RestForm("contract") FileUpload contract) {
         log.trace("complete Token start");
-        UploadedFile uploadedFile = toUploadedFile(contract);
+        UploadedFile uploadedFile = toUploadedFile("contract", contract);
         FileValidationUtils.validatePdfOrP7m(uploadedFile);
         String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
@@ -101,7 +104,7 @@ public class TokenV2Controller {
                                             @PathParam("onboardingId") String onboardingId,
                                             @RestForm("contract") FileUpload contract) {
         log.trace("complete Onboarding Users start");
-        UploadedFile uploadedFile = toUploadedFile(contract);
+        UploadedFile uploadedFile = toUploadedFile("contract", contract);
         FileValidationUtils.validatePdfOrP7m(uploadedFile);
         String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
@@ -131,9 +134,7 @@ public class TokenV2Controller {
     public OnboardingRequestResource retrieveOnboardingRequest(@Parameter(description = "${openapi.tokens.onboardingId}")
                                                                @PathParam("onboardingId")
                                                                String onboardingId) {
-        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_PAGE)) {
-            throw new UnauthorizedUserException("User is not allowed to access this resource.");
-        }
+        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_PAGE);
         log.trace("retrieveOnboardingRequest start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("retrieveOnboardingRequest onboardingId = {}", sanitizedOnboardingId);
@@ -150,12 +151,9 @@ public class TokenV2Controller {
             summary = "${openapi.tokens.approveOnboardingRequest}", operationId = "approveOnboardingUsingPOST")
     public Response approveOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
                                       @PathParam("onboardingId") String onboardingId) {
-        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)) {
-            throw new UnauthorizedUserException("User is not allowed to access this resource.");
-        }
+        checkPermission(onboardingId, PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE);
         log.debug("approve onboarding identified with {}", LogUtils.sanitize(onboardingId));
-        String userUid = securityIdentity.getAttribute("uid");
-        tokenService.approveOnboarding(onboardingId, userUid);
+        tokenService.approveOnboarding(onboardingId, SecurityIdentityUtils.getUid(securityIdentity));
         return Response.ok().build();
     }
 
@@ -166,12 +164,10 @@ public class TokenV2Controller {
     public Response rejectOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      ReasonForRejectDto reasonForRejectDto) {
-        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)) {
-            throw new UnauthorizedUserException("User is not allowed to access this resource.");
-        }
+        RequestParams.requiredBody(reasonForRejectDto);
+        checkPermission(onboardingId, PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE);
         log.debug("reject onboarding identified with {}", LogUtils.sanitize(onboardingId));
-        String userUid = securityIdentity.getAttribute("uid");
-        tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason(), userUid);
+        tokenService.rejectOnboarding(onboardingId, reasonForRejectDto.getReason(), SecurityIdentityUtils.getUid(securityIdentity));
         return Response.ok().build();
     }
 
@@ -184,8 +180,7 @@ public class TokenV2Controller {
         log.trace("delete Token start");
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("delete Token tokenId = {}", sanitizedOnboardingId);
-        String userUid = securityIdentity.getAttribute("uid");
-        tokenService.rejectOnboarding(sanitizedOnboardingId, "REJECTED_BY_USER", userUid);
+        tokenService.rejectOnboarding(sanitizedOnboardingId, "REJECTED_BY_USER", SecurityIdentityUtils.getUid(securityIdentity));
         return Response.noContent().build();
     }
 
@@ -194,9 +189,11 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${openapi.tokens.getContract}",
             description = "${openapi.tokens.getContract}", operationId = "getContractUsingGET")
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS)
     public Response getContract(@Parameter(description = "${openapi.tokens.onboardingId}")
                                 @PathParam("onboardingId")
                                 String onboardingId) {
+        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
         log.trace("getContract start");
         log.debug("getContract onboardingId = {}", LogUtils.sanitize(onboardingId));
         BinaryData contract = tokenService.getContract(onboardingId);
@@ -211,15 +208,13 @@ public class TokenV2Controller {
     public Response getTemplateAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                           @PathParam("onboardingId")
                                           String onboardingId,
-                                          @Parameter(description = "${openapi.tokens.attachmentName}")
-                                          @QueryParam("name") String filename,
-                                          @Parameter(description = "${openapi.tokens.attachmentName}")
-                                          @QueryParam("attachmentName") String legacyAttachmentName) {
+                                          @Parameter(description = "${openapi.tokens.attachmentName}", required = true)
+                                          @QueryParam("attachmentName") String attachmentName) {
+        RequestParams.requiredQuery("attachmentName", attachmentName);
         log.trace("getTemplateAttachment start");
-        String resolvedFilename = resolveAttachmentName(filename, legacyAttachmentName);
-        String sanitizedFilename = resolvedFilename.replaceAll(SANITIZIER, "_");
+        String sanitizedFilename = attachmentName.replaceAll(SANITIZIER, "_");
         log.debug("getTemplateAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        BinaryData contract = tokenService.getTemplateAttachment(onboardingId, resolvedFilename);
+        BinaryData contract = tokenService.getTemplateAttachment(onboardingId, attachmentName);
         return binaryResponse(contract);
     }
 
@@ -231,13 +226,13 @@ public class TokenV2Controller {
     public Response getAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                   @PathParam("onboardingId")
                                   String onboardingId,
-                                  @Parameter(description = "${openapi.tokens.attachmentName}")
+                                  @Parameter(description = "${openapi.tokens.attachmentName}", required = true)
                                   @QueryParam("name") String filename) {
+        RequestParams.requiredQuery("name", filename);
         log.trace("getAttachment start");
-        String resolvedFilename = resolveAttachmentName(filename, null);
-        String sanitizedFilename = resolvedFilename.replaceAll(SANITIZIER, "_");
+        String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
         log.debug("getAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        BinaryData contract = tokenService.getAttachment(onboardingId, resolvedFilename);
+        BinaryData contract = tokenService.getAttachment(onboardingId, filename);
         return binaryResponse(contract);
     }
 
@@ -246,11 +241,10 @@ public class TokenV2Controller {
     @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
             description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
             operationId = "getAvailableDocumentsUsingGET")
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS)
     public AvailableDocumentsResource getAvailableDocuments(@Parameter(description = "${openapi.tokens.onboardingId}")
                                                             @PathParam("onboardingId") String onboardingId) {
-        if (!authorizationService.hasPermission(securityIdentity, onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS)) {
-            throw new UnauthorizedUserException("User is not allowed to access this resource.");
-        }
+        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
         log.trace("getAvailableDocuments start");
         log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
         AvailableDocuments source = tokenService.getAvailableDocuments(onboardingId);
@@ -262,18 +256,49 @@ public class TokenV2Controller {
     }
 
     @GET
-    @Path("/{onboardingId}/attachment/status")
-    @Operation(summary = "${openapi.tokens.headAttachment}",
-            description = "${openapi.tokens.headAttachment}", operationId = "getAttachmentStatusUsingGET")
-    public Response getAttachmentStatus(@Parameter(description = "${openapi.tokens.onboardingId}")
-                                        @PathParam("onboardingId") String onboardingId,
-                                        @NotNull @QueryParam("name") String attachmentName) {
-        log.trace("getAttachmentStatus start");
-        log.debug("getAttachmentStatus onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
-        int attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
-        return attachmentResponse >= 200 && attachmentResponse < 300
-                ? Response.noContent().build()
-                : Response.status(Response.Status.NOT_FOUND).build();
+    @Path("/{onboardingId}/download")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Download a document (signed contract or attachment) for the given onboarding",
+            description = "When type=CONTRACT_SIGNED downloads the signed contract; "
+                    + "when type=ATTACHMENT the 'name' query parameter is required.",
+            operationId = "downloadDocumentUsingGET")
+    @APIResponses(value = {
+            @APIResponse(responseCode = "200", description = "Successful operation"),
+            @APIResponse(responseCode = "400", description = "Invalid request - missing 'name' when type=ATTACHMENT or unsupported download type"),
+            @APIResponse(responseCode = "401", description = "Unauthorized"),
+            @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS),
+            @APIResponse(responseCode = "404", description = "Onboarding or document not found")
+    })
+    @Parameter(name = "type", in = ParameterIn.QUERY,
+            description = "Type of document to download", required = true,
+            schema = @Schema(implementation = DownloadDocumentType.class))
+    public Response downloadDocument(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                     @PathParam("onboardingId") String onboardingId,
+                                     @Context UriInfo uriInfo,
+                                     @Parameter(description = "Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.")
+                                     @QueryParam("name") String name) {
+        // Scalar @QueryParam binding loses the distinction between missing and explicitly empty values.
+        String type = uriInfo.getQueryParameters().getFirst("type");
+        DownloadDocumentType documentType = RequestParams.requiredEnum("type", type, DownloadDocumentType.class);
+        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
+        log.trace("downloadDocument start");
+        log.debug("downloadDocument onboardingId = {}, type = {}, name = {}",
+                Encode.forJava(onboardingId), documentType, Encode.forJava(name));
+
+        BinaryData document;
+        switch (documentType) {
+            case CONTRACT_SIGNED -> document = tokenService.getContractSigned(onboardingId);
+            case ATTACHMENT -> {
+                if (StringUtils.isBlank(name)) {
+                    throw new InvalidRequestException(
+                            "Query parameter 'name' is required when type=" + DownloadDocumentType.ATTACHMENT);
+                }
+                document = tokenService.getAttachment(onboardingId, name);
+            }
+            default -> throw new InvalidRequestException("Unsupported download type: " + documentType);
+        }
+        log.trace("downloadDocument end");
+        return binaryResponse(document);
     }
 
     @HEAD
@@ -282,20 +307,24 @@ public class TokenV2Controller {
             description = "${openapi.tokens.headAttachment}", operationId = "headAttachmentUsingGET")
     public Response headAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                    @PathParam("onboardingId") String onboardingId,
-                                   @NotNull @QueryParam("name") String attachmentName) {
+                                   @Parameter(required = true) @QueryParam("name") String attachmentName) {
+        RequestParams.requiredQuery("name", attachmentName);
         log.trace("headAttachment start");
         log.debug("headAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
-        int attachmentResponse = tokenService.headAttachment(onboardingId, attachmentName);
-        return attachmentResponse >= 200 && attachmentResponse < 300
-                ? Response.noContent().build()
-                : Response.status(Response.Status.NOT_FOUND).build();
+        return attachmentStatus(tokenService.headAttachment(onboardingId, attachmentName));
     }
 
-    public Response uploadAttachment(String onboardingId,
-                                     String attachmentName,
-                                     String legacyAttachmentName,
-                                     FileUpload attachment) {
-        return uploadAttachment(onboardingId, attachmentName, legacyAttachmentName, null, null, attachment);
+    @GET
+    @Path("/{onboardingId}/attachment/status")
+    @Operation(summary = "${openapi.tokens.headAttachment}",
+            description = "${openapi.tokens.headAttachment}", operationId = "getAttachmentStatusUsingGET")
+    public Response getAttachmentStatus(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                        @PathParam("onboardingId") String onboardingId,
+                                        @Parameter(required = true) @QueryParam("name") String attachmentName) {
+        RequestParams.requiredQuery("name", attachmentName);
+        log.trace("getAttachmentStatus start");
+        log.debug("getAttachmentStatus onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
+        return attachmentStatus(tokenService.headAttachment(onboardingId, attachmentName));
     }
 
     @POST
@@ -304,19 +333,20 @@ public class TokenV2Controller {
     @Operation(description = "${openapi.tokens.uploadAttachment}", summary = "${openapi.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
     public Response uploadAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
-                                     @QueryParam("name") String attachmentName,
-                                     @QueryParam("attachmentName") String legacyAttachmentName,
+                                     @Parameter(required = true) @QueryParam("attachmentName") String attachmentName,
                                      @RestForm("attachmentId") String attachmentId,
                                      @RestForm("attachmentDescription") String attachmentDescription,
-                                     @RestForm("attachment") FileUpload attachment) {
+                                     @RestForm("attachment") FileUpload attachment,
+                                     @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantId) {
+        RequestParams.requiredQuery("attachmentName", attachmentName);
         log.trace("uploadAttachment start");
-        UploadedFile uploadedFile = toUploadedFile(attachment);
+        UploadedFile uploadedFile = toUploadedFile("attachment", attachment);
         FileValidationUtils.validatePdfOrP7m(uploadedFile);
-        String resolvedAttachmentName = resolveAttachmentName(attachmentName, legacyAttachmentName);
         String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(onboardingId, uploadedFile, resolvedAttachmentName, attachmentId, attachmentDescription);
+        tokenService.uploadAttachment(requiredTenantId(tenantId), onboardingId, uploadedFile,
+                attachmentName, attachmentId, attachmentDescription);
         return Response.noContent().build();
     }
 
@@ -325,55 +355,51 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${openapi.tokens.getAggregatesCsv}",
             description = "${openapi.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
-    public Response getAggregatesCsv(@Parameter(description = "${openapi.tokens.onboardingId}") @PathParam("onboardingId")
-                                     String onboardingIdInput,
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS)
+    public Response getAggregatesCsv(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                     @PathParam("onboardingId") String onboardingId,
                                      @Parameter(description = "${openapi.tokens.productId}")
-                                     @PathParam("productId")
-                                     String productIdInput) {
-
+                                     @PathParam("productId") String productId) {
+        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
         log.trace("getAggregatesCsv start");
-        String onboardingId = Encode.forJava(onboardingIdInput);
-        String productId = Encode.forJava(productIdInput);
-        log.debug("getAggregatesCsv onboardingId = {}, productId = {}", onboardingId, productId);
-
-        String userUid = SecurityIdentityUtils.getUid(securityIdentity);
-        OnboardingData onboardingWithUserInfo = tokenService.getOnboardingWithUserInfo(onboardingId);
-
-        if ((OnboardingStatus.COMPLETED.name().equalsIgnoreCase(onboardingWithUserInfo.getStatus()) && userInstitutionService.verifyAllowedUserInstitution(
-                onboardingWithUserInfo.getInstitutionUpdate().getId(), productId, userUid)) || tokenService.verifyAllowedUserByRole(onboardingId, userUid)
-                || userService.isAllowedUserByUid(userUid)) {
-            BinaryData csv = tokenService.getAggregatesCsv(onboardingId, productId);
-            return binaryResponse(csv);
-        } else {
-            throw new UnauthorizedUserException("Normal-User not allowed to use this endpoint.");
-        }
-
+        log.debug("getAggregatesCsv onboardingId = {}, productId = {}", Encode.forJava(onboardingId), Encode.forJava(productId));
+        BinaryData csv = tokenService.getAggregatesCsv(onboardingId, productId);
+        return binaryResponse(csv);
     }
 
+    private void checkPermission(String onboardingId, String permission) {
+        if (!authorizationService.hasPermission(securityIdentity, onboardingId, permission)) {
+            throw new AccessDeniedException();
+        }
+    }
+
+    private static String requiredTenantId(String tenantId) {
+        if (StringUtils.isBlank(tenantId)) {
+            throw new InvalidRequestException("Tenant context is required");
+        }
+        return tenantId;
+    }
+
+    private static Response attachmentStatus(int status) {
+        return status >= 200 && status < 300
+                ? Response.noContent().build()
+                : Response.status(Response.Status.NOT_FOUND).build();
+    }
+
+    // The downstream file name is exposed as is: a missing one is rendered as "null", like the former Spring service
     private static Response binaryResponse(BinaryData data) {
-        String fileName = data.fileName() == null || data.fileName().isBlank() ? "download.bin" : data.fileName();
         return Response.ok(data.content(), MediaType.APPLICATION_OCTET_STREAM)
                 .header(ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + data.fileName())
                 .build();
     }
 
-    private static UploadedFile toUploadedFile(FileUpload fileUpload) {
-        if (fileUpload == null) {
-            return null;
-        }
+    private static UploadedFile toUploadedFile(String partName, FileUpload fileUpload) {
+        RequestParams.requiredPart(partName, fileUpload);
         try {
             return new UploadedFile(fileUpload.fileName(), fileUpload.contentType(), Files.readAllBytes(fileUpload.uploadedFile()));
         } catch (IOException e) {
             throw new IllegalStateException("Cannot read uploaded file", e);
         }
-    }
-
-    private static String resolveAttachmentName(String primaryValue, String legacyValue) {
-        String resolvedValue = StringUtils.firstNonBlank(primaryValue, legacyValue);
-        if (resolvedValue == null) {
-            throw new InvalidRequestException("attachment name is required");
-        }
-        return resolvedValue;
     }
 }

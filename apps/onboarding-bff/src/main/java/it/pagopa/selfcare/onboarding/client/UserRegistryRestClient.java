@@ -1,64 +1,69 @@
 package it.pagopa.selfcare.onboarding.client;
 
 import it.pagopa.selfcare.onboarding.client.transport.ReplayOnConnectionDrop;
-import it.pagopa.selfcare.onboarding.client.model.*;
-import jakarta.ws.rs.*;
+import it.pagopa.selfcare.onboarding.client.model.EmbeddedExternalId;
+import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
+import it.pagopa.selfcare.onboarding.client.model.RegistryUser;
+import it.pagopa.selfcare.onboarding.client.model.SaveUserDto;
+import it.pagopa.selfcare.onboarding.client.model.UserId;
+import it.pagopa.selfcare.onboarding.security.AuthenticationPropagationHeadersFactory;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
+import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
-import org.openapi.quarkus.user_registry_json.api.UserApi;
-import org.openapi.quarkus.user_registry_json.model.UserResource;
-import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 
 import java.util.EnumSet;
+import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
+/**
+ * User registry (PDV) client. Like every client of the Spring BFF it sends the registry api key together with the
+ * caller credentials (bearer token and tenant header).
+ */
 @RegisterRestClient(configKey = "user_registry_json")
 @ReplayOnConnectionDrop
+@RegisterClientHeaders(AuthenticationPropagationHeadersFactory.class)
 @ClientHeaderParam(name = "x-api-key", value = "${rest-client.user-registry.api-key}")
-public interface UserRegistryRestClient extends UserApi {
+@Path("/users")
+public interface UserRegistryRestClient {
 
     @POST
-    @Path("/users/search")
+    @Path("/search")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    User searchByExternalId(EmbeddedExternalId externalId, @QueryParam("fl") String fields);
-
-    default User search(EmbeddedExternalId externalId, EnumSet<User.Fields> fields) {
-        return searchByExternalId(externalId, toFieldList(fields));
-    }
+    RegistryUser search(EmbeddedExternalId externalId, @QueryParam("fl") List<String> fields);
 
     @PATCH
-    @Path("/users/{id}")
+    @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     void patchUser(@PathParam("id") UUID id, MutableUserFieldsDto request);
 
     @GET
-    @Path("/users/{id}")
+    @Path("/{id}")
     @Produces(MediaType.APPLICATION_JSON)
-    User getUserByInternalIdRaw(@PathParam("id") UUID id, @QueryParam("fl") String fieldList);
-
-    default User getUserByInternalId(UUID id, EnumSet<User.Fields> fieldList) {
-        return getUserByInternalIdRaw(id, toFieldList(fieldList));
-    }
+    RegistryUser getUserByInternalId(@PathParam("id") UUID id, @QueryParam("fl") List<String> fields);
 
     @PATCH
-    @Path("/users")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     UserId saveUser(SaveUserDto request);
 
     @DELETE
-    @Path("/users/{id}")
+    @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     void deleteById(@PathParam("id") UUID id);
 
-    default UserResource _searchUsingPOST(String fl, UserSearchDto userSearchDto) {
-        return searchUsingPOST(fl, userSearchDto).await().indefinitely();
-    }
-
-    private static String toFieldList(EnumSet<User.Fields> fields) {
-        return fields.stream().map(Enum::name).collect(Collectors.joining(","));
+    /** One {@code fl} query parameter per field, in enum order, as the previous implementation sent them. */
+    static List<String> toFieldList(EnumSet<RegistryUser.Fields> fields) {
+        return fields.stream().map(Enum::name).toList();
     }
 }

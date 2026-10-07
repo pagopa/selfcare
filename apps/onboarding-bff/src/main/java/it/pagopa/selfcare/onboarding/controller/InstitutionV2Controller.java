@@ -2,25 +2,28 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
 import it.pagopa.selfcare.onboarding.controller.request.*;
 import it.pagopa.selfcare.onboarding.controller.response.*;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
+import it.pagopa.selfcare.onboarding.mapper.RegistryProxyMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.util.FileValidationUtils;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
 import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -28,6 +31,7 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import java.util.Objects;
 import java.io.IOException;
 import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
@@ -51,14 +55,62 @@ public class InstitutionV2Controller {
     private final InstitutionService institutionService;
     private final OnboardingMapper onboardingMapper;
     private final InstitutionMapper institutionMapper;
+    private final RegistryProxyMapper registryProxyMapper;
     private static final String ONBOARDING_START = "onboarding start";
     private static final String ONBOARDING_END = "onboarding end";
 
     @Inject
     SecurityIdentity securityIdentity;
 
-    @ApiResponse(responseCode = "403",
+    @GET
+    @Path("/ipa")
+    @Operation(summary = "${openapi.onboarding.institutions.api.searchIpaInstitutions.summary}",
+            description = "${openapi.onboarding.institutions.api.searchIpaInstitutions.description}",
+            operationId = "searchIpaInstitutionsUsingGET")
+    public IpaInstitutionsSearchResource searchIpaInstitutions(
+            @Parameter(description = "Search text", schema = @Schema(defaultValue = "*"))
+            @QueryParam("search") String search,
+            @Parameter(description = "${openapi.onboarding.institutions.api.ipaCategory}")
+            @QueryParam("category") String category,
+            @Parameter(schema = @Schema(type = SchemaType.INTEGER, format = "int32", defaultValue = "0"))
+            @QueryParam("page") String page,
+            @Parameter(schema = @Schema(type = SchemaType.INTEGER, format = "int32", defaultValue = "50"))
+            @QueryParam("pageSize") String pageSize) {
+        log.trace("searchIpaInstitutions start");
+        String resolvedSearch = search == null || search.isEmpty() ? "*" : search;
+        Integer resolvedPage = Objects.requireNonNullElse(RequestParams.optionalInt("page", page), 0);
+        Integer resolvedPageSize = Objects.requireNonNullElse(RequestParams.optionalInt("pageSize", pageSize), 50);
+        IpaInstitutionsSearchResource resource = registryProxyMapper.toResource(
+                institutionService.searchIpaInstitutions(resolvedSearch, category, resolvedPage, resolvedPageSize));
+        log.debug("searchIpaInstitutions result count = {}", resource == null ? null : resource.getCount());
+        log.trace("searchIpaInstitutions end");
+        return resource;
+    }
+
+    @GET
+    @Path("/ipa/{taxCode}")
+    @Operation(summary = "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.summary}",
+            description = "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.description}",
+            operationId = "findIpaInstitutionByTaxCodeUsingGET")
+    public IpaInstitutionResource findIpaInstitutionByTaxCode(
+            @PathParam("taxCode") String taxCode,
+            @Parameter(description = "${openapi.onboarding.institutions.api.ipaCategory}")
+            @QueryParam("category") String category) {
+        log.trace("findIpaInstitutionByTaxCode start");
+        IpaInstitutionResource resource = registryProxyMapper.toResource(
+                institutionService.findIpaInstitutionByTaxCode(taxCode, category));
+        log.trace("findIpaInstitutionByTaxCode end");
+        return resource;
+    }
+
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
+            content = {
+                    @Content(mediaType = "application/problem+json",
+                            schema = @Schema(implementation = Problem.class))
+            })
+    @APIResponse(responseCode = "409",
+            description = "Conflict",
             content = {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
@@ -68,6 +120,7 @@ public class InstitutionV2Controller {
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
     public Response onboarding(@Valid OnboardingProductDto request) {
+        RequestParams.requiredBody(request);
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
         institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
@@ -80,7 +133,7 @@ public class InstitutionV2Controller {
         return Response.status(Response.Status.CREATED).build();
     }
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -91,6 +144,7 @@ public class InstitutionV2Controller {
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
     public Response onboarding(@Valid CompanyOnboardingDto request) {
+        RequestParams.requiredBody(request);
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
@@ -99,7 +153,7 @@ public class InstitutionV2Controller {
         return Response.status(Response.Status.CREATED).build();
     }
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -123,10 +177,8 @@ public class InstitutionV2Controller {
                                                     @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                                     @QueryParam("subunitCode")
                                                     String subunitCode) {
+        RequestParams.requiredQuery("productId", productId);
         log.trace("getInstitution start");
-        if (StringUtils.isAllBlank(productId, taxCode, origin, originId, subunitCode)) {
-            throw new InvalidRequestException("At least one filter must be provided");
-        }
         final List<InstitutionResource> institutions = institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
                 .stream()
                 .map(institutionMapper::toResource)
@@ -145,17 +197,11 @@ public class InstitutionV2Controller {
                                                         @RestForm("institutionType") String institutionType,
                                                         @RestForm("productId") String productId,
                                                         @QueryParam("institutionType") String legacyInstitutionType,
-                                                        @QueryParam("productId") String legacyProductId){
+                                                        @QueryParam("productId") String legacyProductId) {
+        UploadedFile uploadedFile = toUploadedFile("aggregates", file);
+        String resolvedProductId = RequestParams.requiredQuery("productId", productId != null ? productId : legacyProductId);
         log.trace("Verify Aggregates Csv start");
-        String resolvedInstitutionType = StringUtils.firstNonBlank(institutionType, legacyInstitutionType);
-        String resolvedProductId = StringUtils.firstNonBlank(productId, legacyProductId);
-        if (StringUtils.isBlank(resolvedProductId)) {
-            throw new InvalidRequestException("productId is required");
-        }
         log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
-        log.debug("Verify Aggregates Csv institutionType = {}", LogUtils.sanitize(resolvedInstitutionType));
-
-        UploadedFile uploadedFile = toUploadedFile(file);
         FileValidationUtils.validateAggregatesFile(uploadedFile);
         VerifyAggregatesResponse response = onboardingMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId));
         log.trace("Verify Aggregates Csv end");
@@ -169,6 +215,7 @@ public class InstitutionV2Controller {
     public VerifyManagerResponse verifyManager(
             @Valid VerifyManagerRequest request
     ) {
+        RequestParams.requiredBody(request);
         log.trace("verifyManager start");
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
         VerifyManagerResponse response = onboardingMapper.toManagerVerification(institutionService.verifyManager(fiscalCode, request.getCompanyTaxCode()));
@@ -184,6 +231,8 @@ public class InstitutionV2Controller {
                                                                    @QueryParam("productId") String productId,
                                                                    @QueryParam("subunitCode") String subunitCode
     ) {
+        RequestParams.requiredQuery("taxCode", taxCode);
+        RequestParams.requiredQuery("productId", productId);
         log.trace("getActiveOnboarding start");
         log.debug("getActiveOnboarding taxCode = {}, productId = {}", Encode.forJava(taxCode), Encode.forJava(productId));
         if ((StringUtils.isBlank(taxCode) || StringUtils.isBlank(productId)))
@@ -203,6 +252,8 @@ public class InstitutionV2Controller {
             description = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
     public RecipientCodeStatus checkRecipientCode(@QueryParam("originId") String originId,
                                                   @QueryParam("recipientCode") String recipientCode) {
+        RequestParams.requiredQuery("originId", originId);
+        RequestParams.requiredQuery("recipientCode", recipientCode);
         log.trace("Check recipientCode start");
         log.debug("Check originId start for institution with originId {} and recipientCode {}",
                 LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
@@ -227,13 +278,15 @@ public class InstitutionV2Controller {
     @Path("/onboardings")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingInfo.summary}",
             description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
-    public List<OnboardingGet> getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
-                                                   @QueryParam("status") String inputStatus) {
+    public List<OnboardingResult> getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
+                                                     @QueryParam("status") String inputStatus) {
+        RequestParams.requiredQuery("taxCode", inputTaxCode);
+        RequestParams.requiredQuery("status", inputStatus);
         log.trace("onboardingInfo start");
         String taxCode = Encode.forJava(inputTaxCode);
         String status = Encode.forJava(inputStatus);
         log.debug("onboardingInfo request = {} - {}", taxCode, status);
-        List<OnboardingGet> results = institutionService.getOnboardingWithFilter(taxCode, status).getItems();
+        List<OnboardingResult> results = institutionService.getOnboardingWithFilter(taxCode, status);
         log.trace("onboardingInfo end");
         return results;
     }
@@ -251,10 +304,8 @@ public class InstitutionV2Controller {
         return Response.noContent().build();
     }
 
-    private static UploadedFile toUploadedFile(FileUpload fileUpload) {
-        if (fileUpload == null) {
-            return null;
-        }
+    private static UploadedFile toUploadedFile(String partName, FileUpload fileUpload) {
+        RequestParams.requiredPart(partName, fileUpload);
         try {
             return new UploadedFile(fileUpload.fileName(), fileUpload.contentType(), Files.readAllBytes(fileUpload.uploadedFile()));
         } catch (IOException e) {

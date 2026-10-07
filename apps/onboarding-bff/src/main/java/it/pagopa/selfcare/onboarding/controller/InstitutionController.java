@@ -5,13 +5,14 @@ import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_FD_GARANTITO;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionOnboardingData;
@@ -58,7 +59,7 @@ public class InstitutionController {
     @Inject
     SecurityIdentity securityIdentity;
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -69,6 +70,7 @@ public class InstitutionController {
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingUsingPOST")
     public Response onboarding(@Valid OnboardingProductDto request) {
+        RequestParams.requiredBody(request);
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
         institutionService.onboardingProduct(onboardingMapper.toEntity(request));
@@ -76,7 +78,7 @@ public class InstitutionController {
         return Response.status(Response.Status.CREATED).build();
     }
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -87,6 +89,7 @@ public class InstitutionController {
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingCompanyUsingPOST")
     public Response onboarding(@Valid CompanyOnboardingDto request) {
+        RequestParams.requiredBody(request);
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
         institutionService.onboardingProduct(onboardingMapper.toEntity(request));
@@ -95,7 +98,7 @@ public class InstitutionController {
     }
 
     @GET
-    @Path("/onboarding/")
+    @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
     public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${openapi.onboarding.institutions.model.id}")
@@ -104,6 +107,8 @@ public class InstitutionController {
                                                                           @Parameter(description = "${openapi.onboarding.product.model.id}")
                                                                           @QueryParam("productId")
                                                                           String productId) {
+        RequestParams.requiredQuery("institutionId", institutionId);
+        RequestParams.requiredQuery("productId", productId);
         log.trace("getInstitutionOnboardingInfoById start");
         log.debug("getInstitutionOnboardingInfoById institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
         InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingDataById(institutionId, productId);
@@ -141,6 +146,7 @@ public class InstitutionController {
                                                                                            @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                                                                            @QueryParam("subunitCode")
                                                                                            String subunitCode) {
+        RequestParams.requiredQuery("taxCode", taxCode);
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode start");
         log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode taxCode = {}, subunitCode = {}",
                 LogUtils.sanitize(taxCode), LogUtils.sanitize(subunitCode));
@@ -176,7 +182,7 @@ public class InstitutionController {
     }
 
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -199,7 +205,7 @@ public class InstitutionController {
         log.trace("verifyOnboarding end");
     }
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -231,7 +237,9 @@ public class InstitutionController {
                                      @QueryParam("institutionType")
                                      String institutionType,
                                  @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}")
-                                     @QueryParam("verifyType") VerifyType type) {
+                                     @QueryParam("verifyType") String verifyType) {
+        RequestParams.requiredQuery("productId", productId);
+        VerifyType type = RequestParams.optionalEnum("verifyType", verifyType, VerifyType.class);
         log.trace("verifyOnboarding start");
         if (VerifyType.EXTERNAL.equals(type) && vatNumber.isPresent() && (PROD_FD.getValue().equals(productId) || PROD_FD_GARANTITO.getValue().equals(productId))) {
             institutionService.checkOrganization(productId, taxCode, vatNumber.get());
@@ -240,7 +248,7 @@ public class InstitutionController {
         log.trace("verifyOnboarding end");
     }
 
-    @ApiResponse(responseCode = "403",
+    @APIResponse(responseCode = "403",
             description = "Forbidden",
             content = {
                     @Content(mediaType = "application/problem+json",
@@ -271,20 +279,9 @@ public class InstitutionController {
                                         @QueryParam("institutionType")
                                         String institutionType,
                                         @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}")
-                                        @QueryParam("verifyType") VerifyType type) {
-        verifyOnboarding(taxCode, subunitCode, productId, origin, originId, vatNumber, institutionType, type);
+                                        @QueryParam("verifyType") String verifyType) {
+        verifyOnboarding(taxCode, subunitCode, productId, origin, originId, vatNumber, institutionType, verifyType);
         return Response.ok().build();
-    }
-
-    @PUT
-    @Path("/{onboardingId}")
-    @Operation(summary = "Trigger onboarding request", operationId = "triggerOnboardingRequestUsingPUT")
-    public Response triggerOnboardingRequest(@PathParam("onboardingId") String onboardingId) {
-        log.trace("triggerOnboardingRequest start");
-        log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));
-        institutionService.triggerOnboardingRequest(onboardingId);
-        log.trace("triggerOnboardingRequest end");
-        return Response.noContent().build();
     }
 
     @GET
@@ -308,6 +305,7 @@ public class InstitutionController {
     public MatchInfoResultResource postVerificationMatch(
                                                          @Valid
                                                          VerificationMatchRequest verificationMatchRequest) {
+        RequestParams.requiredBody(verificationMatchRequest);
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser userDto = {}", verificationMatchRequest);
         MatchInfoResult matchInfoResult = institutionService.matchInstitutionAndUser(verificationMatchRequest.getTaxCode(),
@@ -323,6 +321,7 @@ public class InstitutionController {
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}",
             description = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}", operationId = "postVerificationLegalAddressUsingPOST")
     public InstitutionLegalAddressResource postVerificationLegalAddress(@Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
+        RequestParams.requiredBody(verificationLegalAddressRequest);
         log.trace("getInstitutionLegalAddress start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}",
                 LogUtils.sanitize(verificationLegalAddressRequest.getTaxCode()));
@@ -341,7 +340,7 @@ public class InstitutionController {
     @GET
     @Path("/{externalInstitutionId}/products/{productId}/onboarded-institution-info")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
-            description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET_1")
+            description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET_1", hidden = true)
     public InstitutionOnboardingInfoResource getInstitutionOnboardingInfo(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
                                                                           @PathParam("externalInstitutionId")
                                                                           String externalInstitutionId,

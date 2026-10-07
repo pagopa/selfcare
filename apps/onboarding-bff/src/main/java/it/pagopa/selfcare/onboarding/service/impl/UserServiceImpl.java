@@ -7,20 +7,17 @@ import it.pagopa.selfcare.onboarding.exception.InvalidUserFieldsException;
 import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
-import it.pagopa.selfcare.onboarding.mapper.UserMapper;
-import it.pagopa.selfcare.onboarding.service.strategy.UserAllowedValidationStrategy;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
+import it.pagopa.selfcare.onboarding.util.Preconditions;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
 import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Objects;
 import java.util.Optional;
 
 import static it.pagopa.selfcare.onboarding.util.Utils.getManager;
@@ -31,30 +28,26 @@ import static it.pagopa.selfcare.onboarding.util.Utils.isUserAdmin;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    private static final EnumSet<User.Fields> FIELD_LIST = EnumSet.of(User.Fields.name, User.Fields.familyName, User.Fields.workContacts);
+    private static final EnumSet<RegistryUser.Fields> FIELD_LIST = EnumSet.of(RegistryUser.Fields.name, RegistryUser.Fields.familyName);
     private static final String INVALID_FIELD_REASON = "the value does not match with the certified data";
     private final UserRegistryService userRegistryConnector;
     private final OnboardingService onboardingMsConnector;
     private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
-    private final UserAllowedValidationStrategy userAllowedValidationStrategy;
 
     @Override
     public void validate(User user) {
         log.trace("validate start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate user = {}", user);
-        Objects.requireNonNull(user, "An user is required");
-        final Optional<User> searchResult =
+        Preconditions.notNull(user, "An user is required");
+        final Optional<RegistryUser> searchResult =
                 userRegistryConnector.search(user.getTaxCode(), FIELD_LIST);
-        if (searchResult.isEmpty()) {
-            throw new ResourceNotFoundException("User not found");
-        }
         searchResult.ifPresent(foundUser -> {
             final ArrayList<InvalidUserFieldsException.InvalidField> invalidFields = new ArrayList<>();
-            if (!isValid(UserMapper.map(user.getName()), foundUser.getName())) {
+            if (!isValid(user.getName(), foundUser.getName())) {
                 invalidFields.add(new InvalidUserFieldsException.InvalidField("name", INVALID_FIELD_REASON));
             }
-            if (!isValid(UserMapper.map(user.getFamilyName()), foundUser.getFamilyName())) {
+            if (!isValid(user.getSurname(), foundUser.getFamilyName())) {
                 invalidFields.add(new InvalidUserFieldsException.InvalidField("surname", INVALID_FIELD_REASON));
             }
             if (!invalidFields.isEmpty()) {
@@ -84,8 +77,7 @@ public class UserServiceImpl implements UserService {
     public boolean  checkManager(CheckManagerRequest checkManagerRequest) {
         log.trace("checkManager start");
         log.debug("checkManager checkManagerRequest = {}", checkManagerRequest);
-        CheckManagerResponse response = onboardingMsConnector.checkManager(checkManagerRequest);
-        boolean checkManager = response != null && Boolean.TRUE.equals(response.getResponse());
+        boolean checkManager = onboardingMsConnector.checkManager(checkManagerRequest);
         log.trace("checkManager end");
         return checkManager;
     }
@@ -131,12 +123,6 @@ public class UserServiceImpl implements UserService {
         log.trace("getManagerInfo end");
         return managerInfo;
     }
-
-  @Override
-  public boolean isAllowedUserByUid(String uid) {
-      log.trace("isAllowedUser for {}", uid);
-      return userAllowedValidationStrategy.isAuthorizedUser(uid);
-  }
 
     @Override
     public UserId searchUser(String taxCode) {

@@ -2,17 +2,17 @@ package it.pagopa.selfcare.onboarding.service.impl;
 
 import it.pagopa.selfcare.onboarding.service.*;
 
+import it.pagopa.selfcare.onboarding.client.model.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.client.model.RequiredDocumentModel;
+import it.pagopa.selfcare.onboarding.client.model.StorageOrigin;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.StorageOrigin;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +108,17 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
+    public BinaryData getContractSigned(String onboardingId) {
+        log.trace("getContractSigned start");
+        log.debug("getContractSigned id = {}", Encode.forJava(onboardingId));
+        Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
+        BinaryData resource = documentMsClient.getContractSigned(onboardingId);
+        log.debug("getContractSigned result = success");
+        log.trace("getContractSigned end");
+        return resource;
+    }
+
+    @Override
     public BinaryData getTemplateAttachment(String onboardingId, String filename) {
         log.trace("getTemplateAttachment start");
         log.debug("getTemplateAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
@@ -164,33 +175,27 @@ public class TokenServiceImpl implements TokenService {
         return resource;
     }
 
-  @Override
-  public boolean verifyAllowedUserByRole(String onboardingId, String uid) {
-    log.trace("verifyAllowedUserRole for {} - {}", onboardingId, uid);
-    OnboardingData onboardingData = getOnboardingWithUserInfo(onboardingId);
-    return onboardingData.getUsers().stream().anyMatch(user -> uid.equalsIgnoreCase(user.getId()));
-  }
-
     @Override
-    public void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName, String attachmentId, String attachmentDescription) {
+    public void uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
+                                 String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Objects.requireNonNull(attachmentName, "filename is required");
         Objects.requireNonNull(attachment, "file is required");
-
         OnboardingData onboarding = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboarding(onboardingId));
-        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(onboarding, attachmentId);
+
+        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(tenantId, onboarding, attachmentId);
         boolean userStorage = requiredDocument
                 .map(RequiredDocumentModel::getStorageOrigin)
                 .map(storageOrigin -> storageOrigin == StorageOrigin.USER)
                 .orElse(false);
 
         if (userStorage) {
-            log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
             Integer maxDocumentsRequired = requiredDocument
                     .map(RequiredDocumentModel::getMaxDocumentsRequired)
                     .orElse(1);
+            log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
             documentMsClient.uploadUserAttachment(
                     onboardingId,
                     attachment,
@@ -200,20 +205,13 @@ public class TokenServiceImpl implements TokenService {
                     attachmentName,
                     maxDocumentsRequired);
         } else {
-            log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
             Product product = productService.getProductValid(onboarding.getProductId());
             AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
-            documentMsClient.uploadAttachment(
-                    onboardingId,
-                    attachment,
-                    attachmentName,
-                    attachmentId,
-                    attachmentDescription,
-                    product.getId(),
-                    template);
+            log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
+            documentMsClient.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
         }
-        log.debug("getAttachment result = success");
-        log.trace("getAttachment end");
+        log.debug("uploadAttachment result = success");
+        log.trace("uploadAttachment end");
     }
 
     @Override
@@ -228,18 +226,15 @@ public class TokenServiceImpl implements TokenService {
         return resource;
     }
 
-    private Optional<RequiredDocumentModel> findRequiredDocument(OnboardingData onboarding, String attachmentId) {
-        if (Objects.isNull(attachmentId)) {
-            return Optional.empty();
-        }
-        String origin = Objects.nonNull(onboarding.getInstitutionUpdate()) ? onboarding.getInstitutionUpdate().getOrigin() : onboarding.getOrigin();
+    private Optional<RequiredDocumentModel> findRequiredDocument(String tenantId, OnboardingData onboarding, String attachmentId) {
         return productService
                 .getRequiredDocuments(
+                        tenantId,
                         onboarding.getProductId(),
                         onboarding.getInstitutionType().name(),
-                        origin)
+                        onboarding.getInstitutionUpdate().getOrigin())
                 .stream()
-                .filter(requiredDocumentModel -> attachmentId.equals(requiredDocumentModel.getId()))
+                .filter(requiredDocumentModel -> requiredDocumentModel.getId().equals(attachmentId))
                 .findFirst();
     }
 
@@ -249,7 +244,7 @@ public class TokenServiceImpl implements TokenService {
                 .get(onboarding.getInstitutionType().name())
                 .getAttachments()
                 .stream()
-                .filter(a -> attachmentName.equals(a.getName()))
+                .filter(a -> a.getName().equals(attachmentName))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(
                         String.format("Attachment with name %s not found", attachmentName)));

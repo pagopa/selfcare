@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.service;
 
 import io.vertx.core.buffer.Buffer;
 import it.pagopa.selfcare.onboarding.client.DocumentContentRestClient;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.client.model.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
@@ -83,8 +83,6 @@ public class DocumentService {
     public void uploadAttachment(String onboardingId,
                                  UploadedFile attachment,
                                  String attachmentName,
-                                 String attachmentId,
-                                 String attachmentDescription,
                                  String productId,
                                  AttachmentTemplate template) {
         DocumentBuilderRequest request = new DocumentBuilderRequest();

@@ -4,18 +4,10 @@ import it.pagopa.selfcare.onboarding.service.*;
 
 import it.pagopa.selfcare.onboarding.client.model.UserInstitutionRequest;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.entity.ProductStatus;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import java.io.IOException;
-import jakarta.ws.rs.ProcessingException;
-import java.time.temporal.ChronoUnit;
-import org.eclipse.microprofile.faulttolerance.Retry;
 import org.openapi.quarkus.user_json.api.InstitutionControllerApi;
 
 import java.util.List;
@@ -27,13 +19,14 @@ import static org.apache.commons.lang3.StringUtils.EMPTY;
 @ApplicationScoped
 public class UserInstitutionServiceImpl implements UserInstitutionService {
 
+  private static final String ACTIVE_STATE = "ACTIVE";
+
   private final InstitutionControllerApi userInstitutionApi;
 
   public UserInstitutionServiceImpl(@RestClient InstitutionControllerApi userInstitutionApi) {
     this.userInstitutionApi = userInstitutionApi;
   }
 
-  @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
   @Override
   public boolean verifyAllowedUserInstitution(String institutionId, String product, String uid) {
     log.trace("init verifyAllowedUserInstitution");
@@ -55,7 +48,7 @@ public class UserInstitutionServiceImpl implements UserInstitutionService {
 
     UserInstitutionRequest userInstitutionRequest =
         buildUserInstitutionRequest(
-            institutionId, EMPTY, product, rolesFilter, ProductStatus.ACTIVE.name(), EMPTY);
+            institutionId, EMPTY, product, rolesFilter, ACTIVE_STATE, EMPTY);
     List<org.openapi.quarkus.user_json.model.UserInstitutionResponse> response =
         userInstitutionApi
             .institutionsInstitutionIdUserInstitutionsGet(

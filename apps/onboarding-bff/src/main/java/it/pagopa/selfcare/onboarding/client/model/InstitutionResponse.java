@@ -2,7 +2,6 @@ package it.pagopa.selfcare.onboarding.client.model;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import lombok.Data;
-import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
 
 import java.util.List;
 

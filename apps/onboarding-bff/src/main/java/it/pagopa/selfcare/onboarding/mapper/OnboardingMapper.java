@@ -131,7 +131,7 @@ public interface OnboardingMapper {
 
     @Mapping(target = "institutionUpdate", source = "institution")
     @Mapping(target = "institutionUpdate.additionalInformations", source = "additionalInformations")
-    @Mapping(target = "origin", source = "institution.origin", qualifiedByName = "setOrigin")
+    @Mapping(target = "institutionUpdate.origin", source = "institution.origin", qualifiedByName = "setOrigin")
     OnboardingData toOnboardingData(org.openapi.quarkus.onboarding_json.model.OnboardingResponse onboardingResponse);
 
     @Named("setOrigin")
@@ -262,26 +262,40 @@ public interface OnboardingMapper {
 
     VerifyAggregateResult toVerifyAggregateResult(VerifyAggregateResponse body);
 
-    default VerifyAggregatesResponse toVerifyAggregatesResponse(VerifyAggregateResponse body) {
-        VerifyAggregateResult mapped = toVerifyAggregateResult(body);
+    default VerifyAggregatesResponse toVerifyAggregatesResponse(VerifyAggregateResult mapped) {
+        if (mapped == null) {
+            return null;
+        }
         VerifyAggregatesResponse response = new VerifyAggregatesResponse();
-        if (mapped != null) {
-            response.setAggregates(mapped.getAggregates());
-            response.setErrors(
-                    Optional.ofNullable(mapped.getErrors())
-                            .orElse(List.of())
-                            .stream()
-                            .map(error -> {
-                                RowErrorResponse rowErrorResponse = new RowErrorResponse();
-                                rowErrorResponse.setRow(error.getRow());
-                                rowErrorResponse.setCf(error.getCf());
-                                rowErrorResponse.setReason(error.getReason());
-                                return rowErrorResponse;
-                            })
-                            .toList()
-            );
+        response.setAggregates(mapped.getAggregates());
+        if (mapped.getErrors() != null) {
+            response.setErrors(mapped.getErrors().stream()
+                    .map(error -> {
+                        RowErrorResponse rowErrorResponse = new RowErrorResponse();
+                        rowErrorResponse.setRow(error.getRow());
+                        rowErrorResponse.setCf(error.getCf());
+                        rowErrorResponse.setReason(error.getReason());
+                        return rowErrorResponse;
+                    })
+                    .toList());
         }
         return response;
+    }
+
+    default List<OnboardingResult> toOnboardingWithFilter(OnboardingGetResponse onboardingGetResponse) {
+        if (onboardingGetResponse == null || onboardingGetResponse.getItems() == null) {
+            return List.of();
+        }
+        return onboardingGetResponse.getItems().stream()
+                .filter(Objects::nonNull)
+                .map(current -> {
+                    OnboardingResult onboarding = new OnboardingResult();
+                    onboarding.setId(current.getId());
+                    onboarding.setProductId(current.getProductId());
+                    onboarding.setStatus(current.getStatus());
+                    return onboarding;
+                })
+                .toList();
     }
 
     RecipientCodeStatusResult toRecipientCodeStatusResult(org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus recipientCodeStatus);

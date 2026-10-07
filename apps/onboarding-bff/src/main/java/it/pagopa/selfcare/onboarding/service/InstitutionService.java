@@ -1,10 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
-import org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus;
-import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
-
 import java.util.List;
 
 public interface InstitutionService {
@@ -18,6 +14,10 @@ public interface InstitutionService {
     void onboardingPaAggregator(OnboardingData entity);
 
     List<InstitutionInfo> getInstitutions(String productId, String userId);
+
+    IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize);
+
+    InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category);
 
     List<Institution> getActiveOnboarding(String taxCode,String productId,String subunitCode);
 
@@ -44,15 +44,15 @@ public interface InstitutionService {
 
     List<Institution> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
-    VerifyAggregateResponse validateAggregatesCsv(UploadedFile file, String productId);
+    VerifyAggregateResult validateAggregatesCsv(UploadedFile file, String productId);
 
-    RecipientCodeStatus checkRecipientCode(String originId, String recipientCode);
+    RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
 
     void onboardingUsersPgFromIcAndAde(OnboardingData onboardingUserPgRequest);
 
     ManagerVerification verifyManager(String taxCode, String companyTaxCode);
 
-    OnboardingGetResponse getOnboardingWithFilter(String taxCode, String status);
+    List<OnboardingResult> getOnboardingWithFilter(String taxCode, String status);
 
     void validateOnboardingByProductOrInstitutionTaxCode(String taxCode, String productId);
 

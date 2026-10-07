@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.client.model.GPUData;
 import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
@@ -83,9 +83,6 @@ public class OnboardingProductDto {
 
     @Schema(description = "${openapi.onboarding.institutions.model.atecoCodes}")
     private List<String> atecoCodes;
-
-    @Schema(description = "${openapi.onboarding.institutions.model.payment}")
-    private PaymentDto payment;
 
     @Schema(description = "${openapi.onboarding.institutions.model.requester}")
     private UserRequestDto userRequester;

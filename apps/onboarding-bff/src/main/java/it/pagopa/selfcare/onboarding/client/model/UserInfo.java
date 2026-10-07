@@ -13,7 +13,7 @@ import java.util.Set;
 public class UserInfo {
 
     private String id;
-    private User user;
+    private RegistryUser user;
     private String institutionId;
     private PartyRole role;
     private String status;

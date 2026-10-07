@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
-import it.pagopa.selfcare.product.entity.StorageOrigin;
 import lombok.Data;
 
 @Data

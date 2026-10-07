@@ -28,6 +28,8 @@ public interface TokenService {
 
   BinaryData getContract(String onboardingId);
 
+  BinaryData getContractSigned(String onboardingId);
+
   BinaryData getTemplateAttachment(String onboardingId, String filename);
 
   BinaryData getAttachment(String onboardingId, String filename);
@@ -36,13 +38,8 @@ public interface TokenService {
 
   BinaryData getAggregatesCsv(String onboardingId, String productId);
 
-  boolean verifyAllowedUserByRole(String onboardingId, String uid);
-
-  default void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName) {
-    uploadAttachment(onboardingId, attachment, attachmentName, null, null);
-  }
-
-  void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName, String attachmentId, String attachmentDescription);
+  void uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
+                        String attachmentId, String attachmentDescription);
 
   int headAttachment(String onboardingId, String filename);
 }

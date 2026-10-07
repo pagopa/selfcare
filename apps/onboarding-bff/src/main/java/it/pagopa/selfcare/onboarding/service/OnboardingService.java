@@ -1,9 +1,13 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
+import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import org.openapi.quarkus.onboarding_json.model.*;
+import it.pagopa.selfcare.onboarding.client.model.VerifyAggregateResult;
+import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
+import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
+import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
 
 import java.util.List;
 
@@ -31,29 +35,21 @@ public interface OnboardingService {
 
     OnboardingGet getOnboardingWithUserInfo(String onboardingId);
 
-    BinaryData getContract(String onboardingId);
-
-    BinaryData getTemplateAttachment(String onboardingId, String filename);
-
-    BinaryData getAttachment(String onboardingId, String filename);
-
-    BinaryData getAggregatesCsv(String onboardingId, String productId);
-
     void onboardingPaAggregation(OnboardingData onboardingData);
 
     List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
-    CheckManagerResponse checkManager(CheckManagerRequest request);
+    boolean checkManager(CheckManagerRequest request);
+
+    RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
 
     void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
 
     void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData);
 
-    OnboardingGetResponse onboardingWithFilter(String taxCode, String status);
+    List<OnboardingResult> onboardingWithFilter(String taxCode, String status);
 
-    void uploadAttachment(String onboardingId, UploadedFile attachment, String attachmentName);
-
-    int headAttachment(String onboardingId, String filename);
+    VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId);
 
     void triggerOnboardingRequest(String onboardingId);
 }

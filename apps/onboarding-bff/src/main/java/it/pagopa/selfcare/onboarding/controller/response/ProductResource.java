@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import it.pagopa.selfcare.product.entity.ProductStatus;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import it.pagopa.selfcare.onboarding.client.model.ProductStatus;
 import lombok.Data;
 
 @Data

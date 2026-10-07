@@ -7,64 +7,61 @@ components:
       properties:
         belongRegulatedMarket:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.additionalInformations.belongRegulatedMarket}"
         regulatedMarketNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.additionalInformations.regulatedMarketNote}"
         ipa:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.additionalInformations.ipa}"
         ipaCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.additionalInformations.ipaCode}"
         establishedByRegulatoryProvision:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.additionalInformations.establishedByRegulatoryProvision}"
         establishedByRegulatoryProvisionNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.additionalInformations.establishedByRegulatoryProvisionNote}"
         agentOfPublicService:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.additionalInformations.agentOfPublicService}"
         agentOfPublicServiceNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.additionalInformations.agentOfPublicServiceNote}"
         otherNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.additionalInformations.otherNote}"
     AdditionalInformationsDto:
       type: object
       properties:
         belongRegulatedMarket:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.assistance.belongRegulatedMarket}"
         regulatedMarketNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.regulatedMarketNote}"
         ipa:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.assistance.ipa}"
         ipaCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.ipaCode}"
         establishedByRegulatoryProvision:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.assistance.establishedByRegulatoryProvision}"
         establishedByRegulatoryProvisionNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.establishedByRegulatoryProvisionNote}"
         agentOfPublicService:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.assistance.agentOfPublicService}"
         agentOfPublicServiceNote:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.agentOfPublicServiceNote}"
         otherNote:
           type: string
-    AdditionalInformationsDto1:
-      type: object
-      properties:
-        belongRegulatedMarket:
-          type: boolean
-        regulatedMarketNote:
-          type: string
-        ipa:
-          type: boolean
-        ipaCode:
-          type: string
-        establishedByRegulatoryProvision:
-          type: boolean
-        establishedByRegulatoryProvisionNote:
-          type: string
-        agentOfPublicService:
-          type: boolean
-        agentOfPublicServiceNote:
-          type: string
-        otherNote:
-          type: string
+          description: "${openapi.onboarding.institutions.model.assistance.otherNote}"
     AggregateInstitution:
       type: object
       required:
@@ -164,24 +161,34 @@ components:
       properties:
         supportEmail:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.supportEmail}"
         supportPhone:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.supportPhone}"
     AssistanceContactsResource:
       type: object
       properties:
         supportEmail:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.supportEmail}"
         supportPhone:
           type: string
+          description: "${openapi.onboarding.institutions.model.assistance.supportPhone}"
     AvailableDocumentsResource:
+      description: Aggregated list of documents available for download for a given
+        onboarding.
       type: object
       properties:
         attachments:
           type: array
           items:
             type: string
+          description: Names of the attachments available for the onboarding. Empty
+            list if none.
         contractFilename:
           type: string
+          description: Filename of the signed contract available for download. Null
+            when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).
     Billing:
       type: object
       properties:
@@ -202,66 +209,79 @@ components:
       properties:
         businessName:
           type: string
+          description: "${openapi.onboarding.institutions.model.name}"
           pattern: \S
         registeredOffice:
           type: string
+          description: "${openapi.onboarding.institutions.model.address}"
           pattern: \S
         digitalAddress:
           type: string
+          description: "${openapi.onboarding.institutions.model.digitalAddress}"
           pattern: \S
         zipCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.zipCode}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         taxCodeInvoicing:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCodeInvoicing}"
         vatNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.vatNumber}"
         recipientCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.recipientCode}"
         publicServices:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.publicServices}"
         certified:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.certified}"
         legalForm:
           type: string
+          description: "${openapi.onboarding.institutions.model.legalForm}"
     BillingDataResponseDto:
       type: object
       properties:
         businessName:
           type: string
+          description: "${openapi.onboarding.institutions.model.name}"
         registeredOffice:
           type: string
+          description: "${openapi.onboarding.institutions.model.address}"
         digitalAddress:
           type: string
+          description: "${openapi.onboarding.institutions.model.digitalAddress}"
         zipCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.zipCode}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         vatNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.vatNumber}"
         recipientCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.recipientCode}"
         publicServices:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.publicServices}"
         certified:
           type: boolean
-    BillingResponse:
-      type: object
-      properties:
-        vatNumber:
-          type: string
-        recipientCode:
-          type: string
-        publicServices:
-          type: boolean
+          description: "${openapi.onboarding.institutions.model.certified}"
     BusinessResourceIC:
       type: object
       properties:
         businessName:
           type: string
+          description: "${openapi.onboarding.institutions.businessIc.model.businessName}"
         businessTaxId:
           type: string
+          description: "${openapi.onboarding.institutions.businessIc.model.businessTaxId}"
     CheckManagerDto:
       type: object
       required:
@@ -269,26 +289,28 @@ components:
       - productId
       properties:
         userId:
+          description: "${openapi.onboarding.institutions.model.userId}"
+          type: string
           $ref: "#/components/schemas/UUID"
         institutionType:
+          description: "${openapi.onboarding.institutions.model.institutionType}"
+          type: string
           $ref: "#/components/schemas/InstitutionType"
         origin:
           type: string
+          description: "${openapi.onboarding.institutions.model.origin}"
         originId:
           type: string
+          description: "${openapi.onboarding.institutions.model.originId}"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         subunitCode:
           type: string
-    CheckManagerResponse:
-      type: object
-      required:
-      - result
-      properties:
-        result:
-          type: boolean
+          description: "${openapi.onboarding.institutions.model.subunitCode}"
     CompanyBillingDataDto:
       type: object
       required:
@@ -298,31 +320,41 @@ components:
       properties:
         businessName:
           type: string
+          description: "${openapi.onboarding.institutions.model.name}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
           pattern: \S
         certified:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.certified}"
         digitalAddress:
           type: string
+          description: "${openapi.onboarding.institutions.model.digitalAddress}"
     CompanyInformationsDto:
       type: object
       properties:
         rea:
           type: string
+          description: "${openapi.onboarding.institutions.model.companyInformations.rea}"
         shareCapital:
           type: string
+          description: "${openapi.onboarding.institutions.model.companyInformations.shareCapital}"
         businessRegisterPlace:
           type: string
+          description: "${openapi.onboarding.institutions.model.companyInformations.businessRegisterPlace}"
     CompanyInformationsResource:
       type: object
       properties:
         rea:
           type: string
+          description: "${openapi.onboarding.institutions.model.companyInformations.rea}"
         shareCapital:
           type: string
+          description: "${openapi.onboarding.institutions.model.companyInformations.shareCapital}"
         businessRegisterPlace:
           type: string
+          description: "${openapi.onboarding.institutions.model.companyInformations.businessRegisterPlace}"
     CompanyOnboardingDto:
       type: object
       required:
@@ -336,15 +368,22 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CompanyUserDto"
+          description: "${openapi.onboarding.institutions.model.users}"
           minItems: 1
         billingData:
+          description: "${openapi.onboarding.institutions.model.billingData}"
+          type: object
           $ref: "#/components/schemas/CompanyBillingDataDto"
         institutionType:
+          description: "${openapi.onboarding.institutions.model.institutionType}"
+          type: string
           $ref: "#/components/schemas/InstitutionType"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
     CompanyOnboardingUserDto:
       type: object
       required:
@@ -358,15 +397,21 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/CompanyUserDto"
+          description: "${openapi.onboarding.institutions.model.users}"
           minItems: 1
         institutionType:
+          description: "${openapi.onboarding.institutions.model.institutionType}"
+          type: string
           $ref: "#/components/schemas/InstitutionType"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         certified:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.certified}"
     CompanyUserDto:
       type: object
       required:
@@ -377,19 +422,23 @@ components:
       properties:
         name:
           type: string
+          description: "${openapi.onboarding.user.model.name}"
           pattern: \S
         surname:
           type: string
+          description: "${openapi.onboarding.user.model.surname}"
           pattern: \S
         email:
           type: string
+          description: "${openapi.onboarding.user.model.email}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.user.model.fiscalCode}"
           pattern: \S
         role:
-          $ref: "#/components/schemas/PartyRole"
-        productRole:
+          description: "${openapi.onboarding.user.model.role}"
           type: string
+          $ref: "#/components/schemas/PartyRole"
     DataProtectionOfficer:
       type: object
       properties:
@@ -399,15 +448,12 @@ components:
           type: string
         pec:
           type: string
-    DataProtectionOfficerRequest:
-      type: object
-      properties:
-        address:
-          type: string
-        email:
-          type: string
-        pec:
-          type: string
+    DownloadDocumentType:
+      description: Type of document to download.
+      type: string
+      enum:
+      - CONTRACT_SIGNED
+      - ATTACHMENT
     DpoData:
       type: object
       required:
@@ -417,12 +463,15 @@ components:
       properties:
         address:
           type: string
+          description: "${openapi.onboarding.institutions.model.dpoData.address}"
           pattern: \S
         pec:
           type: string
+          description: "${openapi.onboarding.institutions.model.dpoData.pec}"
           pattern: \S
         email:
           type: string
+          description: "${openapi.onboarding.institutions.model.dpoData.email}"
           pattern: \S
     DpoDataDto:
       type: object
@@ -433,12 +482,15 @@ components:
       properties:
         address:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.dpoData.address}"
           pattern: \S
         pec:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.dpoData.pec}"
           pattern: \S
         email:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.dpoData.email}"
           pattern: \S
     GPUData:
       type: object
@@ -469,9 +521,11 @@ components:
       properties:
         code:
           type: string
+          description: "${openapi.onboarding.geographicTaxonomy.model.code}"
           pattern: \S
         desc:
           type: string
+          description: "${openapi.onboarding.geographicTaxonomy.model.desc}"
           pattern: \S
     GeographicTaxonomyDto1:
       type: object
@@ -485,71 +539,110 @@ components:
       properties:
         code:
           type: string
+          description: "${openapi.onboarding.geographicTaxonomy.model.code}"
         desc:
           type: string
+          description: "${openapi.onboarding.geographicTaxonomy.model.desc}"
     InstitutionData:
       type: object
       properties:
         id:
           type: string
+          description: "${openapi.onboarding.institutions.model.id}"
         institutionType:
+          description: "${openapi.onboarding.institutions.model.institutionType}"
+          type: string
           $ref: "#/components/schemas/InstitutionType"
         billingData:
+          description: "${openapi.onboarding.institutions.model.billingData}"
+          type: object
           $ref: "#/components/schemas/BillingDataResponseDto"
         city:
           type: string
+          description: "${openapi.onboarding.institutions.model.city}"
         county:
           type: string
+          description: "${openapi.onboarding.institutions.model.county}"
         country:
           type: string
+          description: "${openapi.onboarding.institutions.model.country}"
         origin:
           type: string
         originId:
           type: string
         paymentServiceProvider:
+          description: "${openapi.onboarding.institutions.model.paymentServiceProvider}"
+          type: object
           $ref: "#/components/schemas/PaymentServiceProvider"
         dataProtectionOfficer:
+          description: "${openapi.onboarding.institutions.model.dataProtectionOfficer}"
+          type: object
           $ref: "#/components/schemas/DataProtectionOfficer"
         gpuData:
+          description: "${openapi.onboarding.institutions.model.gpuData}"
+          type: object
           $ref: "#/components/schemas/GPUData"
         companyInformations:
+          description: "${openapi.onboarding.institutions.model.companyInformations}"
+          type: object
           $ref: "#/components/schemas/CompanyInformationsResource"
         assistanceContacts:
+          description: "${openapi.onboarding.institutions.model.assistance}"
+          type: object
           $ref: "#/components/schemas/AssistanceContactsResource"
     InstitutionInfo:
       type: object
       properties:
         id:
           type: string
+          description: "${openapi.onboarding.institutions.model.id}"
         name:
           type: string
+          description: "${openapi.onboarding.institutions.model.name}"
         institutionType:
           type: string
+          description: "${openapi.onboarding.institutions.model.institutionType}"
         address:
           type: string
+          description: "${openapi.onboarding.institutions.model.address}"
         zipCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.zipCode}"
         city:
           type: string
+          description: "${openapi.onboarding.institutions.model.city}"
         country:
           type: string
+          description: "${openapi.onboarding.institutions.model.country}"
         county:
           type: string
+          description: "${openapi.onboarding.institutions.model.county}"
         mailAddress:
           type: string
+          description: "${openapi.onboarding.institutions.model.digitalAddress}"
         fiscalCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         taxCodeInvoicing:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCodeInvoicing}"
         vatNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.vatNumber}"
         recipientCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.recipientCode}"
         pspData:
+          description: "${openapi.onboarding.institutions.model.pspData}"
+          type: object
           $ref: "#/components/schemas/PspData"
         dpoData:
+          description: "${openapi.onboarding.institutions.model.dpoData}"
+          type: object
           $ref: "#/components/schemas/DpoData"
         additionalInformations:
+          description: "${openapi.onboarding.institutions.model.additionalInformations}"
+          type: object
           $ref: "#/components/schemas/AdditionalInformations"
       required:
       - name
@@ -558,22 +651,28 @@ components:
       - zipCode
       - mailAddress
       - fiscalCode
+      - vatNumber
     InstitutionLegalAddressResource:
       type: object
       properties:
         address:
           type: string
+          description: "${openapi.onboarding.institutions.model.address}"
         zipCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.zipCode}"
     InstitutionLocationDataDto:
       type: object
       properties:
         city:
           type: string
+          description: "${openapi.onboarding.institutions.model.city}"
         county:
           type: string
+          description: "${openapi.onboarding.institutions.model.county}"
         country:
           type: string
+          description: "${openapi.onboarding.institutions.model.country}"
     InstitutionOnboarding:
       type: object
       properties:
@@ -599,11 +698,14 @@ components:
       type: object
       properties:
         institution:
+          description: "${openapi.onboarding.institutions.model.institutionData}"
+          type: object
           $ref: "#/components/schemas/InstitutionData"
         geographicTaxonomies:
           type: array
           items:
             $ref: "#/components/schemas/GeographicTaxonomyResource"
+          description: "${openapi.onboarding.institutions.model.geographicTaxonomy}"
     InstitutionOnboardingResource:
       type: object
       properties:
@@ -615,115 +717,70 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/InstitutionOnboarding"
-    InstitutionPaSubunitType:
-      type: string
-      enum:
-      - AOO
-      - UO
-      - EC
     InstitutionResource:
       type: object
       properties:
         id:
+          description: "${openapi.onboarding.institutions.model.id}"
+          type: string
           $ref: "#/components/schemas/UUID"
         description:
           type: string
+          description: "${openapi.onboarding.institutions.model.name}"
         parentDescription:
           type: string
+          description: "${openapi.onboarding.institutions.model.parentDescription}"
         externalId:
           type: string
+          description: "${openapi.onboarding.institutions.model.externalId}"
         originId:
           type: string
+          description: "${openapi.onboarding.institutions.model.originId}"
         institutionType:
           type: string
+          description: "${openapi.onboarding.institutions.model.institutionType}"
         digitalAddress:
           type: string
+          description: "${openapi.onboarding.institutions.model.digitalAddress}"
         address:
           type: string
+          description: "${openapi.onboarding.institutions.model.address}"
         zipCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.zipCode}"
         city:
           type: string
+          description: "${openapi.onboarding.institutions.model.city}"
         county:
           type: string
+          description: "${openapi.onboarding.institutions.model.county}"
         country:
           type: string
+          description: "${openapi.onboarding.institutions.model.country}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         origin:
           type: string
+          description: "${openapi.onboarding.institutions.model.origin}"
         userRole:
+          description: "${openapi.onboarding.institutions.model.userRole}"
+          type: string
           $ref: "#/components/schemas/UserAuthority"
     InstitutionResourceIC:
       type: object
       properties:
         legalTaxId:
           type: string
+          description: "${openapi.onboarding.institutions.model.legalTaxId}"
         requestDateTime:
           type: string
+          description: "${openapi.onboarding.institutions.model.requestDateTime}"
         businesses:
           type: array
           items:
             $ref: "#/components/schemas/BusinessResourceIC"
-    InstitutionResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        institutionType:
-          type: string
-        taxCode:
-          type: string
-        taxCodeInvoicing:
-          type: string
-        subunitCode:
-          type: string
-        subunitType:
-          $ref: "#/components/schemas/InstitutionPaSubunitType"
-        origin:
-          $ref: "#/components/schemas/Origin1"
-        originId:
-          type: string
-        city:
-          type: string
-        country:
-          type: string
-        county:
-          type: string
-        description:
-          type: string
-        digitalAddress:
-          type: string
-        address:
-          type: string
-        zipCode:
-          type: string
-        parentDescription:
-          type: string
-        geographicTaxonomies:
-          type: array
-          items:
-            $ref: "#/components/schemas/GeographicTaxonomyDto1"
-        rea:
-          type: string
-        shareCapital:
-          type: string
-        businessRegisterPlace:
-          type: string
-        supportEmail:
-          type: string
-        supportPhone:
-          type: string
-        paymentServiceProvider:
-          $ref: "#/components/schemas/PaymentServiceProviderRequest"
-        dataProtectionOfficer:
-          $ref: "#/components/schemas/DataProtectionOfficerRequest"
-        atecoCodes:
-          type: array
-          items:
-            type: string
-        legalForm:
-          type: string
+          description: "${openapi.onboarding.institutions.model.businesses}"
     InstitutionType:
       type: string
       enum:
@@ -759,71 +816,68 @@ components:
       - GPU
       - SCEC
       - DEFAULT
+    InvalidParam:
+      type: object
+      properties:
+        name:
+          type: string
+        reason:
+          type: string
+    IpaInstitutionResource:
+      type: object
+      properties:
+        id:
+          type: string
+        originId:
+          type: string
+        o:
+          type: string
+        ou:
+          type: string
+        aoo:
+          type: string
+        taxCode:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        digitalAddress:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        origin:
+          type: string
+        istatCode:
+          type: string
+    IpaInstitutionsSearchResource:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/IpaInstitutionResource"
+        count:
+          type: integer
+          format: int64
     LocalDateTime:
       type: string
       format: date-time
       examples:
       - 2022-03-10T12:15:50
-    ManagerInfoResponse:
-      type: object
-      properties:
-        name:
-          type: string
-        surname:
-          type: string
     MatchInfoResultResource:
       type: object
       properties:
         verificationResult:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.matchResult}"
     OffsetDateTime:
       type: string
       format: date-time
       examples:
       - 2022-03-10T12:15:50-04:00
-    OnboardingGet:
-      type: object
-      properties:
-        id:
-          type: string
-        productId:
-          type: string
-        workflowType:
-          type: string
-        institution:
-          $ref: "#/components/schemas/InstitutionResponse"
-        users:
-          type: array
-          items:
-            $ref: "#/components/schemas/UserResponse"
-        pricingPlan:
-          type: string
-        billing:
-          $ref: "#/components/schemas/BillingResponse"
-        payment:
-          $ref: "#/components/schemas/PaymentResponse"
-        signContract:
-          type: boolean
-        additionalInformations:
-          $ref: "#/components/schemas/AdditionalInformationsDto1"
-        createdAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-        updatedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-        expiringDate:
-          $ref: "#/components/schemas/OffsetDateTime"
-        activatedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
-        status:
-          type: string
-        userRequester:
-          $ref: "#/components/schemas/UserRequesterResponse"
-        reasonForReject:
-          type: string
-        attachments:
-          type: array
-          items:
-            type: string
     OnboardingProductDto:
       type: object
       required:
@@ -835,56 +889,85 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserDto"
+          description: "${openapi.onboarding.institutions.model.users}"
           minItems: 1
         billingData:
+          description: "${openapi.onboarding.institutions.model.billingData}"
+          type: object
           $ref: "#/components/schemas/BillingDataDto"
         institutionLocationData:
+          description: "${openapi.onboarding.institution.model.locationData}"
+          type: object
           $ref: "#/components/schemas/InstitutionLocationDataDto"
         institutionType:
+          description: "${openapi.onboarding.institutions.model.institutionType}"
+          type: string
           $ref: "#/components/schemas/InstitutionType"
         origin:
           type: string
+          description: "${openapi.onboarding.institutions.model.origin}"
         originId:
           type: string
+          description: "${openapi.onboarding.institutions.model.originId}"
         pricingPlan:
           type: string
+          description: "${openapi.onboarding.institutions.model.pricingPlan}"
         pspData:
+          description: "${openapi.onboarding.institutions.model.pspData}"
+          type: object
           $ref: "#/components/schemas/PspDataDto"
         geographicTaxonomies:
           type: array
           items:
             $ref: "#/components/schemas/GeographicTaxonomyDto"
+          description: "${openapi.onboarding.institutions.model.geographicTaxonomies}"
         companyInformations:
+          description: "${openapi.onboarding.institutions.model.companyInformations}"
+          type: object
           $ref: "#/components/schemas/CompanyInformationsDto"
         assistanceContacts:
+          description: "${openapi.onboarding.institutions.model.assistance}"
+          type: object
           $ref: "#/components/schemas/AssistanceContactsDto"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         subunitCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.subunitCode}"
         subunitType:
           type: string
+          description: "${openapi.onboarding.institutions.model.subunitType}"
         additionalInformations:
+          description: "${openapi.onboarding.institutions.model.additionalInformations}"
+          type: object
           $ref: "#/components/schemas/AdditionalInformationsDto"
         isAggregator:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.isAggregator}"
         aggregates:
           type: array
           items:
             $ref: "#/components/schemas/AggregateInstitution"
+          description: "${openapi.onboarding.institutions.model.aggregates}"
         gpuData:
+          description: "${openapi.onboarding.institutions.model.gpuData}"
+          type: object
           $ref: "#/components/schemas/GPUData"
         istatCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.istatCode}"
         atecoCodes:
           type: array
           items:
             type: string
-        payment:
-          $ref: "#/components/schemas/PaymentDto"
+          description: "${openapi.onboarding.institutions.model.atecoCodes}"
         userRequester:
+          description: "${openapi.onboarding.institutions.model.requester}"
+          type: object
           $ref: "#/components/schemas/UserRequestDto"
     OnboardingRequestResource:
       type: object
@@ -894,26 +977,48 @@ components:
       properties:
         status:
           type: string
+          description: "${openapi.onboarding.model.status}"
         institutionInfo:
+          description: "${openapi.onboarding.model.institutionInfo}"
+          type: object
           $ref: "#/components/schemas/InstitutionInfo"
         manager:
+          description: "${openapi.onboarding.model.manager}"
+          type: object
           $ref: "#/components/schemas/UserInfo"
         admins:
           type: array
           items:
             $ref: "#/components/schemas/UserInfo"
+          description: "${openapi.onboarding.model.admins}"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         updatedAt:
+          description: "${openapi.onboarding.model.updateDate}"
+          type: string
           $ref: "#/components/schemas/LocalDateTime"
         expiringDate:
+          description: "${openapi.onboarding.model.expiringDate}"
+          type: string
           $ref: "#/components/schemas/LocalDateTime"
         reasonForReject:
           type: string
+          description: "${openapi.onboarding.model.reason}"
         attachments:
           type: array
           items:
             type: string
+          description: "${openapi.onboarding.model.attachments}"
+    OnboardingResult:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        productId:
+          type: string
     OnboardingUserDto:
       type: object
       required:
@@ -924,21 +1029,30 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserDto"
+          description: "${openapi.onboarding.institutions.model.users}"
           minItems: 1
         institutionType:
+          description: "${openapi.onboarding.institutions.model.institutionType}"
+          type: string
           $ref: "#/components/schemas/InstitutionType"
         origin:
           type: string
+          description: "${openapi.onboarding.institutions.model.origin}"
         originId:
           type: string
+          description: "${openapi.onboarding.institutions.model.originId}"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         taxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
         subunitCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.subunitCode}"
         toAddOnAggregates:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.toAddOnAggregates}"
     OnboardingVerify:
       type: object
       required:
@@ -946,23 +1060,15 @@ components:
       properties:
         status:
           type: string
+          description: "${openapi.onboarding.model.status}"
         productId:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         expiringDate:
+          description: "${openapi.onboarding.model.expiringDate}"
+          type: string
           $ref: "#/components/schemas/LocalDateTime"
     Origin:
-      type: string
-      enum:
-      - MOCK
-      - IPA
-      - SELC
-      - ANAC
-      - UNKNOWN
-      - ADE
-      - INFOCAMERE
-      - IVASS
-      - PDND_INFOCAMERE
-    Origin1:
       type: string
       enum:
       - MOCK
@@ -990,6 +1096,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/OriginEntry"
+          description: "${openapi.product.model.id}"
     PartyRole:
       type: string
       enum:
@@ -998,28 +1105,6 @@ components:
       - SUB_DELEGATE
       - OPERATOR
       - ADMIN_EA
-    PartyRole1:
-      type: string
-      enum:
-      - MANAGER
-      - DELEGATE
-      - SUB_DELEGATE
-      - OPERATOR
-      - ADMIN_EA
-    PaymentDto:
-      type: object
-      properties:
-        iban:
-          type: string
-        holder:
-          type: string
-    PaymentResponse:
-      type: object
-      properties:
-        iban:
-          type: string
-        holder:
-          type: string
     PaymentServiceProvider:
       type: object
       properties:
@@ -1035,44 +1120,46 @@ components:
           type: string
         vatNumberGroup:
           type: boolean
-    PaymentServiceProviderRequest:
+    Problem:
       type: object
       properties:
-        businessRegisterNumber:
+        type:
           type: string
-        legalRegisterNumber:
+        title:
           type: string
-        legalRegisterName:
+        status:
+          type: integer
+          format: int32
+        detail:
           type: string
-        longTermPayments:
-          type: boolean
-        abiCode:
+        instance:
           type: string
-        vatNumberGroup:
-          type: boolean
-        providerNames:
+        invalidParams:
           type: array
           items:
-            type: string
-        contractType:
-          type: string
-        contractId:
-          type: string
+            $ref: "#/components/schemas/InvalidParam"
     ProductResource:
       type: object
       properties:
         id:
           type: string
+          description: "${openapi.onboarding.product.model.id}"
         title:
           type: string
+          description: "${openapi.onboarding.product.model.title}"
         parentId:
           type: string
+          description: "${openapi.onboarding.product.model.parentId}"
         status:
+          description: "${openapi.onboarding.product.model.status}"
+          type: string
           $ref: "#/components/schemas/ProductStatus"
         logo:
           type: string
+          description: "${openapi.onboarding.product.model.logo}"
         logoBgColor:
           type: string
+          description: "${openapi.onboarding.product.model.logoBgColor}"
     ProductStatus:
       type: string
       enum:
@@ -1091,14 +1178,19 @@ components:
       properties:
         businessRegisterNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.businessRegisterNumber}"
         legalRegisterName:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterName}"
         legalRegisterNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterNumber}"
         abiCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.abiCode}"
         vatNumberGroup:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.pspData.vatNumberGroup}"
     PspDataDto:
       type: object
       required:
@@ -1111,25 +1203,33 @@ components:
       properties:
         businessRegisterNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.businessRegisterNumber}"
           pattern: \S
         legalRegisterName:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterName}"
           pattern: \S
         legalRegisterNumber:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterNumber}"
           pattern: \S
         abiCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.pspData.abiCode}"
           pattern: \S
         vatNumberGroup:
           type: boolean
+          description: "${openapi.onboarding.institutions.model.pspData.vatNumberGroup}"
         dpoData:
+          description: "${openapi.onboarding.institutions.model.pspData.dpoData}"
+          type: object
           $ref: "#/components/schemas/DpoDataDto"
     ReasonForRejectDto:
       type: object
       properties:
         reason:
           type: string
+          description: "${openapi.onboarding.institution.model.reason}"
     RecipientCodeStatus:
       type: string
       enum:
@@ -1159,6 +1259,8 @@ components:
       properties:
         requiredDocumentsEnabled:
           type: boolean
+          description: "True when the (productId, institutionType, origin) triplet\
+            \ has required-documents configured on product-ms, false otherwise."
     RowErrorResponse:
       type: object
       properties:
@@ -1191,11 +1293,14 @@ components:
       properties:
         taxCode:
           type: string
+          description: "${openapi.onboarding.user.model.fiscalCode}"
           pattern: \S
         name:
           type: string
+          description: "${openapi.onboarding.user.model.name}"
         surname:
           type: string
+          description: "${openapi.onboarding.user.model.surname}"
     UserDto:
       type: object
       required:
@@ -1206,26 +1311,23 @@ components:
       properties:
         name:
           type: string
+          description: "${openapi.onboarding.user.model.name}"
           pattern: \S
         surname:
           type: string
+          description: "${openapi.onboarding.user.model.surname}"
           pattern: \S
         taxCode:
           type: string
+          description: "${openapi.onboarding.user.model.fiscalCode}"
           pattern: \S
         role:
+          description: "${openapi.onboarding.user.model.role}"
+          type: string
           $ref: "#/components/schemas/PartyRole"
         email:
           type: string
-        productRole:
-          type: string
-    UserId:
-      type: object
-      required:
-      - id
-      properties:
-        id:
-          $ref: "#/components/schemas/UUID"
+          description: "${openapi.onboarding.user.model.email}"
     UserInfo:
       type: object
       required:
@@ -1236,15 +1338,21 @@ components:
       - fiscalCode
       properties:
         id:
+          description: "${openapi.onboarding.user.model.id}"
+          type: string
           $ref: "#/components/schemas/UUID"
         name:
           type: string
+          description: "${openapi.onboarding.user.model.name}"
         surname:
           type: string
+          description: "${openapi.onboarding.user.model.surname}"
         email:
           type: string
+          description: "${openapi.onboarding.user.model.institutionalEmail}"
         fiscalCode:
           type: string
+          description: "${openapi.onboarding.user.model.fiscalCode}"
     UserRequestDto:
       type: object
       required:
@@ -1254,37 +1362,16 @@ components:
       properties:
         name:
           type: string
+          description: "${openapi.onboarding.user.model.name}"
           pattern: \S
         surname:
           type: string
+          description: "${openapi.onboarding.user.model.surname}"
           pattern: \S
         email:
           type: string
+          description: "${openapi.onboarding.user.model.email}"
           pattern: \S
-    UserRequesterResponse:
-      type: object
-      properties:
-        userMailUuid:
-          type: string
-        userRequestUid:
-          type: string
-    UserResponse:
-      type: object
-      properties:
-        id:
-          type: string
-        taxCode:
-          type: string
-        name:
-          type: string
-        surname:
-          type: string
-        email:
-          type: string
-        role:
-          $ref: "#/components/schemas/PartyRole1"
-        productRole:
-          type: string
     UserTaxCodeDto:
       type: object
       required:
@@ -1292,6 +1379,7 @@ components:
       properties:
         taxCode:
           type: string
+          description: "${openapi.onboarding.user.model.fiscalCode}"
           pattern: \S
     VerificationLegalAddressRequest:
       type: object
@@ -1330,30 +1418,40 @@ components:
       properties:
         companyTaxCode:
           type: string
+          description: "${openapi.onboarding.institutions.model.taxCode}"
           pattern: \S
     VerifyManagerResponse:
       type: object
       properties:
         origin:
           type: string
+          description: "${openapi.onboarding.institutions.model.origin}"
         companyName:
           type: string
-    VerifyType:
-      type: string
-      enum:
-      - INTERNAL
-      - EXTERNAL
+          description: "${openapi.onboarding.institutions.model.name}"
   securitySchemes:
     SecurityScheme:
       type: http
       scheme: bearer
       bearerFormat: JWT
       description: Authentication
+tags:
+- name: institutions
+- name: product
+- name: product-ms
+- name: tokens
+- name: user
 paths:
   /v1/institutions:
     get:
+      summary: "${openapi.onboarding.institutions.api.getInstitutions}"
+      description: "${openapi.onboarding.institutions.api.getInstitutions}"
+      operationId: getInstitutionsUsingGET
+      tags:
+      - institutions
       parameters:
-      - name: productId
+      - description: "${openapi.onboarding.institutions.model.productFilter}"
+        name: productId
         in: query
         schema:
           type: string
@@ -1370,13 +1468,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Institutions
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/company/onboarding:
     post:
+      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      operationId: onboardingCompanyUsingPOST
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -1384,24 +1484,25 @@ paths:
               $ref: "#/components/schemas/CompanyOnboardingDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/from-infocamere:
     get:
+      summary: "${openapi.onboarding.institutions.api.getInstitutionsByUser}"
+      description: "${openapi.onboarding.institutions.api.getInstitutionsByUser}"
+      operationId: getInstitutionsFromInfocamereUsingGET
+      tags:
+      - institutions
       responses:
         "200":
           description: OK
@@ -1413,19 +1514,23 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Institutions From Infocamere
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/geographic-taxonomies:
     get:
+      summary: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
+      description: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
+      operationId: getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET
+      tags:
+      - institutions
       parameters:
-      - name: subunitCode
+      - description: "${openapi.onboarding.institutions.model.subunitCode}"
+        name: subunitCode
         in: query
         schema:
           type: string
-      - name: taxCode
+      - description: "${openapi.onboarding.institutions.model.taxCode}"
+        name: taxCode
         in: query
         schema:
           type: string
@@ -1442,60 +1547,74 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Geographic Taxonomies By Tax Code And Subunit Code
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/onboarding:
     head:
+      summary: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      description: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      operationId: verifyOnboardingUsingHEAD
+      tags:
+      - institutions
       parameters:
-      - name: institutionType
+      - description: "${openapi.onboarding.institutions.model.institutionType}"
+        name: institutionType
         in: query
         schema:
           type: string
-      - name: origin
+      - description: "${openapi.onboarding.institutions.model.origin}"
+        name: origin
         in: query
         schema:
           type: string
-      - name: originId
+      - description: "${openapi.onboarding.institutions.model.originId}"
+        name: originId
         in: query
         schema:
           type: string
-      - name: productId
+      - description: "${openapi.onboarding.product.model.id}"
+        name: productId
         in: query
         schema:
           type: string
-      - name: subunitCode
+      - description: "${openapi.onboarding.institutions.model.subunitCode}"
+        name: subunitCode
         in: query
         schema:
           type: string
-      - name: taxCode
+      - description: "${openapi.onboarding.institutions.model.taxCode}"
+        name: taxCode
         in: query
         schema:
           type: string
-      - name: vatNumber
+      - description: "${openapi.onboarding.institutions.model.vatNumber}"
+        name: vatNumber
         in: query
         schema:
           type: string
         required: false
-      - name: verifyType
+      - description: "${openapi.onboarding.institutions.model.verifyType}"
+        name: verifyType
         in: query
         schema:
-          $ref: "#/components/schemas/VerifyType"
+          type: string
       responses:
-        "204":
-          description: No Content
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Verify Onboarding
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
     post:
+      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      operationId: onboardingUsingPOST
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -1503,29 +1622,32 @@ paths:
               $ref: "#/components/schemas/OnboardingProductDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
     get:
+      summary: "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}"
+      description: "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}"
+      operationId: getInstitutionOnboardingInfoUsingGET
+      tags:
+      - institutions
       parameters:
-      - name: institutionId
+      - description: "${openapi.onboarding.institutions.model.id}"
+        name: institutionId
         in: query
         schema:
           type: string
-      - name: productId
+      - description: "${openapi.onboarding.product.model.id}"
+        name: productId
         in: query
         schema:
           type: string
@@ -1540,64 +1662,74 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Institution Onboarding Info By Id
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/onboarding/verify:
     get:
+      summary: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      operationId: verifyOnboardingUsingGET
+      tags:
+      - institutions
       parameters:
-      - name: institutionType
+      - description: "${openapi.onboarding.institutions.model.institutionType}"
+        name: institutionType
         in: query
         schema:
           type: string
-      - name: origin
+      - description: "${openapi.onboarding.institutions.model.origin}"
+        name: origin
         in: query
         schema:
           type: string
-      - name: originId
+      - description: "${openapi.onboarding.institutions.model.originId}"
+        name: originId
         in: query
         schema:
           type: string
-      - name: productId
+      - description: "${openapi.onboarding.product.model.id}"
+        name: productId
         in: query
         schema:
           type: string
-      - name: subunitCode
+      - description: "${openapi.onboarding.institutions.model.subunitCode}"
+        name: subunitCode
         in: query
         schema:
           type: string
-      - name: taxCode
+      - description: "${openapi.onboarding.institutions.model.taxCode}"
+        name: taxCode
         in: query
         schema:
           type: string
-      - name: vatNumber
+      - description: "${openapi.onboarding.institutions.model.vatNumber}"
+        name: vatNumber
         in: query
         schema:
           type: string
         required: false
-      - name: verifyType
+      - description: "${openapi.onboarding.institutions.model.verifyType}"
+        name: verifyType
         in: query
         schema:
-          $ref: "#/components/schemas/VerifyType"
+          type: string
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Verify Onboarding Get
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/verification/legal-address:
     post:
+      summary: "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}"
+      description: "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}"
+      operationId: postVerificationLegalAddressUsingPOST
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -1617,13 +1749,15 @@ paths:
           description: Not Allowed
         "400":
           description: Bad Request
-      summary: Post Verification Legal Address
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/verification/match:
     post:
+      summary: "${openapi.onboarding.institutions.api.matchInstitutionAndUser}"
+      description: "${openapi.onboarding.institutions.api.matchInstitutionAndUser}"
+      operationId: postVerificationMatchUsingPOST
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -1643,15 +1777,18 @@ paths:
           description: Not Allowed
         "400":
           description: Bad Request
-      summary: Post Verification Match
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/geographic-taxonomy:
     get:
+      summary: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
+      description: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
+      operationId: getInstitutionGeographicTaxonomyUsingGET
+      tags:
+      - institutions
       parameters:
-      - name: externalInstitutionId
+      - description: "${openapi.onboarding.institutions.model.externalId}"
+        name: externalInstitutionId
         in: path
         required: true
         schema:
@@ -1669,102 +1806,58 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Institution Geographic Taxonomy
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/institutions/{externalInstitutionId}/products/{productId}:
     head:
-      parameters:
-      - name: externalInstitutionId
-        in: path
-        required: true
-        schema:
-          type: string
-      - name: productId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "204":
-          description: No Content
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Verify Onboarding
+      summary: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      description: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      operationId: verifyOnboardingProductUsingHEAD
       tags:
-      - Institution Controller
-      security:
-      - SecurityScheme: []
-  /v1/institutions/{externalInstitutionId}/products/{productId}/onboarded-institution-info:
-    get:
-      deprecated: true
+      - institutions
       parameters:
-      - name: externalInstitutionId
+      - description: "${openapi.onboarding.institutions.model.externalId}"
+        name: externalInstitutionId
         in: path
         required: true
         schema:
           type: string
-      - name: productId
+      - description: "${openapi.onboarding.product.model.id}"
+        name: productId
         in: path
         required: true
         schema:
           type: string
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Get Institution Onboarding Info
-      tags:
-      - Institution Controller
-      security:
-      - SecurityScheme: []
-  /v1/institutions/{onboardingId}:
-    put:
-      parameters:
-      - name: onboardingId
-        in: path
-        required: true
-        schema:
-          type: string
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Trigger Onboarding Request
-      tags:
-      - Institution Controller
       security:
       - SecurityScheme: []
   /v1/product/{id}:
     get:
+      summary: "${openapi.onboarding.product.api.getProduct}"
+      description: "${openapi.onboarding.product.api.getProduct}"
+      operationId: getProductUsingGET
+      tags:
+      - product
       parameters:
-      - name: id
+      - description: "${openapi.onboarding.product.model.id}"
+        name: id
         in: path
         required: true
         schema:
           type: string
-      - name: institutionType
+      - description: "${openapi.onboarding.institutions.model.institutionType}"
+        name: institutionType
         in: query
         schema:
-          $ref: "#/components/schemas/InstitutionType"
-        required: false
+          type: string
       responses:
         "200":
           description: OK
@@ -1776,13 +1869,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Product
-      tags:
-      - Product Controller
       security:
       - SecurityScheme: []
   /v1/products:
     get:
+      summary: "${openapi.onboarding.product.api.getProducts}"
+      description: "${openapi.onboarding.product.api.getProducts}"
+      operationId: getProducts
+      tags:
+      - product
       responses:
         "200":
           description: OK
@@ -1796,13 +1891,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Products
-      tags:
-      - Product Controller
       security:
       - SecurityScheme: []
   /v1/products/admin:
     get:
+      summary: "${openapi.onboarding.product.api.getProductsAdmin}"
+      description: "${openapi.onboarding.product.api.getProductsAdmin}"
+      operationId: getProductsAdmin
+      tags:
+      - product
       responses:
         "200":
           description: OK
@@ -1816,13 +1913,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Products Admin
-      tags:
-      - Product Controller
       security:
       - SecurityScheme: []
   /v1/users/check-manager:
     post:
+      summary: "${openapi.onboarding.users.api.check-manager}"
+      description: "${openapi.onboarding.users.api.check-manager}"
+      operationId: checkManager
+      tags:
+      - user
       requestBody:
         content:
           application/json:
@@ -1830,25 +1929,25 @@ paths:
               $ref: "#/components/schemas/CheckManagerDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/CheckManagerResponse"
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Check Manager
-      tags:
-      - User Controller
       security:
       - SecurityScheme: []
   /v1/users/onboarding:
     post:
+      summary: "${openapi.onboarding.users.api.onboarding}"
+      description: "${openapi.onboarding.users.api.onboarding}"
+      operationId: onboardingUsers
+      tags:
+      - user
       requestBody:
         content:
           application/json:
@@ -1856,24 +1955,25 @@ paths:
               $ref: "#/components/schemas/OnboardingUserDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding
-      tags:
-      - User Controller
       security:
       - SecurityScheme: []
   /v1/users/onboarding/aggregator:
     post:
+      summary: "${openapi.onboarding.users.api.onboarding-aggregator}"
+      description: "${openapi.onboarding.users.api.onboarding-aggregator}"
+      operationId: onboardingAggregatorUsingPOST
+      tags:
+      - user
       requestBody:
         content:
           application/json:
@@ -1881,24 +1981,25 @@ paths:
               $ref: "#/components/schemas/OnboardingUserDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding Aggregator
-      tags:
-      - User Controller
       security:
       - SecurityScheme: []
   /v1/users/onboarding/{onboardingId}/manager:
     get:
+      summary: "${openapi.onboarding.users.api.check-manager}"
+      description: "${openapi.onboarding.users.api.check-manager}"
+      operationId: getManagerInfo
+      tags:
+      - user
       parameters:
       - name: onboardingId
         in: path
@@ -1906,23 +2007,23 @@ paths:
         schema:
           type: string
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/ManagerInfoResponse"
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Get Manager Info
-      tags:
-      - User Controller
       security:
       - SecurityScheme: []
   /v1/users/search-user:
     post:
+      summary: "${openapi.onboarding.users.api.search-user}"
+      description: "${openapi.onboarding.users.api.search-user}"
+      operationId: searchUserId
+      tags:
+      - user
       requestBody:
         content:
           application/json:
@@ -1930,25 +2031,25 @@ paths:
               $ref: "#/components/schemas/UserTaxCodeDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/UserId"
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Search User
-      tags:
-      - User Controller
       security:
       - SecurityScheme: []
   /v1/users/validate:
     post:
+      summary: "${openapi.onboarding.user.api.validate}"
+      description: "${openapi.onboarding.user.api.validate}"
+      operationId: validateUsingPOST
+      tags:
+      - user
       requestBody:
         content:
           application/json:
@@ -1956,65 +2057,71 @@ paths:
               $ref: "#/components/schemas/UserDataValidationDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "409":
+          description: Conflict
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
         "400":
           description: Bad Request
-      summary: Validate
-      tags:
-      - User Controller
       security:
       - SecurityScheme: []
   /v2/institutions:
     get:
+      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      operationId: v2GetInstitutionByFilters
+      tags:
+      - institutions
       parameters:
-      - name: origin
+      - description: "${openapi.onboarding.institutions.model.origin}"
+        name: origin
         in: query
         schema:
           type: string
-      - name: originId
+      - description: "${openapi.onboarding.institutions.model.originId}"
+        name: originId
         in: query
         schema:
           type: string
-      - name: productId
+      - description: "${openapi.onboarding.institutions.model.productFilter}"
+        name: productId
         in: query
         schema:
           type: string
-      - name: subunitCode
+      - description: "${openapi.onboarding.institutions.model.subunitCode}"
+        name: subunitCode
         in: query
         schema:
           type: string
-      - name: taxCode
+      - description: "${openapi.onboarding.institutions.model.taxCode}"
+        name: taxCode
         in: query
         schema:
           type: string
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
+            application/problem+json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/InstitutionResource"
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Get Institution
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/company/onboarding:
     post:
+      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      operationId: institutionOnboardingCompany
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -2022,24 +2129,25 @@ paths:
               $ref: "#/components/schemas/CompanyOnboardingDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/company/verify-manager:
     post:
+      summary: "${openapi.onboarding.institutions.api.onboarding.verifyManager}"
+      description: "${openapi.onboarding.institutions.api.onboarding.verifyManager}"
+      operationId: verifyManagerUsingPOST
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -2059,13 +2167,89 @@ paths:
           description: Not Allowed
         "400":
           description: Bad Request
-      summary: Verify Manager
+      security:
+      - SecurityScheme: []
+  /v2/institutions/ipa:
+    get:
+      summary: "${openapi.onboarding.institutions.api.searchIpaInstitutions.summary}"
+      description: "${openapi.onboarding.institutions.api.searchIpaInstitutions.description}"
+      operationId: searchIpaInstitutionsUsingGET
       tags:
-      - Institution V 2 Controller
+      - institutions
+      parameters:
+      - description: "${openapi.onboarding.institutions.api.ipaCategory}"
+        name: category
+        in: query
+        schema:
+          type: string
+      - schema:
+          format: int32
+          type: integer
+          default: 0
+        name: page
+        in: query
+      - schema:
+          format: int32
+          type: integer
+          default: 50
+        name: pageSize
+        in: query
+      - description: Search text
+        schema:
+          default: '*'
+        name: search
+        in: query
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpaInstitutionsSearchResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /v2/institutions/ipa/{taxCode}:
+    get:
+      summary: "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.summary}"
+      description: "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.description}"
+      operationId: findIpaInstitutionByTaxCodeUsingGET
+      tags:
+      - institutions
+      parameters:
+      - name: taxCode
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: "${openapi.onboarding.institutions.api.ipaCategory}"
+        name: category
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpaInstitutionResource"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
       security:
       - SecurityScheme: []
   /v2/institutions/onboarding:
     post:
+      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      operationId: institutionOnboarding
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -2073,24 +2257,31 @@ paths:
               $ref: "#/components/schemas/OnboardingProductDto"
         required: true
       responses:
-        "200":
-          description: OK
+        "403":
+          description: Forbidden
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/onboarding/active:
     get:
+      summary: "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}"
+      description: "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}"
+      operationId: getActiveOnboardingUsingGET
+      tags:
+      - institutions
       parameters:
       - name: productId
         in: query
@@ -2117,13 +2308,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Active Onboarding
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/onboarding/aggregation/verification:
     post:
+      summary: "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}"
+      description: "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}"
+      operationId: verifyAggregatesCsvUsingPOST
+      tags:
+      - institutions
       parameters:
       - name: institutionType
         in: query
@@ -2160,13 +2353,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Verify Aggregates Csv
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/onboarding/recipient-code/verification:
     get:
+      summary: "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}"
+      description: "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}"
+      operationId: checkRecipientCodeUsingGET
+      tags:
+      - institutions
       parameters:
       - name: originId
         in: query
@@ -2187,13 +2382,15 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Check Recipient Code
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/onboarding/users/pg:
     post:
+      summary: "${openapi.onboarding.institutions.api.onboardingUsersPg}"
+      description: "${openapi.onboarding.institutions.api.onboardingUsersPg}"
+      operationId: onboardingUsersPgUsingPOST
+      tags:
+      - institutions
       requestBody:
         content:
           application/json:
@@ -2212,13 +2409,15 @@ paths:
           description: Not Allowed
         "400":
           description: Bad Request
-      summary: Onboarding Users
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/onboardings:
     get:
+      summary: "${openapi.onboarding.institutions.api.onboardingInfo.summary}"
+      description: "${openapi.onboarding.institutions.api.onboardingInfo.description}"
+      operationId: getOnboardingInfo
+      tags:
+      - institutions
       parameters:
       - name: status
         in: query
@@ -2236,18 +2435,22 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: "#/components/schemas/OnboardingGet"
+                  $ref: "#/components/schemas/OnboardingResult"
         "401":
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Onboardings Info
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/institutions/{onboardingId}:
     put:
+      summary: Trigger onboarding request
+      description: "Idempotent trigger invoked after each document upload. If all\
+        \ mandatory documents are present, triggers orchestration to advance the onboarding\
+        \ from REQUEST to PENDING."
+      operationId: triggerOnboardingRequest
+      tags:
+      - institutions
       parameters:
       - name: onboardingId
         in: path
@@ -2264,15 +2467,18 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Trigger Onboarding Request
-      tags:
-      - Institution V 2 Controller
       security:
       - SecurityScheme: []
   /v2/product:
     get:
+      summary: "${openapi.product.ms.api.getOrigins.summary}"
+      description: "${openapi.product.ms.api.getOrigins.description}"
+      operationId: getOrigins
+      tags:
+      - product-ms
       parameters:
-      - name: productId
+      - description: "${openapi.onboarding.institutions.model.institutionType}"
+        name: productId
         in: query
         schema:
           type: string
@@ -2287,15 +2493,19 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Origins
-      tags:
-      - Product V 2 Controller
       security:
       - SecurityScheme: []
   /v2/product/{productId}/required-documents:
     get:
+      summary: Get required documents for a product
+      description: "Returns the list of required documents for the given product,\
+        \ institutionType and origin."
+      operationId: getRequiredDocuments
+      tags:
+      - product-ms
       parameters:
-      - name: productId
+      - description: The product id
+        name: productId
         in: path
         required: true
         schema:
@@ -2321,15 +2531,20 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Required Documents
-      tags:
-      - Product V 2 Controller
       security:
       - SecurityScheme: []
   /v2/product/{productId}/required-documents/enabled:
     get:
+      summary: Check if required documents are enabled for a product
+      description: "Returns an object with the boolean flag requiredDocumentsEnabled\
+        \ = true when required documents are configured for the given product, institutionType\
+        \ and origin."
+      operationId: isRequiredDocumentsEnabled
+      tags:
+      - product-ms
       parameters:
-      - name: productId
+      - description: The product id
+        name: productId
         in: path
         required: true
         schema:
@@ -2353,15 +2568,18 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Is Required Documents Enabled
-      tags:
-      - Product V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}:
     get:
+      summary: "${openapi.tokens.retrieveOnboardingRequest}"
+      description: "${openapi.tokens.retrieveOnboardingRequest}"
+      operationId: retrieveOnboardingRequestUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2377,15 +2595,18 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Retrieve Onboarding Request
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/approve:
     post:
+      summary: "${openapi.tokens.approveOnboardingRequest}"
+      description: "${openapi.tokens.approveOnboardingRequest}"
+      operationId: approveOnboardingUsingPOST
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2400,24 +2621,24 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Approve Onboarding
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/attachment:
     post:
+      summary: "${openapi.tokens.uploadAttachment}"
+      description: "${openapi.tokens.uploadAttachment}"
+      operationId: uploadAttachmentUsingPOST
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - name: attachmentName
-        in: query
-        schema:
-          type: string
-      - name: name
+      - required: true
+        name: attachmentName
         in: query
         schema:
           type: string
@@ -2445,19 +2666,24 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Upload Attachment
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
     get:
+      summary: "${openapi.tokens.getAttachment}"
+      description: "${openapi.tokens.getAttachment}"
+      operationId: getAttachmentUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - name: name
+      - description: "${openapi.tokens.attachmentName}"
+        required: true
+        name: name
         in: query
         schema:
           type: string
@@ -2470,24 +2696,27 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Attachment
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/attachment/status:
     head:
+      summary: "${openapi.tokens.headAttachment}"
+      description: "${openapi.tokens.headAttachment}"
+      operationId: headAttachmentUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - name: name
+      - required: true
+        name: name
         in: query
         schema:
           type: string
-        required: true
       responses:
         "200":
           description: OK
@@ -2498,23 +2727,26 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Head Attachment
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
     get:
+      summary: "${openapi.tokens.headAttachment}"
+      description: "${openapi.tokens.headAttachment}"
+      operationId: getAttachmentStatusUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - name: name
+      - required: true
+        name: name
         in: query
         schema:
           type: string
-        required: true
       responses:
         "200":
           description: OK
@@ -2525,39 +2757,41 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Attachment Status
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/available-documents:
     get:
+      summary: Retrieve the list of documents available for download for the given
+        onboarding
+      description: "Returns the list of attachment names and, if present, the filename\
+        \ of the signed contract associated with the onboarding."
+      operationId: getAvailableDocumentsUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/AvailableDocumentsResource"
+        "403":
+          description: Forbidden - user does not have permission to view account documents
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Get Available Documents
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/complete:
     delete:
+      summary: "${openapi.tokens.complete}"
+      description: "${openapi.tokens.complete}"
+      operationId: deleteUsingDELETE
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.tokenId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2572,14 +2806,17 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Delete Onboarding
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
     post:
+      summary: "${openapi.tokens.complete}"
+      description: "${openapi.tokens.complete}"
+      operationId: completeUsingPOST
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2604,15 +2841,18 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Complete
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/complete-onboarding-users:
     post:
+      summary: "${openapi.tokens.completeOnboardingUsers}"
+      description: "${openapi.tokens.completeOnboardingUsers}"
+      operationId: completeOnboardingUsersUsingPOST
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2637,64 +2877,109 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Complete Onboarding Users
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/contract:
     get:
+      summary: "${openapi.tokens.getContract}"
+      description: "${openapi.tokens.getContract}"
+      operationId: getContractUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/octet-stream: {}
+        "403":
+          description: Forbidden - user does not have permission to view account documents
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Get Contract
+      security:
+      - SecurityScheme: []
+  /v2/tokens/{onboardingId}/download:
+    get:
+      summary: Download a document (signed contract or attachment) for the given onboarding
+      description: When type=CONTRACT_SIGNED downloads the signed contract; when type=ATTACHMENT
+        the 'name' query parameter is required.
+      operationId: downloadDocumentUsingGET
       tags:
-      - Token V 2 Controller
+      - tokens
+      parameters:
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: "Name of the attachment. Required when type=ATTACHMENT, ignored\
+          \ otherwise."
+        name: name
+        in: query
+        schema:
+          type: string
+      - description: Type of document to download
+        in: query
+        name: type
+        required: true
+        schema:
+          $ref: "#/components/schemas/DownloadDocumentType"
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/octet-stream: {}
+        "400":
+          description: Invalid request - missing 'name' when type=ATTACHMENT or unsupported
+            download type
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - user does not have permission to view account documents
+        "404":
+          description: Onboarding or document not found
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/products/{productId}/aggregates-csv:
     get:
+      summary: "${openapi.tokens.getAggregatesCsv}"
+      description: "${openapi.tokens.getAggregatesCsv}"
+      operationId: getAggregatesCsvUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - name: productId
+      - description: "${openapi.tokens.productId}"
+        name: productId
         in: path
         required: true
         schema:
           type: string
       responses:
-        "200":
-          description: OK
-          content:
-            application/octet-stream: {}
+        "403":
+          description: Forbidden - user does not have permission to view account documents
         "401":
           description: Not Authorized
-        "403":
-          description: Not Allowed
-      summary: Get Aggregates Csv
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/reject:
     post:
+      summary: Service to reject a specific onboarding request
+      description: Service to reject a specific onboarding request
+      operationId: rejectOnboardingUsingPOST
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2717,24 +3002,25 @@ paths:
           description: Not Allowed
         "400":
           description: Bad Request
-      summary: Reject Onboarding
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/template-attachment:
     get:
+      summary: "${openapi.tokens.getTemplateAttachment}"
+      description: "${openapi.tokens.getTemplateAttachment}"
+      operationId: getTemplateAttachmentUsingGET
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - name: attachmentName
-        in: query
-        schema:
-          type: string
-      - name: name
+      - description: "${openapi.tokens.attachmentName}"
+        required: true
+        name: attachmentName
         in: query
         schema:
           type: string
@@ -2747,15 +3033,18 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Get Template Attachment
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
   /v2/tokens/{onboardingId}/verify:
     post:
+      summary: "${openapi.tokens.verify}"
+      description: "${openapi.tokens.verify}"
+      operationId: verifyOnboardingUsingPOST
+      tags:
+      - tokens
       parameters:
-      - name: onboardingId
+      - description: "${openapi.tokens.onboardingId}"
+        name: onboardingId
         in: path
         required: true
         schema:
@@ -2771,9 +3060,6 @@ paths:
           description: Not Authorized
         "403":
           description: Not Allowed
-      summary: Verify Onboarding
-      tags:
-      - Token V 2 Controller
       security:
       - SecurityScheme: []
 info:

@@ -1,15 +1,19 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.model.OriginResult;
+import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.client.model.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.product.entity.Product;
 
 import java.util.List;
 
 public interface ProductService {
 
-    OriginResult getOrigins(String productId);
+    OriginResult getOrigins(String tenantId, String productId);
+
+    List<RequiredDocumentModel> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin);
+
+    boolean isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin);
 
     Product getProduct(String id, InstitutionType institutionType);
 
@@ -17,8 +21,8 @@ public interface ProductService {
 
     List<Product> getProducts(boolean rootOnly);
 
-    List<RequiredDocumentModel> getRequiredDocuments(String productId, String institutionType, String origin);
+    boolean isProductEnabled(String productId);
 
-    boolean isRequiredDocumentsEnabled(String productId, String institutionType, String origin);
+    boolean verifyAllowedByInstitutionTaxCode(String productId, String institutionTaxCode);
 
 }

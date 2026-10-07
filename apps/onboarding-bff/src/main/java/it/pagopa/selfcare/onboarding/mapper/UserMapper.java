@@ -30,14 +30,14 @@ public interface UserMapper {
         resource.setInstitutionId(UUID.fromString(model.getInstitutionId()));
 
         if (model.getUser() != null) {
-            resource.setName(map(model.getUser().getName()));
-            resource.setTaxCode(model.getUser().getTaxCode());
-            resource.setSurname(map(model.getUser().getFamilyName()));
+            resource.setName(CertifiedFieldMapper.toValue(model.getUser().getName()));
+            resource.setTaxCode(model.getUser().getFiscalCode());
+            resource.setSurname(CertifiedFieldMapper.toValue(model.getUser().getFamilyName()));
 
             Optional.ofNullable(model.getUser().getWorkContacts())
                     .map(map -> map.get(model.getInstitutionId()))
                     .map(WorkContact::getEmail)
-                    .map(UserMapper::map)
+                    .map(CertifiedFieldMapper::toValue)
                     .ifPresent(resource::setEmail);
         }
 
@@ -64,25 +64,12 @@ public interface UserMapper {
     }
 
     private static void fillMutableUserFieldsDto(User model, String institutionId, MutableUserFieldsDto resource) {
-        resource.setName(model.getName());
-        resource.setFamilyName(model.getFamilyName());
-        if (institutionId != null && model.getWorkContacts() != null && model.getWorkContacts().containsKey(institutionId)) {
+        resource.setName(CertifiedFieldMapper.map(model.getName()));
+        resource.setFamilyName(CertifiedFieldMapper.map(model.getSurname()));
+        if (institutionId != null) {
             WorkContact contact = new WorkContact();
-            CertifiedField<String> emailField = model.getWorkContacts().get(institutionId).getEmail();
-            contact.setEmail(emailField);
+            contact.setEmail(CertifiedFieldMapper.map(model.getEmail()));
             resource.setWorkContacts(Map.of(institutionId, contact));
         }
-    }
-
-    static <T> T map(CertifiedField<T> certifiedField) {
-        return certifiedField != null ? certifiedField.getValue() : null;
-    }
-
-    static <T> CertifiedField<T> map(T value) {
-        if (value == null) return null;
-        CertifiedField<T> certifiedField = new CertifiedField<>();
-        certifiedField.setValue(value);
-        certifiedField.setCertification(Certification.NONE);
-        return certifiedField;
     }
 }
