@@ -19,8 +19,7 @@ import it.pagopa.selfcare.external_api.model.user.OnboardedProductResponse;
 import it.pagopa.selfcare.external_api.model.user.User;
 import it.pagopa.selfcare.external_api.model.user.UserInstitution;
 import it.pagopa.selfcare.external_api.model.user.UserProductResponse;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductResponse;
 import it.pagopa.selfcare.registry_proxy.generated.openapi.v1.dto.LegalVerificationResult;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +47,7 @@ class InstitutionServiceImpl implements InstitutionService {
     private static final EnumSet<User.Fields> USER_FIELD_LIST_FISCAL_CODE = EnumSet.of(name, familyName, workContacts, fiscalCode);
     static final String REQUIRED_INSTITUTION_MESSAGE = "An Institution id is required";
     private final MsCoreRestClient msCoreRestClient;
-    private final it.pagopa.selfcare.product.service.ProductService productService;
+    private final ProductMsService productMsService;
     private static final String TAG_LOG_INSTITUTION_USER_PRODUCTS = "getInstitutionUserProducts";
     private final Set<String> serviceType;
 
@@ -66,14 +65,14 @@ class InstitutionServiceImpl implements InstitutionService {
 
     @Autowired
     InstitutionServiceImpl(MsCoreRestClient msCoreRestClient,
-                           ProductService productService,
+                           ProductMsService productMsService,
                            @Value("${external_api.allowed-service-types}")String[] serviceType,
                            UserMapper userMapper, ProductsMapper productsMapper, MsUserApiRestClient msUserApiRestClient,
                            MsRegistryProxyNationalRegistryRestClient nationalRegistryRestClient,
                            RegistryProxyMapper registryProxyMapper,
                            UserRegistryRestClient userRegistryRestClient, MsCoreInstitutionApiClient institutionApiClient) {
         this.msCoreRestClient = msCoreRestClient;
-        this.productService = productService;
+        this.productMsService = productMsService;
         this.serviceType = Set.of(serviceType);
         this.userMapper = userMapper;
         this.productsMapper = productsMapper;
@@ -122,7 +121,7 @@ class InstitutionServiceImpl implements InstitutionService {
         Assert.hasText(institutionId, REQUIRED_INSTITUTION_MESSAGE);
 
         List<ProductResource> productResources = new ArrayList<>();
-        List<Product> products = productService.getProducts(true, true);
+        List<ProductResponse> products = productMsService.getProducts(true, true);
         if (!products.isEmpty()) {
 
             InstitutionResponse institutionResponse = institutionApiClient._retrieveInstitutionByIdUsingGET(institutionId, null).getBody();
@@ -139,7 +138,7 @@ class InstitutionServiceImpl implements InstitutionService {
             log.trace("getInstitutionUserProducts start");
             List<String> productIds =  productsSet.stream().toList();
             productResources = products.stream()
-                    .filter(product -> productIds.contains(product.getId()))
+                    .filter(product -> productIds.contains(product.getProductId()))
                     .map(product -> productsMapper.toResource(product, institutionResponse.getInstitutionType()))
                     .toList();
         }
