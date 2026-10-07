@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.billingData}")
 public class CompanyBillingDataDto {
 
     @Schema(description = "${openapi.onboarding.institutions.model.name}", required = true)

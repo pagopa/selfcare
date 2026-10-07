@@ -65,6 +65,7 @@ public class InstitutionController {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "201", description = "Created")
     @POST
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
@@ -84,6 +85,7 @@ public class InstitutionController {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "201", description = "Created")
     @POST
     @Path("/company/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
@@ -101,10 +103,10 @@ public class InstitutionController {
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${openapi.onboarding.institutions.model.id}")
+    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${openapi.onboarding.institutions.model.id}", required = true)
                                                                           @QueryParam("institutionId")
                                                                           String institutionId,
-                                                                          @Parameter(description = "${openapi.onboarding.product.model.id}")
+                                                                          @Parameter(description = "${openapi.onboarding.product.model.id}", required = true)
                                                                           @QueryParam("productId")
                                                                           String productId) {
         RequestParams.requiredQuery("institutionId", institutionId);
@@ -140,7 +142,7 @@ public class InstitutionController {
     @Path("/geographic-taxonomies")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
             description = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET")
-    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
+    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}", required = true)
                                                                                            @QueryParam("taxCode")
                                                                                            String taxCode,
                                                                                            @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
@@ -188,6 +190,7 @@ public class InstitutionController {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "204", description = "No Content")
     @HEAD
     @Path("/{externalInstitutionId}/products/{productId}")
     @Operation(summary = "${openapi.onboarding.institutions.api.verifyOnboarding}",
@@ -211,6 +214,7 @@ public class InstitutionController {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "204", description = "No Content")
     @HEAD
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.verifyOnboarding}",
@@ -221,7 +225,7 @@ public class InstitutionController {
                                  @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                      @QueryParam("subunitCode")
                                      String subunitCode,
-                                 @Parameter(description = "${openapi.onboarding.product.model.id}")
+                                 @Parameter(description = "${openapi.onboarding.product.model.id}", required = true)
                                      @QueryParam("productId")
                                      String productId,
                                  @Parameter(description = "${openapi.onboarding.institutions.model.origin}")
@@ -236,7 +240,8 @@ public class InstitutionController {
                                  @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                      @QueryParam("institutionType")
                                      String institutionType,
-                                 @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}")
+                                 @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}",
+                                         schema = @Schema(implementation = VerifyType.class))
                                      @QueryParam("verifyType") String verifyType) {
         RequestParams.requiredQuery("productId", productId);
         VerifyType type = RequestParams.optionalEnum("verifyType", verifyType, VerifyType.class);
@@ -254,16 +259,18 @@ public class InstitutionController {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "200", description = "OK")
     @GET
     @Path("/onboarding/verify")
-    @Operation(summary = "${openapi.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingGET")
+    @Operation(summary = "${openapi.onboarding.institutions.api.verifyOnboarding}",
+            description = "${openapi.onboarding.institutions.api.verifyOnboarding}", operationId = "verifyOnboardingUsingGET")
     public Response verifyOnboardingGet(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
                                         @QueryParam("taxCode")
                                         String taxCode,
                                         @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                         @QueryParam("subunitCode")
                                         String subunitCode,
-                                        @Parameter(description = "${openapi.onboarding.product.model.id}")
+                                        @Parameter(description = "${openapi.onboarding.product.model.id}", required = true)
                                         @QueryParam("productId")
                                         String productId,
                                         @Parameter(description = "${openapi.onboarding.institutions.model.origin}")
@@ -278,7 +285,8 @@ public class InstitutionController {
                                         @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
                                         @QueryParam("institutionType")
                                         String institutionType,
-                                        @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}")
+                                        @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}",
+                                                schema = @Schema(implementation = VerifyType.class))
                                         @QueryParam("verifyType") String verifyType) {
         verifyOnboarding(taxCode, subunitCode, productId, origin, originId, vatNumber, institutionType, verifyType);
         return Response.ok().build();

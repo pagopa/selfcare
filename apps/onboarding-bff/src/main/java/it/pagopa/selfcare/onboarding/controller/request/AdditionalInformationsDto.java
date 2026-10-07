@@ -4,6 +4,7 @@ import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import lombok.Data;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.additionalInformations}")
 public class AdditionalInformationsDto {
 
     @Schema(description = "${openapi.onboarding.institutions.model.assistance.belongRegulatedMarket}")

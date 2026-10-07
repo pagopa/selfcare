@@ -8,6 +8,7 @@ import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.users}")
 public class CompanyUserDto {
 
 

@@ -43,7 +43,7 @@ public class ProductV2Controller {
     @GET
     @Operation(summary = "${openapi.product.ms.api.getOrigins.summary}",
             description = "${openapi.product.ms.api.getOrigins.description}", operationId = "getOrigins")
-    public OriginResponse getOrigins(@Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
+    public OriginResponse getOrigins(@Parameter(description = "${openapi.onboarding.institutions.model.institutionType}", required = true)
                                       @QueryParam("productId")
                                       String productId,
                                       @Parameter(hidden = true) @HeaderParam(TENANT_HEADER)
@@ -65,8 +65,8 @@ public class ProductV2Controller {
             operationId = "getRequiredDocuments")
     public List<RequiredDocumentModel> getRequiredDocuments(@Parameter(description = "The product id")
                                                             @PathParam("productId") String productId,
-                                                            @QueryParam("institutionType") String institutionType,
-                                                            @QueryParam("origin") String origin,
+                                                            @Parameter(required = true) @QueryParam("institutionType") String institutionType,
+                                                            @Parameter(required = true) @QueryParam("origin") String origin,
                                                             @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantHeader) {
         log.trace("getRequiredDocuments start");
         RequestParams.requiredQuery("institutionType", institutionType);
@@ -89,8 +89,8 @@ public class ProductV2Controller {
             operationId = "isRequiredDocumentsEnabled")
     public RequiredDocumentsEnabledResource isRequiredDocumentsEnabled(@Parameter(description = "The product id")
                                                                        @PathParam("productId") String productId,
-                                                                       @QueryParam("institutionType") String institutionType,
-                                                                       @QueryParam("origin") String origin,
+                                                                       @Parameter(required = true) @QueryParam("institutionType") String institutionType,
+                                                                       @Parameter(required = true) @QueryParam("origin") String origin,
                                                                        @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantHeader) {
         log.trace("isRequiredDocumentsEnabled start");
         RequestParams.requiredQuery("institutionType", institutionType);

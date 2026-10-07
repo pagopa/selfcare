@@ -51,6 +51,7 @@ public class UserController {
 
     @POST
     @Path("/validate")
+    @APIResponse(responseCode = "204", description = "No Content")
     @APIResponse(responseCode = "409",
             description = "Conflict",
             content = {
@@ -76,6 +77,7 @@ public class UserController {
             })
     @POST
     @Path("/onboarding")
+    @APIResponse(responseCode = "201", description = "Created")
     @Operation(summary= "${openapi.onboarding.users.api.onboarding}",
             description = "${openapi.onboarding.users.api.onboarding}", operationId = "onboardingUsers")
     public Response onboarding(@Valid OnboardingUserDto request) {
@@ -96,6 +98,7 @@ public class UserController {
             })
     @POST
     @Path("/onboarding/aggregator")
+    @APIResponse(responseCode = "201", description = "Created")
     @Operation(summary = "${openapi.onboarding.users.api.onboarding-aggregator}",
             description = "${openapi.onboarding.users.api.onboarding-aggregator}", operationId = "onboardingAggregatorUsingPOST")
     public Response onboardingAggregator(@Valid OnboardingUserDto request) {
@@ -115,6 +118,7 @@ public class UserController {
             })
     @POST
     @Path("/check-manager")
+    @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
             description = "${openapi.onboarding.users.api.check-manager}", operationId = "checkManager")
     public CheckManagerResponse checkManager(@Valid CheckManagerDto request) {
@@ -133,6 +137,7 @@ public class UserController {
             })
     @GET
     @Path("/onboarding/{onboardingId}/manager")
+    @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
             description = "${openapi.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
     public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId) {
@@ -151,6 +156,7 @@ public class UserController {
             })
     @POST
     @Path("/search-user")
+    @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.search-user}",
             description = "${openapi.onboarding.users.api.search-user}", operationId = "searchUserId")
     public UserId searchUser(@Valid UserTaxCodeDto request) {

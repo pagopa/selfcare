@@ -4,11 +4,14 @@ import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.controller.request.UserDto;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.openapi.quarkus.onboarding_json.model.GeographicTaxonomyDto;
 
 import java.util.List;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.aggregates}")
 public class AggregateInstitution {
 
     @NotNull(message = "taxCode is required")
@@ -17,6 +20,7 @@ public class AggregateInstitution {
     private String description;
     private String subunitCode;
     private String subunitType;
+    @Schema(type = SchemaType.ARRAY, implementation = it.pagopa.selfcare.onboarding.controller.request.GeographicTaxonomyDto.class)
     private List<GeographicTaxonomyDto> geographicTaxonomies;
     private String address;
     private String zipCode;

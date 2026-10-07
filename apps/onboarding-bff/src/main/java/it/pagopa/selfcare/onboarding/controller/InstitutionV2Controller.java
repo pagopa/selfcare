@@ -4,7 +4,9 @@ import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -68,7 +70,7 @@ public class InstitutionV2Controller {
             description = "${openapi.onboarding.institutions.api.searchIpaInstitutions.description}",
             operationId = "searchIpaInstitutionsUsingGET")
     public IpaInstitutionsSearchResource searchIpaInstitutions(
-            @Parameter(description = "Search text", schema = @Schema(defaultValue = "*"))
+            @Parameter(schema = @Schema(type = SchemaType.STRING, defaultValue = "*"))
             @QueryParam("search") String search,
             @Parameter(description = "${openapi.onboarding.institutions.api.ipaCategory}")
             @QueryParam("category") String category,
@@ -115,6 +117,7 @@ public class InstitutionV2Controller {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "201", description = "Created")
     @POST
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
@@ -139,6 +142,7 @@ public class InstitutionV2Controller {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "201", description = "Created")
     @POST
     @Path("/company/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
@@ -159,10 +163,11 @@ public class InstitutionV2Controller {
                     @Content(mediaType = "application/problem+json",
                             schema = @Schema(implementation = Problem.class))
             })
+    @APIResponse(responseCode = "200", description = "OK")
     @GET
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
-    public List<InstitutionResource> getInstitution(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}")
+    public List<InstitutionResource> getInstitution(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}", required = true)
                                                     @QueryParam("productId")
                                                     String productId,
                                                     @Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
@@ -191,11 +196,15 @@ public class InstitutionV2Controller {
     @POST
     @Path("/onboarding/aggregation/verification")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @RequestBody(required = false, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(requiredProperties = "aggregates")))
+    @Parameter(name = "institutionType", in = ParameterIn.QUERY, schema = @Schema(type = SchemaType.STRING))
+    @Parameter(name = "productId", in = ParameterIn.QUERY, required = true, schema = @Schema(type = SchemaType.STRING))
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
     public VerifyAggregatesResponse verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
-                                                        @RestForm("institutionType") String institutionType,
-                                                        @RestForm("productId") String productId,
+                                                        @Schema(hidden = true) @RestForm("institutionType") String institutionType,
+                                                        @Schema(hidden = true) @RestForm("productId") String productId,
                                                         @QueryParam("institutionType") String legacyInstitutionType,
                                                         @QueryParam("productId") String legacyProductId) {
         UploadedFile uploadedFile = toUploadedFile("aggregates", file);
@@ -227,8 +236,8 @@ public class InstitutionV2Controller {
     @Path("/onboarding/active")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}",
             description = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}", operationId = "getActiveOnboardingUsingGET")
-    public List<InstitutionOnboardingResource> getActiveOnboarding(@QueryParam("taxCode") String taxCode,
-                                                                   @QueryParam("productId") String productId,
+    public List<InstitutionOnboardingResource> getActiveOnboarding(@Parameter(required = true) @QueryParam("taxCode") String taxCode,
+                                                                   @Parameter(required = true) @QueryParam("productId") String productId,
                                                                    @QueryParam("subunitCode") String subunitCode
     ) {
         RequestParams.requiredQuery("taxCode", taxCode);
@@ -250,8 +259,8 @@ public class InstitutionV2Controller {
     @Path("/onboarding/recipient-code/verification")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}",
             description = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
-    public RecipientCodeStatus checkRecipientCode(@QueryParam("originId") String originId,
-                                                  @QueryParam("recipientCode") String recipientCode) {
+    public RecipientCodeStatus checkRecipientCode(@Parameter(required = true) @QueryParam("originId") String originId,
+                                                  @Parameter(required = true) @QueryParam("recipientCode") String recipientCode) {
         RequestParams.requiredQuery("originId", originId);
         RequestParams.requiredQuery("recipientCode", recipientCode);
         log.trace("Check recipientCode start");
@@ -266,7 +275,7 @@ public class InstitutionV2Controller {
     @Path("/onboarding/users/pg")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingUsersPg}",
             description = "${openapi.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
-    public Response onboardingUsers(@Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
+    public Response onboardingUsers(@RequestBody(required = false) @Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
         institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto));
@@ -278,8 +287,8 @@ public class InstitutionV2Controller {
     @Path("/onboardings")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingInfo.summary}",
             description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
-    public List<OnboardingResult> getOnboardingsInfo(@QueryParam("taxCode") String inputTaxCode,
-                                                     @QueryParam("status") String inputStatus) {
+    public List<OnboardingResult> getOnboardingsInfo(@Parameter(required = true) @QueryParam("taxCode") String inputTaxCode,
+                                                     @Parameter(required = true) @QueryParam("status") String inputStatus) {
         RequestParams.requiredQuery("taxCode", inputTaxCode);
         RequestParams.requiredQuery("status", inputStatus);
         log.trace("onboardingInfo start");
@@ -291,12 +300,14 @@ public class InstitutionV2Controller {
         return results;
     }
 
+    @APIResponse(responseCode = "204", description = "No Content")
     @PUT
     @Path("/{onboardingId}")
     @Operation(summary = "Trigger onboarding request",
             description = "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
             operationId = "triggerOnboardingRequest")
-    public Response triggerOnboardingRequest(@PathParam("onboardingId") String onboardingId) {
+    public Response triggerOnboardingRequest(@Parameter(description = "The onboarding id")
+                                             @PathParam("onboardingId") String onboardingId) {
         log.trace("triggerOnboardingRequest start");
         log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));
         institutionService.triggerOnboardingRequest(onboardingId);

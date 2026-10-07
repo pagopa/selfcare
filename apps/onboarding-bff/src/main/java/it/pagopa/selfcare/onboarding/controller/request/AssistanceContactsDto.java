@@ -6,6 +6,7 @@ import lombok.Data;
 import jakarta.validation.constraints.Email;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.assistance}")
 public class AssistanceContactsDto {
 
     @Schema(description = "${openapi.onboarding.institutions.model.assistance.supportEmail}")

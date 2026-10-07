@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.pspData}")
 public class PspDataDto {
 
     @Schema(description = "${openapi.onboarding.institutions.model.pspData.businessRegisterNumber}", required = true)

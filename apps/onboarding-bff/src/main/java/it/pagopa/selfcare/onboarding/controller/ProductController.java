@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
 import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.client.model.Product;
@@ -43,7 +44,8 @@ public class ProductController {
     public ProductResource getProduct(@Parameter(description = "${openapi.onboarding.product.model.id}")
                                       @PathParam("id")
                                       String id,
-                                      @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}")
+                                      @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}",
+                                              schema = @Schema(implementation = InstitutionType.class))
                                       @QueryParam("institutionType")
                                       String institutionType) {
         log.trace("getProduct start");

@@ -10,6 +10,7 @@ import lombok.Data;
 import jakarta.validation.Valid;
 
 @Data
+@Schema(description = "${openapi.onboarding.institutions.model.institutionData}")
 public class InstitutionData {
 
 
@@ -25,9 +26,9 @@ public class InstitutionData {
     private String county;
     @Schema(description = "${openapi.onboarding.institutions.model.country}")
     private String country;
-    @Schema
+    @Schema(description = "${openapi.onboarding.institutions.model.origin}")
     private String origin;
-    @Schema
+    @Schema(description = "${openapi.onboarding.institutions.model.originId}")
     private String originId;
     @Schema(description = "${openapi.onboarding.institutions.model.paymentServiceProvider}")
     private PaymentServiceProvider paymentServiceProvider;

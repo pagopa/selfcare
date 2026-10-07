@@ -84,7 +84,6 @@ public class OnboardingProductDto {
     @Schema(description = "${openapi.onboarding.institutions.model.atecoCodes}")
     private List<String> atecoCodes;
 
-    @Schema(description = "${openapi.onboarding.institutions.model.requester}")
     private UserRequestDto userRequester;
 
 }

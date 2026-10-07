@@ -46,6 +46,7 @@ public class OnboardingRequestResource {
 
     @Data
     @EqualsAndHashCode(of = "id")
+    @Schema(description = "${openapi.onboarding.model.institutionInfo}")
     public static class InstitutionInfo {
 
         @Schema(description = "${openapi.onboarding.institutions.model.id}")
@@ -103,6 +104,7 @@ public class OnboardingRequestResource {
         private AdditionalInformations additionalInformations;
 
         @Data
+        @Schema(description = "${openapi.onboarding.institutions.model.additionalInformations}")
         public static class AdditionalInformations{
             @Schema(description = "${openapi.onboarding.institutions.model.additionalInformations.belongRegulatedMarket}")
             private boolean belongRegulatedMarket;
@@ -133,6 +135,7 @@ public class OnboardingRequestResource {
         }
 
         @Data
+        @Schema(description = "${openapi.onboarding.institutions.model.pspData}")
         public static class PspData {
 
             @Schema(description = "${openapi.onboarding.institutions.model.pspData.businessRegisterNumber}", required = true)
@@ -158,6 +161,7 @@ public class OnboardingRequestResource {
 
 
         @Data
+        @Schema(description = "${openapi.onboarding.institutions.model.dpoData}")
         public static class DpoData {
 
             @Schema(description = "${openapi.onboarding.institutions.model.dpoData.address}", required = true)
@@ -180,6 +184,7 @@ public class OnboardingRequestResource {
     }
 
     @Data
+    @Schema(description = "${openapi.onboarding.model.admins}")
     public static class UserInfo {
 
         @Schema(description = "${openapi.onboarding.user.model.id}", required = true)

@@ -1,72 +1,76 @@
 ---
-openapi: 3.1.0
+openapi: 3.0.1
 components:
   schemas:
     AdditionalInformations:
+      description: GSP institution's additional informations
       type: object
       properties:
         belongRegulatedMarket:
+          description: The institution belongs to a regulated market
           type: boolean
-          description: "${openapi.onboarding.institutions.model.additionalInformations.belongRegulatedMarket}"
         regulatedMarketNote:
+          description: regulatedMarket Note
           type: string
-          description: "${openapi.onboarding.institutions.model.additionalInformations.regulatedMarketNote}"
         ipa:
+          description: The institution is registered on IPA
           type: boolean
-          description: "${openapi.onboarding.institutions.model.additionalInformations.ipa}"
         ipaCode:
+          description: IPA code
           type: string
-          description: "${openapi.onboarding.institutions.model.additionalInformations.ipaCode}"
         establishedByRegulatoryProvision:
+          description: The institution is a company established by a regulatory provision
           type: boolean
-          description: "${openapi.onboarding.institutions.model.additionalInformations.establishedByRegulatoryProvision}"
         establishedByRegulatoryProvisionNote:
+          description: establishedByRegulatoryProvision Note
           type: string
-          description: "${openapi.onboarding.institutions.model.additionalInformations.establishedByRegulatoryProvisionNote}"
         agentOfPublicService:
+          description: The institution is an agent of a public service
           type: boolean
-          description: "${openapi.onboarding.institutions.model.additionalInformations.agentOfPublicService}"
         agentOfPublicServiceNote:
+          description: agentOfPublicService Note
           type: string
-          description: "${openapi.onboarding.institutions.model.additionalInformations.agentOfPublicServiceNote}"
         otherNote:
+          description: Other note
           type: string
-          description: "${openapi.onboarding.institutions.model.additionalInformations.otherNote}"
     AdditionalInformationsDto:
+      description: GSP institution's additional informations
       type: object
       properties:
         belongRegulatedMarket:
+          description: The institution belongs to a regulated market
           type: boolean
-          description: "${openapi.onboarding.institutions.model.assistance.belongRegulatedMarket}"
         regulatedMarketNote:
+          description: regulatedMarket Note
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.regulatedMarketNote}"
         ipa:
+          description: The institution is registered on IPA
           type: boolean
-          description: "${openapi.onboarding.institutions.model.assistance.ipa}"
         ipaCode:
+          description: IPA code
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.ipaCode}"
         establishedByRegulatoryProvision:
+          description: The institution is a company established by a regulatory provision
           type: boolean
-          description: "${openapi.onboarding.institutions.model.assistance.establishedByRegulatoryProvision}"
         establishedByRegulatoryProvisionNote:
+          description: establishedByRegulatoryProvision Note
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.establishedByRegulatoryProvisionNote}"
         agentOfPublicService:
+          description: The institution is an agent of a public service
           type: boolean
-          description: "${openapi.onboarding.institutions.model.assistance.agentOfPublicService}"
         agentOfPublicServiceNote:
+          description: agentOfPublicService Note
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.agentOfPublicServiceNote}"
         otherNote:
+          description: Other note
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.otherNote}"
     AggregateInstitution:
-      type: object
+      description: "List of Aggregate Institutions, not empty only if isAggregator\
+        \ field's value is True"
       required:
-      - taxCode
       - description
+      - taxCode
+      type: object
       properties:
         taxCode:
           type: string
@@ -79,7 +83,7 @@ components:
         geographicTaxonomies:
           type: array
           items:
-            $ref: "#/components/schemas/GeographicTaxonomyDto1"
+            $ref: "#/components/schemas/GeographicTaxonomyDto"
         address:
           type: string
         zipCode:
@@ -87,7 +91,17 @@ components:
         originId:
           type: string
         origin:
-          $ref: "#/components/schemas/Origin"
+          enum:
+          - MOCK
+          - IPA
+          - SELC
+          - ANAC
+          - UNKNOWN
+          - ADE
+          - INFOCAMERE
+          - IVASS
+          - PDND_INFOCAMERE
+          type: string
         users:
           type: array
           items:
@@ -157,38 +171,42 @@ components:
         role:
           type: string
     AssistanceContactsDto:
+      description: Institution's assistance contacts
       type: object
       properties:
         supportEmail:
+          description: Institution's support email contact
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.supportEmail}"
         supportPhone:
+          description: Institution's support phone contact
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.supportPhone}"
     AssistanceContactsResource:
+      description: Institution's assistance contacts
       type: object
       properties:
         supportEmail:
+          description: Institution's support email contact
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.supportEmail}"
         supportPhone:
+          description: Institution's support phone contact
           type: string
-          description: "${openapi.onboarding.institutions.model.assistance.supportPhone}"
     AvailableDocumentsResource:
       description: Aggregated list of documents available for download for a given
         onboarding.
       type: object
       properties:
         attachments:
-          type: array
-          items:
-            type: string
           description: Names of the attachments available for the onboarding. Empty
             list if none.
+          type: array
+          items:
+            description: Names of the attachments available for the onboarding. Empty
+              list if none.
+            type: string
         contractFilename:
-          type: string
           description: Filename of the signed contract available for download. Null
             when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).
+          type: string
     Billing:
       type: object
       properties:
@@ -201,245 +219,301 @@ components:
         taxCodeInvoicing:
           type: string
     BillingDataDto:
-      type: object
+      description: Institution's billing information
       required:
       - businessName
-      - registeredOffice
       - digitalAddress
+      - registeredOffice
+      type: object
       properties:
         businessName:
+          description: Institution's legal name
           type: string
-          description: "${openapi.onboarding.institutions.model.name}"
-          pattern: \S
         registeredOffice:
+          description: Institution's physical address
           type: string
-          description: "${openapi.onboarding.institutions.model.address}"
-          pattern: \S
         digitalAddress:
+          description: Institution's digitalAddress
           type: string
-          description: "${openapi.onboarding.institutions.model.digitalAddress}"
-          pattern: \S
         zipCode:
+          description: Institution's zipCode
           type: string
-          description: "${openapi.onboarding.institutions.model.zipCode}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         taxCodeInvoicing:
+          description: Institution's taxCodeInvoicing for electronic invoicing
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCodeInvoicing}"
         vatNumber:
+          description: Institution's VAT number
           type: string
-          description: "${openapi.onboarding.institutions.model.vatNumber}"
         recipientCode:
+          description: Billing recipient code
           type: string
-          description: "${openapi.onboarding.institutions.model.recipientCode}"
         publicServices:
+          description: Institution's service type
           type: boolean
-          description: "${openapi.onboarding.institutions.model.publicServices}"
         certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
           type: boolean
-          description: "${openapi.onboarding.institutions.model.certified}"
         legalForm:
+          description: Legal form of the legal representative
           type: string
-          description: "${openapi.onboarding.institutions.model.legalForm}"
     BillingDataResponseDto:
+      description: Institution's billing information
       type: object
       properties:
         businessName:
+          description: Institution's legal name
           type: string
-          description: "${openapi.onboarding.institutions.model.name}"
         registeredOffice:
+          description: Institution's physical address
           type: string
-          description: "${openapi.onboarding.institutions.model.address}"
         digitalAddress:
+          description: Institution's digitalAddress
           type: string
-          description: "${openapi.onboarding.institutions.model.digitalAddress}"
         zipCode:
+          description: Institution's zipCode
           type: string
-          description: "${openapi.onboarding.institutions.model.zipCode}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         vatNumber:
+          description: Institution's VAT number
           type: string
-          description: "${openapi.onboarding.institutions.model.vatNumber}"
         recipientCode:
+          description: Billing recipient code
           type: string
-          description: "${openapi.onboarding.institutions.model.recipientCode}"
         publicServices:
+          description: Institution's service type
           type: boolean
-          description: "${openapi.onboarding.institutions.model.publicServices}"
         certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
           type: boolean
-          description: "${openapi.onboarding.institutions.model.certified}"
     BusinessResourceIC:
+      description: Legal Representative's institutions list
       type: object
       properties:
         businessName:
+          description: Legal Representative's institutions name
           type: string
-          description: "${openapi.onboarding.institutions.businessIc.model.businessName}"
         businessTaxId:
+          description: Legal Representative's institutions tax ID
           type: string
-          description: "${openapi.onboarding.institutions.businessIc.model.businessTaxId}"
     CheckManagerDto:
-      type: object
       required:
-      - userId
       - productId
+      - userId
+      type: object
       properties:
         userId:
-          description: "${openapi.onboarding.institutions.model.userId}"
+          format: uuid
+          description: User's id
           type: string
-          $ref: "#/components/schemas/UUID"
         institutionType:
-          description: "${openapi.onboarding.institutions.model.institutionType}"
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
           type: string
-          $ref: "#/components/schemas/InstitutionType"
         origin:
+          description: Institution data origin
           type: string
-          description: "${openapi.onboarding.institutions.model.origin}"
         originId:
+          description: Institution's details origin Id
           type: string
-          description: "${openapi.onboarding.institutions.model.originId}"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         subunitCode:
+          description: Institution's subunitCode
           type: string
-          description: "${openapi.onboarding.institutions.model.subunitCode}"
-    CompanyBillingDataDto:
+    CheckManagerResponse:
+      required:
+      - result
       type: object
+      properties:
+        result:
+          description: Is the given user manager of the institution
+          type: boolean
+    CompanyBillingDataDto:
+      description: Institution's billing information
       required:
       - businessName
-      - taxCode
       - certified
+      - taxCode
+      type: object
       properties:
         businessName:
+          description: Institution's legal name
           type: string
-          description: "${openapi.onboarding.institutions.model.name}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
-          pattern: \S
         certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
           type: boolean
-          description: "${openapi.onboarding.institutions.model.certified}"
         digitalAddress:
+          description: Institution's digitalAddress
           type: string
-          description: "${openapi.onboarding.institutions.model.digitalAddress}"
     CompanyInformationsDto:
+      description: "GPS, SCP, PT optional data"
       type: object
       properties:
         rea:
+          description: Institution's REA
           type: string
-          description: "${openapi.onboarding.institutions.model.companyInformations.rea}"
         shareCapital:
+          description: Institution's share capital value
           type: string
-          description: "${openapi.onboarding.institutions.model.companyInformations.shareCapital}"
         businessRegisterPlace:
+          description: Institution's business register place
           type: string
-          description: "${openapi.onboarding.institutions.model.companyInformations.businessRegisterPlace}"
     CompanyInformationsResource:
+      description: "GPS, SCP, PT optional data"
       type: object
       properties:
         rea:
+          description: Institution's REA
           type: string
-          description: "${openapi.onboarding.institutions.model.companyInformations.rea}"
         shareCapital:
+          description: Institution's share capital value
           type: string
-          description: "${openapi.onboarding.institutions.model.companyInformations.shareCapital}"
         businessRegisterPlace:
+          description: Institution's business register place
           type: string
-          description: "${openapi.onboarding.institutions.model.companyInformations.businessRegisterPlace}"
     CompanyOnboardingDto:
-      type: object
       required:
-      - users
       - billingData
       - institutionType
       - productId
       - taxCode
+      - users
+      type: object
       properties:
         users:
+          description: List of onboarding users
           type: array
           items:
             $ref: "#/components/schemas/CompanyUserDto"
-          description: "${openapi.onboarding.institutions.model.users}"
-          minItems: 1
         billingData:
-          description: "${openapi.onboarding.institutions.model.billingData}"
-          type: object
           $ref: "#/components/schemas/CompanyBillingDataDto"
         institutionType:
-          description: "${openapi.onboarding.institutions.model.institutionType}"
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
           type: string
-          $ref: "#/components/schemas/InstitutionType"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
     CompanyOnboardingUserDto:
-      type: object
       required:
-      - users
+      - certified
       - institutionType
       - productId
       - taxCode
-      - certified
+      - users
+      type: object
       properties:
         users:
+          description: List of onboarding users
           type: array
           items:
             $ref: "#/components/schemas/CompanyUserDto"
-          description: "${openapi.onboarding.institutions.model.users}"
-          minItems: 1
         institutionType:
-          description: "${openapi.onboarding.institutions.model.institutionType}"
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
           type: string
-          $ref: "#/components/schemas/InstitutionType"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
           type: boolean
-          description: "${openapi.onboarding.institutions.model.certified}"
     CompanyUserDto:
-      type: object
+      description: List of onboarding users
       required:
       - name
+      - role
       - surname
       - taxCode
-      - role
+      type: object
       properties:
         name:
+          description: User's name
           type: string
-          description: "${openapi.onboarding.user.model.name}"
-          pattern: \S
         surname:
+          description: User's surname
           type: string
-          description: "${openapi.onboarding.user.model.surname}"
-          pattern: \S
         email:
+          description: User's email
           type: string
-          description: "${openapi.onboarding.user.model.email}"
         taxCode:
+          description: User's fiscal code
           type: string
-          description: "${openapi.onboarding.user.model.fiscalCode}"
-          pattern: \S
         role:
-          description: "${openapi.onboarding.user.model.role}"
+          description: User's role
+          enum:
+          - MANAGER
+          - DELEGATE
+          - SUB_DELEGATE
+          - OPERATOR
+          - ADMIN_EA
           type: string
-          $ref: "#/components/schemas/PartyRole"
     DataProtectionOfficer:
+      description: Data protection officer
       type: object
       properties:
         address:
@@ -448,51 +522,42 @@ components:
           type: string
         pec:
           type: string
-    DownloadDocumentType:
-      description: Type of document to download.
-      type: string
-      enum:
-      - CONTRACT_SIGNED
-      - ATTACHMENT
     DpoData:
-      type: object
+      description: Data Protection Officer (DPO) specific data
       required:
       - address
-      - pec
       - email
+      - pec
+      type: object
       properties:
         address:
+          description: DPO's address
           type: string
-          description: "${openapi.onboarding.institutions.model.dpoData.address}"
-          pattern: \S
         pec:
+          description: DPO's PEC
           type: string
-          description: "${openapi.onboarding.institutions.model.dpoData.pec}"
-          pattern: \S
         email:
+          description: DPO's email
           type: string
-          description: "${openapi.onboarding.institutions.model.dpoData.email}"
-          pattern: \S
     DpoDataDto:
-      type: object
+      description: Data Protection Officer (DPO) specific data
       required:
       - address
-      - pec
       - email
+      - pec
+      type: object
       properties:
         address:
+          description: DPO's address
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.dpoData.address}"
-          pattern: \S
         pec:
+          description: DPO's PEC
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.dpoData.pec}"
-          pattern: \S
         email:
+          description: DPO's email
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.dpoData.email}"
-          pattern: \S
     GPUData:
+      description: Institution's GPU data
       type: object
       properties:
         businessRegisterNumber:
@@ -514,165 +579,157 @@ components:
         institutionCourtMeasures:
           type: boolean
     GeographicTaxonomyDto:
-      type: object
       required:
       - code
       - desc
-      properties:
-        code:
-          type: string
-          description: "${openapi.onboarding.geographicTaxonomy.model.code}"
-          pattern: \S
-        desc:
-          type: string
-          description: "${openapi.onboarding.geographicTaxonomy.model.desc}"
-          pattern: \S
-    GeographicTaxonomyDto1:
       type: object
       properties:
         code:
+          description: Institution's geographic taxonomy ISTAT code
           type: string
         desc:
+          description: Institution's geographic taxonomy extended name
           type: string
     GeographicTaxonomyResource:
       type: object
       properties:
         code:
+          description: Institution's geographic taxonomy ISTAT code
           type: string
-          description: "${openapi.onboarding.geographicTaxonomy.model.code}"
         desc:
+          description: Institution's geographic taxonomy extended name
           type: string
-          description: "${openapi.onboarding.geographicTaxonomy.model.desc}"
     InstitutionData:
+      description: Institution's billing and type information
       type: object
       properties:
         id:
+          description: Institution's unique internal Id
           type: string
-          description: "${openapi.onboarding.institutions.model.id}"
         institutionType:
-          description: "${openapi.onboarding.institutions.model.institutionType}"
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
           type: string
-          $ref: "#/components/schemas/InstitutionType"
         billingData:
-          description: "${openapi.onboarding.institutions.model.billingData}"
-          type: object
           $ref: "#/components/schemas/BillingDataResponseDto"
         city:
+          description: Institution's city
           type: string
-          description: "${openapi.onboarding.institutions.model.city}"
         county:
+          description: Institution's county
           type: string
-          description: "${openapi.onboarding.institutions.model.county}"
         country:
+          description: Institution's country
           type: string
-          description: "${openapi.onboarding.institutions.model.country}"
         origin:
+          description: Institution data origin
           type: string
         originId:
+          description: Institution's details origin Id
           type: string
         paymentServiceProvider:
-          description: "${openapi.onboarding.institutions.model.paymentServiceProvider}"
-          type: object
           $ref: "#/components/schemas/PaymentServiceProvider"
         dataProtectionOfficer:
-          description: "${openapi.onboarding.institutions.model.dataProtectionOfficer}"
-          type: object
           $ref: "#/components/schemas/DataProtectionOfficer"
         gpuData:
-          description: "${openapi.onboarding.institutions.model.gpuData}"
-          type: object
           $ref: "#/components/schemas/GPUData"
         companyInformations:
-          description: "${openapi.onboarding.institutions.model.companyInformations}"
-          type: object
           $ref: "#/components/schemas/CompanyInformationsResource"
         assistanceContacts:
-          description: "${openapi.onboarding.institutions.model.assistance}"
-          type: object
           $ref: "#/components/schemas/AssistanceContactsResource"
     InstitutionInfo:
+      description: Institution specific data
+      required:
+      - address
+      - fiscalCode
+      - institutionType
+      - mailAddress
+      - name
+      - vatNumber
+      - zipCode
       type: object
       properties:
         id:
+          description: Institution's unique internal Id
           type: string
-          description: "${openapi.onboarding.institutions.model.id}"
         name:
+          description: Institution's legal name
           type: string
-          description: "${openapi.onboarding.institutions.model.name}"
         institutionType:
+          description: Institution's type
           type: string
-          description: "${openapi.onboarding.institutions.model.institutionType}"
         address:
+          description: Institution's physical address
           type: string
-          description: "${openapi.onboarding.institutions.model.address}"
         zipCode:
+          description: Institution's zipCode
           type: string
-          description: "${openapi.onboarding.institutions.model.zipCode}"
         city:
+          description: Institution's city
           type: string
-          description: "${openapi.onboarding.institutions.model.city}"
         country:
+          description: Institution's country
           type: string
-          description: "${openapi.onboarding.institutions.model.country}"
         county:
+          description: Institution's county
           type: string
-          description: "${openapi.onboarding.institutions.model.county}"
         mailAddress:
+          description: Institution's digitalAddress
           type: string
-          description: "${openapi.onboarding.institutions.model.digitalAddress}"
         fiscalCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         taxCodeInvoicing:
+          description: Institution's taxCodeInvoicing for electronic invoicing
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCodeInvoicing}"
         vatNumber:
+          description: Institution's VAT number
           type: string
-          description: "${openapi.onboarding.institutions.model.vatNumber}"
         recipientCode:
+          description: Billing recipient code
           type: string
-          description: "${openapi.onboarding.institutions.model.recipientCode}"
         pspData:
-          description: "${openapi.onboarding.institutions.model.pspData}"
-          type: object
           $ref: "#/components/schemas/PspData"
         dpoData:
-          description: "${openapi.onboarding.institutions.model.dpoData}"
-          type: object
           $ref: "#/components/schemas/DpoData"
         additionalInformations:
-          description: "${openapi.onboarding.institutions.model.additionalInformations}"
-          type: object
           $ref: "#/components/schemas/AdditionalInformations"
-      required:
-      - name
-      - institutionType
-      - address
-      - zipCode
-      - mailAddress
-      - fiscalCode
-      - vatNumber
     InstitutionLegalAddressResource:
       type: object
       properties:
         address:
+          description: Institution's physical address
           type: string
-          description: "${openapi.onboarding.institutions.model.address}"
         zipCode:
+          description: Institution's zipCode
           type: string
-          description: "${openapi.onboarding.institutions.model.zipCode}"
     InstitutionLocationDataDto:
+      description: "Institution's location data, city, county, country information"
       type: object
       properties:
         city:
+          description: Institution's city
           type: string
-          description: "${openapi.onboarding.institutions.model.city}"
         county:
+          description: Institution's county
           type: string
-          description: "${openapi.onboarding.institutions.model.county}"
         country:
+          description: Institution's country
           type: string
-          description: "${openapi.onboarding.institutions.model.country}"
     InstitutionOnboarding:
       type: object
       properties:
@@ -689,23 +746,24 @@ components:
         billing:
           $ref: "#/components/schemas/Billing"
         createdAt:
-          $ref: "#/components/schemas/OffsetDateTime"
+          format: date-time
+          type: string
         updatedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
+          format: date-time
+          type: string
         closedAt:
-          $ref: "#/components/schemas/OffsetDateTime"
+          format: date-time
+          type: string
     InstitutionOnboardingInfoResource:
       type: object
       properties:
         institution:
-          description: "${openapi.onboarding.institutions.model.institutionData}"
-          type: object
           $ref: "#/components/schemas/InstitutionData"
         geographicTaxonomies:
+          description: Institution's geographic taxonomy
           type: array
           items:
             $ref: "#/components/schemas/GeographicTaxonomyResource"
-          description: "${openapi.onboarding.institutions.model.geographicTaxonomy}"
     InstitutionOnboardingResource:
       type: object
       properties:
@@ -721,107 +779,81 @@ components:
       type: object
       properties:
         id:
-          description: "${openapi.onboarding.institutions.model.id}"
+          format: uuid
+          description: Institution's unique internal Id
           type: string
-          $ref: "#/components/schemas/UUID"
         description:
+          description: Institution's legal name
           type: string
-          description: "${openapi.onboarding.institutions.model.name}"
         parentDescription:
+          description: Institution's parent description
           type: string
-          description: "${openapi.onboarding.institutions.model.parentDescription}"
         externalId:
+          description: Institution's unique external identifier
           type: string
-          description: "${openapi.onboarding.institutions.model.externalId}"
         originId:
+          description: Institution's details origin Id
           type: string
-          description: "${openapi.onboarding.institutions.model.originId}"
         institutionType:
+          description: Institution's type
           type: string
-          description: "${openapi.onboarding.institutions.model.institutionType}"
         digitalAddress:
+          description: Institution's digitalAddress
           type: string
-          description: "${openapi.onboarding.institutions.model.digitalAddress}"
         address:
+          description: Institution's physical address
           type: string
-          description: "${openapi.onboarding.institutions.model.address}"
         zipCode:
+          description: Institution's zipCode
           type: string
-          description: "${openapi.onboarding.institutions.model.zipCode}"
         city:
+          description: Institution's city
           type: string
-          description: "${openapi.onboarding.institutions.model.city}"
         county:
+          description: Institution's county
           type: string
-          description: "${openapi.onboarding.institutions.model.county}"
         country:
+          description: Institution's country
           type: string
-          description: "${openapi.onboarding.institutions.model.country}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         origin:
+          description: Institution data origin
           type: string
-          description: "${openapi.onboarding.institutions.model.origin}"
         userRole:
-          description: "${openapi.onboarding.institutions.model.userRole}"
+          description: Logged user's role
+          enum:
+          - ADMIN
+          - LIMITED
+          - ADMIN_EA
           type: string
-          $ref: "#/components/schemas/UserAuthority"
     InstitutionResourceIC:
       type: object
       properties:
         legalTaxId:
+          description: Legal Representative's tax ID
           type: string
-          description: "${openapi.onboarding.institutions.model.legalTaxId}"
         requestDateTime:
+          description: Timestamp request institutions PNPG list
           type: string
-          description: "${openapi.onboarding.institutions.model.requestDateTime}"
         businesses:
+          description: Legal Representative's institutions list
           type: array
           items:
             $ref: "#/components/schemas/BusinessResourceIC"
-          description: "${openapi.onboarding.institutions.model.businesses}"
-    InstitutionType:
-      type: string
-      enum:
-      - PA
-      - PG
-      - GSP
-      - SA
-      - PT
-      - SCP
-      - PSP
-      - AS
-      - REC
-      - CON
-      - PRV
-      - PRV_PF
-      - GPU
-      - SCEC
-    InstitutionType1:
-      type: string
-      enum:
-      - PA
-      - PG
-      - GSP
-      - SA
-      - PT
-      - SCP
-      - PSP
-      - AS
-      - REC
-      - CON
-      - PRV
-      - PRV_PF
-      - GPU
-      - SCEC
-      - DEFAULT
     InvalidParam:
+      description: A list of invalid parameters details.
+      required:
+      - name
+      - reason
       type: object
       properties:
         name:
+          description: Invalid parameter name.
           type: string
         reason:
+          description: Invalid parameter reason.
           type: string
     IpaInstitutionResource:
       type: object
@@ -860,156 +892,155 @@ components:
           items:
             $ref: "#/components/schemas/IpaInstitutionResource"
         count:
-          type: integer
           format: int64
-    LocalDateTime:
-      type: string
-      format: date-time
-      examples:
-      - 2022-03-10T12:15:50
+          type: integer
+    ManagerInfoResponse:
+      required:
+      - name
+      - surname
+      type: object
+      properties:
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
     MatchInfoResultResource:
       type: object
       properties:
         verificationResult:
+          description: Legal Representative and Institution match result on Agenzia
+            delle Entrate
           type: boolean
-          description: "${openapi.onboarding.institutions.model.matchResult}"
-    OffsetDateTime:
-      type: string
-      format: date-time
-      examples:
-      - 2022-03-10T12:15:50-04:00
     OnboardingProductDto:
-      type: object
       required:
-      - users
       - institutionType
       - productId
+      - users
+      type: object
       properties:
         users:
+          description: List of onboarding users
           type: array
           items:
             $ref: "#/components/schemas/UserDto"
-          description: "${openapi.onboarding.institutions.model.users}"
-          minItems: 1
         billingData:
-          description: "${openapi.onboarding.institutions.model.billingData}"
-          type: object
           $ref: "#/components/schemas/BillingDataDto"
         institutionLocationData:
-          description: "${openapi.onboarding.institution.model.locationData}"
-          type: object
           $ref: "#/components/schemas/InstitutionLocationDataDto"
         institutionType:
-          description: "${openapi.onboarding.institutions.model.institutionType}"
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
           type: string
-          $ref: "#/components/schemas/InstitutionType"
         origin:
+          description: Institution data origin
           type: string
-          description: "${openapi.onboarding.institutions.model.origin}"
         originId:
+          description: Institution's details origin Id
           type: string
-          description: "${openapi.onboarding.institutions.model.originId}"
         pricingPlan:
+          description: Product's pricing plan
           type: string
-          description: "${openapi.onboarding.institutions.model.pricingPlan}"
         pspData:
-          description: "${openapi.onboarding.institutions.model.pspData}"
-          type: object
           $ref: "#/components/schemas/PspDataDto"
         geographicTaxonomies:
+          description: List of geographic Taxonomies
           type: array
           items:
             $ref: "#/components/schemas/GeographicTaxonomyDto"
-          description: "${openapi.onboarding.institutions.model.geographicTaxonomies}"
         companyInformations:
-          description: "${openapi.onboarding.institutions.model.companyInformations}"
-          type: object
           $ref: "#/components/schemas/CompanyInformationsDto"
         assistanceContacts:
-          description: "${openapi.onboarding.institutions.model.assistance}"
-          type: object
           $ref: "#/components/schemas/AssistanceContactsDto"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         subunitCode:
+          description: Institution's subunitCode
           type: string
-          description: "${openapi.onboarding.institutions.model.subunitCode}"
         subunitType:
+          description: Institution's subunitType
           type: string
-          description: "${openapi.onboarding.institutions.model.subunitType}"
         additionalInformations:
-          description: "${openapi.onboarding.institutions.model.additionalInformations}"
-          type: object
           $ref: "#/components/schemas/AdditionalInformationsDto"
         isAggregator:
+          description: specified if given institution is an Aggregator
           type: boolean
-          description: "${openapi.onboarding.institutions.model.isAggregator}"
         aggregates:
+          description: "List of Aggregate Institutions, not empty only if isAggregator\
+            \ field's value is True"
           type: array
           items:
             $ref: "#/components/schemas/AggregateInstitution"
-          description: "${openapi.onboarding.institutions.model.aggregates}"
         gpuData:
-          description: "${openapi.onboarding.institutions.model.gpuData}"
-          type: object
           $ref: "#/components/schemas/GPUData"
         istatCode:
+          description: Institution's istat code
           type: string
-          description: "${openapi.onboarding.institutions.model.istatCode}"
         atecoCodes:
+          description: Institution's ateco codes
           type: array
           items:
+            description: Institution's ateco codes
             type: string
-          description: "${openapi.onboarding.institutions.model.atecoCodes}"
         userRequester:
-          description: "${openapi.onboarding.institutions.model.requester}"
-          type: object
           $ref: "#/components/schemas/UserRequestDto"
     OnboardingRequestResource:
-      type: object
       required:
-      - status
       - institutionInfo
+      - status
+      type: object
       properties:
         status:
+          description: Onboarding request's status
           type: string
-          description: "${openapi.onboarding.model.status}"
         institutionInfo:
-          description: "${openapi.onboarding.model.institutionInfo}"
-          type: object
           $ref: "#/components/schemas/InstitutionInfo"
         manager:
-          description: "${openapi.onboarding.model.manager}"
-          type: object
           $ref: "#/components/schemas/UserInfo"
         admins:
+          description: Administrators specific data
           type: array
           items:
             $ref: "#/components/schemas/UserInfo"
-          description: "${openapi.onboarding.model.admins}"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         updatedAt:
-          description: "${openapi.onboarding.model.updateDate}"
+          format: date-time
+          description: Onboarding request update date
           type: string
-          $ref: "#/components/schemas/LocalDateTime"
         expiringDate:
-          description: "${openapi.onboarding.model.expiringDate}"
+          format: date-time
+          description: Onboarding request expiring date
           type: string
-          $ref: "#/components/schemas/LocalDateTime"
         reasonForReject:
+          description: Onboarding request rejection reason
           type: string
-          description: "${openapi.onboarding.model.reason}"
         attachments:
+          description: Onboarding's attachments
           type: array
           items:
+            description: Onboarding's attachments
             type: string
-          description: "${openapi.onboarding.model.attachments}"
     OnboardingResult:
       type: object
       properties:
@@ -1020,92 +1051,113 @@ components:
         productId:
           type: string
     OnboardingUserDto:
-      type: object
       required:
-      - users
       - productId
+      - users
+      type: object
       properties:
         users:
+          description: List of onboarding users
           type: array
           items:
             $ref: "#/components/schemas/UserDto"
-          description: "${openapi.onboarding.institutions.model.users}"
-          minItems: 1
         institutionType:
-          description: "${openapi.onboarding.institutions.model.institutionType}"
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
           type: string
-          $ref: "#/components/schemas/InstitutionType"
         origin:
+          description: Institution data origin
           type: string
-          description: "${openapi.onboarding.institutions.model.origin}"
         originId:
+          description: Institution's details origin Id
           type: string
-          description: "${openapi.onboarding.institutions.model.originId}"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         taxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
         subunitCode:
+          description: Institution's subunitCode
           type: string
-          description: "${openapi.onboarding.institutions.model.subunitCode}"
         toAddOnAggregates:
+          description: specified if should be added on aggregates
           type: boolean
-          description: "${openapi.onboarding.institutions.model.toAddOnAggregates}"
     OnboardingVerify:
-      type: object
       required:
       - status
+      type: object
       properties:
         status:
+          description: Onboarding request's status
           type: string
-          description: "${openapi.onboarding.model.status}"
         productId:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         expiringDate:
-          description: "${openapi.onboarding.model.expiringDate}"
+          format: date-time
+          description: Onboarding request expiring date
           type: string
-          $ref: "#/components/schemas/LocalDateTime"
-    Origin:
-      type: string
-      enum:
-      - MOCK
-      - IPA
-      - SELC
-      - ANAC
-      - UNKNOWN
-      - ADE
-      - INFOCAMERE
-      - IVASS
-      - PDND_INFOCAMERE
     OriginEntry:
+      description: Origin's unique identifier
       type: object
       properties:
         institutionType:
-          $ref: "#/components/schemas/InstitutionType1"
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          - DEFAULT
+          type: string
         origin:
-          $ref: "#/components/schemas/Origin"
+          enum:
+          - MOCK
+          - IPA
+          - SELC
+          - ANAC
+          - UNKNOWN
+          - ADE
+          - INFOCAMERE
+          - IVASS
+          - PDND_INFOCAMERE
+          type: string
         labelKey:
           type: string
     OriginResponse:
       type: object
       properties:
         origins:
+          description: Origin's unique identifier
           type: array
           items:
             $ref: "#/components/schemas/OriginEntry"
-          description: "${openapi.product.model.id}"
-    PartyRole:
-      type: string
-      enum:
-      - MANAGER
-      - DELEGATE
-      - SUB_DELEGATE
-      - OPERATOR
-      - ADMIN_EA
     PaymentServiceProvider:
+      description: Payment service provider
       type: object
       properties:
         businessRegisterNumber:
@@ -1121,121 +1173,93 @@ components:
         vatNumberGroup:
           type: boolean
     Problem:
+      description: Generic problem response
       type: object
-      properties:
-        type:
-          type: string
-        title:
-          type: string
-        status:
-          type: integer
-          format: int32
-        detail:
-          type: string
-        instance:
-          type: string
-        invalidParams:
-          type: array
-          items:
-            $ref: "#/components/schemas/InvalidParam"
     ProductResource:
       type: object
       properties:
         id:
+          description: Product's unique identifier
           type: string
-          description: "${openapi.onboarding.product.model.id}"
         title:
+          description: Product's title
           type: string
-          description: "${openapi.onboarding.product.model.title}"
         parentId:
+          description: Product's parent's Id
           type: string
-          description: "${openapi.onboarding.product.model.parentId}"
         status:
-          description: "${openapi.onboarding.product.model.status}"
+          description: Product's status
+          enum:
+          - ACTIVE
+          - TESTING
+          - PHASE_OUT
+          - INACTIVE
           type: string
-          $ref: "#/components/schemas/ProductStatus"
         logo:
+          description: Product's logo
           type: string
-          description: "${openapi.onboarding.product.model.logo}"
         logoBgColor:
+          description: Product logo's background color
           type: string
-          description: "${openapi.onboarding.product.model.logoBgColor}"
-    ProductStatus:
-      type: string
-      enum:
-      - ACTIVE
-      - TESTING
-      - PHASE_OUT
-      - INACTIVE
     PspData:
-      type: object
+      description: Payment Service Provider (PSP) specific data
       required:
+      - abiCode
       - businessRegisterNumber
       - legalRegisterName
       - legalRegisterNumber
-      - abiCode
       - vatNumberGroup
+      type: object
       properties:
         businessRegisterNumber:
+          description: PSP's Business Register number
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.businessRegisterNumber}"
         legalRegisterName:
+          description: PSP's legal register name
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterName}"
         legalRegisterNumber:
+          description: PSP's legal register number
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterNumber}"
         abiCode:
+          description: PSP's ABI code
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.abiCode}"
         vatNumberGroup:
+          description: PSP's Vat Number group
           type: boolean
-          description: "${openapi.onboarding.institutions.model.pspData.vatNumberGroup}"
     PspDataDto:
-      type: object
+      description: Payment Service Provider (PSP) specific data
       required:
+      - abiCode
       - businessRegisterNumber
+      - dpoData
       - legalRegisterName
       - legalRegisterNumber
-      - abiCode
       - vatNumberGroup
-      - dpoData
+      type: object
       properties:
         businessRegisterNumber:
+          description: PSP's Business Register number
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.businessRegisterNumber}"
-          pattern: \S
         legalRegisterName:
+          description: PSP's legal register name
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterName}"
-          pattern: \S
         legalRegisterNumber:
+          description: PSP's legal register number
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.legalRegisterNumber}"
-          pattern: \S
         abiCode:
+          description: PSP's ABI code
           type: string
-          description: "${openapi.onboarding.institutions.model.pspData.abiCode}"
-          pattern: \S
         vatNumberGroup:
+          description: PSP's Vat Number group
           type: boolean
-          description: "${openapi.onboarding.institutions.model.pspData.vatNumberGroup}"
         dpoData:
-          description: "${openapi.onboarding.institutions.model.pspData.dpoData}"
-          type: object
           $ref: "#/components/schemas/DpoDataDto"
     ReasonForRejectDto:
       type: object
       properties:
         reason:
+          description: Rejection reason of an onboarding request
           type: string
-          description: "${openapi.onboarding.institution.model.reason}"
-    RecipientCodeStatus:
-      type: string
-      enum:
-      - ACCEPTED
-      - DENIED_NO_BILLING
-      - DENIED_NO_ASSOCIATION
     RequiredDocumentModel:
       type: object
       properties:
@@ -1250,154 +1274,146 @@ components:
         mimeType:
           type: string
         maxDocumentsRequired:
-          type: integer
           format: int32
+          type: integer
         storageOrigin:
-          $ref: "#/components/schemas/StorageOrigin"
+          enum:
+          - SYSTEM
+          - USER
+          type: string
     RequiredDocumentsEnabledResource:
       type: object
       properties:
         requiredDocumentsEnabled:
-          type: boolean
           description: "True when the (productId, institutionType, origin) triplet\
             \ has required-documents configured on product-ms, false otherwise."
+          type: boolean
     RowErrorResponse:
       type: object
       properties:
         riga:
-          type: integer
           format: int32
+          type: integer
         codice fiscale:
           type: string
         errore:
           type: string
-    StorageOrigin:
-      type: string
-      enum:
-      - SYSTEM
-      - USER
-    UUID:
-      type: string
-      format: uuid
-      pattern: "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}"
-    UserAuthority:
-      type: string
-      enum:
-      - ADMIN
-      - LIMITED
-      - ADMIN_EA
     UserDataValidationDto:
-      type: object
       required:
       - taxCode
+      type: object
       properties:
         taxCode:
+          description: User's fiscal code
           type: string
-          description: "${openapi.onboarding.user.model.fiscalCode}"
-          pattern: \S
         name:
+          description: User's name
           type: string
-          description: "${openapi.onboarding.user.model.name}"
         surname:
+          description: User's surname
           type: string
-          description: "${openapi.onboarding.user.model.surname}"
     UserDto:
-      type: object
       required:
       - name
+      - role
       - surname
       - taxCode
-      - role
+      type: object
       properties:
         name:
+          description: User's name
           type: string
-          description: "${openapi.onboarding.user.model.name}"
-          pattern: \S
         surname:
+          description: User's surname
           type: string
-          description: "${openapi.onboarding.user.model.surname}"
-          pattern: \S
         taxCode:
+          description: User's fiscal code
           type: string
-          description: "${openapi.onboarding.user.model.fiscalCode}"
-          pattern: \S
         role:
-          description: "${openapi.onboarding.user.model.role}"
+          description: User's role
+          enum:
+          - MANAGER
+          - DELEGATE
+          - SUB_DELEGATE
+          - OPERATOR
+          - ADMIN_EA
           type: string
-          $ref: "#/components/schemas/PartyRole"
         email:
+          description: User's email
           type: string
-          description: "${openapi.onboarding.user.model.email}"
-    UserInfo:
-      type: object
+    UserId:
       required:
+      - id
+      type: object
+      properties:
+        id:
+          format: uuid
+          type: string
+    UserInfo:
+      description: Administrators specific data
+      required:
+      - email
+      - fiscalCode
       - id
       - name
       - surname
-      - email
-      - fiscalCode
+      type: object
       properties:
         id:
-          description: "${openapi.onboarding.user.model.id}"
+          format: uuid
+          description: User's unique identifier
           type: string
-          $ref: "#/components/schemas/UUID"
         name:
+          description: User's name
           type: string
-          description: "${openapi.onboarding.user.model.name}"
         surname:
+          description: User's surname
           type: string
-          description: "${openapi.onboarding.user.model.surname}"
         email:
+          description: User's institutional email
           type: string
-          description: "${openapi.onboarding.user.model.institutionalEmail}"
         fiscalCode:
+          description: User's fiscal code
           type: string
-          description: "${openapi.onboarding.user.model.fiscalCode}"
     UserRequestDto:
-      type: object
       required:
+      - email
       - name
       - surname
-      - email
+      type: object
       properties:
         name:
+          description: User's name
           type: string
-          description: "${openapi.onboarding.user.model.name}"
-          pattern: \S
         surname:
+          description: User's surname
           type: string
-          description: "${openapi.onboarding.user.model.surname}"
-          pattern: \S
         email:
+          description: User's email
           type: string
-          description: "${openapi.onboarding.user.model.email}"
-          pattern: \S
     UserTaxCodeDto:
-      type: object
       required:
       - taxCode
+      type: object
       properties:
         taxCode:
+          description: User's fiscal code
           type: string
-          description: "${openapi.onboarding.user.model.fiscalCode}"
-          pattern: \S
     VerificationLegalAddressRequest:
-      type: object
       required:
       - taxCode
+      type: object
       properties:
         taxCode:
           type: string
-          pattern: \S
     VerificationMatchRequest:
-      type: object
       required:
       - taxCode
       - userDto
+      type: object
       properties:
         taxCode:
           type: string
-          pattern: \S
         userDto:
           $ref: "#/components/schemas/UserDto"
     VerifyAggregatesResponse:
@@ -1412,49 +1428,53 @@ components:
           items:
             $ref: "#/components/schemas/RowErrorResponse"
     VerifyManagerRequest:
-      type: object
       required:
       - companyTaxCode
+      type: object
       properties:
         companyTaxCode:
+          description: Institution's taxCode
           type: string
-          description: "${openapi.onboarding.institutions.model.taxCode}"
-          pattern: \S
     VerifyManagerResponse:
       type: object
       properties:
         origin:
+          description: Institution data origin
           type: string
-          description: "${openapi.onboarding.institutions.model.origin}"
         companyName:
+          description: Institution's legal name
           type: string
-          description: "${openapi.onboarding.institutions.model.name}"
   securitySchemes:
-    SecurityScheme:
+    bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Authentication
+      description: "A bearer token in the format of a JWS and conformed to the specifications\
+        \ included in [RFC8725](https://tools.ietf.org/html/RFC8725)"
 tags:
 - name: institutions
+  description: Institution operations
 - name: product
-- name: product-ms
-- name: tokens
+  description: Product operations
 - name: user
 paths:
   /v1/institutions:
     get:
-      summary: "${openapi.onboarding.institutions.api.getInstitutions}"
-      description: "${openapi.onboarding.institutions.api.getInstitutions}"
+      summary: The service retrieves all the onboarded institutions related to the
+        logged user and product's identifier.
+      description: The service retrieves all the onboarded institutions related to
+        the logged user and product's identifier.
       operationId: getInstitutionsUsingGET
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.productFilter}"
+      - description: A product to filter the institutions based on whether the institution
+          has an ACTIVE onboarding on the specified product.
         name: productId
         in: query
         schema:
           type: string
+        required: false
       responses:
         "200":
           description: OK
@@ -1464,16 +1484,41 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/InstitutionResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/company/onboarding:
     post:
-      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
-      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
       operationId: onboardingCompanyUsingPOST
       tags:
       - institutions
@@ -1484,56 +1529,65 @@ paths:
               $ref: "#/components/schemas/CompanyOnboardingDto"
         required: true
       responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
-      security:
-      - SecurityScheme: []
-  /v1/institutions/from-infocamere:
-    get:
-      summary: "${openapi.onboarding.institutions.api.getInstitutionsByUser}"
-      description: "${openapi.onboarding.institutions.api.getInstitutionsByUser}"
-      operationId: getInstitutionsFromInfocamereUsingGET
-      tags:
-      - institutions
-      responses:
-        "200":
-          description: OK
+        "404":
+          description: Not Found
           content:
-            application/json:
+            application/problem+json:
               schema:
-                $ref: "#/components/schemas/InstitutionResourceIC"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/geographic-taxonomies:
     get:
-      summary: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
-      description: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
+      summary: The service retrieve the institution's geographic taxonomy
+      description: The service retrieve the institution's geographic taxonomy
       operationId: getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.subunitCode}"
-        name: subunitCode
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.taxCode}"
+      - description: Institution's taxCode
+        required: true
         name: taxCode
         in: query
         schema:
           type: string
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
       responses:
         "200":
           description: OK
@@ -1543,75 +1597,141 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GeographicTaxonomyResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/onboarding:
     head:
-      summary: "${openapi.onboarding.institutions.api.verifyOnboarding}"
-      description: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      summary: Checks if the specified institution has been onboarded on the specified
+        product.
+      description: Checks if the specified institution has been onboarded on the specified
+        product.
       operationId: verifyOnboardingUsingHEAD
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.institutionType}"
-        name: institutionType
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.origin}"
-        name: origin
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.originId}"
-        name: originId
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.product.model.id}"
-        name: productId
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.subunitCode}"
-        name: subunitCode
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.taxCode}"
+      - description: Institution's taxCode
         name: taxCode
         in: query
         schema:
           type: string
-      - description: "${openapi.onboarding.institutions.model.vatNumber}"
+        required: false
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Product's unique identifier
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      - description: Institution data origin
+        name: origin
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's details origin Id
+        name: originId
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's VAT number
         name: vatNumber
         in: query
         schema:
           type: string
         required: false
-      - description: "${openapi.onboarding.institutions.model.verifyType}"
-        name: verifyType
+      - description: Institution's type
+        name: institutionType
         in: query
         schema:
           type: string
+        required: false
+      - description: Onboarding verification method type
+        schema:
+          enum:
+          - INTERNAL
+          - EXTERNAL
+          type: string
+        name: verifyType
+        in: query
+        required: false
       responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
     post:
-      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
-      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
       operationId: onboardingUsingPOST
       tags:
       - institutions
@@ -1622,31 +1742,61 @@ paths:
               $ref: "#/components/schemas/OnboardingProductDto"
         required: true
       responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
     get:
-      summary: "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}"
-      description: "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}"
+      summary: The service retrieves the institutions Manager and institution informations
+      description: The service retrieves the institutions Manager and institution
+        informations
       operationId: getInstitutionOnboardingInfoUsingGET
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.id}"
+      - description: Institution's unique internal Id
+        required: true
         name: institutionId
         in: query
         schema:
           type: string
-      - description: "${openapi.onboarding.product.model.id}"
+      - description: Product's unique identifier
+        required: true
         name: productId
         in: query
         schema:
@@ -1658,75 +1808,142 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/onboarding/verify:
     get:
-      summary: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      summary: Checks if the specified institution has been onboarded on the specified
+        product.
+      description: Checks if the specified institution has been onboarded on the specified
+        product.
       operationId: verifyOnboardingUsingGET
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.institutionType}"
-        name: institutionType
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.origin}"
-        name: origin
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.originId}"
-        name: originId
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.product.model.id}"
-        name: productId
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.subunitCode}"
-        name: subunitCode
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.taxCode}"
+      - description: Institution's taxCode
         name: taxCode
         in: query
         schema:
           type: string
-      - description: "${openapi.onboarding.institutions.model.vatNumber}"
+        required: false
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Product's unique identifier
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      - description: Institution data origin
+        name: origin
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's details origin Id
+        name: originId
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's VAT number
         name: vatNumber
         in: query
         schema:
           type: string
         required: false
-      - description: "${openapi.onboarding.institutions.model.verifyType}"
-        name: verifyType
+      - description: Institution's type
+        name: institutionType
         in: query
         schema:
           type: string
+        required: false
+      - description: Onboarding verification method type
+        schema:
+          enum:
+          - INTERNAL
+          - EXTERNAL
+          type: string
+        name: verifyType
+        in: query
+        required: false
       responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/verification/legal-address:
     post:
-      summary: "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}"
-      description: "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}"
+      summary: Get legal address by business tax id
+      description: Get legal address by business tax id
       operationId: postVerificationLegalAddressUsingPOST
       tags:
       - institutions
@@ -1743,18 +1960,43 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/InstitutionLegalAddressResource"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/verification/match:
     post:
-      summary: "${openapi.onboarding.institutions.api.matchInstitutionAndUser}"
-      description: "${openapi.onboarding.institutions.api.matchInstitutionAndUser}"
+      summary: MatchLegal Representative and inserted Institution by querying on Agenzia
+        delle Entrate
+      description: MatchLegal Representative and inserted Institution by querying
+        on Agenzia delle Entrate
       operationId: postVerificationMatchUsingPOST
       tags:
       - institutions
@@ -1771,23 +2013,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/MatchInfoResultResource"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/{externalInstitutionId}/geographic-taxonomy:
     get:
-      summary: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
-      description: "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}"
+      summary: The service retrieve the institution's geographic taxonomy
+      description: The service retrieve the institution's geographic taxonomy
       operationId: getInstitutionGeographicTaxonomyUsingGET
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.externalId}"
+      - description: Institution's unique external identifier
         name: externalInstitutionId
         in: path
         required: true
@@ -1802,62 +2067,134 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/GeographicTaxonomyResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/institutions/{externalInstitutionId}/products/{productId}:
     head:
-      summary: "${openapi.onboarding.institutions.api.verifyOnboarding}"
-      description: "${openapi.onboarding.institutions.api.verifyOnboarding}"
+      summary: Checks if the specified institution has been onboarded on the specified
+        product.
+      description: Checks if the specified institution has been onboarded on the specified
+        product.
       operationId: verifyOnboardingProductUsingHEAD
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.externalId}"
+      - description: Institution's unique external identifier
         name: externalInstitutionId
         in: path
         required: true
         schema:
           type: string
-      - description: "${openapi.onboarding.product.model.id}"
+      - description: Product's unique identifier
         name: productId
         in: path
         required: true
         schema:
           type: string
       responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/product/{id}:
     get:
-      summary: "${openapi.onboarding.product.api.getProduct}"
-      description: "${openapi.onboarding.product.api.getProduct}"
+      summary: The service retrieves the product given its internal id
+      description: The service retrieves the product given its internal id
       operationId: getProductUsingGET
       tags:
       - product
       parameters:
-      - description: "${openapi.onboarding.product.model.id}"
+      - description: Product's unique identifier
         name: id
         in: path
         required: true
         schema:
           type: string
-      - description: "${openapi.onboarding.institutions.model.institutionType}"
+      - description: Institution's type
+        schema:
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
         name: institutionType
         in: query
-        schema:
-          type: string
+        required: false
       responses:
         "200":
           description: OK
@@ -1865,16 +2202,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProductResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/products:
     get:
-      summary: "${openapi.onboarding.product.api.getProducts}"
-      description: "${openapi.onboarding.product.api.getProducts}"
+      summary: The service retrieves all products
+      description: The service retrieves all products
       operationId: getProducts
       tags:
       - product
@@ -1887,16 +2249,43 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ProductResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/products/admin:
     get:
-      summary: "${openapi.onboarding.product.api.getProductsAdmin}"
-      description: "${openapi.onboarding.product.api.getProductsAdmin}"
+      summary: The service retrieves all products for the addition administration
+        functionality
+      description: The service retrieves all products for the addition administration
+        functionality
       operationId: getProductsAdmin
       tags:
       - product
@@ -1909,16 +2298,41 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ProductResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/users/check-manager:
     post:
-      summary: "${openapi.onboarding.users.api.check-manager}"
-      description: "${openapi.onboarding.users.api.check-manager}"
+      summary: Returns true if current manager and previous one are the same
+      description: Returns true if current manager and previous one are the same
       operationId: checkManager
       tags:
       - user
@@ -1929,22 +2343,53 @@ paths:
               $ref: "#/components/schemas/CheckManagerDto"
         required: true
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckManagerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/users/onboarding:
     post:
-      summary: "${openapi.onboarding.users.api.onboarding}"
-      description: "${openapi.onboarding.users.api.onboarding}"
+      summary: The service allows the onboarding of Users
+      description: The service allows the onboarding of Users
       operationId: onboardingUsers
       tags:
       - user
@@ -1955,22 +2400,49 @@ paths:
               $ref: "#/components/schemas/OnboardingUserDto"
         required: true
       responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/users/onboarding/aggregator:
     post:
-      summary: "${openapi.onboarding.users.api.onboarding-aggregator}"
-      description: "${openapi.onboarding.users.api.onboarding-aggregator}"
+      summary: The service allows the onboarding of Users for aggregators
+      description: The service allows the onboarding of Users for aggregators
       operationId: onboardingAggregatorUsingPOST
       tags:
       - user
@@ -1981,22 +2453,49 @@ paths:
               $ref: "#/components/schemas/OnboardingUserDto"
         required: true
       responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/users/onboarding/{onboardingId}/manager:
     get:
-      summary: "${openapi.onboarding.users.api.check-manager}"
-      description: "${openapi.onboarding.users.api.check-manager}"
+      summary: Returns true if current manager and previous one are the same
+      description: Returns true if current manager and previous one are the same
       operationId: getManagerInfo
       tags:
       - user
@@ -2007,20 +2506,53 @@ paths:
         schema:
           type: string
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerInfoResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/users/search-user:
     post:
-      summary: "${openapi.onboarding.users.api.search-user}"
-      description: "${openapi.onboarding.users.api.search-user}"
+      summary: Returns uuid of specific user from PDV
+      description: Returns uuid of specific user from PDV
       operationId: searchUserId
       tags:
       - user
@@ -2031,22 +2563,53 @@ paths:
               $ref: "#/components/schemas/UserTaxCodeDto"
         required: true
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserId"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v1/users/validate:
     post:
-      summary: "${openapi.onboarding.user.api.validate}"
-      description: "${openapi.onboarding.user.api.validate}"
+      summary: Check if requested user data are valid
+      description: Check if requested user data are valid
       operationId: validateUsingPOST
       tags:
       - user
@@ -2057,68 +2620,134 @@ paths:
               $ref: "#/components/schemas/UserDataValidationDto"
         required: true
       responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "409":
           description: Conflict
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
-        "400":
-          description: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions:
     get:
-      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
-      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
       operationId: v2GetInstitutionByFilters
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.model.origin}"
-        name: origin
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.originId}"
-        name: originId
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.productFilter}"
+      - description: A product to filter the institutions based on whether the institution
+          has an ACTIVE onboarding on the specified product.
+        required: true
         name: productId
         in: query
         schema:
           type: string
-      - description: "${openapi.onboarding.institutions.model.subunitCode}"
-        name: subunitCode
-        in: query
-        schema:
-          type: string
-      - description: "${openapi.onboarding.institutions.model.taxCode}"
+      - description: Institution's taxCode
         name: taxCode
         in: query
         schema:
           type: string
+        required: false
+      - description: Institution data origin
+        name: origin
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's details origin Id
+        name: originId
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
       responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/company/onboarding:
     post:
-      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
-      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
       operationId: institutionOnboardingCompany
       tags:
       - institutions
@@ -2129,22 +2758,51 @@ paths:
               $ref: "#/components/schemas/CompanyOnboardingDto"
         required: true
       responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/company/verify-manager:
     post:
-      summary: "${openapi.onboarding.institutions.api.onboarding.verifyManager}"
-      description: "${openapi.onboarding.institutions.api.onboarding.verifyManager}"
+      summary: The service allows to verify the legal representative on external registries
+        and retrieve the company name
+      description: The service allows to verify the legal representative on external
+        registries and retrieve the company name
       operationId: verifyManagerUsingPOST
       tags:
       - institutions
@@ -2161,44 +2819,73 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VerifyManagerResponse"
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/ipa:
     get:
-      summary: "${openapi.onboarding.institutions.api.searchIpaInstitutions.summary}"
-      description: "${openapi.onboarding.institutions.api.searchIpaInstitutions.description}"
+      summary: Search IPA institutions
+      description: Searches IPA institutions indexed by the registry proxy. category
+        accepts a comma-separated list of IPA category codes.
       operationId: searchIpaInstitutionsUsingGET
       tags:
       - institutions
       parameters:
-      - description: "${openapi.onboarding.institutions.api.ipaCategory}"
+      - schema:
+          default: '*'
+          type: string
+        name: search
+        in: query
+        required: false
+      - description: One IPA category code or a comma-separated list of IPA category
+          codes.
         name: category
         in: query
         schema:
           type: string
+        required: false
       - schema:
           format: int32
-          type: integer
           default: 0
+          type: integer
         name: page
         in: query
+        required: false
       - schema:
           format: int32
-          type: integer
           default: 50
+          type: integer
         name: pageSize
         in: query
-      - description: Search text
-        schema:
-          default: '*'
-        name: search
-        in: query
+        required: false
       responses:
         "200":
           description: OK
@@ -2206,16 +2893,42 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IpaInstitutionsSearchResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/ipa/{taxCode}:
     get:
-      summary: "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.summary}"
-      description: "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.description}"
+      summary: Find IPA institution by tax code
+      description: Returns the IPA institution with the exact tax code. category optionally
+        accepts a comma-separated list of IPA category codes.
       operationId: findIpaInstitutionByTaxCodeUsingGET
       tags:
       - institutions
@@ -2225,11 +2938,13 @@ paths:
         required: true
         schema:
           type: string
-      - description: "${openapi.onboarding.institutions.api.ipaCategory}"
+      - description: One IPA category code or a comma-separated list of IPA category
+          codes.
         name: category
         in: query
         schema:
           type: string
+        required: false
       responses:
         "200":
           description: OK
@@ -2237,16 +2952,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/IpaInstitutionResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/onboarding:
     post:
-      summary: "${openapi.onboarding.institutions.api.onboarding.subunit}"
-      description: "${openapi.onboarding.institutions.api.onboarding.subunit}"
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
       operationId: institutionOnboarding
       tags:
       - institutions
@@ -2257,33 +2997,68 @@ paths:
               $ref: "#/components/schemas/OnboardingProductDto"
         required: true
       responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "409":
           description: Conflict
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/Problem"
-        "401":
-          description: Not Authorized
-        "400":
-          description: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/onboarding/active:
     get:
-      summary: "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}"
-      description: "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}"
+      summary: The service retrieves the active onboarding information for a given
+        tax code and product ID
+      description: The service retrieves the active onboarding information for a given
+        tax code and product ID
       operationId: getActiveOnboardingUsingGET
       tags:
       - institutions
       parameters:
-      - name: productId
+      - required: true
+        name: taxCode
+        in: query
+        schema:
+          type: string
+      - required: true
+        name: productId
         in: query
         schema:
           type: string
@@ -2291,10 +3066,7 @@ paths:
         in: query
         schema:
           type: string
-      - name: taxCode
-        in: query
-        schema:
-          type: string
+        required: false
       responses:
         "200":
           description: OK
@@ -2304,44 +3076,68 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/InstitutionOnboardingResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/onboarding/aggregation/verification:
     post:
-      summary: "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}"
-      description: "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}"
+      summary: The service allows to verify if the given csv contains valid aggregate
+        institutions
+      description: The service allows to verify if the given csv contains valid aggregate
+        institutions
       operationId: verifyAggregatesCsvUsingPOST
       tags:
       - institutions
       parameters:
-      - name: institutionType
-        in: query
-        style: form
+      - in: query
+        name: institutionType
         schema:
           type: string
-      - name: productId
-        in: query
-        style: form
+        required: false
+      - in: query
+        name: productId
+        required: true
         schema:
           type: string
       requestBody:
         content:
           multipart/form-data:
             schema:
+              required:
+              - aggregates
               type: object
               properties:
                 aggregates:
-                  type: string
                   format: binary
-                institutionType:
                   type: string
-                productId:
-                  type: string
-        required: true
       responses:
         "200":
           description: OK
@@ -2349,25 +3145,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/VerifyAggregatesResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/onboarding/recipient-code/verification:
     get:
-      summary: "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}"
-      description: "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}"
+      summary: The service allows to verify if recipientCode is valid or not
+      description: The service allows to verify if recipientCode is valid or not
       operationId: checkRecipientCodeUsingGET
       tags:
       - institutions
       parameters:
-      - name: originId
+      - required: true
+        name: originId
         in: query
         schema:
           type: string
-      - name: recipientCode
+      - required: true
+        name: recipientCode
         in: query
         schema:
           type: string
@@ -2377,17 +3200,46 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RecipientCodeStatus"
+                enum:
+                - ACCEPTED
+                - DENIED_NO_BILLING
+                - DENIED_NO_ASSOCIATION
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/onboarding/users/pg:
     post:
-      summary: "${openapi.onboarding.institutions.api.onboardingUsersPg}"
-      description: "${openapi.onboarding.institutions.api.onboardingUsersPg}"
+      summary: The service allows the onboarding of Users to a PG Institution
+      description: The service allows the onboarding of Users to a PG Institution
       operationId: onboardingUsersPgUsingPOST
       tags:
       - institutions
@@ -2396,34 +3248,59 @@ paths:
           application/json:
             schema:
               $ref: "#/components/schemas/CompanyOnboardingUserDto"
-        required: true
       responses:
         "200":
           description: OK
-          content:
-            application/json:
-              schema: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/onboardings:
     get:
-      summary: "${openapi.onboarding.institutions.api.onboardingInfo.summary}"
-      description: "${openapi.onboarding.institutions.api.onboardingInfo.description}"
+      summary: Retrieve onboarding information for an institution filtered by tax
+        code and status
+      description: "Returns a list of onboarding processes associated with the institution\
+        \ identified by the provided tax code. The results can be filtered by the\
+        \ onboarding status. Each item in the response contains key details such as\
+        \ the onboarding ID, related product, and current status."
       operationId: getOnboardingInfo
       tags:
       - institutions
       parameters:
-      - name: status
+      - required: true
+        name: taxCode
         in: query
         schema:
           type: string
-      - name: taxCode
+      - required: true
+        name: status
         in: query
         schema:
           type: string
@@ -2436,12 +3313,37 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/OnboardingResult"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/institutions/{onboardingId}:
     put:
       summary: Trigger onboarding request
@@ -2452,32 +3354,56 @@ paths:
       tags:
       - institutions
       parameters:
-      - name: onboardingId
+      - description: The onboarding id
+        name: onboardingId
         in: path
         required: true
         schema:
           type: string
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/product:
     get:
-      summary: "${openapi.product.ms.api.getOrigins.summary}"
-      description: "${openapi.product.ms.api.getOrigins.description}"
+      summary: Get product origins by productId
+      description: Retrieve the list of institution origins for the given product.
       operationId: getOrigins
       tags:
       - product-ms
       parameters:
-      - description: "${openapi.onboarding.institutions.model.institutionType}"
+      - description: Institution's type
+        required: true
         name: productId
         in: query
         schema:
@@ -2489,12 +3415,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OriginResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/product/{productId}/required-documents:
     get:
       summary: Get required documents for a product
@@ -2510,11 +3461,13 @@ paths:
         required: true
         schema:
           type: string
-      - name: institutionType
+      - required: true
+        name: institutionType
         in: query
         schema:
           type: string
-      - name: origin
+      - required: true
+        name: origin
         in: query
         schema:
           type: string
@@ -2527,12 +3480,37 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/RequiredDocumentModel"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/product/{productId}/required-documents/enabled:
     get:
       summary: Check if required documents are enabled for a product
@@ -2549,11 +3527,13 @@ paths:
         required: true
         schema:
           type: string
-      - name: institutionType
+      - required: true
+        name: institutionType
         in: query
         schema:
           type: string
-      - name: origin
+      - required: true
+        name: origin
         in: query
         schema:
           type: string
@@ -2564,21 +3544,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RequiredDocumentsEnabledResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}:
     get:
-      summary: "${openapi.tokens.retrieveOnboardingRequest}"
-      description: "${openapi.tokens.retrieveOnboardingRequest}"
+      summary: Service to retrieve a specific onboarding request
+      description: Service to retrieve a specific onboarding request
       operationId: retrieveOnboardingRequestUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2591,21 +3596,46 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OnboardingRequestResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/approve:
     post:
-      summary: "${openapi.tokens.approveOnboardingRequest}"
-      description: "${openapi.tokens.approveOnboardingRequest}"
+      summary: Service to approve a specific onboarding request
+      description: Service to approve a specific onboarding request
       operationId: approveOnboardingUsingPOST
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2614,24 +3644,46 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/attachment:
     post:
-      summary: "${openapi.tokens.uploadAttachment}"
-      description: "${openapi.tokens.uploadAttachment}"
+      summary: Upload a signed attachment
+      description: Upload a signed attachment
       operationId: uploadAttachmentUsingPOST
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2646,6 +3698,8 @@ paths:
         content:
           multipart/form-data:
             schema:
+              required:
+              - attachment
               type: object
               properties:
                 attachmentId:
@@ -2653,35 +3707,56 @@ paths:
                 attachmentDescription:
                   type: string
                 attachment:
-                  type: string
                   format: binary
-        required: true
+                  type: string
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
     get:
-      summary: "${openapi.tokens.getAttachment}"
-      description: "${openapi.tokens.getAttachment}"
+      summary: Service to download a specific onboarding attachment
+      description: Service to download a specific onboarding attachment
       operationId: getAttachmentUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - description: "${openapi.tokens.attachmentName}"
+      - description: Onboarding's attachment name
         required: true
         name: name
         in: query
@@ -2691,22 +3766,52 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream: {}
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/attachment/status:
     head:
-      summary: "${openapi.tokens.headAttachment}"
-      description: "${openapi.tokens.headAttachment}"
+      summary: Service to check the existence of a specific onboarding attachment
+      description: Service to check the existence of a specific onboarding attachment
       operationId: headAttachmentUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2720,23 +3825,45 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
     get:
-      summary: "${openapi.tokens.headAttachment}"
-      description: "${openapi.tokens.headAttachment}"
+      summary: Service to check the existence of a specific onboarding attachment
+      description: Service to check the existence of a specific onboarding attachment
       operationId: getAttachmentStatusUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2750,15 +3877,37 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/available-documents:
     get:
       summary: Retrieve the list of documents available for download for the given
@@ -2769,53 +3918,112 @@ paths:
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
         schema:
           type: string
       responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableDocumentsResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden - user does not have permission to view account documents
-        "401":
-          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableDocumentsResource"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/complete:
     delete:
-      summary: "${openapi.tokens.complete}"
-      description: "${openapi.tokens.complete}"
+      summary: Complete an onboarding request
+      description: Complete an onboarding request
       operationId: deleteUsingDELETE
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.tokenId}"
+      - description: Contract's unique identifier
         name: onboardingId
         in: path
         required: true
         schema:
           type: string
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
     post:
-      summary: "${openapi.tokens.complete}"
-      description: "${openapi.tokens.complete}"
+      summary: Complete an onboarding request
+      description: Complete an onboarding request
       operationId: completeUsingPOST
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2825,33 +4033,56 @@ paths:
         content:
           multipart/form-data:
             schema:
+              required:
+              - contract
               type: object
               properties:
                 contract:
-                  type: string
                   format: binary
-        required: true
+                  type: string
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/complete-onboarding-users:
     post:
-      summary: "${openapi.tokens.completeOnboardingUsers}"
-      description: "${openapi.tokens.completeOnboardingUsers}"
+      summary: Complete an onboarding users request
+      description: Complete an onboarding users request
       operationId: completeOnboardingUsersUsingPOST
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2861,45 +4092,111 @@ paths:
         content:
           multipart/form-data:
             schema:
+              required:
+              - contract
               type: object
               properties:
                 contract:
-                  type: string
                   format: binary
-        required: true
+                  type: string
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
           content:
-            application/json:
-              schema: {}
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/contract:
     get:
-      summary: "${openapi.tokens.getContract}"
-      description: "${openapi.tokens.getContract}"
+      summary: Service to download a specific onboarding contract
+      description: Service to download a specific onboarding contract
       operationId: getContractUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
         schema:
           type: string
       responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden - user does not have permission to view account documents
-        "401":
-          description: Not Authorized
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/download:
     get:
       summary: Download a document (signed contract or attachment) for the given onboarding
@@ -2909,7 +4206,7 @@ paths:
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2921,55 +4218,137 @@ paths:
         in: query
         schema:
           type: string
+        required: false
       - description: Type of document to download
         in: query
         name: type
         required: true
         schema:
-          $ref: "#/components/schemas/DownloadDocumentType"
+          description: Type of document to download.
+          enum:
+          - CONTRACT_SIGNED
+          - ATTACHMENT
+          type: string
       responses:
         "200":
           description: Successful operation
           content:
-            application/octet-stream: {}
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
         "400":
-          description: Invalid request - missing 'name' when type=ATTACHMENT or unsupported
-            download type
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
           description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden - user does not have permission to view account documents
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
         "404":
-          description: Onboarding or document not found
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/products/{productId}/aggregates-csv:
     get:
-      summary: "${openapi.tokens.getAggregatesCsv}"
-      description: "${openapi.tokens.getAggregatesCsv}"
+      summary: Service to download a specific onboarding aggregates csv
+      description: Service to download a specific onboarding aggregates csv
       operationId: getAggregatesCsvUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - description: "${openapi.tokens.productId}"
+      - description: Product's unique identifier
         name: productId
         in: path
         required: true
         schema:
           type: string
       responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "403":
           description: Forbidden - user does not have permission to view account documents
-        "401":
-          description: Not Authorized
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/reject:
     post:
       summary: Service to reject a specific onboarding request
@@ -2978,7 +4357,7 @@ paths:
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -2993,32 +4372,52 @@ paths:
       responses:
         "200":
           description: OK
-          content:
-            application/json:
-              schema: {}
-        "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
         "400":
           description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/template-attachment:
     get:
-      summary: "${openapi.tokens.getTemplateAttachment}"
-      description: "${openapi.tokens.getTemplateAttachment}"
+      summary: Service to download a specific template attachment
+      description: Service to download a specific template attachment
       operationId: getTemplateAttachmentUsingGET
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
         schema:
           type: string
-      - description: "${openapi.tokens.attachmentName}"
+      - description: Onboarding's attachment name
         required: true
         name: attachmentName
         in: query
@@ -3028,22 +4427,52 @@ paths:
         "200":
           description: OK
           content:
-            application/octet-stream: {}
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
   /v2/tokens/{onboardingId}/verify:
     post:
-      summary: "${openapi.tokens.verify}"
-      description: "${openapi.tokens.verify}"
+      summary: Verify if the token is already consumed
+      description: Verify if the token is already consumed
       operationId: verifyOnboardingUsingPOST
       tags:
       - tokens
       parameters:
-      - description: "${openapi.tokens.onboardingId}"
+      - description: Onboarding's unique identifier
         name: onboardingId
         in: path
         required: true
@@ -3056,18 +4485,89 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OnboardingVerify"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
         "401":
-          description: Not Authorized
-        "403":
-          description: Not Allowed
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
       security:
-      - SecurityScheme: []
+      - bearerAuth:
+        - global
+  /v1/institutions/from-infocamere/:
+    get:
+      summary: Get Legal Representative's PN PG institution List
+      description: Get Legal Representative's PN PG institution List
+      operationId: getInstitutionsFromInfocamereUsingGET
+      tags:
+      - institutions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionResourceIC"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
 info:
-  title: Onboarding-BFF
-  version: 1.0.0
-  description: '"SelfCare Onboarding BFF"'
+  title: BFF Onboarding API
+  version: 0.1.0-SNAPSHOT
+  description: Self Care OnBoarding API documentation
+  contact:
+    name: PagoPA
+    url: https://www.pagopa.gov.it
 servers:
-- url: http://localhost:8080
-  description: Auto generated value
-- url: http://0.0.0.0:8080
-  description: Auto generated value
+- url: http://localhost
+  description: Generated server url

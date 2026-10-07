@@ -3,8 +3,10 @@ package it.pagopa.selfcare.onboarding.controller;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
-import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
+import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
@@ -40,11 +42,11 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.Response;
 import java.io.IOException;
 import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
@@ -81,6 +83,9 @@ public class TokenV2Controller {
     @POST
     @Path("/{onboardingId}/complete")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @RequestBody(required = false, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(requiredProperties = "contract")))
+    @APIResponse(responseCode = "204", description = "No Content")
     @Operation(description = "${openapi.tokens.complete}", summary = "${openapi.tokens.complete}", operationId = "completeUsingPOST")
     public Response complete(@Parameter(description = "${openapi.tokens.onboardingId}")
                              @PathParam("onboardingId") String onboardingId,
@@ -98,6 +103,9 @@ public class TokenV2Controller {
     @POST
     @Path("/{onboardingId}/complete-onboarding-users")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @RequestBody(required = false, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(requiredProperties = "contract")))
+    @APIResponse(responseCode = "204", description = "No Content")
     @Operation(description = "${openapi.tokens.completeOnboardingUsers}", summary = "${openapi.tokens.completeOnboardingUsers}",
             operationId = "completeOnboardingUsersUsingPOST")
     public Response completeOnboardingUsers(@Parameter(description = "${openapi.tokens.onboardingId}")
@@ -173,6 +181,7 @@ public class TokenV2Controller {
 
     @DELETE
     @Path("/{onboardingId}/complete")
+    @APIResponse(responseCode = "204", description = "No Content")
     @Operation(summary = "${openapi.tokens.complete}",
             description = "${openapi.tokens.complete}", operationId = "deleteUsingDELETE")
     public Response deleteOnboarding(@Parameter(description = "${openapi.tokens.tokenId}")
@@ -189,7 +198,8 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${openapi.tokens.getContract}",
             description = "${openapi.tokens.getContract}", operationId = "getContractUsingGET")
-    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS)
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS, content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
     public Response getContract(@Parameter(description = "${openapi.tokens.onboardingId}")
                                 @PathParam("onboardingId")
                                 String onboardingId) {
@@ -241,7 +251,10 @@ public class TokenV2Controller {
     @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
             description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
             operationId = "getAvailableDocumentsUsingGET")
-    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS)
+    @APIResponse(responseCode = "200", description = "Successful operation",
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AvailableDocumentsResource.class)))
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS,
+            content = @Content(mediaType = MediaType.APPLICATION_JSON, schema = @Schema(implementation = AvailableDocumentsResource.class)))
     public AvailableDocumentsResource getAvailableDocuments(@Parameter(description = "${openapi.tokens.onboardingId}")
                                                             @PathParam("onboardingId") String onboardingId) {
         checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
@@ -263,10 +276,12 @@ public class TokenV2Controller {
                     + "when type=ATTACHMENT the 'name' query parameter is required.",
             operationId = "downloadDocumentUsingGET")
     @APIResponses(value = {
-            @APIResponse(responseCode = "200", description = "Successful operation"),
+            @APIResponse(responseCode = "200", description = "Successful operation",
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
             @APIResponse(responseCode = "400", description = "Invalid request - missing 'name' when type=ATTACHMENT or unsupported download type"),
             @APIResponse(responseCode = "401", description = "Unauthorized"),
-            @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS),
+            @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS,
+                    content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
             @APIResponse(responseCode = "404", description = "Onboarding or document not found")
     })
     @Parameter(name = "type", in = ParameterIn.QUERY,
@@ -330,6 +345,9 @@ public class TokenV2Controller {
     @POST
     @Path("/{onboardingId}/attachment")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @RequestBody(required = false, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
+            schema = @Schema(requiredProperties = "attachment")))
+    @APIResponse(responseCode = "204", description = "No Content")
     @Operation(description = "${openapi.tokens.uploadAttachment}", summary = "${openapi.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
     public Response uploadAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
@@ -355,7 +373,8 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${openapi.tokens.getAggregatesCsv}",
             description = "${openapi.tokens.getAggregatesCsv}", operationId = "getAggregatesCsvUsingGET")
-    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS)
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS, content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
     public Response getAggregatesCsv(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      @Parameter(description = "${openapi.tokens.productId}")
