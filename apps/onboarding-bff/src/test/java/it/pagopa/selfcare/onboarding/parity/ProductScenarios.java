@@ -45,19 +45,20 @@ final class ProductScenarios {
             + productWithContract("prod-nopath", "ACTIVE", true, false)
             + "]";
     s.add(
-        Scenario.api(G, "list-keeps-only-active-and-enabled", "/v1/products")
+        Scenario.api(G, "list-keeps-only-active", "/v1/products")
             .stub(st -> st.on(MS_PRODUCT, "GET", "/product", Reply.json(200, list)))
             .expect(
                 c ->
                     c.status(200)
                         .contentType("application/json")
-                        .jsonSize("", 2)
+                        .jsonSize("", 3)
                         .json("/0/id", "prod-io")
                         .json("/0/title", "Title of prod-io")
                         .json("/0/status", "ACTIVE")
                         .json("/0/logo", "https://cdn.test/prod-io.png")
                         .json("/0/logoBgColor", "#0066CC")
-                        .json("/1/id", "prod-nopath")
+                        .json("/1/id", "prod-off")
+                        .json("/2/id", "prod-nopath")
                         .exactCalls("ms-product GET /product")
                         .propagatesIdentity()
                         .call(MS_PRODUCT, "GET", "/product")
@@ -79,8 +80,9 @@ final class ProductScenarios {
             .expect(
                 c ->
                     c.status(200)
-                        .jsonSize("", 1)
+                        .jsonSize("", 2)
                         .json("/0/id", "prod-io")
+                        .json("/1/id", "prod-off")
                         .call(MS_PRODUCT, "GET", "/product")
                         .query("rootOnly", "true")
                         .query("valid", "true")));

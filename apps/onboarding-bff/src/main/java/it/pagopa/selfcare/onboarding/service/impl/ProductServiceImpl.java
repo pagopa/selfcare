@@ -108,7 +108,7 @@ public class ProductServiceImpl implements ProductService {
         List<ProductResponse> response = productApi.getProducts(rootOnly, true, TENANT_FROM_HEADER).await().indefinitely();
         List<Product> result = Objects.requireNonNull(response).stream()
                 .map(productMapper::toProduct)
-                .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()) && product.isEnabled())
+                .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()))
                 .toList();
         log.debug("getProducts size = {}", result.size());
         log.trace("getProducts end");

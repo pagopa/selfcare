@@ -196,7 +196,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getProducts_requestsValidProductsAndKeepsOnlyActiveAndEnabled() {
+    void getProducts_requestsValidProductsAndKeepsOnlyActive() {
         ProductResponse r1 = mock(ProductResponse.class);
         ProductResponse r2 = mock(ProductResponse.class);
         ProductResponse r3 = mock(ProductResponse.class);
@@ -208,7 +208,7 @@ class ProductServiceImplTest {
         when(productMapper.toProduct(r2)).thenReturn(disabledActive);
         when(productMapper.toProduct(r3)).thenReturn(enabledTesting);
 
-        assertEquals(List.of(enabledActive), productService.getProducts(false));
+        assertEquals(List.of(enabledActive, disabledActive), productService.getProducts(false));
         verify(productApi).getProducts(false, true, null);
     }
 
