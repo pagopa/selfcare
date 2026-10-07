@@ -1,83 +1,85 @@
 package it.pagopa.selfcare.onboarding.service;
 
-import it.pagopa.selfcare.onboarding.client.model.BinaryData;
-import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
-import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import it.pagopa.selfcare.onboarding.client.util.FilePayloadUtils;
-import it.pagopa.selfcare.onboarding.exception.InternalGatewayErrorException;
-import it.pagopa.selfcare.onboarding.mapper.DocumentMapper;
+import io.vertx.core.buffer.Buffer;
+import it.pagopa.selfcare.onboarding.client.DocumentContentRestClient;
 import it.pagopa.selfcare.product.entity.AttachmentTemplate;
+import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
+import it.pagopa.selfcare.onboarding.client.model.BinaryData;
+import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.client.util.ContentDispositions;
+import it.pagopa.selfcare.onboarding.mapper.DocumentMapper;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.io.IOException;
+import java.time.temporal.ChronoUnit;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.jboss.resteasy.reactive.client.api.ClientMultipartForm;
 import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentType;
 import org.openapi.quarkus.document_json.model.UserAttachmentRequest;
-import java.io.File;
-import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
-import java.io.IOException;
-import jakarta.ws.rs.ProcessingException;
-import java.time.temporal.ChronoUnit;
 
+/**
+ * Document-ms facade. Reads are retried (3 attempts, 5s apart) on connection problems and timeouts only;
+ * uploads and the head check are never retried.
+ */
 @ApplicationScoped
 public class DocumentService {
 
-    private final DocumentContentControllerApi documentContentApi;
+    private static final String FILE_PART = "file";
+    private static final String REQUEST_PART = "request";
+
+    private final DocumentContentRestClient documentContentClient;
     private final DocumentControllerApi documentApi;
     private final DocumentMapper documentMapper;
 
-    public DocumentService(@RestClient DocumentContentControllerApi documentContentApi,
+    public DocumentService(@RestClient DocumentContentRestClient documentContentClient,
                            @RestClient DocumentControllerApi documentApi,
                            DocumentMapper documentMapper) {
-        this.documentContentApi = documentContentApi;
+        this.documentContentClient = documentContentClient;
         this.documentApi = documentApi;
         this.documentMapper = documentMapper;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public BinaryData getContract(String onboardingId) {
-        try {
-            File file = documentContentApi.getContract(onboardingId).await().indefinitely();
-            return FilePayloadUtils.toBinaryData(file, file.getName());
-        } catch (Exception e) {
-            throw new InternalGatewayErrorException("Error retrieving contract from document service");
-        }
+        return toBinaryData(documentContentClient.getContract(onboardingId));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
+    public BinaryData getContractSigned(String onboardingId) {
+        return toBinaryData(documentContentClient.getContractSigned(onboardingId));
+    }
+
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public BinaryData getTemplateAttachment(String onboardingId,
                                             String institutionDescription,
                                             String filename,
                                             String productId,
                                             String templatePath) {
-        File file = documentContentApi
-                .getTemplateAttachment(onboardingId, institutionDescription, filename, productId, templatePath)
-                .await().indefinitely();
-        return FilePayloadUtils.toBinaryData(file, filename);
+        return toBinaryData(documentContentClient
+                .getTemplateAttachment(onboardingId, institutionDescription, filename, productId, templatePath));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public BinaryData getAttachment(String onboardingId, String filename) {
-        File file = documentContentApi.getAttachment(onboardingId, filename).await().indefinitely();
-        return FilePayloadUtils.toBinaryData(file, filename);
+        return toBinaryData(documentContentClient.getAttachment(onboardingId, filename));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public AvailableDocuments getAvailableDocuments(String onboardingId) {
         return documentMapper.toAvailableDocuments(documentApi.getAvailableDocuments(onboardingId).await().indefinitely());
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public BinaryData getAggregatesCsv(String onboardingId, String productId) {
-        File file = documentContentApi.getAggregatesCsv(onboardingId, productId).await().indefinitely();
-        return FilePayloadUtils.toBinaryData(file, file.getName());
+        return toBinaryData(documentContentClient.getAggregatesCsv(onboardingId, productId));
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void uploadAttachment(String onboardingId,
                                  UploadedFile attachment,
                                  String attachmentName,
@@ -92,15 +94,9 @@ public class DocumentService {
         request.setTemplatePath(template.getTemplatePath());
         request.setTemplateVersion(template.getTemplateVersion());
         request.setDocumentType(DocumentType.ATTACHMENT);
-
-        DocumentContentControllerApi.UploadAttachmentMultipartForm form =
-                new DocumentContentControllerApi.UploadAttachmentMultipartForm();
-        form._file = FilePayloadUtils.toTempFile(attachment, "document-attachment-", ".bin");
-        form.request = request;
-        documentContentApi.uploadAttachment(form).await().indefinitely();
+        documentContentClient.uploadAttachment(multipart(attachment, request, DocumentBuilderRequest.class)).close();
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public void uploadUserAttachment(String onboardingId,
                                      UploadedFile attachment,
                                      String productId,
@@ -115,17 +111,26 @@ public class DocumentService {
         request.setAttachmentDescription(attachmentDescription);
         request.setAttachmentName(attachmentName);
         request.setMaxDocumentsRequired(maxDocumentsRequired);
-        DocumentContentControllerApi.UploadUserAttachmentMultipartForm form =
-                new DocumentContentControllerApi.UploadUserAttachmentMultipartForm();
-        form._file = FilePayloadUtils.toTempFile(attachment, "document-user-attachment-", ".bin");
-        form.request = request;
-        documentContentApi.uploadUserAttachment(form).await().indefinitely();
+        documentContentClient.uploadUserAttachment(multipart(attachment, request, UserAttachmentRequest.class)).close();
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public int headAttachment(String onboardingId, String filename) {
-        return documentApi.headAttachment(onboardingId, filename)
-                .await().indefinitely()
-                .getStatus();
+        try (Response response = documentApi.headAttachment(onboardingId, filename).await().indefinitely()) {
+            return response.getStatus();
+        }
+    }
+
+    private static ClientMultipartForm multipart(UploadedFile attachment, Object request, Class<?> requestType) {
+        String contentType = attachment.contentType() == null ? MediaType.APPLICATION_OCTET_STREAM : attachment.contentType();
+        return ClientMultipartForm.create()
+                .binaryFileUpload(FILE_PART, attachment.fileName(), Buffer.buffer(attachment.content()), contentType)
+                .entity(REQUEST_PART, request, MediaType.APPLICATION_JSON, requestType);
+    }
+
+    private static BinaryData toBinaryData(Response response) {
+        try (response) {
+            byte[] content = response.hasEntity() ? response.readEntity(byte[].class) : new byte[0];
+            return new BinaryData(ContentDispositions.filename(response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION)), content);
+        }
     }
 }
