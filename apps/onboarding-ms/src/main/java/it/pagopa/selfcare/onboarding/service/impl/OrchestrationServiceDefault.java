@@ -65,7 +65,7 @@ public class OrchestrationServiceDefault implements OrchestrationService {
         }
         log.info(STARTING_ONBOARDING_ORCHESTRATION_FOR + "current onboardingId {}", currentOnboardingId);
         return orchestrationApi.apiStartOnboardingOrchestrationGet(
-                currentOnboardingId, timeout, requesterUserId);
+                currentOnboardingId, requesterUserId, timeout);
     }
 
     /**
