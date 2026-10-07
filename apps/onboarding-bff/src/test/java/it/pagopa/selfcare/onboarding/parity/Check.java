@@ -232,6 +232,18 @@ public final class Check {
     return this;
   }
 
+  public Check downstreamApiKey(String expected) {
+    for (Call call : exchange.calls()) {
+      if (!List.of(expected).equals(call.headers().get("x-api-key"))) {
+        failures.add("downstream " + call + ": configured x-api-key missing, duplicated or different");
+      }
+      if (call.headers().containsKey("x-functions-key")) {
+        failures.add("downstream " + call + ": unexpected x-functions-key");
+      }
+    }
+    return this;
+  }
+
   public Check callsAtLeast(String service, int min) {
     int actual = (int) exchange.calls().stream().filter(c -> c.service().equals(service)).count();
     if (actual < min) {

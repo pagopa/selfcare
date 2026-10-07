@@ -50,6 +50,8 @@ public final class ParityCatalog {
       if (!names.add(scenario.displayName())) {
         throw new IllegalStateException("duplicate scenario " + scenario.displayName());
       }
+      scenario.expect(scenario.expectation.andThen(check ->
+          check.downstreamApiKey(ParityTargets.USER_REGISTRY_API_KEY)));
     }
     return scenarios;
   }

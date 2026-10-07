@@ -68,6 +68,11 @@ class CheckTest {
           if (authorization != null) {
             downstream.header("Authorization", authorization);
           }
+          for (String name : java.util.List.of("x-api-key", "x-functions-key")) {
+            for (String value : exchange.getRequestHeaders().getOrDefault(name, java.util.List.of())) {
+              downstream.header(name, value);
+            }
+          }
           try {
             HttpClient.newHttpClient().send(downstream.build(), HttpResponse.BodyHandlers.discarding());
           } catch (Exception e) {
@@ -186,6 +191,28 @@ class CheckTest {
     assertTrue(error.getMessage().contains("X-Tenant-Id expected PNPG but was null"), error.getMessage());
     assertTrue(!error.getMessage().contains("bearer token was not propagated"), error.getMessage());
     fails("/ok", "propagation cannot be verified", Check::propagatesIdentity);
+  }
+
+  @Test
+  void configuredApiKeyIsCheckedOnEveryDownstreamCall() {
+    assertDoesNotThrow(() -> Scenario.get("self", "configured-key", "/forwards")
+        .header("x-api-key", "configured-key").stub(PRODUCT_MS)
+        .expect(c -> c.downstreamApiKey("configured-key")).run(baseUrl, stub));
+    fails("/forwards", "configured x-api-key", c -> c.downstreamApiKey("configured-key"));
+    assertThrows(AssertionError.class, () -> Scenario.get("self", "wrong-key", "/forwards")
+        .header("x-api-key", "wrong-key").stub(PRODUCT_MS)
+        .expect(c -> c.downstreamApiKey("configured-key")).run(baseUrl, stub));
+    assertThrows(AssertionError.class, () -> Scenario.get("self", "duplicate-key", "/forwards")
+        .header("x-api-key", "configured-key").header("x-api-key", "configured-key").stub(PRODUCT_MS)
+        .expect(c -> c.downstreamApiKey("configured-key")).run(baseUrl, stub));
+  }
+
+  @Test
+  void addingAFunctionsKeyIsAContractDifference() {
+    AssertionError error = assertThrows(AssertionError.class, () -> Scenario.get("self", "functions-key", "/forwards")
+        .header("x-api-key", "configured-key").header("x-functions-key", "functions-key").stub(PRODUCT_MS)
+        .expect(c -> c.downstreamApiKey("configured-key")).run(baseUrl, stub));
+    assertTrue(error.getMessage().contains("unexpected x-functions-key"), error.getMessage());
   }
 
   @Test
