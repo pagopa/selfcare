@@ -179,7 +179,7 @@ locals {
       value = "noreply@areariservata.pagopa.it"
     },
     {
-      name  = "MAIL_ENABLED"
+      name  = "USER_MAIL_ENABLED"
       value = "false"
     }
   ]

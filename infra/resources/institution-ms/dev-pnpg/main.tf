@@ -174,7 +174,7 @@ locals {
       value = "noreply@selfcare.pagopa.it"
     },
     {
-      name  = "MAIL_ENABLED"
+      name  = "USER_MAIL_ENABLED"
       value = "false"
     }
   ]
