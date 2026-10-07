@@ -8,7 +8,7 @@ import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-@RegisterRestClient(configKey = "ms-iam")
+@RegisterRestClient(configKey = "iam_json")
 @RegisterClientHeaders(it.pagopa.selfcare.onboarding.security.AuthenticationPropagationHeadersFactory.class)
 public interface IamRestClient {
     @GET
