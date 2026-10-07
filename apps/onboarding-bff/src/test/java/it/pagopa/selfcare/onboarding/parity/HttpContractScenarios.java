@@ -76,7 +76,7 @@ final class HttpContractScenarios {
             .stub(HttpContractScenarios::productsOk)
             .expect(
                 c ->
-                    c.status(200).headerContains("Vary", "Origin")));
+                    c.status(200).headerItems("Vary", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers")));
   }
 
   private static void routing(List<Scenario> s) {
@@ -112,7 +112,10 @@ final class HttpContractScenarios {
     s.add(
         Scenario.api(G, "double-slash-is-rejected", "/v1//products")
             .stub(HttpContractScenarios::productsOk)
-            .expect(c -> c.status(400).totalCalls(0)));
+            .expect(c -> c.status(400).contentType("application/json")
+                .jsonSize("", 4).json("/status", 400).json("/error", "Bad Request")
+                .json("/path", "/v1//products").jsonPresent("/timestamp")
+                .headerAbsent("Cache-Control").headerAbsent("X-Frame-Options").totalCalls(0)));
     s.add(
         Scenario.of(G, "unknown-path-unauthenticated-is-401", "GET", "/v1/unknown")
             .header("X-Tenant-Id", "PNPG")
@@ -134,6 +137,7 @@ final class HttpContractScenarios {
                     c.status(200)
                         .contentType("application/vnd.spring-boot.actuator.v3+json")
                         .json("/status", "UP")
+                        .jsonSize("", 1)
                         .headerAbsent("Cache-Control")
                         .totalCalls(0)));
     s.add(
@@ -164,7 +168,9 @@ final class HttpContractScenarios {
                           .json("/instance", path)
                           .totalCalls(0)));
     }
-    s.add(Scenario.of(G, "error-endpoint-is-public", "GET", "/error").expect(c -> c.status(500).totalCalls(0)));
+    s.add(Scenario.of(G, "error-endpoint-is-public", "GET", "/error").expect(c -> c.status(500)
+        .contentType("application/json").jsonSize("", 3).json("/status", 999)
+        .json("/error", "None").jsonPresent("/timestamp").totalCalls(0)));
     s.add(
         Scenario.of(G, "api-docs-are-public", "GET", "/v3/api-docs")
             .expect(
