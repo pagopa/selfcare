@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.util.Collections;
 import java.util.List;
 
-import static com.azure.core.http.ContentType.APPLICATION_OCTET_STREAM;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
@@ -77,7 +76,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
 
         Resource resource = new ByteArrayResource("test content".getBytes());
         ResponseEntity<Resource> responseFile = ResponseEntity.ok()
-          .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+          .header(HttpHeaders.CONTENT_TYPE, org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE)
           .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"contractSigned\"")
           .body(resource);
 
@@ -109,7 +108,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         onboardingsResponse.setOnboardings(List.of(onboarding));
         Resource resource = new ByteArrayResource("related content".getBytes());
         ResponseEntity<Resource> responseFile = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_TYPE, org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=attachment.pdf")
                 .body(resource);
         when(institutionApiClient._getOnboardingsInstitutionUsingGET(institutionId, productId))
@@ -131,7 +130,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         OnboardingsResponse onboardingsResponse = mock(OnboardingsResponse.class);
         Resource resource = new ByteArrayResource("p7m content".getBytes());
         ResponseEntity<Resource> responseFile = ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_TYPE, org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=contract.pdf.p7m")
                 .body(resource);
         DocumentResponse documentResponse = new DocumentResponse();
@@ -163,7 +162,7 @@ class ContractServiceImplTest extends BaseServiceTestUtils {
         OnboardingsResponse onboardingsResponse = mock(OnboardingsResponse.class);
 
         ResponseEntity<Resource> responseFile = ResponseEntity.ok()
-          .header(HttpHeaders.CONTENT_TYPE, APPLICATION_OCTET_STREAM)
+          .header(HttpHeaders.CONTENT_TYPE, org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE)
           .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"contractSigned\"")
           .body(null);
 
