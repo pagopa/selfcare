@@ -117,13 +117,6 @@
                             </configOptions>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>7.17.0</version>
-                <executions>
                     <execution>
                         <id>user-ms</id>
                         <goals>
