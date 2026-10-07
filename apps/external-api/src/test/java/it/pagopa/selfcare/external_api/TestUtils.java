@@ -1,28 +1,29 @@
 package it.pagopa.selfcare.external_api;
 
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.ProductRole;
-import it.pagopa.selfcare.product.entity.ProductRoleInfo;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.BackOfficeRole;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.InstitutionType;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductResponse;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.RoleMapping;
 
 import java.util.List;
-import java.util.Map;
-
-import static it.pagopa.selfcare.onboarding.common.PartyRole.MANAGER;
+import java.util.ArrayList;
 
 public class TestUtils {
 
-    public static Product dummyProduct(String productId) {
-        Product product = new Product();
-        product.setId(productId);
-        ProductRole productRole = new ProductRole();
-        productRole.setCode("admin");
-        productRole.setLabel("Amministratore");
-        productRole.setDescription("Amministratore");
+    public static ProductResponse dummyProductResponse(String productId) {
+        BackOfficeRole role = new BackOfficeRole();
+        role.setCode("admin");
+        role.setLabel("Amministratore");
+        role.setDescription("Amministratore");
 
-        ProductRoleInfo productRoleInfo = new ProductRoleInfo();
-        productRoleInfo.setRoles(List.of(productRole));
+        RoleMapping mapping = new RoleMapping();
+        mapping.setRole("MANAGER");
+        mapping.setInstitutionType(InstitutionType.DEFAULT);
+        mapping.setBackOfficeRoles(new ArrayList<>(List.of(role)));
 
-        product.setRoleMappings(Map.of(MANAGER, productRoleInfo));
+        ProductResponse product = new ProductResponse();
+        product.setProductId(productId);
+        product.setRoleMappings(new ArrayList<>(List.of(mapping)));
         return product;
     }
 }

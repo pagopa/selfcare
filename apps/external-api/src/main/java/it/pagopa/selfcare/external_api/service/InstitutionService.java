@@ -7,7 +7,6 @@ import it.pagopa.selfcare.external_api.model.national_registries.LegalVerificati
 import it.pagopa.selfcare.external_api.model.pnpg.CreatePnPgInstitution;
 import it.pagopa.selfcare.external_api.model.product.ProductResource;
 import it.pagopa.selfcare.external_api.model.user.UserProductResponse;
-import it.pagopa.selfcare.product.entity.Product;
 
 import java.util.Collection;
 import java.util.List;
