@@ -13,7 +13,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserNotificationServiceImpl implements UserNotificationService {
 
-    private static final String DELEGATION_USER_TEMPLATE_ID = "selfcare_delegation_user_notification";
+    private static final String DELEGATION_USER_TEMPLATE_ID = "selfcare_user_pt_delegation";
 
     private final OneMailConnector oneMailConnector;
 
