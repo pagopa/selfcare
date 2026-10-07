@@ -14,7 +14,6 @@ import org.springframework.context.annotation.PropertySource;
 public class MailTemplateConfig {
 
     private String delegationNotificationPath;
-    private String delegationUserNotificationPath;
     private String delegationPartnerName;
 
     private String institutionDescription;
