@@ -18,7 +18,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserNotificationServiceImplTest {
 
-    private static final String TEMPLATE_ID = "selfcare_delegation_user_notification";
+    private static final String TEMPLATE_ID = "selfcare_user_pt_delegation";
     private static final Map<String, String> TEMPLATE_ATTRIBUTES = Map.of(
             "productName", "product",
             "institutionName", "institution",

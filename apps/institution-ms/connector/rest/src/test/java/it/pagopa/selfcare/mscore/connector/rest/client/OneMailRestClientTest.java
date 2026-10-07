@@ -74,7 +74,7 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
                 .from(new EmailAddress().email("noreply@test.it"))
                 .to(new EmailAddress().email("user@test.it"))
                 .templateContent(Map.of(
-                        "templateId", "selfcare_delegation_user_notification",
+                        "templateId", "selfcare_user_pt_delegation",
                         "templateAttributes", Map.of("productName", "product")))
                 .build();
 
@@ -89,7 +89,7 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
                           "from": {"email": "noreply@test.it"},
                           "to": {"email": "user@test.it"},
                           "templateContent": {
-                            "templateId": "selfcare_delegation_user_notification",
+                            "templateId": "selfcare_user_pt_delegation",
                             "templateAttributes": {"productName": "product"}
                           }
                         }
