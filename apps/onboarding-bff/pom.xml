@@ -34,6 +34,7 @@
         <security-sdk.version>0.6.0</security-sdk.version>
         <tenant-sdk.version>0.4.0</tenant-sdk.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
+        <antrun-plugin.version>3.1.0</antrun-plugin.version>
         <skipITs>true</skipITs>
     </properties>
 
@@ -295,6 +296,28 @@
                             <goal>generate-code</goal>
                             <goal>generate-code-tests</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>${antrun-plugin.version}</version>
+                <executions>
+                    <!-- Terraform (APIM) and the onboarding frontend sync read the Spring path: it must always be the generated document -->
+                    <execution>
+                        <id>publish-legacy-openapi-alias</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <copy file="${project.basedir}/src/main/docs/openapi.json"
+                                      tofile="${project.basedir}/app/src/main/resources/swagger/api-docs.json"
+                                      overwrite="true"/>
+                            </target>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
