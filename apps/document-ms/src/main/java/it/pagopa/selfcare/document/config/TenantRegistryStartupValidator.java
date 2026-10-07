@@ -16,5 +16,9 @@ public class TenantRegistryStartupValidator {
 
     void onStart(@Observes StartupEvent event, TenantRegistry tenantRegistry) {
         log.info("Tenant registry validated, supported tenants: {}", tenantRegistry.supportedTenantIds());
+        // No TenantContext exists at startup: log the configured databases instead of touching Mongo.
+        tenantRegistry.supportedTenantIds().forEach(tenantId ->
+                log.info("Tenant {} uses Mongo database {}", tenantId,
+                        tenantRegistry.resolve(tenantId).mongo().database()));
     }
 }

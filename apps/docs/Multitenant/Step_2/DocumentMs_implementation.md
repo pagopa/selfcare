@@ -81,7 +81,7 @@ mp.jwt.verify.publickey=${JWT_PUBLIC_KEY:NONE}
 |---|---|---|---|---|
 | SELC-DMS-01 ✅ | Dipendenze e configurazione tenant | SELC-17 | – | S |
 | SELC-DMS-02 ✅ | Risoluzione del tenant per richiesta | SELC-12 | 01 | M |
-| SELC-DMS-03 | Routing Mongo per tenant | SELC-13.9–13.13 | 02 | M |
+| SELC-DMS-03 ✅ | Routing Mongo per tenant | SELC-13.9–13.13 | 02 | M |
 | SELC-DMS-04 | Discriminatore `tenantId` e isolamento dati | SELC-13.1–13.8 | 03 | L |
 | SELC-DMS-05 | Routing storage per tenant | SELC-14 | 02 | L |
 | SELC-DMS-06 | Firma PagoPA per tenant | SELC-17.1–17.4 | 02 | L |
@@ -125,7 +125,7 @@ flowchart LR
 | SELC-DMS-01.09 | ✅ | Quality gate SonarCloud (`new_coverage` 0% su #940): `config/` e `storage/` non erano in `quarkus.jacoco.includes`, quindi il report non conteneva `TenantRegistryStartupValidator` nonostante il test. Aggiunti `config/**` e `storage/**` (le classi `*Config.java` restano escluse da `sonar.coverage.exclusions`). | `application.properties` | S |
 | SELC-DMS-01.10 | ✅ | `quarkus-jacoco` registra solo le classi caricate dai `@QuarkusTest`: i test JUnit puri (es. resolver firma, `PrefixingAzureBlobClient`) non entravano nel report usato da Sonar. Aggiunto `jacoco-maven-plugin` `prepare-agent` (`exclClassLoaders=*QuarkusClassLoader`, stesso `target/jacoco.exec`, `append`), come in `onboarding-ms`. | `pom.xml` | S |
 
-**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 481 test, 0 errori (baseline 477); con `-Dtenant.supported-tenants=AR,PNPG` l'avvio fallisce con `Missing Mongo configuration for tenant PNPG`.
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 483 test, 0 errori (baseline 477); con `-Dtenant.supported-tenants=AR,PNPG` l'avvio fallisce con `Missing Mongo configuration for tenant PNPG`.
 
 **Vincolo di rilascio:** applicare il Terraform di `01.05` **prima** di distribuire l'immagine; senza `MONGODB_CONNECTION_STRING_AR` l'avvio fallisce (comportamento voluto).
 
@@ -142,7 +142,7 @@ flowchart LR
 | SELC-DMS-02.05 | ✅ | Test unitari del filtro e test `@QuarkusTest` con enforcement attivo, registry AR+PNPG e chiavi JWT distinte generate a runtime: header mancante, sconosciuto, duplicato o in conflitto col claim; token SPID senza claim; issuer o firma non validi; 40 richieste AR/PNPG concorrenti interleaved, in cui il service vede sempre il tenant della propria richiesta. | `src/test/.../filter/*`, `src/test/.../exception/handler/TenantExceptionHandlerTest.java` | M |
 | SELC-DMS-02.06 | ✅ | Review: `selfcare-cucumber-sdk` 0.1.2 → 0.1.3, che invia `X-Tenant-Id` dal claim `tenant_id` del token (AR per `j.doe`). Con 0.1.2 le feature `document_content`, `document_signature` e `document_endpoints_validation` chiamano `/v1/**` senza header: `JwtTenantValidationFilter` risponde 401 e la CI di integrazione su `main` fallirebbe. Il test interleaved legge ora il tenant dopo un salto sul worker pool (`emitOn`), come le catene reattive reali. | `pom.xml`, `src/test/.../filter/TenantResolutionIntegrationTest.java` | S |
 
-**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 514 test, 0 errori (dopo 01: 481). Le IT Cucumber chiamano anche `/v1/**` col token SPID `j.doe` (`tenant_id=AR`): con `selfcare-cucumber-sdk` 0.1.3 inviano `X-Tenant-Id` (`02.06`). Non eseguite in locale (serve Docker): vanno verificate dalla CI.
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 516 test, 0 errori (dopo 01: 483). Le IT Cucumber chiamano anche `/v1/**` col token SPID `j.doe` (`tenant_id=AR`): con `selfcare-cucumber-sdk` 0.1.3 inviano `X-Tenant-Id` (`02.06`). Non eseguite in locale (serve Docker): vanno verificate dalla CI.
 
 **Comportamenti osservati da tenere presenti:**
 
@@ -150,14 +150,26 @@ flowchart LR
 - Per i token SPID il confronto claim/header nell'SDK è case-sensitive (`ar` ≠ `AR`, risposta 401); per i token PAGOPA vale la normalizzazione del filtro.
 - Rollout: con `TENANT_ENFORCEMENT_ENABLED=true` (default) i chiamanti senza `X-Tenant-Id` ricevono 400. `onboarding-ms`, `onboarding-functions` e `dashboard-bff` (`DocumentRestClientConfig` → `TenantHeaderInterceptor`, che propaga solo se l'header è presente in ingresso) lo inviano già; la verifica completa resta in `08.03`. In caso di emergenza: `TENANT_ENFORCEMENT_ENABLED=false` con `TENANT_DEFAULT=AR`. La leva copre solo i token PAGOPA: per i token SPID `JwtTenantValidationFilter` (SDK) richiede comunque l'header e risponde 401 senza.
 
-## SELC-DMS-03 – Routing Mongo per tenant
+## SELC-DMS-03 – Routing Mongo per tenant ✅ Completata
 
-| Task | Descrizione | File | Dim. |
-|---|---|---|---|
-| SELC-DMS-03.01 | Aggiungere `selfcare-sdk-tenant-mongodb` 0.3.0 e adottare `TenantMongoClientProducer` e `TenantMongoDatabaseResolver`; non usare `@MongoEntity(clientName)`; rimuovere `quarkus.mongodb.connection-string` e `quarkus.mongodb.database`. | `pom.xml`, `application.properties` | S |
-| SELC-DMS-03.02 | Eliminare `Document.mongoDatabase()` da `DocumentMsConfig.onStart` (all'avvio non c'è un tenant), sostituendolo con un log dei tenant configurati. | `config/DocumentMsConfig.java:33-35` | S |
-| SELC-DMS-03.03 | Rendere `DocumentMongoReadinessCheck` un ping per ogni tenant supportato, senza esporre connection string. | `health/DocumentMongoReadinessCheck.java` | S |
-| SELC-DMS-03.04 | Test: selezione del database per tenant; tenant senza Mongo ⇒ errore. | `src/test/...` | S |
+**Obiettivo:** ogni accesso Mongo usa client e database del tenant della richiesta; senza tenant non si accede a Mongo.
+
+| Task | Stato | Descrizione | File | Dim. |
+|---|---|---|---|---|
+| SELC-DMS-03.01 | ✅ | Aggiunto `selfcare-sdk-tenant-mongodb` 0.3.0 (scoperto via `beans.xml`): `TenantMongoClientProducer` sostituisce il `ReactiveMongoClient` di default con un proxy per tenant (un client per tenant supportato) e `TenantMongoDatabaseResolver` sceglie il database del tenant per le entity Panache. `@MongoEntity` resta senza `clientName`/`database`. Rimossi `quarkus.mongodb.connection-string` e `quarkus.mongodb.database` (anche in test). La readiness legge database e host dal registry nello stesso commit, così l'app continua ad avviarsi. | `pom.xml`, `application.properties`, `health/DocumentMongoReadinessCheck.java` | S |
+| SELC-DMS-03.02 | ✅ | Rimosso `onStart` (`Document.mongoDatabase()`) da `DocumentMsConfig`: all'avvio non c'è un tenant e il resolver fallirebbe. `TenantRegistryStartupValidator` registra nei log, per ogni tenant, il database Mongo usato. | `config/DocumentMsConfig.java`, `config/TenantRegistryStartupValidator.java` | S |
+| SELC-DMS-03.03 | ✅ | `DocumentMongoReadinessCheck` esegue in parallelo un `ping` su ogni tenant supportato (ordine stabile). È UP solo se rispondono tutti; se un tenant fallisce è DOWN con `error` `Tenant <ID> ping failed: …`; senza tenant è DOWN. I dati riportano coppie `tenant=database` e `tenant=host` (host da `hostFromConnectionString`, `n/a` se non parsabile), mai connection string né credenziali. | `health/DocumentMongoReadinessCheck.java` | S |
+| SELC-DMS-03.04 | ✅ | Unit test della readiness (singolo e multi-tenant, fallimento di un tenant, lookup del client che lancia un'eccezione, credenziali non esposte, nessun tenant). `@QuarkusTest` con registry AR (`selcDocument`) + PNPG (`selcDocumentPnpg`): `Document.mongoDatabase()`/`mongoCollection()` seguono il tenant della richiesta nella stessa JVM; client distinti per tenant; senza tenant `UnresolvedTenantException`; `clientForTenant("UNKNOWN")` → `IllegalStateException`; un tenant supportato senza `mongo` blocca il registry (`Missing Mongo configuration for tenant PNPG`). | `src/test/.../health/DocumentMongoReadinessCheckTest.java`, `src/test/.../repository/TenantMongoRoutingTest.java` | S |
+| SELC-DMS-03.05 | ✅ | Review: ogni `ping` ha un timeout proprio (2 s) e il timeout complessivo della readiness è 2,5 s, così un tenant lento compare per nome nell'`error` (`Tenant <ID> ping failed: TimeoutException…`) invece del generico timeout del check. `quarkus.mongodb.devservices.enabled=false`: senza connection string di default il dev mode avvierebbe un Mongo inutilizzato. | `health/DocumentMongoReadinessCheck.java`, `application.properties`, test | S |
+
+**Definition of Done (verificata):** `mvn -f apps/document-ms/pom.xml test` → 526 test, 0 errori (dopo 02: 516).
+
+**Comportamenti osservati da tenere presenti:**
+
+- Fuori da una richiesta con tenant (avvio, job, thread non propagati) qualsiasi accesso Mongo fallisce con `UnresolvedTenantException`, così il sistema non procede in silenzio (fail-closed). Eventuali scheduler o consumer futuri devono impostare esplicitamente `TenantContext`.
+- Il secret `MONGODB_CONNECTION_STRING` non è più letto dall'app; la connection string arriva solo da `MONGODB_CONNECTION_STRING_AR` (rimozione infra in `07.02`).
+- Panache risolve il database a ogni chiamata (nessuna cache per entity): verificato alternando AR e PNPG nella stessa JVM.
+- Il campo `error` della readiness riporta il messaggio del driver Mongo (host e stato del cluster, mai credenziali): `/q/health` non va esposto fuori dalla rete interna.
 
 ## SELC-DMS-04 – Discriminatore `tenantId` e isolamento dati
 
