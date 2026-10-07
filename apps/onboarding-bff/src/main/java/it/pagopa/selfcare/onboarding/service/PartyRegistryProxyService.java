@@ -1,19 +1,34 @@
 package it.pagopa.selfcare.onboarding.service;
 
 import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyRestClient;
-import it.pagopa.selfcare.onboarding.client.model.*;
+import it.pagopa.selfcare.onboarding.client.model.AooResponse;
+import it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomiesResponse;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionByLegalTaxIdRequest;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionByLegalTaxIdRequestDto;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionLegalAddressData;
+import it.pagopa.selfcare.onboarding.client.model.InstitutionProxyInfo;
+import it.pagopa.selfcare.onboarding.client.model.IpaInstitutionsSearchResponse;
+import it.pagopa.selfcare.onboarding.client.model.IpaInstitutionsSearchResult;
+import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;
+import it.pagopa.selfcare.onboarding.client.model.ProxyInstitutionResponse;
+import it.pagopa.selfcare.onboarding.client.model.UoResponse;
+import it.pagopa.selfcare.onboarding.mapper.RegistryProxyMapper;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
+import it.pagopa.selfcare.onboarding.util.Preconditions;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.ProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+
 import java.io.IOException;
-import jakarta.ws.rs.ProcessingException;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * Party registry proxy operations. Like the previous implementation every lookup but the info-camere one
+ * is retried on connection problems only.
+ */
 @ApplicationScoped
 @Slf4j
 public class PartyRegistryProxyService {
@@ -22,95 +37,112 @@ public class PartyRegistryProxyService {
     private static final String REQUIRED_EXTERNAL_ID_MESSAGE = "An institution's external id is required";
 
     private final PartyRegistryProxyRestClient restClient;
+    private final RegistryProxyMapper proxyMapper;
 
-    public PartyRegistryProxyService(@RestClient PartyRegistryProxyRestClient restClient) {
+    public PartyRegistryProxyService(@RestClient PartyRegistryProxyRestClient restClient,
+                                     RegistryProxyMapper proxyMapper) {
         this.restClient = restClient;
+        this.proxyMapper = proxyMapper;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
     public InstitutionInfoIC getInstitutionsByUserFiscalCode(String taxCode) {
         log.trace("getInstitutionsByUserFiscalCode start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserFiscalCode taxCode = {}", taxCode);
-        requireHasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
-        
+        Preconditions.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+
         InstitutionByLegalTaxIdRequestDto filter = new InstitutionByLegalTaxIdRequestDto();
         filter.setLegalTaxId(taxCode);
         InstitutionByLegalTaxIdRequest request = new InstitutionByLegalTaxIdRequest();
         request.setFilter(filter);
-        
+
         InstitutionInfoIC result = restClient.getInstitutionsByUserLegalTaxId(request);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserFiscalCode result = {}", result);
         log.trace("getInstitutionsByUserFiscalCode end");
         return result;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public MatchInfoResult matchInstitutionAndUser(String externalInstitutionId, String taxCode) {
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser taxCode = {}", taxCode);
-        requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
-        requireHasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+        Preconditions.hasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
+        Preconditions.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
         MatchInfoResult result = restClient.matchInstitutionAndUser(externalInstitutionId, taxCode);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser result = {}", result);
         log.trace("matchInstitutionAndUser end");
         return result;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId) {
         log.trace("getInstitutionLegalAddress start");
         log.debug("getInstitutionLegalAddress externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
-        requireHasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
+        Preconditions.hasText(externalInstitutionId, REQUIRED_EXTERNAL_ID_MESSAGE);
         InstitutionLegalAddressData result = restClient.getInstitutionLegalAddress(externalInstitutionId);
         log.debug("getInstitutionLegalAddress result = {}", result);
         log.trace("getInstitutionLegalAddress end");
         return result;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public AooResponse getAooById(String aooCode) {
         log.trace("getAooById start");
-        log.debug("getAooById aooCode = {}", aooCode);
+        log.debug("getAooById aooCode = {}", LogUtils.sanitize(aooCode));
         AooResponse result = restClient.getAooById(aooCode);
         log.debug("getAooById result = {}", result);
         log.trace("getAooById end");
         return result;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public UoResponse getUoById(String uoCode) {
         log.trace("getUoById start");
-        log.debug("getUoById uoCode = {}", uoCode);
+        log.debug("getUoById uoCode = {}", LogUtils.sanitize(uoCode));
         UoResponse result = restClient.getUoById(uoCode);
         log.debug("getUoById result = {}", result);
         log.trace("getUoById end");
         return result;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
-    public GeographicTaxonomiesResponse getExtById(String code){
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
+    public GeographicTaxonomiesResponse getExtById(String code) {
         log.trace("getExtById start");
-        log.debug("getExtById code = {}", code);
+        log.debug("getExtById code = {}", LogUtils.sanitize(code));
         GeographicTaxonomiesResponse result = restClient.getExtByCode(code);
         log.debug("getExtById result = {}", result);
         log.trace("getExtById end");
         return result;
     }
 
-    @Retry(maxRetries = 3, delay = 5000, delayUnit = ChronoUnit.MILLIS, retryOn = {ProcessingException.class, IOException.class}, abortOn = {ResourceNotFoundException.class, InvalidRequestException.class, UnauthorizedUserException.class})
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
     public ProxyInstitutionResponse getInstitutionProxyById(String externalId) {
         log.trace("getInstitutionProxyById start");
-        log.debug("getInstitutionProxyById externalId = {}", externalId);
+        log.debug("getInstitutionProxyById externalId = {}", LogUtils.sanitize(externalId));
         ProxyInstitutionResponse result = restClient.getInstitutionById(externalId);
         log.debug("getInstitutionProxyById result = {}", result);
         log.trace("getInstitutionProxyById end");
         return result;
     }
 
-    private static void requireHasText(String value, String message) {
-        if (value == null || value.trim().isEmpty()) {
-            throw new IllegalArgumentException(message);
-        }
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
+    public InstitutionProxyInfo findIpaInstitutionByTaxCode(String taxCode, String category) {
+        log.trace("findIpaInstitutionByTaxCode start");
+        log.debug("findIpaInstitutionByTaxCode taxCode = {}", LogUtils.sanitize(taxCode));
+        Preconditions.hasText(taxCode, REQUIRED_FISCAL_CODE_MESSAGE);
+        ProxyInstitutionResponse response = restClient.findIpaInstitutionByTaxCode(taxCode, category);
+        InstitutionProxyInfo result = proxyMapper.toInstitutionProxyInfo(response);
+        log.debug("findIpaInstitutionByTaxCode result = {}", result);
+        log.trace("findIpaInstitutionByTaxCode end");
+        return result;
     }
 
+    @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
+    public IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize) {
+        log.trace("searchIpaInstitutions start");
+        IpaInstitutionsSearchResponse response = restClient.searchIpaInstitutions(search, category, page, pageSize);
+        IpaInstitutionsSearchResult result = proxyMapper.toIpaInstitutionsSearchResult(response);
+        log.debug("searchIpaInstitutions result count = {}", result.getCount());
+        log.trace("searchIpaInstitutions end");
+        return result;
+    }
 }
