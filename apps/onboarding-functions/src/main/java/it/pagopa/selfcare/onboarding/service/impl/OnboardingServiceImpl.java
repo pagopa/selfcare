@@ -12,9 +12,8 @@ import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.*;
 import it.pagopa.selfcare.onboarding.utils.DocumentBuilder;
 import it.pagopa.selfcare.onboarding.utils.GenericError;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -91,7 +90,7 @@ public class OnboardingServiceImpl implements OnboardingService {
                                         pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, userToOnboard.getId()))
                         .toList();
         UserResource manager = getUserResource(onboarding);
-        Product product = productService.getProductIsValid(onboarding.getProductId());
+        ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         ContractPdfRequest request =
                 documentBuilder.toContractPdfRequest(
                         onboarding,
@@ -119,7 +118,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     public void createAttachment(OnboardingAttachment onboardingAttachment) {
         Onboarding onboarding = onboardingAttachment.getOnboarding();
-        Product product = productService.getProductIsValid(onboarding.getProductId());
+        ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         AttachmentTemplate attachment = onboardingAttachment.getAttachment();
         AttachmentPdfRequest request =
                 documentBuilder.toAttachmentPdfRequest(
@@ -130,7 +129,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     public void saveTokenWithContract(OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
-        Product product = productService.getProductIsValid(onboarding.getProductId());
+        ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         DocumentBuilderRequest request =
                 documentBuilder.toContractDocumentBuilderRequest(onboarding, product, onboardingWorkflow);
         documentService.saveDocument(request);
@@ -138,7 +137,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     public void saveTokenWithAttachment(OnboardingAttachment onboardingAttachment) {
         Onboarding onboarding = onboardingAttachment.getOnboarding();
-        Product product = productService.getProductIsValid(onboarding.getProductId());
+        ProductResponse product = productService.getValidProduct(onboarding.getProductId());
         AttachmentTemplate attachmentTemplate = onboardingAttachment.getAttachment();
         DocumentBuilderRequest request =
                 documentBuilder.toAttachmentDocumentBuilderRequest(
@@ -149,7 +148,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     public void sendMailRegistration(Onboarding onboarding) {
         SendMailInput sendMailInput = builderWithProductAndUserRequest(onboarding);
 
-        String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
+        String expirationDate = productService.getProductExpirationDays(onboarding.getProductId()).toString();
 
         notificationService.sendMailRegistration(
                 onboarding.getInstitution().getDescription(),
@@ -201,7 +200,7 @@ public class OnboardingServiceImpl implements OnboardingService {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
         SendMailInput sendMailInput = builderWithProductAndUserRequest(onboarding);
 
-        String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
+        String expirationDate = productService.getProductExpirationDays(onboarding.getProductId()).toString();
 
         notificationService.sendMailRegistrationForContract(
                 sendMailInput,
@@ -211,7 +210,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     public void sendMailRegistrationForContractAggregator(Onboarding onboarding) {
         SendMailInput sendMailInput = builderWithProductAndUserRequest(onboarding);
 
-        String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
+        String expirationDate = productService.getProductExpirationDays(onboarding.getProductId()).toString();
 
         notificationService.sendMailRegistrationForContractAggregator(
                 onboarding.getId(),
@@ -223,9 +222,9 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     public void sendMailRegistrationForContractWhenApprove(OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
-        Product product = productService.getProduct(onboarding.getProductId());
+        ProductResponse product = productService.getProduct(onboarding.getProductId());
 
-        String expirationDate = productService.getProductExpirationDate(onboarding.getProductId()).toString();
+        String expirationDate = productService.getProductExpirationDays(onboarding.getProductId()).toString();
 
         notificationService.sendMailRegistrationForContract(
                 onboarding.getId(),
@@ -249,7 +248,7 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     public void updateOnboardingExpiringDate(Onboarding onboarding) {
-        Integer onboardingExpirationDays = productService.getProductExpirationDate(onboarding.getProductId());
+        Integer onboardingExpirationDays = productService.getProductExpirationDays(onboarding.getProductId());
         onboarding.setExpiringDate(OffsetDateTime.now().plusDays(onboardingExpirationDays).toLocalDateTime());
         onboardingRepositoryService.update(onboarding);
     }
@@ -325,8 +324,8 @@ public class OnboardingServiceImpl implements OnboardingService {
                                         "Starting countOnboarding with filters productId: %s from: %s to: %s",
                                         productId, from, to));
         return productService.getProducts(false, false).stream()
-                .filter(product -> Objects.isNull(productId) || product.getId().equals(productId))
-                .map(product -> countNotificationsByFilters(product.getId(), from, to, context))
+                .filter(product -> Objects.isNull(productId) || product.getProductId().equals(productId))
+                .map(product -> countNotificationsByFilters(product.getProductId(), from, to, context))
                 .toList();
     }
 

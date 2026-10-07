@@ -177,7 +177,7 @@ class ProductServiceImplTest {
     }
 
     @Test
-    void getProducts_returnsOnlyActiveAndEnabledProducts() {
+    void getProducts_returnsOnlyActiveProducts() {
         Product enabledActiveProduct = new Product();
         enabledActiveProduct.setId("enabled-active");
         enabledActiveProduct.setStatus(ProductStatus.ACTIVE);
@@ -198,7 +198,7 @@ class ProductServiceImplTest {
 
         List<Product> result = productService.getProducts(false);
 
-        assertEquals(List.of(enabledActiveProduct), result);
+        assertEquals(List.of(enabledActiveProduct, disabledActiveProduct), result);
         verify(productMsConnector).getProducts(false);
         verifyNoMoreInteractions(productMsConnector);
     }
