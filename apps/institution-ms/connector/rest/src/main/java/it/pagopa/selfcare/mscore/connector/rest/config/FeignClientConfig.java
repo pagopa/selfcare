@@ -12,12 +12,14 @@ import org.springframework.context.annotation.PropertySource;
 @PropertySource("classpath:config/party-registry-proxy-rest-client.properties")
 @PropertySource("classpath:config/user-rest-client.properties")
 @PropertySource("classpath:config/user-registry-rest-client.properties")
+@PropertySource("classpath:config/one-mail-rest-client.properties")
 @EnableFeignClients(clients = {
         UserRegistryRestClient.class,
         UserInstitutionApiRestClient.class,
         UserApiRestClient.class,
         PartyRegistryProxyRestClient.class,
-        EventHubRestClient.class
+        EventHubRestClient.class,
+        OneMailRestClient.class
 })
 public class FeignClientConfig {
 }

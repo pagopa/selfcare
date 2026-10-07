@@ -139,10 +139,6 @@ locals {
       value = "contracts/template/mail/delegation-notification/1.0.1.json"
     },
     {
-      name  = "MAIL_TEMPLATE_DELEGATION_USER_NOTIFICATION_PATH"
-      value = "contracts/template/mail/delegation-notification/user-1.0.1.json"
-    },
-    {
       name  = "STORAGE_CONTAINER"
       value = "sc-u-documents-blob"
     },
@@ -248,6 +244,18 @@ locals {
     {
       name  = "EVENTHUB_SENDER_MANAGED_IDENTITY_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.delegations_eventhub_sender_identity.client_id
+    },
+    {
+      name  = "ONE_MAIL_URL"
+      value = "https://uat.onemail.pagopa.it"
+    },
+    {
+      name  = "ONE_MAIL_SENDER_ADDRESS"
+      value = "noreply@selfcare.pagopa.it"
+    },
+    {
+      name  = "MAIL_ENABLED"
+      value = "false"
     }
   ]
 
@@ -259,8 +267,7 @@ locals {
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
     "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
     "JWT_TOKEN_PUBLIC_KEY"                     = "jwt-public-key"
-    "AWS_SES_ACCESS_KEY_ID"                    = "aws-ses-access-key-id"
-    "AWS_SES_SECRET_ACCESS_KEY"                = "aws-ses-secret-access-key"
+    "ONE_MAIL_API_KEY"                         = "onemail-api-key"
   }
 }
 
