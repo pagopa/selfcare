@@ -62,11 +62,14 @@ class TokenV2ControllerTest {
 
     TokenV2Controller controller;
 
-    private static UriInfo downloadQuery(String type) {
+    private static UriInfo downloadQuery(String type, String name) {
         var uriInfo = mock(UriInfo.class);
         var query = new MultivaluedHashMap<String, String>();
         if (type != null) {
             query.putSingle("type", type);
+        }
+        if (name != null) {
+            query.putSingle("name", name);
         }
         when(uriInfo.getQueryParameters()).thenReturn(query);
         return uriInfo;
@@ -263,7 +266,7 @@ class TokenV2ControllerTest {
         when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
         when(tokenService.getContractSigned("42")).thenReturn(new BinaryData("signed.pdf", "x".getBytes()));
 
-        Response response = controller.downloadDocument("42", downloadQuery("CONTRACT_SIGNED"), null);
+        Response response = controller.downloadDocument("42", downloadQuery("CONTRACT_SIGNED", null));
 
         assertBinary(response, "signed.pdf", "x".getBytes());
         verify(tokenService, never()).getAttachment(any(), any());
@@ -274,7 +277,7 @@ class TokenV2ControllerTest {
         when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
         when(tokenService.getAttachment("42", "doc.pdf")).thenReturn(new BinaryData("doc.pdf", "x".getBytes()));
 
-        assertBinary(controller.downloadDocument("42", downloadQuery("ATTACHMENT"), "doc.pdf"), "doc.pdf", "x".getBytes());
+        assertBinary(controller.downloadDocument("42", downloadQuery("ATTACHMENT", "doc.pdf")), "doc.pdf", "x".getBytes());
     }
 
     @Test
@@ -282,9 +285,9 @@ class TokenV2ControllerTest {
         when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
 
         InvalidRequestException missing = assertThrows(InvalidRequestException.class,
-                () -> controller.downloadDocument("42", downloadQuery("ATTACHMENT"), null));
+                () -> controller.downloadDocument("42", downloadQuery("ATTACHMENT", null)));
         InvalidRequestException blank = assertThrows(InvalidRequestException.class,
-                () -> controller.downloadDocument("42", downloadQuery("ATTACHMENT"), "  "));
+                () -> controller.downloadDocument("42", downloadQuery("ATTACHMENT", "  ")));
 
         assertEquals("Query parameter 'name' is required when type=ATTACHMENT", missing.getMessage());
         assertEquals(missing.getMessage(), blank.getMessage());
@@ -293,8 +296,8 @@ class TokenV2ControllerTest {
 
     @Test
     void downloadDocument_missingOrUnknownTypeIsABadRequestWithoutAnyDownstreamCall() {
-        assertThrows(InvalidRequestException.class, () -> controller.downloadDocument("42", downloadQuery(null), null));
-        assertThrows(InvalidRequestException.class, () -> controller.downloadDocument("42", downloadQuery("OTHER"), "doc.pdf"));
+        assertThrows(InvalidRequestException.class, () -> controller.downloadDocument("42", downloadQuery(null, null)));
+        assertThrows(InvalidRequestException.class, () -> controller.downloadDocument("42", downloadQuery("OTHER", "doc.pdf")));
         verifyNoInteractions(authorizationService, tokenService);
     }
 
@@ -302,7 +305,7 @@ class TokenV2ControllerTest {
     void downloadDocument_deniedIsAccessDenied() {
         when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(false);
 
-        assertThrows(AccessDeniedException.class, () -> controller.downloadDocument("42", downloadQuery("CONTRACT_SIGNED"), null));
+        assertThrows(AccessDeniedException.class, () -> controller.downloadDocument("42", downloadQuery("CONTRACT_SIGNED", null)));
         verifyNoInteractions(tokenService);
     }
 

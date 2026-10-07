@@ -4212,13 +4212,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: "Name of the attachment. Required when type=ATTACHMENT, ignored\
-          \ otherwise."
-        name: name
-        in: query
-        schema:
-          type: string
-        required: false
       - description: Type of document to download
         in: query
         name: type
@@ -4229,6 +4222,13 @@ paths:
           - CONTRACT_SIGNED
           - ATTACHMENT
           type: string
+      - description: "Name of the attachment. Required when type=ATTACHMENT, ignored\
+          \ otherwise."
+        in: query
+        name: name
+        schema:
+          type: string
+        required: false
       responses:
         "200":
           description: Successful operation

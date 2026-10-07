@@ -7,6 +7,7 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.enums.ParameterIn;
+import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
@@ -284,16 +285,19 @@ public class TokenV2Controller {
                     content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM)),
             @APIResponse(responseCode = "404", description = "Onboarding or document not found")
     })
+    // Both query parameters are read from UriInfo and declared here, so the document lists them in the Spring order
     @Parameter(name = "type", in = ParameterIn.QUERY,
             description = "Type of document to download", required = true,
             schema = @Schema(implementation = DownloadDocumentType.class))
+    @Parameter(name = "name", in = ParameterIn.QUERY,
+            description = "Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.",
+            schema = @Schema(type = SchemaType.STRING))
     public Response downloadDocument(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
-                                     @Context UriInfo uriInfo,
-                                     @Parameter(description = "Name of the attachment. Required when type=ATTACHMENT, ignored otherwise.")
-                                     @QueryParam("name") String name) {
+                                     @Context UriInfo uriInfo) {
         // Scalar @QueryParam binding loses the distinction between missing and explicitly empty values.
         String type = uriInfo.getQueryParameters().getFirst("type");
+        String name = uriInfo.getQueryParameters().getFirst("name");
         DownloadDocumentType documentType = RequestParams.requiredEnum("type", type, DownloadDocumentType.class);
         checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
         log.trace("downloadDocument start");
