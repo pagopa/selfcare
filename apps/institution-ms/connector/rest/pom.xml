@@ -187,6 +187,7 @@
                                 <skipDefaultInterface>false</skipDefaultInterface>
                                 <useTags>true</useTags>
                                 <useSpringBoot3>true</useSpringBoot3>
+                                <useBeanValidation>false</useBeanValidation>
                                 <generatedConstructorWithRequiredArgs>false</generatedConstructorWithRequiredArgs>
                                 <containerDefaultToNull>true</containerDefaultToNull>
                             </configOptions>
