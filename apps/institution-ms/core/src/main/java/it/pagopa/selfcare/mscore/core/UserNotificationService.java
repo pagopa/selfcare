@@ -5,6 +5,6 @@ import java.util.Map;
 
 public interface UserNotificationService {
 
-    void sendDelegationUserNotification(List<String> to, String templateName, String productName, Map<String, String> mailParameters);
+    void sendDelegationUserNotification(List<String> to, Map<String, String> templateAttributes);
 
 }
