@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.entity.ProductStatus;
+import it.pagopa.selfcare.onboarding.client.model.ProductStatus;
 import io.smallrye.mutiny.Uni;
 import java.util.ArrayList;
 import java.util.List;

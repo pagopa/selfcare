@@ -1,69 +1,82 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
-import it.pagopa.selfcare.onboarding.security.AuthorizationService;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
-import it.pagopa.selfcare.onboarding.util.PermissionConstants;
 import it.pagopa.selfcare.onboarding.controller.request.ReasonForRejectDto;
+import it.pagopa.selfcare.onboarding.controller.response.AvailableDocumentsResource;
 import it.pagopa.selfcare.onboarding.controller.response.OnboardingRequestResource;
+import it.pagopa.selfcare.onboarding.exception.AccessDeniedException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
+import it.pagopa.selfcare.onboarding.security.AuthorizationService;
 import it.pagopa.selfcare.onboarding.service.TokenService;
-import it.pagopa.selfcare.onboarding.service.UserInstitutionService;
-import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.util.PermissionConstants;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.Response;
-import java.lang.reflect.Field;
+import jakarta.ws.rs.core.UriInfo;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 @ExtendWith(MockitoExtension.class)
 class TokenV2ControllerTest {
+
+    private static final String VIEW_PAGE = PermissionConstants.SELC_VIEW_ACCOUNT_PAGE;
+    private static final String VIEW_DOCUMENTS = PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS;
+    private static final String MANAGE_PAGE = PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE;
+    private static final String EXPOSE_HEADERS = "Access-Control-Expose-Headers";
 
     @Mock
     AuthorizationService authorizationService;
     @Mock
     TokenService tokenService;
     @Mock
-    UserService userService;
-    @Mock
-    UserInstitutionService userInstitutionService;
-    @Mock
     OnboardingMapper onboardingMapper;
     @Mock
     SecurityIdentity securityIdentity;
 
-    @InjectMocks
-    TokenV2Controller tokenV2Controller;
+    TokenV2Controller controller;
+
+    private static UriInfo downloadQuery(String type) {
+        var uriInfo = mock(UriInfo.class);
+        var query = new MultivaluedHashMap<String, String>();
+        if (type != null) {
+            query.putSingle("type", type);
+        }
+        when(uriInfo.getQueryParameters()).thenReturn(query);
+        return uriInfo;
+    }
 
     @BeforeEach
-    void setUp() throws Exception {
-        Field securityField = TokenV2Controller.class.getDeclaredField("securityIdentity");
-        securityField.setAccessible(true);
-        securityField.set(tokenV2Controller, securityIdentity);
-
-        Field authField = TokenV2Controller.class.getDeclaredField("authorizationService");
-        authField.setAccessible(true);
-        authField.set(tokenV2Controller, authorizationService);
+    void setUp() {
+        controller = new TokenV2Controller(tokenService, onboardingMapper);
+        controller.securityIdentity = securityIdentity;
+        controller.authorizationService = authorizationService;
     }
 
     @Test
@@ -73,206 +86,375 @@ class TokenV2ControllerTest {
         when(tokenService.verifyOnboarding("42")).thenReturn(onboardingData);
         when(onboardingMapper.toOnboardingVerify(onboardingData)).thenReturn(expected);
 
-        OnboardingVerify result = tokenV2Controller.verifyOnboarding("42");
-
-        assertSame(expected, result);
+        assertSame(expected, controller.verifyOnboarding("42"));
     }
 
     @Test
-    void retrieveOnboardingRequest_returnsMappedResult() {
-        // given
+    void retrieveOnboardingRequest_checksViewAccountPageThenMapsTheResult() {
         OnboardingData onboardingData = new OnboardingData();
         OnboardingRequestResource expected = new OnboardingRequestResource();
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_PAGE)).thenReturn(true);
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_PAGE)).thenReturn(true);
         when(tokenService.getOnboardingWithUserInfo("42")).thenReturn(onboardingData);
         when(onboardingMapper.toOnboardingRequestResource(onboardingData)).thenReturn(expected);
 
-        // when
-        OnboardingRequestResource result = tokenV2Controller.retrieveOnboardingRequest("42");
-
-        // then
-        assertSame(expected, result);
+        assertSame(expected, controller.retrieveOnboardingRequest("42"));
     }
 
     @Test
-    void retrieveOnboardingRequest_throwsWhenUnauthorized() {
-        // given
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_PAGE)).thenReturn(false);
+    void retrieveOnboardingRequest_deniedIsAccessDeniedWithoutReadingTheOnboarding() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_PAGE)).thenReturn(false);
 
-        // when / then
-        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.retrieveOnboardingRequest("42"));
+        AccessDeniedException e = assertThrows(AccessDeniedException.class, () -> controller.retrieveOnboardingRequest("42"));
+
+        assertEquals("Access Denied", e.getMessage());
+        verifyNoInteractions(tokenService);
     }
 
     @Test
-    void approveOnboarding_delegatesToService() {
-        // given
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(true);
+    void approveOnboarding_requiresManageAccountPageAndForwardsTheCallerUid() {
+        when(authorizationService.hasPermission(securityIdentity, "42", MANAGE_PAGE)).thenReturn(true);
         when(securityIdentity.getAttribute("uid")).thenReturn("test-uid");
 
-        // when
-        tokenV2Controller.approveOnboarding("42");
+        Response response = controller.approveOnboarding("42");
 
-        // then
+        assertEquals(200, response.getStatus());
         verify(tokenService).approveOnboarding("42", "test-uid");
     }
 
     @Test
-    void approveOnboarding_throwsWhenUnauthorized() {
-        // given
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(false);
+    void approveOnboarding_deniedIsAccessDenied() {
+        when(authorizationService.hasPermission(securityIdentity, "42", MANAGE_PAGE)).thenReturn(false);
 
-        // when / then
-        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.approveOnboarding("42"));
+        assertThrows(AccessDeniedException.class, () -> controller.approveOnboarding("42"));
+        verifyNoInteractions(tokenService);
     }
 
     @Test
-    void rejectOnboarding_delegatesToService() {
-        // given
+    void rejectOnboarding_requiresManageAccountPageAndForwardsTheReason() {
         ReasonForRejectDto request = new ReasonForRejectDto();
         request.setReason("reason");
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(true);
+        when(authorizationService.hasPermission(securityIdentity, "42", MANAGE_PAGE)).thenReturn(true);
         when(securityIdentity.getAttribute("uid")).thenReturn("test-uid");
 
-        // when
-        tokenV2Controller.rejectOnboarding("42", request);
+        Response response = controller.rejectOnboarding("42", request);
 
-        // then
+        assertEquals(200, response.getStatus());
         verify(tokenService).rejectOnboarding("42", "reason", "test-uid");
     }
 
     @Test
-    void rejectOnboarding_throwsWhenUnauthorized() {
-        // given
+    void rejectOnboarding_deniedIsAccessDenied() {
         ReasonForRejectDto request = new ReasonForRejectDto();
         request.setReason("reason");
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_MANAGE_ACCOUNT_PAGE)).thenReturn(false);
+        when(authorizationService.hasPermission(securityIdentity, "42", MANAGE_PAGE)).thenReturn(false);
 
-        // when / then
-        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.rejectOnboarding("42", request));
+        assertThrows(AccessDeniedException.class, () -> controller.rejectOnboarding("42", request));
+        verifyNoInteractions(tokenService);
     }
 
     @Test
-    void deleteOnboarding_returnsNoContent() {
+    void rejectOnboarding_missingBodyIsABadRequestBeforeAnyPermissionCheck() {
+        assertThrows(InvalidRequestException.class, () -> controller.rejectOnboarding("42", null));
+        verifyNoInteractions(authorizationService, tokenService);
+    }
+
+    @Test
+    void deleteOnboarding_rejectsAsUserWithoutIamCheck() {
         when(securityIdentity.getAttribute("uid")).thenReturn("test-uid");
 
-        Response response = tokenV2Controller.deleteOnboarding("42");
+        Response response = controller.deleteOnboarding("42");
 
         assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
         verify(tokenService).rejectOnboarding("42", "REJECTED_BY_USER", "test-uid");
+        verifyNoInteractions(authorizationService);
     }
 
     @Test
-    void getContract_returnsBinaryResponse() {
-        BinaryData contract = new BinaryData("contract.pdf", "content".getBytes());
-        when(tokenService.getContract("42")).thenReturn(contract);
+    void getContract_requiresViewAccountDocumentsAndExposesTheFileName() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+        when(tokenService.getContract("42")).thenReturn(new BinaryData("contract.pdf", "content".getBytes()));
 
-        Response response = tokenV2Controller.getContract("42");
+        Response response = controller.getContract("42");
 
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals("attachment; filename=contract.pdf", response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION));
+        assertBinary(response, "contract.pdf", "content".getBytes());
     }
 
     @Test
-    void getTemplateAttachment_supportsLegacyAttachmentNameQueryParam() {
-        BinaryData contract = new BinaryData("template.pdf", "content".getBytes());
-        when(tokenService.getTemplateAttachment("42", "legacy-template.pdf")).thenReturn(contract);
+    void getContract_deniedIsAccessDenied() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(false);
 
-        Response response = tokenV2Controller.getTemplateAttachment("42", null, "legacy-template.pdf");
-
-        assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-        assertEquals("attachment; filename=template.pdf", response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION));
-        verify(tokenService).getTemplateAttachment("42", "legacy-template.pdf");
+        assertThrows(AccessDeniedException.class, () -> controller.getContract("42"));
+        verifyNoInteractions(tokenService);
     }
 
     @Test
-    void getAttachment_throwsWhenAttachmentNameMissing() {
-        assertThrows(InvalidRequestException.class, () -> tokenV2Controller.getAttachment("42", null));
+    void getTemplateAttachment_requiresAttachmentNameAndSkipsIam() {
+        assertThrows(InvalidRequestException.class, () -> controller.getTemplateAttachment("42", null));
+        verifyNoInteractions(tokenService, authorizationService);
     }
 
     @Test
-    void uploadAttachment_throwsWhenAttachmentNameMissing() throws Exception {
-        Path tempFile = Files.createTempFile("token-upload-", ".pdf");
-        Files.writeString(tempFile, "pdf-content");
-        try {
-            FileUpload fileUpload = org.mockito.Mockito.mock(FileUpload.class);
-            when(fileUpload.fileName()).thenReturn("contract.pdf");
-            when(fileUpload.contentType()).thenReturn("application/pdf");
-            when(fileUpload.uploadedFile()).thenReturn(tempFile);
+    void getTemplateAttachment_returnsTheBinary() {
+        when(tokenService.getTemplateAttachment("42", "template.pdf"))
+                .thenReturn(new BinaryData("template.pdf", "content".getBytes()));
 
-            assertThrows(InvalidRequestException.class, () -> tokenV2Controller.uploadAttachment("42", null, null, fileUpload));
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        Response response = controller.getTemplateAttachment("42", "template.pdf");
+
+        assertBinary(response, "template.pdf", "content".getBytes());
+        verifyNoInteractions(authorizationService);
     }
 
     @Test
-    void uploadAttachment_supportsLegacyAttachmentNameQueryParam() throws Exception {
-        Path tempFile = Files.createTempFile("token-upload-", ".pdf");
-        Files.writeString(tempFile, "pdf-content");
-        try {
-            FileUpload fileUpload = org.mockito.Mockito.mock(FileUpload.class);
-            when(fileUpload.fileName()).thenReturn("contract.pdf");
-            when(fileUpload.contentType()).thenReturn("application/pdf");
-            when(fileUpload.uploadedFile()).thenReturn(tempFile);
-
-            Response response = tokenV2Controller.uploadAttachment("42", null, "legacy-attachment.pdf", fileUpload);
-
-            assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
-            verify(tokenService).uploadAttachment(eq("42"), any(UploadedFile.class), eq("legacy-attachment.pdf"), eq(null), eq(null));
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+    void getAttachment_requiresNameAndSkipsIam() {
+        assertThrows(InvalidRequestException.class, () -> controller.getAttachment("42", null));
+        verifyNoInteractions(tokenService, authorizationService);
     }
 
     @Test
-    void getAvailableDocuments_returnsMappedResult() {
-        // given
-        it.pagopa.selfcare.onboarding.client.model.AvailableDocuments source =
-                new it.pagopa.selfcare.onboarding.client.model.AvailableDocuments();
-        source.setAttachments(java.util.List.of("doc1.pdf"));
+    void getAttachment_returnsTheBinaryWithoutIam() {
+        when(tokenService.getAttachment("42", "doc.pdf")).thenReturn(new BinaryData("doc.pdf", new byte[] {1, 2}));
+
+        Response response = controller.getAttachment("42", "doc.pdf");
+
+        assertBinary(response, "doc.pdf", new byte[] {1, 2});
+        verifyNoInteractions(authorizationService);
+    }
+
+    @Test
+    void getAvailableDocuments_requiresViewAccountDocuments() {
+        AvailableDocuments source = new AvailableDocuments();
+        source.setAttachments(List.of("doc1.pdf"));
         source.setContractFilename("contract.pdf");
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS)).thenReturn(true);
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
         when(tokenService.getAvailableDocuments("42")).thenReturn(source);
 
-        // when
-        it.pagopa.selfcare.onboarding.controller.response.AvailableDocumentsResource result =
-                tokenV2Controller.getAvailableDocuments("42");
+        AvailableDocumentsResource result = controller.getAvailableDocuments("42");
 
-        // then
-        assertEquals(java.util.List.of("doc1.pdf"), result.getAttachments());
+        assertEquals(List.of("doc1.pdf"), result.getAttachments());
         assertEquals("contract.pdf", result.getContractFilename());
     }
 
     @Test
-    void getAvailableDocuments_throwsWhenUnauthorized() {
-        // given
-        when(authorizationService.hasPermission(securityIdentity, "42", PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS)).thenReturn(false);
+    void getAvailableDocuments_deniedIsAccessDenied() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(false);
 
-        // when / then
-        assertThrows(UnauthorizedUserException.class, () -> tokenV2Controller.getAvailableDocuments("42"));
+        assertThrows(AccessDeniedException.class, () -> controller.getAvailableDocuments("42"));
+        verifyNoInteractions(tokenService);
     }
 
     @Test
-    void getAttachmentStatus_returnsNoContentWhenFound() {
-        // given
-        when(tokenService.headAttachment("42", "doc.pdf")).thenReturn(200);
+    void getAggregatesCsv_requiresViewAccountDocuments() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+        when(tokenService.getAggregatesCsv("42", "prod-io")).thenReturn(new BinaryData("agg.csv", "a;b".getBytes()));
 
-        // when
-        Response response = tokenV2Controller.getAttachmentStatus("42", "doc.pdf");
-
-        // then
-        assertEquals(Response.Status.NO_CONTENT.getStatusCode(), response.getStatus());
+        assertBinary(controller.getAggregatesCsv("42", "prod-io"), "agg.csv", "a;b".getBytes());
     }
 
     @Test
-    void getAttachmentStatus_returnsNotFoundWhenMissing() {
-        // given
-        when(tokenService.headAttachment("42", "doc.pdf")).thenReturn(404);
+    void getAggregatesCsv_deniedIsAccessDenied() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(false);
 
-        // when
-        Response response = tokenV2Controller.getAttachmentStatus("42", "doc.pdf");
+        assertThrows(AccessDeniedException.class, () -> controller.getAggregatesCsv("42", "prod-io"));
+        verifyNoInteractions(tokenService);
+    }
 
-        // then
-        assertEquals(Response.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    @Test
+    void downloadDocument_signedContract() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+        when(tokenService.getContractSigned("42")).thenReturn(new BinaryData("signed.pdf", "x".getBytes()));
+
+        Response response = controller.downloadDocument("42", downloadQuery("CONTRACT_SIGNED"), null);
+
+        assertBinary(response, "signed.pdf", "x".getBytes());
+        verify(tokenService, never()).getAttachment(any(), any());
+    }
+
+    @Test
+    void downloadDocument_attachment() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+        when(tokenService.getAttachment("42", "doc.pdf")).thenReturn(new BinaryData("doc.pdf", "x".getBytes()));
+
+        assertBinary(controller.downloadDocument("42", downloadQuery("ATTACHMENT"), "doc.pdf"), "doc.pdf", "x".getBytes());
+    }
+
+    @Test
+    void downloadDocument_attachmentWithoutNameIsABadRequestAfterTheIamCheck() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+
+        InvalidRequestException missing = assertThrows(InvalidRequestException.class,
+                () -> controller.downloadDocument("42", downloadQuery("ATTACHMENT"), null));
+        InvalidRequestException blank = assertThrows(InvalidRequestException.class,
+                () -> controller.downloadDocument("42", downloadQuery("ATTACHMENT"), "  "));
+
+        assertEquals("Query parameter 'name' is required when type=ATTACHMENT", missing.getMessage());
+        assertEquals(missing.getMessage(), blank.getMessage());
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void downloadDocument_missingOrUnknownTypeIsABadRequestWithoutAnyDownstreamCall() {
+        assertThrows(InvalidRequestException.class, () -> controller.downloadDocument("42", downloadQuery(null), null));
+        assertThrows(InvalidRequestException.class, () -> controller.downloadDocument("42", downloadQuery("OTHER"), "doc.pdf"));
+        verifyNoInteractions(authorizationService, tokenService);
+    }
+
+    @Test
+    void downloadDocument_deniedIsAccessDenied() {
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(false);
+
+        assertThrows(AccessDeniedException.class, () -> controller.downloadDocument("42", downloadQuery("CONTRACT_SIGNED"), null));
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void attachmentStatus_isNoContentOn2xxAndNotFoundOtherwise() {
+        when(tokenService.headAttachment("42", "ok.pdf")).thenReturn(200);
+        when(tokenService.headAttachment("42", "gone.pdf")).thenReturn(404);
+        when(tokenService.headAttachment("42", "err.pdf")).thenReturn(500);
+
+        assertEquals(204, controller.getAttachmentStatus("42", "ok.pdf").getStatus());
+        assertEquals(204, controller.headAttachment("42", "ok.pdf").getStatus());
+        assertEquals(404, controller.getAttachmentStatus("42", "gone.pdf").getStatus());
+        assertEquals(404, controller.headAttachment("42", "err.pdf").getStatus());
+        verifyNoInteractions(authorizationService);
+    }
+
+    @Test
+    void attachmentStatus_requiresName() {
+        assertThrows(InvalidRequestException.class, () -> controller.getAttachmentStatus("42", null));
+        assertThrows(InvalidRequestException.class, () -> controller.headAttachment("42", null));
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void uploadAttachment_requiresAttachmentNameBeforeAnyWork() {
+        FileUpload upload = mock(FileUpload.class);
+
+        assertThrows(InvalidRequestException.class,
+                () -> controller.uploadAttachment("42", null, null, null, upload, "tenant"));
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void uploadAttachment_requiresTheFilePart() {
+        InvalidRequestException e = assertThrows(InvalidRequestException.class,
+                () -> controller.uploadAttachment("42", "att", null, null, null, "tenant"));
+
+        assertEquals("Required part 'attachment' is not present.", e.getMessage());
+        verifyNoInteractions(tokenService);
+    }
+
+    @Test
+    void uploadAttachment_requiresATenant() throws Exception {
+        Path tempFile = pdf();
+        try {
+            FileUpload upload = upload(tempFile, "contract.pdf", "application/pdf");
+
+            InvalidRequestException blank = assertThrows(InvalidRequestException.class,
+                    () -> controller.uploadAttachment("42", "att", null, null, upload, " "));
+            InvalidRequestException missing = assertThrows(InvalidRequestException.class,
+                    () -> controller.uploadAttachment("42", "att", null, null, upload, null));
+
+            assertEquals("Tenant context is required", blank.getMessage());
+            assertEquals("Tenant context is required", missing.getMessage());
+            verifyNoInteractions(tokenService);
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
+    }
+
+    @Test
+    void uploadAttachment_rejectsFormatsOtherThanPdfAndP7m() throws Exception {
+        Path tempFile = Files.createTempFile("token-upload-", ".txt");
+        Files.writeString(tempFile, "text");
+        try {
+            FileUpload upload = upload(tempFile, "contract.txt", "text/plain");
+
+            InvalidRequestException e = assertThrows(InvalidRequestException.class,
+                    () -> controller.uploadAttachment("42", "att", null, null, upload, "tenant"));
+
+            assertEquals("Formato file non supportato. Ammessi: [.pdf, .p7m]", e.getMessage());
+            verifyNoInteractions(tokenService);
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
+    }
+
+    @Test
+    void uploadAttachment_forwardsTenantNameAndMultipartFields() throws Exception {
+        Path tempFile = pdf();
+        try {
+            FileUpload upload = upload(tempFile, "contract.pdf", "application/pdf");
+
+            Response response = controller.uploadAttachment("42", "att", "att-id", "att description", upload, "tenant-1");
+
+            assertEquals(204, response.getStatus());
+            verify(tokenService).uploadAttachment(eq("tenant-1"), eq("42"), any(UploadedFile.class),
+                    eq("att"), eq("att-id"), eq("att description"));
+        } finally {
+            Files.deleteIfExists(tempFile);
+        }
+    }
+
+    @Test
+    void complete_acceptsPdfAndP7mOnly() throws Exception {
+        Path pdf = pdf();
+        Path p7m = Files.createTempFile("token-upload-", ".p7m");
+        Files.writeString(p7m, "signed");
+        Path txt = Files.createTempFile("token-upload-", ".txt");
+        Files.writeString(txt, "text");
+        try {
+            assertEquals(204, controller.complete("42", upload(pdf, "c.pdf", "application/pdf")).getStatus());
+            assertEquals(204, controller.complete("42", upload(p7m, "c.pdf.p7m", "application/pkcs7-mime")).getStatus());
+            FileUpload rejected = upload(txt, "c.txt", "text/plain");
+            InvalidRequestException e = assertThrows(InvalidRequestException.class, () -> controller.complete("42", rejected));
+
+            assertEquals("Formato file non supportato. Ammessi: [.pdf, .p7m]", e.getMessage());
+            verify(tokenService, times(2)).completeTokenV2(eq("42"), any(UploadedFile.class));
+            assertThrows(InvalidRequestException.class, () -> controller.complete("42", null));
+        } finally {
+            Files.deleteIfExists(pdf);
+            Files.deleteIfExists(p7m);
+            Files.deleteIfExists(txt);
+        }
+    }
+
+    @Test
+    void completeOnboardingUsers_acceptsPdfAndP7mOnly() throws Exception {
+        Path pdf = pdf();
+        Path txt = Files.createTempFile("token-upload-", ".txt");
+        Files.writeString(txt, "text");
+        try {
+            assertEquals(204, controller.completeOnboardingUsers("42", upload(pdf, "c.pdf", "application/pdf")).getStatus());
+            FileUpload rejected = upload(txt, "c.txt", "text/plain");
+            assertThrows(InvalidRequestException.class, () -> controller.completeOnboardingUsers("42", rejected));
+
+            verify(tokenService).completeOnboardingUsers(eq("42"), any(UploadedFile.class));
+        } finally {
+            Files.deleteIfExists(pdf);
+            Files.deleteIfExists(txt);
+        }
+    }
+
+    private static void assertBinary(Response response, String fileName, byte[] content) {
+        assertEquals(200, response.getStatus());
+        assertEquals("attachment; filename=" + fileName, response.getHeaderString(HttpHeaders.CONTENT_DISPOSITION));
+        assertEquals(HttpHeaders.CONTENT_DISPOSITION, response.getHeaderString(EXPOSE_HEADERS));
+        assertEquals(MediaType.APPLICATION_OCTET_STREAM_TYPE, response.getMediaType());
+        assertArrayEquals(content, (byte[]) response.getEntity());
+    }
+
+    private static Path pdf() throws Exception {
+        Path tempFile = Files.createTempFile("token-upload-", ".pdf");
+        Files.writeString(tempFile, "pdf-content");
+        return tempFile;
+    }
+
+    private static FileUpload upload(Path tempFile, String fileName, String contentType) {
+        FileUpload upload = mock(FileUpload.class);
+        when(upload.fileName()).thenReturn(fileName);
+        when(upload.contentType()).thenReturn(contentType);
+        when(upload.uploadedFile()).thenReturn(tempFile);
+        return upload;
     }
 }

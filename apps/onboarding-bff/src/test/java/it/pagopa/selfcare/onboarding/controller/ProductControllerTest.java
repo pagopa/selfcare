@@ -2,17 +2,21 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import it.pagopa.selfcare.onboarding.client.model.ContractTemplate;
+import it.pagopa.selfcare.onboarding.client.model.Product;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.service.ProductService;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -22,65 +26,81 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ProductControllerTest {
 
-    @Mock
-    ProductService productService;
-    @Mock
-    InstitutionMapper institutionMapper;
-
     @InjectMocks
-    ProductController productController;
+    private ProductController controller;
+
+    @Mock
+    private ProductService productService;
+
+    @Mock
+    private InstitutionMapper productMapper;
 
     @Test
-    void getProduct_returnsMappedResource() {
+    void getProduct_mapsTheServiceResult() {
         Product product = new Product();
-        product.setId("productId");
-        ProductResource expected = new ProductResource();
-        expected.setId("productId");
+        ProductResource resource = new ProductResource();
+        when(productService.getProduct("prod-io", InstitutionType.PA)).thenReturn(product);
+        when(productMapper.toResource(product)).thenReturn(resource);
 
-        when(productService.getProduct("productId", null)).thenReturn(product);
-        when(institutionMapper.toResource(product)).thenReturn(expected);
-
-        ProductResource result = productController.getProduct("productId", Optional.empty());
-
-        assertSame(expected, result);
+        assertSame(resource, controller.getProduct("prod-io", "PA"));
     }
 
     @Test
-    void getProducts_returnsMappedList() {
+    void getProduct_withoutInstitutionTypePassesNull() {
         Product product = new Product();
-        product.setId("id");
-        ProductResource expected = new ProductResource();
-        expected.setId("id");
+        when(productService.getProduct("prod-io", null)).thenReturn(product);
+        when(productMapper.toResource(product)).thenReturn(new ProductResource());
 
+        controller.getProduct("prod-io", null);
+        controller.getProduct("prod-io", " ");
+
+        verify(productService, org.mockito.Mockito.times(2)).getProduct("prod-io", null);
+    }
+
+    @Test
+    void getProduct_unknownProductIsReportedWithTheSpringMessage() {
+        when(productService.getProduct("missing", null)).thenThrow(new ResourceNotFoundException("{\"detail\":\"x\"}"));
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
+                () -> controller.getProduct("missing", null));
+
+        assertEquals("No product found with id missing", exception.getMessage());
+    }
+
+    @Test
+    void getProduct_invalidInstitutionTypeIsABadRequestWithoutDownstreamCall() {
+        assertThrows(InvalidRequestException.class, () -> controller.getProduct("prod-io", "NOT_A_TYPE"));
+
+        verifyNoInteractions(productService);
+    }
+
+    @Test
+    void getProducts_returnsTheActiveProductsOfAnyLevel() {
+        Product product = new Product();
+        ProductResource resource = new ProductResource();
         when(productService.getProducts(false)).thenReturn(List.of(product));
-        when(institutionMapper.toResource(product)).thenReturn(expected);
+        when(productMapper.toResource(product)).thenReturn(resource);
 
-        List<ProductResource> result = productController.getProducts();
-
-        assertEquals(1, result.size());
-        assertEquals("id", result.get(0).getId());
+        assertEquals(List.of(resource), controller.getProducts());
     }
 
     @Test
-    void getProductsAdmin_filtersAndMapsResults() {
+    void getProductsAdmin_keepsRootProductsWithADefaultUserContractTemplate() {
+        Product withTemplate = productWithUserTemplate("DEFAULT", "path/to/template");
+        Product withoutPath = productWithUserTemplate("DEFAULT", null);
+        Product withoutMappings = new Product();
+        ProductResource resource = new ProductResource();
+        when(productService.getProducts(true)).thenReturn(List.of(withTemplate, withoutPath, withoutMappings));
+        when(productMapper.toResource(withTemplate)).thenReturn(resource);
+
+        assertEquals(List.of(resource), controller.getProductsAdmin());
+    }
+
+    private static Product productWithUserTemplate(String institutionType, String path) {
+        ContractTemplate template = new ContractTemplate();
+        template.setContractTemplatePath(path);
         Product product = new Product();
-        product.setId("id");
-        var mappings = new HashMap<String, ContractTemplate>();
-        ContractTemplate contractTemplate = new ContractTemplate();
-        contractTemplate.setContractTemplatePath("template/path");
-        mappings.put(Product.CONTRACT_TYPE_DEFAULT, contractTemplate);
-        product.setUserContractMappings(mappings);
-
-        ProductResource expected = new ProductResource();
-        expected.setId("id");
-
-        when(productService.getProducts(true)).thenReturn(List.of(product));
-        when(institutionMapper.toResource(product)).thenReturn(expected);
-
-        List<ProductResource> result = productController.getProductsAdmin();
-
-        verify(productService).getProducts(true);
-        assertEquals(1, result.size());
-        assertSame(expected, result.get(0));
+        product.setUserContractMappings(Map.of(institutionType, template));
+        return product;
     }
 }
