@@ -1,6 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import lombok.Data;
 
 @Data
