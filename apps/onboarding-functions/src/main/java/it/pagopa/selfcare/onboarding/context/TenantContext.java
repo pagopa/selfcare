@@ -5,6 +5,8 @@ import com.microsoft.azure.functions.HttpRequestMessage;
 import org.eclipse.microprofile.config.ConfigProvider;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,11 +25,21 @@ public final class TenantContext {
 
     private TenantContext() {}
 
+    public static String tenantHeader(HttpRequestMessage<?> request) {
+        Map<String, String> headers = request.getHeaders();
+        if (headers == null) {
+            return null;
+        }
+        return headers.entrySet().stream()
+                .filter(entry -> TENANT_HEADER.equalsIgnoreCase(entry.getKey()))
+                .map(Map.Entry::getValue)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
     public static Scope open(HttpRequestMessage<?> request, ExecutionContext context) {
-        String headerTenant = request.getHeaders() == null
-                ? null
-                : request.getHeaders().get(TENANT_HEADER);
-        String tenant = resolve(headerTenant);
+        String tenant = resolve(tenantHeader(request));
         context.getLogger().info(() -> "Function request tenant=" + tenant);
 
         return open(tenant);
