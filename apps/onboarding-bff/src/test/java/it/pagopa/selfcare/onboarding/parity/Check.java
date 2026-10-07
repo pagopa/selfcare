@@ -78,13 +78,13 @@ public final class Check {
     return this;
   }
 
-  /** A comma separated header whose items are an unordered set, e.g. Allow: the order and the spaces are not part of the contract. */
+  /** All lines of a comma-separated header form one unordered set, e.g. Allow or Vary. */
   public Check headerItems(String name, String... expected) {
-    String actual = exchange.header(name);
+    List<String> actual = exchange.headers().getOrDefault(name.toLowerCase(Locale.ROOT), List.of());
     java.util.Set<String> want = new java.util.TreeSet<>(java.util.List.of(expected));
     java.util.Set<String> got = new java.util.TreeSet<>();
-    if (actual != null) {
-      for (String item : actual.split(",")) {
+    for (String line : actual) {
+      for (String item : line.split(",")) {
         got.add(item.trim());
       }
     }

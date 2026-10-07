@@ -39,6 +39,8 @@ class CheckTest {
           exchange.getResponseHeaders().add("Content-Type", "application/json;charset=UTF-8");
           exchange.getResponseHeaders().add("X-Test", "present");
           exchange.getResponseHeaders().add("Allow", "HEAD, GET, OPTIONS");
+          exchange.getResponseHeaders().add("Vary", "Origin");
+          exchange.getResponseHeaders().add("Vary", "Access-Control-Request-Method, Access-Control-Request-Headers");
           exchange.sendResponseHeaders(200, body.length);
           exchange.getResponseBody().write(body);
           exchange.close();
@@ -128,6 +130,13 @@ class CheckTest {
     fails("/ok", "header X-Test", c -> c.headerContains("X-Test", "zzz"));
     fails("/ok", "expected absent", c -> c.headerAbsent("X-Test"));
     fails("/ok", "header Allow", c -> c.headerItems("Allow", "GET", "HEAD"));
+  }
+
+  @Test
+  void headerItemsIncludeAllRepeatedLinesAndCommaSeparatedValues() {
+    passes("/ok", c -> c.headerItems("VARY", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
+    fails("/ok", "header Vary", c -> c.headerItems("Vary", "Origin"));
+    fails("/ok", "header Vary", c -> c.headerItems("Vary", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Accept"));
   }
 
   @Test
