@@ -36,6 +36,20 @@ public interface PartyRegistryProxyRestClient {
     ProxyInstitutionResponse getInstitutionById(@PathParam("institutionId") String id);
 
     @GET
+    @Path("/institutions/ipa/{taxCode}")
+    @Produces(APPLICATION_JSON)
+    ProxyInstitutionResponse findIpaInstitutionByTaxCode(@PathParam("taxCode") String taxCode,
+                                                         @QueryParam("category") String category);
+
+    @GET
+    @Path("/institutions/ipa")
+    @Produces(APPLICATION_JSON)
+    IpaInstitutionsSearchResponse searchIpaInstitutions(@QueryParam("search") String search,
+                                                        @QueryParam("category") String category,
+                                                        @QueryParam("page") Integer page,
+                                                        @QueryParam("pageSize") Integer pageSize);
+
+    @GET
     @Path("/geotaxonomies/{geotax_id}")
     @Consumes(APPLICATION_JSON)
     GeographicTaxonomiesResponse getExtByCode(@PathParam("geotax_id") String code);
