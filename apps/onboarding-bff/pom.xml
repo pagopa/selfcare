@@ -31,7 +31,8 @@
         <compiler-plugin.version>3.13.0</compiler-plugin.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <mapstruct.lombok.version>0.2.0</mapstruct.lombok.version>
-        <security-sdk.version>0.2.3</security-sdk.version>
+        <security-sdk.version>0.6.0</security-sdk.version>
+        <tenant-sdk.version>0.4.0</tenant-sdk.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
         <skipITs>true</skipITs>
     </properties>
@@ -83,6 +84,11 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-security</artifactId>
             <version>${security-sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-tenant</artifactId>
+            <version>${tenant-sdk.version}</version>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
