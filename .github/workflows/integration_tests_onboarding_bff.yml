@@ -38,24 +38,51 @@ jobs:
         with:
           servers: '[{"id": "selfcare-onboarding", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}, {"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
 
-      - name: Build and install modules
-        working-directory: apps/onboarding-bff
-        run: mvn install -DskipTests
+      # Builds and installs what onboarding-bff depends on from this repository (libs)
+      - name: Build and install dependencies
+        run: mvn -B --projects :onboarding-bff --also-make install -DskipTests
 
-      - name: Run Integration Tests
+      # Surefire runs the unit and parity tests, then Failsafe (profile integration-tests) runs
+      # CucumberSuiteTest against the docker compose fixture of src/test/resources
+      - name: Run unit and integration tests
         id: int_tests
-        working-directory: apps/onboarding-bff/app
-        run: mvn test -Dtest=it.pagopa.selfcare.onboarding.CucumberSuite -Dsurefire.failIfNoSpecifiedTests=false
+        run: mvn -B --projects :onboarding-bff verify -Pintegration-tests
         shell: bash
-        env:
-          APP_SERVER_PORT: 8082
+
+      - name: Verify that both suites actually ran
+        if: success()
+        working-directory: apps/onboarding-bff
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import glob, json, re, sys
+          import xml.etree.ElementTree as ET
+
+          def tests(directory):
+              return sum(int(ET.parse(f).getroot().get("tests", "0")) for f in glob.glob(directory + "/TEST-*.xml"))
+
+          unit, integration = tests("target/surefire-reports"), tests("target/failsafe-reports")
+          expected = sum(
+              len(re.findall(r"^\s*Scenario( Outline)?:", open(f, encoding="utf-8").read(), re.M))
+              for f in glob.glob("src/test/resources/features/*.feature")
+          )
+          with open("target/cucumber-report/cucumber.json", encoding="utf-8") as report:
+              executed = sum(1 for feature in json.load(report) for e in feature.get("elements", []) if e.get("type") == "scenario")
+          print(f"unit tests: {unit}, failsafe tests: {integration}, cucumber scenarios: {executed}/{expected}")
+          if unit == 0 or integration == 0 or expected == 0 or executed < expected:
+              sys.exit("a test suite did not run completely")
+          PY
 
       - name: Upload Test Results
         if: always() && (steps.int_tests.conclusion == 'success' || steps.int_tests.conclusion == 'failure')
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cucumber-report
-          path: apps/onboarding-bff/app/target/cucumber-report/cucumber.html
+          path: |
+            apps/onboarding-bff/target/cucumber-report/cucumber.html
+            apps/onboarding-bff/target/cucumber-report/cucumber.json
+            apps/onboarding-bff/target/surefire-reports
+            apps/onboarding-bff/target/failsafe-reports
 
       - name: Collect service logs
         if: always()
@@ -65,7 +92,7 @@ jobs:
           echo "Listing all containers (for debug)" > docker-logs/docker-ps.txt
           docker ps -a --format 'table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}' >> docker-logs/docker-ps.txt 2>&1 || true
 
-          COMPOSE_FILE=app/src/test/resources/docker-compose.yml
+          COMPOSE_FILE=src/test/resources/docker-compose.yml
           services=$(docker compose -f $COMPOSE_FILE config --services 2>/dev/null || true)
           for s in $services; do
             echo "Collecting logs for service: $s" >&2
@@ -102,7 +129,7 @@ jobs:
         working-directory: apps/onboarding-bff
         run: |
           set -e
-          COMPOSE_FILE=app/src/test/resources/docker-compose.yml
+          COMPOSE_FILE=src/test/resources/docker-compose.yml
           echo "Attempting docker compose down for $COMPOSE_FILE"
           if docker compose -f $COMPOSE_FILE ps -q >/dev/null 2>&1; then
             docker compose -f $COMPOSE_FILE down --volumes --remove-orphans || true

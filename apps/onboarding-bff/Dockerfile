@@ -34,10 +34,12 @@ COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/*.jar ./
 COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/app/ ./app/
 COPY --from=builder /src/apps/onboarding-bff/target/quarkus-app/quarkus/ ./quarkus/
 
-ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.2.11/applicationinsights-agent-3.2.11.jar ./applicationinsights-agent.jar
+ADD https://github.com/microsoft/ApplicationInsights-Java/releases/download/3.7.8/applicationinsights-agent-3.7.8.jar ./applicationinsights-agent.jar
 RUN chmod 755 ./applicationinsights-agent.jar
 
 EXPOSE 8080
 USER 1001
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTIONS -jar /app/quarkus-run.jar"]
+# The agent is attached by the container app through JAVA_TOOL_OPTIONS=-javaagent:applicationinsights-agent.jar,
+# a path relative to WORKDIR /app; exec keeps the JVM as PID 1 so it receives SIGTERM like the Spring image did.
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTIONS -jar /app/quarkus-run.jar"]

@@ -72,16 +72,6 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selfcare-onboarding-sdk-product</artifactId>
-            <version>${parent-commons-sdk-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selfcare-onboarding-sdk-azure-storage</artifactId>
-            <version>${parent-commons-sdk-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-security</artifactId>
             <version>${security-sdk.version}</version>
         </dependency>
@@ -89,6 +79,10 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-sdk-tenant</artifactId>
             <version>${tenant-sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <dependency>
             <groupId>org.openapitools</groupId>
@@ -345,6 +339,7 @@
                         <user.country>US</user.country>
                         <user.timezone>GMT</user.timezone>
                     </systemPropertyVariables>
+                    <failIfNoTests>true</failIfNoTests>
                     <excludes>
                         <exclude>**/CucumberSuiteTest.java</exclude>
                     </excludes>
@@ -370,6 +365,10 @@
                 </executions>
                 <configuration>
                     <skip>${skipITs}</skip>
+                    <failIfNoTests>true</failIfNoTests>
+                    <includes>
+                        <include>**/CucumberSuiteTest.java</include>
+                    </includes>
                     <systemPropertyVariables>
                         <user.language>en</user.language>
                         <user.country>US</user.country>
@@ -400,6 +399,12 @@
     </repositories>
 
     <profiles>
+        <profile>
+            <id>integration-tests</id>
+            <properties>
+                <skipITs>false</skipITs>
+            </properties>
+        </profile>
         <profile>
             <id>native</id>
             <activation>

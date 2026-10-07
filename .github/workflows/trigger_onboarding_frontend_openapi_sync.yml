@@ -2,12 +2,14 @@ name: Onboarding Frontend - Trigger OpenAPI Sync
 
 # Asks pagopa/selfcare-onboarding-frontend to update its local copy of the swaggers below
 # (its sync_bff_openapi.yml workflow opens a PR with the changed files).
+# That workflow downloads the swaggers from the paths of ONBOARDING_SWAGGER/PROXY_SWAGGER below at the
+# dispatched commit: the onboarding path there must be updated together with this file.
 on:
   push:
     branches:
       - main
     paths:
-      - "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+      - "apps/onboarding-bff/src/main/docs/openapi.json"
       - "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
   workflow_dispatch:
 
@@ -15,7 +17,7 @@ permissions:
   contents: read
 
 env:
-  ONBOARDING_SWAGGER: "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+  ONBOARDING_SWAGGER: "apps/onboarding-bff/src/main/docs/openapi.json"
   PROXY_SWAGGER: "apps/registry-proxy/app/src/main/resources/swagger/api-docs.json"
 
 jobs:
