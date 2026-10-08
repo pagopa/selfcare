@@ -12,6 +12,9 @@ bodies, headers, security, calls to the downstream services) must stay identical
 > [Verifying the equivalence with the Spring BFF](#verifying-the-equivalence-with-the-spring-bff); a red gate is a
 > difference still to fix, never an expectation to relax. The matching OpenAPI document alone is not a proof.
 
+Architectural realignment is tracked in the [migration plan](plan.md), with stories, implementation tasks,
+dependencies and acceptance criteria. It is a backlog, not evidence that the refactoring or release is complete.
+
 ## Build and run
 
 Run the commands from the repository root. Maven needs the credentials of the `selfcare-platform` (Azure DevOps) and
