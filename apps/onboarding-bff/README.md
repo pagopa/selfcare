@@ -28,6 +28,10 @@ The build regenerates the OpenAPI document under `apps/onboarding-bff/src/main/d
 `openapi.yaml`): it is the canonical published specification and must be committed together with the code that
 changes it, never edited by hand.
 
+During `package`, Maven also copies `openapi.json` byte-for-byte to the legacy
+`apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json` path consumed by APIM and the frontend sync.
+Commit both generated JSON files together; do not maintain the legacy alias manually.
+
 The container image runs `java $JAVA_OPTIONS -jar /app/quarkus-run.jar` as user `1001` on port `8080`. The
 Application Insights agent (3.7.8, the version of the other services) is in `/app/applicationinsights-agent.jar` and
 is attached by the container app environment (`JAVA_TOOL_OPTIONS=-javaagent:applicationinsights-agent.jar`, relative to
@@ -76,16 +80,14 @@ do not set `MS_DOCUMENT_URL`).
 
 #### REST client timeouts (milliseconds)
 
-`REST_CLIENT_CONNECT_TIMEOUT` (default 10000) and `REST_CLIENT_READ_TIMEOUT` (default 60000) apply to every client;
-a client-specific variable takes precedence.
+Every REST client uses **10000 ms connect / 60000 ms read**, including aggregates and institution calls.
+These values preserve the measured behavior of the Spring Feign clients: Spring's legacy
+`feign.client.config.*` settings were not bound by OpenFeign 4.
 
-| **Client** | **Connect timeout variable** | **Read timeout variable** |
-|------------|------------------------------|---------------------------|
-|party process, onboarding, user, party registry proxy|USERVICE_PARTY_PROCESS_REST_CLIENT_CONNECT_TIMEOUT|USERVICE_PARTY_PROCESS_REST_CLIENT_READ_TIMEOUT|
-|institution (core)|USERVICE_MS_CORE_REST_CLIENT_CONNECT_TIMEOUT|USERVICE_MS_CORE_REST_CLIENT_READ_TIMEOUT|
-|iam|IAM_REST_CLIENT_CONNECT_TIMEOUT|IAM_REST_CLIENT_READ_TIMEOUT|
-|user registry|USERVICE_USER_REGISTRY_REST_CLIENT_CONNECT_TIMEOUT|USERVICE_USER_REGISTRY_REST_CLIENT_READ_TIMEOUT|
-|aggregates and institution calls of onboarding-ms (default 90000)|AGGREGATES_REST_CLIENT_CONNECT_TIMEOUT|AGGREGATES_REST_CLIENT_READ_TIMEOUT|
+The legacy `REST_CLIENT_*`, `USERVICE_*_REST_CLIENT_*`, `IAM_REST_CLIENT_*` and `AGGREGATES_REST_CLIENT_*`
+timeout variables do not override these settings. For an intentional override, use the corresponding Quarkus
+property, for example `-Dquarkus.rest-client.iam_json.read-timeout=1500`. The client configuration keys and
+fully qualified API-specific overrides are listed in `src/main/resources/application.properties`.
 
 ## Tests
 
@@ -132,6 +134,9 @@ services replaced by a controlled in-JVM stub, against both applications:
    `src/main/docs` with the Spring one (`src/test/resources/parity/spring-api-docs.json`, taken from the Spring
    checkout): routes, methods, parameters and their style, required flags, schemas, response headers, security,
    operation ids. These gates are necessary but not sufficient: the behavior is proven by the scenarios.
+   `OpenApiIdenticalDocumentGateTest` additionally requires exact structural equality with the Spring document;
+   `LegacyOpenApiAliasGateTest` checks the legacy alias against the generated and served document, including its
+   suitability for Terraform `templatefile`.
 
 Each run prints a line `PARITY <target> scenarios=<n> attempted=<n> passed=<n>`; a run that executes no scenario fails.
 
