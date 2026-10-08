@@ -72,9 +72,7 @@ public class AuthorizationService {
                 && userId.equalsIgnoreCase(onboardingData.getUserRequester().getUserRequestUid())) {
             return true;
         }
-        if (onboardingData.getUsers() == null) {
-            return false;
-        }
+        // getUsers() never returns null (empty list when users are missing)
         return onboardingData.getUsers().stream()
                 .map(User::getId)
                 .filter(StringUtils::isNotBlank)

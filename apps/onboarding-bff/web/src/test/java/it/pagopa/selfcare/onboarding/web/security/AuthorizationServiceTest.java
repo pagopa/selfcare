@@ -163,4 +163,86 @@ class AuthorizationServiceTest {
         assertFalse(result);
         verify(iamService, times(1)).hasIamUserPermission(permission, userId, "", productId);
     }
+
+    @Test
+    void hasPermission_withViewPermission_andIamDenied_andBlankUserId_shouldDeny() {
+        // given: a principal without id can never match the onboarding requester/users
+        String onboardingId = "onboardingId";
+        String permission = "Selc:ViewAccountDocuments";
+        String userId = " ";
+        String productId = "product-id";
+        OnboardingData onboardingData = new OnboardingData();
+        onboardingData.setProductId(productId);
+        User user = new User();
+        user.setId(userId);
+        onboardingData.setUsers(List.of(user));
+        UserRequester userRequester = new UserRequester();
+        userRequester.setUserRequestUid(userId);
+        onboardingData.setUserRequester(userRequester);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(SelfCareUser.builder(userId).build());
+        when(tokenService.getOnboardingWithUserInfo(onboardingId)).thenReturn(onboardingData);
+        when(iamService.hasIamUserPermission(permission, userId, "", productId)).thenReturn(false);
+
+        // when
+        boolean result = authorizationService.hasPermission(authentication, onboardingId, permission);
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    void hasPermission_withViewPermission_andIamDenied_andUserRequesterMismatch_andNoUsers_shouldDeny() {
+        // given: the requester is another user and the onboarding has no users list
+        String onboardingId = "onboardingId";
+        String permission = "Selc:ViewAccountPage";
+        String userId = "user-id";
+        String productId = "product-id";
+        OnboardingData onboardingData = new OnboardingData();
+        onboardingData.setProductId(productId);
+        onboardingData.setUsers(null);
+        UserRequester userRequester = new UserRequester();
+        userRequester.setUserRequestUid("another-user-id");
+        onboardingData.setUserRequester(userRequester);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(SelfCareUser.builder(userId).build());
+        when(tokenService.getOnboardingWithUserInfo(onboardingId)).thenReturn(onboardingData);
+        when(iamService.hasIamUserPermission(permission, userId, "", productId)).thenReturn(false);
+
+        // when
+        boolean result = authorizationService.hasPermission(authentication, onboardingId, permission);
+
+        // then
+        assertFalse(result);
+    }
+
+    @Test
+    void hasPermission_withViewPermission_andIamDenied_andUserRequesterWithoutUid_shouldFallbackToUsers() {
+        // given: the requester has no uid, the match is done on the onboarding users
+        // (case-insensitive, ignoring users without id)
+        String onboardingId = "onboardingId";
+        String permission = "Selc:ViewAccountDocuments";
+        String userId = "user-id";
+        String productId = "product-id";
+        OnboardingData onboardingData = new OnboardingData();
+        onboardingData.setProductId(productId);
+        User userWithoutId = new User();
+        User matchingUser = new User();
+        matchingUser.setId("USER-ID");
+        onboardingData.setUsers(List.of(userWithoutId, matchingUser));
+        onboardingData.setUserRequester(new UserRequester());
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(SelfCareUser.builder(userId).build());
+        when(tokenService.getOnboardingWithUserInfo(onboardingId)).thenReturn(onboardingData);
+        when(iamService.hasIamUserPermission(permission, userId, "", productId)).thenReturn(false);
+
+        // when
+        boolean result = authorizationService.hasPermission(authentication, onboardingId, permission);
+
+        // then
+        assertTrue(result);
+    }
 }
