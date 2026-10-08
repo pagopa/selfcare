@@ -72,6 +72,19 @@ public final class ProblemResponses {
         return body;
     }
 
+    /** The Spring container rejects encoded slashes before its JSON error handling is reached. */
+    public static Response servletBadRequest() {
+        String title = "HTTP Status 400 \u2013 Bad Request";
+        return Response.status(400).type("text/html;charset=utf-8")
+                .entity("<!doctype html><html lang=\"en\"><head><title>" + title + "</title>"
+                        + "<style type=\"text/css\">body {font-family:Tahoma,Arial,sans-serif;} "
+                        + "h1, h2, h3, b {color:white;background-color:#525D76;} h1 {font-size:22px;} "
+                        + "h2 {font-size:16px;} h3 {font-size:14px;} p {font-size:12px;} "
+                        + "a {color:black;} .line {height:1px;background-color:#525D76;border:none;}"
+                        + "</style></head><body><h1>" + title + "</h1></body></html>")
+                .build();
+    }
+
     /** Status a downstream failure is re-exposed with; unknown and 2xx statuses become a 500. */
     public static int downstreamErrorStatus(int status) {
         boolean success = status >= 200 && status < 300;

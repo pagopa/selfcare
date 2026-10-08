@@ -81,6 +81,9 @@ public class TokenV2Controller {
     @Inject
     AuthorizationService authorizationService;
 
+    @Context
+    UriInfo uriInfo;
+
     @POST
     @Path("/{onboardingId}/complete")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -221,6 +224,7 @@ public class TokenV2Controller {
                                           String onboardingId,
                                           @Parameter(description = "${openapi.tokens.attachmentName}", required = true)
                                           @QueryParam("attachmentName") String attachmentName) {
+        attachmentName = RequestParams.stringQuery(uriInfo, "attachmentName", attachmentName);
         RequestParams.requiredQuery("attachmentName", attachmentName);
         log.trace("getTemplateAttachment start");
         String sanitizedFilename = attachmentName.replaceAll(SANITIZIER, "_");
@@ -239,6 +243,7 @@ public class TokenV2Controller {
                                   String onboardingId,
                                   @Parameter(description = "${openapi.tokens.attachmentName}", required = true)
                                   @QueryParam("name") String filename) {
+        filename = RequestParams.stringQuery(uriInfo, "name", filename);
         RequestParams.requiredQuery("name", filename);
         log.trace("getAttachment start");
         String sanitizedFilename = filename.replaceAll(SANITIZIER, "_");
@@ -297,7 +302,7 @@ public class TokenV2Controller {
                                      @Context UriInfo uriInfo) {
         // Scalar @QueryParam binding loses the distinction between missing and explicitly empty values.
         String type = uriInfo.getQueryParameters().getFirst("type");
-        String name = uriInfo.getQueryParameters().getFirst("name");
+        String name = RequestParams.stringQuery(uriInfo, "name", uriInfo.getQueryParameters().getFirst("name"));
         DownloadDocumentType documentType = RequestParams.requiredEnum("type", type, DownloadDocumentType.class);
         checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
         log.trace("downloadDocument start");
@@ -327,6 +332,7 @@ public class TokenV2Controller {
     public Response headAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                    @PathParam("onboardingId") String onboardingId,
                                    @Parameter(required = true) @QueryParam("name") String attachmentName) {
+        attachmentName = RequestParams.stringQuery(uriInfo, "name", attachmentName);
         RequestParams.requiredQuery("name", attachmentName);
         log.trace("headAttachment start");
         log.debug("headAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
@@ -340,6 +346,7 @@ public class TokenV2Controller {
     public Response getAttachmentStatus(@Parameter(description = "${openapi.tokens.onboardingId}")
                                         @PathParam("onboardingId") String onboardingId,
                                         @Parameter(required = true) @QueryParam("name") String attachmentName) {
+        attachmentName = RequestParams.stringQuery(uriInfo, "name", attachmentName);
         RequestParams.requiredQuery("name", attachmentName);
         log.trace("getAttachmentStatus start");
         log.debug("getAttachmentStatus onboardingId = {}, filename = {}", Encode.forJava(onboardingId), Encode.forJava(attachmentName));
@@ -360,6 +367,7 @@ public class TokenV2Controller {
                                      @RestForm("attachmentDescription") String attachmentDescription,
                                      @RestForm("attachment") FileUpload attachment,
                                      @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantId) {
+        attachmentName = RequestParams.stringQuery(uriInfo, "attachmentName", attachmentName);
         RequestParams.requiredQuery("attachmentName", attachmentName);
         log.trace("uploadAttachment start");
         UploadedFile uploadedFile = toUploadedFile("attachment", attachment);

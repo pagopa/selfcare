@@ -9,7 +9,7 @@ import java.util.Set;
 public final class ParityCatalog {
 
   /** Scenarios validated on the Spring reference when this floor was set; the catalog may only grow. */
-  public static final int MINIMUM_SCENARIOS = 516;
+  public static final int MINIMUM_SCENARIOS = 538;
 
   /** Optional regular expression on the scenario names, to iterate on one group: {@code -Dparity.only='^security ::'}. */
   public static final String ONLY_PROPERTY = "parity.only";

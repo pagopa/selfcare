@@ -23,20 +23,40 @@ public final class SpringReference implements AutoCloseable {
 
   private final Process process;
   private final int port;
+  private final String scheme;
 
   SpringReference(Process process, int port) {
+    this(process, port, "http");
+  }
+
+  private SpringReference(Process process, int port, String scheme) {
     this.process = process;
     this.port = port;
+    this.scheme = scheme;
   }
 
   public static SpringReference start(Path jar, DownstreamStub stub) throws Exception {
+    return start(jar, stub, Map.of(), "http", HttpClient.newHttpClient());
+  }
+
+  static SpringReference startSecure(Path jar, DownstreamStub stub, Path keyStore, String password,
+      HttpClient client) throws Exception {
+    return start(jar, stub, Map.of(
+        "SERVER_SSL_ENABLED", "true",
+        "SERVER_SSL_KEY_STORE", keyStore.toUri().toString(),
+        "SERVER_SSL_KEY_STORE_TYPE", "PKCS12",
+        "SERVER_SSL_KEY_STORE_PASSWORD", password), "https", client);
+  }
+
+  private static SpringReference start(Path jar, DownstreamStub stub, Map<String, String> overrides,
+      String scheme, HttpClient client) throws Exception {
     if (!Files.isRegularFile(jar)) {
       throw new IllegalStateException("Spring reference jar not found: " + jar);
     }
     int port = freePort();
     Path logDir = Path.of("target", "parity");
     Files.createDirectories(logDir);
-    File log = logDir.resolve("spring-reference.log").toFile();
+    File log = logDir.resolve("https".equals(scheme) ? "spring-reference-https.log" : "spring-reference.log").toFile();
 
     String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
     ProcessBuilder builder =
@@ -46,18 +66,22 @@ public final class SpringReference implements AutoCloseable {
     Map<String, String> env = builder.environment();
     env.keySet().removeIf(name -> name.startsWith("JAVA_TOOL_OPTIONS"));
     env.putAll(ParityTargets.springEnvironment(stub, port));
+    env.putAll(overrides);
     Process process = builder.start();
-    SpringReference reference = new SpringReference(process, port);
-    reference.awaitReady(Duration.ofSeconds(180));
+    SpringReference reference = new SpringReference(process, port, scheme);
+    reference.awaitReady(Duration.ofSeconds(180), client);
     return reference;
   }
 
   public String baseUrl() {
-    return "http://127.0.0.1:" + port;
+    return scheme + "://127.0.0.1:" + port;
   }
 
   void awaitReady(Duration timeout) throws InterruptedException {
-    HttpClient client = HttpClient.newHttpClient();
+    awaitReady(timeout, HttpClient.newHttpClient());
+  }
+
+  private void awaitReady(Duration timeout, HttpClient client) throws InterruptedException {
     long deadline = System.nanoTime() + timeout.toNanos();
     boolean ready = false;
     try {

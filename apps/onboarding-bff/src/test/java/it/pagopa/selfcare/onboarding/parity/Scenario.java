@@ -161,6 +161,10 @@ public final class Scenario {
 
   /** Runs the scenario against {@code baseUrl} using {@code stub}; throws AssertionError on any parity failure. */
   public Exchange run(String baseUrl, DownstreamStub stub) {
+    return run(baseUrl, stub, CLIENT);
+  }
+
+  Exchange run(String baseUrl, DownstreamStub stub, HttpClient client) {
     if (expectation == null) {
       throw new IllegalStateException(displayName() + " - scenario has no expectation");
     }
@@ -187,7 +191,7 @@ public final class Scenario {
     long start = System.nanoTime();
     HttpResponse<byte[]> response;
     try {
-      response = CLIENT.send(request.build(), HttpResponse.BodyHandlers.ofByteArray());
+      response = client.send(request.build(), HttpResponse.BodyHandlers.ofByteArray());
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new AssertionError(displayName() + " - request interrupted", e);

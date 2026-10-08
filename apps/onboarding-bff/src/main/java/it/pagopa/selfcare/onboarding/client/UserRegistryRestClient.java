@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.client;
 
 import it.pagopa.selfcare.onboarding.client.transport.ReplayOnConnectionDrop;
+import it.pagopa.selfcare.onboarding.client.transport.LegacyHttpMethodFilter;
 import it.pagopa.selfcare.onboarding.client.model.EmbeddedExternalId;
 import it.pagopa.selfcare.onboarding.client.model.MutableUserFieldsDto;
 import it.pagopa.selfcare.onboarding.client.model.RegistryUser;
@@ -19,6 +20,7 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+import org.eclipse.microprofile.rest.client.annotation.RegisterProvider;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import java.util.EnumSet;
@@ -30,6 +32,7 @@ import java.util.UUID;
  * caller credentials (bearer token and tenant header).
  */
 @RegisterRestClient(configKey = "user_registry_json")
+@RegisterProvider(LegacyHttpMethodFilter.class)
 @ReplayOnConnectionDrop
 @RegisterClientHeaders(AuthenticationPropagationHeadersFactory.class)
 @ClientHeaderParam(name = "x-api-key", value = "${rest-client.user-registry.api-key}")

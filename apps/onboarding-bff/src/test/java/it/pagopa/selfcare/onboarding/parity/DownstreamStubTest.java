@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -213,5 +214,15 @@ class DownstreamStubTest {
     assertEquals("contract", parts.get(1).name());
     assertEquals("c.pdf", parts.get(1).filename());
     assertArrayEquals(new byte[] {1, 2, 3}, parts.get(1).content());
+  }
+
+  @Test
+  void truncatedRepliesCloseBeforeTheirAdvertisedLength() {
+    stub.on(DownstreamStub.MS_PRODUCT, "GET", "/product",
+        Reply.json(200, "{\"id\":").truncated().header("X-Stub", "truncated").delay(1));
+
+    assertTimeoutPreemptively(Duration.ofSeconds(3),
+        () -> assertThrows(IOException.class, () -> send("GET", stub.url(DownstreamStub.MS_PRODUCT) + "/product", null)));
+    assertEquals(1, stub.calls().size());
   }
 }

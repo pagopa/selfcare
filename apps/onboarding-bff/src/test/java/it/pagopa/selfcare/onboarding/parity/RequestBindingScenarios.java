@@ -17,6 +17,37 @@ final class RequestBindingScenarios {
 
   static List<Scenario> all() {
     List<Scenario> scenarios = new ArrayList<>();
+    for (String[] boundary : new String[][] {
+        {"absent-defaults", "", "*", null, "0", "50"},
+        {"empty-defaults", "?search=&page=&pageSize=&category=", "*", null, "0", "50"},
+        {"bare-defaults", "?search&page&pageSize&category", "*", null, "0", "50"},
+        {"repeated-integer", "?page=2&page=3", "*", null, "2", "50"},
+        {"ignored-second-integer", "?page=2&page=bad", "*", null, "2", "50"},
+        {"repeated-search", "?search=alpha&search=beta", "alpha,beta", null, "0", "50"},
+        {"repeated-category", "?category=A&category=B", "*", "A,B", "0", "50"},
+        {"empty-first-string", "?search=&search=beta", ",beta", null, "0", "50"}
+    }) {
+      scenarios.add(Scenario.api("binding-boundaries", boundary[0], "/v2/institutions/ipa" + boundary[1])
+          .stub(stub -> stub.on(PARTY_REGISTRY_PROXY, "GET", "/institutions/ipa",
+              Reply.json(200, "{\"count\":0,\"items\":[]}")))
+          .expect(check -> {
+            var call = check.status(200).totalCalls(1).propagatesIdentity()
+                .call(PARTY_REGISTRY_PROXY, "GET", "/institutions/ipa")
+                .query("search", boundary[2]).query("page", boundary[4]).query("pageSize", boundary[5]);
+            if (boundary[3] == null) {
+              call.queryAbsent("category");
+            } else {
+              call.query("category", boundary[3]);
+            }
+          }));
+    }
+    scenarios.add(Scenario.api("binding-boundaries", "invalid-first-integer", "/v2/institutions/ipa?page=bad&page=2")
+        .expect(check -> check.status(400).contentType("application/problem+json").totalCalls(0)));
+    scenarios.add(Scenario.api("binding-boundaries", "repeated-enum-uses-first",
+            "/v2/tokens/ob1/download?type=CONTRACT_SIGNED&type=bad")
+        .stub(Fx::onboardingExists).stub(Fx::iamAdminOnly)
+        .stub(stub -> stub.on(MS_DOCUMENT, "GET", "/v1/document-content/ob1/contract-signed", Fx.document("signed.pdf")))
+        .expect(check -> check.status(200).bodyBytes(Fx.PDF).totalCalls(3)));
     for (String[] conversion : new String[][] {
         {"0x10", "16"}, {"#10", "16"}, {"-0X10", "-16"}, {"010", "10"}, {"+010", "10"}, {"1 2", "12"},
         {" ", "0"}, {"\t", "0"}, {"\u2003", "0"}

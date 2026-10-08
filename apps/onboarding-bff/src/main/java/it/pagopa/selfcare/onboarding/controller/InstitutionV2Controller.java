@@ -32,6 +32,8 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.Response;
 import java.util.Objects;
 import java.io.IOException;
@@ -64,6 +66,9 @@ public class InstitutionV2Controller {
     @Inject
     SecurityIdentity securityIdentity;
 
+    @Context
+    UriInfo uriInfo;
+
     @GET
     @Path("/ipa")
     @Operation(summary = "${openapi.onboarding.institutions.api.searchIpaInstitutions.summary}",
@@ -78,6 +83,8 @@ public class InstitutionV2Controller {
             @QueryParam("page") String page,
             @Parameter(schema = @Schema(type = SchemaType.INTEGER, format = "int32", defaultValue = "50"))
             @QueryParam("pageSize") String pageSize) {
+        search = RequestParams.stringQuery(uriInfo, "search", search);
+        category = RequestParams.stringQuery(uriInfo, "category", category);
         log.trace("searchIpaInstitutions start");
         String resolvedSearch = search == null || search.isEmpty() ? "*" : search;
         Integer resolvedPage = Objects.requireNonNullElse(RequestParams.optionalInt("page", page), 0);
@@ -98,6 +105,7 @@ public class InstitutionV2Controller {
             @PathParam("taxCode") String taxCode,
             @Parameter(description = "${openapi.onboarding.institutions.api.ipaCategory}")
             @QueryParam("category") String category) {
+        category = RequestParams.stringQuery(uriInfo, "category", category);
         log.trace("findIpaInstitutionByTaxCode start");
         IpaInstitutionResource resource = registryProxyMapper.toResource(
                 institutionService.findIpaInstitutionByTaxCode(taxCode, category));
@@ -182,6 +190,11 @@ public class InstitutionV2Controller {
                                                     @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                                     @QueryParam("subunitCode")
                                                     String subunitCode) {
+        productId = RequestParams.stringQuery(uriInfo, "productId", productId);
+        taxCode = RequestParams.stringQuery(uriInfo, "taxCode", taxCode);
+        origin = RequestParams.stringQuery(uriInfo, "origin", origin);
+        originId = RequestParams.stringQuery(uriInfo, "originId", originId);
+        subunitCode = RequestParams.stringQuery(uriInfo, "subunitCode", subunitCode);
         RequestParams.requiredQuery("productId", productId);
         log.trace("getInstitution start");
         final List<InstitutionResource> institutions = institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
@@ -207,6 +220,8 @@ public class InstitutionV2Controller {
                                                         @Schema(hidden = true) @RestForm("productId") String productId,
                                                         @QueryParam("institutionType") String legacyInstitutionType,
                                                         @QueryParam("productId") String legacyProductId) {
+        legacyInstitutionType = RequestParams.stringQuery(uriInfo, "institutionType", legacyInstitutionType);
+        legacyProductId = RequestParams.stringQuery(uriInfo, "productId", legacyProductId);
         UploadedFile uploadedFile = toUploadedFile("aggregates", file);
         String resolvedProductId = RequestParams.requiredQuery("productId", productId != null ? productId : legacyProductId);
         log.trace("Verify Aggregates Csv start");
@@ -240,6 +255,9 @@ public class InstitutionV2Controller {
                                                                    @Parameter(required = true) @QueryParam("productId") String productId,
                                                                    @QueryParam("subunitCode") String subunitCode
     ) {
+        taxCode = RequestParams.stringQuery(uriInfo, "taxCode", taxCode);
+        productId = RequestParams.stringQuery(uriInfo, "productId", productId);
+        subunitCode = RequestParams.stringQuery(uriInfo, "subunitCode", subunitCode);
         RequestParams.requiredQuery("taxCode", taxCode);
         RequestParams.requiredQuery("productId", productId);
         log.trace("getActiveOnboarding start");
@@ -261,6 +279,8 @@ public class InstitutionV2Controller {
             description = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
     public RecipientCodeStatus checkRecipientCode(@Parameter(required = true) @QueryParam("originId") String originId,
                                                   @Parameter(required = true) @QueryParam("recipientCode") String recipientCode) {
+        originId = RequestParams.stringQuery(uriInfo, "originId", originId);
+        recipientCode = RequestParams.stringQuery(uriInfo, "recipientCode", recipientCode);
         RequestParams.requiredQuery("originId", originId);
         RequestParams.requiredQuery("recipientCode", recipientCode);
         log.trace("Check recipientCode start");
@@ -289,6 +309,8 @@ public class InstitutionV2Controller {
             description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
     public List<OnboardingResult> getOnboardingsInfo(@Parameter(required = true) @QueryParam("taxCode") String inputTaxCode,
                                                      @Parameter(required = true) @QueryParam("status") String inputStatus) {
+        inputTaxCode = RequestParams.stringQuery(uriInfo, "taxCode", inputTaxCode);
+        inputStatus = RequestParams.stringQuery(uriInfo, "status", inputStatus);
         RequestParams.requiredQuery("taxCode", inputTaxCode);
         RequestParams.requiredQuery("status", inputStatus);
         log.trace("onboardingInfo start");

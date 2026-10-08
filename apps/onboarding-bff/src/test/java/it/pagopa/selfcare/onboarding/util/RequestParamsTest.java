@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -14,6 +18,20 @@ import org.junit.jupiter.params.provider.ValueSource;
 class RequestParamsTest {
 
     enum Choice { VALUE }
+
+    @Test
+    void repeatedStringsKeepOrderDuplicatesAndEmptyItems() {
+        UriInfo uriInfo = mock(UriInfo.class);
+        var query = new MultivaluedHashMap<String, String>();
+        query.addAll("search", "", "beta", "beta");
+        when(uriInfo.getQueryParameters()).thenReturn(query);
+        assertEquals(",beta,beta", RequestParams.stringQuery(uriInfo, "search", null));
+        assertNull(RequestParams.stringQuery(uriInfo, "missing", null));
+        assertEquals("bound", RequestParams.stringQuery(null, "search", "bound"));
+        query.putSingle("search", "");
+        assertNull(RequestParams.stringQuery(uriInfo, "search", null));
+        assertEquals("", RequestParams.stringQuery(uriInfo, "search", ""));
+    }
 
     @ParameterizedTest
     @CsvSource({"0x10,16", "#10,16", "-0X10,-16", "010,10", "+010,10", "1 2,12", "-2147483648,-2147483648"})

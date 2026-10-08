@@ -14,7 +14,9 @@ import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.security.Principal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.server.ServerRequestFilter;
@@ -29,13 +31,24 @@ import org.jboss.resteasy.reactive.server.ServerRequestFilter;
 @ApplicationScoped
 public class BffSecurityFilter {
 
+    private static final Set<HttpMethod> ALLOWED_METHODS = Set.of(
+            HttpMethod.DELETE, HttpMethod.GET, HttpMethod.HEAD, HttpMethod.OPTIONS,
+            HttpMethod.PATCH, HttpMethod.POST, HttpMethod.PUT);
+
     @Inject
     CurrentIdentityAssociation identityAssociation;
 
     @ServerRequestFilter(preMatching = true, priority = Priorities.AUTHENTICATION)
     public Uni<Response> filter(RoutingContext context) {
         String path = context.request().path();
-        if (path.contains("//")) {
+        String encodedPath = path.toLowerCase(Locale.ROOT);
+        if (encodedPath.contains("%2f")) {
+            return Uni.createFrom().item(ProblemResponses.servletBadRequest());
+        }
+        if (!ALLOWED_METHODS.contains(context.request().method())) {
+            return Uni.createFrom().item(Response.status(400).build());
+        }
+        if (path.contains("//") || path.contains(";") || encodedPath.contains("%2e")) {
             return Uni.createFrom().item(Response.status(400).type("application/json")
                     .entity(ProblemResponses.servletError(400, "Bad Request", path)).build());
         }
@@ -136,6 +149,9 @@ public class BffSecurityFilter {
                             headers.set(name, value);
                         }
                     });
+            if (context.request().isSSL() && !headers.contains("Strict-Transport-Security")) {
+                headers.set("Strict-Transport-Security", "max-age=31536000 ; includeSubDomains");
+            }
             for (String vary : List.of("Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers")) {
                 if (headers.getAll("Vary").stream().noneMatch(vary::equalsIgnoreCase)) {
                     headers.add("Vary", vary);

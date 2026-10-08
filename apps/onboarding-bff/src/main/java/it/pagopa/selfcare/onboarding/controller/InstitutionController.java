@@ -30,6 +30,8 @@ import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Objects;
@@ -48,6 +50,9 @@ import org.owasp.encoder.Encode;
 @Tag(name = "institutions")
 @RequiredArgsConstructor
 public class InstitutionController {
+
+    @Context
+    UriInfo uriInfo;
 
     private final InstitutionService institutionService;
     private final OnboardingMapper onboardingMapper;
@@ -109,6 +114,8 @@ public class InstitutionController {
                                                                           @Parameter(description = "${openapi.onboarding.product.model.id}", required = true)
                                                                           @QueryParam("productId")
                                                                           String productId) {
+        institutionId = RequestParams.stringQuery(uriInfo, "institutionId", institutionId);
+        productId = RequestParams.stringQuery(uriInfo, "productId", productId);
         RequestParams.requiredQuery("institutionId", institutionId);
         RequestParams.requiredQuery("productId", productId);
         log.trace("getInstitutionOnboardingInfoById start");
@@ -148,6 +155,8 @@ public class InstitutionController {
                                                                                            @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
                                                                                            @QueryParam("subunitCode")
                                                                                            String subunitCode) {
+        taxCode = RequestParams.stringQuery(uriInfo, "taxCode", taxCode);
+        subunitCode = RequestParams.stringQuery(uriInfo, "subunitCode", subunitCode);
         RequestParams.requiredQuery("taxCode", taxCode);
         log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode start");
         log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode taxCode = {}, subunitCode = {}",
@@ -171,6 +180,7 @@ public class InstitutionController {
     public List<InstitutionResource> getInstitutions(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}")
                                                      @QueryParam("productId")
                                                      String productId) {
+        productId = RequestParams.stringQuery(uriInfo, "productId", productId);
         log.trace("getInstitutions start");
         String uid = SecurityIdentityUtils.getUid(securityIdentity);
 
@@ -243,6 +253,13 @@ public class InstitutionController {
                                  @Parameter(description = "${openapi.onboarding.institutions.model.verifyType}",
                                          schema = @Schema(implementation = VerifyType.class))
                                      @QueryParam("verifyType") String verifyType) {
+        productId = RequestParams.stringQuery(uriInfo, "productId", productId);
+        taxCode = RequestParams.stringQuery(uriInfo, "taxCode", taxCode);
+        subunitCode = RequestParams.stringQuery(uriInfo, "subunitCode", subunitCode);
+        origin = RequestParams.stringQuery(uriInfo, "origin", origin);
+        originId = RequestParams.stringQuery(uriInfo, "originId", originId);
+        institutionType = RequestParams.stringQuery(uriInfo, "institutionType", institutionType);
+        vatNumber = Optional.ofNullable(RequestParams.stringQuery(uriInfo, "vatNumber", vatNumber.orElse(null)));
         RequestParams.requiredQuery("productId", productId);
         VerifyType type = RequestParams.optionalEnum("verifyType", verifyType, VerifyType.class);
         log.trace("verifyOnboarding start");

@@ -20,6 +20,8 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -40,6 +42,9 @@ public class ProductV2Controller {
     private final ProductService productService;
     private final InstitutionMapper productMapper;
 
+    @Context
+    UriInfo uriInfo;
+
     @GET
     @Operation(summary = "${openapi.product.ms.api.getOrigins.summary}",
             description = "${openapi.product.ms.api.getOrigins.description}", operationId = "getOrigins")
@@ -48,6 +53,7 @@ public class ProductV2Controller {
                                       String productId,
                                       @Parameter(hidden = true) @HeaderParam(TENANT_HEADER)
                                       String tenantHeader) {
+        productId = RequestParams.stringQuery(uriInfo, "productId", productId);
         log.trace("getOrigins start");
         RequestParams.requiredQuery("productId", productId);
         String productIdSanitized = Encode.forJava(productId);
@@ -68,6 +74,8 @@ public class ProductV2Controller {
                                                             @Parameter(required = true) @QueryParam("institutionType") String institutionType,
                                                             @Parameter(required = true) @QueryParam("origin") String origin,
                                                             @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantHeader) {
+        institutionType = RequestParams.stringQuery(uriInfo, "institutionType", institutionType);
+        origin = RequestParams.stringQuery(uriInfo, "origin", origin);
         log.trace("getRequiredDocuments start");
         RequestParams.requiredQuery("institutionType", institutionType);
         RequestParams.requiredQuery("origin", origin);
@@ -92,6 +100,8 @@ public class ProductV2Controller {
                                                                        @Parameter(required = true) @QueryParam("institutionType") String institutionType,
                                                                        @Parameter(required = true) @QueryParam("origin") String origin,
                                                                        @Parameter(hidden = true) @HeaderParam(TENANT_HEADER) String tenantHeader) {
+        institutionType = RequestParams.stringQuery(uriInfo, "institutionType", institutionType);
+        origin = RequestParams.stringQuery(uriInfo, "origin", origin);
         log.trace("isRequiredDocumentsEnabled start");
         RequestParams.requiredQuery("institutionType", institutionType);
         RequestParams.requiredQuery("origin", origin);

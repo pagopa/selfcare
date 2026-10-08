@@ -78,7 +78,11 @@ public final class DownstreamStub implements AutoCloseable {
   }
 
   /** What the stub answers to a matched request. */
-  public record Reply(int status, Map<String, String> headers, byte[] body, long delayMs) {
+  public record Reply(int status, Map<String, String> headers, byte[] body, long delayMs, boolean truncateBody) {
+
+    public Reply(int status, Map<String, String> headers, byte[] body, long delayMs) {
+      this(status, headers, body, delayMs, false);
+    }
 
     public static Reply json(int status, String json) {
       return new Reply(
@@ -111,11 +115,15 @@ public final class DownstreamStub implements AutoCloseable {
     public Reply header(String name, String value) {
       Map<String, String> copy = new LinkedHashMap<>(headers);
       copy.put(name, value);
-      return new Reply(status, copy, body, delayMs);
+      return new Reply(status, copy, body, delayMs, truncateBody);
     }
 
     public Reply delay(long millis) {
-      return new Reply(status, headers, body, millis);
+      return new Reply(status, headers, body, millis, truncateBody);
+    }
+
+    public Reply truncated() {
+      return new Reply(status, headers, body, delayMs, true);
     }
   }
 
@@ -217,15 +225,17 @@ public final class DownstreamStub implements AutoCloseable {
       if ("HEAD".equalsIgnoreCase(method) || reply.body().length == 0) {
         exchange.sendResponseHeaders(reply.status(), -1);
       } else {
-        exchange.sendResponseHeaders(reply.status(), reply.body().length);
-        try (OutputStream out = exchange.getResponseBody()) {
-          out.write(reply.body());
-        }
+        long responseLength = reply.body().length + (reply.truncateBody() ? 100L : 0L);
+        exchange.sendResponseHeaders(reply.status(), responseLength);
+        // Close the exchange first: closing an incomplete body stream first can leave the socket open.
+        OutputStream out = exchange.getResponseBody();
+        out.write(reply.body());
+        out.flush();
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     } catch (IOException ignored) {
-      // The caller gave up (timeout): nothing to answer.
+      // The caller gave up, or the deliberately truncated body could not fill Content-Length.
     } finally {
       exchange.close();
     }

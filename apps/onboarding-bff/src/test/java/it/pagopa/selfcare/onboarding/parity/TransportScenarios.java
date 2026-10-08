@@ -92,7 +92,56 @@ final class TransportScenarios {
             .stub(st -> st.on(MS_DOCUMENT, "HEAD", "/v1/documents/ob1/attachment/status", Reply.abort()))
             .expect(c -> c.status(500).noBody().contentType("application/problem+json")
                     .callCount(MS_DOCUMENT, 2).totalCalls(2).elapsedBelow(4_000)));
+    s.add(
+        Scenario.api(G, "ms-product-truncated-body-is-not-replayed", "/v1/product/prod-io")
+            .stub(st -> st.on(MS_PRODUCT, "GET", "/product/prod-io", Reply.json(200, "{\"id\":").truncated()))
+            .expect(c -> failure(c).callCount(MS_PRODUCT, 1).totalCalls(1).elapsedBelow(4_000)));
+    s.add(
+        Scenario.api(G, "bodyless-put-dropped-once-is-replayed-immediately", "PUT", "/v2/institutions/ob1")
+            .stub(st -> st.on(MS_ONBOARDING, "PUT", "/v1/onboarding/ob1",
+                call -> st.callsTo(MS_ONBOARDING).size() == 1 ? Reply.abort() : Reply.status(204)))
+            .expect(c -> c.status(204).noBody().callCount(MS_ONBOARDING, 2).totalCalls(2)
+                .propagatesIdentity().elapsedBelow(4_000)));
+    retried(
+        s,
+        Scenario.api(G, "bodyless-put-always-dropped-exhausts-service-retries", "PUT", "/v2/institutions/ob1")
+            .stub(st -> st.on(MS_ONBOARDING, "PUT", "/v1/onboarding/ob1", Reply.abort())),
+        MS_ONBOARDING);
+    s.add(userRegistryPatch());
     return s;
+  }
+
+  private static Scenario userRegistryPatch() {
+    String userId = "44444444-4444-4444-8444-444444444444";
+    String product = """
+        {"productId":"prod-io","title":"IO","status":"ACTIVE","features":{"enabled":true},
+         "contracts":[{"institutionType":"PA","path":"contract.pdf","version":"1"}],
+         "roleMappings":[{"role":"MANAGER","backOfficeRoles":[{"code":"admin"}]}]}
+        """;
+    return Scenario.api(G, "user-registry-patch-keeps-the-legacy-transport-error", "POST", "/v1/institutions/onboarding")
+        .json("""
+            {"productId":"prod-io","institutionType":"PA","origin":"IPA","taxCode":"00000000000",
+             "billingData":{"businessName":"Comune","registeredOffice":"Via Roma","digitalAddress":"pec@test.it"},
+             "users":[{"name":"Mario","surname":"Rossi","taxCode":"RSSMRA80A01H501U","role":"MANAGER","email":"m@test.it"}]}
+            """)
+        .stub(st -> {
+          st.on(MS_PRODUCT, "GET", "/product/prod-io", Reply.json(200, product));
+          st.on(MS_PRODUCT, "GET", "/product/prod-io/valid", Reply.json(200, product));
+          st.on(PARTY_PROCESS, "GET", "/institutions",
+              Reply.json(200, "{\"institutions\":[{\"id\":\"inst1\",\"externalId\":\"ext1\"}]}"));
+          st.on(USER_REGISTRY, "POST", "/users/search", Reply.json(200,
+              "{\"id\":\"" + userId + "\",\"name\":{\"value\":\"Luigi\",\"certification\":\"NONE\"},"
+                  + "\"familyName\":{\"value\":\"Rossi\",\"certification\":\"SPID\"}}"));
+          st.on(USER_REGISTRY, "PATCH", "/users/" + userId, Reply.status(204));
+          st.on(PARTY_PROCESS, "POST", "/onboarding/institution", Reply.status(201));
+        })
+        .expect(c -> failure(c).exactCalls(
+                "ms-product GET /product/prod-io",
+                "ms-product GET /product/prod-io/valid",
+                "ms-product GET /product/prod-io/valid",
+                "party-process GET /institutions",
+                "user-registry POST /users/search")
+            .propagatesIdentity().elapsedBelow(4_000));
   }
 
   private static void retried(List<Scenario> s, Scenario scenario, String service) {

@@ -27,7 +27,34 @@ final class HttpContractScenarios {
     cors(s);
     negotiation(s);
     forwarding(s);
+    boundaries(s);
     return s;
+  }
+
+  private static void boundaries(List<Scenario> scenarios) {
+    for (String method : List.of("TRACE", "PROPFIND")) {
+      scenarios.add(Scenario.api("http-boundaries", "unsupported-firewall-method-" + method, method, PRODUCTS)
+          .expect(c -> c.status(400).noBody().headerAbsent("Content-Type")
+              .headerAbsent("Cache-Control").totalCalls(0)));
+    }
+    for (String path : List.of("/v1/products;v=1", "/v1/%2e%2e/products")) {
+      scenarios.add(Scenario.api("http-boundaries", "rejected-path-" + path, path)
+          .expect(c -> c.status(400).contentType("application/json")
+              .json("/status", 400).json("/error", "Bad Request")
+              .headerAbsent("Cache-Control").totalCalls(0)));
+    }
+    scenarios.add(Scenario.api("http-boundaries", "encoded-slash-is-rejected-by-the-container", "/v1%2fproducts")
+        .expect(c -> c.status(400).contentType("text/html").bodyContains("HTTP Status 400")
+            .headerAbsent("Cache-Control").totalCalls(0)));
+    for (String[] header : new String[][] {
+        {"Forwarded", "for=192.0.2.1;proto=https;host=example.test"},
+        {"X-Forwarded-Proto", "https"}, {"X-Forwarded-Ssl", "on"}
+    }) {
+      scenarios.add(Scenario.api("http-boundaries", "untrusted-" + header[0], PRODUCTS)
+          .header(header[0], header[1]).stub(HttpContractScenarios::productsOk)
+          .expect(c -> c.status(200).headerAbsent("Strict-Transport-Security").totalCalls(1)
+              .call(MS_PRODUCT, "GET", "/product").headerAbsent(header[0])));
+    }
   }
 
   private static void productsOk(DownstreamStub stub) {

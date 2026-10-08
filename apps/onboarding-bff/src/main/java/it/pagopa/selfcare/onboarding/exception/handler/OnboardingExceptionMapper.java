@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.exception.handler;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import io.vertx.core.http.HttpClosedException;
 import it.pagopa.selfcare.onboarding.exception.AccessDeniedException;
 import it.pagopa.selfcare.onboarding.exception.CustomVerifyException;
 import it.pagopa.selfcare.onboarding.exception.DownstreamServiceException;
@@ -239,7 +240,8 @@ public class OnboardingExceptionMapper {
     }
 
     private static boolean isTransportFailure(Throwable e) {
-        return e instanceof ProcessingException || e instanceof IOException || e instanceof TimeoutException;
+        return e instanceof ProcessingException || e instanceof IOException || e instanceof TimeoutException
+                || e instanceof HttpClosedException;
     }
 
     /**

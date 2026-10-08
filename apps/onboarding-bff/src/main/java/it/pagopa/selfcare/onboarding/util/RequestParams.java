@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.onboarding.util;
 
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import jakarta.ws.rs.core.UriInfo;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -10,6 +12,15 @@ import java.util.Locale;
 public final class RequestParams {
 
     private RequestParams() {
+    }
+
+    /** Spring binds repeated String query parameters as one comma-delimited value, not the first item. */
+    public static String stringQuery(UriInfo uriInfo, String name, String boundValue) {
+        if (uriInfo == null) {
+            return boundValue;
+        }
+        List<String> values = uriInfo.getQueryParameters().get(name);
+        return values == null || values.size() < 2 ? boundValue : String.join(",", values);
     }
 
     public static String requiredQuery(String name, String value) {

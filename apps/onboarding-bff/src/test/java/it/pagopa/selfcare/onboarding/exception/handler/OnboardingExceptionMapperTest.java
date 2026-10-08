@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
+import io.vertx.core.http.HttpClosedException;
 import it.pagopa.selfcare.onboarding.exception.AccessDeniedException;
 import it.pagopa.selfcare.onboarding.exception.CustomVerifyException;
 import it.pagopa.selfcare.onboarding.exception.DownstreamServiceException;
@@ -208,6 +209,10 @@ class OnboardingExceptionMapperTest {
         assertProblem(mapper.handleThrowable(new CompletionException(new TimeoutException("read timed out")), uriInfo),
                 500, "Internal Server Error", DOWNSTREAM_DETAIL);
         assertProblem(mapper.handleThrowable(new ExecutionException(new CompletionException(new IOException("x"))), uriInfo),
+                500, "Internal Server Error", DOWNSTREAM_DETAIL);
+        assertProblem(mapper.handleThrowable(new HttpClosedException("Connection was closed"), uriInfo),
+                500, "Internal Server Error", DOWNSTREAM_DETAIL);
+        assertProblem(mapper.handleThrowable(new CompletionException(new HttpClosedException("Connection was closed")), uriInfo),
                 500, "Internal Server Error", DOWNSTREAM_DETAIL);
     }
 
