@@ -7,6 +7,7 @@ import it.pagopa.selfcare.onboarding.client.model.User;
 import it.pagopa.selfcare.onboarding.service.IamService;
 import it.pagopa.selfcare.onboarding.service.TokenService;
 import it.pagopa.selfcare.onboarding.util.PermissionConstants;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,15 +44,18 @@ public class AuthorizationService {
         String productId = onboardingData.getProductId();
 
         log.info("Checking IAM permission: onboardingId={}, userId={}, permission={}, productId={}",
-                onboardingId, userId, permission, productId);
+                LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
+                LogUtils.sanitize(permission), LogUtils.sanitize(productId));
         boolean hasPermission = iamService.hasIamUserPermission(permission, userId, StringUtils.EMPTY, productId);
         log.info("IAM permission check result: onboardingId={}, userId={}, permission={}, productId={}, authorized={}",
-                onboardingId, userId, permission, productId, hasPermission);
+                LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
+                LogUtils.sanitize(permission), LogUtils.sanitize(productId), hasPermission);
 
         if (!hasPermission && VIEW_PERMISSIONS_BYPASSABLE_WITHOUT_IAM.contains(permission)) {
             hasPermission = isOnboardingRequester(userId, onboardingData);
             log.info("IAM denied: applying onboarding-requester fallback, onboardingId={}, userId={}, permission={}, isOnboardingRequester={}",
-                    onboardingId, userId, permission, hasPermission);
+                    LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
+                    LogUtils.sanitize(permission), hasPermission);
         }
 
         return hasPermission;

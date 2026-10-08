@@ -53,6 +53,23 @@ class AuthorizationServiceTest {
     private AuthorizationService authorizationService;
 
     @Test
+    void sanitizingLogsDoesNotChangeTheValuesSentToIam() {
+        String onboardingId = "onboarding\r\nid";
+        String userId = "user\r\nid";
+        String permission = "permission\r\nname";
+        String productId = "product\r\nid";
+        OnboardingData data = new OnboardingData();
+        data.setProductId(productId);
+        when(tokenService.getOnboardingWithUserInfo(onboardingId)).thenReturn(data);
+        when(iamService.hasIamUserPermission(permission, userId, "", productId)).thenReturn(true);
+
+        assertTrue(authorizationService.hasPermission(identityOf(userId), onboardingId, permission));
+
+        verify(tokenService).getOnboardingWithUserInfo(onboardingId);
+        verify(iamService).hasIamUserPermission(permission, userId, "", productId);
+    }
+
+    @Test
     void hasPermission_withIamGranted_shouldReturnTrueWithoutFallback() {
         givenOnboardingWithUsers();
         when(iamService.hasIamUserPermission(MANAGE_PAGE, USER_ID, "", PRODUCT_ID)).thenReturn(true);

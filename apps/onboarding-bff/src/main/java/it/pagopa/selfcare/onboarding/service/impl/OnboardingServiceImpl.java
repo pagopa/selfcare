@@ -14,6 +14,7 @@ import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.ClientRequestValidator;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.util.Preconditions;
+import it.pagopa.selfcare.onboarding.util.LogUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.MediaType;
@@ -234,14 +235,14 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId) {
-        log.info("validateAggregatesCsv for product: {}", productId);
+        log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
         switch (productId) {
             case PROD_IO, PROD_PAGOPA, PROD_PN -> {
                 VerifyAggregateResponse response = uploadClient.verifyAggregatesCsv(productId, multipart(AGGREGATES_PART, file));
                 return onboardingMapper.toVerifyAggregateResult(response);
             }
             default -> {
-                log.error("Unsupported productId: {}", productId);
+                log.error("Unsupported productId: {}", LogUtils.sanitize(productId));
                 throw new InvalidRequestException(String.format("%s Unsupported productId: %s", "400 BAD_REQUEST", productId));
             }
         }

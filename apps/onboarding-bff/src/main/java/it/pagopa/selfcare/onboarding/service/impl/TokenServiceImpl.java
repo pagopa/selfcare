@@ -68,7 +68,7 @@ public class TokenServiceImpl implements TokenService {
     @Override
     public OnboardingData getOnboardingWithUserInfo(String onboardingId) {
         log.trace("getOnboardingWithUserInfo start");
-        log.debug("getOnboardingWithUserInfo id = {}", onboardingId);
+        log.debug("getOnboardingWithUserInfo id = {}", LogUtils.sanitize(onboardingId));
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
         OnboardingData onboardingData = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboardingWithUserInfo(onboardingId));
         log.debug("getOnboardingWithUserInfo result = success");

@@ -315,7 +315,7 @@ public class InstitutionController {
                                                          VerificationMatchRequest verificationMatchRequest) {
         RequestParams.requiredBody(verificationMatchRequest);
         log.trace("matchInstitutionAndUser start");
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser userDto = {}", verificationMatchRequest);
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser userDto = {}", LogUtils.sanitize(verificationMatchRequest));
         MatchInfoResult matchInfoResult = institutionService.matchInstitutionAndUser(verificationMatchRequest.getTaxCode(),
                 userMapper.toUser(verificationMatchRequest.getUserDto()));
         MatchInfoResultResource result = institutionMapper.toResource(matchInfoResult);
