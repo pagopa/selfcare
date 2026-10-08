@@ -11,7 +11,6 @@ import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
@@ -242,12 +241,6 @@ public class TokenV2Controller {
      * who received the PEC with the onboarding link (e.g. a secretary of the legal representative) must
      * be able to download the contract. The IAM-protected twin used by the backstage (Area Riservata)
      * is {@link #getContractBackstage(String)}: both delegate to the same {@link TokenService#getContract(String)}.
-     *
-     * TODO: decide whether to re-introduce an authorization check on this endpoint. Options:
-     *  - restore @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, 'Selc:ViewAccountDocuments')")
-     *    (blocks PEC recipients who are neither onboarding users nor the requester);
-     *  - allow download only while the onboarding is waiting for the signature (e.g. status PENDING/TOBEVALIDATED);
-     *  - verify a token/claim carried by the PEC link instead of relying on the logged user.
      */
     @GetMapping(value = "/{onboardingId}/contract", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @ResponseStatus(HttpStatus.OK)
