@@ -7,6 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class PreconditionsTest {
 
@@ -32,5 +35,15 @@ class PreconditionsTest {
         assertThrows(IllegalArgumentException.class, () -> Preconditions.isTrue(false, "invalid"));
         assertEquals("state", assertThrows(IllegalStateException.class,
                 () -> Preconditions.state(false, "state")).getMessage());
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    @ValueSource(strings = {" ", "\t", "\n", "\r", "\u2003"})
+    void missingTextIsRejectedEvenAfterNullSafeDiagnosticSanitization(String value) {
+        assertDoesNotThrow(() -> LogUtils.sanitize(value));
+        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+                () -> Preconditions.hasText(value, "An Institution ID is required"));
+        assertEquals("An Institution ID is required", failure.getMessage());
     }
 }
