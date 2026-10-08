@@ -13,11 +13,11 @@ Threat profile from ARCHITECTURE.md: this is **not** a web/API application. It i
 
 ## Required Security Inputs
 
-- Runtime environment: TO BE DECIDED (candidate: Azure Container Apps Job; ARCHITECTURE.md).
-- Server framework: TO BE DECIDED (candidate: Quarkus 3.31.x / Java 17 command mode).
+- Runtime environment: Azure Container Apps Job (`infra/resources/_modules/container_app_job`).
+- Server framework: Quarkus 3.31.x / Java 17 command mode; no inbound HTTP surface.
 - Inbound surface: none. Triggers are schedule and manual (backfill / on-demand). Who may start a manual run: TO BE DECIDED.
 - Job parameters (environment, reference date): source and allowed range TO BE DECIDED (SELC-5.2–5.4).
-- Workload identity: Managed Identity (SELC-4.7). System-assigned or a dedicated user-assigned identity: TO BE DECIDED.
+- Workload identity: system-assigned Managed Identity (SELC-4.7).
 - RBAC scopes for the job and for dashboard viewers: TO BE DECIDED (ARCHITECTURE.md C7).
 - Source logs workspace and access mode (resource-context vs workspace): UNKNOWN (G1).
 - Network path to Table storage (private endpoint + DNS): TO BE DECIDED (G3).
@@ -80,7 +80,7 @@ Safe, durable defaults grounded in known facts. Each rule cites its source so th
   - Source: OWASP CS *Logging*.
 - **SEC-5.2** On failure, exit non-zero with a generic error class. Slack notifications carry only environment, reference date and a failure reason without stack traces or secrets (SELC-5.1).
   - Source: OWASP CS *Error Handling*.
-- **SEC-5.3** Fail closed: any query, validation or write error means no write, or a run marked as failed (SELC-4.5, 4.9). Never write default or zero counts on error.
+- **SEC-5.3** Fail closed on query and validation errors: do not write either destination and never write default or zero counts on error. If one destination write succeeds before the other fails, mark the run failed and rely on a retry to reconcile the reporting projection (SELC-4.5, 4.9).
   - Source: OWASP OPC C10 *Handle All Errors and Exceptions*.
 
 ### 6. Infrastructure as Code
@@ -114,9 +114,9 @@ Safe, durable defaults grounded in known facts. Each rule cites its source so th
 
 - `Code quality -> /apps/* (repo baseline: pom.xml Sonar/Jacoco) + OWASP Proactive Controls (fallback: no library prompt)`
 - `API security / HTTP boundary -> Not applicable (no inbound API; ARCHITECTURE.md)`
-- `Backend framework -> UNRESOLVED (TO BE DECIDED; candidate Quarkus; ARCHITECTURE.md)`
-- `Runtime / container -> UNRESOLVED (TO BE DECIDED; candidate infra/resources/_modules/container_app_job; conditional rules in SEC-7.5)`
-- `Client framework -> Not applicable (Azure Portal Dashboard, no custom client)`
+- `Backend framework -> Quarkus: apps/log-availability-runner (Java 17 command-mode job)`
+- `Runtime / container -> Azure Container Apps Job: infra/resources/_modules/container_app_job`
+- `Client framework -> Azure Monitor Workbook: infra/core/_modules/monitor`
 - `Authentication (workload) -> Entra ID Managed Identity: infra/resources/_modules/container_app_job + OWASP CS Secrets Management (fallback)`
 - `Authentication (users) -> Not applicable at app level (Azure Portal / Entra ID; no sessions, passwords, MFA or SSO handled by the system)`
 - `Authorization -> Azure RBAC: infra/core/_modules/user_managed_identity + OWASP CS Authorization (fallback)`

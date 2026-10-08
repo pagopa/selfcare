@@ -361,7 +361,8 @@ module "app_gw" {
   app_gateway_min_capacity = var.app_gateway_min_capacity
   app_gateway_max_capacity = var.app_gateway_max_capacity
 
-  alerts_enabled = var.app_gateway_alerts_enabled
+  alerts_enabled                 = var.app_gateway_alerts_enabled
+  sec_log_analytics_workspace_id = var.log_analytics_workspace_id
 
   action = var.env_short == "x" ? [
     {

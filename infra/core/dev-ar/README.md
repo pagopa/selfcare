@@ -5,7 +5,7 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >=1.10.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 3.8.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.0 |
@@ -17,7 +17,7 @@
 | Name | Version |
 | ---- | ------- |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
-| <a name="provider_random"></a> [random](#provider\_random) | 3.9.0 |
+| <a name="provider_random"></a> [random](#provider\_random) | 3.9.1 |
 
 ## Modules
 
@@ -37,6 +37,7 @@
 | <a name="module_dns_private"></a> [dns\_private](#module\_dns\_private) | ../_modules/dns_private | n/a |
 | <a name="module_dns_public"></a> [dns\_public](#module\_dns\_public) | ../_modules/dns_public | n/a |
 | <a name="module_events"></a> [events](#module\_events) | ../_modules/events | n/a |
+| <a name="module_internal_events"></a> [internal\_events](#module\_internal\_events) | ../_modules/internal_events | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ../_modules/key_vault | n/a |
 | <a name="module_log_analytics"></a> [log\_analytics](#module\_log\_analytics) | ../_modules/log_analytics | n/a |
 | <a name="module_logs_storage"></a> [logs\_storage](#module\_logs\_storage) | ../_modules/storage_account_template | n/a |

@@ -8,31 +8,30 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
 - System purpose: Each night, compute the previous UTC day's API availability for each environment (DEV, UAT, PROD) from Application Gateway access logs (`< 500` available vs `>= 500`/invalid unavailable). Store one record per day and report it on an Azure Portal Dashboard over any date range.
 - Primary use cases: (1) scheduled D-1 computation and persistence (SELC-1, 2, 3, 4); (2) go-live backfill and on-demand regeneration of a past date (SELC-5.2–5.4); (3) failure notification (SELC-5.1); (4) range reporting: pie chart, daily column charts, totals, on-demand table (SELC-6).
 - Target users / actors: Scheduled job (system actor, Managed Identity). Operators receiving Slack failure notifications. Report consumers: users of the environment's Azure subscription (SELC-6.8).
-- Runtime environment: TO BE DECIDED. Repo precedent for scheduled batch work: Azure Container Apps Job in the environment's Container Apps Environment (e.g. `selc-p-cae-002`), using module `infra/resources/_modules/container_app_job` with `schedule_trigger_config` and `manual_trigger_config` and a `ghcr.io/pagopa/*` image (see `institution-send-mail-scheduler`, `registry-proxy-runner`). Container Apps cron expressions are evaluated in UTC.
-- Server framework: TO BE DECIDED. Repo precedent: Quarkus 3.31.x / Java 17 command-mode application (`@QuarkusMain`, as `apps/institution-send-mail-scheduler`). No inbound HTTP server is required.
-- Client framework: None (no custom client). The UI is a new Azure Portal Dashboard (`azurerm_portal_dashboard`, JSON template rendered with `templatefile`, same pattern as `monitoring-dashboard` in `infra/core/_modules/monitor`) with Log Analytics (KQL) tiles (SELC-6.3).
+- Runtime environment: Azure Container Apps Job in each environment's existing Container Apps Environment; Terraform module `infra/resources/_modules/container_app_job`; Docker image in `ghcr.io/pagopa/*`. Scheduled Container Apps cron expressions are evaluated in UTC.
+- Server framework: Quarkus 3.31.x / Java 17 command-mode application (`@QuarkusMain`), matching repo conventions. No inbound HTTP server is required.
+- Client framework: Azure Monitor Workbook (`azurerm_application_insights_workbook`) with Log Analytics (KQL) query items and a time-range parameter that filters by `ReferenceDate` (SELC-6.3).
 - API style and integration model: No inbound API. Outbound-only batch over HTTPS with Entra ID tokens:
   - Log Analytics query (KQL over `AzureDiagnostics`, App Gateway access logs).
   - Azure Table Storage upsert into `SelcAvailability`.
   - Azure Monitor Logs Ingestion API through a Data Collection Rule into `SelcAvailability_CL`. This is the only Managed-Identity path into a custom table; the legacy HTTP Data Collector API needs a shared key, which SELC-4.7 forbids.
   - Failure notification through Azure Monitor alert → action group → email-to-Slack receiver (existing pattern in `infra/core/_modules/monitor`).
 - Authentication and session model: No user sessions and no application-level login.
-  - Writer: Entra ID Managed Identity (Container Apps Jobs already get `SystemAssigned, UserAssigned`). Keys, SAS and connection strings MUST NOT be used for writes (SELC-4.7).
+  - Writer: system-assigned Entra ID Managed Identity on the scheduled Container Apps Job. Keys, SAS and connection strings MUST NOT be used for writes (SELC-4.7).
   - Readers: Entra ID users of the subscription through the Azure Portal. Dashboard tiles query with the viewer's identity (SELC-6.8).
 - Data model expectations: One Daily Availability Record per (reference date, environment): reference date, environment, `count_lt_500`, `count_gte_500`, total, availability (2 decimal places), generation timestamp (SELC-4.2, 3.3).
   - `SelcAvailability` (system of record, no expiry): `PartitionKey = yyyy`, `RowKey = yyyy-MM-dd` (UTC); upsert replaces the record.
-  - `SelcAvailability_CL` (reporting copy, append-only, 730-day Analytics retention): mandatory `TimeGenerated` plus an explicit reference-date column. The latest entry per key is selected with `arg_max(generation timestamp)` (SELC-4.10).
-  - Column names and types: TO BE DECIDED.
-- Deployment model: Terraform, one stack per environment: `infra/core/{dev,uat,prod}-ar`, and a new `infra/resources/<app>/{dev,uat,prod}-ar` for the job if the Container Apps Job precedent is adopted. PNPG stacks (`*-pnpg`) are not involved: PNPG traffic is in the `-ar` gateway (`api-pnpg` listener).
+  - `SelcAvailability_CL` (reporting copy, append-only, 730-day Analytics retention): `TimeGenerated`, `ReferenceDate`, and `GenerationTimestamp` are datetime columns; `Environment` is string; counts are long; `Availability` is real. The latest entry per key is selected with `arg_max(GenerationTimestamp)` (SELC-4.10).
+- Deployment model: Terraform, one stack per environment: `infra/core/{dev,uat,prod}-ar`, plus `infra/resources/log-availability-runner/{dev,uat,prod}-ar` for the job. PNPG stacks (`*-pnpg`) are not involved: PNPG traffic is in the `-ar` gateway (`api-pnpg` listener).
   - New resources: the `SelcAvailability` table in `selc{d,u,p}stlogs`; a Table private endpoint; the `SelcAvailability_CL` table and its DCR; the dashboard; the failure alert; role assignments.
-  - Exact module placement: TO BE DECIDED.
+  - Core stack owns App Gateway diagnostics, retention settings, the storage-table private endpoint, the custom Log Analytics table, Workbook, and missing-record alert. The app resource stack owns the job, DCR/DCE, table creation permissions, Managed Identity role assignments, and failed-execution alert.
 - Scale expectations: Very low write volume: 1 scheduled execution per day per environment (plus idempotent reruns) and 1 record per day per environment (~365 per year).
   - Read side: one 24-hour KQL aggregation over App Gateway access logs. Daily log volume: UNKNOWN. The gateway is WAF_v2 with autoscale 1–5 in PROD.
   - Backfill: one-off, bounded by the source log retention.
   - No latency target beyond completing the nightly run.
 - Security expectations:
-  - Least-privilege RBAC for the Managed Identity: read the source logs; `Storage Table Data Contributor` on the logs storage account; `Monitoring Metrics Publisher` on the DCR. Exact scopes: TO BE DECIDED.
-  - Private network access to Table storage: the logs account has public network access disabled.
+  - The job uses its system-assigned Managed Identity. Least-privilege RBAC: `Log Analytics Reader` on the environment workspace; `Storage Table Data Contributor` on the logs storage account; `Monitoring Metrics Publisher` on the DCR.
+  - Table storage traffic uses a Table private endpoint. The logs account retains its existing public-network setting: enabled in DEV/UAT and disabled in PROD.
   - No personal data persisted (SELC-4.4).
   - The existing Key Vault secrets `logs-storage-access-key` / `logs-storage-connection-string` MUST NOT be used by the job.
   - Viewers need read access on `SelcAvailability_CL` (SELC-6.8).
@@ -50,12 +49,13 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
   - Steps: run one KQL aggregation over `[D-1 00:00Z, D 00:00Z)` restricted to listeners `api` and `api-pnpg`, excluding `/spid/v1/metadata` and `dummy`. Classify statuses (valid `100–499` → `count_lt_500`; anything else, including missing or invalid → `count_gte_500`), compute availability, write C3, then write C4.
   - Exit status: non-zero if any step fails. Nothing is written if the query fails (SELC-4.5).
 - **C3 System of record.** Table `SelcAvailability` in `selcdstlogs` / `selcustlogs` / `selcpstlogs`. Upsert on (`PartitionKey`, `RowKey`). No lifecycle deletion.
-- **C4 Reporting copy.** Custom table `SelcAvailability_CL` in the environment workspace (`selc-{d,u,p}-law`), fed through a DCR, with 730 days of Analytics retention set on the table.
-- **C5 Dashboard.** A new Azure Portal Dashboard, one per environment, separate from `monitoring-dashboard`.
+- **C4 Reporting copy.** Custom table `SelcAvailability_CL` in the environment workspace (`selc-{d,u,p}-law`), fed through a DCR, with 730 days of Analytics retention set on the table. `TimeGenerated` is ingestion/generation time; `ReferenceDate` carries the day being reported.
+- **C5 Workbook.** A new Azure Monitor Workbook, one per environment, separate from `monitoring-dashboard`.
   - Tiles: pie chart, daily availability % column chart, stacked daily counts with a `99.9` reference line, range totals, and a table on demand.
-  - All tiles query C4 de-duplicated by `arg_max`. Range totals use summed counts (SELC-6.2).
-- **C6 Failure alerting.** An Azure Monitor alert sends to an action group that forwards to Slack: `prod_self_care_status` (PROD) and `selfcare_status_uat` (DEV, UAT).
-  - Assumption: detection combines a failed job execution with a scheduled-query check for a missing D-1 row in C4. The second check also catches runs that never started.
+  - Workbook time-range parameter filters `ReferenceDate`; all queries select the latest C4 record per key with `arg_max`. Range totals use summed counts (SELC-6.2).
+- **C6 Failure alerting.** Two Azure Monitor alerts send to the existing environment action group, whose Key Vault-backed receiver routes to Slack: `prod_self_care_status` (PROD) and `selfcare_status_uat` (DEV, UAT). The DEV receiver secret must target the UAT channel; this out-of-band configuration is a deployment prerequisite.
+  - Failed execution: `Microsoft.App/jobs` metric `Executions`, `state = Failed`, threshold `> 0`, evaluated every 5 minutes over 15 minutes. Split by `executionName` so subsequent failed executions are detected independently, including manual recalculations with an existing daily record. Azure retries occur before the execution reaches its terminal failed state. The alert identifies the job/execution; its logs contain the reference date and failure stage (`SOURCE_QUERY`, `TABLE_STORAGE_WRITE`, `LOG_ANALYTICS_WRITE`).
+  - Missing record: hourly scheduled query after 04:00 UTC, checking for D-1 in C4 with an explicit 48-hour ingestion-time lookback, independent of the selected reporting dates. Environment and UTC reference date are alert dimensions. This detects runs that never started or did not deliver a reporting record; the alert resolves once the record is visible.
 - **C7 Identity and access.** The job's Managed Identity holds only the roles listed under Security expectations. Viewers get dashboard read access plus read access on C4.
 
 ### Flow
@@ -66,40 +66,34 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
 4. C2 upserts it into C3.
 5. C2 ingests it into C4.
 6. On failure, the job exits with an error and C6 notifies Slack. A later run realigns C3 and C4 (SELC-4.9).
-7. C5 reads C4.
+7. C5 reads C4 using the selected reference-date range.
 
 ### Assumptions
 
-- **A1 Schedule.** Container Apps cron runs in UTC, so 03:00 Europe/Rome means 01:00 UTC (summer) or 02:00 UTC (winter).
-  - Provisional approach: trigger at both `0 1,2 * * *` UTC and rely on idempotency (SELC-1.3).
-  - Alternative: the job skips the run unless the local time is 03:xx.
-  - TO BE DECIDED.
+- **A1 Schedule.** Container Apps cron runs in UTC, so trigger at both `0 1,2 * * *` UTC. The job proceeds without an explicit reference date when it starts during the 03:00–03:59 hour in `Europe/Rome`; it skips the other trigger. Accepting the full hour tolerates job startup delay while daylight-saving changes still select one trigger per day (SELC-1.3). Manual date-specific runs bypass this guard.
 - **A2 Backfill.** Run C2 manually, once per past date, with a date override. This is the same code path as the daily run.
 - **A3 Environment isolation.** No cross-environment component. Each `-ar` stack owns its job, table, LA table, dashboard and alert.
 
-### Gaps found in current infrastructure (need input)
+### Infrastructure changes and remaining limits
 
-- **G1 Source workspace not in IaC.** In `_modules/appgateway/app_gateway/main.tf` the App Gateway diagnostic setting only exists when `sec_log_analytics_workspace_id` is set, and `_modules/appgateway/main.tf` does not pass it. Which workspace receives `ApplicationGatewayAccessLog`, and with what retention: UNKNOWN.
-- **G2 Retention mismatch.** `law_retention_in_days = 30` in `infra/core/{dev,uat,prod}-ar/locals.tf`, while SELC-5.2 and SELC-5.4 assume 90 days. The backfill depth equals the actual retention of the source table: TO BE DECIDED or verified.
-- **G3 No Table private endpoint.** The logs storage (`_modules/storage_account_template`) has public network access disabled and a private endpoint for `Blob` only. Table access needs a `table` private endpoint, plus `privatelink.table.core.windows.net` resolution from the job's subnet. That zone exists today only in `_modules/synthetic_monitoring_storage`.
-- **G4 Time filter vs. reference date.** Logs Ingestion rejects a `TimeGenerated` more than 2 days in the past, so backfilled rows cannot carry the reference date in `TimeGenerated`. The dashboard time picker filters on `TimeGenerated`, so range selection (SELC-6.3) must filter on the reference-date column instead.
-  - How the user picks the range on a Portal Dashboard, which has no parameters: TO BE DECIDED.
-  - The on-demand table mechanism (SELC-6.7): TO BE DECIDED.
-- **G5 Slack routing.** The existing action groups are `selcdev` (DEV), `selcuat` (UAT) and `selcperror` / `SlackPagoPA` (PROD), defined in `_modules/monitor/main.tf`. Their Slack addresses live in Key Vault.
-  - Which action groups or addresses map to `prod_self_care_status` and `selfcare_status_uat`: UNKNOWN.
-  - DEV → `selfcare_status_uat` differs from the existing DEV action group.
+- **G1 Source workspace.** Terraform routes App Gateway access diagnostics to each existing environment workspace (`selc-{d,u,p}-law`). Collection begins after deployment; prior history can be backfilled only if it already exists in that workspace.
+- **G2 Retention.** Terraform configures 90-day retention for the `AzureDiagnostics` table to support SELC-5.2/5.4 without changing retention for unrelated tables. The oldest partial day is skipped.
+- **G3 Table network path.** Terraform adds a Table private endpoint and links `privatelink.table.core.windows.net` to the core VNet used by the Container Apps environment. DEV/UAT retain their existing public-network-enabled setting; PROD remains disabled.
+- **G4 Reporting time range.** Logs Ingestion limits historical `TimeGenerated`, so the reporting copy uses ingestion time there and stores `ReferenceDate` separately. The Workbook time-range parameter filters on `ReferenceDate`; its table item implements the on-demand daily records view.
+- **G5 Slack routing.** Reuse the existing action groups and Key Vault-backed receivers. DEV's `alert-selfcare-status-dev-slack` secret is updated out of band to point to `selfcare_status_uat`; UAT uses its existing UAT receiver. PROD receiver configuration remains in the existing production error action group.
+- **G6 Eventual consistency.** Azure Table Storage and Log Analytics cannot participate in a shared transaction. A destination failure may leave a partial write; the run fails and a retry repairs the projection. `SelcAvailability` remains authoritative (SELC-4.5, 4.9).
 
 ## Requirement Traceability
 
 | Component / boundary | Requirements | Needs more architecture input |
 |---|---|---|
-| C1 Source logs | SELC-2.5, 2.6, 2.7, 5.2, 5.3 | G1 (workspace), G2 (retention / backfill depth) |
-| C2 Availability job | SELC-1.1–1.4, 2.1–2.4, 3.1–3.3, 4.3, 4.5, 4.9, 5.4 | Runtime and framework TO BE DECIDED; A1 (UTC cron vs 03:00 Rome) |
-| C3 `SelcAvailability` | SELC-4.1–4.7 | G3 (Table private endpoint / DNS) |
+| C1 Source logs | SELC-2.5, 2.6, 2.7, 5.2, 5.3 | G1 (collection starts after deployment); G2 (available history / backfill depth) |
+| C2 Availability job | SELC-1.1–1.4, 2.1–2.4, 3.1–3.3, 4.3, 4.5, 4.9, 5.4 | G1 (pre-existing history), G6 (temporary partial writes) |
+| C3 `SelcAvailability` | SELC-4.1–4.7 | G3 (private path must be verified after deployment) |
 | C4 `SelcAvailability_CL` + DCR | SELC-4.8, 4.10, 4.11 | Column schema TO BE DECIDED; G4 |
-| C5 Portal Dashboard | SELC-6.1–6.9 | G4 (range selection on reference date, SELC-6.3; on-demand table, SELC-6.7) |
-| C6 Failure alerting | SELC-5.1, 4.9 | G5 (channel ↔ action group mapping); detection signal (assumption in C6) |
-| C7 Identity and access | SELC-4.7, 6.8 | Role scopes (table vs account, workspace vs table) TO BE DECIDED |
+| C5 Azure Monitor Workbook | SELC-6.1–6.9 | Workbook KQL/rendering and date-range parameter |
+| C6 Failure alerting | SELC-5.1, 4.9 | G5 (receiver secret values must be correct); verify metric emission and notification delivery after deployment |
+| C7 Identity and access | SELC-4.7, 6.8 | Viewer role assignments are managed outside this feature |
 | Backfill / on-demand (manual run of C2) | SELC-5.2, 5.3, 5.4 | G2, G4 |
 
 ## Dependency Rules

@@ -280,9 +280,10 @@ module "appgateway" {
   key_vault_id = module.key_vault.key_vault_id
   tenant_id    = module.key_vault.tenant_id
 
-  action_group_error_id = module.monitor.action_group_error_id
-  action_group_slack_id = module.monitor.action_group_slack_id
-  action_group_email_id = module.monitor.action_group_email_id
+  action_group_error_id      = module.monitor.action_group_error_id
+  action_group_slack_id      = module.monitor.action_group_slack_id
+  action_group_email_id      = module.monitor.action_group_email_id
+  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
 
   app_gateway_max_capacity = 5
   app_gateway_min_capacity = 1
@@ -684,6 +685,8 @@ module "logs_storage" {
   cidr_subnet                       = local.cidr_subnet_logs_storage
   private_endpoint_network_policies = local.private_endpoint_network_policies
   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
+  table_private_endpoint_enabled    = true
+  table_private_dns_zone_ids        = [module.dns_private.privatelink_table_core_windows_net_id]
 
   enable_management_lock           = true
   enable_spid_logs_encryption_keys = true

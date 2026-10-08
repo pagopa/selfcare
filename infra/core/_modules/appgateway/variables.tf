@@ -52,6 +52,12 @@ variable "app_gateway_api_pnpg_certificate_name" {
   type = string
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "Log Analytics workspace receiving Application Gateway diagnostics."
+  default     = null
+}
+
 variable "app_gateway_sku_name" {
   type    = string
   default = "Standard_v2"

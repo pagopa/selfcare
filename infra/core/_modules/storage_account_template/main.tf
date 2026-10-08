@@ -108,3 +108,25 @@ resource "azurerm_private_endpoint" "this" {
     private_dns_zone_ids = var.private_dns_zone_ids
   }
 }
+
+resource "azurerm_private_endpoint" "table" {
+  count               = var.table_private_endpoint_enabled ? 1 : 0
+  name                = "${var.project}-${var.name}_table"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.this.name
+  subnet_id           = var.private_endpoint_id == null ? module.subnet.id : var.private_endpoint_id
+
+  private_service_connection {
+    name                           = "${var.project}-${var.name}_table-private-endpoint"
+    private_connection_resource_id = module.storage_account.id
+    is_manual_connection           = false
+    subresource_names              = ["table"]
+  }
+
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = var.table_private_dns_zone_ids
+  }
+
+  tags = var.tags
+}

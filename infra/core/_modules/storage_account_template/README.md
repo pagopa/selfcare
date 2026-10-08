@@ -26,6 +26,7 @@ No requirements.
 | [azurerm_key_vault_secret.blob_connection_string](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.connection_string](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_private_endpoint.table](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_private_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_storage_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
@@ -52,6 +53,8 @@ No requirements.
 | <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | n/a | `bool` | `false` | no |
 | <a name="input_rg_vnet_name"></a> [rg\_vnet\_name](#input\_rg\_vnet\_name) | Resource group name for the VNet (for DNS zone) | `string` | n/a | yes |
 | <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | Exact name of the storage account (before removing dashes) | `string` | n/a | yes |
+| <a name="input_table_private_dns_zone_ids"></a> [table\_private\_dns\_zone\_ids](#input\_table\_private\_dns\_zone\_ids) | Private DNS zone IDs for the Storage Table private endpoint. | `list(string)` | `[]` | no |
+| <a name="input_table_private_endpoint_enabled"></a> [table\_private\_endpoint\_enabled](#input\_table\_private\_endpoint\_enabled) | Create a private endpoint for the Storage Table subresource. | `bool` | `false` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | `map(any)` | `{}` | no |
 | <a name="input_vnet_name"></a> [vnet\_name](#input\_vnet\_name) | VNet name for the VNet (for DNS zone) | `string` | n/a | yes |
 
