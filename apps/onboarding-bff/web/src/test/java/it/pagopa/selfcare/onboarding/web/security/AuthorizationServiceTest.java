@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.web.security;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.User;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.UserRequester;
 import it.pagopa.selfcare.onboarding.core.IamService;
 import it.pagopa.selfcare.onboarding.core.TokenService;
 import org.junit.jupiter.api.Test;
@@ -79,6 +80,35 @@ class AuthorizationServiceTest {
         // then
         assertTrue(result);
         verify(iamService, times(1)).hasIamUserPermission(permission, userId, "", productId);
+    }
+
+    @Test
+    void hasPermission_withViewPermission_andIamDenied_andUserIsUserRequester_shouldFallbackToTrue() {
+        // given: the authenticated user submitted the request (userRequester.userRequestUid)
+        // but is not listed among the onboarding users
+        String onboardingId = "onboardingId";
+        String permission = "Selc:ViewAccountDocuments";
+        String userId = "user-id";
+        String productId = "product-id";
+        OnboardingData onboardingData = new OnboardingData();
+        onboardingData.setProductId(productId);
+        User user = new User();
+        user.setId("another-user-id");
+        onboardingData.setUsers(List.of(user));
+        UserRequester userRequester = new UserRequester();
+        userRequester.setUserRequestUid(userId);
+        onboardingData.setUserRequester(userRequester);
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.getPrincipal()).thenReturn(SelfCareUser.builder(userId).build());
+        when(tokenService.getOnboardingWithUserInfo(onboardingId)).thenReturn(onboardingData);
+        when(iamService.hasIamUserPermission(permission, userId, "", productId)).thenReturn(false);
+
+        // when
+        boolean result = authorizationService.hasPermission(authentication, onboardingId, permission);
+
+        // then
+        assertTrue(result);
     }
 
     @Test
