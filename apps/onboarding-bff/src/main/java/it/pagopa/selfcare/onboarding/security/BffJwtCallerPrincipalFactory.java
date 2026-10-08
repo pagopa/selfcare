@@ -49,7 +49,7 @@ public class BffJwtCallerPrincipalFactory extends JWTCallerPrincipalFactory {
         AlgorithmIdentifiers.RSA_PSS_USING_SHA512
     };
 
-    private volatile Verifier verifier;
+    private Verifier verifier;
 
     /**
      * The only claim checks of the Spring BFF (jjwt): {@code exp} and {@code nbf}, each one only when
@@ -83,7 +83,7 @@ public class BffJwtCallerPrincipalFactory extends JWTCallerPrincipalFactory {
         return new DefaultJWTCallerPrincipal(token, context.getJoseObjects().get(0).getHeader("typ"), claims);
     }
 
-    private Verifier verifierFor(JWTAuthContextInfo authContextInfo) throws ParseException {
+    private synchronized Verifier verifierFor(JWTAuthContextInfo authContextInfo) throws ParseException {
         Verifier current = verifier;
         if (current == null || current.source != authContextInfo) {
             current = new Verifier(authContextInfo);

@@ -268,6 +268,12 @@ class OnboardingServiceImplTest {
     }
 
     @Test
+    void aggregatesVerification_rejectsNullProductBeforeCallingTheDownstream() {
+        assertThrows(NullPointerException.class, () -> onboardingService.aggregatesVerification(null, null));
+        verifyNoInteractions(uploadClient, onboardingMapper);
+    }
+
+    @Test
     void onlyTheOperationsRetriedBySpringAreRetriedOnTransportErrorsOnly() {
         Set<String> retried = Arrays.stream(OnboardingServiceImpl.class.getDeclaredMethods())
                 .filter(method -> method.isAnnotationPresent(Retry.class))

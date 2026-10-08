@@ -235,6 +235,7 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     public VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId) {
+        Objects.requireNonNull(productId, "productId");
         log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
         switch (productId) {
             case PROD_IO, PROD_PAGOPA, PROD_PN -> {

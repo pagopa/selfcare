@@ -99,7 +99,7 @@ public class BffSecurityFilter {
         }
         if ("/v1/institutions/from-infocamere".equals(path)
                 || path.length() > 1 && path.endsWith("/") && !"/v1/institutions/from-infocamere/".equals(path)) {
-            String resource = path.replaceAll("^/+|/+$", "");
+            String resource = path.replaceAll("(^/+)|(/+$)", "");
             return ProblemResponses.problem(400, "No static resource " + resource + ".", path);
         }
         return null;
