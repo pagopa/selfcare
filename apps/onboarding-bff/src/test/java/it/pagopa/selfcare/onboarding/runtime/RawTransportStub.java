@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -40,6 +41,8 @@ final class RawTransportStub implements AutoCloseable {
     record Hit(String method, String path, int connection, long at) {}
 
     private static final byte[] DEFAULT_ANSWER = "{\"id\":\"prod-io\"}".getBytes(StandardCharsets.UTF_8);
+    private static final int MAX_BODY_BYTES = 10 * 1024 * 1024;
+    private static final int MAX_CHUNK_LINE_BYTES = 8192;
 
     private final Map<String, byte[]> answers = new ConcurrentHashMap<>();
     private final ServerSocket server;
@@ -211,26 +214,61 @@ final class RawTransportStub implements AutoCloseable {
     }
 
     private static void skipBody(InputStream in, String head) throws IOException {
-        String lower = head.toLowerCase();
+        String lower = head.toLowerCase(Locale.ROOT);
         int length = lower.indexOf("content-length:");
         if (length >= 0) {
-            in.readNBytes(Integer.parseInt(lower.substring(length + 15, lower.indexOf("\r\n", length)).trim()));
+            in.skipNBytes(bodyLength(lower.substring(length + 15, lower.indexOf("\r\n", length)).trim(), 10));
         } else if (lower.contains("transfer-encoding: chunked")) {
-            int size;
-            do {
-                StringBuilder line = new StringBuilder();
-                int c;
-                while ((c = in.read()) != '\n') {
-                    if (c == -1) {
-                        throw new IOException("closed inside a chunked body");
-                    }
-                    if (c != '\r') {
-                        line.append((char) c);
-                    }
+            int remaining = MAX_BODY_BYTES;
+            while (true) {
+                String line = readChunkLine(in);
+                int extension = line.indexOf(';');
+                int size = bodyLength((extension < 0 ? line : line.substring(0, extension)).trim(), 16);
+                if (size > remaining) {
+                    throw new IOException("Chunked body exceeds the stub body limit");
                 }
-                size = Integer.parseInt(line.toString().trim(), 16);
-                in.readNBytes(size + 2);
-            } while (size > 0);
+                remaining -= size;
+                if (size == 0) {
+                    while (!readChunkLine(in).isEmpty()) {
+                        // Consume trailers before the next request on the same connection.
+                    }
+                    return;
+                }
+                in.skipNBytes(size);
+                if (in.read() != '\r' || in.read() != '\n') {
+                    throw new IOException("Missing chunk terminator");
+                }
+            }
         }
+    }
+
+    private static int bodyLength(String value, int radix) throws IOException {
+        try {
+            int length = Integer.parseInt(value, radix);
+            if (length < 0 || length > MAX_BODY_BYTES) {
+                throw new IOException("Body exceeds the stub body limit");
+            }
+            return length;
+        } catch (NumberFormatException e) {
+            throw new IOException("Invalid body length", e);
+        }
+    }
+
+    private static String readChunkLine(InputStream in) throws IOException {
+        StringBuilder line = new StringBuilder();
+        while (line.length() < MAX_CHUNK_LINE_BYTES) {
+            int c = in.read();
+            if (c == -1) {
+                throw new IOException("Closed inside a chunked body");
+            }
+            if (c == '\r') {
+                if (in.read() != '\n') {
+                    throw new IOException("Missing chunk line terminator");
+                }
+                return line.toString();
+            }
+            line.append((char) c);
+        }
+        throw new IOException("Chunk line exceeds the stub limit");
     }
 }
