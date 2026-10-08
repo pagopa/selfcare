@@ -1,16 +1,43 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.controller.request.*;
-import it.pagopa.selfcare.onboarding.controller.response.*;
+import it.pagopa.selfcare.onboarding.model.dto.request.*;
+import it.pagopa.selfcare.onboarding.model.dto.response.*;
+import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
+
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 @Mapper(componentModel = "jakarta-cdi", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
+
+    default UserId toUserId(RegistryUser found) {
+        UserId userId = new UserId();
+        if (found != null && found.getId() != null) {
+            userId.setId(UUID.fromString(found.getId()));
+        }
+        return userId;
+    }
+
+    default UserInstitutionRequest toUserInstitutionRequest(String institutionId, String productRole, String product,
+                                                            String role, String state, String userId) {
+        return UserInstitutionRequest.builder()
+                .institutionId(institutionId)
+                .productRoles(splitValue(productRole))
+                .products(splitValue(product))
+                .roles(splitValue(role))
+                .states(splitValue(state))
+                .userId(userId)
+                .build();
+    }
+
+    private static List<String> splitValue(String value) {
+        return StringUtils.isNotBlank(value) ? List.of(value.split(",")) : List.of(StringUtils.EMPTY);
+    }
 
     User toUser(UserDto model);
 

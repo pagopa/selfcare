@@ -10,7 +10,7 @@ import static org.mockito.Mockito.when;
 import it.pagopa.selfcare.onboarding.client.model.ContractTemplate;
 import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
+import it.pagopa.selfcare.onboarding.model.dto.response.ProductResource;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;

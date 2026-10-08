@@ -11,7 +11,10 @@ Piano del **2026-10-08**, sul branch **`feature/migration-bff-quarkus`**.
 Baseline da cui partire: `07844c25c05ae511dfecb1767886185a47fd89e4`.
 **BFF-ST01 completata il 2026-10-08:** inventario, consumer e decisioni tracciati,
 regressioni di caratterizzazione aggiunte e riferimento Spring riconfermato.
-**Il refactoring della produzione non e iniziato**: ST02-ST10 restano da fare.
+Commit ST01: `2f821d6cd2f586bca3c7f0d178d0818cb844f88d`.
+**BFF-ST02 completata il 2026-10-08:** layout, DTO, injection e conversioni pure
+riallineati, mantenendo contratto pubblico e comportamento downstream.
+**ST03-ST10 restano da fare.**
 Gli identificativi sono locali al piano, non ticket Jira gia creati.
 
 La baseline ha gia evidenze di parita HTTP (538 scenari Spring e 538 Quarkus),
@@ -63,7 +66,7 @@ Non aggiungere `repository` o `entity`: il BFF non ha persistenza propria.
 
 ## Backlog e dipendenze
 
-**ST01 e completata; ST02-ST10 sono da fare.** Le decisioni esterne bloccate sono
+**ST01 e ST02 sono completate; ST03-ST10 sono da fare.** Le decisioni esterne bloccate sono
 elencate nel registro ST01 e non autorizzano rimozioni. Il completamento
 dell'inventario non chiude l'epic. Le dipendenze sono prerequisiti di implementazione, non un obbligo di
 lavorare in parallelo; i task di una storia si eseguono nell'ordine indicato.
@@ -310,22 +313,117 @@ leggere il BFF con le stesse convenzioni degli altri servizi Quarkus.
 **Dove:** `controller/request`, `controller/response`, `service`, `service/impl`,
 `mapper`, relativi test e riferimenti di configurazione.
 
-- [ ] **BFF-ST02-T01 - Spostare i DTO pubblici.** Portare richieste e risposte in
+- [x] **BFF-ST02-T01 - Spostare i DTO pubblici.** Portare richieste e risposte in
   `model/dto/request` e `model/dto/response`, aggiornando tutti gli import, i test e
   gli eventuali riferimenti per nome. Non cambiare contemporaneamente campi o nomi pubblici.
-- [ ] **BFF-ST02-T02 - Uniformare servizi e injection.** Collocare le implementazioni
+- [x] **BFF-ST02-T02 - Uniformare servizi e injection.** Collocare le implementazioni
   concrete in `service/impl` e mantenere i contratti in `service` dove utili.
   Riutilizzare le convenzioni CDI dei riferimenti, senza introdurre interfacce o wrapper vuoti.
-- [ ] **BFF-ST02-T03 - Ricollocare le conversioni pure.** Usare i mapper MapStruct
+- [x] **BFF-ST02-T03 - Ricollocare le conversioni pure.** Usare i mapper MapStruct
   esistenti per conversioni oggi manuali, incluso `PartyService`. Lasciare nei
   servizi le decisioni applicative, preservando null, default e ordine delle collezioni.
-- [ ] **BFF-ST02-T04 - Verificare tutte le dipendenze.** Compilare produzione e test,
+- [x] **BFF-ST02-T04 - Verificare tutte le dipendenze.** Compilare produzione e test,
   controllare che i servizi non importino package dei controller e confrontare
   JSON, schemi OpenAPI e percorsi degli errori di validazione.
 
 **Accettazione:** DTO fuori dai controller; nessuna dipendenza service -> controller;
 layout e injection coerenti; nessuna variazione di serializzazione, validazione o
 identita degli schemi introdotta dal solo spostamento.
+
+#### Registro ST02 - Modifiche ed evidenze del 2026-10-08
+
+Lotto successivo a ST01, con baseline
+`2f821d6cd2f586bca3c7f0d178d0818cb844f88d`, identificato dal subject
+`Align BFF DTO and service responsibilities`. Nessun nuovo branch/worktree.
+L'inventario ST01 resta una fotografia storica dei package precedenti.
+
+Spostati **25 DTO request e 27 DTO response**, mantenendo nomi semplici, campi,
+annotazioni Jackson/OpenAPI e vincoli. Aggiornati import e riferimenti riflessivi
+nel solo BFF; i modelli omonimi di onboarding-ms non sono consumer da modificare.
+Spostati in `service/impl` i cinque bean concreti `DocumentService`, `PartyService`,
+`PartyRegistryProxyService`, `UserRegistryService`, `ClientRequestValidator`.
+Restano **7 contratti utili in `service` e 12 classi in `service/impl`**:
+nessuna nuova interfaccia, wrapper o classe di produzione.
+
+Conversioni ricollocate nei mapper gia esistenti:
+
+| Mapper | Conversioni estratte |
+|--------|---------------------|
+| `InstitutionMapper` | Request party-process, proiezione selettiva di `InstitutionUpdate`, utenti e contratto; request IPA e lista ID; assembly `InstitutionOnboardingData` e proiezione della location |
+| `DocumentMapper` | Request per upload attachment e user attachment |
+| `RegistryProxyMapper` | Wrapper/filter del lookup per codice fiscale del legale |
+| `UserMapper` | Wrapper `UserId` e filtri `UserInstitutionRequest`, con split e sentinella vuota originali |
+
+Riutilizzati metodi `default` nei mapper MapStruct per conservare esattamente
+omissioni, null, riferimenti condivisi e ordine delle liste. La request party
+non diventa una copia integrale dell'istituzione: restano omessi ID, GPU, forma
+giuridica, origin/originId e gli altri campi prima non inoltrati.
+Precondizioni, policy, lookup sequenziali, arricchimenti geografici, retry,
+gestione delle risposte binarie/multipart e await restano nei servizi.
+La propagazione di `Uni` appartiene alle storie successive.
+
+**Compatibilita dei dettagli di errore.** Lo spostamento esponeva il nuovo
+FQCN in conversioni enum e messaggi Jackson. `RequestParams` conserva il nome
+storico di `DownloadDocumentType`; `OnboardingExceptionMapper` conserva i
+package storici soltanto nei descrittori di tipo Jackson, anche per collezioni
+generiche ed eccezioni wrappate. Non riscrive i valori rifiutati inviati dal
+client. Le stringhe `controller.request`/`controller.response` rimaste in questi
+due punti e nelle aspettative dei test sono parte del dettaglio pubblico,
+non dipendenze da classi obsolete o import dei controller.
+
+Le tre nuove regressioni Jackson sono inizialmente fallite dopo lo spostamento,
+misurando la differenza di FQCN; passano dopo l'adattamento mirato.
+Le regressioni HTTP verificano errore JSON, percorso
+`userTaxCodeDto.taxCode`, reason del Validator CDI effettivo e assenza di chiamate
+downstream. Il reason non assume una lingua diversa da quella del runtime.
+Aggiornati package dei test, riferimenti riflessivi, injection e guard del retry,
+senza nuovi framework di test.
+
+Comandi eseguiti con `JAVA_HOME=$(/usr/libexec/java_home -v 17)`, usando il
+fallback Maven gia motivato in ST01. `SPRING_ORACLE_JAR` indica lo stesso FATJAR
+Spring read-only, con SHA-256 invariato.
+
+```shell
+# Compilazione pulita e regressioni dei componenti riallineati.
+mvn -f apps/onboarding-bff/pom.xml clean test \
+  '-Dtest=*MapperTest,*ServiceImplTest,*ControllerTest,*DtoTest,*ResourceTest,*ResourceICTest,DocumentServiceTest,PartyRegistryProxyServiceTest,ClientRequestValidatorTest,PartyServiceTest,UserRegistryServiceTest,RequestParamsTest,RetryPolicyTest,JacksonConfigurationTest'
+
+# Errori JSON/enum, serializzazione e validazione sul runtime HTTP.
+mvn -f apps/onboarding-bff/pom.xml test \
+  -Dtest=OnboardingExceptionMapperTest,RuntimeWiringTest,RequestParamsTest,JacksonConfigurationTest
+
+# Gate finali su entrambi i runtime e confezionamento degli artefatti.
+mvn -f apps/onboarding-bff/pom.xml package \
+  -Dtest=QuarkusParityTest,SpringReferenceParityTest,HttpsParityTest,ParityCatalogTest,QuarkusOpenApiInventoryTest,OpenApiInventoryTest,OpenApiExactDiffTest,PublishedOpenApiGateTest,OpenApiIdenticalDocumentGateTest,LegacyOpenApiAliasGateTest,RuntimeWiringTest,RuntimeProbeIsolationTest,RuntimeSecurityHttpTest,RuntimeAuthorizationHttpTest,RuntimeIamErrorsHttpTest,TransportReplayHttpTest,OnboardingExceptionMapperTest,JacksonConfigurationTest \
+  -Dparity.spring.jar="$SPRING_ORACLE_JAR"
+
+# Nessun documento pubblicato o golden cambiato dopo package.
+git diff --exit-code HEAD -- apps/onboarding-bff/src/main/docs \
+  apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json \
+  apps/onboarding-bff/src/test/resources/parity
+```
+
+| Esecuzione | Esito |
+|------------|-------|
+| Compilazione pulita e test mirati | SUCCESS: 382 test, 0 failure/errori/skipped |
+| Errori e validazione HTTP dopo il fix | SUCCESS: 72 test, 0 failure/errori/skipped |
+| Gate finali e package | SUCCESS: 1436 test, 0 failure/errori/skipped |
+| Catalogo Quarkus | `PARITY quarkus scenarios=538 attempted=538 passed=538 failed=0` |
+| Catalogo Spring | `PARITY spring-reference scenarios=538 attempted=538 passed=538 failed=0` |
+| Gate OpenAPI, alias, HTTPS, sicurezza e replay | Passati nella selezione finale |
+| Audit dei sorgenti DTO | Tutti i 52 file identici alla baseline dopo la sola sostituzione dei package |
+| Audit layout e dipendenze | 225 file Java di produzione; nessuna dipendenza service -> controller; nessun vecchio riferimento Java attivo |
+| Documenti pubblicati, golden e oracolo | Invariati; confrontati nuovamente dopo package |
+
+Il package finale rigenera i documenti della sola produzione e l'alias legacy:
+le route di probe dei profili di test non entrano negli artefatti pubblicati.
+Log conservati nello spazio di sessione: `bff-st02-targeted-tests.log`,
+`bff-st02-jackson-type-regression.log`, `bff-st02-error-compatibility-tests.log`,
+`bff-st02-final-gates.log`.
+
+Cucumber/Docker, codegen/build frontend, import APIM e smoke deployato,
+coverage/Sonar e builder/publish dell'immagine **non eseguiti per ST02**.
+I blocchi D01-D04 e i gate finali ST10/G01-G03 non sono chiusi da questo lotto.
 
 ### BFF-ST03 - Prodotti come primo flusso Quarkus nativo
 

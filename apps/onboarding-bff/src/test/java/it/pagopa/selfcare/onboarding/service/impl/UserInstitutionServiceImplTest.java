@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.client.model.ProductStatus;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
+import it.pagopa.selfcare.onboarding.mapper.UserMapperImpl;
 import io.smallrye.mutiny.Uni;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapi.quarkus.user_json.api.InstitutionControllerApi;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
@@ -27,6 +30,7 @@ class UserInstitutionServiceImplTest {
   @InjectMocks private UserInstitutionServiceImpl userInstitutionService;
 
   @Mock private InstitutionControllerApi userInstitutionApi;
+  @Spy private UserMapper userMapper = new UserMapperImpl();
 
   @Test
   void verifyAllowedUserInstitution_shouldReturnEmptyList() {

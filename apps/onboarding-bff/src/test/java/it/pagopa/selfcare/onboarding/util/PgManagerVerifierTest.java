@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.common.Origin;
-import it.pagopa.selfcare.onboarding.service.PartyRegistryProxyService;
+import it.pagopa.selfcare.onboarding.service.impl.PartyRegistryProxyService;
 import it.pagopa.selfcare.onboarding.client.model.BusinessInfoIC;
 import it.pagopa.selfcare.onboarding.client.model.InstitutionInfoIC;
 import it.pagopa.selfcare.onboarding.client.model.ManagerVerification;

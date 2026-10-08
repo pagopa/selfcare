@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import it.pagopa.selfcare.onboarding.service.*;
 
 import it.pagopa.selfcare.onboarding.client.model.UserInstitutionRequest;
+import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import jakarta.enterprise.context.ApplicationScoped;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +23,11 @@ public class UserInstitutionServiceImpl implements UserInstitutionService {
   private static final String ACTIVE_STATE = "ACTIVE";
 
   private final InstitutionControllerApi userInstitutionApi;
+  private final UserMapper userMapper;
 
-  public UserInstitutionServiceImpl(@RestClient InstitutionControllerApi userInstitutionApi) {
+  public UserInstitutionServiceImpl(@RestClient InstitutionControllerApi userInstitutionApi, UserMapper userMapper) {
     this.userInstitutionApi = userInstitutionApi;
+    this.userMapper = userMapper;
   }
 
   @Override
@@ -47,7 +50,7 @@ public class UserInstitutionServiceImpl implements UserInstitutionService {
             .toString();
 
     UserInstitutionRequest userInstitutionRequest =
-        buildUserInstitutionRequest(
+        userMapper.toUserInstitutionRequest(
             institutionId, EMPTY, product, rolesFilter, ACTIVE_STATE, EMPTY);
     List<org.openapi.quarkus.user_json.model.UserInstitutionResponse> response =
         userInstitutionApi
@@ -75,24 +78,4 @@ public class UserInstitutionServiceImpl implements UserInstitutionService {
             });
   }
 
-  private UserInstitutionRequest buildUserInstitutionRequest(
-      String institutionId,
-      String productRole,
-      String product,
-      String role,
-      String state,
-      String userId) {
-    return UserInstitutionRequest.builder()
-        .institutionId(institutionId)
-        .productRoles(splitValue(productRole))
-        .products(splitValue(product))
-        .roles(splitValue(role))
-        .states(splitValue(state))
-        .userId(userId)
-        .build();
-  }
-
-  private List<String> splitValue(String value) {
-    return StringUtils.isNotBlank(value) ? List.of(value.split(",")) : List.of(EMPTY);
-  }
 }

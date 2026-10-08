@@ -3,8 +3,8 @@ package it.pagopa.selfcare.onboarding.mapper;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import it.pagopa.selfcare.onboarding.client.model.User;
-import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
-import it.pagopa.selfcare.onboarding.controller.request.UserDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserDataValidationDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserDto;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 

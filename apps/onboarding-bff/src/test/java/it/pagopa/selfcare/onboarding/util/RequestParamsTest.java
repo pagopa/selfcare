@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.model.dto.request.DownloadDocumentType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.UriInfo;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,18 @@ import org.junit.jupiter.params.provider.ValueSource;
 class RequestParamsTest {
 
     enum Choice { VALUE }
+
+    @Test
+    void relocatedDownloadEnumKeepsThePublishedConversionErrorType() {
+        String typeName = "it.pagopa.selfcare.onboarding.controller.request.DownloadDocumentType";
+
+        InvalidRequestException failure = assertThrows(InvalidRequestException.class,
+                () -> RequestParams.requiredEnum("type", "bad", DownloadDocumentType.class));
+
+        assertEquals("Method parameter 'type': Failed to convert value of type 'java.lang.String' to required type '"
+                + typeName + "'; Failed to convert from type [java.lang.String] to type [" + typeName
+                + "] for value [bad]", failure.getMessage());
+    }
 
     @Test
     void repeatedStringsKeepOrderDuplicatesAndEmptyItems() {

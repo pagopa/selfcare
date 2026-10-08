@@ -9,7 +9,7 @@ import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.service.ProductService;
-import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
+import it.pagopa.selfcare.onboarding.model.dto.response.ProductResource;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.util.RequestParams;
 import jakarta.enterprise.context.ApplicationScoped;

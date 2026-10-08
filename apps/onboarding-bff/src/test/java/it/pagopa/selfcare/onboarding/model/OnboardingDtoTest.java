@@ -8,6 +8,6 @@ class OnboardingDtoTest {
 
     @Test
     void classExistsInNewModel() {
-        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.controller.request.OnboardingDto"));
+        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.model.dto.request.OnboardingDto"));
     }
 }

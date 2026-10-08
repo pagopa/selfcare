@@ -27,7 +27,7 @@ import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
-import it.pagopa.selfcare.onboarding.service.UserRegistryService;
+import it.pagopa.selfcare.onboarding.service.impl.UserRegistryService;
 import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
 import java.util.EnumSet;
 import java.util.List;

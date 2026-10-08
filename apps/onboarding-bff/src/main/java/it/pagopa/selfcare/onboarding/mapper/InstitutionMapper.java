@@ -4,10 +4,11 @@ import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.model.UserAuthority;
 import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.controller.response.*;
+import it.pagopa.selfcare.onboarding.model.dto.response.*;
 import org.openapi.quarkus.user_json.model.OnboardedProductResponse;
 import org.openapi.quarkus.user_json.model.OnboardedProductState;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
+import org.openapi.quarkus.onboarding_json.model.GetInstitutionRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -19,6 +20,96 @@ import org.mapstruct.ReportingPolicy;
 
 @Mapper(componentModel = "jakarta-cdi", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface InstitutionMapper {
+
+    default OnboardingInstitutionRequest toOnboardingInstitutionRequest(OnboardingData onboardingData) {
+        OnboardingInstitutionRequest request = new OnboardingInstitutionRequest();
+        request.setInstitutionExternalId(onboardingData.getInstitutionExternalId());
+        request.setPricingPlan(onboardingData.getPricingPlan());
+        request.setBilling(onboardingData.getBilling());
+        request.setProductId(onboardingData.getProductId());
+        request.setProductName(onboardingData.getProductName());
+
+        InstitutionUpdate source = onboardingData.getInstitutionUpdate();
+        InstitutionUpdate institutionUpdate = new InstitutionUpdate();
+        institutionUpdate.setInstitutionType(onboardingData.getInstitutionType());
+        institutionUpdate.setAddress(source.getAddress());
+        institutionUpdate.setDescription(source.getDescription());
+        institutionUpdate.setDigitalAddress(source.getDigitalAddress());
+        institutionUpdate.setTaxCode(source.getTaxCode());
+        institutionUpdate.setZipCode(source.getZipCode());
+        institutionUpdate.setPaymentServiceProvider(source.getPaymentServiceProvider());
+        institutionUpdate.setDataProtectionOfficer(source.getDataProtectionOfficer());
+        if (onboardingData.getLocation() != null) {
+            institutionUpdate.setCity(onboardingData.getLocation().getCity());
+            institutionUpdate.setCounty(onboardingData.getLocation().getCounty());
+            institutionUpdate.setCountry(onboardingData.getLocation().getCountry());
+        }
+        if (Objects.nonNull(source.getGeographicTaxonomies())) {
+            institutionUpdate.setGeographicTaxonomyCodes(source.getGeographicTaxonomies().stream()
+                    .map(GeographicTaxonomy::getCode).toList());
+        }
+        institutionUpdate.setRea(source.getRea());
+        institutionUpdate.setShareCapital(source.getShareCapital());
+        institutionUpdate.setBusinessRegisterPlace(source.getBusinessRegisterPlace());
+        institutionUpdate.setSupportEmail(source.getSupportEmail());
+        institutionUpdate.setSupportPhone(source.getSupportPhone());
+        institutionUpdate.setImported(source.getImported());
+        institutionUpdate.setAdditionalInformations(source.getAdditionalInformations());
+        request.setInstitutionUpdate(institutionUpdate);
+
+        request.setUsers(onboardingData.getUsers().stream()
+                .map(userInfo -> {
+                    User user = new User();
+                    user.setId(userInfo.getId());
+                    user.setName(userInfo.getName());
+                    user.setSurname(userInfo.getSurname());
+                    user.setTaxCode(userInfo.getTaxCode());
+                    user.setEmail(userInfo.getEmail());
+                    user.setRole(userInfo.getRole());
+                    user.setProductRole(userInfo.getProductRole());
+                    return user;
+                }).toList());
+
+        OnboardingContract contract = new OnboardingContract();
+        contract.setPath(onboardingData.getContractPath());
+        contract.setVersion(onboardingData.getContractVersion());
+        request.setContract(contract);
+        return request;
+    }
+
+    default InstitutionFromIpaPost toInstitutionFromIpaPost(String taxCode, String subunitCode, String subunitType) {
+        InstitutionFromIpaPost request = new InstitutionFromIpaPost();
+        request.setSubunitCode(subunitCode);
+        request.setTaxCode(taxCode);
+        request.setSubunitType(subunitType);
+        return request;
+    }
+
+    default GetInstitutionRequest toGetInstitutionRequest(List<InstitutionInfo> institutions) {
+        GetInstitutionRequest request = new GetInstitutionRequest();
+        request.setInstitutionIds(institutions.stream().map(InstitutionInfo::getId).toList());
+        return request;
+    }
+
+    default InstitutionOnboardingData toInstitutionOnboardingData(Institution institution, InstitutionInfo institutionInfo) {
+        InstitutionOnboardingData result = new InstitutionOnboardingData();
+        result.setInstitution(institutionInfo);
+        result.setGeographicTaxonomies(institution.getGeographicTaxonomies());
+        result.setCompanyInformations(institution.getCompanyInformations());
+        result.setAssistanceContacts(institution.getAssistanceContacts());
+        return result;
+    }
+
+    default void updateInstitutionInfo(Institution institution, InstitutionInfo institutionInfo) {
+        InstitutionLocation institutionLocation = new InstitutionLocation();
+        institutionLocation.setCountry(institution.getCountry());
+        institutionLocation.setCity(institution.getCity());
+        institutionLocation.setCounty(institution.getCounty());
+        institutionInfo.setInstitutionLocation(institutionLocation);
+        institutionInfo.setSubunitCode(institution.getSubunitCode());
+        institutionInfo.setSubunitType(institution.getSubunitType());
+        institutionInfo.setOrigin(institution.getOrigin());
+    }
 
     @Mapping(target = "companyInformations", source = ".", qualifiedByName = "toCompanyInformationsEntity")
     @Mapping(target = "assistanceContacts", source = ".", qualifiedByName = "toAssistanceContacts")

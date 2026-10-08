@@ -61,12 +61,13 @@ import it.pagopa.selfcare.onboarding.exception.OnboardingNotAllowedException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapperImpl;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
-import it.pagopa.selfcare.onboarding.service.PartyRegistryProxyService;
-import it.pagopa.selfcare.onboarding.service.PartyService;
+import it.pagopa.selfcare.onboarding.service.impl.PartyRegistryProxyService;
+import it.pagopa.selfcare.onboarding.service.impl.PartyService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
-import it.pagopa.selfcare.onboarding.service.UserRegistryService;
+import it.pagopa.selfcare.onboarding.service.impl.UserRegistryService;
 import it.pagopa.selfcare.onboarding.util.PgManagerVerifier;
 import jakarta.validation.ValidationException;
 import jakarta.ws.rs.core.Response;
@@ -80,6 +81,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.openapi.quarkus.onboarding_functions_json.api.OrganizationApi;
 import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
@@ -105,8 +107,8 @@ class InstitutionServiceImplTest {
     OrganizationApi organizationApi;
     @Mock
     PartyRegistryProxyService registryProxyService;
-    @Mock
-    InstitutionMapper institutionMapper;
+    @Spy
+    InstitutionMapper institutionMapper = new InstitutionMapperImpl();
     @Mock
     OnboardingMapper onboardingMapper;
     @Mock

@@ -78,12 +78,12 @@ class RetryPolicyTest {
                         "getInstitutionProxyById",
                         "findIpaInstitutionByTaxCode",
                         "searchIpaInstitutions"),
-                retriedMethods("PartyRegistryProxyService"));
+                retriedMethods("impl.PartyRegistryProxyService"));
     }
 
     @Test
     void onlyTheInstitutionsByTaxCodeOperationOfPartyProcessIsRetried() throws ClassNotFoundException {
-        assertEquals(names("getInstitutionsByTaxCodeAndSubunitCode"), retriedMethods("PartyService"));
+        assertEquals(names("getInstitutionsByTaxCodeAndSubunitCode"), retriedMethods("impl.PartyService"));
     }
 
     @Test
@@ -96,7 +96,7 @@ class RetryPolicyTest {
                         "getAttachment",
                         "getAvailableDocuments",
                         "getAggregatesCsv"),
-                retriedMethods("DocumentService"));
+                retriedMethods("impl.DocumentService"));
     }
 
     @Test
@@ -109,7 +109,7 @@ class RetryPolicyTest {
                     "impl.UserServiceImpl",
                     "impl.UserInstitutionServiceImpl",
                     "impl.InstitutionServiceImpl",
-                    "UserRegistryService",
+                    "impl.UserRegistryService",
                     "ProductService"
                 }) {
             assertTrue(retriedMethods(className).isEmpty(), className + " must not retry");
@@ -121,7 +121,7 @@ class RetryPolicyTest {
             throws ClassNotFoundException {
         for (String className :
                 new String[] {
-                    "impl.OnboardingServiceImpl", "PartyRegistryProxyService", "PartyService", "DocumentService"
+                    "impl.OnboardingServiceImpl", "impl.PartyRegistryProxyService", "impl.PartyService", "impl.DocumentService"
                 }) {
             for (Method method : Class.forName(PACKAGE + className).getDeclaredMethods()) {
                 Retry retry = method.getAnnotation(Retry.class);

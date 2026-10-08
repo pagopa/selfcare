@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.util;
 
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.model.dto.request.DownloadDocumentType;
 import jakarta.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.Locale;
@@ -75,7 +76,10 @@ public final class RequestParams {
         try {
             return Enum.valueOf(type, value.trim());
         } catch (IllegalArgumentException e) {
-            throw new InvalidRequestException(typeMismatch(name, type.getName(), value));
+            // The published conversion error keeps its type name after the DTO package move.
+            String typeName = type == DownloadDocumentType.class
+                    ? "it.pagopa.selfcare.onboarding.controller.request.DownloadDocumentType" : type.getName();
+            throw new InvalidRequestException(typeMismatch(name, typeName, value));
         }
     }
 

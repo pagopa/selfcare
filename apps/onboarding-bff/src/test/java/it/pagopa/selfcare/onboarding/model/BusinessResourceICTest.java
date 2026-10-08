@@ -8,6 +8,6 @@ class BusinessResourceICTest {
 
     @Test
     void classExistsInNewModel() {
-        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.controller.response.BusinessResourceIC"));
+        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.model.dto.response.BusinessResourceIC"));
     }
 }

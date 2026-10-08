@@ -1,8 +1,8 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
-import it.pagopa.selfcare.onboarding.controller.request.*;
-import it.pagopa.selfcare.onboarding.controller.response.*;
+import it.pagopa.selfcare.onboarding.model.dto.request.*;
+import it.pagopa.selfcare.onboarding.model.dto.response.*;
 import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
 import it.pagopa.selfcare.onboarding.model.OnboardingVerify;
 import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
@@ -36,7 +36,7 @@ public interface OnboardingMapper {
     @Mapping(target = "digitalAddress", source = "institutionUpdate.digitalAddress")
     OnboardingPgRequest toOnboardingPgRequest(OnboardingData onboardingData);
 
-    it.pagopa.selfcare.onboarding.controller.request.GeographicTaxonomyDto toGeographicTaxonomyDto(it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy geographicTaxonomy);
+    it.pagopa.selfcare.onboarding.model.dto.request.GeographicTaxonomyDto toGeographicTaxonomyDto(it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy geographicTaxonomy);
 
     org.openapi.quarkus.onboarding_json.model.GeographicTaxonomyDto toGeographicTaxonomyGenerated(it.pagopa.selfcare.onboarding.client.model.GeographicTaxonomy geographicTaxonomy);
 
@@ -314,12 +314,12 @@ public interface OnboardingMapper {
         return RecipientCodeStatus.valueOf(recipientCodeStatusResult.name());
     }
 
-    default List<String> toGeographicTaxonomyCodes(List<it.pagopa.selfcare.onboarding.controller.request.GeographicTaxonomyDto> geographicTaxonomies) {
+    default List<String> toGeographicTaxonomyCodes(List<it.pagopa.selfcare.onboarding.model.dto.request.GeographicTaxonomyDto> geographicTaxonomies) {
         if (geographicTaxonomies == null) {
             return null;
         }
         return geographicTaxonomies.stream()
-                .map(it.pagopa.selfcare.onboarding.controller.request.GeographicTaxonomyDto::getCode)
+                .map(it.pagopa.selfcare.onboarding.model.dto.request.GeographicTaxonomyDto::getCode)
                 .toList();
     }
 

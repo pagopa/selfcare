@@ -8,6 +8,6 @@ class GeographicTaxonomyResourceTest {
 
     @Test
     void classExistsInNewModel() {
-        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.controller.response.GeographicTaxonomyResource"));
+        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.model.dto.response.GeographicTaxonomyResource"));
     }
 }

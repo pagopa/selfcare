@@ -368,14 +368,10 @@ class InstitutionServiceImpl implements InstitutionService {
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException(String.format("Onboarding for institutionId %s not found", institutionId)));
         Institution institution = partyConnector.getInstitutionById(institutionId, productId);
-        InstitutionOnboardingData result = new InstitutionOnboardingData();
         InstitutionInfo institutionInfo = institutionMapper.toInstitutionInfo(institution);
         institutionInfo.setPricingPlan(onboardingResource.getPricingPlan());
         institutionInfo.setBilling(onboardingResource.getBilling());
-        result.setInstitution(institutionInfo);
-        result.setGeographicTaxonomies(institution.getGeographicTaxonomies());
-        result.setCompanyInformations(institution.getCompanyInformations());
-        result.setAssistanceContacts(institution.getAssistanceContacts());
+        InstitutionOnboardingData result = institutionMapper.toInstitutionOnboardingData(institution, institutionInfo);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionOnboardingData result = {}", result);
         log.trace("getInstitutionOnboardingData end");
         return result;
@@ -573,7 +569,6 @@ class InstitutionServiceImpl implements InstitutionService {
                 LogUtils.sanitize(externalInstitutionId), LogUtils.sanitize(productId));
         Preconditions.hasText(externalInstitutionId, REQUIRED_INSTITUTION_ID_MESSAGE);
         Preconditions.hasText(productId, A_PRODUCT_ID_IS_REQUIRED);
-        InstitutionOnboardingData result = new InstitutionOnboardingData();
         InstitutionInfo institutionInfo = partyConnector.getInstitutionBillingData(externalInstitutionId, productId);
         if (institutionInfo == null) {
             throw new ResourceNotFoundException(String.format("Institution %s not found", externalInstitutionId));
@@ -585,25 +580,12 @@ class InstitutionServiceImpl implements InstitutionService {
         if (institution.getGeographicTaxonomies() == null) {
             throw new ValidationException(String.format("The institution %s does not have geographic taxonomies.", externalInstitutionId));
         }
-        setInstitutionInfo(institution, institutionInfo);
+        institutionMapper.updateInstitutionInfo(institution, institutionInfo);
         setLocationInfo(institutionInfo);
-        result.setInstitution(institutionInfo);
-        result.setGeographicTaxonomies(institution.getGeographicTaxonomies());
-        result.setCompanyInformations(institution.getCompanyInformations());
-        result.setAssistanceContacts(institution.getAssistanceContacts());
+        InstitutionOnboardingData result = institutionMapper.toInstitutionOnboardingData(institution, institutionInfo);
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionOnboardingData result = {}", result);
         log.trace("getInstitutionOnboardingData end");
         return result;
-    }
-    private void setInstitutionInfo(Institution institution, InstitutionInfo institutionInfo){
-        InstitutionLocation institutionLocation = new InstitutionLocation();
-        institutionLocation.setCountry(institution.getCountry());
-        institutionLocation.setCity(institution.getCity());
-        institutionLocation.setCounty(institution.getCounty());
-        institutionInfo.setInstitutionLocation(institutionLocation);
-        institutionInfo.setSubunitCode(institution.getSubunitCode());
-        institutionInfo.setSubunitType(institution.getSubunitType());
-        institutionInfo.setOrigin(institution.getOrigin());
     }
     private void setLocationInfo(InstitutionInfo institutionInfo){
         if (institutionInfo.getInstitutionLocation().getCity()==null && Origin.IPA.getValue().equals(institutionInfo.getOrigin())){

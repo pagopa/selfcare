@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
@@ -52,6 +54,8 @@ import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 public class OnboardingExceptionMapper {
 
     static final String DOWNSTREAM_ERROR_DETAIL = "An error occurred during a downstream service request";
+    private static final Pattern JACKSON_TYPE_DESCRIPTOR = Pattern.compile(
+            "^(Cannot (?:deserialize (?:value|Map key) of type|construct instance of) `)([^`]+)(`)");
     private static final int BAD_REQUEST = Response.Status.BAD_REQUEST.getStatusCode();
     private static final int INTERNAL_SERVER_ERROR = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
 
@@ -174,13 +178,28 @@ public class OnboardingExceptionMapper {
     @ServerExceptionMapper
     public Response handleJsonProcessingException(JsonProcessingException e, UriInfo uriInfo) {
         log.warn(e.toString());
-        return ProblemResponses.problem(BAD_REQUEST, "JSON parse error: " + e.getOriginalMessage(), uriInfo);
+        return ProblemResponses.problem(BAD_REQUEST, jsonParseDetail(e), uriInfo);
     }
 
     // Overrides the quarkus-rest-jackson built-in mapper, which answers with a bare, non problem+json body
     @ServerExceptionMapper
     public Response handleMismatchedInputException(MismatchedInputException e, UriInfo uriInfo) {
         return handleJsonProcessingException(e, uriInfo);
+    }
+
+    private static String jsonParseDetail(JsonProcessingException exception) {
+        String message = exception.getOriginalMessage();
+        if (message != null) {
+            // Preserve published DTO type names, not similarly named values supplied in the request.
+            message = JACKSON_TYPE_DESCRIPTOR.matcher(message).replaceFirst(match -> Matcher.quoteReplacement(
+                    match.group(1) + match.group(2)
+                            .replace("it.pagopa.selfcare.onboarding.model.dto.request.",
+                                    "it.pagopa.selfcare.onboarding.controller.request.")
+                            .replace("it.pagopa.selfcare.onboarding.model.dto.response.",
+                                    "it.pagopa.selfcare.onboarding.controller.response.")
+                            + match.group(3)));
+        }
+        return "JSON parse error: " + message;
     }
 
     private Response downstreamProblem(Throwable e, int downstreamStatus, UriInfo uriInfo) {
@@ -197,7 +216,7 @@ public class OnboardingExceptionMapper {
         log.warn(e.toString());
         int status = e.getResponse() == null ? INTERNAL_SERVER_ERROR : e.getResponse().getStatus();
         if (e.getCause() instanceof JsonProcessingException jsonException) {
-            return ProblemResponses.problem(BAD_REQUEST, "JSON parse error: " + jsonException.getOriginalMessage(), uriInfo);
+            return ProblemResponses.problem(BAD_REQUEST, jsonParseDetail(jsonException), uriInfo);
         }
         if (e instanceof NotFoundException) {
             String path = ProblemResponses.instance(uriInfo);

@@ -13,8 +13,10 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.smallrye.jwt.auth.principal.JWTCallerPrincipalFactory;
 import it.pagopa.selfcare.onboarding.parity.DownstreamStub;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
 import it.pagopa.selfcare.onboarding.security.DownstreamApiKeyFilter;
 import jakarta.inject.Inject;
+import jakarta.validation.Validator;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -35,6 +37,9 @@ class RuntimeWiringTest {
     @Inject
     DownstreamApiKeyFilter downstreamApiKeyFilter;
 
+    @Inject
+    Validator validator;
+
     @Test
     void registryClient_doesNotActivateTheIgnoredSpringTraceInterceptor() {
         stub.reset();
@@ -48,6 +53,40 @@ class RuntimeWiringTest {
         assertEquals(1, stub.calls().size());
         assertNull(stub.calls().get(0).header("X-Correlation-Id"));
         assertEquals(RuntimeTestEnvironment.USER_REGISTRY_API_KEY, stub.calls().get(0).header("x-api-key"));
+    }
+
+    @Test
+    void invalidDtoShape_keepsTheOriginalTypeNameInTheHttpProblem() {
+        stub.reset();
+
+        var response = given().header("Authorization", "Bearer " + RuntimeJwt.sign(RuntimeJwt.spid(RuntimeJwt.UID)))
+                .header("X-Tenant-Id", "PNPG").contentType("application/json").body("[]")
+                .post("/v1/users/search-user").then().statusCode(400)
+                .contentType("application/problem+json").extract().response();
+
+        assertEquals("JSON parse error: Cannot deserialize value of type "
+                + "`it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto`"
+                + " from Array value (token `JsonToken.START_ARRAY`)", response.jsonPath().getString("detail"));
+        assertEquals("/v1/users/search-user", response.jsonPath().getString("instance"));
+        assertTrue(stub.calls().isEmpty());
+    }
+
+    @Test
+    void invalidDtoField_keepsTheValidationPathWithoutCallingDownstream() {
+        stub.reset();
+
+        var response = given().header("Authorization", "Bearer " + RuntimeJwt.sign(RuntimeJwt.spid(RuntimeJwt.UID)))
+                .header("X-Tenant-Id", "PNPG").contentType("application/json").body("{\"taxCode\":\"\"}")
+                .post("/v1/users/search-user").then().statusCode(400)
+                .contentType("application/problem+json").extract().response();
+
+        assertEquals("Validation failed", response.jsonPath().getString("detail"));
+        assertEquals("userTaxCodeDto.taxCode", response.jsonPath().getString("invalidParams[0].name"));
+        UserTaxCodeDto request = new UserTaxCodeDto();
+        request.setTaxCode("");
+        assertEquals(validator.validate(request).iterator().next().getMessage(),
+                response.jsonPath().getString("invalidParams[0].reason"));
+        assertTrue(stub.calls().isEmpty());
     }
 
     @Test

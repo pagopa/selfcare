@@ -8,6 +8,6 @@ class InstitutionOnboardingInfoResourceTest {
 
     @Test
     void classExistsInNewModel() {
-        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.controller.response.InstitutionOnboardingInfoResource"));
+        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.model.dto.response.InstitutionOnboardingInfoResource"));
     }
 }

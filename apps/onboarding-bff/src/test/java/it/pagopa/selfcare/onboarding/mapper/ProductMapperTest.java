@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.mapper;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import it.pagopa.selfcare.onboarding.controller.response.ProductResource;
+import it.pagopa.selfcare.onboarding.model.dto.response.ProductResource;
 import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.client.model.ProductStatus;
 import org.junit.jupiter.api.Test;

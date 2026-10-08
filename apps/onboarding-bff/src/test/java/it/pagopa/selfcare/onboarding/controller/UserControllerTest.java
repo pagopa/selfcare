@@ -7,11 +7,11 @@ import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.client.model.User;
 import it.pagopa.selfcare.onboarding.client.model.UserId;
-import it.pagopa.selfcare.onboarding.controller.request.CheckManagerDto;
-import it.pagopa.selfcare.onboarding.controller.request.OnboardingUserDto;
-import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
-import it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto;
-import it.pagopa.selfcare.onboarding.controller.response.CheckManagerResponse;
+import it.pagopa.selfcare.onboarding.model.dto.request.CheckManagerDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.OnboardingUserDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserDataValidationDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
+import it.pagopa.selfcare.onboarding.model.dto.response.CheckManagerResponse;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
 import it.pagopa.selfcare.onboarding.service.UserService;

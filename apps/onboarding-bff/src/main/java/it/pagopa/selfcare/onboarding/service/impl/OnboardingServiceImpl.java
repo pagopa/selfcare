@@ -11,7 +11,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionPaSubunitType;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
-import it.pagopa.selfcare.onboarding.service.ClientRequestValidator;
+import it.pagopa.selfcare.onboarding.service.impl.ClientRequestValidator;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.util.Preconditions;
 import it.pagopa.selfcare.onboarding.util.LogUtils;

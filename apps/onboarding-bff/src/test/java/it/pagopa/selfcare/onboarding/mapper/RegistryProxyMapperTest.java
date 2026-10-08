@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.pagopa.selfcare.onboarding.client.model.IpaInstitutionsSearchResponse;
@@ -9,6 +10,17 @@ import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;
 
 class RegistryProxyMapperTest {
+
+    @Test
+    void legalTaxIdRequest_preservesTheFilterWrapperEvenWithNullValue() {
+        var mapper = Mappers.getMapper(RegistryProxyMapper.class);
+
+        assertEquals("tax-code", mapper.toInstitutionByLegalTaxIdRequest("tax-code").getFilter().getLegalTaxId());
+        var request = mapper.toInstitutionByLegalTaxIdRequest(null);
+        assertNotNull(request);
+        assertNotNull(request.getFilter());
+        assertNull(request.getFilter().getLegalTaxId());
+    }
 
     @Test
     void searchResultsKeepEveryFieldAndCount() throws Exception {

@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.util;
 
 import it.pagopa.selfcare.onboarding.util.LogUtils;
 import it.pagopa.selfcare.onboarding.common.Origin;
-import it.pagopa.selfcare.onboarding.service.PartyRegistryProxyService;
+import it.pagopa.selfcare.onboarding.service.impl.PartyRegistryProxyService;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.client.model.ManagerVerification;
 import it.pagopa.selfcare.onboarding.client.model.MatchInfoResult;

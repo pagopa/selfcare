@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,12 +25,14 @@ import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.NotAcceptableException;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.ProcessingException;
@@ -55,6 +58,7 @@ class OnboardingExceptionMapperTest {
 
     private static final String DETAIL_MESSAGE = "detail message";
     private static final String DOWNSTREAM_DETAIL = "An error occurred during a downstream service request";
+    private static final String LEGACY_TAX_CODE_DTO = "it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto";
 
     private final OnboardingExceptionMapper mapper = new OnboardingExceptionMapper();
     private UriInfo uriInfo;
@@ -244,6 +248,43 @@ class OnboardingExceptionMapperTest {
         assertEquals("Bad Request", body.getTitle());
         assertTrue(body.getDetail().startsWith("JSON parse error: Cannot deserialize value of type `java.util.UUID`"));
         assertEquals("/v1/institutions/abc", body.getInstance());
+    }
+
+    @Test
+    void invalidDtoArrayKeepsTheOriginalTypeNameInDirectAndWrappedJacksonErrors() {
+        MismatchedInputException failure = assertThrows(MismatchedInputException.class,
+                () -> new ObjectMapper().readValue("[]", UserTaxCodeDto.class));
+        String detail = "JSON parse error: Cannot deserialize value of type `" + LEGACY_TAX_CODE_DTO
+                + "` from Array value (token `JsonToken.START_ARRAY`)";
+
+        assertProblem(mapper.handleMismatchedInputException(failure, uriInfo), 400, "Bad Request", detail);
+        assertProblem(mapper.handleWebApplicationException(new BadRequestException(failure), requestContext()),
+                400, "Bad Request", detail);
+    }
+
+    @Test
+    void invalidDtoListKeepsTheOriginalTypeNameInsideTheGenericDescriptor() {
+        MismatchedInputException failure = assertThrows(MismatchedInputException.class,
+                () -> new ObjectMapper().readValue("{}", new TypeReference<List<UserTaxCodeDto>>() { }));
+        String detail = "JSON parse error: Cannot deserialize value of type `java.util.ArrayList<"
+                + LEGACY_TAX_CODE_DTO + ">` from Object value (token `JsonToken.START_OBJECT`)";
+
+        assertProblem(mapper.handleMismatchedInputException(failure, uriInfo), 400, "Bad Request", detail);
+    }
+
+    @Test
+    void invalidDtoScalarKeepsTheOriginalTypeNameWithoutRewritingTheRejectedValue() throws Exception {
+        String rejectedValue = "`" + UserTaxCodeDto.class.getName() + "`";
+        String json = new ObjectMapper().writeValueAsString(rejectedValue);
+        MismatchedInputException failure = assertThrows(MismatchedInputException.class,
+                () -> new ObjectMapper().readValue(json, UserTaxCodeDto.class));
+        String originalDetail = failure.getOriginalMessage().replace(
+                "instance of `" + UserTaxCodeDto.class.getName() + "`", "instance of `" + LEGACY_TAX_CODE_DTO + "`");
+        assertTrue(originalDetail.contains("instance of `" + LEGACY_TAX_CODE_DTO + "`"));
+        assertTrue(originalDetail.contains("('" + rejectedValue + "')"));
+
+        assertProblem(mapper.handleMismatchedInputException(failure, uriInfo), 400, "Bad Request",
+                "JSON parse error: " + originalDetail);
     }
 
     @Test

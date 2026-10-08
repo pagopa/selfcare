@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import it.pagopa.selfcare.onboarding.client.model.Certification;
 import it.pagopa.selfcare.onboarding.client.model.CertifiedField;
@@ -14,18 +15,58 @@ import it.pagopa.selfcare.onboarding.client.model.User;
 import it.pagopa.selfcare.onboarding.client.model.UserInfo;
 import it.pagopa.selfcare.onboarding.client.model.WorkContact;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.onboarding.controller.request.UserDataValidationDto;
-import it.pagopa.selfcare.onboarding.controller.request.UserDto;
-import it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto;
-import it.pagopa.selfcare.onboarding.controller.response.ManagerInfoResponse;
-import it.pagopa.selfcare.onboarding.controller.response.UserResource;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserDataValidationDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserDto;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
+import it.pagopa.selfcare.onboarding.model.dto.response.ManagerInfoResponse;
+import it.pagopa.selfcare.onboarding.model.dto.response.UserResource;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class UserMapperTest {
 
     private final UserMapper userMapper = new UserMapperImpl();
+
+    @Test
+    void toUserId_preservesTheNonNullWrapperAndUuidConversion() {
+        assertNotNull(userMapper.toUserId(null));
+        assertNull(userMapper.toUserId(null).getId());
+        assertNull(userMapper.toUserId(new RegistryUser()).getId());
+        RegistryUser user = new RegistryUser();
+        UUID id = UUID.randomUUID();
+        user.setId(id.toString());
+        assertEquals(id, userMapper.toUserId(user).getId());
+
+        user.setId("invalid-uuid");
+        assertThrows(IllegalArgumentException.class, () -> userMapper.toUserId(user));
+    }
+
+    @Test
+    void toUserInstitutionRequest_preservesSplitOrderWhitespaceAndTrailingItemSemantics() {
+        var request = userMapper.toUserInstitutionRequest(
+                "institution", "second, first,", "product,", "MANAGER,DELEGATE,SUB_DELEGATE", "ACTIVE", "user");
+
+        assertEquals("institution", request.getInstitutionId());
+        assertEquals(List.of("second", " first"), request.getProductRoles());
+        assertEquals(List.of("product"), request.getProducts());
+        assertEquals(List.of("MANAGER", "DELEGATE", "SUB_DELEGATE"), request.getRoles());
+        assertEquals(List.of("ACTIVE"), request.getStates());
+        assertEquals("user", request.getUserId());
+    }
+
+    @Test
+    void toUserInstitutionRequest_keepsTheEmptyStringSentinelAndCommaOnlyResult() {
+        var request = userMapper.toUserInstitutionRequest(null, null, "  ", "", ",", null);
+
+        assertNull(request.getInstitutionId());
+        assertEquals(List.of(""), request.getProductRoles());
+        assertEquals(List.of(""), request.getProducts());
+        assertEquals(List.of(""), request.getRoles());
+        assertEquals(List.of(), request.getStates());
+        assertNull(request.getUserId());
+    }
 
     @Test
     void toUser_fromUserDto() {

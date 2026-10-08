@@ -8,6 +8,6 @@ class GeographicTaxonomyDtoTest {
 
     @Test
     void classExistsInNewModel() {
-        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.controller.request.GeographicTaxonomyDto"));
+        assertDoesNotThrow(() -> Class.forName("it.pagopa.selfcare.onboarding.model.dto.request.GeographicTaxonomyDto"));
     }
 }

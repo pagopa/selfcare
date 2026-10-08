@@ -23,7 +23,7 @@ import it.pagopa.selfcare.onboarding.client.model.VerifyAggregateResult;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
-import it.pagopa.selfcare.onboarding.service.ClientRequestValidator;
+import it.pagopa.selfcare.onboarding.service.impl.ClientRequestValidator;
 import jakarta.validation.Validation;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
