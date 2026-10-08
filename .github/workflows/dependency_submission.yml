@@ -1,0 +1,52 @@
+name: Maven Dependency Submission
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - '**/pom.xml'
+      - '.github/workflows/dependency_submission.yml'
+  push:
+    branches:
+      - main
+      - releases/**
+    paths:
+      - '**/pom.xml'
+      - '.github/workflows/dependency_submission.yml'
+
+permissions:
+  contents: write
+  packages: read
+
+jobs:
+  submit:
+    name: Authenticated Maven dependency snapshot
+    if: >-
+      github.event_name != 'pull_request' ||
+      (github.event.pull_request.head.repo.full_name == github.repository &&
+       github.actor != 'dependabot[bot]')
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Setup Maven
+        uses: s4u/setup-maven-action@fa2c7e4517ed008b1f73e7e0195a9eecf5582cd4
+        with:
+          java-version: 17
+          java-distribution: temurin
+          maven-version: '3.9.5'
+          cache-enabled: true
+
+      - name: Configure GitHub Packages authentication
+        uses: s4u/maven-settings-action@60912582505985be4cc55d2b890eb32767f8de5f # v2.8.0
+        with:
+          servers: '[{"id": "selfcare", "username": "${{ github.actor }}", "password": "${{ secrets.GITHUB_TOKEN }}"}]'
+
+      - name: Validate the complete Maven reactor
+        run: mvn -B -ntp validate
+
+      - name: Submit the complete Maven dependency graph
+        uses: advanced-security/maven-dependency-submission-action@a64327a7329c9939cf675e458452febe1894a70c # v6.0.1
+        with:
+          maven-args: -B -ntp

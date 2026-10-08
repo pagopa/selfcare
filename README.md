@@ -9,7 +9,7 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=pagopa_selfcare&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=pagopa_selfcare)
 [![Java](https://img.shields.io/badge/Java-17-blue)](https://openjdk.org/projects/jdk/17/)
 [![Maven](https://img.shields.io/badge/Maven-3.9.x-C71A36)](https://maven.apache.org/)
-[![Quarkus](https://img.shields.io/badge/Quarkus-3.5.1--3.35.1-4695EB)](https://quarkus.io/)
+[![Quarkus](https://img.shields.io/badge/Quarkus-3.5.1--3.36.2-4695EB)](https://quarkus.io/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.0-6DB33F)](https://spring.io/projects/spring-boot)
 
 SelfCare platform monorepo: services, SDKs, infrastructure, releases.
@@ -34,8 +34,8 @@ SelfCare platform monorepo: services, SDKs, infrastructure, releases.
 | --- | --- | --- |
 | Java | `17` | Main runtime target. |
 | Maven | `3.9.x` | Build and release orchestration. |
-| Quarkus | `3.5.1` - `3.35.1` | Most backend services, with versions declared per app POM. |
-| Spring Boot | `3.3.0` | `onboarding-bff` through `selc-starter-parent`. |
+| Quarkus | `3.5.1` - `3.36.2` | Most backend services, including `onboarding-bff`, with versions declared per app POM. |
+| Spring Boot | `3.3.0` | Legacy services and shared libraries using Spring parents. |
 
 ## Build
 
@@ -64,7 +64,23 @@ All pull requests and code contributions are analyzed through GitHub Actions and
 | Quality gate | Shared code-review workflows and SonarCloud analysis. |
 | Coverage | JaCoCo aggregate reports from all modules via [`test-coverage/`](test-coverage/). |
 | Security scan | CodeQL workflow. |
+| Maven dependency graph | Authenticated [`dependency_submission.yml`](.github/workflows/dependency_submission.yml). |
 | Drift detection | Terraform drift workflows. |
+
+### Maven dependency graph
+
+The dependency-submission workflow validates the complete reactor with Java 17 and the same authenticated
+Maven server configuration used by the build workflows. Its token grants `packages: read` for private
+SelfCare artifacts and `contents: write` for dependency snapshots. No separate registry secret is required.
+
+Snapshots run for same-repository pull requests other than Dependabot, pushes to `main` and `releases/**`,
+and manual dispatches. Fork and Dependabot pull requests do not receive the write-capable job; their merged
+changes are covered by the push workflow. The graph includes the complete reactor without module or scope
+exclusions. This workflow does not replace unit tests, integration tests or the Sonar quality gate.
+
+GitHub-managed automatic Maven submission is a separate repository setting. If it is already enabled,
+an administrator must approve the switch after verifying the authenticated workflow's snapshot.
+Adding this workflow does not disable automatic submission, the dependency graph or any required check.
 
 ### Generate and upload coverage
 
