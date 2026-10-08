@@ -53,15 +53,15 @@ Feature: Token
     When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10222/approve"
     Then The status code is 200
 
-  Scenario: Failed to approve onboarding when given invalid id
+  Scenario: Failed to approve onboarding when status is invalid
     Given User login with username "j.doe" and password "test"
-    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i101/approve"
+    When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i1000/approve"
     Then The status code is 400
 
   Scenario: Failed to approve onboarding when is not found
     Given User login with username "j.doe" and password "test"
     When I send a POST request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i101/approve"
-    Then The status code is 400
+    Then The status code is 404
 
   Scenario: Failed to approve onboarding when is already consumed
     Given User login with username "j.doe" and password "test"
@@ -107,5 +107,5 @@ Feature: Token
 
   Scenario: Failed to get Contract
     Given User login with username "j.doe" and password "test"
-    When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10001/contract"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/contract"
     Then The status code is 502

@@ -14,6 +14,9 @@ import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,7 +27,7 @@ class IamServiceImplTest {
 
     private static final String PERMISSION = "Selc:ManageAccountPage";
     private static final String USER_ID = "user-uid";
-    private static final String INSTITUTION_ID = "";
+    private static final String INSTITUTION_ID = "institution-id";
     private static final String PRODUCT_ID = "prod-test";
 
     @InjectMocks
@@ -41,6 +44,32 @@ class IamServiceImplTest {
         assertTrue(iamService.hasIamUserPermission(PERMISSION, USER_ID, INSTITUTION_ID, PRODUCT_ID));
 
         verify(response).close();
+    }
+
+    @Test
+    void hasIamUserPermission_emptyInstitutionQueryIsOmitted() {
+        Response response = responseWithBody(Map.of("hasPermission", true));
+        when(iamRestClient.hasIAMUserPermission(PERMISSION, USER_ID, null, PRODUCT_ID)).thenReturn(response);
+
+        assertTrue(iamService.hasIamUserPermission(PERMISSION, USER_ID, "", PRODUCT_ID));
+    }
+
+    @ParameterizedTest
+    @NullAndEmptySource
+    void hasIamUserPermission_emptyQueriesAreOmitted(String value) {
+        Response response = responseWithBody(Map.of("hasPermission", true));
+        when(iamRestClient.hasIAMUserPermission(PERMISSION, USER_ID, null, null)).thenReturn(response);
+
+        assertTrue(iamService.hasIamUserPermission(PERMISSION, USER_ID, value, value));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {" ", "scoped-id"})
+    void hasIamUserPermission_nonEmptyQueriesArePreserved(String value) {
+        Response response = responseWithBody(Map.of("hasPermission", true));
+        when(iamRestClient.hasIAMUserPermission(PERMISSION, USER_ID, value, value)).thenReturn(response);
+
+        assertTrue(iamService.hasIamUserPermission(PERMISSION, USER_ID, value, value));
     }
 
     @Test

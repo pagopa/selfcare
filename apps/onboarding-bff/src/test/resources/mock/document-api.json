@@ -1,0 +1,38 @@
+[
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/v1/documents/(37f7609b-5a4b-4200-82e7-2117756d64aa|89ad7142-24bb-48ad-8504-9c9231137i(103|105|110|122|1022|10222|123|1000))/attachment-list",
+      "headers": { "X-Tenant-Id": ["AR"] }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": { "Content-Type": ["application/json"] },
+      "body": []
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/v1/documents/onboarding/89ad7142-24bb-48ad-8504-9c9231137i(103|105)",
+      "headers": { "X-Tenant-Id": ["AR"] }
+    },
+    "httpResponse": { "statusCode": 404 }
+  },
+  {
+    "httpRequest": {
+      "method": "POST",
+      "path": "/v1/document-content/89ad7142-24bb-48ad-8504-9c9231137i(103|105)/upload-signed-contract",
+      "headers": { "X-Tenant-Id": ["AR"] }
+    },
+    "httpResponse": { "statusCode": 200 }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
+      "path": "/v1/document-content/37f7609b-5a4b-4200-82e7-2117756d64aa/contract",
+      "headers": { "X-Tenant-Id": ["AR"] }
+    },
+    "httpResponse": { "statusCode": 503 }
+  }
+]

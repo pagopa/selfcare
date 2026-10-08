@@ -301,7 +301,11 @@ db.onboardings.insertMany([
   ],
   "workflowType": "CONTRACT_REGISTRATION"
 }
-]);
+].map(onboarding => ({
+  ...onboarding,
+  tenantId: "AR",
+  users: onboarding.users.map(({id, ...user}) => ({_id: id, ...user}))
+})));
 
 db.tokens.insertMany([
   {
@@ -336,6 +340,8 @@ db.tokens.insertMany([
     updatedAt: new Date("2023-07-25T10:24:08.119Z"),
   },
 ]);
+
+db.tokens.updateMany({}, { $set: { tenantId: "AR" } });
 
 db = db.getSiblingDB("selcMsCore");
 
@@ -443,10 +449,75 @@ db.userInstitutions.insertMany([
 
 db = db.getSiblingDB("selcProduct");
 
+// Product-ms now owns this catalog; onboarding-ms still consumes its legacy blob representation.
+const legacyProducts = JSON.parse(require("fs").readFileSync("/fixtures/products.json", "utf8"));
+const contractMappings = {
+  institutionContractMappings: "INSTITUTION",
+  institutionAggregatorContractMappings: "INSTITUTION_AGGREGATOR",
+  userContractMappings: "USER",
+  userAggregatorContractMappings: "USER_AGGREGATOR"
+};
+db.products.insertMany(legacyProducts.map(product => ({
+  _id: "fixture-" + product.id,
+  tenantId: "AR",
+  productId: product.id,
+  version: 1,
+  parentId: product.parentId,
+  alias: product.alias,
+  title: product.title,
+  description: product.description,
+  status: product.status,
+  consumers: product.consumers,
+  testEnvProductIds: product.testEnvProductIds,
+  institutionTypesAllowed: product.institutionTypesAllowed,
+  backOfficeEnvironmentConfigurations: Object.entries(product.backOfficeEnvironmentConfigurations || {})
+    .map(([env, configuration]) => ({
+      env,
+      identityTokenAudience: configuration.identityTokenAudience,
+      urlBO: configuration.url,
+      urlPublic: product.urlPublic
+    })),
+  visualConfiguration: {
+    logoUrl: product.logo,
+    depictImageUrl: product.depictImageUrl,
+    logoBgColor: product.logoBgColor
+  },
+  features: {
+    enabled: product.enabled === true,
+    delegable: product.delegable === true,
+    invoiceable: product.invoiceable === true,
+    requiresParentOnboarding: product.requiresParentOnboarding === true,
+    allowCompanyOnboarding: product.allowCompanyOnboarding === true,
+    allowIndividualOnboarding: product.allowIndividualOnboarding === true,
+    allowedInstitutionTaxCode: product.allowedInstitutionTaxCode,
+    expirationDays: product.expirationDate ?? 30
+  },
+  roleMappings: Object.entries(product.roleMappings || {}).map(([role, mapping]) => ({
+    ...mapping, role, backOfficeRoles: mapping.roles
+  })).concat(Object.entries(product.roleMappingsByInstitutionType || {}).flatMap(([institutionType, roles]) =>
+    Object.entries(roles).map(([role, mapping]) => ({
+      ...mapping, role, institutionType, backOfficeRoles: mapping.roles
+    }))
+  )),
+  contracts: Object.entries(contractMappings).flatMap(([field, onboardingType]) =>
+    Object.entries(product[field] || {}).flatMap(([institutionType, contract]) => [
+      {
+        onboardingType, institutionType, contractType: "CONTRACT", enabled: true,
+        path: contract.contractTemplatePath, version: contract.contractTemplateVersion
+      },
+      ...(contract.attachments || []).map(attachment => ({
+        ...attachment, onboardingType, institutionType, contractType: "ATTACHMENT", enabled: true,
+        path: attachment.templatePath, version: attachment.templateVersion
+      }))
+    ])
+  )
+})));
+
 db.products.insertMany([
   {
     _id: "89ad7142-24bb-48ad-8504-9c9231137232",
     productId: "prod-test",
+    tenantId: "AR",
     alias: "prod-test",
     title: "Prod TEST",
     description: "Product description",

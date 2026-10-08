@@ -49,6 +49,7 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
 
     composeContainer.start();
     Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
+    verifyIamFixture();
 
     log.info(
         "\nLANGUAGE: {}\nCOUNTRY: {}\nTIMEZONE: {}\n",
@@ -61,5 +62,20 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
   @AfterAll
   static void tearDown() {
     log.info("Cucumber tests are finished.");
+  }
+
+  private static void verifyIamFixture() {
+    String path = "/iam/users/97a511a7-2acc-47b9-afed-2f3c65753b4a/permissions/Selc:ViewAccountPage";
+    RestAssured.given().port(1080).urlEncodingEnabled(false).header("X-Tenant-Id", "AR")
+        .queryParam("productId", "prod-io").get(path).then().statusCode(200);
+    for (String institutionId : new String[] {"", "unexpected-institution"}) {
+      RestAssured.given().port(1080).urlEncodingEnabled(false).header("X-Tenant-Id", "AR")
+          .queryParam("productId", "prod-io").queryParam("institutionId", institutionId)
+          .get(path).then().statusCode(400);
+    }
+    RestAssured.given().port(1080).urlEncodingEnabled(false).header("X-Tenant-Id", "PNPG")
+        .queryParam("productId", "prod-io").get(path).then().statusCode(404);
+    RestAssured.given().port(1080).urlEncodingEnabled(false).header("X-Tenant-Id", "AR")
+        .queryParam("productId", "unexpected-product").get(path).then().statusCode(404);
   }
 }

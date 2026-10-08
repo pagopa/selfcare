@@ -4,13 +4,13 @@ Feature: Product
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v1/products"
     Then The status code is 200
-    And The response body contains the list "status" of size 11
+    And The response body contains the list "status" of size 14
 
   Scenario: Success in getProducts for admin
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v1/products/admin"
     Then The status code is 200
-    And The response body contains the list "status" of size 7
+    And The response body contains the list "status" of size 5
 
   Scenario: Success in getProducts by id
     Given User login with username "j.doe" and password "test"

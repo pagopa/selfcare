@@ -7,6 +7,7 @@ services:
       - develop-network
     volumes:
       - "./db:/docker-entrypoint-initdb.d"
+      - "./blobStorageInit/products.json:/fixtures/products.json:ro"
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite@sha256:0a47e12e3693483cef5c71f35468b91d751611f172d2f97414e9c69113b106d9
@@ -38,7 +39,7 @@ services:
     entrypoint: [ "sh", "/init_azurite.sh" ]
 
   onboarding-ms:
-    image: ghcr.io/pagopa/selfcare-onboarding-ms:latest
+    image: ghcr.io/pagopa/selfcare-onboarding-ms@sha256:a4511530968aef0efa518f71ce14d78cd70cc4af4eb01b7303d50b85ccd5a70f
     ports:
       - "8085:8080"
     env_file:
@@ -51,6 +52,7 @@ services:
       - azure-cli
       - azurite
       - institution-ms
+      - product-ms
 
   user-ms:
     image: ghcr.io/pagopa/selfcare-user-ms:sha-f3cd392
@@ -66,7 +68,7 @@ services:
       - azure-cli
 
   institution-ms:
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms@sha256:2f71a454dfcdcf18e31070d79814992aac1acf71fb44face3db8a0381b5233b2
     ports:
       - "8082:8080"
     networks:
@@ -79,7 +81,7 @@ services:
       - azure-cli
 
   product-ms:
-    image: ghcr.io/pagopa/selfcare-product-ms:latest
+    image: ghcr.io/pagopa/selfcare-product-ms@sha256:9970fdba5a4bbdb84dbe4db261d199f6bf2c4543e6760c4b648a2b9e1b05cd73
     ports:
       - "9090:8080"
     networks:

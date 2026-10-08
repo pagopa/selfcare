@@ -57,6 +57,7 @@ final class TokenScenarios {
                         .jsonPresent("/manager")
                         .exactCalls(WUI, iam(User.ADMIN, "ViewAccountPage"), WUI)
                         .call("ms-iam", "GET", "/iam/users/" + User.ADMIN.uid + "/permissions/Selc:ViewAccountPage")
+                        .queryAbsent("institutionId")
                         .query("productId", Fx.PRODUCT)));
     s.add(
         Scenario.api(G, "retrieve-propagates-identity", BASE)

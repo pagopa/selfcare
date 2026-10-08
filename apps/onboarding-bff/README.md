@@ -105,6 +105,18 @@ Failsafe run.
 The suite is `CucumberSuiteTest`; without `-Pintegration-tests` Failsafe is skipped (`skipITs=true`). The scenarios
 start the compose stack in `src/test/resources/docker-compose.yml` (MongoDB, Azurite, mock server and the images of the
 downstream services) and call the BFF with signed tokens.
+The pinned downstream images use tenant-aware MongoDB configuration for the existing fixture databases.
+Both tenants share the SDK's legacy test signing key; the registry deliberately leaves `jwt` unset so the
+downstream verifier uses that single key, rather than synthetic tenant key IDs incompatible with `jwt_test_kid`.
+Signature verification and tenant validation remain enabled.
+Mongo fixtures carry the SDK users' `AR` tenant. Product-ms is seeded from the same legacy catalog mounted
+for blob initialization, mapped to its current schema: 14 ACTIVE products, including disabled products,
+and 11 ACTIVE roots, of which 5 have the default user contract required by the admin endpoint.
+The Cucumber assertions cover the exact public/admin counts.
+IAM fixtures require the decoded permission path, the `AR` tenant and the seeded product IDs.
+They also require `institutionId` to be absent: Spring's product-scoped permission lookup passes an
+empty value internally, which Feign omits on the wire. The Quarkus client preserves that omission;
+the fixtures do not grant access for arbitrary institution or product contexts.
 
 ## Verifying the equivalence with the Spring BFF
 
@@ -139,6 +151,17 @@ services replaced by a controlled in-JVM stub, against both applications:
    suitability for Terraform `templatefile`.
 
 Each run prints a line `PARITY <target> scenarios=<n> attempted=<n> passed=<n>`; a run that executes no scenario fails.
+
+Compatibility includes the Spring user-registry client's HTTP method restriction: its `HttpURLConnection`
+transport rejects PATCH before sending a request. The Quarkus client preserves that error, including the
+onboarding response and absence of downstream writes. Enabling user creation/update via PATCH is a separate
+functional change, not an implicit fix bundled into this migration.
+
+`HttpsParityTest` additionally opens real TLS listeners for both runtimes using a short-lived local
+certificate trusted only by its test client. It verifies HSTS on protected success/error responses and its
+absence on public health. HTTP scenarios verify that untrusted forwarded headers do not enable HSTS.
+These are application-boundary checks: APIM TLS termination, trusted proxy configuration and deployed
+forwarding policies still require the authorized environment smoke checks.
 
 Coverage combines plain JUnit and `@QuarkusTest` executions in `target/jacoco.exec`: the Maven JaCoCo agent
 instruments ordinary classloaders, while `quarkus-jacoco` instruments the Quarkus classloader. Both cover the
