@@ -140,6 +140,11 @@ services replaced by a controlled in-JVM stub, against both applications:
 
 Each run prints a line `PARITY <target> scenarios=<n> attempted=<n> passed=<n>`; a run that executes no scenario fails.
 
+Coverage combines plain JUnit and `@QuarkusTest` executions in `target/jacoco.exec`: the Maven JaCoCo agent
+instruments ordinary classloaders, while `quarkus-jacoco` instruments the Quarkus classloader. Both cover the
+whole BFF package and append to the shared data file. Use `clean` for a fresh measurement; the existing
+`test-coverage` aggregate consumes that file without changing the Sonar quality gate or report exclusions.
+
 ## Core Configurations (legacy Spring BFF)
 
 The Spring BFF documented here its feign clients with `feign.client.config.*` properties; they do not exist in the

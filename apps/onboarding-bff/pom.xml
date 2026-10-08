@@ -35,6 +35,7 @@
         <tenant-sdk.version>0.4.0</tenant-sdk.version>
         <surefire-plugin.version>3.5.4</surefire-plugin.version>
         <antrun-plugin.version>3.1.0</antrun-plugin.version>
+        <jacoco.version>0.8.12</jacoco.version>
         <skipITs>true</skipITs>
     </properties>
 
@@ -262,6 +263,24 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>prepare-unit-test-coverage</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <exclClassLoaders>*QuarkusClassLoader</exclClassLoaders>
+                            <destFile>${project.build.directory}/jacoco.exec</destFile>
+                            <append>true</append>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
