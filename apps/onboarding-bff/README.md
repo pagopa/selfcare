@@ -102,6 +102,11 @@ Failsafe run.
 | Cucumber integration suite (Docker required) | `mvn -f apps/onboarding-bff/pom.xml verify -Pintegration-tests` |
 | Coverage report | `mvn --projects :test-coverage --also-make verify -Ponboarding-bff,report` |
 
+When testing this module together with other Quarkus applications in the same Maven reactor, use `-T 1`.
+The mixed Quarkus plugin versions currently fail BFF test-class discovery in parallel reactor builds.
+The monorepo Sonar workflow selects serial execution whenever its scope includes onboarding-bff; all tests
+and coverage collection remain enabled.
+
 The suite is `CucumberSuiteTest`; without `-Pintegration-tests` Failsafe is skipped (`skipITs=true`). The scenarios
 start the compose stack in `src/test/resources/docker-compose.yml` (MongoDB, Azurite, mock server and the images of the
 downstream services) and call the BFF with signed tokens.
