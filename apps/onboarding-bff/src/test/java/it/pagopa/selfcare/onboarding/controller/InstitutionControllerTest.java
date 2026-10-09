@@ -75,25 +75,31 @@ class InstitutionControllerTest {
 
     @Test
     void getInstitutionOnboardingInfoById_mapsResult() {
+        // given
         InstitutionOnboardingData data = new InstitutionOnboardingData();
         InstitutionOnboardingInfoResource expected = new InstitutionOnboardingInfoResource();
-        when(institutionService.getInstitutionOnboardingDataById("instId", "prodId")).thenReturn(data);
+        when(institutionService.getInstitutionOnboardingDataById("instId", "prodId")).thenReturn(Uni.createFrom().item(data));
         when(institutionMapper.toResource(data)).thenReturn(expected);
 
-        InstitutionOnboardingInfoResource result = institutionController.getInstitutionOnboardingInfoById("instId", "prodId");
+        // when
+        InstitutionOnboardingInfoResource result = institutionController.getInstitutionOnboardingInfoById("instId", "prodId").await().indefinitely();
 
+        // then
         assertSame(expected, result);
     }
 
     @Test
     void getInstitutionGeographicTaxonomy_mapsList() {
+        // given
         GeographicTaxonomy taxonomy = new GeographicTaxonomy();
         GeographicTaxonomyResource expected = new GeographicTaxonomyResource();
-        when(institutionService.getGeographicTaxonomyList("extId")).thenReturn(List.of(taxonomy));
+        when(institutionService.getGeographicTaxonomyList("extId")).thenReturn(Uni.createFrom().item(List.of(taxonomy)));
         when(institutionMapper.toResource(any(GeographicTaxonomy.class))).thenReturn(expected);
 
-        List<GeographicTaxonomyResource> result = institutionController.getInstitutionGeographicTaxonomy("extId");
+        // when
+        List<GeographicTaxonomyResource> result = institutionController.getInstitutionGeographicTaxonomy("extId").await().indefinitely();
 
+        // then
         assertEquals(1, result.size());
         assertSame(expected, result.get(0));
     }

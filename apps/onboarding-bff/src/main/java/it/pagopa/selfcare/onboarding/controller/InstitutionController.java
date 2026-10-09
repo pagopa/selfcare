@@ -108,7 +108,7 @@ public class InstitutionController {
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET")
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfoById(@Parameter(description = "${openapi.onboarding.institutions.model.id}", required = true)
+    public Uni<InstitutionOnboardingInfoResource> getInstitutionOnboardingInfoById(@Parameter(description = "${openapi.onboarding.institutions.model.id}", required = true)
                                                                           @QueryParam("institutionId")
                                                                           String institutionId,
                                                                           @Parameter(description = "${openapi.onboarding.product.model.id}", required = true)
@@ -120,36 +120,36 @@ public class InstitutionController {
         RequestParams.requiredQuery("productId", productId);
         log.trace("getInstitutionOnboardingInfoById start");
         log.debug("getInstitutionOnboardingInfoById institutionId = {}, productId = {}", Encode.forJava(institutionId), Encode.forJava(productId));
-        InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingDataById(institutionId, productId);
-        InstitutionOnboardingInfoResource result = institutionMapper.toResource(institutionOnboardingData);
-        log.debug("getInstitutionOnboardingInfoById result = {}", result);
-        log.trace("getInstitutionOnboardingInfoById end");
-        return result;
+        return institutionService.getInstitutionOnboardingDataById(institutionId, productId)
+                .map(institutionMapper::toResource)
+                .invoke(result -> {
+                    log.debug("getInstitutionOnboardingInfoById result = {}", result);
+                    log.trace("getInstitutionOnboardingInfoById end");
+                });
     }
 
     @GET
     @Path("/{externalInstitutionId}/geographic-taxonomy")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
             description = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getInstitutionGeographicTaxonomyUsingGET")
-    public List<GeographicTaxonomyResource> getInstitutionGeographicTaxonomy(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
+    public Uni<List<GeographicTaxonomyResource>> getInstitutionGeographicTaxonomy(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
                                                                              @PathParam("externalInstitutionId")
                                                                              String externalInstitutionId) {
         log.trace("getInstitutionGeographicTaxonomy start");
         log.debug("getInstitutionGeographicTaxonomy institutionId = {}", LogUtils.sanitize(externalInstitutionId));
-        List<GeographicTaxonomyResource> geographicTaxonomies = institutionService.getGeographicTaxonomyList(externalInstitutionId)
-                .stream()
-                .map(institutionMapper::toResource)
-                .toList();
-        log.debug("getInstitutionGeographicTaxonomy result = {}", geographicTaxonomies);
-        log.trace("getInstitutionGeographicTaxonomy end");
-        return geographicTaxonomies;
+        return institutionService.getGeographicTaxonomyList(externalInstitutionId)
+                .map(taxonomies -> taxonomies.stream().map(institutionMapper::toResource).toList())
+                .invoke(result -> {
+                    log.debug("getInstitutionGeographicTaxonomy result = {}", result);
+                    log.trace("getInstitutionGeographicTaxonomy end");
+                });
     }
 
     @GET
     @Path("/geographic-taxonomies")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}",
             description = "${openapi.onboarding.institutions.api.getInstitutionGeographicTaxonomy}", operationId = "getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET")
-    public List<GeographicTaxonomyResource> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}", required = true)
+    public Uni<List<GeographicTaxonomyResource>> getGeographicTaxonomiesByTaxCodeAndSubunitCode(@Parameter(description = "${openapi.onboarding.institutions.model.taxCode}", required = true)
                                                                                            @QueryParam("taxCode")
                                                                                            String taxCode,
                                                                                            @Parameter(description = "${openapi.onboarding.institutions.model.subunitCode}")
@@ -164,13 +164,12 @@ public class InstitutionController {
         if (StringUtils.isBlank(taxCode) || (Objects.nonNull(subunitCode) && StringUtils.isBlank(subunitCode)))
             throw new InvalidRequestException("taxCode and/or subunitCode must not be blank! ");
 
-        List<GeographicTaxonomyResource> geographicTaxonomies = institutionService.getGeographicTaxonomyList(taxCode, subunitCode)
-                .stream()
-                .map(institutionMapper::toResource)
-                .toList();
-        log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode result = {}", geographicTaxonomies);
-        log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode end");
-        return geographicTaxonomies;
+        return institutionService.getGeographicTaxonomyList(taxCode, subunitCode)
+                .map(taxonomies -> taxonomies.stream().map(institutionMapper::toResource).toList())
+                .invoke(result -> {
+                    log.debug("getGeographicTaxonomiesByTaxCodeAndSubunitCode result = {}", result);
+                    log.trace("getGeographicTaxonomiesByTaxCodeAndSubunitCode end");
+                });
     }
 
     @GET
@@ -330,34 +329,36 @@ public class InstitutionController {
     @Path("/verification/match")
     @Operation(summary = "${openapi.onboarding.institutions.api.matchInstitutionAndUser}",
             description = "${openapi.onboarding.institutions.api.matchInstitutionAndUser}", operationId = "postVerificationMatchUsingPOST")
-    public MatchInfoResultResource postVerificationMatch(
+    public Uni<MatchInfoResultResource> postVerificationMatch(
                                                          @Valid
                                                          VerificationMatchRequest verificationMatchRequest) {
         RequestParams.requiredBody(verificationMatchRequest);
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser userDto = {}", LogUtils.sanitize(verificationMatchRequest));
-        MatchInfoResult matchInfoResult = institutionService.matchInstitutionAndUser(verificationMatchRequest.getTaxCode(),
-                userMapper.toUser(verificationMatchRequest.getUserDto()));
-        MatchInfoResultResource result = institutionMapper.toResource(matchInfoResult);
-        log.debug("matchInstitutionAndUser result = {}", result);
-        log.trace("matchInstitutionAndUser end");
-        return result;
+        return institutionService.matchInstitutionAndUser(verificationMatchRequest.getTaxCode(),
+                        userMapper.toUser(verificationMatchRequest.getUserDto()))
+                .map(institutionMapper::toResource)
+                .invoke(result -> {
+                    log.debug("matchInstitutionAndUser result = {}", result);
+                    log.trace("matchInstitutionAndUser end");
+                });
     }
 
     @POST
     @Path("/verification/legal-address")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}",
             description = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}", operationId = "postVerificationLegalAddressUsingPOST")
-    public InstitutionLegalAddressResource postVerificationLegalAddress(@Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
+    public Uni<InstitutionLegalAddressResource> postVerificationLegalAddress(@Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
         RequestParams.requiredBody(verificationLegalAddressRequest);
         log.trace("getInstitutionLegalAddress start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}",
                 LogUtils.sanitize(verificationLegalAddressRequest.getTaxCode()));
-        InstitutionLegalAddressData institutionLegalAddressData = institutionService.getInstitutionLegalAddress(verificationLegalAddressRequest.getTaxCode());
-        InstitutionLegalAddressResource result = onboardingMapper.toResource(institutionLegalAddressData);
-        log.debug("getInstitutionLegalAddress result = {}", result);
-        log.trace("getInstitutionLegalAddress end");
-        return result;
+        return institutionService.getInstitutionLegalAddress(verificationLegalAddressRequest.getTaxCode())
+                .map(onboardingMapper::toResource)
+                .invoke(result -> {
+                    log.debug("getInstitutionLegalAddress result = {}", result);
+                    log.trace("getInstitutionLegalAddress end");
+                });
     }
 
     /**
@@ -369,7 +370,7 @@ public class InstitutionController {
     @Path("/{externalInstitutionId}/products/{productId}/onboarded-institution-info")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}",
             description = "${openapi.onboarding.institutions.api.getInstitutionOnboardingInfo}", operationId = "getInstitutionOnboardingInfoUsingGET_1", hidden = true)
-    public InstitutionOnboardingInfoResource getInstitutionOnboardingInfo(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
+    public Uni<InstitutionOnboardingInfoResource> getInstitutionOnboardingInfo(@Parameter(description = "${openapi.onboarding.institutions.model.externalId}")
                                                                           @PathParam("externalInstitutionId")
                                                                           String externalInstitutionId,
                                                                           @Parameter(description = "${openapi.onboarding.product.model.id}")
@@ -378,11 +379,12 @@ public class InstitutionController {
         log.trace("getInstitutionOnBoardingInfo start");
         log.debug("getInstitutionOnBoardingInfo institutionId = {}, productId = {}",
                 LogUtils.sanitize(externalInstitutionId), LogUtils.sanitize(productId));
-        InstitutionOnboardingData institutionOnboardingData = institutionService.getInstitutionOnboardingData(externalInstitutionId, productId);
-        InstitutionOnboardingInfoResource result = institutionMapper.toResource(institutionOnboardingData);
-        log.debug("getInstitutionOnBoardingInfo result = {}", result);
-        log.trace("getInstitutionOnBoardingInfo end");
-        return result;
+        return institutionService.getInstitutionOnboardingData(externalInstitutionId, productId)
+                .map(institutionMapper::toResource)
+                .invoke(result -> {
+                    log.debug("getInstitutionOnBoardingInfo result = {}", result);
+                    log.trace("getInstitutionOnBoardingInfo end");
+                });
     }
 
 }

@@ -25,7 +25,21 @@ moving that I/O out of the controller is still ST05, not completed by ST03.
 The ST03 candidate passes the complete 550-scenario catalog on both untouched Spring main and Quarkus,
 and all 63 Cucumber scenarios. The published OpenAPI, legacy alias and Spring golden are unchanged.
 The bodyless verification GET explicitly declares `Void` in its response schema so `Uni<Response>` does
-not introduce inferred JSON content. ST04-ST10 and release/review gates remain open.
+not introduce inferred JSON content.
+
+ST04-T01/T03 are complete. All 27 InstitutionService methods and their controller consumers return
+`Uni`, including company verification/onboarding, IPA queries, billing/geographies, active onboarding,
+CSV verification, recipient code and document-gate triggering. Six native onboarding-ms calls compose
+directly without await; the synchronous CSV upload and party/registry/manager lookups run on explicit
+workers. Company ownership precedes onboarding, billing precedes institution/location lookup, and
+only the original location 404 is recovered. Existing retries, tenant/header propagation, IAM empty
+query omission and the user-registry PATCH rejection are preserved.
+
+The ST04 institution candidate passes all 555 scenarios on both untouched Spring main and Quarkus,
+and all 63 Cucumber scenarios. Canonical OpenAPI, alias and golden remain unchanged. The bodyless
+users-PG POST also explicitly declares `Void`; multipart CSV verification remains `@Blocking`
+until ST05 moves file reading out of controllers. ST04 remains open for users/IAM (T02) and the
+story-wide final verification (T04); ST05-ST10 and release/review gates are not complete.
 
 ### Contract download authorization
 

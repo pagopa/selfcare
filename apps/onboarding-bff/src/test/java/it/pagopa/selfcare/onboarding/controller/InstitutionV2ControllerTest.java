@@ -101,62 +101,85 @@ class InstitutionV2ControllerTest {
 
     @Test
     void searchIpaInstitutions_appliesTheSpringDefaults() {
+        // given
         IpaInstitutionsSearchResult result = new IpaInstitutionsSearchResult();
         IpaInstitutionsSearchResource resource = new IpaInstitutionsSearchResource();
-        when(institutionService.searchIpaInstitutions("*", null, 0, 50)).thenReturn(result);
+        when(institutionService.searchIpaInstitutions("*", null, 0, 50)).thenReturn(Uni.createFrom().item(result));
         when(registryProxyMapper.toResource(result)).thenReturn(resource);
 
-        assertSame(resource, controller().searchIpaInstitutions(null, null, null, null));
+        // when
+        var actualResult1 = controller().searchIpaInstitutions(null, null, null, null).await().indefinitely();
+        // then
+        assertSame(resource, actualResult1);
         verify(institutionService).searchIpaInstitutions("*", null, 0, 50);
     }
 
     @Test
     void searchIpaInstitutions_emptySearchFallsBackToTheWildcard() {
-        controller().searchIpaInstitutions("", "C17,C16", "2", "10");
+        // given
+        // when
+        controller().searchIpaInstitutions("", "C17,C16", "2", "10").await().indefinitely();
 
+        // then
         verify(institutionService).searchIpaInstitutions("*", "C17,C16", 2, 10);
     }
 
     @Test
     void searchIpaInstitutions_forwardsTheGivenValues() {
-        controller().searchIpaInstitutions("esempio", "C17,C16", "1", "20");
+        // given
+        // when
+        controller().searchIpaInstitutions("esempio", "C17,C16", "1", "20").await().indefinitely();
 
+        // then
         verify(institutionService).searchIpaInstitutions("esempio", "C17,C16", 1, 20);
     }
 
     @Test
     void searchIpaInstitutions_nonNumericPagingIsABadRequestWithoutDownstreamCalls() {
+        // given
         InstitutionV2Controller controller = controller();
 
-        assertThrows(InvalidRequestException.class, () -> controller.searchIpaInstitutions("a", null, "x", null));
-        assertThrows(InvalidRequestException.class, () -> controller.searchIpaInstitutions("a", null, null, "1.5"));
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.searchIpaInstitutions("a", null, "x", null).await().indefinitely());
+        // then
+        assertThrows(InvalidRequestException.class, () -> controller.searchIpaInstitutions("a", null, null, "1.5").await().indefinitely());
         verifyNoInteractions(institutionService);
     }
 
     @Test
     void findIpaInstitutionByTaxCode_forwardsTaxCodeAndCategory() {
+        // given
         InstitutionProxyInfo info = new InstitutionProxyInfo();
         IpaInstitutionResource resource = new IpaInstitutionResource();
-        when(institutionService.findIpaInstitutionByTaxCode("12345678901", "C17")).thenReturn(info);
+        when(institutionService.findIpaInstitutionByTaxCode("12345678901", "C17")).thenReturn(Uni.createFrom().item(info));
         when(registryProxyMapper.toResource(info)).thenReturn(resource);
 
-        assertSame(resource, controller().findIpaInstitutionByTaxCode("12345678901", "C17"));
+        // when
+        var actualResult1 = controller().findIpaInstitutionByTaxCode("12345678901", "C17").await().indefinitely();
+        // then
+        assertSame(resource, actualResult1);
     }
 
     @Test
     void findIpaInstitutionByTaxCode_categoryIsOptional() {
-        controller().findIpaInstitutionByTaxCode("12345678901", null);
+        // given
+        // when
+        controller().findIpaInstitutionByTaxCode("12345678901", null).await().indefinitely();
 
+        // then
         verify(institutionService).findIpaInstitutionByTaxCode("12345678901", null);
     }
 
     @Test
     void getInstitution_requiresProductId() {
+        // given
         InstitutionV2Controller controller = controller();
 
+        // when
         InvalidRequestException e = assertThrows(InvalidRequestException.class,
-                () -> controller.getInstitution(null, "tax", null, null, null));
+                () -> controller.getInstitution(null, "tax", null, null, null).await().indefinitely());
 
+        // then
         assertEquals("Required request parameter 'productId' for method parameter type String is not present",
                 e.getMessage());
         verifyNoInteractions(institutionService);
@@ -164,45 +187,57 @@ class InstitutionV2ControllerTest {
 
     @Test
     void getActiveOnboarding_requiresTaxCodeAndProductId() {
+        // given
         InstitutionV2Controller controller = controller();
 
-        assertThrows(InvalidRequestException.class, () -> controller.getActiveOnboarding(null, "prod", null));
-        assertThrows(InvalidRequestException.class, () -> controller.getActiveOnboarding("tax", null, null));
-        assertThrows(InvalidRequestException.class, () -> controller.getActiveOnboarding(" ", "prod", null));
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.getActiveOnboarding(null, "prod", null).await().indefinitely());
+        // then
+        assertThrows(InvalidRequestException.class, () -> controller.getActiveOnboarding("tax", null, null).await().indefinitely());
+        assertThrows(InvalidRequestException.class, () -> controller.getActiveOnboarding(" ", "prod", null).await().indefinitely());
         verifyNoInteractions(institutionService);
     }
 
     @Test
     void checkRecipientCode_requiresBothParameters() {
+        // given
         InstitutionV2Controller controller = controller();
 
-        assertThrows(InvalidRequestException.class, () -> controller.checkRecipientCode(null, "RC"));
-        assertThrows(InvalidRequestException.class, () -> controller.checkRecipientCode("origin", null));
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.checkRecipientCode(null, "RC").await().indefinitely());
+        // then
+        assertThrows(InvalidRequestException.class, () -> controller.checkRecipientCode("origin", null).await().indefinitely());
         verifyNoInteractions(institutionService);
     }
 
     @Test
     void getOnboardingsInfo_requiresTaxCodeAndStatus() {
+        // given
         InstitutionV2Controller controller = controller();
 
-        assertThrows(InvalidRequestException.class, () -> controller.getOnboardingsInfo(null, "PENDING"));
-        assertThrows(InvalidRequestException.class, () -> controller.getOnboardingsInfo("tax", null));
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.getOnboardingsInfo(null, "PENDING").await().indefinitely());
+        // then
+        assertThrows(InvalidRequestException.class, () -> controller.getOnboardingsInfo("tax", null).await().indefinitely());
         verifyNoInteractions(institutionService);
     }
 
     @Test
     void verifyAggregatesCsv_supportsLegacyQueryProductIdWhenFormProductIdMissing() throws Exception {
+        // given
         Path tempFile = Files.createTempFile("aggregates-", ".csv");
         Files.writeString(tempFile, "taxCode;description\n123;demo");
         try {
             FileUpload fileUpload = csv(tempFile);
             VerifyAggregateResult serviceResponse = new VerifyAggregateResult();
             VerifyAggregatesResponse mappedResponse = new VerifyAggregatesResponse();
-            when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"))).thenReturn(serviceResponse);
+            when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"))).thenReturn(Uni.createFrom().item(serviceResponse));
             when(onboardingMapper.toVerifyAggregatesResponse(serviceResponse)).thenReturn(mappedResponse);
 
-            VerifyAggregatesResponse result = controller().verifyAggregatesCsv(fileUpload, null, null, "PA", "prod-io");
+        // when
+            VerifyAggregatesResponse result = controller().verifyAggregatesCsv(fileUpload, null, null, "PA", "prod-io").await().indefinitely();
 
+        // then
             assertSame(mappedResponse, result);
             verify(institutionService).validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"));
         } finally {
@@ -212,14 +247,17 @@ class InstitutionV2ControllerTest {
 
     @Test
     void verifyAggregatesCsv_formProductIdWinsOverTheLegacyQuery() throws Exception {
+        // given
         Path tempFile = Files.createTempFile("aggregates-", ".csv");
         Files.writeString(tempFile, "taxCode;description\n123;demo");
         try {
             FileUpload fileUpload = csv(tempFile);
-            when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"))).thenReturn(new VerifyAggregateResult());
+            when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"))).thenReturn(Uni.createFrom().item(new VerifyAggregateResult()));
 
-            controller().verifyAggregatesCsv(fileUpload, "PA", "prod-pn", null, "prod-io");
+        // when
+            controller().verifyAggregatesCsv(fileUpload, "PA", "prod-pn", null, "prod-io").await().indefinitely();
 
+        // then
             verify(institutionService).validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"));
         } finally {
             Files.deleteIfExists(tempFile);
@@ -228,14 +266,17 @@ class InstitutionV2ControllerTest {
 
     @Test
     void verifyAggregatesCsv_throwsWhenProductIdMissing() throws Exception {
+        // given
         Path tempFile = Files.createTempFile("aggregates-", ".csv");
         Files.writeString(tempFile, "taxCode;description\n123;demo");
         try {
             FileUpload fileUpload = csv(tempFile);
             InstitutionV2Controller controller = controller();
 
+        // when
             assertThrows(InvalidRequestException.class,
-                    () -> controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null));
+                    () -> controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null).await().indefinitely());
+        // then
             verifyNoInteractions(institutionService);
         } finally {
             Files.deleteIfExists(tempFile);
@@ -244,17 +285,21 @@ class InstitutionV2ControllerTest {
 
     @Test
     void verifyAggregatesCsv_throwsWhenTheFilePartIsMissing() {
+        // given
         InstitutionV2Controller controller = controller();
 
+        // when
         InvalidRequestException e = assertThrows(InvalidRequestException.class,
-                () -> controller.verifyAggregatesCsv(null, "PA", "prod-io", null, null));
+                () -> controller.verifyAggregatesCsv(null, "PA", "prod-io", null, null).await().indefinitely());
 
+        // then
         assertEquals("Required part 'aggregates' is not present.", e.getMessage());
         verifyNoInteractions(institutionService);
     }
 
     @Test
     void verifyAggregatesCsv_rejectsUnsupportedFileFormats() throws Exception {
+        // given
         Path tempFile = Files.createTempFile("aggregates-", ".txt");
         Files.writeString(tempFile, "demo");
         try {
@@ -264,8 +309,10 @@ class InstitutionV2ControllerTest {
             when(fileUpload.uploadedFile()).thenReturn(tempFile);
             InstitutionV2Controller controller = controller();
 
+        // when
             assertThrows(InvalidRequestException.class,
-                    () -> controller.verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null));
+                    () -> controller.verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null).await().indefinitely());
+        // then
             verifyNoInteractions(institutionService);
         } finally {
             Files.deleteIfExists(tempFile);
@@ -274,16 +321,56 @@ class InstitutionV2ControllerTest {
 
     @Test
     void triggerOnboardingRequest_answersNoContent() {
-        assertEquals(204, controller().triggerOnboardingRequest("onb-1").getStatus());
+        // given
+        // when
+        var actualResult1 = controller().triggerOnboardingRequest("onb-1").await().indefinitely();
+        // then
+        assertEquals(204, actualResult1.getStatus());
 
         verify(institutionService).triggerOnboardingRequest("onb-1");
     }
 
     @Test
     void getInstitution_mapsTheFilteredInstitutions() {
-        when(institutionService.getByFilters("prod", "tax", null, null, null)).thenReturn(List.of());
+        // given
+        when(institutionService.getByFilters("prod", "tax", null, null, null)).thenReturn(Uni.createFrom().item(List.of()));
 
-        assertEquals(List.of(), controller().getInstitution("prod", "tax", null, null, null));
+        // when
+        var actualResult1 = controller().getInstitution("prod", "tax", null, null, null).await().indefinitely();
+        // then
+        assertEquals(List.of(), actualResult1);
+    }
+
+    @Test
+    void triggerDoesNotReturnNoContentBeforeTheServiceCompletes() {
+        // given
+        AtomicReference<UniEmitter<? super Void>> pending = new AtomicReference<>();
+        when(institutionService.triggerOnboardingRequest("onb-1"))
+                .thenReturn(Uni.createFrom().<Void>emitter(pending::set));
+
+        // when
+        UniAssertSubscriber<Response> result = controller().triggerOnboardingRequest("onb-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        pending.get().complete(null);
+        result.assertCompleted();
+        assertEquals(204, result.getItem().getStatus());
+    }
+
+    @Test
+    void triggerFailureDoesNotBecomeASuccessResponse() {
+        // given
+        InvalidRequestException failure = new InvalidRequestException("invalid onboarding");
+        when(institutionService.triggerOnboardingRequest("onb-1")).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Response> result = controller().triggerOnboardingRequest("onb-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
     }
 
     private static FileUpload csv(Path tempFile) {

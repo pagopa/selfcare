@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -15,6 +16,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniEmitter;
 import it.pagopa.selfcare.onboarding.client.OnboardingUploadRestClient;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
@@ -34,6 +37,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.UUID;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.eclipse.microprofile.faulttolerance.Retry;
 import org.junit.jupiter.api.Test;
@@ -192,6 +197,7 @@ class OnboardingServiceImplTest {
 
     @Test
     void getByFilters_keepsTheOnboardingOfTheRequestedProductWithoutReferenceAndNotSubunit() {
+        // given
         OnboardingResponse wanted = onboardingResponse("prod-io", null, null);
         OnboardingResponse otherProduct = onboardingResponse("prod-pn", null, null);
         OnboardingResponse withReference = onboardingResponse("prod-io", "ref", null);
@@ -200,31 +206,42 @@ class OnboardingServiceImplTest {
         when(supportApi.onboardingInstitutionUsingGET("IPA", "oid", OnboardingStatus.COMPLETED, null, "tax"))
                 .thenReturn(Uni.createFrom().item(List.of(wanted, otherProduct, withReference, uo, aoo)));
 
-        List<OnboardingResponse> result = onboardingService.getByFilters("prod-io", "tax", "IPA", "oid", null);
+        // when
+        List<OnboardingResponse> result = onboardingService.getByFilters("prod-io", "tax", "IPA", "oid", null).await().indefinitely();
 
+        // then
         assertEquals(List.of(wanted), result);
     }
 
     @Test
     void getByFilters_withSubunitCodeKeepsOnlyOnboardingsWithoutReference() {
+        // given
         OnboardingResponse uo = onboardingResponse("prod-io", null, InstitutionPaSubunitType.UO);
         OnboardingResponse withReference = onboardingResponse("prod-io", "ref", InstitutionPaSubunitType.UO);
         when(supportApi.onboardingInstitutionUsingGET(null, null, OnboardingStatus.COMPLETED, "SUB", "tax"))
                 .thenReturn(Uni.createFrom().item(List.of(uo, withReference)));
 
-        assertEquals(List.of(uo), onboardingService.getByFilters("prod-io", "tax", null, null, "SUB"));
+        // when
+        var actualResult1 = onboardingService.getByFilters("prod-io", "tax", null, null, "SUB").await().indefinitely();
+        // then
+        assertEquals(List.of(uo), actualResult1);
     }
 
     @Test
     void getByFilters_nullDownstreamBodyIsEmpty() {
+        // given
         when(supportApi.onboardingInstitutionUsingGET(null, null, OnboardingStatus.COMPLETED, null, "tax"))
                 .thenReturn(Uni.createFrom().nullItem());
 
-        assertTrue(onboardingService.getByFilters("prod-io", "tax", null, null, null).isEmpty());
+        // when
+        var actualResult1 = onboardingService.getByFilters("prod-io", "tax", null, null, null).await().indefinitely();
+        // then
+        assertTrue(actualResult1.isEmpty());
     }
 
     @Test
     void onboardingWithFilter_mapsTheResponseAndNeverForwardsProductId() {
+        // given
         OnboardingGetResponse response = new OnboardingGetResponse();
         List<OnboardingResult> mapped = List.of(new OnboardingResult());
         when(onboardingApi.getOnboardingWithFilter(
@@ -233,14 +250,20 @@ class OnboardingServiceImplTest {
                 .thenReturn(Uni.createFrom().item(response));
         when(onboardingMapper.toOnboardingWithFilter(response)).thenReturn(mapped);
 
-        assertSame(mapped, onboardingService.onboardingWithFilter("tax", "PENDING"));
+        // when
+        var actualResult1 = onboardingService.onboardingWithFilter("tax", "PENDING").await().indefinitely();
+        // then
+        assertSame(mapped, actualResult1);
     }
 
     @Test
     void onboardingWithFilter_unknownStatusIsRejectedWithoutCall() {
+        // given
         for (String status : new String[]{"NOT_A_STATUS", "pending", " ", null}) {
+        // when
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                    () -> onboardingService.onboardingWithFilter("tax", status));
+                    () -> onboardingService.onboardingWithFilter("tax", status).await().indefinitely());
+        // then
             assertEquals("Unexpected value '" + status + "'", exception.getMessage());
         }
         verifyNoInteractions(onboardingApi);
@@ -273,22 +296,29 @@ class OnboardingServiceImplTest {
 
     @Test
     void aggregatesVerification_supportsOnlyTheAggregatesProducts() {
+        // given
         UploadedFile file = new UploadedFile("aggregates.csv", "text/csv", new byte[]{1});
         VerifyAggregateResponse response = new VerifyAggregateResponse();
         VerifyAggregateResult mapped = new VerifyAggregateResult();
         when(uploadClient.verifyAggregatesCsv(eq("prod-io"), any())).thenReturn(response);
         when(onboardingMapper.toVerifyAggregateResult(response)).thenReturn(mapped);
 
-        assertSame(mapped, onboardingService.aggregatesVerification(file, "prod-io"));
+        // when
+        var actualResult1 = onboardingService.aggregatesVerification(file, "prod-io").await().indefinitely();
+        // then
+        assertSame(mapped, actualResult1);
 
         InvalidRequestException exception = assertThrows(InvalidRequestException.class,
-                () -> onboardingService.aggregatesVerification(file, "prod-other"));
+                () -> onboardingService.aggregatesVerification(file, "prod-other").await().indefinitely());
         assertEquals("400 BAD_REQUEST Unsupported productId: prod-other", exception.getMessage());
     }
 
     @Test
     void aggregatesVerification_rejectsNullProductBeforeCallingTheDownstream() {
-        assertThrows(NullPointerException.class, () -> onboardingService.aggregatesVerification(null, null));
+        // given
+        // when
+        assertThrows(NullPointerException.class, () -> onboardingService.aggregatesVerification(null, null).await().indefinitely());
+        // then
         verifyNoInteractions(uploadClient, onboardingMapper);
     }
 
@@ -379,18 +409,97 @@ class OnboardingServiceImplTest {
         when(onboardingMapper.toOnboardingPaAggregationRequest(data)).thenReturn(new OnboardingPaRequest());
         when(onboardingMapper.toOnboardingUserPgRequest(data)).thenReturn(new OnboardingUserPgRequest());
 
-        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboardingCompany(data))
+        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboardingCompany(data).await().indefinitely())
                 .getMessage().startsWith("_onboardingPgCompletion.onboardingPgRequest."));
         // when
         assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboardingPaAggregation(data).await().indefinitely())
                 .getMessage().startsWith("_onboardingPaAggregation.onboardingPaRequest."));
         // then
         assertTrue(assertThrows(InvalidRequestException.class,
-                () -> onboardingService.onboardingUsersPgFromIcAndAde(data))
+                () -> onboardingService.onboardingUsersPgFromIcAndAde(data).await().indefinitely())
                 .getMessage().startsWith("_onboardingUsersPg.onboardingUserPgRequest."));
         assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.checkManager(new CheckManagerRequest()).await().indefinitely())
                 .getMessage().startsWith("_checkManager.checkManagerRequest."));
         verifyNoInteractions(onboardingApi);
+    }
+
+    @Test
+    void recipientCodeMappingWaitsForTheNativeClientResult() {
+        // given
+        AtomicReference<UniEmitter<? super org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus>> pending = new AtomicReference<>();
+        var response = org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus.ACCEPTED;
+        when(onboardingApi.checkRecipientCode("origin", "ABCDEF"))
+                .thenReturn(Uni.createFrom().<org.openapi.quarkus.onboarding_json.model.RecipientCodeStatus>emitter(pending::set));
+        when(onboardingMapper.toRecipientCodeStatusResult(response))
+                .thenReturn(it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult.ACCEPTED);
+
+        // when
+        var result = onboardingService.checkRecipientCode("origin", "ABCDEF")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(onboardingMapper);
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult.ACCEPTED);
+    }
+
+    @Test
+    void triggerWaitsForTheNativeResponseAndClosesIt() {
+        // given
+        AtomicReference<UniEmitter<? super Response>> pending = new AtomicReference<>();
+        Response response = mock(Response.class);
+        when(onboardingApi.triggerDocumentGate("onb-1")).thenReturn(Uni.createFrom().<Response>emitter(pending::set));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.triggerOnboardingRequest("onb-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(response);
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(null);
+        verify(response).close();
+    }
+
+    @Test
+    void triggerPropagatesTheNativeFailure() {
+        // given
+        ProcessingException failure = new ProcessingException("connection dropped");
+        when(onboardingApi.triggerDocumentGate("onb-1")).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.triggerOnboardingRequest("onb-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+    }
+
+    @Test
+    void aggregatesUploadRunsLazilyOnTheWorkerAndKeepsItsFailure() {
+        // given
+        UploadedFile file = new UploadedFile("aggregates.csv", "text/csv", new byte[]{1});
+        ProcessingException failure = new ProcessingException("upload failed");
+        AtomicReference<Thread> uploadThread = new AtomicReference<>();
+        when(uploadClient.verifyAggregatesCsv(eq("prod-io"), any())).thenAnswer(invocation -> {
+            uploadThread.set(Thread.currentThread());
+            throw failure;
+        });
+        Uni<VerifyAggregateResult> operation = onboardingService.aggregatesVerification(file, "prod-io");
+        verifyNoInteractions(uploadClient, onboardingMapper);
+        Thread subscribingThread = Thread.currentThread();
+
+        // when
+        UniAssertSubscriber<VerifyAggregateResult> result = operation.subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.awaitFailure(Duration.ofSeconds(2));
+        assertSame(failure, result.getFailure());
+        assertNotSame(subscribingThread, uploadThread.get());
+        verify(uploadClient).verifyAggregatesCsv(eq("prod-io"), any());
+        verifyNoInteractions(onboardingMapper);
     }
 
     private static InstitutionBaseRequest institutionBase() {

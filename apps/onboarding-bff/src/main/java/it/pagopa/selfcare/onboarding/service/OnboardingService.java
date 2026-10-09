@@ -20,7 +20,7 @@ public interface OnboardingService {
 
     void onboardingUsersAggregator(OnboardingData onboardingData);
 
-    void onboardingCompany(OnboardingData onboardingData);
+    Uni<Void> onboardingCompany(OnboardingData onboardingData);
 
     void onboardingTokenComplete(String onboardingId, UploadedFile contract);
 
@@ -38,19 +38,19 @@ public interface OnboardingService {
 
     Uni<Void> onboardingPaAggregation(OnboardingData onboardingData);
 
-    List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
+    Uni<List<OnboardingResponse>> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
     Uni<Boolean> checkManager(CheckManagerRequest request);
 
-    RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
+    Uni<RecipientCodeStatusResult> checkRecipientCode(String originId, String recipientCode);
 
     Uni<Void> verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
 
-    void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData);
+    Uni<Void> onboardingUsersPgFromIcAndAde(OnboardingData onboardingData);
 
-    List<OnboardingResult> onboardingWithFilter(String taxCode, String status);
+    Uni<List<OnboardingResult>> onboardingWithFilter(String taxCode, String status);
 
-    VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId);
+    Uni<VerifyAggregateResult> aggregatesVerification(UploadedFile file, String productId);
 
-    void triggerOnboardingRequest(String onboardingId);
+    Uni<Void> triggerOnboardingRequest(String onboardingId);
 }

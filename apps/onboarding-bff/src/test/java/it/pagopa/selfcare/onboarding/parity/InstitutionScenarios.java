@@ -278,6 +278,38 @@ final class InstitutionScenarios {
   }
 
   private static void v2Onboarding(List<Scenario> s) {
+    for (boolean certified : new boolean[]{true, false}) {
+      String origin = certified ? "infocamere" : "ade";
+      String registryMethod = certified ? "POST" : "GET";
+      String registryPath = certified ? "/info-camere/institutions" : "/national-registries/verify-legal";
+      String owned = certified
+          ? "{\"businesses\":[{\"businessTaxId\":\"" + TAX + "\",\"businessName\":\"Acme\"}]}"
+          : "{\"verificationResult\":true}";
+      String notOwned = certified ? "{\"businesses\":[]}" : "{\"verificationResult\":false}";
+      s.add(
+          Scenario.api(G, "v2-company-onboarding-" + origin + "-verifies-before-completion", "POST", "/v2/institutions/company/onboarding")
+              .json(companyOnboardingRequest(certified))
+              .stub(st -> {
+                st.on(PARTY_REGISTRY_PROXY, registryMethod, registryPath, Reply.json(200, owned));
+                st.on(MS_ONBOARDING, "POST", "/v1/onboarding/pg/completion", Reply.json(200, "{\"id\":\"ob9\"}"));
+              })
+              .expect(c -> c.status(201).noBody().exactCalls(
+                      "party-registry-proxy " + registryMethod + " " + registryPath,
+                      "ms-onboarding POST /v1/onboarding/pg/completion")
+                  .propagatesIdentity()
+                  .call(MS_ONBOARDING, "POST", "/v1/onboarding/pg/completion")
+                  .jsonBody("/productId", "prod-io").jsonBody("/institutionType", "PG")
+                  .jsonBody("/taxCode", TAX).jsonBody("/businessName", "Acme")
+                  .jsonBody("/origin", certified ? "INFOCAMERE" : "ADE")
+                  .jsonBody("/users/0/role", "MANAGER")));
+      s.add(
+          Scenario.api(G, "v2-company-onboarding-" + origin + "-not-owned-never-completes", "POST", "/v2/institutions/company/onboarding")
+              .json(companyOnboardingRequest(certified))
+              .stub(st -> st.on(PARTY_REGISTRY_PROXY, registryMethod, registryPath, Reply.json(200, notOwned)))
+              .expect(c -> c.problem(403, "The selected business does not belong to the user")
+                  .exactCalls("party-registry-proxy " + registryMethod + " " + registryPath)
+                  .propagatesIdentity()));
+    }
     s.add(
         Scenario.api(G, "v2-onboarding-users-pg", "POST", "/v2/institutions/onboarding/users/pg")
             .json("{\"productId\":\"prod-io\",\"taxCode\":\"" + TAX + "\",\"certified\":true,\"users\":[" + MANAGER + "]}")
@@ -319,6 +351,14 @@ final class InstitutionScenarios {
         Scenario.api(G, "v1-company-onboarding-requires-body-fields", "POST", "/v1/institutions/company/onboarding")
             .json("{\"productId\":\"prod-io\"}")
             .expect(c -> c.status(400).contentType("application/problem+json").totalCalls(0)));
+  }
+
+  static String companyOnboardingRequest(boolean certified) {
+    return """
+        {"productId":"prod-io","institutionType":"PG","taxCode":"%s",
+         "billingData":{"businessName":"Acme","taxCode":"%s","certified":%s,"digitalAddress":"pec@t.it"},
+         "users":[%s]}
+        """.formatted(TAX, TAX, certified, MANAGER);
   }
 
   private static void v1Queries(List<Scenario> s) {

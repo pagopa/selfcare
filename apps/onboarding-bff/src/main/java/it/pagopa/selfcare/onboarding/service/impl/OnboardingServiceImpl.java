@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.buffer.Buffer;
 import it.pagopa.selfcare.onboarding.client.OnboardingUploadRestClient;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
@@ -30,11 +31,9 @@ import org.openapi.quarkus.onboarding_json.api.SupportApi;
 import org.openapi.quarkus.onboarding_json.model.ApproveRequest;
 import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
 import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
-import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
 import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
 import org.openapi.quarkus.onboarding_json.model.OnboardingStatus;
 import org.openapi.quarkus.onboarding_json.model.ReasonRequest;
-import org.openapi.quarkus.onboarding_json.model.VerifyAggregateResponse;
 
 import java.io.IOException;
 import java.time.temporal.ChronoUnit;
@@ -107,8 +106,9 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingCompany(OnboardingData onboardingData) {
-        onboardingApi.onboardingPgCompletion(validated("_onboardingPgCompletion", "onboardingPgRequest", onboardingMapper.toOnboardingPgRequest(onboardingData))).await().indefinitely();
+    public Uni<Void> onboardingCompany(OnboardingData onboardingData) {
+        return onboardingApi.onboardingPgCompletion(validated("_onboardingPgCompletion", "onboardingPgRequest", onboardingMapper.toOnboardingPgRequest(onboardingData)))
+                .replaceWithVoid();
     }
 
     @Override
@@ -172,19 +172,18 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    public List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
-        List<OnboardingResponse> result = supportApi.onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode)
-                .await().indefinitely();
-        return Objects.nonNull(result) ? result.stream()
-                .filter(onboardingResponse -> {
-                    if (Objects.isNull(subunitCode) && Objects.nonNull(onboardingResponse.getInstitution().getSubunitType())) {
-                        return !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.UO.name())
-                                && !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.AOO.name());
-                    }
-                    return StringUtils.isBlank(onboardingResponse.getReferenceOnboardingId());
-                })
-                .filter(onboardingResponse -> onboardingResponse.getProductId().equals(productId))
-                .toList() : List.of();
+    public Uni<List<OnboardingResponse>> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode) {
+        return supportApi.onboardingInstitutionUsingGET(origin, originId, OnboardingStatus.COMPLETED, subunitCode, taxCode)
+                .map(result -> Objects.nonNull(result) ? result.stream()
+                        .filter(onboardingResponse -> {
+                            if (Objects.isNull(subunitCode) && Objects.nonNull(onboardingResponse.getInstitution().getSubunitType())) {
+                                return !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.UO.name())
+                                        && !onboardingResponse.getInstitution().getSubunitType().name().equals(InstitutionPaSubunitType.AOO.name());
+                            }
+                            return StringUtils.isBlank(onboardingResponse.getReferenceOnboardingId());
+                        })
+                        .filter(onboardingResponse -> onboardingResponse.getProductId().equals(productId))
+                        .toList() : List.of());
     }
 
     @Override
@@ -195,8 +194,9 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    public RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode) {
-        return onboardingMapper.toRecipientCodeStatusResult(onboardingApi.checkRecipientCode(originId, recipientCode).await().indefinitely());
+    public Uni<RecipientCodeStatusResult> checkRecipientCode(String originId, String recipientCode) {
+        return onboardingApi.checkRecipientCode(originId, recipientCode)
+                .map(onboardingMapper::toRecipientCodeStatusResult);
     }
 
     @Override
@@ -210,16 +210,17 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    public void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {
+    public Uni<Void> onboardingUsersPgFromIcAndAde(OnboardingData onboardingData) {
         log.trace("onboardingUsersPgFromIcAndAde start");
-        onboardingApi.onboardingUsersPg(validated("_onboardingUsersPg", "onboardingUserPgRequest", onboardingMapper.toOnboardingUserPgRequest(onboardingData))).await().indefinitely();
-        log.trace("onboardingUsersPgFromIcAndAde end");
+        return onboardingApi.onboardingUsersPg(validated("_onboardingUsersPg", "onboardingUserPgRequest", onboardingMapper.toOnboardingUserPgRequest(onboardingData)))
+                .invoke(response -> log.trace("onboardingUsersPgFromIcAndAde end"))
+                .replaceWithVoid();
     }
 
     @Override
-    public List<OnboardingResult> onboardingWithFilter(String taxCode, String status) {
+    public Uni<List<OnboardingResult>> onboardingWithFilter(String taxCode, String status) {
         log.trace("onboardingWithFilter start");
-        OnboardingGetResponse response = onboardingApi.getOnboardingWithFilter(
+        return onboardingApi.getOnboardingWithFilter(
                 null,
                 null,
                 null,
@@ -232,20 +233,20 @@ public class OnboardingServiceImpl implements OnboardingService {
                 null,
                 taxCode,
                 null,
-                null).await().indefinitely();
-        List<OnboardingResult> results = onboardingMapper.toOnboardingWithFilter(response);
-        log.trace("onboardingWithFilter end");
-        return results;
+                null)
+                .map(onboardingMapper::toOnboardingWithFilter)
+                .invoke(results -> log.trace("onboardingWithFilter end"));
     }
 
     @Override
-    public VerifyAggregateResult aggregatesVerification(UploadedFile file, String productId) {
+    public Uni<VerifyAggregateResult> aggregatesVerification(UploadedFile file, String productId) {
         Objects.requireNonNull(productId, "productId");
         log.info("validateAggregatesCsv for product: {}", LogUtils.sanitize(productId));
         switch (productId) {
             case PROD_IO, PROD_PAGOPA, PROD_PN -> {
-                VerifyAggregateResponse response = uploadClient.verifyAggregatesCsv(productId, multipart(AGGREGATES_PART, file));
-                return onboardingMapper.toVerifyAggregateResult(response);
+                return Uni.createFrom().item(() -> uploadClient.verifyAggregatesCsv(productId, multipart(AGGREGATES_PART, file)))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                        .map(onboardingMapper::toVerifyAggregateResult);
             }
             default -> {
                 log.error("Unsupported productId: {}", LogUtils.sanitize(productId));
@@ -256,10 +257,12 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void triggerOnboardingRequest(String onboardingId) {
+    public Uni<Void> triggerOnboardingRequest(String onboardingId) {
         log.trace("triggerOnboardingRequest start");
-        onboardingApi.triggerDocumentGate(onboardingId).await().indefinitely().close();
-        log.trace("triggerOnboardingRequest end");
+        return onboardingApi.triggerDocumentGate(onboardingId)
+                .invoke(Response::close)
+                .invoke(response -> log.trace("triggerOnboardingRequest end"))
+                .replaceWithVoid();
     }
 
     // The downstream contract is strict, unlike the case-insensitive generated fromString

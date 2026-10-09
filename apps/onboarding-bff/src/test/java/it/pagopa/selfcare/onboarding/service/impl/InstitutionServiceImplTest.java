@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -80,6 +81,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
@@ -173,6 +176,7 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingCompanyV2_infocamereRequiresTheBusinessToBelongToTheUser() {
+        // given
         OnboardingData data = new OnboardingData();
         data.setTaxCode(TAX_CODE);
         data.setOrigin("INFOCAMERE");
@@ -182,13 +186,16 @@ class InstitutionServiceImplTest {
         businesses.setBusinesses(List.of(business));
         when(registryProxyService.getInstitutionsByUserFiscalCode("USER_CF")).thenReturn(businesses);
 
-        service.onboardingCompanyV2(data, "USER_CF");
+        // when
+        service.onboardingCompanyV2(data, "USER_CF").await().indefinitely();
 
+        // then
         verify(onboardingService).onboardingCompany(data);
     }
 
     @Test
     void onboardingCompanyV2_infocamereBusinessNotOwnedOrMissingIsNotAllowed() {
+        // given
         OnboardingData data = new OnboardingData();
         data.setTaxCode(TAX_CODE);
         data.setOrigin("INFOCAMERE");
@@ -200,14 +207,17 @@ class InstitutionServiceImplTest {
         when(registryProxyService.getInstitutionsByUserFiscalCode("EMPTY_CF")).thenReturn(new InstitutionInfoIC());
         when(registryProxyService.getInstitutionsByUserFiscalCode("NULL_CF")).thenReturn(null);
 
-        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "USER_CF"));
-        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "EMPTY_CF"));
-        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "NULL_CF"));
+        // when
+        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "USER_CF").await().indefinitely());
+        // then
+        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "EMPTY_CF").await().indefinitely());
+        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "NULL_CF").await().indefinitely());
         verifyNoInteractions(onboardingService);
     }
 
     @Test
     void onboardingCompanyV2_adeRequiresAPositiveMatch() {
+        // given
         OnboardingData data = new OnboardingData();
         data.setTaxCode(TAX_CODE);
         data.setOrigin("ADE");
@@ -219,20 +229,25 @@ class InstitutionServiceImplTest {
         when(registryProxyService.matchInstitutionAndUser(TAX_CODE, "KO_CF")).thenReturn(noMatch);
         when(registryProxyService.matchInstitutionAndUser(TAX_CODE, "NULL_CF")).thenReturn(null);
 
-        service.onboardingCompanyV2(data, "OK_CF");
-        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "KO_CF"));
-        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "NULL_CF"));
+        // when
+        service.onboardingCompanyV2(data, "OK_CF").await().indefinitely();
+        // then
+        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "KO_CF").await().indefinitely());
+        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingCompanyV2(data, "NULL_CF").await().indefinitely());
 
         verify(onboardingService).onboardingCompany(data);
     }
 
     @Test
     void onboardingCompanyV2_unsupportedOriginIsABadRequest() {
+        // given
         OnboardingData data = new OnboardingData();
         data.setOrigin("IPA");
 
-        InvalidRequestException e = assertThrows(InvalidRequestException.class, () -> service.onboardingCompanyV2(data, "USER_CF"));
+        // when
+        InvalidRequestException e = assertThrows(InvalidRequestException.class, () -> service.onboardingCompanyV2(data, "USER_CF").await().indefinitely());
 
+        // then
         assertEquals("Origin not supported", e.getMessage());
         verifyNoInteractions(onboardingService, registryProxyService);
     }
@@ -696,25 +711,33 @@ class InstitutionServiceImplTest {
 
     @Test
     void ipaSearchAndLookup_delegateToThePartyRegistryProxy() {
+        // given
         IpaInstitutionsSearchResult search = new IpaInstitutionsSearchResult();
         InstitutionProxyInfo found = new InstitutionProxyInfo();
         when(registryProxyService.searchIpaInstitutions("*", "L6", 0, 50)).thenReturn(search);
         when(registryProxyService.findIpaInstitutionByTaxCode(TAX_CODE, "L6")).thenReturn(found);
 
-        assertSame(search, service.searchIpaInstitutions("*", "L6", 0, 50));
-        assertSame(found, service.findIpaInstitutionByTaxCode(TAX_CODE, "L6"));
+        // when
+        var actualResult1 = service.searchIpaInstitutions("*", "L6", 0, 50).await().indefinitely();
+        // then
+        assertSame(search, actualResult1);
+        var actualResult2 = service.findIpaInstitutionByTaxCode(TAX_CODE, "L6").await().indefinitely();
+        assertSame(found, actualResult2);
     }
 
     @Test
     void getActiveOnboarding_keepsOnlyActiveOnboardingsOfTheProduct() {
+        // given
         Institution institution = institution("ext-id");
         institution.setOnboarding(List.of(
                 onboarding(PRODUCT_ID, "ACTIVE"), onboarding(PRODUCT_ID, "PENDING"), onboarding("other", "ACTIVE")));
         Institution withoutOnboarding = institution("other-ext");
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, "sub")).thenReturn(List.of(institution, withoutOnboarding));
 
-        List<Institution> result = service.getActiveOnboarding(TAX_CODE, PRODUCT_ID, "sub");
+        // when
+        List<Institution> result = service.getActiveOnboarding(TAX_CODE, PRODUCT_ID, "sub").await().indefinitely();
 
+        // then
         assertEquals(1, result.size());
         assertEquals(1, result.get(0).getOnboarding().size());
         assertEquals("ACTIVE", result.get(0).getOnboarding().get(0).getStatus());
@@ -722,23 +745,29 @@ class InstitutionServiceImplTest {
 
     @Test
     void getActiveOnboarding_notFoundCases() {
+        // given
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode("none", null)).thenReturn(List.of());
         Institution inactive = institution("ext-id");
         inactive.setOnboarding(List.of(onboarding(PRODUCT_ID, "PENDING")));
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode("inactive", null)).thenReturn(List.of(inactive));
 
+        // when
         assertEquals("Institution not found",
-                assertThrows(ResourceNotFoundException.class, () -> service.getActiveOnboarding("none", PRODUCT_ID, null)).getMessage());
+        // then
+                assertThrows(ResourceNotFoundException.class, () -> service.getActiveOnboarding("none", PRODUCT_ID, null).await().indefinitely()).getMessage());
         assertEquals("Institution doesn't have active onboarding for the given product",
-                assertThrows(ResourceNotFoundException.class, () -> service.getActiveOnboarding("inactive", PRODUCT_ID, null)).getMessage());
+                assertThrows(ResourceNotFoundException.class, () -> service.getActiveOnboarding("inactive", PRODUCT_ID, null).await().indefinitely()).getMessage());
     }
 
     @Test
     void getInstitutionOnboardingDataById_validatesInputAndMergesBilling() {
+        // given
+        // when
         assertEquals("An Institution id is required",
-                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingDataById(" ", PRODUCT_ID)).getMessage());
+        // then
+                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingDataById(" ", PRODUCT_ID).await().indefinitely()).getMessage());
         assertEquals("A Product Id is required",
-                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingDataById(INSTITUTION_ID, null)).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingDataById(INSTITUTION_ID, null).await().indefinitely()).getMessage());
 
         OnboardingResource onboarding = new OnboardingResource();
         onboarding.setPricingPlan("C3");
@@ -752,7 +781,7 @@ class InstitutionServiceImplTest {
         when(partyService.getInstitutionById(INSTITUTION_ID, PRODUCT_ID)).thenReturn(institution);
         when(institutionMapper.toInstitutionInfo(institution)).thenReturn(info);
 
-        InstitutionOnboardingData result = service.getInstitutionOnboardingDataById(INSTITUTION_ID, PRODUCT_ID);
+        InstitutionOnboardingData result = service.getInstitutionOnboardingDataById(INSTITUTION_ID, PRODUCT_ID).await().indefinitely();
 
         assertSame(info, result.getInstitution());
         assertEquals("C3", info.getPricingPlan());
@@ -762,49 +791,62 @@ class InstitutionServiceImplTest {
 
     @Test
     void getInstitutionOnboardingDataById_noOnboardingIsNotFound() {
+        // given
         when(partyService.getOnboardings(INSTITUTION_ID, PRODUCT_ID)).thenReturn(List.of());
 
+        // when
         ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class,
-                () -> service.getInstitutionOnboardingDataById(INSTITUTION_ID, PRODUCT_ID));
+                () -> service.getInstitutionOnboardingDataById(INSTITUTION_ID, PRODUCT_ID).await().indefinitely());
 
+        // then
         assertEquals("Onboarding for institutionId institution-id not found", e.getMessage());
         verify(partyService, never()).getInstitutionById(any(), any());
     }
 
     @Test
     void getInstitutionOnboardingData_requiresInputs() {
+        // given
+        // when
         assertEquals("An Institution id is required",
-                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingData(null, PRODUCT_ID)).getMessage());
+        // then
+                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingData(null, PRODUCT_ID).await().indefinitely()).getMessage());
         assertEquals("A Product Id is required",
-                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingData(INSTITUTION_ID, " ")).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionOnboardingData(INSTITUTION_ID, " ").await().indefinitely()).getMessage());
     }
 
     @Test
     void getInstitutionOnboardingData_missingBillingOrInstitutionIsNotFound() {
+        // given
         when(partyService.getInstitutionBillingData("none", PRODUCT_ID)).thenReturn(null);
         when(partyService.getInstitutionBillingData("noinst", PRODUCT_ID)).thenReturn(new InstitutionInfo());
         when(partyService.getInstitutionByExternalId("noinst")).thenReturn(null);
 
+        // when
         assertEquals("Institution none not found",
-                assertThrows(ResourceNotFoundException.class, () -> service.getInstitutionOnboardingData("none", PRODUCT_ID)).getMessage());
+        // then
+                assertThrows(ResourceNotFoundException.class, () -> service.getInstitutionOnboardingData("none", PRODUCT_ID).await().indefinitely()).getMessage());
         assertEquals("Institution noinst not found",
-                assertThrows(ResourceNotFoundException.class, () -> service.getInstitutionOnboardingData("noinst", PRODUCT_ID)).getMessage());
+                assertThrows(ResourceNotFoundException.class, () -> service.getInstitutionOnboardingData("noinst", PRODUCT_ID).await().indefinitely()).getMessage());
     }
 
     @Test
     void getInstitutionOnboardingData_missingTaxonomiesIsAValidationError() {
+        // given
         when(partyService.getInstitutionBillingData("inst1", PRODUCT_ID)).thenReturn(new InstitutionInfo());
         Institution institution = institution("inst1");
         institution.setGeographicTaxonomies(null);
         when(partyService.getInstitutionByExternalId("inst1")).thenReturn(institution);
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.getInstitutionOnboardingData("inst1", PRODUCT_ID));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.getInstitutionOnboardingData("inst1", PRODUCT_ID).await().indefinitely());
 
+        // then
         assertEquals("The institution inst1 does not have geographic taxonomies.", e.getMessage());
     }
 
     @Test
     void getInstitutionOnboardingData_copiesInstitutionLocationAndKeepsExistingCity() {
+        // given
         InstitutionInfo info = new InstitutionInfo();
         info.setTaxCode(TAX_CODE);
         Institution institution = institution("ext");
@@ -818,8 +860,10 @@ class InstitutionServiceImplTest {
         when(partyService.getInstitutionBillingData("ext", PRODUCT_ID)).thenReturn(info);
         when(partyService.getInstitutionByExternalId("ext")).thenReturn(institution);
 
-        InstitutionOnboardingData result = service.getInstitutionOnboardingData("ext", PRODUCT_ID);
+        // when
+        InstitutionOnboardingData result = service.getInstitutionOnboardingData("ext", PRODUCT_ID).await().indefinitely();
 
+        // then
         assertEquals("Roma", result.getInstitution().getInstitutionLocation().getCity());
         assertEquals("AOO", result.getInstitution().getSubunitType());
         assertEquals("IPA", result.getInstitution().getOrigin());
@@ -871,7 +915,7 @@ class InstitutionServiceImplTest {
         }
         when(proxy.getExtById(expectedCode)).thenReturn(taxonomies);
 
-        InstitutionOnboardingData result = local.getInstitutionOnboardingData("ext", PRODUCT_ID);
+        InstitutionOnboardingData result = local.getInstitutionOnboardingData("ext", PRODUCT_ID).await().indefinitely();
 
         InstitutionLocation location = result.getInstitution().getInstitutionLocation();
         assertEquals("ROMA", location.getCity());
@@ -881,6 +925,7 @@ class InstitutionServiceImplTest {
 
     @Test
     void getInstitutionOnboardingData_ipaLookupNotFoundIsSwallowed() {
+        // given
         InstitutionInfo info = new InstitutionInfo();
         info.setTaxCode(TAX_CODE);
         Institution institution = institution("ext");
@@ -890,23 +935,30 @@ class InstitutionServiceImplTest {
         when(partyService.getInstitutionByExternalId("ext")).thenReturn(institution);
         when(registryProxyService.getInstitutionProxyById(TAX_CODE)).thenThrow(new ResourceNotFoundException());
 
-        InstitutionOnboardingData result = service.getInstitutionOnboardingData("ext", PRODUCT_ID);
+        // when
+        InstitutionOnboardingData result = service.getInstitutionOnboardingData("ext", PRODUCT_ID).await().indefinitely();
 
+        // then
         assertNull(result.getInstitution().getInstitutionLocation().getCity());
     }
 
     @Test
     void getInstitutionByExternalId_requiresAnId() {
+        // given
         Institution institution = institution("ext");
         when(partyService.getInstitutionByExternalId("ext")).thenReturn(institution);
 
-        assertSame(institution, service.getInstitutionByExternalId("ext"));
+        // when
+        var actualResult1 = service.getInstitutionByExternalId("ext").await().indefinitely();
+        // then
+        assertSame(institution, actualResult1);
         assertEquals("An Institution id is required",
-                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionByExternalId("")).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.getInstitutionByExternalId("").await().indefinitely()).getMessage());
     }
 
     @Test
     void getGeographicTaxonomyList_byExternalIdAndByTaxCode() {
+        // given
         Institution institution = institution("ext");
         institution.setGeographicTaxonomies(List.of(new GeographicTaxonomy()));
         Institution withoutTaxonomies = institution("ext-2");
@@ -916,13 +968,20 @@ class InstitutionServiceImplTest {
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode("none", null)).thenReturn(List.of());
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode("null", null)).thenReturn(null);
 
-        assertEquals(1, service.getGeographicTaxonomyList("ext").size());
-        assertTrue(service.getGeographicTaxonomyList("ext-2").isEmpty());
-        assertEquals(1, service.getGeographicTaxonomyList(TAX_CODE, null).size());
-        assertTrue(service.getGeographicTaxonomyList("none", null).isEmpty());
-        assertTrue(service.getGeographicTaxonomyList("null", null).isEmpty());
+        // when
+        var actualResult1 = service.getGeographicTaxonomyList("ext").await().indefinitely();
+        // then
+        assertEquals(1, actualResult1.size());
+        var actualResult2 = service.getGeographicTaxonomyList("ext-2").await().indefinitely();
+        assertTrue(actualResult2.isEmpty());
+        var actualResult3 = service.getGeographicTaxonomyList(TAX_CODE, null).await().indefinitely();
+        assertEquals(1, actualResult3.size());
+        var actualResult4 = service.getGeographicTaxonomyList("none", null).await().indefinitely();
+        assertTrue(actualResult4.isEmpty());
+        var actualResult5 = service.getGeographicTaxonomyList("null", null).await().indefinitely();
+        assertTrue(actualResult5.isEmpty());
         assertEquals("A taxCode id is required",
-                assertThrows(IllegalArgumentException.class, () -> service.getGeographicTaxonomyList(" ", null)).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.getGeographicTaxonomyList(" ", null).await().indefinitely()).getMessage());
     }
 
     @Test
@@ -1028,44 +1087,55 @@ class InstitutionServiceImplTest {
 
     @Test
     void getByFilters_mapsTheInstitutionsAndEmptyIsNotFound() {
+        // given
         OnboardingResponse response = new OnboardingResponse();
         org.openapi.quarkus.onboarding_json.model.InstitutionResponse institutionResponse =
                 new org.openapi.quarkus.onboarding_json.model.InstitutionResponse();
         response.setInstitution(institutionResponse);
         Institution mapped = institution("ext");
-        when(onboardingService.getByFilters(PRODUCT_ID, TAX_CODE, null, null, null)).thenReturn(List.of(response));
-        when(onboardingService.getByFilters("empty", null, null, null, null)).thenReturn(List.of());
-        when(onboardingService.getByFilters("null", null, null, null, null)).thenReturn(null);
+        when(onboardingService.getByFilters(PRODUCT_ID, TAX_CODE, null, null, null)).thenReturn(Uni.createFrom().item(List.of(response)));
+        when(onboardingService.getByFilters("empty", null, null, null, null)).thenReturn(Uni.createFrom().item(List.of()));
+        when(onboardingService.getByFilters("null", null, null, null, null)).thenReturn(Uni.createFrom().nullItem());
         when(institutionMapper.toInstitution(institutionResponse)).thenReturn(mapped);
 
-        assertEquals(List.of(mapped), service.getByFilters(PRODUCT_ID, TAX_CODE, null, null, null));
-        assertThrows(ResourceNotFoundException.class, () -> service.getByFilters("empty", null, null, null, null));
-        assertThrows(ResourceNotFoundException.class, () -> service.getByFilters("null", null, null, null, null));
+        // when
+        var actualResult1 = service.getByFilters(PRODUCT_ID, TAX_CODE, null, null, null).await().indefinitely();
+        // then
+        assertEquals(List.of(mapped), actualResult1);
+        assertThrows(ResourceNotFoundException.class, () -> service.getByFilters("empty", null, null, null, null).await().indefinitely());
+        assertThrows(ResourceNotFoundException.class, () -> service.getByFilters("null", null, null, null, null).await().indefinitely());
     }
 
     @Test
     void matchInstitutionAndUser_usesTheUserTaxCode() {
+        // given
         User user = new User();
         user.setTaxCode("USER_CF");
         it.pagopa.selfcare.onboarding.client.model.MatchInfoResult expected = new it.pagopa.selfcare.onboarding.client.model.MatchInfoResult();
         when(registryProxyService.matchInstitutionAndUser("ext", "USER_CF")).thenReturn(expected);
 
-        assertSame(expected, service.matchInstitutionAndUser("ext", user));
+        // when
+        var actualResult1 = service.matchInstitutionAndUser("ext", user).await().indefinitely();
+        // then
+        assertSame(expected, actualResult1);
     }
 
     @Test
     void validateAggregatesCsv_keepsOnlyErrorsOrOnlyAggregates() {
+        // given
         UploadedFile file = new UploadedFile("a.csv", "text/csv", new byte[] {1});
         VerifyAggregateResult withErrors = new VerifyAggregateResult();
         withErrors.setErrors(List.of(new RowError()));
         withErrors.setAggregates(List.of(new AggregateResult()));
         VerifyAggregateResult clean = new VerifyAggregateResult();
         clean.setAggregates(List.of(new AggregateResult()));
-        when(onboardingService.aggregatesVerification(file, PRODUCT_ID)).thenReturn(withErrors).thenReturn(clean);
+        when(onboardingService.aggregatesVerification(file, PRODUCT_ID)).thenReturn(Uni.createFrom().item(withErrors)).thenReturn(Uni.createFrom().item(clean));
 
-        VerifyAggregateResult first = service.validateAggregatesCsv(file, PRODUCT_ID);
-        VerifyAggregateResult second = service.validateAggregatesCsv(file, PRODUCT_ID);
+        // when
+        VerifyAggregateResult first = service.validateAggregatesCsv(file, PRODUCT_ID).await().indefinitely();
+        VerifyAggregateResult second = service.validateAggregatesCsv(file, PRODUCT_ID).await().indefinitely();
 
+        // then
         assertEquals(1, first.getErrors().size());
         assertTrue(first.getAggregates().isEmpty());
         assertTrue(second.getErrors().isEmpty());
@@ -1074,46 +1144,64 @@ class InstitutionServiceImplTest {
 
     @Test
     void checkRecipientCode_delegates() {
-        when(onboardingService.checkRecipientCode("origin", "ABCDEF")).thenReturn(RecipientCodeStatusResult.ACCEPTED);
+        // given
+        when(onboardingService.checkRecipientCode("origin", "ABCDEF")).thenReturn(Uni.createFrom().item(RecipientCodeStatusResult.ACCEPTED));
 
-        assertEquals(RecipientCodeStatusResult.ACCEPTED, service.checkRecipientCode("origin", "ABCDEF"));
+        // when
+        var actualResult1 = service.checkRecipientCode("origin", "ABCDEF").await().indefinitely();
+        // then
+        assertEquals(RecipientCodeStatusResult.ACCEPTED, actualResult1);
     }
 
     @Test
     void onboardingUsersPgFromIcAndAde_delegates() {
+        // given
         OnboardingData data = new OnboardingData();
 
-        service.onboardingUsersPgFromIcAndAde(data);
+        // when
+        service.onboardingUsersPgFromIcAndAde(data).await().indefinitely();
 
+        // then
         verify(onboardingService).onboardingUsersPgFromIcAndAde(data);
     }
 
     @Test
     void verifyManager_returnsVerifiedAndFailsOtherwiseWithTheLegalRepresentativeMessage() {
+        // given
         ManagerVerification verified = new ManagerVerification();
         verified.setVerified(true);
         ManagerVerification notVerified = new ManagerVerification();
         when(pgManagerVerifier.doVerify("OK_CF", "COMPANY")).thenReturn(verified);
         when(pgManagerVerifier.doVerify("KO_CF", "COMPANY")).thenReturn(notVerified);
 
-        assertSame(verified, service.verifyManager("OK_CF", "COMPANY"));
-        ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class, () -> service.verifyManager("KO_CF", "COMPANY"));
+        // when
+        var actualResult1 = service.verifyManager("OK_CF", "COMPANY").await().indefinitely();
+        // then
+        assertSame(verified, actualResult1);
+        ResourceNotFoundException e = assertThrows(ResourceNotFoundException.class, () -> service.verifyManager("KO_CF", "COMPANY").await().indefinitely());
 
         assertEquals("User with userTaxCode KO_CF is not the legal representative of the institution", e.getMessage());
     }
 
     @Test
     void getOnboardingWithFilter_delegatesTheEncodedFilters() {
+        // given
         OnboardingResult result = new OnboardingResult();
-        when(onboardingService.onboardingWithFilter("TAX", "COMPLETED")).thenReturn(List.of(result));
+        when(onboardingService.onboardingWithFilter("TAX", "COMPLETED")).thenReturn(Uni.createFrom().item(List.of(result)));
 
-        assertEquals(List.of(result), service.getOnboardingWithFilter("TAX", "COMPLETED"));
+        // when
+        var actualResult1 = service.getOnboardingWithFilter("TAX", "COMPLETED").await().indefinitely();
+        // then
+        assertEquals(List.of(result), actualResult1);
     }
 
     @Test
     void triggerOnboardingRequest_delegates() {
-        service.triggerOnboardingRequest("42");
+        // given
+        // when
+        service.triggerOnboardingRequest("42").await().indefinitely();
 
+        // then
         verify(onboardingService).triggerOnboardingRequest("42");
         verifyNoMoreInteractions(onboardingService);
     }
@@ -1258,6 +1346,214 @@ class InstitutionServiceImplTest {
 
         // then
         assertEquals(List.of(business), result.getBusinesses());
+    }
+
+    @Test
+    @Timeout(value = 5, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void companyVerificationRunsOnWorkerBeforeStartingTheNativeOnboarding() throws Exception {
+        // given
+        OnboardingData data = new OnboardingData();
+        data.setTaxCode(TAX_CODE);
+        data.setOrigin("ADE");
+        var match = new it.pagopa.selfcare.onboarding.client.model.MatchInfoResult();
+        match.setVerificationResult(true);
+        CountDownLatch lookupStarted = new CountDownLatch(1);
+        CountDownLatch releaseLookup = new CountDownLatch(1);
+        CountDownLatch onboardingStarted = new CountDownLatch(1);
+        AtomicReference<Thread> lookupThread = new AtomicReference<>();
+        AtomicReference<UniEmitter<? super Void>> pending = new AtomicReference<>();
+        when(registryProxyService.matchInstitutionAndUser(TAX_CODE, "USER_CF")).thenAnswer(invocation -> {
+            lookupThread.set(Thread.currentThread());
+            lookupStarted.countDown();
+            if (!releaseLookup.await(2, TimeUnit.SECONDS)) {
+                throw new AssertionError("Registry lookup was not released");
+            }
+            return match;
+        });
+        when(onboardingService.onboardingCompany(data)).thenReturn(Uni.createFrom().<Void>emitter(emitter -> {
+            pending.set(emitter);
+            onboardingStarted.countDown();
+        }));
+        Uni<Void> operation = service.onboardingCompanyV2(data, "USER_CF");
+        verifyNoInteractions(registryProxyService, onboardingService);
+        Thread subscribingThread = Thread.currentThread();
+
+        // when
+        UniAssertSubscriber<Void> result = operation.subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        try {
+            assertTrue(lookupStarted.await(2, TimeUnit.SECONDS));
+            assertNotSame(subscribingThread, lookupThread.get());
+            result.assertNotTerminated();
+            verifyNoInteractions(onboardingService);
+        } finally {
+            releaseLookup.countDown();
+        }
+        assertTrue(onboardingStarted.await(2, TimeUnit.SECONDS));
+        result.assertNotTerminated();
+        pending.get().complete(null);
+        result.awaitItem(Duration.ofSeconds(2)).assertCompleted().assertItem(null);
+        verify(onboardingService).onboardingCompany(data);
+    }
+
+    @Test
+    void companyRegistryFailureIsNotReplacedByTheBusinessOwnershipError() {
+        // given
+        OnboardingData data = new OnboardingData();
+        data.setTaxCode(TAX_CODE);
+        data.setOrigin("ADE");
+        ResourceNotFoundException failure = new ResourceNotFoundException("registry unavailable");
+        when(registryProxyService.matchInstitutionAndUser(TAX_CODE, "USER_CF")).thenThrow(failure);
+
+        // when
+        UniAssertSubscriber<Void> result = service.onboardingCompanyV2(data, "USER_CF")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.awaitFailure(Duration.ofSeconds(2));
+        assertSame(failure, result.getFailure());
+        verifyNoInteractions(onboardingService);
+    }
+
+    @Test
+    void billingInstitutionAndLocationLookupsStaySequentialOnTheWorker() {
+        // given
+        InstitutionInfo info = new InstitutionInfo();
+        Institution institution = institution("ext");
+        institution.setTaxCode(TAX_CODE);
+        institution.setOrigin("IPA");
+        institution.setSubunitType("UO");
+        institution.setSubunitCode("UO1");
+        institution.setGeographicTaxonomies(List.of());
+        UoResponse uo = new UoResponse();
+        uo.setMunicipalIstatCode("istat");
+        GeographicTaxonomiesResponse geography = new GeographicTaxonomiesResponse();
+        geography.setDescription("ROMA - COMUNE");
+        AtomicReference<Thread> billingThread = new AtomicReference<>();
+        AtomicReference<Thread> institutionThread = new AtomicReference<>();
+        AtomicReference<Thread> uoThread = new AtomicReference<>();
+        AtomicReference<Thread> geographyThread = new AtomicReference<>();
+        when(partyService.getInstitutionBillingData("ext", PRODUCT_ID)).thenAnswer(invocation -> {
+            billingThread.set(Thread.currentThread());
+            return info;
+        });
+        when(partyService.getInstitutionByExternalId("ext")).thenAnswer(invocation -> {
+            institutionThread.set(Thread.currentThread());
+            return institution;
+        });
+        when(registryProxyService.getUoById("UO1")).thenAnswer(invocation -> {
+            uoThread.set(Thread.currentThread());
+            return uo;
+        });
+        when(registryProxyService.getExtById("istat")).thenAnswer(invocation -> {
+            geographyThread.set(Thread.currentThread());
+            return geography;
+        });
+        Uni<InstitutionOnboardingData> operation = service.getInstitutionOnboardingData("ext", PRODUCT_ID);
+        verifyNoInteractions(partyService, registryProxyService);
+        Thread subscribingThread = Thread.currentThread();
+
+        // when
+        InstitutionOnboardingData result = operation.await().atMost(Duration.ofSeconds(2));
+
+        // then
+        assertNotSame(subscribingThread, billingThread.get());
+        assertSame(billingThread.get(), institutionThread.get());
+        assertSame(billingThread.get(), uoThread.get());
+        assertSame(billingThread.get(), geographyThread.get());
+        assertEquals("ROMA", result.getInstitution().getInstitutionLocation().getCity());
+        var calls = org.mockito.Mockito.inOrder(partyService, registryProxyService);
+        calls.verify(partyService).getInstitutionBillingData("ext", PRODUCT_ID);
+        calls.verify(partyService).getInstitutionByExternalId("ext");
+        calls.verify(registryProxyService).getUoById("UO1");
+        calls.verify(registryProxyService).getExtById("istat");
+        calls.verifyNoMoreInteractions();
+    }
+
+    @Test
+    void locationLookupOnlyRecoversNotFoundAndPropagatesOtherFailures() {
+        // given
+        InstitutionInfo info = new InstitutionInfo();
+        info.setTaxCode(TAX_CODE);
+        Institution institution = institution("ext");
+        institution.setOrigin("IPA");
+        institution.setGeographicTaxonomies(List.of());
+        InvalidRequestException failure = new InvalidRequestException("invalid registry response");
+        when(partyService.getInstitutionBillingData("ext", PRODUCT_ID)).thenReturn(info);
+        when(partyService.getInstitutionByExternalId("ext")).thenReturn(institution);
+        when(registryProxyService.getInstitutionProxyById(TAX_CODE)).thenThrow(failure);
+
+        // when
+        UniAssertSubscriber<InstitutionOnboardingData> result = service.getInstitutionOnboardingData("ext", PRODUCT_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.awaitFailure(Duration.ofSeconds(2));
+        assertSame(failure, result.getFailure());
+        verify(registryProxyService, never()).getExtById(any());
+    }
+
+    @Test
+    void filteredInstitutionsAreNotMappedBeforeTheNativeLookupEmits() {
+        // given
+        AtomicReference<UniEmitter<? super List<OnboardingResponse>>> pending = new AtomicReference<>();
+        when(onboardingService.getByFilters(PRODUCT_ID, TAX_CODE, null, null, null))
+                .thenReturn(Uni.createFrom().<List<OnboardingResponse>>emitter(pending::set));
+        OnboardingResponse response = new OnboardingResponse();
+        var institutionResponse = new org.openapi.quarkus.onboarding_json.model.InstitutionResponse();
+        response.setInstitution(institutionResponse);
+        Institution institution = institution("ext");
+        when(institutionMapper.toInstitution(institutionResponse)).thenReturn(institution);
+
+        // when
+        UniAssertSubscriber<List<Institution>> result = service.getByFilters(PRODUCT_ID, TAX_CODE, null, null, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verify(institutionMapper, never()).toInstitution(any());
+        pending.get().complete(List.of(response));
+        result.assertCompleted().assertItem(List.of(institution));
+    }
+
+    @Test
+    void aggregatesAreNormalizedOnlyAfterTheNativeResultEmits() {
+        // given
+        UploadedFile file = new UploadedFile("aggregates.csv", "text/csv", new byte[]{1});
+        VerifyAggregateResult response = new VerifyAggregateResult();
+        response.setErrors(List.of(new RowError()));
+        response.setAggregates(List.of(new AggregateResult()));
+        AtomicReference<UniEmitter<? super VerifyAggregateResult>> pending = new AtomicReference<>();
+        when(onboardingService.aggregatesVerification(file, PRODUCT_ID))
+                .thenReturn(Uni.createFrom().<VerifyAggregateResult>emitter(pending::set));
+
+        // when
+        UniAssertSubscriber<VerifyAggregateResult> result = service.validateAggregatesCsv(file, PRODUCT_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        assertEquals(1, response.getAggregates().size());
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(response);
+        assertEquals(1, response.getErrors().size());
+        assertTrue(response.getAggregates().isEmpty());
+    }
+
+    @Test
+    void managerLookupFailureKeepsTheDownstreamFailure() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("registry lookup failed");
+        when(pgManagerVerifier.doVerify("USER_CF", TAX_CODE)).thenThrow(failure);
+
+        // when
+        UniAssertSubscriber<ManagerVerification> result = service.verifyManager("USER_CF", TAX_CODE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.awaitFailure(Duration.ofSeconds(2));
+        assertSame(failure, result.getFailure());
     }
 
     private static OnboardingData baseData(InstitutionType type, String origin) {

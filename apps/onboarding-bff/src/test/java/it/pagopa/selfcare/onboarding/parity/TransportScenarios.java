@@ -129,6 +129,20 @@ final class TransportScenarios {
             .stub(st -> st.on(MS_ONBOARDING, "PUT", "/v1/onboarding/ob1", Reply.abort())),
         MS_ONBOARDING);
     s.add(userRegistryPatch());
+    s.add(
+        Scenario.api(G, "reactive-company-completion-connection-dropped-is-retried", "POST", "/v2/institutions/company/onboarding")
+            .json(InstitutionScenarios.companyOnboardingRequest(true))
+            .stub(st -> {
+              st.on(PARTY_REGISTRY_PROXY, "POST", "/info-camere/institutions",
+                  Reply.json(200, "{\"businesses\":[{\"businessTaxId\":\"00000000000\"}]}"));
+              st.on(MS_ONBOARDING, "POST", "/v1/onboarding/pg/completion", Reply.abort());
+            })
+            .expect(c -> failure(c).exactCalls(
+                    "party-registry-proxy POST /info-camere/institutions",
+                    "ms-onboarding POST /v1/onboarding/pg/completion",
+                    "ms-onboarding POST /v1/onboarding/pg/completion",
+                    "ms-onboarding POST /v1/onboarding/pg/completion")
+                .elapsedAtLeast(9_500).elapsedBelow(14_000).propagatesIdentity()));
     return s;
   }
 

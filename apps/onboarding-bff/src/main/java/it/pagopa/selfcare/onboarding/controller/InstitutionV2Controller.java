@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.controller;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
+import io.smallrye.common.annotation.Blocking;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
@@ -75,7 +76,7 @@ public class InstitutionV2Controller {
     @Operation(summary = "${openapi.onboarding.institutions.api.searchIpaInstitutions.summary}",
             description = "${openapi.onboarding.institutions.api.searchIpaInstitutions.description}",
             operationId = "searchIpaInstitutionsUsingGET")
-    public IpaInstitutionsSearchResource searchIpaInstitutions(
+    public Uni<IpaInstitutionsSearchResource> searchIpaInstitutions(
             @Parameter(schema = @Schema(type = SchemaType.STRING, defaultValue = "*"))
             @QueryParam("search") String search,
             @Parameter(description = "${openapi.onboarding.institutions.api.ipaCategory}")
@@ -90,11 +91,12 @@ public class InstitutionV2Controller {
         String resolvedSearch = search == null || search.isEmpty() ? "*" : search;
         Integer resolvedPage = Objects.requireNonNullElse(RequestParams.optionalInt("page", page), 0);
         Integer resolvedPageSize = Objects.requireNonNullElse(RequestParams.optionalInt("pageSize", pageSize), 50);
-        IpaInstitutionsSearchResource resource = registryProxyMapper.toResource(
-                institutionService.searchIpaInstitutions(resolvedSearch, category, resolvedPage, resolvedPageSize));
-        log.debug("searchIpaInstitutions result count = {}", resource == null ? null : resource.getCount());
-        log.trace("searchIpaInstitutions end");
-        return resource;
+        return institutionService.searchIpaInstitutions(resolvedSearch, category, resolvedPage, resolvedPageSize)
+                .map(registryProxyMapper::toResource)
+                .invoke(resource -> {
+                    log.debug("searchIpaInstitutions result count = {}", resource == null ? null : resource.getCount());
+                    log.trace("searchIpaInstitutions end");
+                });
     }
 
     @GET
@@ -102,16 +104,15 @@ public class InstitutionV2Controller {
     @Operation(summary = "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.summary}",
             description = "${openapi.onboarding.institutions.api.findIpaInstitutionByTaxCode.description}",
             operationId = "findIpaInstitutionByTaxCodeUsingGET")
-    public IpaInstitutionResource findIpaInstitutionByTaxCode(
+    public Uni<IpaInstitutionResource> findIpaInstitutionByTaxCode(
             @PathParam("taxCode") String taxCode,
             @Parameter(description = "${openapi.onboarding.institutions.api.ipaCategory}")
             @QueryParam("category") String category) {
         category = RequestParams.stringQuery(uriInfo, "category", category);
         log.trace("findIpaInstitutionByTaxCode start");
-        IpaInstitutionResource resource = registryProxyMapper.toResource(
-                institutionService.findIpaInstitutionByTaxCode(taxCode, category));
-        log.trace("findIpaInstitutionByTaxCode end");
-        return resource;
+        return institutionService.findIpaInstitutionByTaxCode(taxCode, category)
+                .map(registryProxyMapper::toResource)
+                .invoke(resource -> log.trace("findIpaInstitutionByTaxCode end"));
     }
 
     @APIResponse(responseCode = "403",
@@ -154,14 +155,14 @@ public class InstitutionV2Controller {
     @Path("/company/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
-    public Response onboarding(@Valid CompanyOnboardingDto request) {
+    public Uni<Response> onboarding(@Valid CompanyOnboardingDto request) {
         RequestParams.requiredBody(request);
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
-        institutionService.onboardingCompanyV2(onboardingMapper.toEntity(request), fiscalCode);
-        log.trace(ONBOARDING_END);
-        return Response.status(Response.Status.CREATED).build();
+        return institutionService.onboardingCompanyV2(onboardingMapper.toEntity(request), fiscalCode)
+                .invoke(() -> log.trace(ONBOARDING_END))
+                .replaceWith(() -> Response.status(Response.Status.CREATED).build());
     }
 
     @APIResponse(responseCode = "403",
@@ -174,7 +175,7 @@ public class InstitutionV2Controller {
     @GET
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "v2GetInstitutionByFilters")
-    public List<InstitutionResource> getInstitution(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}", required = true)
+    public Uni<List<InstitutionResource>> getInstitution(@Parameter(description = "${openapi.onboarding.institutions.model.productFilter}", required = true)
                                                     @QueryParam("productId")
                                                     String productId,
                                                     @Parameter(description = "${openapi.onboarding.institutions.model.taxCode}")
@@ -196,17 +197,17 @@ public class InstitutionV2Controller {
         subunitCode = RequestParams.stringQuery(uriInfo, "subunitCode", subunitCode);
         RequestParams.requiredQuery("productId", productId);
         log.trace("getInstitution start");
-        final List<InstitutionResource> institutions = institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
-                .stream()
-                .map(institutionMapper::toResource)
-                .toList();
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitution result = {}", institutions);
-        log.trace("getInstitution end");
-        return institutions;
+        return institutionService.getByFilters(productId, taxCode, origin, originId, subunitCode)
+                .map(institutions -> institutions.stream().map(institutionMapper::toResource).toList())
+                .invoke(result -> {
+                    log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitution result = {}", result);
+                    log.trace("getInstitution end");
+                });
     }
 
     @POST
     @Path("/onboarding/aggregation/verification")
+    @Blocking
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RequestBody(required = false, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(requiredProperties = "aggregates")))
@@ -214,7 +215,7 @@ public class InstitutionV2Controller {
     @Parameter(name = "productId", in = ParameterIn.QUERY, required = true, schema = @Schema(type = SchemaType.STRING))
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",
             description = "${openapi.onboarding.institutions.api.onboarding.verifyAggregatesCsv}",  operationId = "verifyAggregatesCsvUsingPOST")
-    public VerifyAggregatesResponse verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
+    public Uni<VerifyAggregatesResponse> verifyAggregatesCsv(@RestForm("aggregates") FileUpload file,
                                                         @Schema(hidden = true) @RestForm("institutionType") String institutionType,
                                                         @Schema(hidden = true) @RestForm("productId") String productId,
                                                         @QueryParam("institutionType") String legacyInstitutionType,
@@ -226,31 +227,31 @@ public class InstitutionV2Controller {
         log.trace("Verify Aggregates Csv start");
         log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
         FileValidationUtils.validateAggregatesFile(uploadedFile);
-        VerifyAggregatesResponse response = onboardingMapper.toVerifyAggregatesResponse(institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId));
-        log.trace("Verify Aggregates Csv end");
-        return response;
+        return institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId)
+                .map(onboardingMapper::toVerifyAggregatesResponse)
+                .invoke(response -> log.trace("Verify Aggregates Csv end"));
     }
 
     @POST
     @Path("/company/verify-manager")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyManager}",
             description = "${openapi.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
-    public VerifyManagerResponse verifyManager(
+    public Uni<VerifyManagerResponse> verifyManager(
             @Valid VerifyManagerRequest request
     ) {
         RequestParams.requiredBody(request);
         log.trace("verifyManager start");
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
-        VerifyManagerResponse response = onboardingMapper.toManagerVerification(institutionService.verifyManager(fiscalCode, request.getCompanyTaxCode()));
-        log.trace("verifyManager end");
-        return response;
+        return institutionService.verifyManager(fiscalCode, request.getCompanyTaxCode())
+                .map(onboardingMapper::toManagerVerification)
+                .invoke(response -> log.trace("verifyManager end"));
     }
 
     @GET
     @Path("/onboarding/active")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}",
             description = "${openapi.onboarding.institutions.api.onboarding.getActiveOnboarding}", operationId = "getActiveOnboardingUsingGET")
-    public List<InstitutionOnboardingResource> getActiveOnboarding(@Parameter(required = true) @QueryParam("taxCode") String taxCode,
+    public Uni<List<InstitutionOnboardingResource>> getActiveOnboarding(@Parameter(required = true) @QueryParam("taxCode") String taxCode,
                                                                    @Parameter(required = true) @QueryParam("productId") String productId,
                                                                    @QueryParam("subunitCode") String subunitCode
     ) {
@@ -263,20 +264,19 @@ public class InstitutionV2Controller {
         log.debug("getActiveOnboarding taxCode = {}, productId = {}", Encode.forJava(taxCode), Encode.forJava(productId));
         if ((StringUtils.isBlank(taxCode) || StringUtils.isBlank(productId)))
             throw new InvalidRequestException("taxCode and/or productId must not be blank! ");
-        List<InstitutionOnboardingResource> response = institutionService.getActiveOnboarding(taxCode, productId,subunitCode)
-                .stream()
-                .map(onboardingMapper::toOnboardingResource)
-                .toList();
-        log.debug("getActiveOnboarding result = {}", response);
-        log.trace("getActiveOnboarding end");
-        return response;
+        return institutionService.getActiveOnboarding(taxCode, productId, subunitCode)
+                .map(institutions -> institutions.stream().map(onboardingMapper::toOnboardingResource).toList())
+                .invoke(response -> {
+                    log.debug("getActiveOnboarding result = {}", response);
+                    log.trace("getActiveOnboarding end");
+                });
     }
 
     @GET
     @Path("/onboarding/recipient-code/verification")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}",
             description = "${openapi.onboarding.institutions.api.onboarding.checkRecipientCode}", operationId = "checkRecipientCodeUsingGET")
-    public RecipientCodeStatus checkRecipientCode(@Parameter(required = true) @QueryParam("originId") String originId,
+    public Uni<RecipientCodeStatus> checkRecipientCode(@Parameter(required = true) @QueryParam("originId") String originId,
                                                   @Parameter(required = true) @QueryParam("recipientCode") String recipientCode) {
         originId = RequestParams.stringQuery(uriInfo, "originId", originId);
         recipientCode = RequestParams.stringQuery(uriInfo, "recipientCode", recipientCode);
@@ -285,28 +285,30 @@ public class InstitutionV2Controller {
         log.trace("Check recipientCode start");
         log.debug("Check originId start for institution with originId {} and recipientCode {}",
                 LogUtils.sanitize(originId), LogUtils.sanitize(recipientCode));
-        RecipientCodeStatus response = onboardingMapper.toRecipientCodeStatus(institutionService.checkRecipientCode(originId, recipientCode));
-        log.trace("Check recipientCode end");
-        return response;
+        return institutionService.checkRecipientCode(originId, recipientCode)
+                .map(onboardingMapper::toRecipientCodeStatus)
+                .invoke(response -> log.trace("Check recipientCode end"));
     }
 
     @POST
     @Path("/onboarding/users/pg")
+    @APIResponse(responseCode = "200", description = "OK",
+            content = @Content(schema = @Schema(implementation = Void.class)))
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingUsersPg}",
             description = "${openapi.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
-    public Response onboardingUsers(@RequestBody(required = false) @Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
+    public Uni<Response> onboardingUsers(@RequestBody(required = false) @Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
-        institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto));
-        log.trace("onboardingUsersPgFromIcAndAde end");
-        return Response.ok().build();
+        return institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto))
+                .invoke(() -> log.trace("onboardingUsersPgFromIcAndAde end"))
+                .replaceWith(() -> Response.ok().build());
     }
 
     @GET
     @Path("/onboardings")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingInfo.summary}",
             description = "${openapi.onboarding.institutions.api.onboardingInfo.description}", operationId = "getOnboardingInfo")
-    public List<OnboardingResult> getOnboardingsInfo(@Parameter(required = true) @QueryParam("taxCode") String inputTaxCode,
+    public Uni<List<OnboardingResult>> getOnboardingsInfo(@Parameter(required = true) @QueryParam("taxCode") String inputTaxCode,
                                                      @Parameter(required = true) @QueryParam("status") String inputStatus) {
         inputTaxCode = RequestParams.stringQuery(uriInfo, "taxCode", inputTaxCode);
         inputStatus = RequestParams.stringQuery(uriInfo, "status", inputStatus);
@@ -316,9 +318,8 @@ public class InstitutionV2Controller {
         String taxCode = Encode.forJava(inputTaxCode);
         String status = Encode.forJava(inputStatus);
         log.debug("onboardingInfo request = {} - {}", taxCode, status);
-        List<OnboardingResult> results = institutionService.getOnboardingWithFilter(taxCode, status);
-        log.trace("onboardingInfo end");
-        return results;
+        return institutionService.getOnboardingWithFilter(taxCode, status)
+                .invoke(results -> log.trace("onboardingInfo end"));
     }
 
     @APIResponse(responseCode = "204", description = "No Content")
@@ -327,13 +328,13 @@ public class InstitutionV2Controller {
     @Operation(summary = "Trigger onboarding request",
             description = "Idempotent trigger invoked after each document upload. If all mandatory documents are present, triggers orchestration to advance the onboarding from REQUEST to PENDING.",
             operationId = "triggerOnboardingRequest")
-    public Response triggerOnboardingRequest(@Parameter(description = "The onboarding id")
+    public Uni<Response> triggerOnboardingRequest(@Parameter(description = "The onboarding id")
                                              @PathParam("onboardingId") String onboardingId) {
         log.trace("triggerOnboardingRequest start");
         log.debug("triggerOnboardingRequest onboardingId = {}", Encode.forJava(onboardingId));
-        institutionService.triggerOnboardingRequest(onboardingId);
-        log.trace("triggerOnboardingRequest end");
-        return Response.noContent().build();
+        return institutionService.triggerOnboardingRequest(onboardingId)
+                .invoke(() -> log.trace("triggerOnboardingRequest end"))
+                .replaceWith(() -> Response.noContent().build());
     }
 
     private static UploadedFile toUploadedFile(String partName, FileUpload fileUpload) {

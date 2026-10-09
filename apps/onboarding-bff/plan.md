@@ -16,7 +16,9 @@ Commit ST01: `2f821d6cd2f586bca3c7f0d178d0818cb844f88d`.
 riallineati, mantenendo contratto pubblico e comportamento downstream.
 **BFF-ST03 completata il 2026-10-09:** tutte le operazioni prodotti e i consumer
 istituzioni/token compongono `Uni`; contratto e sequenze downstream preservati.
-**ST04-ST10 restano da fare; ST04 e ora sbloccata.**
+**BFF-ST04-T01/T03 completati il 2026-10-09:** flussi istituzioni/aggregazioni
+reattivi e confini registry preservati. ST04 resta aperta per utenti/IAM (T02)
+e verifica finale della storia (T04); ST05-ST10 restano da fare.
 Gli identificativi sono locali al piano, non ticket Jira gia creati.
 
 **Integrazione main del 2026-10-09:** incorporato `cd0a2751f`, preservando ST01/ST02.
@@ -86,7 +88,8 @@ Non aggiungere `repository` o `entity`: il BFF non ha persistenza propria.
 
 ## Backlog e dipendenze
 
-**ST01 e ST02 sono completate; ST03 e in corso; ST04-ST10 sono da fare.** Le decisioni esterne bloccate sono
+**ST01/ST02/ST03 sono completate; ST04-T01/T03 sono chiusi, T02/T04 restano aperti;
+ST05-ST10 sono da fare.** Le decisioni esterne bloccate sono
 elencate nel registro ST01 e non autorizzano rimozioni. Il completamento
 dell'inventario non chiude l'epic. Le dipendenze sono prerequisiti di implementazione, non un obbligo di
 lavorare in parallelo; i task di una storia si eseguono nell'ordine indicato.
@@ -623,13 +626,13 @@ istituzioni e utenti, mantenendo le autorizzazioni e gli effetti delle integrazi
 servizi istituzioni/utenti/IAM, `PartyService`, `PartyRegistryProxyService`,
 `UserRegistryService` e relativi client.
 
-- [ ] **BFF-ST04-T01 - Migrare istituzioni e aggregazioni.** Applicare la composizione
+- [x] **BFF-ST04-T01 - Migrare istituzioni e aggregazioni.** Applicare la composizione
   `Uni` alle catene di `InstitutionService` e `PartyService`; mantenere mapping nei
   mapper e aggiornare tutti i controller e i consumer delle firme modificate.
 - [ ] **BFF-ST04-T02 - Migrare utenti e autorizzazioni.** Adeguare `UserService`,
   `UserInstitutionService`, `IamService` e i loro chiamanti. Verificare la
   propagazione del contesto tenant anche quando l'esecuzione cambia thread.
-- [ ] **BFF-ST04-T03 - Preservare i confini dei registri.** Eliminare ponti bloccanti
+- [x] **BFF-ST04-T03 - Preservare i confini dei registri.** Eliminare ponti bloccanti
   sui client reattivi e documentare l'eventuale I/O realmente bloccante. Conservare
   l'omissione di `institutionId` vuoto sul wire, senza normalizzare gli spazi;
   conservare il rifiuto del PATCH legacy prima della scrittura downstream.
@@ -640,6 +643,69 @@ servizi istituzioni/utenti/IAM, `PartyService`, `PartyRegistryProxyService`,
 **Accettazione:** nessun await ordinario sui client gia reattivi; nessuna nuova
 scrittura o richiesta downstream; differenze tra valore assente, vuoto e spazi
 preservate dove previste dal contratto.
+
+#### Registro esecuzione ST04-T01/T03 del 2026-10-09
+
+**Lotto istituzioni completato; ST04 nel complesso resta aperta.** Dalla baseline
+ST03 `553321038` sono convertite le 18 firme residue di InstitutionService:
+tutti i suoi 27 metodi restituiscono Uni. Aggiornate le 17 route residue v1/v2 e
+tutti i consumer delle sette firme collegate di OnboardingService. Il percorso
+PartyService con client user/institution gia Mutiny resta composto nativamente,
+come verificato in ST03; le altre chiamate party-process sono HTTP sincrono.
+
+Eliminati sei await dei client onboarding-ms gia Mutiny: completion company,
+lookup COMPLETED, recipient code, utenti PG, filtri status e trigger document gate.
+La verifica CSV usa invece OnboardingUploadRestClient realmente sincrono, isolato
+su worker. Anche party-process, registry e PgManagerVerifier restano su boundary
+worker esplicite: nessun await o wrapper worker sui client gia Mutiny, nessuna
+nuova dipendenza e nessun nuovo retry. I sei await onboarding ancora presenti
+appartengono ai consumer utenti/token dei lotti successivi.
+
+Preservati appartenenza INFOCAMERE/ADE prima dell'onboarding, billing prima di
+istituzione/location e primo onboarding prima dell'istituzione. Filtri e mutazioni
+ACTIVE, reference/subunit e parsing status stretto sono invariati. Il fallback IPA
+per UO/AOO/proxy recupera soltanto ResourceNotFoundException, con il log originale.
+Non cambiano omissione IAM del valore vuoto (non degli spazi), field list/UUID
+registry, rifiuto PATCH prima della scrittura, tenant, Authorization/API key o
+assenza di forwarding trace header. Il trigger chiude Response dopo l'emissione.
+
+La verifica multipart CSV resta @Blocking per Files.readAllBytes nel controller;
+spostare tale I/O e compito ST05. Il POST utenti PG senza body di risposta dichiara
+@Schema(implementation = Void.class): l'inferenza JSON introdotta da Uni<Response>
+e rimossa alla fonte, senza modificare golden, comparator o filtro OpenAPI.
+
+**Verifica completa del candidato:**
+
+| Gate | Evidenza |
+|------|----------|
+| Test mirati istituzioni/onboarding/registry/retry | 141 test, zero failure/errori/skipped |
+| Surefire completo | 2129 test, zero failure/errori/skipped |
+| Catalogo Quarkus | 555 tentati e passati, zero failure |
+| Catalogo Spring main invariato | Gli stessi 555 tentati e passati, zero failure |
+| Cucumber completo | 63 scenari e 230 step passati |
+| Failsafe, inclusi lifecycle | 73 test, zero failure/errori/skipped |
+| Contratto | Canonical JSON/YAML, alias e golden identici alla baseline |
+| Oracoli | SHA-256 corrente e storico invariati |
+
+Quattro nuovi casi certificano success/failure INFOCAMERE/ADE e ordine prima della
+completion. Un quinto verifica tre POST completion, una sola verifica registry e
+intervalli di retry di 5 secondi; i due replay PUT gia presenti restano verdi.
+Floor portato a 555 dopo la doppia verifica dei nuovi casi. Tredici regressioni
+unitarie aggiunte coprono emitter, pending, worker/laziness, ordine billing/location,
+scope dei failure, normalizzazione CSV e chiusura Response.
+
+Comando eseguito: `mvn -B -ntp -T 1 -f apps/onboarding-bff/pom.xml verify
+-Pintegration-tests -Dparity.spring.jar=<oracolo Spring main cd0a2751f invariato>`.
+Log persistente `bff-st04-final-verify.log` negli artefatti della sessione.
+Docker ripristinato alla baseline: container Terraform e tre immagini preesistenti
+preservati; container/reti del task assenti, immagine user-ms, 11 record di cache
+(106.2 MB) e dati Azurite rimossi. Nessun push, deploy o nuovo branch/worktree.
+
+**Prossimo lotto: ST04-T02 utenti/IAM e propagazione tenant**, seguito da T04.
+Restano sei await OnboardingServiceImpl, due DocumentService e uno
+UserInstitutionServiceImpl: ritracciare i consumer, senza trascinare implicitamente
+documenti/token/ST05 nel lotto utenti. Le certificazioni di questo candidato non
+chiudono automaticamente ST04 o i gate reactor, coverage/CI, review e rilascio.
 
 ### BFF-ST05 - Onboarding, token, documenti e I/O
 
@@ -784,7 +850,7 @@ valutare la migrazione senza affidarmi ai risultati della vecchia baseline.
   framework di architettura solo per automatizzare lo stile.
 - [ ] **BFF-ST10-T02 - Certificare il contratto completo.** Rieseguire l'intero
   catalogo Spring/Quarkus, Cucumber, OpenAPI/alias/codegen e HTTP/HTTPS. Attendere
-  almeno 550 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
+  almeno 555 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
   aggiunte lecite aumentano i conteggi, riduzioni richiedono una decisione esplicita.
 - [ ] **BFF-ST10-T03 - Verificare integrazione e coverage.** Rieseguire il reactor
   seriale con le altre app Quarkus coinvolte, la coverage e i gate CI. Verificare
