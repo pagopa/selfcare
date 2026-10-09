@@ -23,6 +23,7 @@ No requirements.
 | Name | Type |
 | ---- | ---- |
 | [azurerm_key_vault_access_policy.app_gateway_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
+| [azurerm_monitor_diagnostic_setting.app_gw_access_log](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
 | [azurerm_user_assigned_identity.appgateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_api_management.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/api_management) | data source |
 | [azurerm_key_vault_certificate.api_pnpg_selfcare_certificate](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_certificate) | data source |
@@ -36,6 +37,7 @@ No requirements.
 | <a name="input_action_group_error_id"></a> [action\_group\_error\_id](#input\_action\_group\_error\_id) | From key\_vault module From monitor module | `string` | `null` | no |
 | <a name="input_action_group_slack_id"></a> [action\_group\_slack\_id](#input\_action\_group\_slack\_id) | n/a | `string` | n/a | yes |
 | <a name="input_aks_platform_env"></a> [aks\_platform\_env](#input\_aks\_platform\_env) | n/a | `string` | n/a | yes |
+| <a name="input_app_gateway_access_log_enabled"></a> [app\_gateway\_access\_log\_enabled](#input\_app\_gateway\_access\_log\_enabled) | Creates a diagnostic setting sending ApplicationGatewayAccessLog to log\_analytics\_workspace\_id. Keep false where another setting already sends that category to the same workspace (Azure rejects duplicates). | `bool` | `false` | no |
 | <a name="input_app_gateway_alerts_enabled"></a> [app\_gateway\_alerts\_enabled](#input\_app\_gateway\_alerts\_enabled) | n/a | `bool` | `false` | no |
 | <a name="input_app_gateway_api_certificate_name"></a> [app\_gateway\_api\_certificate\_name](#input\_app\_gateway\_api\_certificate\_name) | n/a | `string` | n/a | yes |
 | <a name="input_app_gateway_api_pnpg_certificate_name"></a> [app\_gateway\_api\_pnpg\_certificate\_name](#input\_app\_gateway\_api\_pnpg\_certificate\_name) | n/a | `string` | n/a | yes |
@@ -52,6 +54,7 @@ No requirements.
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | n/a | `string` | n/a | yes |
 | <a name="input_external_domain"></a> [external\_domain](#input\_external\_domain) | n/a | `string` | `"pagopa.it"` | no |
 | <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | From key\_vault module | `string` | n/a | yes |
+| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | Log Analytics workspace receiving Application Gateway diagnostics. | `string` | `null` | no |
 | <a name="input_prefix"></a> [prefix](#input\_prefix) | n/a | `string` | `"selc"` | no |
 | <a name="input_private_endpoint_network_policies"></a> [private\_endpoint\_network\_policies](#input\_private\_endpoint\_network\_policies) | n/a | `string` | `"Enabled"` | no |
 | <a name="input_rg_vnet_location"></a> [rg\_vnet\_location](#input\_rg\_vnet\_location) | n/a | `string` | n/a | yes |

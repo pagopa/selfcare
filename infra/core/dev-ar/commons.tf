@@ -319,9 +319,13 @@ module "appgateway" {
   key_vault_id = module.key_vault.key_vault_id
   tenant_id    = module.key_vault.tenant_id
 
-  action_group_error_id = module.monitor.action_group_error_id
-  action_group_slack_id = module.monitor.action_group_slack_id
-  action_group_email_id = module.monitor.action_group_email_id
+  action_group_error_id      = module.monitor.action_group_error_id
+  action_group_slack_id      = module.monitor.action_group_slack_id
+  action_group_email_id      = module.monitor.action_group_email_id
+  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
+
+  # The out-of-band setting "AuditLogs_LogAnalytics" already sends the access log to this workspace.
+  app_gateway_access_log_enabled = false
 }
 
 ###############################################################################
@@ -895,8 +899,8 @@ module "user_managed_identity" {
 module "internal_events" {
   source = "../_modules/internal_events"
 
-  location                  = local.location
-  env_short                 = local.env_short
-  domain                    = local.app_domain
-  tags                      = local.tags
+  location  = local.location
+  env_short = local.env_short
+  domain    = local.app_domain
+  tags      = local.tags
 }

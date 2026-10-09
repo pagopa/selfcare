@@ -280,9 +280,10 @@ module "appgateway" {
   key_vault_id = module.key_vault.key_vault_id
   tenant_id    = module.key_vault.tenant_id
 
-  action_group_error_id = module.monitor.action_group_error_id
-  action_group_slack_id = module.monitor.action_group_slack_id
-  action_group_email_id = module.monitor.action_group_email_id
+  action_group_error_id      = module.monitor.action_group_error_id
+  action_group_slack_id      = module.monitor.action_group_slack_id
+  action_group_email_id      = module.monitor.action_group_email_id
+  log_analytics_workspace_id = module.log_analytics.log_analytics_workspace_id
 
   app_gateway_max_capacity = 5
   app_gateway_min_capacity = 1
@@ -290,6 +291,8 @@ module "appgateway" {
   app_gateway_waf_enabled = true
   app_gateway_sku_name    = "WAF_v2"
   app_gateway_sku_tier    = "WAF_v2"
+
+  app_gateway_access_log_enabled = true
 }
 
 ###############################################################################

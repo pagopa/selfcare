@@ -23,6 +23,13 @@ resource "azurerm_storage_account" "this" {
   tags = var.tags
 }
 
+# The account also stores the long-lived daily availability history (SelcAvailability table).
+resource "azurerm_management_lock" "this" {
+  name       = azurerm_storage_account.this.name
+  scope      = azurerm_storage_account.this.id
+  lock_level = "CanNotDelete"
+}
+
 resource "azurerm_private_dns_zone" "table" {
   name                = "privatelink.table.core.windows.net"
   resource_group_name = var.virtual_network_resource_group_name
