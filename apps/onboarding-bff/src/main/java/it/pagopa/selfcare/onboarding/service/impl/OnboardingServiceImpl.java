@@ -94,14 +94,16 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingUsers(OnboardingData onboardingData) {
-        onboardingApi.onboardingUsers(validated("_onboardingUsers", "onboardingUserRequest", onboardingMapper.toOnboardingUsersRequest(onboardingData))).await().indefinitely();
+    public Uni<Void> onboardingUsers(OnboardingData onboardingData) {
+        return onboardingApi.onboardingUsers(validated("_onboardingUsers", "onboardingUserRequest", onboardingMapper.toOnboardingUsersRequest(onboardingData)))
+                .replaceWithVoid();
     }
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingUsersAggregator(OnboardingData onboardingData) {
-        onboardingApi.onboardingUsersAggregator(validated("_onboardingUsersAggregator", "onboardingUserRequest", onboardingMapper.toOnboardingUsersRequest(onboardingData))).await().indefinitely();
+    public Uni<Void> onboardingUsersAggregator(OnboardingData onboardingData) {
+        return onboardingApi.onboardingUsersAggregator(validated("_onboardingUsersAggregator", "onboardingUserRequest", onboardingMapper.toOnboardingUsersRequest(onboardingData)))
+                .replaceWithVoid();
     }
 
     @Override
@@ -111,37 +113,44 @@ public class OnboardingServiceImpl implements OnboardingService {
                 .replaceWithVoid();
     }
 
+    // The upload client is synchronous: it runs on a worker
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingTokenComplete(String onboardingId, UploadedFile contract) {
-        uploadClient.completeOnboardingToken(onboardingId, multipart(CONTRACT_PART, contract)).close();
+    public Uni<Void> onboardingTokenComplete(String onboardingId, UploadedFile contract) {
+        return Uni.createFrom().voidItem()
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> uploadClient.completeOnboardingToken(onboardingId, multipart(CONTRACT_PART, contract)).close());
     }
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingUsersComplete(String onboardingId, UploadedFile contract) {
-        uploadClient.completeOnboardingUsers(onboardingId, multipart(CONTRACT_PART, contract)).close();
+    public Uni<Void> onboardingUsersComplete(String onboardingId, UploadedFile contract) {
+        return Uni.createFrom().voidItem()
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> uploadClient.completeOnboardingUsers(onboardingId, multipart(CONTRACT_PART, contract)).close());
     }
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingPending(String onboardingId) {
-        onboardingApi.getOnboardingPending(onboardingId).await().indefinitely();
+    public Uni<Void> onboardingPending(String onboardingId) {
+        return onboardingApi.getOnboardingPending(onboardingId).replaceWithVoid();
     }
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void approveOnboarding(String onboardingId, String userUid) {
+    public Uni<Void> approveOnboarding(String onboardingId, String userUid) {
         ApproveRequest approveRequest = new ApproveRequest();
         if (StringUtils.isNotBlank(userUid)) {
             approveRequest.setUserUid(userUid);
         }
-        onboardingApi.approve(onboardingId, approveRequest).await().indefinitely().close();
+        return onboardingApi.approve(onboardingId, approveRequest)
+                .invoke(Response::close)
+                .replaceWithVoid();
     }
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void rejectOnboarding(String onboardingId, String reason, String userUid) {
+    public Uni<Void> rejectOnboarding(String onboardingId, String reason, String userUid) {
         ReasonRequest reasonForReject = new ReasonRequest();
         if (StringUtils.isNotBlank(reason)) {
             reasonForReject.setReasonForReject(reason);
@@ -149,7 +158,9 @@ public class OnboardingServiceImpl implements OnboardingService {
         if (StringUtils.isNotBlank(userUid)) {
             reasonForReject.setUserUid(userUid);
         }
-        onboardingApi.rejectOnboardingUsingPUT(onboardingId, reasonForReject).await().indefinitely().close();
+        return onboardingApi.rejectOnboardingUsingPUT(onboardingId, reasonForReject)
+                .invoke(Response::close)
+                .replaceWithVoid();
     }
 
     @Override
@@ -160,8 +171,8 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public OnboardingGet getOnboardingWithUserInfo(String onboardingId) {
-        return onboardingApi.getByIdWithUserInfo(onboardingId).await().indefinitely();
+    public Uni<OnboardingGet> getOnboardingWithUserInfo(String onboardingId) {
+        return onboardingApi.getByIdWithUserInfo(onboardingId);
     }
 
     @Override

@@ -29,6 +29,7 @@ import org.eclipse.microprofile.openapi.models.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.models.responses.APIResponse;
 import org.eclipse.microprofile.openapi.models.responses.APIResponses;
 import org.eclipse.microprofile.openapi.models.security.SecurityScheme;
+import org.eclipse.microprofile.openapi.models.info.Info;
 
 /**
  * Publishes the contract the Spring BFF exposes: every operation is protected by the
@@ -50,8 +51,6 @@ public class OpenApiContractFilter implements OASFilter {
     static final String PROBLEM_JSON = "application/problem+json";
     private static final String OCTET_STREAM = "application/octet-stream";
     private static final String SCHEMA_REF_PREFIX = "#/components/schemas/";
-    private static final String SPRING_SERVER_URL = "http://localhost";
-    private static final String SPRING_SERVER_DESCRIPTION = "Generated server url";
     private static final String AUTO_FORBIDDEN = "Not Allowed";
     private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([^}]+)}");
     private static final String NOT_BLANK_PATTERN = "\\S";
@@ -74,16 +73,34 @@ public class OpenApiContractFilter implements OASFilter {
 
     @Override
     public void filterOpenAPI(OpenAPI openApi) {
-        declareServers(openApi);
+        Info info = openApi.getInfo();
+        if (info != null) {
+            info.setTitle(expand(info.getTitle()));
+            info.setVersion(expand(info.getVersion()));
+        }
         declareTags(openApi);
-        declareAuthentication(openApi);
         Schema problem = problemSchema();
+        if (openApi.getComponents() == null) {
+            openApi.setComponents(OASFactory.createComponents());
+        }
         openApi.getComponents().addSchema(PROBLEM_SCHEMA, problem);
         if (openApi.getPaths() != null && openApi.getPaths().getPathItems() != null) {
             openApi.getPaths().getPathItems().values().forEach(item -> operations(item).forEach(this::declareGlobals));
             keepTrailingSlashes(openApi);
         }
         inlineLeafSchemas(openApi);
+    }
+
+    @Override
+    public SecurityScheme filterSecurityScheme(SecurityScheme scheme) {
+        String description = scheme.getDescription();
+        if ("${openapi.security.schema.bearer.description}".equals(description)) {
+            scheme.setDescription(ConfigProvider.getConfig()
+                    .getOptionalValue("openapi.security.schema.bearer.description", String.class).orElse(null));
+        } else {
+            scheme.setDescription(expand(description));
+        }
+        return scheme;
     }
 
     @Override
@@ -191,11 +208,6 @@ public class OpenApiContractFilter implements OASFilter {
 
     private static List<Operation> operations(PathItem item) {
         return item.getOperations().values().stream().toList();
-    }
-
-    // the Spring document is what Terraform and the frontend codegen read: same generated host for both
-    private static void declareServers(OpenAPI openApi) {
-        openApi.setServers(List.of(OASFactory.createServer().url(SPRING_SERVER_URL).description(SPRING_SERVER_DESCRIPTION)));
     }
 
     /**
@@ -352,21 +364,6 @@ public class OpenApiContractFilter implements OASFilter {
                 .map(name -> OASFactory.createTag().name(name)
                         .description(config.getOptionalValue(TAG_DESCRIPTIONS.get(name), String.class).orElse(null)))
                 .toList());
-    }
-
-    private void declareAuthentication(OpenAPI openApi) {
-        String description = ConfigProvider.getConfig()
-                .getOptionalValue("openapi.security.schema.bearer.description", String.class).orElse(null);
-        SecurityScheme scheme = OASFactory.createSecurityScheme()
-                .type(SecurityScheme.Type.HTTP)
-                .scheme("bearer")
-                .bearerFormat("JWT")
-                .description(description);
-        if (openApi.getComponents() == null) {
-            openApi.setComponents(OASFactory.createComponents());
-        }
-        openApi.getComponents().setSecuritySchemes(Map.of(AUTH_SCHEME, scheme));
-        openApi.setSecurity(null);
     }
 
     private static Schema problemSchema() {

@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.security;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.User;
@@ -34,31 +35,38 @@ public class AuthorizationService {
     private final TokenService tokenService;
     private final IamService iamService;
 
-    public boolean hasPermission(SecurityIdentity identity, String onboardingId, String permission) {
+    public Uni<Boolean> hasPermission(SecurityIdentity identity, String onboardingId, String permission) {
         requireNonNull(identity, "Authentication is required");
         requireNonNull(onboardingId, "OnboardingId is required");
         requireNonNull(permission, "Permission is required");
 
         String userId = SecurityIdentityUtils.getUid(identity);
-        OnboardingData onboardingData = tokenService.getOnboardingWithUserInfo(onboardingId);
-        String productId = onboardingData.getProductId();
+        return tokenService.getOnboardingWithUserInfo(onboardingId)
+                .chain(onboardingData -> {
+                    String productId = onboardingData.getProductId();
 
-        log.info("Checking IAM permission: onboardingId={}, userId={}, permission={}, productId={}",
-                LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
-                LogUtils.sanitize(permission), LogUtils.sanitize(productId));
-        boolean hasPermission = iamService.hasIamUserPermission(permission, userId, StringUtils.EMPTY, productId);
-        log.info("IAM permission check result: onboardingId={}, userId={}, permission={}, productId={}, authorized={}",
-                LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
-                LogUtils.sanitize(permission), LogUtils.sanitize(productId), hasPermission);
+                    log.info("Checking IAM permission: onboardingId={}, userId={}, permission={}, productId={}",
+                            LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
+                            LogUtils.sanitize(permission), LogUtils.sanitize(productId));
+                    return iamService.hasIamUserPermission(permission, userId, StringUtils.EMPTY, productId)
+                            .map(hasPermission -> {
+                                log.info("IAM permission check result: onboardingId={}, userId={}, permission={}, productId={}, authorized={}",
+                                        LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
+                                        LogUtils.sanitize(permission), LogUtils.sanitize(productId), hasPermission);
+                                return hasPermission || applyRequesterFallback(onboardingId, userId, permission, onboardingData);
+                            });
+                });
+    }
 
-        if (!hasPermission && VIEW_PERMISSIONS_BYPASSABLE_WITHOUT_IAM.contains(permission)) {
-            hasPermission = isOnboardingRequester(userId, onboardingData);
-            log.info("IAM denied: applying onboarding-requester fallback, onboardingId={}, userId={}, permission={}, isOnboardingRequester={}",
-                    LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
-                    LogUtils.sanitize(permission), hasPermission);
+    private boolean applyRequesterFallback(String onboardingId, String userId, String permission, OnboardingData onboardingData) {
+        if (!VIEW_PERMISSIONS_BYPASSABLE_WITHOUT_IAM.contains(permission)) {
+            return false;
         }
-
-        return hasPermission;
+        boolean isRequester = isOnboardingRequester(userId, onboardingData);
+        log.info("IAM denied: applying onboarding-requester fallback, onboardingId={}, userId={}, permission={}, isOnboardingRequester={}",
+                LogUtils.sanitize(onboardingId), LogUtils.sanitize(userId),
+                LogUtils.sanitize(permission), isRequester);
+        return isRequester;
     }
 
     private boolean isOnboardingRequester(String userId, OnboardingData onboardingData) {

@@ -18,7 +18,9 @@ riallineati, mantenendo contratto pubblico e comportamento downstream.
 istituzioni/token compongono `Uni`; contratto e sequenze downstream preservati.
 **BFF-ST04-T01/T03 completati il 2026-10-09:** flussi istituzioni/aggregazioni
 reattivi e confini registry preservati. ST04 resta aperta per utenti/IAM (T02)
-e verifica finale della storia (T04); ST05-ST10 restano da fare.
+e verifica finale della storia (T04) nello stato storico del primo lotto.
+Il candidato integrato descritto sotto implementa i lotti residui ed e certificato localmente:
+la pianificazione storica non descrive piu i sorgenti correnti.
 Gli identificativi sono locali al piano, non ticket Jira gia creati.
 
 **Integrazione main del 2026-10-09:** incorporato `cd0a2751f`, preservando ST01/ST02.
@@ -88,8 +90,10 @@ Non aggiungere `repository` o `entity`: il BFF non ha persistenza propria.
 
 ## Backlog e dipendenze
 
-**ST01/ST02/ST03 sono completate; ST04-T01/T03 sono chiusi, T02/T04 restano aperti;
-ST05-ST10 sono da fare.** Le decisioni esterne bloccate sono
+**ST01-ST07 e ST09 sono completate nel perimetro locale; ST08-T01/T02/T03 e
+ST10-T01 sono completati.** ST08-T04 e ST10-T02/T03/T04 restano aperti per i
+consumer e gate esterni: le evidenze locali non certificano frontend/APIM,
+Sonar sul nuovo SHA, builder/publish e osservabilita deployata. Le decisioni esterne bloccate sono
 elencate nel registro ST01 e non autorizzano rimozioni. Il completamento
 dell'inventario non chiude l'epic. Le dipendenze sono prerequisiti di implementazione, non un obbligo di
 lavorare in parallelo; i task di una storia si eseguono nell'ordine indicato.
@@ -111,6 +115,134 @@ Ordine operativo consigliato: ST01, ST02, ST03, ST04, ST05, ST06, ST07, ST08,
 ST09, ST10. ST06/ST07/ST08 non devono attendere necessariamente tutti i flussi
 verticali, ma modifiche concorrenti a filtri, configurazione o mapper vanno coordinate.
 La rimozione finale di adattatori condivisi avviene solo quando tutti i consumer sono aggiornati.
+
+## Piano operativo residuo (2026-10-09)
+
+### Esecuzione parallela e candidato integrato
+
+**Baseline:** `a8adee41c`. Tre sottoagenti Sonnet hanno consegnato flussi,
+binding/errori e analisi read-only di sicurezza/OpenAPI; il coordinatore ha
+integrato trasporto, dichiarazioni native e gate, senza Maven/Docker concorrenti.
+Nessun nuovo branch/worktree, push, merge o deploy.
+
+Eliminati i nove await ordinari residui. Utenti/IAM/autorizzazioni, onboarding,
+token e documenti compongono Uni; rimossa la facciata UserInstitutionService
+senza consumer produttivi e la configurazione del solo client user-institution
+morto. L'InstitutionControllerApi onboarding-ms e gli altri client attivi restano.
+Response IAM buffered e chiuse; worker soltanto per HTTP/file realmente sincroni.
+UploadedFile legge i byte lazily su worker; nessun Files o FileUpload.size nei
+controller. Selezione del documento e validazione del nome attachment spostate
+nel TokenService esistente, dopo la guardia di autorizzazione.
+
+L'oracolo ha confermato le differenze di binding: prefissi numerici con segno,
+Unicode, parametri ripetuti, FQCN DTO `web.model`, firme dei body richiesti e
+media type. Rimossi helper morti; mantenuti adattamenti puntuali con scenari
+stretti. I 22 ultimi casi sono prima passati tutti su Spring e poi sul candidato,
+senza alterare golden/comparator. Body opzionale users-PG preservato, inclusa
+la failure 500 osservata. Consumes nativo application/* e content OpenAPI
+esplicito application/json; filtro circoscritto per header Content-Type assente
+prima del parsing/validation, senza I/O sul thread event-loop.
+
+Server/bearer dichiarati in OpenApiApplication, con root / invariata e aggiunte
+automatiche SmallRye disabilitate. Filter minimo residuo per tag, errori globali,
+inlining, nullability/required, binari legacy, slash/ordine/placeholder: tutti
+ancora contrattuali. SDK JWT e factory BFF non equivalenti per uid/exp/iat/issuer/
+chiavi: nessuna attivazione automatica o riduzione di firma/tenant. Alias e probe
+legacy mantenuti finche consumer e ambiente non autorizzano la rimozione.
+Replay asincrono su cold Uni al massimo una volta, distinto dai tre tentativi
+applicativi e dai relativi intervalli; nessun replay/retry nuovo degli upload.
+
+**Evidenze finali sullo stesso candidato:** 2500 Surefire, 73 Failsafe,
+644/644 scenari per runtime, 63/63 Cucumber e 230/230 step, zero failure/errori/
+skip. Reactor misto seriale verde su nove moduli, inclusi BFF, IAM e scheduler.
+Floor portato a 644 dopo la doppia esecuzione completa. Il checkpoint clean
+precedente contava 2494 Surefire; lo spostamento della selezione documentale ha
+poi passato 237 test mirati e 75/75 casi token per runtime, seguito dalla suite
+completa e Cucumber sul codice finale. Il primo giro completo ha trovato un test unitario che trattava
+erroneamente lo spazio come Optional assente: corretto a empty con regressione
+blank-rejected, in accordo col riferimento HTTP, non cambiando il contratto.
+Entrambe le esecuzioni Docker ripristinate esattamente alle rispettive baseline:
+immagine user-ms e 11 record cache rimossi per ciascuna esecuzione, dati Azurite
+generati rimossi; container, immagini, reti e cache preesistenti preservati.
+Log: bff-parallel-full-verify-2.log, bff-parallel-document-selection-2.log,
+bff-parallel-mixed-reactor.log e bff-parallel-coverage-verify.log.
+
+**Coverage misurata:** aggregate JaCoCo esistente, 80 classi, 3307/4204 linee
+(78,66%) e 1017/1495 branch (68,03%). Linee aggiunte nel suo scope eseguibile:
+332/335 (99,10%) e 60/61 branch (98,36%) rispetto ad a8adee41c;
+2505/2713 (92,33%) e 818/956 branch (85,56%) rispetto a main cd0a2751f.
+Il combined locale nei due diff e 98,99% / 90,57%, ma non e il quality gate
+Sonar: scope/esclusioni e definizione new-code possono differire. Config,
+exception e DTO gia esclusi dall'aggregate non entrano nella misura; nessuna
+nuova esclusione o dipendenza introdotta. La soglia Sonar 80% resta da verificare
+con una nuova analisi sullo SHA pubblicato, senza dichiararla passata per proxy.
+
+```shell
+mvn -T 1 -B -ntp \
+  --projects :onboarding-bff,:iam,:institution-send-mail-scheduler --also-make clean test \
+  -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0 \
+  -Dparity.spring.jar="$SPRING_ORACLE_JAR"
+mvn -T 1 -B -ntp --projects :test-coverage --also-make verify \
+  -Ponboarding-bff,report,integration-tests -Dparity.spring.jar="$SPRING_ORACLE_JAR"
+```
+
+**Stato:** reactor misto, contratto completo, integrazione e report locali verdi;
+checkbox riconciliate con le evidenze pertinenti. Consumer frontend/APIM reali, Sonar sul nuovo SHA, review,
+builder/publish e rollout restano gate espliciti. L'oracolo main cd0a2751f e
+lo SHA-256 registrato restano immutati.
+
+### Fotografia storica prima dell'avvio dei sottoagenti
+
+**Baseline verificata:** `a8adee41c`, ST01/ST02/ST03 e ST04-T01/T03 completati.
+Restano **26 task architetturali** (due ST04 e quattro per ciascuna ST05-ST10)
+e **6 task operativi** nei tre gate G01-G03. Questo aggiornamento e sola
+pianificazione: non avvia altri refactoring, modifiche CI, merge o deploy.
+
+| Ordine | Lotto | Risultato da ottenere |
+|--------|-------|----------------------|
+| 1 | ST04-T02, poi T04 | Flussi utenti/IAM e autorizzazioni reattivi, tenant conservato attraverso i cambi di thread; chiusura dell'intera storia con tutti i consumer adeguati |
+| 2 | ST05-T01..T04 | Completare onboarding/token/documenti, spostare orchestrazione e lettura file dai controller, preservare upload/download e risorse |
+| 3 | ST06-T01..T04 | Ridurre binding/validazioni custom e centralizzare gli errori, mantenendo gli adattamenti realmente necessari al contratto |
+| 4 | ST07-T01..T04 | Ridurre filtri e policy HTTP custom; verificare riuso SDK/JWT senza ampliare gli accessi o cambiare tenant/header |
+| 5 | ST08-T01..T04 | Portare dichiarazioni OpenAPI nelle annotazioni/configurazione e ridurre filtro/route legacy solo dove compatibili con frontend, APIM e probe |
+| 6 | ST09-T01..T04 | Consolidare trasporto/retry/replay, dimostrando gli stessi timeout, tentativi e assenza di scritture duplicate |
+| 7 | ST10-T01..T04 | Pulizia strutturale e certificazione finale sullo stesso candidato: reactor seriale, contratto/consumer, coverage, CI e runtime |
+
+ST06/ST07/ST08 hanno prerequisiti gia soddisfatti, ma l'ordine sopra evita
+modifiche sovrapposte a controller, filtri e mapper. Il cutover amministrativo
+della dependency submission puo procedere separatamente, con autorizzazione.
+
+**Confini concreti del primo lotto:**
+
+- Restano nove await di produzione: sei OnboardingServiceImpl, due DocumentService
+  e uno UserInstitutionServiceImpl. Non sono nove task indipendenti: le firme
+  condivise richiedono l'adeguamento simultaneo di tutti i consumer.
+- Il lookup `getOnboardingWithUserInfo` serve UserService, TokenService e
+  AuthorizationService. IAM/autorizzazioni coinvolgono anche sette guard nel
+  TokenV2Controller: comporre autorizzazione e azione, preservando ordine/conteggio
+  delle richieste e fallback requester soltanto per view, mai per management.
+- Se un consumer token collegato usa un client nativo attraverso un await,
+  migrarlo nello stesso lotto; non introdurre ponti sincroni o worker attorno a Uni.
+  La restante orchestrazione documentale e l'I/O file restano il perimetro ST05.
+- UserInstitutionService del BFF non mostra chiamanti di produzione nella ricerca
+  corrente, soltanto definizione e test. Verificare wiring/consumer prima di decidere
+  se migrare o rimuovere: nessuna eliminazione automatica o modifica di user-ms.
+- Files.readAllBytes resta nei controller TokenV2 e InstitutionV2: ST05 deve
+  spostarlo nei componenti appropriati, non limitarsi a lasciare @Blocking.
+
+**Gate riletti sulla PR #220, HEAD `a8adee41c`:** PR aperta e
+`REVIEW_REQUIRED`; submission Maven automatica `submit-maven` fallita,
+snapshot Maven autenticato riuscito. Build/Analysis BFF, integrazione BFF,
+SonarCloud monorepo e CodeQL Java sono ancora in corso nell'istantanea letta.
+Non sono risultati definitivi: la precedente reliability D e gli otto finding
+restano evidenze storiche da riconciliare con la nuova analisi, non nuovi finding
+certificati su questo SHA.
+
+**Chiusura operativa ancora necessaria:** codegen/build frontend e import APIM
+reali, quality gate/coverage (80% di nuova coverage nella baseline), review e
+autorizzazione al merge, builder Docker/publish completi, rollout e smoke in
+ambiente con rollback. Il catalogo locale verde non sostituisce questi gate;
+nessun bypass, disattivazione CI, pubblicazione o deploy implicito nel piano.
 
 ### BFF-ST01 - Inventario e confine del contratto
 
@@ -390,9 +522,10 @@ FQCN in conversioni enum e messaggi Jackson. `RequestParams` conserva il nome
 storico di `DownloadDocumentType`; `OnboardingExceptionMapper` conserva i
 package storici soltanto nei descrittori di tipo Jackson, anche per collezioni
 generiche ed eccezioni wrappate. Non riscrive i valori rifiutati inviati dal
-client. Le stringhe `controller.request`/`controller.response` rimaste in questi
-due punti e nelle aspettative dei test sono parte del dettaglio pubblico,
-non dipendenze da classi obsolete o import dei controller.
+client. La successiva verifica ST06 sull'oracolo conferma il namespace pubblico
+`web.model`: corregge gli alias inizialmente inferiti come
+`controller.request`/`controller.response`, senza introdurre dipendenze dei
+servizi dai controller o modificare i valori forniti dai client.
 
 Le tre nuove regressioni Jackson sono inizialmente fallite dopo lo spostamento,
 misurando la differenza di FQCN; passano dopo l'adattamento mirato.
@@ -629,14 +762,14 @@ servizi istituzioni/utenti/IAM, `PartyService`, `PartyRegistryProxyService`,
 - [x] **BFF-ST04-T01 - Migrare istituzioni e aggregazioni.** Applicare la composizione
   `Uni` alle catene di `InstitutionService` e `PartyService`; mantenere mapping nei
   mapper e aggiornare tutti i controller e i consumer delle firme modificate.
-- [ ] **BFF-ST04-T02 - Migrare utenti e autorizzazioni.** Adeguare `UserService`,
+- [x] **BFF-ST04-T02 - Migrare utenti e autorizzazioni.** Adeguare `UserService`,
   `UserInstitutionService`, `IamService` e i loro chiamanti. Verificare la
   propagazione del contesto tenant anche quando l'esecuzione cambia thread.
 - [x] **BFF-ST04-T03 - Preservare i confini dei registri.** Eliminare ponti bloccanti
   sui client reattivi e documentare l'eventuale I/O realmente bloccante. Conservare
   l'omissione di `institutionId` vuoto sul wire, senza normalizzare gli spazi;
   conservare il rifiuto del PATCH legacy prima della scrittura downstream.
-- [ ] **BFF-ST04-T04 - Verificare aggregazioni e failure.** Eseguire i test dei
+- [x] **BFF-ST04-T04 - Verificare aggregazioni e failure.** Eseguire i test dei
   servizi/controller interessati e i casi di parita per autorizzazioni, tenant,
   liste vuote, errori parziali, ordine e conteggio delle richieste downstream.
 
@@ -715,17 +848,17 @@ e documentali, con orchestrazione e I/O nei componenti appropriati.
 **Dove:** `TokenV2Controller`, `TokenServiceImpl`, `OnboardingServiceImpl`,
 `DocumentService`, modelli multipart, mapper e client documentali.
 
-- [ ] **BFF-ST05-T01 - Spostare l'orchestrazione.** Portare selezione dei documenti,
+- [x] **BFF-ST05-T01 - Spostare l'orchestrazione.** Portare selezione dei documenti,
   sequenza delle operazioni e decisioni applicative dal controller ai servizi
   esistenti. Lasciare nel controller binding e costruzione della risposta HTTP.
-- [ ] **BFF-ST05-T02 - Comporre i flussi asincroni.** Propagare `Uni` attraverso
+- [x] **BFF-ST05-T02 - Comporre i flussi asincroni.** Propagare `Uni` attraverso
   onboarding, token e documenti, incluse le catene di errore e autorizzazione.
   Mantenere l'ordine delle operazioni con effetti collaterali.
-- [ ] **BFF-ST05-T03 - Isolare il vero I/O bloccante.** Togliere `Files.readAllBytes`
+- [x] **BFF-ST05-T03 - Isolare il vero I/O bloccante.** Togliere `Files.readAllBytes`
   e operazioni analoghe dai controller. Stabilire una boundary worker Quarkus
   esplicita per file/SDK sincroni, gestendo durata dei file temporanei, risorse e
   contesto tenant; non usare un semplice wrapper `Uni` sul thread event-loop.
-- [ ] **BFF-ST05-T04 - Verificare file e autorizzazioni.** Coprire multipart,
+- [x] **BFF-ST05-T04 - Verificare file e autorizzazioni.** Coprire multipart,
   filename, content type, byte scaricati, header, documenti mancanti, permessi,
   errori downstream e chiusura delle risorse, con test mirati e parita HTTP.
 
@@ -741,17 +874,17 @@ debba ricostruire genericamente il comportamento di Spring.
 **Dove:** `util/RequestParams`, `util/Preconditions`, vincoli sui DTO,
 `exception/handler/OnboardingExceptionMapper`, modelli degli errori e controller.
 
-- [ ] **BFF-ST06-T01 - Classificare conversioni e validazioni.** Per ciascun uso
+- [x] **BFF-ST06-T01 - Classificare conversioni e validazioni.** Per ciascun uso
   di `RequestParams` verificare parametri ripetuti, vuoti, enum, numeri e alias
   booleani. Confrontare binding JAX-RS e Bean Validation con i casi osservati.
-- [ ] **BFF-ST06-T02 - Usare il framework dove equivalente.** Sostituire soltanto
+- [x] **BFF-ST06-T02 - Usare il framework dove equivalente.** Sostituire soltanto
   i casi realmente equivalenti; mantenere adattamenti puntuali per quelli richiesti.
   Non aggiungere un nuovo convertitore universale o fallback silenziosi.
-- [ ] **BFF-ST06-T03 - Centralizzare le eccezioni.** Usare il pattern
+- [x] **BFF-ST06-T03 - Centralizzare le eccezioni.** Usare il pattern
   `@ServerExceptionMapper` dei riferimenti, distinguendo dominio, downstream e
   parsing/validazione. Non copiare il formato errori di product se diverso dal
   contratto BFF e non alterare status, body o content type.
-- [ ] **BFF-ST06-T04 - Verificare richieste invalide.** Rieseguire regressioni
+- [x] **BFF-ST06-T04 - Verificare richieste invalide.** Rieseguire regressioni
   binding/errori, inclusi `PreconditionsTest`, input null/vuoti/spazi, route
   inesistenti e media type errati. Tracciare ogni adattamento rimasto.
 
@@ -767,17 +900,17 @@ con policy applicative limitate e meccanismi Quarkus dove compatibili.
 **Dove:** `BffSecurityFilter`, `BffJwtCallerPrincipalFactory`,
 `AuthorizationService`, configurazione sicurezza e test HTTP/HTTPS.
 
-- [ ] **BFF-ST07-T01 - Separare requisiti di accesso e trasporto.** Mappare
+- [x] **BFF-ST07-T01 - Separare requisiti di accesso e trasporto.** Mappare
   autenticazione, tenant, autorizzazioni, URL, metodi, CORS e header, identificando
   per ciascuno l'alternativa Quarkus e il comportamento da conservare.
-- [ ] **BFF-ST07-T02 - Verificare il riuso degli SDK.** Confrontare claim
+- [x] **BFF-ST07-T02 - Verificare il riuso degli SDK.** Confrontare claim
   facoltativi/obbligatori, issuer, firma e risoluzione chiavi. Non attivare
   automaticamente i bean SDK: anche document-ms ne esclude alcuni.
   Conservare la factory BFF se il contratto ne dimostra ancora la necessita.
-- [ ] **BFF-ST07-T03 - Ridurre il filtro.** Delegare a configurazione e componenti
+- [x] **BFF-ST07-T03 - Ridurre il filtro.** Delegare a configurazione e componenti
   standard solo cio che conserva gli accessi e gli header richiesti. Mantenere
   policy applicative esplicite, senza distribuire la stessa emulazione in tanti helper.
-- [ ] **BFF-ST07-T04 - Verificare il confine di sicurezza.** Eseguire i casi
+- [x] **BFF-ST07-T04 - Verificare il confine di sicurezza.** Eseguire i casi
   JWT/tenant/autorizzazioni, 401/403, preflight, URL anomali, route pubbliche,
   header cache/Vary e HSTS HTTP/HTTPS, anche per risposte di errore.
 
@@ -793,13 +926,13 @@ una riscrittura generale di springdoc dentro la configurazione Quarkus.
 **Dove:** `OpenApiContractFilter`, `SpringCompatibleRoutes`, annotazioni dei
 controller/DTO, `application.properties`, `src/main/docs` e alias legacy.
 
-- [ ] **BFF-ST08-T01 - Scomporre i requisiti OpenAPI.** Distinguere security,
+- [x] **BFF-ST08-T01 - Scomporre i requisiti OpenAPI.** Distinguere security,
   risposte, schemi e operation ID da ordine, server, slash e inlining. Associare
   ciascuna trasformazione ai consumer e ai gate esistenti.
-- [ ] **BFF-ST08-T02 - Spostare le dichiarazioni nella sede corretta.** Usare
+- [x] **BFF-ST08-T02 - Spostare le dichiarazioni nella sede corretta.** Usare
   annotazioni OpenAPI, schemi di sicurezza e configurazione SmallRye dove
   equivalenti. Lasciare solo trasformazioni minime con un requisito dimostrato.
-- [ ] **BFF-ST08-T03 - Riesaminare le route legacy.** Verificare health/actuator,
+- [x] **BFF-ST08-T03 - Riesaminare le route legacy.** Verificare health/actuator,
   `/error`, Swagger e `/v3/api-docs` rispetto a probe e consumer. Coordinare errori
   e accessi con ST06/ST07; non rimuovere alias ancora consumati.
 - [ ] **BFF-ST08-T04 - Rigenerare e verificare tutti gli artefatti.** Usare la
@@ -820,16 +953,16 @@ senza retry sovrapposti o replay che possano duplicare le operazioni.
 **Dove:** `client/transport`, `ReplayOnConnectionDropInterceptor`, configurazione
 REST client, annotazioni di retry dei servizi e test di trasporto.
 
-- [ ] **BFF-ST09-T01 - Inventariare i livelli di ripetizione.** Distinguere retry
+- [x] **BFF-ST09-T01 - Inventariare i livelli di ripetizione.** Distinguere retry
   applicativi, replay impliciti JDK/Feign e comportamento dei client Quarkus,
   annotando timeout, metodi HTTP, trigger e numero atteso delle richieste.
-- [ ] **BFF-ST09-T02 - Consolidare senza cambiare la politica.** Eliminare
+- [x] **BFF-ST09-T02 - Consolidare senza cambiare la politica.** Eliminare
   duplicazioni solo dopo aver provato l'equivalenza sul flusso reattivo.
   Non confondere una failure asincrona con un'eccezione prima della sottoscrizione.
-- [ ] **BFF-ST09-T03 - Verificare gli effetti sul wire.** Coprire disconnessione,
+- [x] **BFF-ST09-T03 - Verificare gli effetti sul wire.** Coprire disconnessione,
   timeout, errori HTTP, numero/ordine dei tentativi, assenza di scritture aggiuntive
   e restrizione PATCH legacy, usando stub e regressioni gia disponibili.
-- [ ] **BFF-ST09-T04 - Rimuovere configurazione morta.** Eliminare interceptor,
+- [x] **BFF-ST09-T04 - Rimuovere configurazione morta.** Eliminare interceptor,
   proprieta e helper non piu usati; aggiornare il README per gli override effettivi,
   mantenendo eventuali adattatori ancora richiesti.
 
@@ -844,7 +977,7 @@ valutare la migrazione senza affidarmi ai risultati della vecchia baseline.
 
 **Dove:** intero BFF, test, documentazione e gate CI esistenti.
 
-- [ ] **BFF-ST10-T01 - Completare la pulizia strutturale.** Cercare dipendenze
+- [x] **BFF-ST10-T01 - Completare la pulizia strutturale.** Cercare dipendenze
   service -> controller, await di produzione, I/O nei controller, codice morto
   e responsabilita duplicate. Esaminare ogni occorrenza, senza aggiungere un
   framework di architettura solo per automatizzare lo stile.

@@ -64,10 +64,22 @@ class ProductControllerTest {
 
         // when
         controller.getProduct("prod-io", null).await().indefinitely();
-        controller.getProduct("prod-io", " ").await().indefinitely();
+        controller.getProduct("prod-io", "").await().indefinitely();
 
         // then
         verify(productService, org.mockito.Mockito.times(2)).getProduct("prod-io", null);
+    }
+
+    @Test
+    void getProduct_blankInstitutionTypeIsRejectedLikeTheSpringOptionalParameter() {
+        // given
+        String blankType = " ";
+
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.getProduct("prod-io", blankType));
+
+        // then
+        verifyNoInteractions(productService, productMapper);
     }
 
     @Test

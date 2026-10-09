@@ -26,6 +26,8 @@ import it.pagopa.selfcare.onboarding.client.model.StorageOrigin;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
+import it.pagopa.selfcare.onboarding.model.dto.request.DownloadDocumentType;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.service.impl.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
@@ -33,9 +35,13 @@ import it.pagopa.selfcare.onboarding.service.ProductService;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import jakarta.ws.rs.ProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -46,7 +52,7 @@ class TokenServiceImplTest {
 
     private static final String ONBOARDING_ID = "onboarding-id";
     private static final String PRODUCT_ID = "prod-io";
-    private static final UploadedFile FILE = new UploadedFile("attachment.pdf", "application/pdf", new byte[]{1, 2});
+    private static final UploadedFile FILE = new UploadedFile("attachment.pdf", "application/pdf", new byte[] {1, 2});
 
     @InjectMocks
     private TokenServiceImpl tokenService;
@@ -62,6 +68,54 @@ class TokenServiceImplTest {
 
     @Mock
     private OnboardingMapper onboardingMapper;
+
+    @Test
+    void downloadDocument_selectsTheSignedContractAndIgnoresTheAttachmentName() {
+        // given
+        BinaryData signed = new BinaryData("signed.pdf", new byte[] {1, 2});
+        when(documentMsClient.getContractSigned(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(signed));
+
+        // when
+        BinaryData downloaded = tokenService.downloadDocument(ONBOARDING_ID, DownloadDocumentType.CONTRACT_SIGNED, "ignored.pdf")
+                .await().indefinitely();
+
+        // then
+        assertSame(signed, downloaded);
+        verify(documentMsClient, never()).getAttachment(any(), any());
+        verifyNoInteractions(onboardingMsConnector, productService);
+    }
+
+    @Test
+    void downloadDocument_forwardsTheAttachmentNameWithoutNormalizingWhitespace() {
+        // given
+        BinaryData attachment = new BinaryData("doc.pdf", new byte[] {3});
+        when(documentMsClient.getAttachment(ONBOARDING_ID, " doc.pdf ")).thenReturn(Uni.createFrom().item(attachment));
+
+        // when
+        BinaryData downloaded = tokenService.downloadDocument(ONBOARDING_ID, DownloadDocumentType.ATTACHMENT, " doc.pdf ")
+                .await().indefinitely();
+
+        // then
+        assertSame(attachment, downloaded);
+        verify(documentMsClient, never()).getContractSigned(any());
+        verifyNoInteractions(onboardingMsConnector, productService);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", " ", "\t"})
+    void downloadDocument_requiresAnAttachmentNameBeforeCallingDocumentMs(String name) {
+        // given
+        DownloadDocumentType type = DownloadDocumentType.ATTACHMENT;
+
+        // when
+        InvalidRequestException failure = assertThrows(InvalidRequestException.class,
+                () -> tokenService.downloadDocument(ONBOARDING_ID, type, name));
+
+        // then
+        assertEquals("Query parameter 'name' is required when type=ATTACHMENT", failure.getMessage());
+        verifyNoInteractions(documentMsClient, onboardingMsConnector, productService);
+    }
 
     @Test
     void verifyOnboarding_mapsTheOnboarding() {
@@ -80,54 +134,164 @@ class TokenServiceImplTest {
     }
 
     @Test
-    void getOnboardingWithUserInfo_usesTheUserInfoEndpoint() {
+    void getOnboardingWithUserInfo_usesTheUserInfoEndpointAndMapsOnlyWhenItEmits() {
+        // given
+        AtomicReference<UniEmitter<? super OnboardingGet>> pending = new AtomicReference<>();
         OnboardingGet downstream = new OnboardingGet();
         OnboardingData mapped = new OnboardingData();
-        when(onboardingMsConnector.getOnboardingWithUserInfo(ONBOARDING_ID)).thenReturn(downstream);
+        when(onboardingMsConnector.getOnboardingWithUserInfo(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().<OnboardingGet>emitter(pending::set));
         when(onboardingMapper.toOnboardingData(downstream)).thenReturn(mapped);
 
-        assertSame(mapped, tokenService.getOnboardingWithUserInfo(ONBOARDING_ID));
+        // when
+        UniAssertSubscriber<OnboardingData> result = tokenService.getOnboardingWithUserInfo(ONBOARDING_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(onboardingMapper);
+        pending.get().complete(downstream);
+        result.assertCompleted().assertItem(mapped);
         verify(onboardingMsConnector, never()).getOnboarding(any());
     }
 
     @Test
-    void approveAndReject_forwardTheRequester() {
-        tokenService.approveOnboarding(ONBOARDING_ID, "uid-1");
-        tokenService.rejectOnboarding(ONBOARDING_ID, "wrong data", "uid-1");
+    void getOnboardingWithUserInfo_propagatesTheLookupFailureWithoutMapping() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing onboarding");
+        when(onboardingMsConnector.getOnboardingWithUserInfo(ONBOARDING_ID)).thenReturn(Uni.createFrom().failure(failure));
 
+        // when
+        UniAssertSubscriber<OnboardingData> result = tokenService.getOnboardingWithUserInfo(ONBOARDING_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verifyNoInteractions(onboardingMapper);
+    }
+
+    @Test
+    void approveAndReject_forwardTheRequesterAndCompleteOnlyWithTheDownstream() {
+        // given
+        AtomicReference<UniEmitter<? super Void>> approval = new AtomicReference<>();
+        AtomicReference<UniEmitter<? super Void>> rejection = new AtomicReference<>();
+        when(onboardingMsConnector.approveOnboarding(ONBOARDING_ID, "uid-1"))
+                .thenReturn(Uni.createFrom().<Void>emitter(approval::set));
+        when(onboardingMsConnector.rejectOnboarding(ONBOARDING_ID, "wrong data", "uid-1"))
+                .thenReturn(Uni.createFrom().<Void>emitter(rejection::set));
+
+        // when
+        UniAssertSubscriber<Void> approved = tokenService.approveOnboarding(ONBOARDING_ID, "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<Void> rejected = tokenService.rejectOnboarding(ONBOARDING_ID, "wrong data", "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        approved.assertNotTerminated();
+        rejected.assertNotTerminated();
+        approval.get().complete(null);
+        approved.assertCompleted();
+        rejected.assertNotTerminated();
+        rejection.get().complete(null);
+        rejected.assertCompleted();
         verify(onboardingMsConnector).approveOnboarding(ONBOARDING_ID, "uid-1");
         verify(onboardingMsConnector).rejectOnboarding(ONBOARDING_ID, "wrong data", "uid-1");
     }
 
     @Test
-    void completeOperations_delegateTheContract() {
-        tokenService.completeTokenV2(ONBOARDING_ID, FILE);
-        tokenService.completeOnboardingUsers(ONBOARDING_ID, FILE);
+    void approveAndReject_propagateTheDownstreamFailure() {
+        // given
+        ProcessingException failure = new ProcessingException("connection dropped");
+        when(onboardingMsConnector.approveOnboarding(ONBOARDING_ID, "uid-1")).thenReturn(Uni.createFrom().failure(failure));
+        when(onboardingMsConnector.rejectOnboarding(ONBOARDING_ID, "wrong data", "uid-1"))
+                .thenReturn(Uni.createFrom().failure(failure));
 
+        // when
+        UniAssertSubscriber<Void> approved = tokenService.approveOnboarding(ONBOARDING_ID, "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<Void> rejected = tokenService.rejectOnboarding(ONBOARDING_ID, "wrong data", "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, approved.getFailure());
+        assertSame(failure, rejected.getFailure());
+    }
+
+    @Test
+    void completeOperations_delegateTheContractAndKeepTheirFailure() {
+        // given
+        ProcessingException failure = new ProcessingException("upload failed");
+        when(onboardingMsConnector.onboardingTokenComplete(ONBOARDING_ID, FILE)).thenReturn(Uni.createFrom().voidItem());
+        when(onboardingMsConnector.onboardingUsersComplete(ONBOARDING_ID, FILE)).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> token = tokenService.completeTokenV2(ONBOARDING_ID, FILE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<Void> users = tokenService.completeOnboardingUsers(ONBOARDING_ID, FILE)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        token.assertCompleted();
+        assertSame(failure, users.getFailure());
         verify(onboardingMsConnector).onboardingTokenComplete(ONBOARDING_ID, FILE);
         verify(onboardingMsConnector).onboardingUsersComplete(ONBOARDING_ID, FILE);
     }
 
     @Test
     void documentReads_delegateToDocumentMs() {
+        // given
         BinaryData contract = new BinaryData("contract.pdf", new byte[]{1});
         BinaryData signed = new BinaryData("signed.pdf", new byte[]{2});
         BinaryData attachment = new BinaryData("att.pdf", new byte[]{3});
         BinaryData csv = new BinaryData("aggregates.csv", new byte[]{4});
         AvailableDocuments available = new AvailableDocuments();
-        when(documentMsClient.getContract(ONBOARDING_ID)).thenReturn(contract);
-        when(documentMsClient.getContractSigned(ONBOARDING_ID)).thenReturn(signed);
-        when(documentMsClient.getAttachment(ONBOARDING_ID, "att")).thenReturn(attachment);
-        when(documentMsClient.getAggregatesCsv(ONBOARDING_ID, PRODUCT_ID)).thenReturn(csv);
-        when(documentMsClient.getAvailableDocuments(ONBOARDING_ID)).thenReturn(available);
-        when(documentMsClient.headAttachment(ONBOARDING_ID, "att")).thenReturn(204);
+        when(documentMsClient.getContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(contract));
+        when(documentMsClient.getContractSigned(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(signed));
+        when(documentMsClient.getAttachment(ONBOARDING_ID, "att")).thenReturn(Uni.createFrom().item(attachment));
+        when(documentMsClient.getAggregatesCsv(ONBOARDING_ID, PRODUCT_ID)).thenReturn(Uni.createFrom().item(csv));
+        when(documentMsClient.getAvailableDocuments(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(available));
+        when(documentMsClient.headAttachment(ONBOARDING_ID, "att")).thenReturn(Uni.createFrom().item(204));
 
-        assertSame(contract, tokenService.getContract(ONBOARDING_ID));
-        assertSame(signed, tokenService.getContractSigned(ONBOARDING_ID));
-        assertSame(attachment, tokenService.getAttachment(ONBOARDING_ID, "att"));
-        assertSame(csv, tokenService.getAggregatesCsv(ONBOARDING_ID, PRODUCT_ID));
-        assertSame(available, tokenService.getAvailableDocuments(ONBOARDING_ID));
-        assertEquals(204, tokenService.headAttachment(ONBOARDING_ID, "att"));
+        // when
+        BinaryData actualContract = tokenService.getContract(ONBOARDING_ID).await().indefinitely();
+        BinaryData actualSigned = tokenService.getContractSigned(ONBOARDING_ID).await().indefinitely();
+        BinaryData actualAttachment = tokenService.getAttachment(ONBOARDING_ID, "att").await().indefinitely();
+        BinaryData actualCsv = tokenService.getAggregatesCsv(ONBOARDING_ID, PRODUCT_ID).await().indefinitely();
+        AvailableDocuments actualAvailable = tokenService.getAvailableDocuments(ONBOARDING_ID).await().indefinitely();
+        Integer actualStatus = tokenService.headAttachment(ONBOARDING_ID, "att").await().indefinitely();
+
+        // then
+        assertSame(contract, actualContract);
+        assertSame(signed, actualSigned);
+        assertSame(attachment, actualAttachment);
+        assertSame(csv, actualCsv);
+        assertSame(available, actualAvailable);
+        assertEquals(204, actualStatus);
+    }
+
+    @Test
+    void documentReads_waitForTheDownstreamAndKeepItsFailure() {
+        // given
+        AtomicReference<UniEmitter<? super Integer>> pendingHead = new AtomicReference<>();
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing document");
+        when(documentMsClient.headAttachment(ONBOARDING_ID, "att")).thenReturn(Uni.createFrom().<Integer>emitter(pendingHead::set));
+        when(documentMsClient.getContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().failure(failure));
+        when(documentMsClient.getAvailableDocuments(ONBOARDING_ID)).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Integer> head = tokenService.headAttachment(ONBOARDING_ID, "att")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<BinaryData> contract = tokenService.getContract(ONBOARDING_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<AvailableDocuments> available = tokenService.getAvailableDocuments(ONBOARDING_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        head.assertNotTerminated();
+        pendingHead.get().complete(404);
+        head.assertCompleted().assertItem(404);
+        assertSame(failure, contract.getFailure());
+        assertSame(failure, available.getFailure());
     }
 
     @Test

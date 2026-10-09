@@ -16,6 +16,7 @@ import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -36,6 +37,7 @@ import java.beans.Introspector;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -56,6 +58,9 @@ public class OnboardingExceptionMapper {
     static final String DOWNSTREAM_ERROR_DETAIL = "An error occurred during a downstream service request";
     private static final Pattern JACKSON_TYPE_DESCRIPTOR = Pattern.compile(
             "^(Cannot (?:deserialize (?:value|Map key) of type|construct instance of) `)([^`]+)(`)");
+    private static final Pattern NULL_METHOD_DESCRIPTOR = Pattern.compile("^(Cannot invoke \")([^\"]+)(\" because )");
+    private static final Pattern MULTIPART_ROUTE = Pattern.compile("^/v2/(?:tokens/[^/]+/(?:complete|"
+            + "complete-onboarding-users|attachment)|institutions/onboarding/aggregation/verification)$");
     private static final int BAD_REQUEST = Response.Status.BAD_REQUEST.getStatusCode();
     private static final int INTERNAL_SERVER_ERROR = Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
 
@@ -66,7 +71,12 @@ public class OnboardingExceptionMapper {
             return downstreamProblem(cause, -1, uriInfo);
         }
         log.error("unhandled exception: ", e);
-        return ProblemResponses.problem(INTERNAL_SERVER_ERROR, e.getMessage(), uriInfo);
+        String detail = e.getMessage();
+        if (e instanceof NullPointerException && detail != null) {
+            detail = NULL_METHOD_DESCRIPTOR.matcher(detail).replaceFirst(match -> Matcher.quoteReplacement(
+                    match.group(1) + RequestParams.springTypeName(match.group(2)) + match.group(3)));
+        }
+        return ProblemResponses.problem(INTERNAL_SERVER_ERROR, detail, uriInfo);
     }
 
     @ServerExceptionMapper
@@ -192,12 +202,7 @@ public class OnboardingExceptionMapper {
         if (message != null) {
             // Preserve published DTO type names, not similarly named values supplied in the request.
             message = JACKSON_TYPE_DESCRIPTOR.matcher(message).replaceFirst(match -> Matcher.quoteReplacement(
-                    match.group(1) + match.group(2)
-                            .replace("it.pagopa.selfcare.onboarding.model.dto.request.",
-                                    "it.pagopa.selfcare.onboarding.controller.request.")
-                            .replace("it.pagopa.selfcare.onboarding.model.dto.response.",
-                                    "it.pagopa.selfcare.onboarding.controller.response.")
-                            + match.group(3)));
+                    match.group(1) + RequestParams.springTypeName(match.group(2)) + match.group(3)));
         }
         return "JSON parse error: " + message;
     }
@@ -233,12 +238,38 @@ public class OnboardingExceptionMapper {
         }
         if (e instanceof NotSupportedException) {
             String contentType = requestContext == null ? null : requestContext.getHeaderString("Content-Type");
-            return ProblemResponses.problem(BAD_REQUEST, "Content-Type '" + contentType + "' is not supported", uriInfo);
+            return ProblemResponses.problem(BAD_REQUEST,
+                    unsupportedMediaTypeDetail(contentType, ProblemResponses.instance(uriInfo)), uriInfo);
         }
         if (status < 400 || ProblemResponses.reasonPhrase(status) == null) {
             return ProblemResponses.problem(INTERNAL_SERVER_ERROR, e.getMessage(), uriInfo);
         }
         return ProblemResponses.problem(status, e.getMessage(), uriInfo);
+    }
+
+    // Multipart routes reject the raw header when the request is mapped, while body routes report the media type
+    // as the Spring message converters saw it, with the request encoding filled in.
+    private static String unsupportedMediaTypeDetail(String contentType, String path) {
+        boolean absent = contentType == null || contentType.isBlank();
+        if (path != null && MULTIPART_ROUTE.matcher(path).matches()) {
+            return absent ? "Content-Type is not supported" : "Content-Type '" + contentType + "' is not supported";
+        }
+        return "Content-Type '" + (absent ? MediaType.APPLICATION_OCTET_STREAM : withRequestEncoding(contentType))
+                + "' is not supported";
+    }
+
+    private static String withRequestEncoding(String contentType) {
+        String[] parts = contentType.split(";");
+        StringBuilder mediaType = new StringBuilder(parts[0].trim().toLowerCase(Locale.ROOT));
+        boolean charset = false;
+        for (int i = 1; i < parts.length; i++) {
+            String parameter = parts[i].trim();
+            if (!parameter.isEmpty()) {
+                mediaType.append(';').append(parameter);
+                charset |= parameter.regionMatches(true, 0, "charset=", 0, "charset=".length());
+            }
+        }
+        return charset ? mediaType.toString() : mediaType.append(";charset=UTF-8").toString();
     }
 
     private static Response verbatim(int status, String body) {

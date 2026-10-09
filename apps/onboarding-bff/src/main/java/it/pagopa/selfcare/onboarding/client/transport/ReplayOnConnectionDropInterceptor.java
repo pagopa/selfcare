@@ -37,20 +37,9 @@ public class ReplayOnConnectionDropInterceptor {
             throw failure;
         }
         if (result instanceof Uni<?> uni) {
-            return replayOnDrop(uni, context);
+            // REST client Unis are cold: resubscription repeats the wire request, not the invocation.
+            return uni.onFailure(ConnectionDrops::isDroppedBeforeAnswer).retry().atMost(1);
         }
         return result;
-    }
-
-    // The client Uni is cold: calling the method again builds a request that has not been sent.
-    @SuppressWarnings("unchecked")
-    private static <T> Uni<T> replayOnDrop(Uni<T> uni, InvocationContext context) {
-        return uni.onFailure(ConnectionDrops::isDroppedBeforeAnswer).recoverWithUni(() -> {
-            try {
-                return (Uni<T>) context.proceed();
-            } catch (Exception failure) {
-                return Uni.createFrom().failure(failure);
-            }
-        });
     }
 }

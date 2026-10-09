@@ -19,7 +19,6 @@ public class TransportTestEnvironment implements QuarkusTestResourceLifecycleMan
         config.put("JWT_TOKEN_PUBLIC_KEY", RuntimeJwt.publicKeyPem());
         config.put("rest-client.ms-onboarding.base-url", stub.url("ms-onboarding"));
         config.put("rest-client.ms-user.base-url", stub.url("ms-user"));
-        config.put("rest-client.ms-user-institution.base-url", stub.url("ms-user"));
         config.put("rest-client.ms-product.base-url", stub.url("ms-product"));
         config.put("rest-client.ms-core.base-url", stub.url("ms-core"));
         config.put("rest-client.ms-document.base-url", stub.url("ms-document"));

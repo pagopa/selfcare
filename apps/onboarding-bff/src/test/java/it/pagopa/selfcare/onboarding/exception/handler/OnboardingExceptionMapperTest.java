@@ -8,10 +8,13 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import io.vertx.core.http.HttpClosedException;
+import it.pagopa.selfcare.onboarding.client.model.GPUData;
+import it.pagopa.selfcare.onboarding.config.JacksonConfiguration;
 import it.pagopa.selfcare.onboarding.exception.AccessDeniedException;
 import it.pagopa.selfcare.onboarding.exception.CustomVerifyException;
 import it.pagopa.selfcare.onboarding.exception.DownstreamServiceException;
@@ -24,18 +27,22 @@ import it.pagopa.selfcare.onboarding.exception.ResourceConflictException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.exception.UnauthorizedUserException;
 import it.pagopa.selfcare.onboarding.exception.UpdateNotAllowedException;
+import it.pagopa.selfcare.onboarding.model.AggregateInstitution;
 import it.pagopa.selfcare.onboarding.model.error.Problem;
 import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.Valid;
 import jakarta.validation.Validation;
+import jakarta.validation.ValidationException;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.ws.rs.NotAcceptableException;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.NotSupportedException;
 import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
@@ -53,12 +60,16 @@ import java.util.stream.Collectors;
 import org.hibernate.validator.messageinterpolation.ParameterMessageInterpolator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class OnboardingExceptionMapperTest {
 
     private static final String DETAIL_MESSAGE = "detail message";
     private static final String DOWNSTREAM_DETAIL = "An error occurred during a downstream service request";
-    private static final String LEGACY_TAX_CODE_DTO = "it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto";
+    private static final String SPRING_TAX_CODE_DTO = "it.pagopa.selfcare.onboarding.web.model.UserTaxCodeDto";
 
     private final OnboardingExceptionMapper mapper = new OnboardingExceptionMapper();
     private UriInfo uriInfo;
@@ -207,6 +218,66 @@ class OnboardingExceptionMapperTest {
     }
 
     @Test
+    void downstreamSuccessStatusIsNeverReExposed() {
+        // given
+        DownstreamServiceException exception = new DownstreamServiceException(200, "x");
+
+        // when
+        Response response = mapper.handleDownstreamServiceException(exception, uriInfo);
+
+        // then
+        assertProblem(response, 500, "Internal Server Error", DOWNSTREAM_DETAIL);
+    }
+
+    @Test
+    void domainValidationFailureIs400WithItsMessage() {
+        // given
+        ValidationException exception = new ValidationException(DETAIL_MESSAGE);
+
+        // when
+        Response response = mapper.handleValidationException(exception, uriInfo);
+
+        // then
+        assertProblem(response, 400, "Bad Request", DETAIL_MESSAGE);
+    }
+
+    @Test
+    void wrappedFailureWithoutACauseKeepsItsOwnMessage() {
+        // given
+        CompletionException exception = new CompletionException("lost", null);
+
+        // when
+        Response response = mapper.handleThrowable(exception, uriInfo);
+
+        // then
+        assertProblem(response, 500, "Internal Server Error", "lost");
+    }
+
+    @Test
+    void webApplicationClientErrorKeepsItsStatusAndReasonPhrase() {
+        // given
+        WebApplicationException exception = new WebApplicationException("too big", 413);
+
+        // when
+        Response response = mapper.handleWebApplicationException(exception, requestContext());
+
+        // then
+        assertProblem(response, 413, "Payload Too Large", "too big");
+    }
+
+    @Test
+    void webApplicationRedirectIsNeverExposedAsAProblemStatus() {
+        // given
+        WebApplicationException exception = new WebApplicationException("moved", 302);
+
+        // when
+        Response response = mapper.handleWebApplicationException(exception, requestContext());
+
+        // then
+        assertProblem(response, 500, "Internal Server Error", "moved");
+    }
+
+    @Test
     void checkedTransportFailuresWrappedByMutinyAre500WithGenericDetail() {
         assertProblem(mapper.handleThrowable(new CompletionException(new IOException("Connection was closed")), uriInfo),
                 500, "Internal Server Error", DOWNSTREAM_DETAIL);
@@ -251,40 +322,184 @@ class OnboardingExceptionMapperTest {
     }
 
     @Test
-    void invalidDtoArrayKeepsTheOriginalTypeNameInDirectAndWrappedJacksonErrors() {
+    void invalidDtoArrayReportsTheSpringTypeNameInDirectAndWrappedJacksonErrors() {
+        // given
         MismatchedInputException failure = assertThrows(MismatchedInputException.class,
                 () -> new ObjectMapper().readValue("[]", UserTaxCodeDto.class));
-        String detail = "JSON parse error: Cannot deserialize value of type `" + LEGACY_TAX_CODE_DTO
+        String detail = "JSON parse error: Cannot deserialize value of type `" + SPRING_TAX_CODE_DTO
                 + "` from Array value (token `JsonToken.START_ARRAY`)";
 
-        assertProblem(mapper.handleMismatchedInputException(failure, uriInfo), 400, "Bad Request", detail);
-        assertProblem(mapper.handleWebApplicationException(new BadRequestException(failure), requestContext()),
-                400, "Bad Request", detail);
+        // when
+        Response direct = mapper.handleMismatchedInputException(failure, uriInfo);
+        Response wrapped = mapper.handleWebApplicationException(new BadRequestException(failure), requestContext());
+
+        // then
+        assertProblem(direct, 400, "Bad Request", detail);
+        assertProblem(wrapped, 400, "Bad Request", detail);
     }
 
     @Test
-    void invalidDtoListKeepsTheOriginalTypeNameInsideTheGenericDescriptor() {
+    void invalidDtoListReportsTheSpringTypeNameInsideTheGenericDescriptor() {
+        // given
         MismatchedInputException failure = assertThrows(MismatchedInputException.class,
                 () -> new ObjectMapper().readValue("{}", new TypeReference<List<UserTaxCodeDto>>() { }));
         String detail = "JSON parse error: Cannot deserialize value of type `java.util.ArrayList<"
-                + LEGACY_TAX_CODE_DTO + ">` from Object value (token `JsonToken.START_OBJECT`)";
+                + SPRING_TAX_CODE_DTO + ">` from Object value (token `JsonToken.START_OBJECT`)";
 
-        assertProblem(mapper.handleMismatchedInputException(failure, uriInfo), 400, "Bad Request", detail);
+        // when
+        Response response = mapper.handleMismatchedInputException(failure, uriInfo);
+
+        // then
+        assertProblem(response, 400, "Bad Request", detail);
     }
 
     @Test
-    void invalidDtoScalarKeepsTheOriginalTypeNameWithoutRewritingTheRejectedValue() throws Exception {
+    void invalidDtoScalarReportsTheSpringTypeNameWithoutRewritingTheRejectedValue() throws Exception {
+        // given
         String rejectedValue = "`" + UserTaxCodeDto.class.getName() + "`";
         String json = new ObjectMapper().writeValueAsString(rejectedValue);
         MismatchedInputException failure = assertThrows(MismatchedInputException.class,
                 () -> new ObjectMapper().readValue(json, UserTaxCodeDto.class));
-        String originalDetail = failure.getOriginalMessage().replace(
-                "instance of `" + UserTaxCodeDto.class.getName() + "`", "instance of `" + LEGACY_TAX_CODE_DTO + "`");
-        assertTrue(originalDetail.contains("instance of `" + LEGACY_TAX_CODE_DTO + "`"));
-        assertTrue(originalDetail.contains("('" + rejectedValue + "')"));
+        String expectedDetail = failure.getOriginalMessage().replace(
+                "instance of `" + UserTaxCodeDto.class.getName() + "`", "instance of `" + SPRING_TAX_CODE_DTO + "`");
 
-        assertProblem(mapper.handleMismatchedInputException(failure, uriInfo), 400, "Bad Request",
-                "JSON parse error: " + originalDetail);
+        // when
+        Response response = mapper.handleMismatchedInputException(failure, uriInfo);
+
+        // then
+        assertTrue(expectedDetail.contains("instance of `" + SPRING_TAX_CODE_DTO + "`"));
+        assertTrue(expectedDetail.contains("('" + rejectedValue + "')"));
+        assertProblem(response, 400, "Bad Request", "JSON parse error: " + expectedDetail);
+    }
+
+    @Test
+    void relocatedNestedModelsAreReportedWithTheNamesTheSpringBffPublished() {
+        // given
+        MismatchedInputException gpuFailure = assertThrows(MismatchedInputException.class,
+                () -> new ObjectMapper().readValue("\"x\"", GPUData.class));
+        MismatchedInputException aggregateFailure = assertThrows(MismatchedInputException.class,
+                () -> new ObjectMapper().readValue("\"x\"", AggregateInstitution.class));
+
+        // when
+        Response gpu = mapper.handleMismatchedInputException(gpuFailure, uriInfo);
+        Response aggregate = mapper.handleMismatchedInputException(aggregateFailure, uriInfo);
+
+        // then
+        assertTrue(((Problem) gpu.getEntity()).getDetail().startsWith(
+                "JSON parse error: Cannot construct instance of `it.pagopa.selfcare.onboarding.connector.model.onboarding.GPUData`"));
+        assertTrue(((Problem) aggregate.getEntity()).getDetail().startsWith(
+                "JSON parse error: Cannot construct instance of `it.pagopa.selfcare.onboarding.web.model.AggregateInstitution`"));
+    }
+
+    @Test
+    void malformedJsonSyntaxKeepsTheOriginalMessageWithoutTheSourceLocation() {
+        // given
+        JsonProcessingException failure = assertThrows(JsonProcessingException.class,
+                () -> new ObjectMapper().readValue("{bad", Map.class));
+
+        // when
+        Response response = mapper.handleJsonProcessingException(failure, uriInfo);
+
+        // then
+        assertTrue(failure.getOriginalMessage().startsWith("Unexpected character"));
+        assertProblem(response, 400, "Bad Request", "JSON parse error: " + failure.getOriginalMessage());
+    }
+
+    @Test
+    void applicationObjectMapperFailuresAreStillRewrittenToThePublishedTypeName() {
+        // given
+        ObjectMapper configured = new ObjectMapper();
+        new JacksonConfiguration().customize(configured);
+        MismatchedInputException failure = assertThrows(MismatchedInputException.class,
+                () -> configured.readValue("[]", UserTaxCodeDto.class));
+
+        // when
+        Response response = mapper.handleMismatchedInputException(failure, uriInfo);
+
+        // then
+        assertProblem(response, 400, "Bad Request",
+                "JSON parse error: Cannot deserialize value of type `" + SPRING_TAX_CODE_DTO
+                        + "` from Array value (token `JsonToken.START_ARRAY`)");
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "text/plain|text/plain;charset=UTF-8",
+            "application/xml|application/xml;charset=UTF-8",
+            "application/x-www-form-urlencoded|application/x-www-form-urlencoded;charset=UTF-8",
+            "Text/Plain;Foo=Bar|text/plain;Foo=Bar;charset=UTF-8",
+            "multipart/form-data; boundary=xyz|multipart/form-data;boundary=xyz;charset=UTF-8",
+            "text/plain;charset=ISO-8859-1|text/plain;charset=ISO-8859-1",
+            "text/plain;foo=bar;charset=UTF-16|text/plain;foo=bar;charset=UTF-16"})
+    void unsupportedBodyMediaTypeIsReportedAsTheSpringMessageConverterSawIt(String received, String reported) {
+        // given
+        ContainerRequestContext requestContext = requestContext();
+        when(requestContext.getHeaderString("Content-Type")).thenReturn(received);
+
+        // when
+        Response response = mapper.handleWebApplicationException(new NotSupportedException(), requestContext);
+
+        // then
+        assertProblem(response, 400, "Bad Request", "Content-Type '" + reported + "' is not supported");
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"", " "})
+    void unsupportedBodyWithoutAMediaTypeIsReportedAsOctetStream(String received) {
+        // given
+        ContainerRequestContext requestContext = requestContext();
+        when(requestContext.getHeaderString("Content-Type")).thenReturn(received);
+
+        // when
+        Response response = mapper.handleWebApplicationException(new NotSupportedException(), requestContext);
+
+        // then
+        assertProblem(response, 400, "Bad Request", "Content-Type 'application/octet-stream' is not supported");
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "/v2/tokens/ob1/complete,application/json",
+            "/v2/tokens/ob1/complete-onboarding-users,text/plain",
+            "/v2/tokens/ob1/attachment,application/xml",
+            "/v2/institutions/onboarding/aggregation/verification,text/plain"})
+    void unsupportedMultipartRouteEchoesTheRawMediaTypeLikeSpringRequestMapping(String path, String received) {
+        // given
+        ContainerRequestContext requestContext = requestContext(path, received);
+
+        // when
+        Response response = mapper.handleWebApplicationException(new NotSupportedException(), requestContext);
+
+        // then
+        assertEquals(400, response.getStatus());
+        assertEquals("Content-Type '" + received + "' is not supported", ((Problem) response.getEntity()).getDetail());
+        assertEquals(path, ((Problem) response.getEntity()).getInstance());
+    }
+
+    @Test
+    void unsupportedMultipartRouteWithoutAMediaTypeHasNoValueInTheMessage() {
+        // given
+        ContainerRequestContext requestContext = requestContext("/v2/tokens/ob1/complete", null);
+
+        // when
+        Response response = mapper.handleWebApplicationException(new NotSupportedException(), requestContext);
+
+        // then
+        assertEquals("Content-Type is not supported", ((Problem) response.getEntity()).getDetail());
+    }
+
+    @Test
+    void unsupportedMediaTypeOnAnotherTokenRouteKeepsTheNormalizedBodyMessage() {
+        // given
+        ContainerRequestContext requestContext = requestContext("/v2/tokens/ob1/reject", "text/plain");
+
+        // when
+        Response response = mapper.handleWebApplicationException(new NotSupportedException(), requestContext);
+
+        // then
+        assertEquals("Content-Type 'text/plain;charset=UTF-8' is not supported",
+                ((Problem) response.getEntity()).getDetail());
     }
 
     @Test
@@ -336,20 +551,41 @@ class OnboardingExceptionMapperTest {
         assertEquals("URLRequest.value", body.getInvalidParams().get(0).getName());
     }
 
+    @Test
+    void violationsThatAreNotRequestBodyFieldsKeepTheBeanValidationMessage() throws Exception {
+        // given
+        ConstraintViolationException failure = violationsOf("mixed", new Class<?>[]{String.class, Object.class},
+                "", new UsersBody(List.of(new UserInput("")), Map.of()));
+
+        // when
+        Response response = mapper.handleConstraintViolationException(failure, uriInfo);
+
+        // then
+        Problem body = assertProblem(response, 400, "Bad Request", failure.getMessage());
+        assertNull(body.getInvalidParams());
+    }
+
     private Response invalidBody(Object request) throws Exception {
+        return mapper.handleConstraintViolationException(
+                violationsOf("submit", new Class<?>[]{Object.class}, request), uriInfo);
+    }
+
+    private static ConstraintViolationException violationsOf(String method, Class<?>[] types, Object... arguments)
+            throws Exception {
         try (ValidatorFactory factory = Validation.byDefaultProvider().configure()
                 .messageInterpolator(new ParameterMessageInterpolator()).buildValidatorFactory()) {
             var violations = factory.getValidator().forExecutables().validateParameters(
-                    new ValidationEndpoint(),
-                    ValidationEndpoint.class.getMethod("submit", Object.class),
-                    new Object[]{request});
+                    new ValidationEndpoint(), ValidationEndpoint.class.getMethod(method, types), arguments);
             assertTrue(!violations.isEmpty());
-            return mapper.handleConstraintViolationException(new ConstraintViolationException(violations), uriInfo);
+            return new ConstraintViolationException(violations);
         }
     }
 
     public static class ValidationEndpoint {
         public void submit(@Valid Object request) {
+        }
+
+        public void mixed(@NotBlank String id, @Valid Object request) {
         }
     }
 
@@ -382,6 +618,15 @@ class OnboardingExceptionMapperTest {
     private ContainerRequestContext requestContext() {
         ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
         when(requestContext.getUriInfo()).thenReturn(uriInfo);
+        return requestContext;
+    }
+
+    private ContainerRequestContext requestContext(String path, String contentType) {
+        UriInfo routeUriInfo = mock(UriInfo.class);
+        when(routeUriInfo.getRequestUri()).thenReturn(URI.create("http://localhost:8080" + path));
+        ContainerRequestContext requestContext = mock(ContainerRequestContext.class);
+        when(requestContext.getUriInfo()).thenReturn(routeUriInfo);
+        when(requestContext.getHeaderString("Content-Type")).thenReturn(contentType);
         return requestContext;
     }
 

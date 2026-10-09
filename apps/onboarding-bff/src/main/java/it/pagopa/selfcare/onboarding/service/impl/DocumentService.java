@@ -46,14 +46,17 @@ public class DocumentService {
         this.documentMapper = documentMapper;
     }
 
+    // The document content client is synchronous: the call, the body read and the Response close run on a worker
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public BinaryData getContract(String onboardingId) {
-        return toBinaryData(documentContentClient.getContract(onboardingId));
+    public Uni<BinaryData> getContract(String onboardingId) {
+        return Uni.createFrom().item(() -> toBinaryData(documentContentClient.getContract(onboardingId)))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public BinaryData getContractSigned(String onboardingId) {
-        return toBinaryData(documentContentClient.getContractSigned(onboardingId));
+    public Uni<BinaryData> getContractSigned(String onboardingId) {
+        return Uni.createFrom().item(() -> toBinaryData(documentContentClient.getContractSigned(onboardingId)))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
@@ -68,18 +71,20 @@ public class DocumentService {
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public BinaryData getAttachment(String onboardingId, String filename) {
-        return toBinaryData(documentContentClient.getAttachment(onboardingId, filename));
+    public Uni<BinaryData> getAttachment(String onboardingId, String filename) {
+        return Uni.createFrom().item(() -> toBinaryData(documentContentClient.getAttachment(onboardingId, filename)))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public AvailableDocuments getAvailableDocuments(String onboardingId) {
-        return documentMapper.toAvailableDocuments(documentApi.getAvailableDocuments(onboardingId).await().indefinitely());
+    public Uni<AvailableDocuments> getAvailableDocuments(String onboardingId) {
+        return documentApi.getAvailableDocuments(onboardingId).map(documentMapper::toAvailableDocuments);
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public BinaryData getAggregatesCsv(String onboardingId, String productId) {
-        return toBinaryData(documentContentClient.getAggregatesCsv(onboardingId, productId));
+    public Uni<BinaryData> getAggregatesCsv(String onboardingId, String productId) {
+        return Uni.createFrom().item(() -> toBinaryData(documentContentClient.getAggregatesCsv(onboardingId, productId)))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     public Uni<Void> uploadAttachment(String onboardingId,
@@ -108,10 +113,8 @@ public class DocumentService {
                 .invoke(() -> documentContentClient.uploadUserAttachment(multipart(attachment, request, UserAttachmentRequest.class)).close());
     }
 
-    public int headAttachment(String onboardingId, String filename) {
-        try (Response response = documentApi.headAttachment(onboardingId, filename).await().indefinitely()) {
-            return response.getStatus();
-        }
+    public Uni<Integer> headAttachment(String onboardingId, String filename) {
+        return documentApi.headAttachment(onboardingId, filename).map(DocumentService::statusAndClose);
     }
 
     private static ClientMultipartForm multipart(UploadedFile attachment, Object request, Class<?> requestType) {
@@ -119,6 +122,12 @@ public class DocumentService {
         return ClientMultipartForm.create()
                 .binaryFileUpload(FILE_PART, attachment.fileName(), Buffer.buffer(attachment.content()), contentType)
                 .entity(REQUEST_PART, request, MediaType.APPLICATION_JSON, requestType);
+    }
+
+    private static int statusAndClose(Response response) {
+        try (response) {
+            return response.getStatus();
+        }
     }
 
     private static BinaryData toBinaryData(Response response) {

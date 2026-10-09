@@ -65,7 +65,7 @@ class RuntimeWiringTest {
                 .contentType("application/problem+json").extract().response();
 
         assertEquals("JSON parse error: Cannot deserialize value of type "
-                + "`it.pagopa.selfcare.onboarding.controller.request.UserTaxCodeDto`"
+                + "`it.pagopa.selfcare.onboarding.web.model.UserTaxCodeDto`"
                 + " from Array value (token `JsonToken.START_ARRAY`)", response.jsonPath().getString("detail"));
         assertEquals("/v1/users/search-user", response.jsonPath().getString("instance"));
         assertTrue(stub.calls().isEmpty());
@@ -154,8 +154,6 @@ class RuntimeWiringTest {
         assertEquals(stub.url(DownstreamStub.MS_IAM), config.getValue(RESTEASY_CLIENT_PREFIX + "iam_json.url", String.class));
         assertEquals(stub.url(DownstreamStub.MS_ONBOARDING), config.getValue(RESTEASY_CLIENT_PREFIX + "onboarding_json.url", String.class));
         assertEquals(stub.url(DownstreamStub.ONBOARDING_FN), config.getValue(RESTEASY_CLIENT_PREFIX + "onboarding_functions_json.url", String.class));
-        assertEquals(stub.url(DownstreamStub.MS_USER),
-                config.getValue(RESTEASY_CLIENT_PREFIX + "\"org.openapi.quarkus.user_json.api.InstitutionControllerApi\".url", String.class));
     }
 
     private static long timeout(Config config, String client, String property) {

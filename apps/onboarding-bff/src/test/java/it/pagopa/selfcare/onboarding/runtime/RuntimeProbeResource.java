@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.runtime;
 import io.quarkus.arc.properties.IfBuildProperty;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.PartyRegistryProxyRestClient;
 import it.pagopa.selfcare.onboarding.security.AuthorizationService;
 import it.pagopa.selfcare.onboarding.util.SecurityIdentityUtils;
@@ -63,8 +64,9 @@ public class RuntimeProbeResource {
 
     @GET
     @Path("/permissions/{onboardingId}")
-    public Map<String, Object> permission(@PathParam("onboardingId") String onboardingId,
-                                          @QueryParam("permission") String permission) {
-        return Map.of("granted", authorizationService.hasPermission(identity, onboardingId, permission));
+    public Uni<Map<String, Object>> permission(@PathParam("onboardingId") String onboardingId,
+                                               @QueryParam("permission") String permission) {
+        return authorizationService.hasPermission(identity, onboardingId, permission)
+                .map(granted -> Map.of("granted", granted));
     }
 }

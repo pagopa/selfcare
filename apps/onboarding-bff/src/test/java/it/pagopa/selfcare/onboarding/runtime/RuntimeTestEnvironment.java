@@ -25,7 +25,6 @@ public class RuntimeTestEnvironment implements QuarkusTestResourceLifecycleManag
 
         config.put("rest-client.ms-onboarding.base-url", stub.url(DownstreamStub.MS_ONBOARDING));
         config.put("rest-client.ms-user.base-url", stub.url(DownstreamStub.MS_USER));
-        config.put("rest-client.ms-user-institution.base-url", stub.url(DownstreamStub.MS_USER));
         config.put("rest-client.ms-product.base-url", stub.url(DownstreamStub.MS_PRODUCT));
         config.put("rest-client.ms-core.base-url", stub.url(DownstreamStub.MS_CORE));
         config.put("rest-client.ms-document.base-url", stub.url(DownstreamStub.MS_DOCUMENT));

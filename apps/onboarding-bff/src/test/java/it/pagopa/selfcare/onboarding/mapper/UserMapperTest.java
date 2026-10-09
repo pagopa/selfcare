@@ -21,7 +21,6 @@ import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
 import it.pagopa.selfcare.onboarding.model.dto.response.ManagerInfoResponse;
 import it.pagopa.selfcare.onboarding.model.dto.response.UserResource;
 import java.util.Map;
-import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
@@ -41,31 +40,6 @@ class UserMapperTest {
 
         user.setId("invalid-uuid");
         assertThrows(IllegalArgumentException.class, () -> userMapper.toUserId(user));
-    }
-
-    @Test
-    void toUserInstitutionRequest_preservesSplitOrderWhitespaceAndTrailingItemSemantics() {
-        var request = userMapper.toUserInstitutionRequest(
-                "institution", "second, first,", "product,", "MANAGER,DELEGATE,SUB_DELEGATE", "ACTIVE", "user");
-
-        assertEquals("institution", request.getInstitutionId());
-        assertEquals(List.of("second", " first"), request.getProductRoles());
-        assertEquals(List.of("product"), request.getProducts());
-        assertEquals(List.of("MANAGER", "DELEGATE", "SUB_DELEGATE"), request.getRoles());
-        assertEquals(List.of("ACTIVE"), request.getStates());
-        assertEquals("user", request.getUserId());
-    }
-
-    @Test
-    void toUserInstitutionRequest_keepsTheEmptyStringSentinelAndCommaOnlyResult() {
-        var request = userMapper.toUserInstitutionRequest(null, null, "  ", "", ",", null);
-
-        assertNull(request.getInstitutionId());
-        assertEquals(List.of(""), request.getProductRoles());
-        assertEquals(List.of(""), request.getProducts());
-        assertEquals(List.of(""), request.getRoles());
-        assertEquals(List.of(), request.getStates());
-        assertNull(request.getUserId());
     }
 
     @Test

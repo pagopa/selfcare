@@ -3,7 +3,7 @@ package it.pagopa.selfcare.onboarding.controller;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
-import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
@@ -38,8 +38,6 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.UriInfo;
 import jakarta.ws.rs.core.Response;
 import java.util.Objects;
-import java.io.IOException;
-import java.nio.file.Files;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jboss.resteasy.reactive.RestForm;
@@ -53,7 +51,7 @@ import java.util.List;
 @Authenticated
 @Path("/v2/institutions")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON, "application/*"})
 @Tag(name = "institutions")
 @RequiredArgsConstructor
 public class InstitutionV2Controller {
@@ -89,8 +87,8 @@ public class InstitutionV2Controller {
         category = RequestParams.stringQuery(uriInfo, "category", category);
         log.trace("searchIpaInstitutions start");
         String resolvedSearch = search == null || search.isEmpty() ? "*" : search;
-        Integer resolvedPage = Objects.requireNonNullElse(RequestParams.optionalInt("page", page), 0);
-        Integer resolvedPageSize = Objects.requireNonNullElse(RequestParams.optionalInt("pageSize", pageSize), 50);
+        Integer resolvedPage = Objects.requireNonNullElse(RequestParams.optionalInt("page", page, uriInfo), 0);
+        Integer resolvedPageSize = Objects.requireNonNullElse(RequestParams.optionalInt("pageSize", pageSize, uriInfo), 50);
         return institutionService.searchIpaInstitutions(resolvedSearch, category, resolvedPage, resolvedPageSize)
                 .map(registryProxyMapper::toResource)
                 .invoke(resource -> {
@@ -132,8 +130,10 @@ public class InstitutionV2Controller {
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
-    public Uni<Response> onboarding(@Valid OnboardingProductDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> onboarding(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                   @Valid OnboardingProductDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.InstitutionV2Controller.onboarding("
+                + "it.pagopa.selfcare.onboarding.web.model.OnboardingProductDto)");
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
         return institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId())
@@ -155,8 +155,10 @@ public class InstitutionV2Controller {
     @Path("/company/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboardingCompany")
-    public Uni<Response> onboarding(@Valid CompanyOnboardingDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> onboarding(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                   @Valid CompanyOnboardingDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.InstitutionV2Controller.onboarding("
+                + "it.pagopa.selfcare.onboarding.web.model.CompanyOnboardingDto,java.security.Principal)");
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", Encode.forJava(request.toString()));
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
@@ -207,7 +209,6 @@ public class InstitutionV2Controller {
 
     @POST
     @Path("/onboarding/aggregation/verification")
-    @Blocking
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     @RequestBody(required = false, content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA,
             schema = @Schema(requiredProperties = "aggregates")))
@@ -221,13 +222,15 @@ public class InstitutionV2Controller {
                                                         @QueryParam("institutionType") String legacyInstitutionType,
                                                         @QueryParam("productId") String legacyProductId) {
         legacyInstitutionType = RequestParams.stringQuery(uriInfo, "institutionType", legacyInstitutionType);
-        legacyProductId = RequestParams.stringQuery(uriInfo, "productId", legacyProductId);
-        UploadedFile uploadedFile = toUploadedFile("aggregates", file);
-        String resolvedProductId = RequestParams.requiredQuery("productId", productId != null ? productId : legacyProductId);
-        log.trace("Verify Aggregates Csv start");
-        log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
-        FileValidationUtils.validateAggregatesFile(uploadedFile);
-        return institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId)
+        String queryProductId = RequestParams.stringQuery(uriInfo, "productId", legacyProductId);
+        return readUpload("aggregates", file)
+                .chain(uploadedFile -> {
+                    String resolvedProductId = RequestParams.requiredQuery("productId", productId != null ? productId : queryProductId);
+                    log.trace("Verify Aggregates Csv start");
+                    log.debug("Verify Aggregates Csv start for productId {}", LogUtils.sanitize(resolvedProductId));
+                    FileValidationUtils.validateAggregatesFile(uploadedFile);
+                    return institutionService.validateAggregatesCsv(uploadedFile, resolvedProductId);
+                })
                 .map(onboardingMapper::toVerifyAggregatesResponse)
                 .invoke(response -> log.trace("Verify Aggregates Csv end"));
     }
@@ -237,9 +240,11 @@ public class InstitutionV2Controller {
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.verifyManager}",
             description = "${openapi.onboarding.institutions.api.onboarding.verifyManager}", operationId = "verifyManagerUsingPOST")
     public Uni<VerifyManagerResponse> verifyManager(
-            @Valid VerifyManagerRequest request
+            @RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON)) @Valid VerifyManagerRequest request
     ) {
-        RequestParams.requiredBody(request);
+        RequestParams.requiredBody(request, "public it.pagopa.selfcare.onboarding.web.model.VerifyManagerResponse "
+                + "it.pagopa.selfcare.onboarding.web.controller.InstitutionV2Controller.verifyManager("
+                + "it.pagopa.selfcare.onboarding.web.model.VerifyManagerRequest,java.security.Principal)");
         log.trace("verifyManager start");
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
         return institutionService.verifyManager(fiscalCode, request.getCompanyTaxCode())
@@ -296,7 +301,8 @@ public class InstitutionV2Controller {
             content = @Content(schema = @Schema(implementation = Void.class)))
     @Operation(summary = "${openapi.onboarding.institutions.api.onboardingUsersPg}",
             description = "${openapi.onboarding.institutions.api.onboardingUsersPg}", operationId = "onboardingUsersPgUsingPOST")
-    public Uni<Response> onboardingUsers(@RequestBody(required = false) @Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
+    public Uni<Response> onboardingUsers(@RequestBody(required = false, content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                        @Valid CompanyOnboardingUserDto companyOnboardingUserDto) {
         log.trace("onboardingUsersPgFromIcAndAde start");
         log.debug("onboardingUsersPgFromIcAndAde request = {}", Encode.forJava(companyOnboardingUserDto.toString()));
         return institutionService.onboardingUsersPgFromIcAndAde(onboardingMapper.toEntity(companyOnboardingUserDto))
@@ -337,13 +343,15 @@ public class InstitutionV2Controller {
                 .replaceWith(() -> Response.noContent().build());
     }
 
-    private static UploadedFile toUploadedFile(String partName, FileUpload fileUpload) {
+    // The part metadata is bound eagerly; the request temporary file is read lazily on a worker, before every other
+    // validation like the former eager read
+    private static Uni<UploadedFile> readUpload(String partName, FileUpload fileUpload) {
         RequestParams.requiredPart(partName, fileUpload);
-        try {
-            return new UploadedFile(fileUpload.fileName(), fileUpload.contentType(), Files.readAllBytes(fileUpload.uploadedFile()));
-        } catch (IOException e) {
-            throw new IllegalStateException("Cannot read uploaded file", e);
-        }
+        String fileName = fileUpload.fileName();
+        String contentType = fileUpload.contentType();
+        java.nio.file.Path path = fileUpload.uploadedFile();
+        return Uni.createFrom().item(() -> UploadedFile.read(fileName, contentType, path))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
 }

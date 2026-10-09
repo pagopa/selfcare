@@ -19,8 +19,8 @@ ST01/ST02/ST03 are complete. All product operations compose `Uni` from the REST 
 and controller, including single-product lookup, required documents and their institution/token consumers.
 Enabled and tax-code checks remain sequential even when enabled is true; USER uploads never acquire the
 SYSTEM valid-product lookup. Only genuinely synchronous registry/party/document HTTP and file I/O use
-explicit worker boundaries. The multipart attachment endpoint remains `@Blocking` while it reads the file;
-moving that I/O out of the controller is still ST05, not completed by ST03.
+explicit worker boundaries. At the ST03 checkpoint, the multipart attachment endpoint still used `@Blocking`;
+the subsequent integrated implementation described below removes that file-I/O boundary from the controller.
 
 The ST03 candidate passes the complete 550-scenario catalog on both untouched Spring main and Quarkus,
 and all 63 Cucumber scenarios. The published OpenAPI, legacy alias and Spring golden are unchanged.
@@ -37,9 +37,44 @@ query omission and the user-registry PATCH rejection are preserved.
 
 The ST04 institution candidate passes all 555 scenarios on both untouched Spring main and Quarkus,
 and all 63 Cucumber scenarios. Canonical OpenAPI, alias and golden remain unchanged. The bodyless
-users-PG POST also explicitly declares `Void`; multipart CSV verification remains `@Blocking`
-until ST05 moves file reading out of controllers. ST04 remains open for users/IAM (T02) and the
-story-wide final verification (T04); ST05-ST10 and release/review gates are not complete.
+users-PG POST also explicitly declares `Void`. At that checkpoint, multipart CSV verification still used
+`@Blocking`, and ST04 users/IAM plus ST05-ST10 were pending. That historical checkpoint does not describe
+the integrated implementation below; release/review gates remain separate.
+The [operational roadmap](plan.md#piano-operativo-residuo-2026-10-09) separates
+the completed local implementation from the remaining consumer and release gates.
+
+### Integrated architectural candidate
+
+The candidate after `a8adee41c` composes users, IAM, authorization, onboarding, token and document flows
+without ordinary production awaits. The unused user-institution facade and its generated-client configuration
+are removed. IAM responses are buffered and closed; only actual synchronous HTTP and file I/O use workers.
+Controllers capture multipart metadata without calling `FileUpload.size()` and defer byte reading to
+`UploadedFile.read` on a worker. Document selection and attachment-name policy belong to `TokenService`;
+authorization still completes before that service is invoked.
+
+Binding differences confirmed on the immutable Spring oracle remain explicit: radix/Unicode integer parsing,
+repeated-parameter errors, published DTO names and required-body method descriptors. Native JSON readers handle
+`application/*` while explicit OpenAPI request-body content preserves the published `application/json` contract;
+unsupported application media still fail. A scoped request filter rejects absent Content-Type before parsing
+a present DTO body or multipart mapping. Optional users-PG bodies retain the observed 500 behavior.
+
+`OpenApiApplication` declares the unchanged application root, server and bearer scheme natively.
+Automatic SmallRye server/security additions are disabled; the remaining OpenAPI filter handles only required
+representation/compatibility adjustments. SDK JWT activation and legacy route removal remain gated by their
+actual claim, tenant, probe and consumer requirements. Connection-drop replay resubscribes the cold client Uni
+at most once and remains distinct from the existing application retry policy.
+
+The final candidate passes 2500 Surefire tests, 73 Failsafe tests, 644/644 parity scenarios on each runtime,
+and all 63 Cucumber scenarios / 230 steps, with no failures, errors or skips. The serial mixed reactor
+also passes across nine modules, including BFF, IAM and the institution mail scheduler. The catalog floor
+is 644, raised only after both complete catalogs passed; the golden and comparators are unchanged.
+
+The existing JaCoCo aggregate reports 78.66% line and 68.03% branch coverage. Within that report's existing
+executable scope, added lines versus `a8adee41c` measure 99.10% line / 98.36% branch coverage; versus
+`cd0a2751f`, they measure 92.33% / 85.56%. These diff measurements do not include classes already excluded
+by the aggregate and are not the Sonar new-code quality gate. No exclusions or dependencies were added.
+Actual frontend/APIM consumer runs, Sonar on a new published SHA, the real Docker builder/publish path,
+review/merge and rollout remain open. Both Docker integration runs restored their original resource sets.
 
 ### Contract download authorization
 
@@ -96,6 +131,8 @@ Everything is configured through environment variables, read from `src/main/reso
 |HTTP_SO_REUSE_PORT, HTTP_TCP_CORK, TCP_QUICK_ACK, VERTX_PREFER_NATIVE_TRANSPORT|true| no |
 
 `REST_CLIENT_LOGGER_LEVEL`, set by the infrastructure for the Spring BFF, is not read by the Quarkus application.
+`MS_USER_INSTITUTION_URL` is no longer read after removal of the unused user-institution facade.
+The active institution client belongs to onboarding-ms; the immutable Spring test fixture keeps its legacy settings.
 
 #### Downstream services
 
@@ -107,7 +144,6 @@ do not set `MS_DOCUMENT_URL`).
 |--------------------------|----------------|-------------|
 |MS_ONBOARDING_URL|onboarding-ms|http://localhost:8085|
 |MS_USER_URL|user-ms|http://localhost:8080|
-|MS_USER_INSTITUTION_URL|user-ms, institution API|http://localhost:8080|
 |MS_PRODUCT_URL|product-ms|http://localhost:8080|
 |MS_CORE_URL|institution-ms|http://10.1.1.250:80/ms-core/v1|
 |MS_IAM_URL|iam|http://localhost:8080|

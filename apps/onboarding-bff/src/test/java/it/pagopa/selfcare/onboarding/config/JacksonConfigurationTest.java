@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResource;
+import it.pagopa.selfcare.onboarding.model.dto.request.UserTaxCodeDto;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,21 @@ class JacksonConfigurationTest {
         assertEquals(objectMapper.readTree("""
                 {"productId":"prod-io","createdAt":"2026-10-08T17:00:07+02:00"}
                 """), objectMapper.readTree(objectMapper.writeValueAsString(resource)));
+    }
+
+    @Test
+    void inboundRequestBodiesIgnoreUnknownFieldsLeavingRequiredFieldsToBeanValidation() throws Exception {
+        // given
+        String withUnknownField = "{\"taxCode\":\"RSSMRA80A01H501U\",\"unknownField\":1}";
+        String withoutTaxCode = "{\"unknownField\":1}";
+
+        // when
+        UserTaxCodeDto complete = objectMapper.readValue(withUnknownField, UserTaxCodeDto.class);
+        UserTaxCodeDto incomplete = objectMapper.readValue(withoutTaxCode, UserTaxCodeDto.class);
+
+        // then
+        assertEquals("RSSMRA80A01H501U", complete.getTaxCode());
+        assertNull(incomplete.getTaxCode());
     }
 
     @Test

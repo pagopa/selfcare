@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.onboarding.util;
 
 import java.util.Collection;
-import java.util.Map;
 
 /**
  * Argument checks with the semantics of the Spring {@code Assert} used by the former services: a violated
@@ -30,21 +29,9 @@ public final class Preconditions {
         }
     }
 
-    public static void notEmpty(Map<?, ?> values, String message) {
-        if (values == null || values.isEmpty()) {
-            throw new IllegalArgumentException(message);
-        }
-    }
-
     public static void state(boolean expression, String message) {
         if (!expression) {
             throw new IllegalStateException(message);
-        }
-    }
-
-    public static void isTrue(boolean expression, String message) {
-        if (!expression) {
-            throw new IllegalArgumentException(message);
         }
     }
 }

@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.onboarding.client.model;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -8,6 +11,15 @@ public record UploadedFile(
     String contentType,
     byte[] content
 ) {
+
+    /** Blocking read of a request temporary file: call it from a worker thread only. */
+    public static UploadedFile read(String fileName, String contentType, Path path) {
+        try {
+            return new UploadedFile(fileName, contentType, Files.readAllBytes(path));
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot read uploaded file", e);
+        }
+    }
 
     @Override
     public boolean equals(Object other) {

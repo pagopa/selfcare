@@ -1447,10 +1447,20 @@ components:
   securitySchemes:
     bearerAuth:
       type: http
-      scheme: bearer
-      bearerFormat: JWT
       description: "A bearer token in the format of a JWS and conformed to the specifications\
         \ included in [RFC8725](https://tools.ietf.org/html/RFC8725)"
+      scheme: bearer
+      bearerFormat: JWT
+info:
+  title: BFF Onboarding API
+  version: 0.1.0-SNAPSHOT
+  description: Self Care OnBoarding API documentation
+  contact:
+    name: PagoPA
+    url: https://www.pagopa.gov.it
+servers:
+- url: http://localhost
+  description: Generated server url
 tags:
 - name: institutions
   description: Institution operations
@@ -4618,13 +4628,3 @@ paths:
       security:
       - bearerAuth:
         - global
-info:
-  title: BFF Onboarding API
-  version: 0.1.0-SNAPSHOT
-  description: Self Care OnBoarding API documentation
-  contact:
-    name: PagoPA
-    url: https://www.pagopa.gov.it
-servers:
-- url: http://localhost
-  description: Generated server url

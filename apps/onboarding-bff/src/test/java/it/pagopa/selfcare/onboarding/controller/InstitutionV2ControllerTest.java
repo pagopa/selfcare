@@ -1,8 +1,12 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -28,22 +32,35 @@ import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.mapper.OnboardingMapper;
 import it.pagopa.selfcare.onboarding.mapper.RegistryProxyMapper;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class InstitutionV2ControllerTest {
+
+    private static final Duration TIMEOUT = Duration.ofSeconds(2);
+
+    @TempDir
+    Path folder;
 
     @Mock
     InstitutionService institutionService;
@@ -225,62 +242,165 @@ class InstitutionV2ControllerTest {
     @Test
     void verifyAggregatesCsv_supportsLegacyQueryProductIdWhenFormProductIdMissing() throws Exception {
         // given
-        Path tempFile = Files.createTempFile("aggregates-", ".csv");
-        Files.writeString(tempFile, "taxCode;description\n123;demo");
-        try {
-            FileUpload fileUpload = csv(tempFile);
-            VerifyAggregateResult serviceResponse = new VerifyAggregateResult();
-            VerifyAggregatesResponse mappedResponse = new VerifyAggregatesResponse();
-            when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"))).thenReturn(Uni.createFrom().item(serviceResponse));
-            when(onboardingMapper.toVerifyAggregatesResponse(serviceResponse)).thenReturn(mappedResponse);
+        FileUpload fileUpload = csv(csvFile());
+        VerifyAggregateResult serviceResponse = new VerifyAggregateResult();
+        VerifyAggregatesResponse mappedResponse = new VerifyAggregatesResponse();
+        when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"))).thenReturn(Uni.createFrom().item(serviceResponse));
+        when(onboardingMapper.toVerifyAggregatesResponse(serviceResponse)).thenReturn(mappedResponse);
 
         // when
-            VerifyAggregatesResponse result = controller().verifyAggregatesCsv(fileUpload, null, null, "PA", "prod-io").await().indefinitely();
+        VerifyAggregatesResponse result = controller().verifyAggregatesCsv(fileUpload, null, null, "PA", "prod-io").await().atMost(TIMEOUT);
 
         // then
-            assertSame(mappedResponse, result);
-            verify(institutionService).validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"));
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        assertSame(mappedResponse, result);
+        verify(institutionService).validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"));
     }
 
     @Test
     void verifyAggregatesCsv_formProductIdWinsOverTheLegacyQuery() throws Exception {
         // given
-        Path tempFile = Files.createTempFile("aggregates-", ".csv");
-        Files.writeString(tempFile, "taxCode;description\n123;demo");
-        try {
-            FileUpload fileUpload = csv(tempFile);
-            when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"))).thenReturn(Uni.createFrom().item(new VerifyAggregateResult()));
+        FileUpload fileUpload = csv(csvFile());
+        when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"))).thenReturn(Uni.createFrom().item(new VerifyAggregateResult()));
 
         // when
-            controller().verifyAggregatesCsv(fileUpload, "PA", "prod-pn", null, "prod-io").await().indefinitely();
+        controller().verifyAggregatesCsv(fileUpload, "PA", "prod-pn", null, "prod-io").await().atMost(TIMEOUT);
 
         // then
-            verify(institutionService).validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"));
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        verify(institutionService).validateAggregatesCsv(any(UploadedFile.class), eq("prod-pn"));
+    }
+
+    @Test
+    void verifyAggregatesCsv_readsTheFileOnAWorkerAtSubscriptionAndHandsTheServiceItsBytes() throws Exception {
+        // given
+        Thread caller = Thread.currentThread();
+        AtomicReference<Thread> serviceThread = new AtomicReference<>();
+        Path path = csvFile();
+        FileUpload fileUpload = csv(path);
+        ArgumentCaptor<UploadedFile> captor = ArgumentCaptor.forClass(UploadedFile.class);
+        when(institutionService.validateAggregatesCsv(captor.capture(), eq("prod-io"))).thenAnswer(call -> {
+            serviceThread.set(Thread.currentThread());
+            return Uni.createFrom().item(new VerifyAggregateResult());
+        });
+        Uni<VerifyAggregatesResponse> operation = controller().verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null);
+        verifyNoInteractions(institutionService);
+        Files.writeString(path, "taxCode;description\n456;changed");
+
+        // when
+        operation.await().atMost(TIMEOUT);
+
+        // then
+        UploadedFile uploaded = captor.getValue();
+        assertEquals("aggregates.csv", uploaded.fileName());
+        assertEquals("text/csv", uploaded.contentType());
+        assertArrayEquals("taxCode;description\n456;changed".getBytes(StandardCharsets.UTF_8), uploaded.content());
+        assertNotSame(caller, serviceThread.get());
+        verify(fileUpload, never()).size();
+    }
+
+    @Test
+    void verifyAggregatesCsv_waitsForTheServiceAndMapsOnlyWhenItEmits() throws Exception {
+        // given
+        AtomicReference<UniEmitter<? super VerifyAggregateResult>> pending = new AtomicReference<>();
+        CountDownLatch started = new CountDownLatch(1);
+        FileUpload fileUpload = csv(csvFile());
+        VerifyAggregateResult serviceResponse = new VerifyAggregateResult();
+        VerifyAggregatesResponse mappedResponse = new VerifyAggregatesResponse();
+        when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-io")))
+                .thenReturn(Uni.createFrom().<VerifyAggregateResult>emitter(emitter -> {
+                    pending.set(emitter);
+                    started.countDown();
+                }));
+        when(onboardingMapper.toVerifyAggregatesResponse(serviceResponse)).thenReturn(mappedResponse);
+
+        // when
+        UniAssertSubscriber<VerifyAggregatesResponse> result = controller()
+                .verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertTrue(started.await(TIMEOUT.toMillis(), TimeUnit.MILLISECONDS));
+        result.assertNotTerminated();
+        verifyNoInteractions(onboardingMapper);
+        pending.get().complete(serviceResponse);
+        assertSame(mappedResponse, result.awaitItem(TIMEOUT).getItem());
+    }
+
+    @Test
+    void verifyAggregatesCsv_propagatesTheServiceFailure() throws Exception {
+        // given
+        FileUpload fileUpload = csv(csvFile());
+        ProcessingException failure = new ProcessingException("onboarding unavailable");
+        when(institutionService.validateAggregatesCsv(any(UploadedFile.class), eq("prod-io"))).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<VerifyAggregatesResponse> result = controller()
+                .verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.awaitFailure(TIMEOUT).getFailure());
+        verifyNoInteractions(onboardingMapper);
     }
 
     @Test
     void verifyAggregatesCsv_throwsWhenProductIdMissing() throws Exception {
         // given
-        Path tempFile = Files.createTempFile("aggregates-", ".csv");
-        Files.writeString(tempFile, "taxCode;description\n123;demo");
-        try {
-            FileUpload fileUpload = csv(tempFile);
-            InstitutionV2Controller controller = controller();
+        FileUpload fileUpload = csv(csvFile());
+        InstitutionV2Controller controller = controller();
 
         // when
-            assertThrows(InvalidRequestException.class,
-                    () -> controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null).await().indefinitely());
+        InvalidRequestException e = assertThrows(InvalidRequestException.class,
+                () -> controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null).await().atMost(TIMEOUT));
+
         // then
-            verifyNoInteractions(institutionService);
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        assertEquals("Required request parameter 'productId' for method parameter type String is not present", e.getMessage());
+        verifyNoInteractions(institutionService);
+    }
+
+    @Test
+    void verifyAggregatesCsv_productIdIsCheckedBeforeTheFileContent() throws Exception {
+        // given an empty file and no product
+        FileUpload fileUpload = csv(Files.writeString(folder.resolve("aggregates.csv"), ""));
+        InstitutionV2Controller controller = controller();
+
+        // when
+        InvalidRequestException e = assertThrows(InvalidRequestException.class,
+                () -> controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null).await().atMost(TIMEOUT));
+
+        // then
+        assertEquals("Required request parameter 'productId' for method parameter type String is not present", e.getMessage());
+        verifyNoInteractions(institutionService);
+    }
+
+    @Test
+    void verifyAggregatesCsv_emptyFileIsRejectedBeforeTheServiceIsCalled() throws Exception {
+        // given
+        FileUpload fileUpload = csv(Files.writeString(folder.resolve("aggregates.csv"), ""));
+        InstitutionV2Controller controller = controller();
+
+        // when
+        InvalidRequestException e = assertThrows(InvalidRequestException.class,
+                () -> controller.verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null).await().atMost(TIMEOUT));
+
+        // then
+        assertEquals("Il file è vuoto o mancante.", e.getMessage());
+        verifyNoInteractions(institutionService);
+    }
+
+    @Test
+    void verifyAggregatesCsv_unreadableFileFailsOnSubscriptionBeforeTheProductIdCheck() {
+        // given an unreadable temporary file and no product
+        FileUpload fileUpload = csv(folder.resolve("missing.csv"));
+        InstitutionV2Controller controller = controller();
+
+        // when the Uni is built and then subscribed
+        Uni<VerifyAggregatesResponse> operation = controller.verifyAggregatesCsv(fileUpload, "PA", null, null, null);
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> operation.await().atMost(TIMEOUT));
+
+        // then
+        assertEquals("Cannot read uploaded file", e.getMessage());
+        assertInstanceOf(IOException.class, e.getCause());
+        verifyNoInteractions(institutionService);
     }
 
     @Test
@@ -300,28 +420,26 @@ class InstitutionV2ControllerTest {
     @Test
     void verifyAggregatesCsv_rejectsUnsupportedFileFormats() throws Exception {
         // given
-        Path tempFile = Files.createTempFile("aggregates-", ".txt");
-        Files.writeString(tempFile, "demo");
-        try {
-            FileUpload fileUpload = mock(FileUpload.class);
-            when(fileUpload.fileName()).thenReturn("aggregates.txt");
-            when(fileUpload.contentType()).thenReturn("text/plain");
-            when(fileUpload.uploadedFile()).thenReturn(tempFile);
-            InstitutionV2Controller controller = controller();
+        Path text = Files.writeString(folder.resolve("aggregates.txt"), "text");
+        FileUpload fileUpload = mock(FileUpload.class);
+        when(fileUpload.fileName()).thenReturn("aggregates.txt");
+        when(fileUpload.contentType()).thenReturn("text/plain");
+        when(fileUpload.uploadedFile()).thenReturn(text);
+        InstitutionV2Controller controller = controller();
 
         // when
-            assertThrows(InvalidRequestException.class,
-                    () -> controller.verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null).await().indefinitely());
+        assertThrows(InvalidRequestException.class,
+                () -> controller.verifyAggregatesCsv(fileUpload, "PA", "prod-io", null, null).await().atMost(TIMEOUT));
+
         // then
-            verifyNoInteractions(institutionService);
-        } finally {
-            Files.deleteIfExists(tempFile);
-        }
+        verifyNoInteractions(institutionService);
     }
 
     @Test
     void triggerOnboardingRequest_answersNoContent() {
         // given
+        when(institutionService.triggerOnboardingRequest("onb-1")).thenReturn(Uni.createFrom().voidItem());
+
         // when
         var actualResult1 = controller().triggerOnboardingRequest("onb-1").await().indefinitely();
         // then
@@ -373,11 +491,15 @@ class InstitutionV2ControllerTest {
         assertSame(failure, result.getFailure());
     }
 
-    private static FileUpload csv(Path tempFile) {
+    private Path csvFile() throws IOException {
+        return Files.writeString(folder.resolve("aggregates.csv"), "taxCode;description\n123;demo");
+    }
+
+    private static FileUpload csv(Path path) {
         FileUpload fileUpload = mock(FileUpload.class);
         when(fileUpload.fileName()).thenReturn("aggregates.csv");
         when(fileUpload.contentType()).thenReturn("text/csv");
-        when(fileUpload.uploadedFile()).thenReturn(tempFile);
+        when(fileUpload.uploadedFile()).thenReturn(path);
         return fileUpload;
     }
 }

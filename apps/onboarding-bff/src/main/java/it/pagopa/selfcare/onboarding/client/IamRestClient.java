@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.client;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.transport.ReplayOnConnectionDrop;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -15,8 +16,8 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 public interface IamRestClient {
     @GET
     @Path("/iam/users/{userId}/permissions/{permission}")
-    Response hasIAMUserPermission(@PathParam("permission") String permission,
-                                  @PathParam("userId") String userId,
-                                  @QueryParam("institutionId") String institutionId,
-                                  @QueryParam("productId") String productId);
+    Uni<Response> hasIAMUserPermission(@PathParam("permission") String permission,
+                                       @PathParam("userId") String userId,
+                                       @QueryParam("institutionId") String institutionId,
+                                       @QueryParam("productId") String productId);
 }

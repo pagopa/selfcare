@@ -16,25 +16,25 @@ public interface OnboardingService {
 
     Uni<Void> onboarding(OnboardingData onboardingData);
 
-    void onboardingUsers(OnboardingData onboardingData);
+    Uni<Void> onboardingUsers(OnboardingData onboardingData);
 
-    void onboardingUsersAggregator(OnboardingData onboardingData);
+    Uni<Void> onboardingUsersAggregator(OnboardingData onboardingData);
 
     Uni<Void> onboardingCompany(OnboardingData onboardingData);
 
-    void onboardingTokenComplete(String onboardingId, UploadedFile contract);
+    Uni<Void> onboardingTokenComplete(String onboardingId, UploadedFile contract);
 
-    void onboardingUsersComplete(String onboardingId, UploadedFile contract);
+    Uni<Void> onboardingUsersComplete(String onboardingId, UploadedFile contract);
 
-    void onboardingPending(String onboardingId);
+    Uni<Void> onboardingPending(String onboardingId);
 
-    void approveOnboarding(String onboardingId, String userUid);
+    Uni<Void> approveOnboarding(String onboardingId, String userUid);
 
-    void rejectOnboarding(String onboardingId, String reason, String userUid);
+    Uni<Void> rejectOnboarding(String onboardingId, String reason, String userUid);
 
     Uni<OnboardingGet> getOnboarding(String onboardingId);
 
-    OnboardingGet getOnboardingWithUserInfo(String onboardingId);
+    Uni<OnboardingGet> getOnboardingWithUserInfo(String onboardingId);
 
     Uni<Void> onboardingPaAggregation(OnboardingData onboardingData);
 

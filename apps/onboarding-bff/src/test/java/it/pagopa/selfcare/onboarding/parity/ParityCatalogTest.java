@@ -44,7 +44,8 @@ class ParityCatalogTest {
     assertTrue(
         groups.containsAll(
             Set.of("security", "tokens", "products", "institutions", "users", "transport-failures",
-                "downstream-errors", "http-contract", "http-boundaries", "spec-driven", "binding", "binding-boundaries")),
+                "downstream-errors", "http-contract", "http-boundaries", "spec-driven", "binding", "binding-boundaries",
+                "binding-final")),
         groups.toString());
   }
 

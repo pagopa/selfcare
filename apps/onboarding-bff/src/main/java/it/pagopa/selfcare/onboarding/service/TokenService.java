@@ -5,42 +5,45 @@ import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
+import it.pagopa.selfcare.onboarding.model.dto.request.DownloadDocumentType;
 
 public interface TokenService {
   Uni<OnboardingData> verifyOnboarding(String onboardingId);
 
-  default void approveOnboarding(String onboardingId) {
-    approveOnboarding(onboardingId, null);
+  default Uni<Void> approveOnboarding(String onboardingId) {
+    return approveOnboarding(onboardingId, null);
   }
 
-  void approveOnboarding(String onboardingId, String userUid);
+  Uni<Void> approveOnboarding(String onboardingId, String userUid);
 
-  default void rejectOnboarding(String onboardingId, String reason) {
-    rejectOnboarding(onboardingId, reason, null);
+  default Uni<Void> rejectOnboarding(String onboardingId, String reason) {
+    return rejectOnboarding(onboardingId, reason, null);
   }
 
-  void rejectOnboarding(String onboardingId, String reason, String userUid);
+  Uni<Void> rejectOnboarding(String onboardingId, String reason, String userUid);
 
-  OnboardingData getOnboardingWithUserInfo(String onboardingId);
+  Uni<OnboardingData> getOnboardingWithUserInfo(String onboardingId);
 
-  void completeTokenV2(String onboardingId, UploadedFile contract);
+  Uni<Void> completeTokenV2(String onboardingId, UploadedFile contract);
 
-  void completeOnboardingUsers(String onboardingId, UploadedFile contract);
+  Uni<Void> completeOnboardingUsers(String onboardingId, UploadedFile contract);
 
-  BinaryData getContract(String onboardingId);
+  Uni<BinaryData> getContract(String onboardingId);
 
-  BinaryData getContractSigned(String onboardingId);
+  Uni<BinaryData> getContractSigned(String onboardingId);
 
   Uni<BinaryData> getTemplateAttachment(String onboardingId, String filename);
 
-  BinaryData getAttachment(String onboardingId, String filename);
+  Uni<BinaryData> getAttachment(String onboardingId, String filename);
 
-  AvailableDocuments getAvailableDocuments(String onboardingId);
+  Uni<BinaryData> downloadDocument(String onboardingId, DownloadDocumentType type, String filename);
 
-  BinaryData getAggregatesCsv(String onboardingId, String productId);
+  Uni<AvailableDocuments> getAvailableDocuments(String onboardingId);
+
+  Uni<BinaryData> getAggregatesCsv(String onboardingId, String productId);
 
   Uni<Void> uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
                         String attachmentId, String attachmentDescription);
 
-  int headAttachment(String onboardingId, String filename);
+  Uni<Integer> headAttachment(String onboardingId, String filename);
 }

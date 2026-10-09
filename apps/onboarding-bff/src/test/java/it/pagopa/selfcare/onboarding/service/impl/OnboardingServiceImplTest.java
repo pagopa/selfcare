@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -31,6 +32,7 @@ import jakarta.validation.Validation;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.core.Response;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
@@ -41,6 +43,8 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import org.eclipse.microprofile.faulttolerance.Retry;
+import org.jboss.resteasy.reactive.client.api.ClientMultipartForm;
+import org.jboss.resteasy.reactive.client.impl.multipart.QuarkusMultipartFormDataPart;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -136,12 +140,15 @@ class OnboardingServiceImplTest {
 
     @Test
     void approveOnboarding_sendsUserUidOnlyWhenPresent() {
+        // given
         when(onboardingApi.approve(eq("onb-1"), any(ApproveRequest.class)))
-                .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+                .thenAnswer(call -> Uni.createFrom().item(Response.noContent().build()));
 
-        onboardingService.approveOnboarding("onb-1", "uid-1");
-        onboardingService.approveOnboarding("onb-1", " ");
+        // when
+        onboardingService.approveOnboarding("onb-1", "uid-1").await().indefinitely();
+        onboardingService.approveOnboarding("onb-1", " ").await().indefinitely();
 
+        // then
         ArgumentCaptor<ApproveRequest> captor = ArgumentCaptor.forClass(ApproveRequest.class);
         verify(onboardingApi, org.mockito.Mockito.times(2)).approve(eq("onb-1"), captor.capture());
         assertEquals("uid-1", captor.getAllValues().get(0).getUserUid());
@@ -149,19 +156,91 @@ class OnboardingServiceImplTest {
     }
 
     @Test
+    void approveOnboarding_waitsForTheNativeResponseAndClosesIt() {
+        // given
+        AtomicReference<UniEmitter<? super Response>> pending = new AtomicReference<>();
+        Response response = mock(Response.class);
+        when(onboardingApi.approve(eq("onb-1"), any(ApproveRequest.class)))
+                .thenReturn(Uni.createFrom().<Response>emitter(pending::set));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.approveOnboarding("onb-1", "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(response);
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(null);
+        verify(response).close();
+    }
+
+    @Test
+    void approveOnboarding_propagatesTheNativeFailure() {
+        // given
+        ProcessingException failure = new ProcessingException("connection dropped");
+        when(onboardingApi.approve(eq("onb-1"), any(ApproveRequest.class))).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.approveOnboarding("onb-1", "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+    }
+
+    @Test
     void rejectOnboarding_sendsReasonAndUserUidOnlyWhenPresent() {
+        // given
         when(onboardingApi.rejectOnboardingUsingPUT(eq("onb-1"), any(ReasonRequest.class)))
-                .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+                .thenAnswer(call -> Uni.createFrom().item(Response.noContent().build()));
 
-        onboardingService.rejectOnboarding("onb-1", "REJECTED_BY_USER", "uid-1");
-        onboardingService.rejectOnboarding("onb-1", null, "");
+        // when
+        onboardingService.rejectOnboarding("onb-1", "REJECTED_BY_USER", "uid-1").await().indefinitely();
+        onboardingService.rejectOnboarding("onb-1", null, "").await().indefinitely();
 
+        // then
         ArgumentCaptor<ReasonRequest> captor = ArgumentCaptor.forClass(ReasonRequest.class);
         verify(onboardingApi, org.mockito.Mockito.times(2)).rejectOnboardingUsingPUT(eq("onb-1"), captor.capture());
         assertEquals("REJECTED_BY_USER", captor.getAllValues().get(0).getReasonForReject());
         assertEquals("uid-1", captor.getAllValues().get(0).getUserUid());
         assertNull(captor.getAllValues().get(1).getReasonForReject());
         assertNull(captor.getAllValues().get(1).getUserUid());
+    }
+
+    @Test
+    void rejectOnboarding_waitsForTheNativeResponseAndClosesIt() {
+        // given
+        AtomicReference<UniEmitter<? super Response>> pending = new AtomicReference<>();
+        Response response = mock(Response.class);
+        when(onboardingApi.rejectOnboardingUsingPUT(eq("onb-1"), any(ReasonRequest.class)))
+                .thenReturn(Uni.createFrom().<Response>emitter(pending::set));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.rejectOnboarding("onb-1", "REJECTED_BY_USER", "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(response);
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(null);
+        verify(response).close();
+    }
+
+    @Test
+    void rejectOnboarding_propagatesTheNativeFailure() {
+        // given
+        ProcessingException failure = new ProcessingException("connection dropped");
+        when(onboardingApi.rejectOnboardingUsingPUT(eq("onb-1"), any(ReasonRequest.class)))
+                .thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.rejectOnboarding("onb-1", "REJECTED_BY_USER", "uid-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
     }
 
     @Test
@@ -174,10 +253,49 @@ class OnboardingServiceImplTest {
 
         // when
         var actualAsync1 = onboardingService.getOnboarding("onb-1").await().indefinitely();
+        var actualAsync2 = onboardingService.getOnboardingWithUserInfo("onb-1").await().indefinitely();
 
         // then
         assertSame(plain, actualAsync1);
-        assertSame(withUsers, onboardingService.getOnboardingWithUserInfo("onb-1"));
+        assertSame(withUsers, actualAsync2);
+    }
+
+    @Test
+    void getOnboardingWithUserInfo_isPendingUntilTheNativeClientEmitsAndKeepsItsFailure() {
+        // given
+        AtomicReference<UniEmitter<? super OnboardingGet>> pending = new AtomicReference<>();
+        OnboardingGet withUsers = new OnboardingGet();
+        ProcessingException failure = new ProcessingException("connection dropped");
+        when(onboardingApi.getByIdWithUserInfo("onb-1")).thenReturn(Uni.createFrom().<OnboardingGet>emitter(pending::set));
+        when(onboardingApi.getByIdWithUserInfo("onb-2")).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<OnboardingGet> waiting = onboardingService.getOnboardingWithUserInfo("onb-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<OnboardingGet> failed = onboardingService.getOnboardingWithUserInfo("onb-2")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        waiting.assertNotTerminated();
+        pending.get().complete(withUsers);
+        waiting.assertCompleted().assertItem(withUsers);
+        assertSame(failure, failed.getFailure());
+    }
+
+    @Test
+    void onboardingPending_completesWithoutBodyOnlyWhenTheNativeClientEmits() {
+        // given
+        AtomicReference<UniEmitter<? super OnboardingGet>> pending = new AtomicReference<>();
+        when(onboardingApi.getOnboardingPending("onb-1")).thenReturn(Uni.createFrom().<OnboardingGet>emitter(pending::set));
+
+        // when
+        UniAssertSubscriber<Void> result = onboardingService.onboardingPending("onb-1")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        pending.get().complete(new OnboardingGet());
+        result.assertCompleted().assertItem(null);
     }
 
     @Test
@@ -375,9 +493,34 @@ class OnboardingServiceImplTest {
         when(onboardingMapper.toOnboardingUsersRequest(data)).thenReturn(request);
         when(onboardingApi.onboardingUsers(request)).thenReturn(Uni.createFrom().item(new OnboardingResponse()));
 
-        onboardingService.onboardingUsers(data);
+        onboardingService.onboardingUsers(data).await().indefinitely();
 
         verify(onboardingApi).onboardingUsers(request);
+    }
+
+    @Test
+    void onboardingUsers_andAggregatorWaitForTheNativeClientAndKeepItsFailure() {
+        // given
+        OnboardingData data = onboardingData(InstitutionType.PA);
+        OnboardingUserRequest request = new OnboardingUserRequest().productId("prod-io").origin("IPA")
+                .originId("origin-id").users(List.of(new UserRequest()));
+        AtomicReference<UniEmitter<? super OnboardingResponse>> pending = new AtomicReference<>();
+        ProcessingException failure = new ProcessingException("connection dropped");
+        when(onboardingMapper.toOnboardingUsersRequest(data)).thenReturn(request);
+        when(onboardingApi.onboardingUsers(request)).thenReturn(Uni.createFrom().<OnboardingResponse>emitter(pending::set));
+        when(onboardingApi.onboardingUsersAggregator(request)).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> users = onboardingService.onboardingUsers(data)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<Void> aggregator = onboardingService.onboardingUsersAggregator(data)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        users.assertNotTerminated();
+        pending.get().complete(new OnboardingResponse());
+        users.assertCompleted().assertItem(null);
+        assertSame(failure, aggregator.getFailure());
     }
 
     @Test
@@ -500,6 +643,122 @@ class OnboardingServiceImplTest {
         assertNotSame(subscribingThread, uploadThread.get());
         verify(uploadClient).verifyAggregatesCsv(eq("prod-io"), any());
         verifyNoInteractions(onboardingMapper);
+    }
+
+    @Test
+    void aggregatesUploadKeepsNameTypeAndBytes() {
+        // given
+        byte[] bytes = {1, 2, 3};
+        UploadedFile file = new UploadedFile("aggregates.csv", "text/csv", bytes);
+        VerifyAggregateResponse response = new VerifyAggregateResponse();
+        when(uploadClient.verifyAggregatesCsv(eq("prod-io"), any())).thenReturn(response);
+        when(onboardingMapper.toVerifyAggregateResult(response)).thenReturn(new VerifyAggregateResult());
+        Uni<VerifyAggregateResult> operation = onboardingService.aggregatesVerification(file, "prod-io");
+
+        // when
+        operation.await().atMost(Duration.ofSeconds(2));
+
+        // then
+        ArgumentCaptor<ClientMultipartForm> form = ArgumentCaptor.forClass(ClientMultipartForm.class);
+        verify(uploadClient).verifyAggregatesCsv(eq("prod-io"), form.capture());
+        assertFilePart(form.getValue(), "aggregates", "aggregates.csv", "text/csv", bytes);
+    }
+
+    @Test
+    void completeOperationsSendTheContractOnAWorkerAndCloseTheResponse() {
+        // given
+        Thread caller = Thread.currentThread();
+        AtomicReference<Thread> tokenThread = new AtomicReference<>();
+        AtomicReference<Thread> usersThread = new AtomicReference<>();
+        byte[] bytes = {4, 5, 6};
+        UploadedFile contract = new UploadedFile("contract.pdf", "application/pdf", bytes);
+        Response tokenResponse = mock(Response.class);
+        Response usersResponse = mock(Response.class);
+        when(uploadClient.completeOnboardingToken(eq("onb-1"), any())).thenAnswer(call -> {
+            tokenThread.set(Thread.currentThread());
+            return tokenResponse;
+        });
+        when(uploadClient.completeOnboardingUsers(eq("onb-1"), any())).thenAnswer(call -> {
+            usersThread.set(Thread.currentThread());
+            return usersResponse;
+        });
+        Uni<Void> token = onboardingService.onboardingTokenComplete("onb-1", contract);
+        Uni<Void> users = onboardingService.onboardingUsersComplete("onb-1", contract);
+        verifyNoInteractions(uploadClient, tokenResponse, usersResponse);
+
+        // when
+        token.await().atMost(Duration.ofSeconds(2));
+        users.await().atMost(Duration.ofSeconds(2));
+
+        // then
+        assertNotSame(caller, tokenThread.get());
+        assertNotSame(caller, usersThread.get());
+        verify(tokenResponse).close();
+        verify(usersResponse).close();
+        ArgumentCaptor<ClientMultipartForm> tokenForm = ArgumentCaptor.forClass(ClientMultipartForm.class);
+        ArgumentCaptor<ClientMultipartForm> usersForm = ArgumentCaptor.forClass(ClientMultipartForm.class);
+        verify(uploadClient).completeOnboardingToken(eq("onb-1"), tokenForm.capture());
+        verify(uploadClient).completeOnboardingUsers(eq("onb-1"), usersForm.capture());
+        assertFilePart(tokenForm.getValue(), "contract", "contract.pdf", "application/pdf", bytes);
+        assertFilePart(usersForm.getValue(), "contract", "contract.pdf", "application/pdf", bytes);
+    }
+
+    @Test
+    void completeOperationsWithoutContentTypeUseOctetStream() {
+        // given
+        UploadedFile contract = new UploadedFile("contract.bin", null, new byte[]{7});
+        Response response = mock(Response.class);
+        when(uploadClient.completeOnboardingToken(eq("onb-1"), any())).thenReturn(response);
+
+        // when
+        onboardingService.onboardingTokenComplete("onb-1", contract).await().atMost(Duration.ofSeconds(2));
+
+        // then
+        ArgumentCaptor<ClientMultipartForm> form = ArgumentCaptor.forClass(ClientMultipartForm.class);
+        verify(uploadClient).completeOnboardingToken(eq("onb-1"), form.capture());
+        assertFilePart(form.getValue(), "contract", "contract.bin", "application/octet-stream", new byte[]{7});
+    }
+
+    @Test
+    void completeOperationsKeepTheUploadFailureWithoutRepeatingTheWrite() {
+        // given
+        UploadedFile contract = new UploadedFile("contract.pdf", "application/pdf", new byte[]{1});
+        ProcessingException failure = new ProcessingException("upload failed");
+        when(uploadClient.completeOnboardingToken(eq("onb-1"), any())).thenThrow(failure);
+        when(uploadClient.completeOnboardingUsers(eq("onb-1"), any())).thenThrow(failure);
+
+        // when
+        UniAssertSubscriber<Void> token = onboardingService.onboardingTokenComplete("onb-1", contract)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+        UniAssertSubscriber<Void> users = onboardingService.onboardingUsersComplete("onb-1", contract)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        token.awaitFailure(Duration.ofSeconds(2));
+        users.awaitFailure(Duration.ofSeconds(2));
+        assertSame(failure, token.getFailure());
+        assertSame(failure, users.getFailure());
+        verify(uploadClient).completeOnboardingToken(eq("onb-1"), any());
+        verify(uploadClient).completeOnboardingUsers(eq("onb-1"), any());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void assertFilePart(ClientMultipartForm form, String partName, String fileName, String mediaType,
+                                       byte[] content) {
+        List<QuarkusMultipartFormDataPart> parts;
+        try {
+            Field field = ClientMultipartForm.class.getDeclaredField("parts");
+            field.setAccessible(true);
+            parts = (List<QuarkusMultipartFormDataPart>) field.get(form);
+        } catch (ReflectiveOperationException e) {
+            throw new AssertionError(e);
+        }
+        assertEquals(1, parts.size());
+        QuarkusMultipartFormDataPart part = parts.get(0);
+        assertEquals(partName, part.name());
+        assertEquals(fileName, part.filename());
+        assertEquals(mediaType, part.mediaType());
+        assertArrayEquals(content, part.content().getBytes());
     }
 
     private static InstitutionBaseRequest institutionBase() {

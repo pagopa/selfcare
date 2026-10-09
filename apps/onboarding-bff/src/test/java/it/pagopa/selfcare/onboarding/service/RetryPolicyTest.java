@@ -107,7 +107,6 @@ class RetryPolicyTest {
                     "impl.ProductServiceImpl",
                     "impl.TokenServiceImpl",
                     "impl.UserServiceImpl",
-                    "impl.UserInstitutionServiceImpl",
                     "impl.InstitutionServiceImpl",
                     "impl.UserRegistryService",
                     "ProductService"

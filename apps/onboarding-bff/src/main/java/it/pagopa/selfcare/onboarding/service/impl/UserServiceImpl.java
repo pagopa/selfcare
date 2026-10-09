@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.service.*;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
@@ -19,7 +20,6 @@ import org.owasp.encoder.Encode;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.Optional;
 
 import static it.pagopa.selfcare.onboarding.util.Utils.getManager;
 import static it.pagopa.selfcare.onboarding.util.Utils.isUserAdmin;
@@ -36,42 +36,44 @@ public class UserServiceImpl implements UserService {
     private final OnboardingMapper onboardingMapper;
     private final PgManagerVerifier pgManagerVerifier;
 
+    // The user registry client is synchronous: the lookup runs on a worker, the comparison on the resulting item
     @Override
-    public void validate(User user) {
+    public Uni<Void> validate(User user) {
         log.trace("validate start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate user = {}", user);
         Preconditions.notNull(user, "An user is required");
-        final Optional<RegistryUser> searchResult =
-                userRegistryConnector.search(user.getTaxCode(), FIELD_LIST);
-        searchResult.ifPresent(foundUser -> {
-            final ArrayList<InvalidUserFieldsException.InvalidField> invalidFields = new ArrayList<>();
-            if (!isValid(user.getName(), foundUser.getName())) {
-                invalidFields.add(new InvalidUserFieldsException.InvalidField("name", INVALID_FIELD_REASON));
-            }
-            if (!isValid(user.getSurname(), foundUser.getFamilyName())) {
-                invalidFields.add(new InvalidUserFieldsException.InvalidField("surname", INVALID_FIELD_REASON));
-            }
-            if (!invalidFields.isEmpty()) {
-                throw new InvalidUserFieldsException(invalidFields);
-            }
-        });
-        log.trace("validate end");
+        return Uni.createFrom().item(() -> userRegistryConnector.search(user.getTaxCode(), FIELD_LIST))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(searchResult -> searchResult.ifPresent(foundUser -> {
+                    final ArrayList<InvalidUserFieldsException.InvalidField> invalidFields = new ArrayList<>();
+                    if (!isValid(user.getName(), foundUser.getName())) {
+                        invalidFields.add(new InvalidUserFieldsException.InvalidField("name", INVALID_FIELD_REASON));
+                    }
+                    if (!isValid(user.getSurname(), foundUser.getFamilyName())) {
+                        invalidFields.add(new InvalidUserFieldsException.InvalidField("surname", INVALID_FIELD_REASON));
+                    }
+                    if (!invalidFields.isEmpty()) {
+                        throw new InvalidUserFieldsException(invalidFields);
+                    }
+                }))
+                .invoke(() -> log.trace("validate end"))
+                .replaceWithVoid();
     }
 
     @Override
-    public void onboardingUsers(OnboardingData onboardingData) {
+    public Uni<Void> onboardingUsers(OnboardingData onboardingData) {
         log.trace("onboardingUsers start");
         log.debug("onboardingUsers onboardingData = {}", onboardingData);
-        onboardingMsConnector.onboardingUsers(onboardingData);
-        log.trace("onboardingUsers end");
+        return onboardingMsConnector.onboardingUsers(onboardingData)
+                .invoke(() -> log.trace("onboardingUsers end"));
     }
 
     @Override
-    public void onboardingUsersAggregator(OnboardingData onboardingData) {
+    public Uni<Void> onboardingUsersAggregator(OnboardingData onboardingData) {
         log.trace("onboardingUsersAggregator start");
         log.debug("onboardingUsersAggregator onboardingData = {}", onboardingData);
-        onboardingMsConnector.onboardingUsersAggregator(onboardingData);
-        log.trace("onboardingUsersAggregator end");
+        return onboardingMsConnector.onboardingUsersAggregator(onboardingData)
+                .invoke(() -> log.trace("onboardingUsersAggregator end"));
     }
 
     @Override
@@ -91,18 +93,20 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getManagerInfo(String onboardingId, String userTaxCode) {
+    public Uni<User> getManagerInfo(String onboardingId, String userTaxCode) {
         log.trace("getManagerInfo start");
         log.debug("getManagerInfo onboardingId = {}", Encode.forJava(onboardingId));
 
-        OnboardingData onboardingData;
-        try {
-            onboardingData = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboardingWithUserInfo(onboardingId));
-        } catch (ResourceNotFoundException e) {
-            log.error("Onboarding not found", e);
-            throw new ResourceNotFoundException("Onboarding not found");
-        }
+        return onboardingMsConnector.getOnboardingWithUserInfo(onboardingId)
+                .map(onboardingMapper::toOnboardingData)
+                .onFailure(ResourceNotFoundException.class).transform(e -> {
+                    log.error("Onboarding not found", e);
+                    return new ResourceNotFoundException("Onboarding not found");
+                })
+                .chain(onboardingData -> verifyManager(onboardingData, userTaxCode));
+    }
 
+    private Uni<User> verifyManager(OnboardingData onboardingData, String userTaxCode) {
         String institutionTaxCode = onboardingData.getInstitutionUpdate().getTaxCode();
         log.debug("getManagerInfo institutionTaxCode = {}", institutionTaxCode);
 
@@ -111,25 +115,30 @@ public class UserServiceImpl implements UserService {
 
         boolean isAlreadyAdmin = isUserAdmin(userTaxCode, onboardingData.getUsers());
         if (isAlreadyAdmin) {
-            return managerInfo;
+            return Uni.createFrom().item(managerInfo);
         }
 
-        ManagerVerification managerVerification = pgManagerVerifier.doVerify(userTaxCode, institutionTaxCode);
-        if (!managerVerification.isVerified()) {
-            log.error("User is not an admin of the institution");
-            throw new OnboardingNotAllowedException("User is not an admin of the institution");
-        }
-
-        log.trace("getManagerInfo end");
-        return managerInfo;
+        // The registry lookups behind the verifier are synchronous HTTP calls
+        return Uni.createFrom().item(() -> pgManagerVerifier.doVerify(userTaxCode, institutionTaxCode))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(managerVerification -> {
+                    if (!managerVerification.isVerified()) {
+                        log.error("User is not an admin of the institution");
+                        throw new OnboardingNotAllowedException("User is not an admin of the institution");
+                    }
+                })
+                .map(managerVerification -> {
+                    log.trace("getManagerInfo end");
+                    return managerInfo;
+                });
     }
 
     @Override
-    public UserId searchUser(String taxCode) {
+    public Uni<UserId> searchUser(String taxCode) {
         log.trace("searchUser start");
         log.debug("searchUser taxCode = {}", taxCode);
-        UserId userId = userRegistryConnector.searchUser(taxCode);
-        log.trace("searchUser end");
-        return userId;
+        return Uni.createFrom().item(() -> userRegistryConnector.searchUser(taxCode))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(userId -> log.trace("searchUser end"));
     }
 }

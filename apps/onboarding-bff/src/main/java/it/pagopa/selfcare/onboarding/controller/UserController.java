@@ -6,6 +6,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 import it.pagopa.selfcare.onboarding.util.LogUtils;
@@ -38,7 +39,7 @@ import org.owasp.encoder.Encode;
 @Authenticated
 @Path("/v1/users")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON, "application/*"})
 @Tag(name = "user")
 @RequiredArgsConstructor
 public class UserController {
@@ -61,13 +62,15 @@ public class UserController {
             })
     @Operation(summary = "${openapi.onboarding.user.api.validate}",
             description = "${openapi.onboarding.user.api.validate}", operationId = "validateUsingPOST")
-    public Response validate(@Valid UserDataValidationDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> validate(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                 @Valid UserDataValidationDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.UserController.validate("
+                + "it.pagopa.selfcare.onboarding.web.model.UserDataValidationDto)");
         log.trace("validate start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "validate request = {}", LogUtils.sanitize(request));
-        userService.validate(userResourceMapper.toUser(request));
-        log.trace("validate end");
-        return Response.noContent().build();
+        return userService.validate(userResourceMapper.toUser(request))
+                .invoke(() -> log.trace("validate end"))
+                .replaceWith(() -> Response.noContent().build());
     }
 
     @APIResponse(responseCode = "403",
@@ -81,13 +84,15 @@ public class UserController {
     @APIResponse(responseCode = "201", description = "Created")
     @Operation(summary= "${openapi.onboarding.users.api.onboarding}",
             description = "${openapi.onboarding.users.api.onboarding}", operationId = "onboardingUsers")
-    public Response onboarding(@Valid OnboardingUserDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> onboarding(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                   @Valid OnboardingUserDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.UserController.onboarding("
+                + "it.pagopa.selfcare.onboarding.web.model.OnboardingUserDto)");
         log.trace("onboarding start");
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
-        userService.onboardingUsers(onboardingResourceMapper.toEntity(request));
-        log.trace("onboarding end");
-        return Response.status(Response.Status.CREATED).build();
+        return userService.onboardingUsers(onboardingResourceMapper.toEntity(request))
+                .invoke(() -> log.trace("onboarding end"))
+                .replaceWith(() -> Response.status(Response.Status.CREATED).build());
     }
 
 
@@ -102,13 +107,15 @@ public class UserController {
     @APIResponse(responseCode = "201", description = "Created")
     @Operation(summary = "${openapi.onboarding.users.api.onboarding-aggregator}",
             description = "${openapi.onboarding.users.api.onboarding-aggregator}", operationId = "onboardingAggregatorUsingPOST")
-    public Response onboardingAggregator(@Valid OnboardingUserDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> onboardingAggregator(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                             @Valid OnboardingUserDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.UserController.onboardingAggregator("
+                + "it.pagopa.selfcare.onboarding.web.model.OnboardingUserDto)");
         log.trace("onboardingAggregator start");
         log.debug("onboardingAggregator request = {}", Encode.forJava(request.toString()));
-        userService.onboardingUsersAggregator(onboardingResourceMapper.toEntity(request));
-        log.trace("onboardingAggregator end");
-        return Response.status(Response.Status.CREATED).build();
+        return userService.onboardingUsersAggregator(onboardingResourceMapper.toEntity(request))
+                .invoke(() -> log.trace("onboardingAggregator end"))
+                .replaceWith(() -> Response.status(Response.Status.CREATED).build());
     }
 
     @APIResponse(responseCode = "403",
@@ -122,8 +129,11 @@ public class UserController {
     @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
             description = "${openapi.onboarding.users.api.check-manager}", operationId = "checkManager")
-    public Uni<CheckManagerResponse> checkManager(@Valid CheckManagerDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<CheckManagerResponse> checkManager(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                                 @Valid CheckManagerDto request) {
+        RequestParams.requiredBody(request, "public it.pagopa.selfcare.onboarding.web.model.CheckManagerResponse "
+                + "it.pagopa.selfcare.onboarding.web.controller.UserController.checkManager("
+                + "it.pagopa.selfcare.onboarding.web.model.CheckManagerDto)");
         log.trace("checkManager start");
         return userService.checkManager(onboardingResourceMapper.toCheckManagerData(request))
                 .map(CheckManagerResponse::new)
@@ -141,12 +151,12 @@ public class UserController {
     @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
             description = "${openapi.onboarding.users.api.check-manager}", operationId = "getManagerInfo")
-    public ManagerInfoResponse getManagerInfo(@PathParam("onboardingId") String onboardingId) {
+    public Uni<ManagerInfoResponse> getManagerInfo(@PathParam("onboardingId") String onboardingId) {
         log.trace("getManagerInfo start");
         String fiscalCode = SecurityIdentityUtils.getFiscalCode(securityIdentity);
-        ManagerInfoResponse managerInfoResponse = userResourceMapper.toManagerInfoResponse(userService.getManagerInfo(onboardingId, fiscalCode));
-        log.trace("getManagerInfo end");
-        return managerInfoResponse;
+        return userService.getManagerInfo(onboardingId, fiscalCode)
+                .map(userResourceMapper::toManagerInfoResponse)
+                .invoke(response -> log.trace("getManagerInfo end"));
     }
 
     @APIResponse(responseCode = "403",
@@ -160,11 +170,13 @@ public class UserController {
     @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.search-user}",
             description = "${openapi.onboarding.users.api.search-user}", operationId = "searchUserId")
-    public UserId searchUser(@Valid UserTaxCodeDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<UserId> searchUser(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                 @Valid UserTaxCodeDto request) {
+        RequestParams.requiredBody(request, "public it.pagopa.selfcare.onboarding.connector.model.user.UserId "
+                + "it.pagopa.selfcare.onboarding.web.controller.UserController.searchUser("
+                + "it.pagopa.selfcare.onboarding.web.model.UserTaxCodeDto)");
         log.trace("searchUser start");
-        UserId userId =  userService.searchUser(userResourceMapper.toString(request));
-        log.trace("searchUser end");
-        return userId;
+        return userService.searchUser(userResourceMapper.toString(request))
+                .invoke(userId -> log.trace("searchUser end"));
     }
 }

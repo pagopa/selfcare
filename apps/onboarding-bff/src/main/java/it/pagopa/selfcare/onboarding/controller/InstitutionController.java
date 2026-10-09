@@ -8,6 +8,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
@@ -46,7 +47,7 @@ import org.owasp.encoder.Encode;
 @Authenticated
 @Path("/v1/institutions")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes({MediaType.APPLICATION_JSON, "application/*"})
 @Tag(name = "institutions")
 @RequiredArgsConstructor
 public class InstitutionController {
@@ -75,8 +76,10 @@ public class InstitutionController {
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingUsingPOST")
-    public Uni<Response> onboarding(@Valid OnboardingProductDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> onboarding(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                   @Valid OnboardingProductDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.InstitutionController.onboarding("
+                + "it.pagopa.selfcare.onboarding.web.model.OnboardingProductDto)");
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
         return institutionService.onboardingProduct(onboardingMapper.toEntity(request))
@@ -95,8 +98,10 @@ public class InstitutionController {
     @Path("/company/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "onboardingCompanyUsingPOST")
-    public Uni<Response> onboarding(@Valid CompanyOnboardingDto request) {
-        RequestParams.requiredBody(request);
+    public Uni<Response> onboarding(@RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON))
+                                   @Valid CompanyOnboardingDto request) {
+        RequestParams.requiredBody(request, "public void it.pagopa.selfcare.onboarding.web.controller.InstitutionController.onboarding("
+                + "it.pagopa.selfcare.onboarding.web.model.CompanyOnboardingDto)");
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
         return institutionService.onboardingProduct(onboardingMapper.toEntity(request))
@@ -259,7 +264,7 @@ public class InstitutionController {
         institutionType = RequestParams.stringQuery(uriInfo, "institutionType", institutionType);
         vatNumber = Optional.ofNullable(RequestParams.stringQuery(uriInfo, "vatNumber", vatNumber.orElse(null)));
         RequestParams.requiredQuery("productId", productId);
-        VerifyType type = RequestParams.optionalEnum("verifyType", verifyType, VerifyType.class);
+        VerifyType type = RequestParams.optionalEnum("verifyType", verifyType, VerifyType.class, uriInfo);
         log.trace("verifyOnboarding start");
         Uni<Void> verification;
         if (VerifyType.EXTERNAL.equals(type) && vatNumber.isPresent() && (PROD_FD.getValue().equals(productId) || PROD_FD_GARANTITO.getValue().equals(productId))) {
@@ -330,9 +335,11 @@ public class InstitutionController {
     @Operation(summary = "${openapi.onboarding.institutions.api.matchInstitutionAndUser}",
             description = "${openapi.onboarding.institutions.api.matchInstitutionAndUser}", operationId = "postVerificationMatchUsingPOST")
     public Uni<MatchInfoResultResource> postVerificationMatch(
-                                                         @Valid
+                                                         @RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON)) @Valid
                                                          VerificationMatchRequest verificationMatchRequest) {
-        RequestParams.requiredBody(verificationMatchRequest);
+        RequestParams.requiredBody(verificationMatchRequest, "public it.pagopa.selfcare.onboarding.web.model.MatchInfoResultResource "
+                + "it.pagopa.selfcare.onboarding.web.controller.InstitutionController.postVerificationMatch("
+                + "it.pagopa.selfcare.onboarding.web.model.VerificationMatchRequest)");
         log.trace("matchInstitutionAndUser start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "matchInstitutionAndUser userDto = {}", LogUtils.sanitize(verificationMatchRequest));
         return institutionService.matchInstitutionAndUser(verificationMatchRequest.getTaxCode(),
@@ -348,8 +355,11 @@ public class InstitutionController {
     @Path("/verification/legal-address")
     @Operation(summary = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}",
             description = "${openapi.onboarding.institutions.api.getInstitutionLegalAddress}", operationId = "postVerificationLegalAddressUsingPOST")
-    public Uni<InstitutionLegalAddressResource> postVerificationLegalAddress(@Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
-        RequestParams.requiredBody(verificationLegalAddressRequest);
+    public Uni<InstitutionLegalAddressResource> postVerificationLegalAddress(
+            @RequestBody(content = @Content(mediaType = MediaType.APPLICATION_JSON)) @Valid VerificationLegalAddressRequest verificationLegalAddressRequest) {
+        RequestParams.requiredBody(verificationLegalAddressRequest, "public it.pagopa.selfcare.onboarding.web.model.InstitutionLegalAddressResource "
+                + "it.pagopa.selfcare.onboarding.web.controller.InstitutionController.postVerificationLegalAddress("
+                + "it.pagopa.selfcare.onboarding.web.model.VerificationLegalAddressRequest)");
         log.trace("getInstitutionLegalAddress start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionLegalAddress institutionId = {}",
                 LogUtils.sanitize(verificationLegalAddressRequest.getTaxCode()));
