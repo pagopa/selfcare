@@ -16,6 +16,7 @@ on:
           - external-api
           - institution-ms
           - institution-send-mail-scheduler
+          - log-availability-runner
           - onboarding
           - onboarding-bff
           - product
