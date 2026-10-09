@@ -52,8 +52,12 @@ public class AzureMonitorLogsClient {
                 LOGS_QUERY_SCOPE,
                 payload);
         try {
-            JsonNode primaryResult = objectMapper.readTree(response)
-                    .path("tables").path(0);
+            JsonNode responseNode = objectMapper.readTree(response);
+            JsonNode error = responseNode.path("error");
+            if (!error.isMissingNode() && !error.isNull()) {
+                throw new IllegalStateException("Azure Monitor query returned an error");
+            }
+            JsonNode primaryResult = responseNode.path("tables").path(0);
             JsonNode columns = primaryResult.path("columns");
             JsonNode rows = primaryResult.path("rows");
             if (!columns.isArray() || !rows.isArray() || rows.size() != 1) {
