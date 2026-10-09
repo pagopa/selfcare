@@ -15,6 +15,11 @@ bodies, headers, security, calls to the downstream services) must stay identical
 Architectural realignment is tracked in the [migration plan](plan.md), with stories, implementation tasks,
 dependencies and acceptance criteria. It is a backlog, not evidence that the refactoring or release is complete.
 
+ST01/ST02 are complete; ST03 is in progress. Product lists (public and admin), origins and the
+required-documents enabled flag now compose `Uni` from the REST client through service and controller.
+The single-product lookup and required-document list still share synchronous consumers in the
+institution/token flows; they remain part of ST03, not evidence of completed reactive migration.
+
 ### Contract download authorization
 
 `GET /v2/tokens/{onboardingId}/contract` requires authentication but does not query IAM or

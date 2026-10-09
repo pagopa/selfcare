@@ -7,6 +7,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniEmitter;
 import it.pagopa.selfcare.onboarding.client.model.ContractTemplate;
 import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
@@ -17,7 +20,9 @@ import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -76,24 +81,83 @@ class ProductControllerTest {
 
     @Test
     void getProducts_returnsTheActiveProductsOfAnyLevel() {
+        // given
         Product product = new Product();
         ProductResource resource = new ProductResource();
-        when(productService.getProducts(false)).thenReturn(List.of(product));
+        when(productService.getProducts(false)).thenReturn(Uni.createFrom().item(List.of(product)));
         when(productMapper.toResource(product)).thenReturn(resource);
 
-        assertEquals(List.of(resource), controller.getProducts());
+        // when
+        List<ProductResource> result = controller.getProducts().await().indefinitely();
+
+        // then
+        assertEquals(List.of(resource), result);
     }
 
     @Test
     void getProductsAdmin_keepsRootProductsWithADefaultUserContractTemplate() {
+        // given
         Product withTemplate = productWithUserTemplate("DEFAULT", "path/to/template");
         Product withoutPath = productWithUserTemplate("DEFAULT", null);
         Product withoutMappings = new Product();
         ProductResource resource = new ProductResource();
-        when(productService.getProducts(true)).thenReturn(List.of(withTemplate, withoutPath, withoutMappings));
+        when(productService.getProducts(true)).thenReturn(Uni.createFrom().item(List.of(withTemplate, withoutPath, withoutMappings)));
         when(productMapper.toResource(withTemplate)).thenReturn(resource);
 
-        assertEquals(List.of(resource), controller.getProductsAdmin());
+        // when
+        List<ProductResource> result = controller.getProductsAdmin().await().indefinitely();
+
+        // then
+        assertEquals(List.of(resource), result);
+    }
+
+    @Test
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void listMappingWaitsForTheItemWithoutBlocking() {
+        // given
+        AtomicReference<UniEmitter<? super List<Product>>> pending = new AtomicReference<>();
+        Product product = new Product();
+        ProductResource resource = new ProductResource();
+        when(productService.getProducts(false)).thenReturn(Uni.createFrom().<List<Product>>emitter(pending::set));
+        when(productMapper.toResource(product)).thenReturn(resource);
+
+        // when
+        UniAssertSubscriber<List<ProductResource>> result = controller.getProducts()
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(productMapper);
+        pending.get().complete(List.of(product));
+        result.assertCompleted().assertItem(List.of(resource));
+    }
+
+    @Test
+    void emptyListRemainsAnEmptyList() {
+        // given
+        when(productService.getProducts(false)).thenReturn(Uni.createFrom().item(List.of()));
+
+        // when
+        List<ProductResource> result = controller.getProducts().await().indefinitely();
+
+        // then
+        assertEquals(List.of(), result);
+        verifyNoInteractions(productMapper);
+    }
+
+    @Test
+    void listFailureIsPropagatedWithoutMapping() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing catalog");
+        when(productService.getProducts(false)).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<List<ProductResource>> result = controller.getProducts()
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verifyNoInteractions(productMapper);
     }
 
     private static Product productWithUserTemplate(String institutionType, String path) {

@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.model.OriginResult;
 import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.client.model.ProductStatus;
@@ -13,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.product_json.api.ProductApi;
 import org.openapi.quarkus.product_json.model.Origin;
-import org.openapi.quarkus.product_json.model.ProductOriginResponse;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.owasp.encoder.Encode;
@@ -39,14 +39,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public OriginResult getOrigins(String tenantId, String productId) {
+    public Uni<OriginResult> getOrigins(String tenantId, String productId) {
         log.trace("getOrigins start");
         String productIdSanitized = Encode.forJava(productId);
-        ProductOriginResponse origins = productApi.getProductOriginsById(productIdSanitized, Encode.forJava(tenantId)).await().indefinitely();
-        OriginResult originResult = productMapper.toOriginResult(Objects.requireNonNull(origins));
-        log.debug("getOrigins size = {}", originResult.getOrigins().size());
-        log.trace("getOrigins end");
-        return originResult;
+        return productApi.getProductOriginsById(productIdSanitized, Encode.forJava(tenantId))
+                .map(origins -> productMapper.toOriginResult(Objects.requireNonNull(origins)))
+                .invoke(result -> {
+                    log.debug("getOrigins size = {}", result.getOrigins().size());
+                    log.trace("getOrigins end");
+                });
     }
 
     @Override
@@ -64,20 +65,22 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public boolean isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin) {
+    public Uni<Boolean> isRequiredDocumentsEnabled(String tenantId, String productId, String institutionType, String origin) {
         log.trace("isRequiredDocumentsEnabled start");
         String tenant = Encode.forJava(tenantId);
         String product = Encode.forJava(productId);
         org.openapi.quarkus.product_json.model.InstitutionType type = parseInstitutionType(Encode.forJava(institutionType));
         Origin documentOrigin = parseOrigin(Encode.forJava(origin));
-        boolean result;
-        try (Response response = productApi.isRequiredDocumentsEnabled(product, type, documentOrigin, tenant)
-                .await().indefinitely()) {
-            result = Boolean.parseBoolean(response.getHeaderString(HEADER_REQUIRED_DOCUMENTS_ENABLED));
-        }
-        log.debug("isRequiredDocumentsEnabled result = {}", result);
-        log.trace("isRequiredDocumentsEnabled end");
-        return result;
+        return productApi.isRequiredDocumentsEnabled(product, type, documentOrigin, tenant)
+                .map(response -> {
+                    try (response) {
+                        return Boolean.parseBoolean(response.getHeaderString(HEADER_REQUIRED_DOCUMENTS_ENABLED));
+                    }
+                })
+                .invoke(result -> {
+                    log.debug("isRequiredDocumentsEnabled result = {}", result);
+                    log.trace("isRequiredDocumentsEnabled end");
+                });
     }
 
     @Override
@@ -103,16 +106,17 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> getProducts(boolean rootOnly) {
+    public Uni<List<Product>> getProducts(boolean rootOnly) {
         log.trace("getProducts start");
-        List<ProductResponse> response = productApi.getProducts(rootOnly, true, TENANT_FROM_HEADER).await().indefinitely();
-        List<Product> result = Objects.requireNonNull(response).stream()
-                .map(productMapper::toProduct)
-                .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()))
-                .toList();
-        log.debug("getProducts size = {}", result.size());
-        log.trace("getProducts end");
-        return result;
+        return productApi.getProducts(rootOnly, true, TENANT_FROM_HEADER)
+                .map(response -> Objects.requireNonNull(response).stream()
+                        .map(productMapper::toProduct)
+                        .filter(product -> ProductStatus.ACTIVE.equals(product.getStatus()))
+                        .toList())
+                .invoke(result -> {
+                    log.debug("getProducts size = {}", result.size());
+                    log.trace("getProducts end");
+                });
     }
 
     @Override

@@ -1,10 +1,10 @@
 package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
-import it.pagopa.selfcare.onboarding.client.model.OriginResult;
 import it.pagopa.selfcare.onboarding.client.model.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.model.dto.response.OriginResponse;
 import it.pagopa.selfcare.onboarding.model.dto.response.RequiredDocumentsEnabledResource;
@@ -48,7 +48,7 @@ public class ProductV2Controller {
     @GET
     @Operation(summary = "${openapi.product.ms.api.getOrigins.summary}",
             description = "${openapi.product.ms.api.getOrigins.description}", operationId = "getOrigins")
-    public OriginResponse getOrigins(@Parameter(description = "${openapi.onboarding.institutions.model.institutionType}", required = true)
+    public Uni<OriginResponse> getOrigins(@Parameter(description = "${openapi.onboarding.institutions.model.institutionType}", required = true)
                                       @QueryParam("productId")
                                       String productId,
                                       @Parameter(hidden = true) @HeaderParam(TENANT_HEADER)
@@ -58,10 +58,9 @@ public class ProductV2Controller {
         RequestParams.requiredQuery("productId", productId);
         String productIdSanitized = Encode.forJava(productId);
         log.debug("getOrigins productId = {}", productIdSanitized);
-        OriginResult originEntries = productService.getOrigins(requiredTenantId(tenantHeader), productId);
-        OriginResponse response = productMapper.toOriginResponse(originEntries);
-        log.trace("getOrigins end");
-        return response;
+        return productService.getOrigins(requiredTenantId(tenantHeader), productId)
+                .map(productMapper::toOriginResponse)
+                .invoke(response -> log.trace("getOrigins end"));
     }
 
     @GET
@@ -95,7 +94,7 @@ public class ProductV2Controller {
     @Operation(summary = "Check if required documents are enabled for a product",
             description = "Returns an object with the boolean flag requiredDocumentsEnabled = true when required documents are configured for the given product, institutionType and origin.",
             operationId = "isRequiredDocumentsEnabled")
-    public RequiredDocumentsEnabledResource isRequiredDocumentsEnabled(@Parameter(description = "The product id")
+    public Uni<RequiredDocumentsEnabledResource> isRequiredDocumentsEnabled(@Parameter(description = "The product id")
                                                                        @PathParam("productId") String productId,
                                                                        @Parameter(required = true) @QueryParam("institutionType") String institutionType,
                                                                        @Parameter(required = true) @QueryParam("origin") String origin,
@@ -109,11 +108,13 @@ public class ProductV2Controller {
                 Encode.forJava(productId),
                 Encode.forJava(institutionType),
                 Encode.forJava(origin));
-        boolean result = productService.isRequiredDocumentsEnabled(
-                requiredTenantId(tenantHeader), productId, institutionType, origin);
-        log.debug("isRequiredDocumentsEnabled result = {}", result);
-        log.trace("isRequiredDocumentsEnabled end");
-        return new RequiredDocumentsEnabledResource(result);
+        return productService.isRequiredDocumentsEnabled(
+                        requiredTenantId(tenantHeader), productId, institutionType, origin)
+                .map(result -> {
+                    log.debug("isRequiredDocumentsEnabled result = {}", result);
+                    log.trace("isRequiredDocumentsEnabled end");
+                    return new RequiredDocumentsEnabledResource(result);
+                });
     }
 
     private static String requiredTenantId(String tenantId) {

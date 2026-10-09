@@ -13,6 +13,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniEmitter;
 import it.pagopa.selfcare.onboarding.client.model.OriginResult;
 import it.pagopa.selfcare.onboarding.client.model.Product;
 import it.pagopa.selfcare.onboarding.client.model.ProductStatus;
@@ -21,7 +23,9 @@ import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.ProductMapper;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -48,14 +52,17 @@ class ProductServiceImplTest {
 
     @Test
     void getOrigins_delegatesWithSanitizedIdAndTenant() {
+        // given
         ProductOriginResponse response = new ProductOriginResponse();
         OriginResult mapped = new OriginResult();
         mapped.setOrigins(List.of());
         when(productApi.getProductOriginsById("prod-test", "AR")).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toOriginResult(response)).thenReturn(mapped);
 
-        OriginResult result = productService.getOrigins("AR", "prod-test");
+        // when
+        OriginResult result = productService.getOrigins("AR", "prod-test").await().indefinitely();
 
+        // then
         assertSame(mapped, result);
         verify(productApi).getProductOriginsById("prod-test", "AR");
         verifyNoMoreInteractions(productApi);
@@ -63,6 +70,7 @@ class ProductServiceImplTest {
 
     @Test
     void getOrigins_sanitizesSpecialCharacters() {
+        // given
         String raw = "<error>";
         ProductOriginResponse response = new ProductOriginResponse();
         OriginResult mapped = new OriginResult();
@@ -70,25 +78,41 @@ class ProductServiceImplTest {
         when(productApi.getProductOriginsById(Encode.forJava(raw), "AR")).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toOriginResult(response)).thenReturn(mapped);
 
-        assertNotNull(productService.getOrigins("AR", raw));
+        // when
+        OriginResult result = productService.getOrigins("AR", raw).await().indefinitely();
+
+        // then
+        assertNotNull(result);
         verify(productApi).getProductOriginsById(Encode.forJava(raw), "AR");
     }
 
     @Test
     void getOrigins_nullBodyThrows() {
+        // given
         when(productApi.getProductOriginsById("test", "AR")).thenReturn(Uni.createFrom().nullItem());
 
-        assertThrows(NullPointerException.class, () -> productService.getOrigins("AR", "test"));
+        // when
+        UniAssertSubscriber<OriginResult> result = productService.getOrigins("AR", "test")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertFailedWith(NullPointerException.class);
         verifyNoInteractions(productMapper);
     }
 
     @Test
     void getOrigins_nullOriginsListThrows() {
+        // given
         ProductOriginResponse response = new ProductOriginResponse();
         when(productApi.getProductOriginsById("test", "AR")).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toOriginResult(response)).thenReturn(new OriginResult());
 
-        assertThrows(NullPointerException.class, () -> productService.getOrigins("AR", "test"));
+        // when
+        UniAssertSubscriber<OriginResult> result = productService.getOrigins("AR", "test")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertFailedWith(NullPointerException.class);
     }
 
     @Test
@@ -128,27 +152,45 @@ class ProductServiceImplTest {
 
     @Test
     void isRequiredDocumentsEnabled_readsHeader() {
+        // given
         when(productApi.isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA, "AR"))
                 .thenReturn(Uni.createFrom().item(responseWithFlag("true")));
 
-        assertTrue(productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA"));
+        // when
+        boolean enabled = productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA")
+                .await().indefinitely();
+
+        // then
+        assertTrue(enabled);
     }
 
     @Test
     void isRequiredDocumentsEnabled_falseHeader() {
+        // given
         when(productApi.isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA, "AR"))
                 .thenReturn(Uni.createFrom().item(responseWithFlag("false")));
 
-        assertFalse(productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA"));
+        // when
+        boolean enabled = productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA")
+                .await().indefinitely();
+
+        // then
+        assertFalse(enabled);
     }
 
     @Test
     void isRequiredDocumentsEnabled_missingHeaderIsFalse() {
+        // given
         Response response = mock(Response.class);
         when(productApi.isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA, "AR"))
                 .thenReturn(Uni.createFrom().item(response));
 
-        assertFalse(productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA"));
+        // when
+        boolean enabled = productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA")
+                .await().indefinitely();
+
+        // then
+        assertFalse(enabled);
         verify(response).close();
     }
 
@@ -197,6 +239,7 @@ class ProductServiceImplTest {
 
     @Test
     void getProducts_requestsValidProductsAndKeepsOnlyActive() {
+        // given
         ProductResponse r1 = mock(ProductResponse.class);
         ProductResponse r2 = mock(ProductResponse.class);
         ProductResponse r3 = mock(ProductResponse.class);
@@ -208,24 +251,99 @@ class ProductServiceImplTest {
         when(productMapper.toProduct(r2)).thenReturn(disabledActive);
         when(productMapper.toProduct(r3)).thenReturn(enabledTesting);
 
-        assertEquals(List.of(enabledActive, disabledActive), productService.getProducts(false));
+        // when
+        List<Product> result = productService.getProducts(false).await().indefinitely();
+
+        // then
+        assertEquals(List.of(enabledActive, disabledActive), result);
         verify(productApi).getProducts(false, true, null);
     }
 
     @Test
     void getProducts_rootOnlyIsPropagated() {
+        // given
         when(productApi.getProducts(true, true, null)).thenReturn(Uni.createFrom().item(List.of()));
 
-        assertTrue(productService.getProducts(true).isEmpty());
+        // when
+        List<Product> result = productService.getProducts(true).await().indefinitely();
+
+        // then
+        assertTrue(result.isEmpty());
         verify(productApi).getProducts(true, true, null);
         verifyNoInteractions(productMapper);
     }
 
     @Test
     void getProducts_nullBodyThrows() {
+        // given
         when(productApi.getProducts(false, true, null)).thenReturn(Uni.createFrom().nullItem());
 
-        assertThrows(NullPointerException.class, () -> productService.getProducts(false));
+        // when
+        UniAssertSubscriber<List<Product>> result = productService.getProducts(false)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertFailedWith(NullPointerException.class);
+    }
+
+    @Test
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void originsDoNotWaitForTheDownstreamItem() {
+        // given
+        AtomicReference<UniEmitter<? super ProductOriginResponse>> pending = new AtomicReference<>();
+        ProductOriginResponse response = new ProductOriginResponse();
+        OriginResult mapped = new OriginResult();
+        mapped.setOrigins(List.of());
+        when(productApi.getProductOriginsById("prod-test", "AR"))
+                .thenReturn(Uni.createFrom().<ProductOriginResponse>emitter(pending::set));
+        when(productMapper.toOriginResult(response)).thenReturn(mapped);
+
+        // when
+        UniAssertSubscriber<OriginResult> result = productService.getOrigins("AR", "prod-test")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(productMapper);
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(mapped);
+        verify(productApi).getProductOriginsById("prod-test", "AR");
+        verifyNoMoreInteractions(productApi);
+    }
+
+    @Test
+    void enabledFlagClosesTheResponseWhenHeaderReadingFails() {
+        // given
+        Response response = mock(Response.class);
+        IllegalStateException failure = new IllegalStateException("invalid header");
+        when(response.getHeaderString(ProductServiceImpl.HEADER_REQUIRED_DOCUMENTS_ENABLED)).thenThrow(failure);
+        when(productApi.isRequiredDocumentsEnabled("prod-test", InstitutionType.PA, Origin.IPA, "AR"))
+                .thenReturn(Uni.createFrom().item(response));
+
+        // when
+        UniAssertSubscriber<Boolean> result = productService.isRequiredDocumentsEnabled("AR", "prod-test", "PA", "IPA")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verify(response).close();
+    }
+
+    @Test
+    void listFailureIsPropagatedWithoutMappingOrRetry() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing catalog");
+        when(productApi.getProducts(false, true, null)).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<List<Product>> result = productService.getProducts(false)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verify(productApi).getProducts(false, true, null);
+        verifyNoMoreInteractions(productApi);
+        verifyNoInteractions(productMapper);
     }
 
     @Test

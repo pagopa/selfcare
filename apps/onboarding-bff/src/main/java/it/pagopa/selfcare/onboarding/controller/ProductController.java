@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
@@ -67,30 +68,30 @@ public class ProductController {
     @Path("/v1/products")
     @Operation(summary = "${openapi.onboarding.product.api.getProducts}",
             description = "${openapi.onboarding.product.api.getProducts}", operationId = "getProducts")
-    public List<ProductResource> getProducts() {
+    public Uni<List<ProductResource>> getProducts() {
         log.trace("getProducts start");
-        final List<Product> products = productService.getProducts(false);
-        List<ProductResource> resources = products.stream()
-                .map(productMapper::toResource)
-                .toList();
-        log.debug("getProducts result = {}", resources);
-        log.trace("getProducts end");
-        return resources;
+        return productService.getProducts(false)
+                .map(products -> products.stream().map(productMapper::toResource).toList())
+                .invoke(resources -> {
+                    log.debug("getProducts result = {}", resources);
+                    log.trace("getProducts end");
+                });
     }
 
     @GET
     @Path("/v1/products/admin")
     @Operation(summary = "${openapi.onboarding.product.api.getProductsAdmin}",
             description = "${openapi.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
-    public List<ProductResource> getProductsAdmin() {
+    public Uni<List<ProductResource>> getProductsAdmin() {
         log.trace("getProductsAdmin start");
-        final List<Product> products = productService.getProducts(true);
-        List<ProductResource> resources = products.stream()
-                .filter(product -> Objects.nonNull(product.getUserContractTemplate(Product.CONTRACT_TYPE_DEFAULT).getContractTemplatePath()))
-                .map(productMapper::toResource)
-                .toList();
-        log.debug("getProductsAdmin result = {}", resources);
-        log.trace("getProductsAdmin end");
-        return resources;
+        return productService.getProducts(true)
+                .map(products -> products.stream()
+                        .filter(product -> Objects.nonNull(product.getUserContractTemplate(Product.CONTRACT_TYPE_DEFAULT).getContractTemplatePath()))
+                        .map(productMapper::toResource)
+                        .toList())
+                .invoke(resources -> {
+                    log.debug("getProductsAdmin result = {}", resources);
+                    log.trace("getProductsAdmin end");
+                });
     }
 }

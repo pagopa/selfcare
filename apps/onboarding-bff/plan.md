@@ -14,7 +14,8 @@ regressioni di caratterizzazione aggiunte e riferimento Spring riconfermato.
 Commit ST01: `2f821d6cd2f586bca3c7f0d178d0818cb844f88d`.
 **BFF-ST02 completata il 2026-10-08:** layout, DTO, injection e conversioni pure
 riallineati, mantenendo contratto pubblico e comportamento downstream.
-**ST03-ST10 restano da fare.**
+**BFF-ST03 in corso dal 2026-10-09:** traccia completa e primo lotto reattivo
+verificati; la storia non e ancora completata. **ST04-ST10 restano da fare.**
 Gli identificativi sono locali al piano, non ticket Jira gia creati.
 
 **Integrazione main del 2026-10-09:** incorporato `cd0a2751f`, preservando ST01/ST02.
@@ -30,8 +31,9 @@ proviene dal main aggiornato; canonical e alias Quarkus sono rigenerati da Maven
 Verifica del lotto: 667 test senza failure/errori/skipped, inclusi 297 casi
 token/sicurezza/spec-driven su ciascun runtime e i gate OpenAPI esatti.
 Le regressioni onboarding-ms arrivate da main passano: 178 test senza skip.
-Le fixture Cucumber del contratto sono aggiornate; la loro esecuzione Docker
-e prevista nella verifica del lotto ST03, non inclusa nelle evidenze di questo merge.
+Le fixture Cucumber del contratto sono aggiornate e verificate insieme al primo
+lotto ST03: 10 scenari contratto/prodotti passati con Docker. La suite completa
+Cucumber non e stata rieseguita in questo lotto.
 
 La baseline ha gia evidenze di parita HTTP (538 scenari Spring e 538 Quarkus),
 59 scenari Cucumber e verifica del runtime container. Queste evidenze sono storiche:
@@ -82,7 +84,7 @@ Non aggiungere `repository` o `entity`: il BFF non ha persistenza propria.
 
 ## Backlog e dipendenze
 
-**ST01 e ST02 sono completate; ST03-ST10 sono da fare.** Le decisioni esterne bloccate sono
+**ST01 e ST02 sono completate; ST03 e in corso; ST04-ST10 sono da fare.** Le decisioni esterne bloccate sono
 elencate nel registro ST01 e non autorizzano rimozioni. Il completamento
 dell'inventario non chiude l'epic. Le dipendenze sono prerequisiti di implementazione, non un obbligo di
 lavorare in parallelo; i task di una storia si eseguono nell'ordine indicato.
@@ -449,7 +451,7 @@ usare come modello concreto per gli altri flussi senza creare un nuovo framework
 **Dove:** `ProductController`, `ProductV2Controller`, `ProductService`,
 `service/impl/ProductServiceImpl`, mapper, client e tutti i chiamanti del servizio.
 
-- [ ] **BFF-ST03-T01 - Ricostruire il percorso completo.** Elencare endpoint,
+- [x] **BFF-ST03-T01 - Ricostruire il percorso completo.** Elencare endpoint,
   chiamanti, mapping, failure e retry dei prodotti, associandoli ai casi esistenti.
   Includere i chiamanti interni prima di cambiare le firme.
 - [ ] **BFF-ST03-T02 - Propagare Uni end-to-end.** Restituire e comporre `Uni<T>`
@@ -466,6 +468,87 @@ usare come modello concreto per gli altri flussi senza creare un nuovo framework
 **Accettazione:** client -> servizio -> controller usa `Uni` senza attese
 bloccanti sul percorso ordinario; i controller non orchestrano il dominio;
 i contratti v1/v2 e gli effetti downstream non cambiano.
+
+#### Registro ST03 - Traccia e primo lotto del 2026-10-09
+
+**T01 completato. T02-T04 in corso, con primo lotto verificato; storia aperta.**
+Baseline: merge `08522fc5d`, che incorpora main `cd0a2751f` e mantiene ST01/ST02.
+Il lotto e identificato dal subject `Start reactive BFF product flows`.
+Nessuna modifica ai servizi di riferimento, nuovo framework o bridge sincrono.
+
+| Endpoint | Percorso e stato nel primo lotto |
+|----------|--------------------------------|
+| `GET /v1/products` | `ProductApi.getProducts -> ProductService.getProducts -> ProductController.getProducts`: `Uni` end-to-end |
+| `GET /v1/products/admin` | Stessa catena con `rootOnly=true`, filtro del contratto DEFAULT nel controller: `Uni` end-to-end |
+| `GET /v2/product` | `ProductApi.getProductOriginsById -> ProductService.getOrigins -> ProductV2Controller.getOrigins`: `Uni` end-to-end |
+| `GET /v2/product/{productId}/required-documents/enabled` | HEAD downstream -> flag letto e Response chiusa -> DTO HTTP: `Uni` end-to-end |
+| `GET /v1/product/{id}` | Ancora sincrono: `getProduct` e condiviso con i flussi istituzioni; prossimo lotto |
+| `GET /v2/product/{productId}/required-documents` | Ancora sincrono: `getRequiredDocuments` e condiviso con upload attachment; prossimo lotto |
+
+**Chiamanti interni ricostruiti (otto invocazioni):**
+
+| Chiamante | Invocazione e ordine da preservare nel prossimo lotto |
+|-----------|-----------------------------------------------------|
+| `InstitutionServiceImpl.onboardingProduct` | `getProduct` dopo le precondizioni; delegabilita, phase-out, contratto e ruoli prima di party/registry e scritture |
+| `checkIfProductIsActiveAndSetUserProductRole` | `getProduct` del padre soltanto per i figli; validazione enabled/tax-code, verifica onboarding del padre e ruolo prima delle scritture |
+| `InstitutionServiceImpl.getInstitutions` | `getProduct` prima della ricerca party; stesso messaggio 404 del controller v1 |
+| `validateOnboardingByProductOrInstitutionTaxCode` | `isProductEnabled` poi `verifyAllowedByInstitutionTaxCode`, sempre due chiamate sequenziali anche se la prima e true |
+| `TokenServiceImpl.getTemplateAttachment` | Onboarding -> `getProductValid` -> selezione template -> documento |
+| `TokenServiceImpl.uploadAttachment/findRequiredDocument` | Onboarding -> `getRequiredDocuments`; `getProductValid` solo nel ramo SYSTEM, poi upload; ramo USER senza lookup valid-product |
+
+La chiamata multilinea a `getRequiredDocuments` e parte del perimetro, non un
+consumer assente. Lasciare quelle firme sincrone in questo primo lotto evita di
+spostare gli await nei chiamanti o dichiarare reattive orchestrazioni ancora bloccanti.
+**Prossimo lotto T02:** migrare insieme le due route rimanenti e le orchestrazioni
+interne che consumano i lookup/documenti, con composizione sequenziale e boundary
+di I/O reale esplicite. La dipendenza ST04 -> ST03 non e ancora soddisfatta.
+
+Nel lotto verificato, i tre metodi del servizio ritornano direttamente/componendo
+il `Uni` dei client generati: nessun await, `runSubscriptionOn`, wrapper o retry
+nuovo. Conservati encoding, valid/rootOnly, filtro ACTIVE (inclusi i disabled),
+ordine delle liste, filtro contratto admin, errori/null del downstream e flag
+false per header HEAD mancante. La Response HEAD viene chiusa anche quando la
+lettura dell'header fallisce. I controller fanno solo binding/mapping e risposta.
+
+I test adeguati usano await solo nel test oppure `UniAssertSubscriber`. Due test
+con emitter controllato e timeout di 2 secondi verificano il ritorno senza attendere
+il downstream e il mapping solo dopo l'item. Test di failure verificano la stessa
+eccezione, senza mapping, retry o fallback false. Gli emitter Mockito richiedono
+un tipo esplicito (`<ProductOriginResponse>` / `<List<Product>>`): corretto il
+fallimento iniziale di inferenza senza cast.
+
+| Esecuzione | Esito |
+|------------|-------|
+| Test mirati prodotti, controller v1/v2, retry e parita gruppo products | SUCCESS: 106 test, zero failure/errori/skipped; 30 scenari per runtime |
+| Gate finali e package | SUCCESS: 1347 test, zero failure/errori/skipped |
+| Catalogo completo Quarkus | `PARITY quarkus scenarios=547 attempted=547 passed=547 failed=0` |
+| Catalogo completo Spring main | `PARITY spring-reference scenarios=547 attempted=547 passed=547 failed=0` |
+| OpenAPI esatto, alias, HTTPS, sicurezza, autorizzazione, IAM e replay | Passati nella selezione finale |
+| Fixture/catalogo e Cucumber mirato | 11 test Surefire e 10 scenari Cucumber passati; 17 test Failsafe inclusi i lifecycle, zero skip |
+| Documenti pubblicati, golden e oracoli | Invariati rispetto al merge dopo package/verify; floor del catalogo alzato a 547 solo dopo la doppia verifica |
+| Cleanup Docker | Container/reti del test assenti; immagine residua e 106.2 MB di cache del task rimossi; immagini preesistenti preservate; dati Azurite temporanei rimossi |
+
+Comandi del lotto, Java 17 e fallback Maven gia documentato:
+
+```shell
+mvn -B -ntp -f apps/onboarding-bff/pom.xml package \
+  -Dtest=ProductServiceImplTest,ProductControllerTest,ProductV2ControllerTest,RetryPolicyTest,QuarkusParityTest,SpringReferenceParityTest \
+  '-Dparity.only=^products ::' -Dparity.spring.jar="$SPRING_ORACLE_JAR"
+
+mvn -B -ntp -f apps/onboarding-bff/pom.xml package \
+  -Dtest=ProductServiceImplTest,ProductControllerTest,ProductV2ControllerTest,RetryPolicyTest,TokenV2ControllerTest,AuthorizationServiceTest,QuarkusParityTest,SpringReferenceParityTest,ParityCatalogTest,HttpsParityTest,QuarkusOpenApiInventoryTest,PublishedOpenApiGateTest,OpenApiIdenticalDocumentGateTest,LegacyOpenApiAliasGateTest,RuntimeWiringTest,RuntimeSecurityHttpTest,RuntimeAuthorizationHttpTest,RuntimeIamErrorsHttpTest,TransportReplayHttpTest \
+  -Dparity.spring.jar="$SPRING_ORACLE_JAR"
+
+mvn -B -ntp -f apps/onboarding-bff/pom.xml verify -Pintegration-tests \
+  -Dtest=IntegrationFixtureTest,ParityCatalogTest \
+  '-Dcucumber.filter.name=(?i).*contract.*|.*getProducts.*|GET /v2/product.*'
+```
+
+Log: `bff-st03-targeted.log`, `bff-st03-final-gates.log`,
+`bff-merge-st03-cucumber.log` nello spazio di sessione. Il FATJAR corrente resta
+quello immutabile del main con SHA-256 registrato sopra.
+La suite completa Cucumber, reactor misto, frontend/APIM, coverage/Sonar,
+builder/publish e rollout non sono certificati da questo lotto.
 
 ### BFF-ST04 - Istituzioni, utenti, IAM e registri
 
@@ -637,7 +720,7 @@ valutare la migrazione senza affidarmi ai risultati della vecchia baseline.
   framework di architettura solo per automatizzare lo stile.
 - [ ] **BFF-ST10-T02 - Certificare il contratto completo.** Rieseguire l'intero
   catalogo Spring/Quarkus, Cucumber, OpenAPI/alias/codegen e HTTP/HTTPS. Attendere
-  almeno 538 casi per runtime e 59 scenari Cucumber, tutti tentati e passati;
+  almeno 547 casi per runtime e 59 scenari Cucumber, tutti tentati e passati;
   aggiunte lecite aumentano i conteggi, riduzioni richiedono una decisione esplicita.
 - [ ] **BFF-ST10-T03 - Verificare integrazione e coverage.** Rieseguire il reactor
   seriale con le altre app Quarkus coinvolte, la coverage e i gate CI. Verificare
