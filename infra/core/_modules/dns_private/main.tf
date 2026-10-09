@@ -111,31 +111,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_blob_core_
   tags                  = var.tags
 }
 
-# STORAGE ACCOUNT / TABLE
-resource "azurerm_private_dns_zone" "privatelink_table_core_windows_net" {
-  name                = "privatelink.table.core.windows.net"
-  resource_group_name = var.rg_vnet_name
-  tags                = var.tags
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_table_core_windows_net_vnet" {
-  name                  = var.vnet_name
-  resource_group_name   = var.rg_vnet_name
-  private_dns_zone_name = azurerm_private_dns_zone.privatelink_table_core_windows_net.name
-  virtual_network_id    = var.vnet_id
-  registration_enabled  = false
-  tags                  = var.tags
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_table_core_windows_net_vnet_pair" {
-  name                  = var.vnet_pair_name
-  resource_group_name   = var.rg_vnet_name
-  private_dns_zone_name = azurerm_private_dns_zone.privatelink_table_core_windows_net.name
-  virtual_network_id    = var.vnet_pair_id
-  registration_enabled  = false
-  tags                  = var.tags
-}
-
 # REDIS
 resource "azurerm_private_dns_zone" "privatelink_redis_cache_windows_net" {
   count               = var.redis_private_endpoint_enabled ? 1 : 0

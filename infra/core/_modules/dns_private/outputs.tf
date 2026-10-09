@@ -22,10 +22,6 @@ output "privatelink_blob_core_windows_net_id" {
   value = azurerm_private_dns_zone.privatelink_blob_core_windows_net.id
 }
 
-output "privatelink_table_core_windows_net_id" {
-  value = azurerm_private_dns_zone.privatelink_table_core_windows_net.id
-}
-
 output "private_azurecontainerapps_io_id" {
   value = azurerm_private_dns_zone.private_azurecontainerapps_io.id
 }
@@ -33,3 +29,4 @@ output "private_azurecontainerapps_io_id" {
 output "privatelink_redis_cache_windows_net_id" {
   value = var.redis_private_endpoint_enabled ? azurerm_private_dns_zone.privatelink_redis_cache_windows_net[0].id : null
 }
+

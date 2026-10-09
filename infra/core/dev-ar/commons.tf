@@ -567,8 +567,6 @@ module "logs_storage" {
   cidr_subnet                       = local.cidr_subnet_logs_storage
   private_endpoint_network_policies = local.private_endpoint_network_policies
   private_dns_zone_ids              = [module.dns_private.privatelink_blob_core_windows_net_id]
-  table_private_endpoint_enabled    = true
-  table_private_dns_zone_ids        = [module.dns_private.privatelink_table_core_windows_net_id]
 
   enable_management_lock           = true
   enable_spid_logs_encryption_keys = true

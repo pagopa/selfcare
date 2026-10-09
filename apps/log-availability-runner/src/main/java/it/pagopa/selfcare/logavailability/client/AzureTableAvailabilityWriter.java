@@ -3,8 +3,6 @@ package it.pagopa.selfcare.logavailability.client;
 import com.azure.core.credential.TokenCredential;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableClientBuilder;
-import com.azure.data.tables.TableServiceClient;
-import com.azure.data.tables.TableServiceClientBuilder;
 import com.azure.data.tables.models.TableEntity;
 import com.azure.data.tables.models.TableEntityUpdateMode;
 import it.pagopa.selfcare.logavailability.model.DailyAvailabilityRecord;
@@ -19,9 +17,9 @@ import java.util.Date;
 @ApplicationScoped
 public class AzureTableAvailabilityWriter {
 
+    // Provisioned by Terraform; the job identity is authorized on this table only.
     private static final String TABLE_NAME = "SelcAvailability";
 
-    private final TableServiceClient serviceClient;
     private final TableClient tableClient;
 
     @Inject
@@ -31,10 +29,6 @@ public class AzureTableAvailabilityWriter {
         if (!storageAccountName.matches("[a-z0-9]{3,24}")) {
             throw new IllegalArgumentException("Storage account name is invalid");
         }
-        serviceClient = new TableServiceClientBuilder()
-                .endpoint("https://" + storageAccountName + ".table.core.windows.net")
-                .credential(credential)
-                .buildClient();
         tableClient = new TableClientBuilder()
                 .endpoint("https://" + storageAccountName + ".table.core.windows.net")
                 .tableName(TABLE_NAME)
@@ -43,7 +37,6 @@ public class AzureTableAvailabilityWriter {
     }
 
     public void upsert(DailyAvailabilityRecord record) {
-        serviceClient.createTableIfNotExists(TABLE_NAME);
         TableEntity entity = new TableEntity(record.partitionKey(), record.rowKey())
                 .addProperty("ReferenceDate", record.referenceDate().toString())
                 .addProperty("Environment", record.environment())

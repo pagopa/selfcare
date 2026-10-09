@@ -21,9 +21,10 @@ data "azurerm_log_analytics_workspace" "availability" {
   resource_group_name = data.azurerm_resource_group.monitor.name
 }
 
-data "azurerm_storage_account" "logs" {
-  name                = "selc${module.local.config.env_short}stlogs"
-  resource_group_name = "${module.local.config.project}-logs-storage-rg"
+# Synthetic monitoring account: private Table endpoint and public network access disabled.
+data "azurerm_storage_account" "availability" {
+  name                = "selc${module.local.config.env_short}weusynthmon"
+  resource_group_name = "${module.local.config.project}-synthetic-monitoring-rg"
 }
 
 data "azurerm_application_gateway" "api" {
@@ -46,8 +47,8 @@ module "log_availability_runner" {
   log_analytics_workspace_guid        = data.azurerm_log_analytics_workspace.availability.workspace_id
   log_analytics_workspace_resource_id = data.azurerm_log_analytics_workspace.availability.id
   application_gateway_resource_id     = data.azurerm_application_gateway.api.id
-  storage_account_id                  = data.azurerm_storage_account.logs.id
-  storage_account_name                = data.azurerm_storage_account.logs.name
+  storage_account_id                  = data.azurerm_storage_account.availability.id
+  storage_account_name                = data.azurerm_storage_account.availability.name
   image_tag                           = var.image_tag
   tags                                = module.local.config.tags
 }

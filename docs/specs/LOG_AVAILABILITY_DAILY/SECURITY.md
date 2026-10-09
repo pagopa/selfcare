@@ -70,9 +70,9 @@ Safe, durable defaults grounded in known facts. Each rule cites its source so th
 
 - **SEC-4.1** Persist only the record fields in SELC-4.2. Never copy client IP, URI, query string, headers or user identifiers from `AzureDiagnostics` into the tables, logs or Slack messages (SELC-4.4).
   - Source: OWASP CS *User Privacy Protection*.
-- **SEC-4.2** Reach Table storage only over the private network. Keep `public_network_access_enabled = false` on `selc{d,u,p}stlogs`. Add a `table` private endpoint plus `privatelink.table.core.windows.net` resolution rather than opening the account (G3).
-  - Sources: `infra/core/_modules/storage_account_template/main.tf`, `infra/core/_modules/synthetic_monitoring_storage/main.tf` (table private endpoint precedent).
-- **SEC-4.3** Keep the logs account's `CanNotDelete` management lock (`enable_management_lock = true`). `SelcAvailability` has no expiry (SELC-4.6).
+- **SEC-4.2** Reach Table storage only over the private network. Keep `public_network_access_enabled = false` on `selc{d,u,p}weusynthmon`; use its existing `table` private endpoint and `privatelink.table.core.windows.net` resolution rather than opening the account (G3).
+  - Sources: `infra/core/_modules/synthetic_monitoring_storage/main.tf`.
+- **SEC-4.3** Keep the synthetic monitoring account's `CanNotDelete` management lock (`azurerm_management_lock.this`). Scope the job's `Storage Table Data Contributor` role to the `SelcAvailability` table, not the account. `SelcAvailability` has no expiry (SELC-4.6).
 
 ### 5. Logging, errors and alerting
 
@@ -122,7 +122,7 @@ Safe, durable defaults grounded in known facts. Each rule cites its source so th
 - `Authorization -> Azure RBAC: infra/core/_modules/user_managed_identity + OWASP CS Authorization (fallback)`
 - `Input validation / injection (KQL) -> OWASP CS Input Validation + Injection Prevention (fallback: no library prompt)`
 - `Secret management -> Key Vault: infra/core/_modules/key_vault, infra/core/_modules/monitor + OWASP CS Secrets Management (fallback)`
-- `Network / data protection -> infra/core/_modules/storage_account_template, infra/core/_modules/synthetic_monitoring_storage + OWASP CS User Privacy Protection (fallback)`
+- `Network / data protection -> infra/core/_modules/synthetic_monitoring_storage + OWASP CS User Privacy Protection (fallback)`
 - `Logging and error handling -> infra/core/_modules/monitor (action groups) + OWASP CS Logging, Error Handling (fallback)`
 - `Infrastructure as Code -> /infra/core/*, /infra/resources/* + OWASP CS Infrastructure as Code Security (fallback)`
 - `CI/CD -> .github/workflows/* + OWASP CS CI/CD Security (fallback)`

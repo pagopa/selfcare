@@ -23,15 +23,15 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
   - `SelcAvailability` (system of record, no expiry): `PartitionKey = yyyy`, `RowKey = yyyy-MM-dd` (UTC); upsert replaces the record.
   - `SelcAvailability_CL` (reporting copy, append-only, 730-day Analytics retention): `TimeGenerated`, `ReferenceDate`, and `GenerationTimestamp` are datetime columns; `Environment` is string; counts are long; `Availability` is real. The latest entry per key is selected with `arg_max(GenerationTimestamp)` (SELC-4.10).
 - Deployment model: Terraform, one stack per environment: `infra/core/{dev,uat,prod}-ar`, plus `infra/resources/log-availability-runner/{dev,uat,prod}-ar` for the job. PNPG stacks (`*-pnpg`) are not involved: PNPG traffic is in the `-ar` gateway (`api-pnpg` listener).
-  - New resources: the `SelcAvailability` table in `selc{d,u,p}stlogs`; a Table private endpoint; the `SelcAvailability_CL` table and its DCR; the dashboard; the failure alert; role assignments.
-  - Core stack owns App Gateway diagnostics, retention settings, the storage-table private endpoint, the custom Log Analytics table, Workbook, and missing-record alert. The app resource stack owns the job, DCR/DCE, table creation permissions, Managed Identity role assignments, and failed-execution alert.
+  - New resources: the `SelcAvailability` table in `selc{d,u,p}weusynthmon`; a `CanNotDelete` lock on that account; the `SelcAvailability_CL` table and its DCR; the dashboard; the failure alert; role assignments.
+  - Core stack owns App Gateway diagnostics, retention settings, the synthetic monitoring account lock, the custom Log Analytics table, Workbook, and missing-record alert. The app resource stack owns the job, DCR/DCE, the `SelcAvailability` table, Managed Identity role assignments, and failed-execution alert.
 - Scale expectations: Very low write volume: 1 scheduled execution per day per environment (plus idempotent reruns) and 1 record per day per environment (~365 per year).
   - Read side: one 24-hour KQL aggregation over App Gateway access logs. Daily log volume: UNKNOWN. The gateway is WAF_v2 with autoscale 1–5 in PROD.
   - Backfill: one-off, bounded by the source log retention.
   - No latency target beyond completing the nightly run.
 - Security expectations:
   - The job uses its system-assigned Managed Identity. Least-privilege RBAC: `Log Analytics Reader` on the environment workspace; `Storage Table Data Contributor` on the logs storage account; `Monitoring Metrics Publisher` on the DCR.
-  - Table storage traffic uses a Table private endpoint. The logs account retains its existing public-network setting: enabled in DEV/UAT and disabled in PROD.
+  - Table storage traffic uses the synthetic monitoring account's existing Table private endpoint; public network access is disabled in every environment.
   - No personal data persisted (SELC-4.4).
   - The existing Key Vault secrets `logs-storage-access-key` / `logs-storage-connection-string` MUST NOT be used by the job.
   - Viewers need read access on `SelcAvailability_CL` (SELC-6.8).
@@ -48,7 +48,7 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
   - Input: environment, plus a reference date (default D-1 UTC, overridable for backfill or on-demand runs).
   - Steps: run one KQL aggregation over `[D-1 00:00Z, D 00:00Z)` restricted to listeners `api` and `api-pnpg`, excluding `/spid/v1/metadata` and `dummy`. Classify statuses (valid `100–499` → `count_lt_500`; anything else, including missing or invalid → `count_gte_500`), compute availability, write C3, then write C4.
   - Exit status: non-zero if any step fails. Nothing is written if the query fails (SELC-4.5).
-- **C3 System of record.** Table `SelcAvailability` in `selcdstlogs` / `selcustlogs` / `selcpstlogs`. Upsert on (`PartitionKey`, `RowKey`). No lifecycle deletion.
+- **C3 System of record.** Table `SelcAvailability` in `selcdweusynthmon` / `selcuweusynthmon` / `selcpweusynthmon`, created by Terraform; the job only upserts entities. Upsert on (`PartitionKey`, `RowKey`). No lifecycle deletion.
 - **C4 Reporting copy.** Custom table `SelcAvailability_CL` in the environment workspace (`selc-{d,u,p}-law`), fed through a DCR, with 730 days of Analytics retention set on the table. `TimeGenerated` is ingestion/generation time; `ReferenceDate` carries the day being reported.
 - **C5 Workbook.** A new Azure Monitor Workbook, one per environment, separate from `monitoring-dashboard`.
   - Tiles: pie chart, daily availability % column chart, stacked daily counts with a `99.9` reference line, range totals, and a table on demand.
@@ -78,7 +78,7 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
 
 - **G1 Source workspace.** App Gateway access diagnostics reach each environment workspace (`selc-{d,u,p}-law`). UAT/PROD: Terraform setting `AccessLog_LogAnalytics` (`app_gateway_access_log_enabled = true`). DEV: the existing out-of-band setting `AuditLogs_LogAnalytics`, because Azure rejects a duplicate category to the same workspace. PROD's `sec-p-law` (Prod-Sec) settings are unchanged. Collection begins after deployment; prior history can be backfilled only if it already exists in that workspace.
 - **G2 Retention.** Terraform configures 90-day retention for the `AzureDiagnostics` table to support SELC-5.2/5.4 without changing retention for unrelated tables. The oldest partial day is skipped.
-- **G3 Table network path.** Terraform adds a Table private endpoint and links `privatelink.table.core.windows.net` to the core VNet used by the Container Apps environment. DEV/UAT retain their existing public-network-enabled setting; PROD remains disabled.
+- **G3 Table network path.** Resolved by reusing `selc{d,u,p}weusynthmon`: its Table private endpoint and `privatelink.table.core.windows.net` zone are already linked to the core VNet used by the Container Apps environment; public network access is disabled in every environment.
 - **G4 Reporting time range.** Logs Ingestion limits historical `TimeGenerated`, so the reporting copy uses ingestion time there and stores `ReferenceDate` separately. The Workbook time-range parameter filters on `ReferenceDate`; its table item implements the on-demand daily records view.
 - **G5 Slack routing.** Reuse the existing action groups and Key Vault-backed receivers. DEV's `alert-selfcare-status-dev-slack` secret is updated out of band to point to `selfcare_status_uat`; UAT uses its existing UAT receiver. PROD receiver configuration remains in the existing production error action group.
 - **G6 Eventual consistency.** Azure Table Storage and Log Analytics cannot participate in a shared transaction. A destination failure may leave a partial write; the run fails and a retry repairs the projection. `SelcAvailability` remains authoritative (SELC-4.5, 4.9).

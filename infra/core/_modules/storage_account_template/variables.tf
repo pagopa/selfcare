@@ -84,23 +84,6 @@ variable "private_dns_zone_ids" {
   default = []
 }
 
-variable "table_private_endpoint_enabled" {
-  type        = bool
-  description = "Create a private endpoint for the Storage Table subresource."
-  default     = false
-}
-
-variable "table_private_dns_zone_ids" {
-  type        = list(string)
-  description = "Private DNS zone IDs for the Storage Table private endpoint."
-  default     = []
-
-  validation {
-    condition     = !var.table_private_endpoint_enabled || length(var.table_private_dns_zone_ids) > 0
-    error_message = "Table private endpoints require at least one private DNS zone ID."
-  }
-}
-
 variable "enable_management_lock" {
   type    = bool
   default = false

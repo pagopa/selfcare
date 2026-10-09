@@ -134,8 +134,15 @@ resource "azurerm_role_assignment" "workspace_reader" {
   principal_id         = module.scheduled_job.system_assigned_identity_principal_id
 }
 
+# Created through the management plane, so it works with public network access disabled.
+resource "azurerm_storage_table" "availability" {
+  name               = "SelcAvailability"
+  storage_account_id = var.storage_account_id
+}
+
+# Scoped to the SelcAvailability table only: the account also hosts other tables.
 resource "azurerm_role_assignment" "storage_table_contributor" {
-  scope                = var.storage_account_id
+  scope                = azurerm_storage_table.availability.id
   role_definition_name = "Storage Table Data Contributor"
   principal_id         = module.scheduled_job.system_assigned_identity_principal_id
 }

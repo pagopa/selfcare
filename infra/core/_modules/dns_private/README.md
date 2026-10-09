@@ -27,7 +27,6 @@ No modules.
 | [azurerm_private_dns_zone.privatelink_mongo_cosmos_azure_com](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) | resource |
 | [azurerm_private_dns_zone.privatelink_redis_cache_windows_net](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) | resource |
 | [azurerm_private_dns_zone.privatelink_servicebus_windows_net](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) | resource |
-| [azurerm_private_dns_zone.privatelink_table_core_windows_net](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) | resource |
 | [azurerm_private_dns_zone_virtual_network_link.internal_env_selfcare_pagopa_it_2_aks_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
 | [azurerm_private_dns_zone_virtual_network_link.internal_env_selfcare_pagopa_it_2_vnet_core](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
 | [azurerm_private_dns_zone_virtual_network_link.internal_env_selfcare_pagopa_it_2_vnet_core_pair](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
@@ -48,8 +47,6 @@ No modules.
 | [azurerm_private_dns_zone_virtual_network_link.privatelink_servicebus_windows_net_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
 | [azurerm_private_dns_zone_virtual_network_link.privatelink_servicebus_windows_net_vnet_pair](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
 | [azurerm_private_dns_zone_virtual_network_link.privatelink_servicebus_windows_net_vnet_vs_aks_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
-| [azurerm_private_dns_zone_virtual_network_link.privatelink_table_core_windows_net_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
-| [azurerm_private_dns_zone_virtual_network_link.privatelink_table_core_windows_net_vnet_pair](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
 
 ## Inputs
 
@@ -82,5 +79,4 @@ No modules.
 | <a name="output_privatelink_redis_cache_windows_net_id"></a> [privatelink\_redis\_cache\_windows\_net\_id](#output\_privatelink\_redis\_cache\_windows\_net\_id) | n/a |
 | <a name="output_privatelink_servicebus_windows_net_id"></a> [privatelink\_servicebus\_windows\_net\_id](#output\_privatelink\_servicebus\_windows\_net\_id) | n/a |
 | <a name="output_privatelink_servicebus_windows_net_name"></a> [privatelink\_servicebus\_windows\_net\_name](#output\_privatelink\_servicebus\_windows\_net\_name) | n/a |
-| <a name="output_privatelink_table_core_windows_net_id"></a> [privatelink\_table\_core\_windows\_net\_id](#output\_privatelink\_table\_core\_windows\_net\_id) | n/a |
 <!-- END_TF_DOCS -->

@@ -10,7 +10,7 @@ Reference queries: `azurerm_portal_dashboard.monitoring-dashboard` in `infra/cor
 - Primary users / actors: Scheduled daily job (system actor); report consumers: users of the environment's Azure subscription.
 - Core workflows: (1) daily computation of D-1 request counts split by HTTP status `< 500` / `>= 500`; (2) availability calculation; (3) persistence to a Storage Account table; (4) reporting dashboard over a selected time range: pie chart, daily column chart, numeric and percentage totals, on-demand data table.
 - Business objects / data entities: Application Gateway access log entries (`AzureDiagnostics`, Category `ApplicationGatewayAccessLog`); Daily Availability Record (date, counts, availability).
-- External integrations: Azure Log Analytics workspace (Application Gateway diagnostics, and a custom table holding the reporting copy of the records), Azure Storage Account Table (`SelcAvailability` in `selc{d,u,p}stlogs`). Reporting UI: new Azure Monitor Workbook. Failure notifications: Slack (`prod_self_care_status`, `selfcare_status_uat`).
+- External integrations: Azure Log Analytics workspace (Application Gateway diagnostics, and a custom table holding the reporting copy of the records), Azure Storage Account Table (`SelcAvailability` in `selc{d,u,p}weusynthmon`). Reporting UI: new Azure Monitor Workbook. Failure notifications: Slack (`prod_self_care_status`, `selfcare_status_uat`).
 - Authentication / roles: The writer (the job that generates records) authenticates with Azure Managed Identity. Readers are users of the Azure subscription who can access the dashboard.
 - Regulatory or privacy constraints: none (confirmed decision). Only aggregated counts are stored; no personal data from source logs (e.g. client IP, request URI) is persisted (SELC-4.4).
 
@@ -41,7 +41,7 @@ Reference queries: `azurerm_portal_dashboard.monitoring-dashboard` in `infra/cor
 
 ### 4. Persistence
 
-- **SELC-4.1** The system MUST store each daily result in the new Azure Table `SelcAvailability` of the environment's logs Storage Account: DEV → `selcdstlogs`, UAT → `selcustlogs`, PROD → `selcpstlogs` (confirmed decision).
+- **SELC-4.1** The system MUST store each daily result in the new Azure Table `SelcAvailability` of the environment's synthetic monitoring Storage Account: DEV → `selcdweusynthmon`, UAT → `selcuweusynthmon`, PROD → `selcpweusynthmon` (confirmed decision).
 - **SELC-4.2** Each record MUST include: reference date (D-1), environment, `count_lt_500`, `count_gte_500`, total, availability and generation timestamp. In `SelcAvailability`, `PartitionKey` MUST be the year of the reference date (`yyyy`) and `RowKey` MUST be the reference date (`yyyy-MM-dd`, UTC) (confirmed decision).
 - **SELC-4.3** Writes MUST be idempotent: one record per (reference date, environment), which is one `PartitionKey`/`RowKey` pair in each environment's table. Every run, whether scheduled, repeated or on-demand, MUST replace the existing record for that key and MUST NOT create a duplicate.
 - **SELC-4.4** Records MUST NOT contain personal data or raw request details (client IP, full URI, query string, user identifiers).
