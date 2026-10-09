@@ -164,6 +164,40 @@ resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_servicebus
   tags                  = var.tags
 }
 
+# APP SERVICE / AZURE FUNCTIONS
+resource "azurerm_private_dns_zone" "privatelink_azurewebsites_net" {
+  name                = "privatelink.azurewebsites.net"
+  resource_group_name = var.rg_vnet_name
+  tags                = var.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_azurewebsites_net_vnet" {
+  name                  = var.vnet_name
+  resource_group_name   = var.rg_vnet_name
+  private_dns_zone_name = azurerm_private_dns_zone.privatelink_azurewebsites_net.name
+  virtual_network_id    = var.vnet_id
+  registration_enabled  = false
+  tags                  = var.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_azurewebsites_net_vnet_pair" {
+  name                  = var.vnet_pair_name
+  resource_group_name   = var.rg_vnet_name
+  private_dns_zone_name = azurerm_private_dns_zone.privatelink_azurewebsites_net.name
+  virtual_network_id    = var.vnet_pair_id
+  registration_enabled  = false
+  tags                  = var.tags
+}
+
+resource "azurerm_private_dns_zone_virtual_network_link" "privatelink_azurewebsites_net_aks_vnet" {
+  name                  = var.vnet_aks_platform_name
+  resource_group_name   = var.rg_vnet_name
+  private_dns_zone_name = azurerm_private_dns_zone.privatelink_azurewebsites_net.name
+  virtual_network_id    = var.vnet_aks_platform_id
+  registration_enabled  = false
+  tags                  = var.tags
+}
+
 # CONTAINER APPS
 resource "azurerm_private_dns_zone" "private_azurecontainerapps_io" {
   name                = local.container_app_environment_dns_zone_name
