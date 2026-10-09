@@ -30,6 +30,21 @@
   {
     "httpRequest": {
       "method": "GET",
+      "path": "/v1/document-content/89ad7142-24bb-48ad-8504-9c9231137i103/contract",
+      "headers": { "X-Tenant-Id": ["AR"] }
+    },
+    "httpResponse": {
+      "statusCode": 200,
+      "headers": {
+        "Content-Type": ["application/octet-stream"],
+        "Content-Disposition": ["attachment; filename=\"contract.pdf\""]
+      },
+      "body": { "type": "BINARY", "base64Bytes": "JVBERi0xLjQ=" }
+    }
+  },
+  {
+    "httpRequest": {
+      "method": "GET",
       "path": "/v1/document-content/37f7609b-5a4b-4200-82e7-2117756d64aa/contract",
       "headers": { "X-Tenant-Id": ["AR"] }
     },

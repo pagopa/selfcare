@@ -203,15 +203,29 @@ public class TokenV2Controller {
     @Operation(summary = "${openapi.tokens.getContract}",
             description = "${openapi.tokens.getContract}", operationId = "getContractUsingGET")
     @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
-    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS, content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
     public Response getContract(@Parameter(description = "${openapi.tokens.onboardingId}")
                                 @PathParam("onboardingId")
                                 String onboardingId) {
-        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
         log.trace("getContract start");
         log.debug("getContract onboardingId = {}", LogUtils.sanitize(onboardingId));
         BinaryData contract = tokenService.getContract(onboardingId);
         return binaryResponse(contract);
+    }
+
+    @GET
+    @Path("/{onboardingId}/backstage/contract")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Operation(summary = "Service to download a specific onboarding contract from the backstage (IAM protected)",
+            description = "Service to download a specific onboarding contract from the backstage (IAM protected)",
+            operationId = "getContractBackstageUsingGET")
+    @APIResponse(responseCode = "200", description = "OK", content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
+    @APIResponse(responseCode = "403", description = FORBIDDEN_DOCUMENTS, content = @Content(mediaType = MediaType.APPLICATION_OCTET_STREAM))
+    public Response getContractBackstage(@Parameter(description = "${openapi.tokens.onboardingId}")
+                                         @PathParam("onboardingId") String onboardingId) {
+        checkPermission(onboardingId, PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS);
+        log.trace("getContractBackstage start");
+        log.debug("getContractBackstage onboardingId = {}", LogUtils.sanitize(onboardingId));
+        return binaryResponse(tokenService.getContract(onboardingId));
     }
 
     @GET

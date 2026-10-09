@@ -17,6 +17,22 @@ riallineati, mantenendo contratto pubblico e comportamento downstream.
 **ST03-ST10 restano da fare.**
 Gli identificativi sono locali al piano, non ticket Jira gia creati.
 
+**Integrazione main del 2026-10-09:** incorporato `cd0a2751f`, preservando ST01/ST02.
+Il cambiamento funzionale `5c7f53b8e` viene portato nel Quarkus: `/contract`
+resta autenticato ma non controlla IAM; `/backstage/contract` controlla il permesso
+documentale. Il fallback per i soli permessi view include `userRequester.userRequestUid`.
+I conflitti modify/delete sono risolti nei sorgenti e test Quarkus, senza ripristinare
+i moduli Spring eliminati. L'oracolo per i prossimi lotti e ora Spring main
+`cd0a2751f`, esportato senza modifiche: SHA-256 FATJAR
+`3f9e66de01d3c2ab5491223c3b188803b0a36b7d4e81196f457afb64ba9c946d`.
+Il precedente FATJAR `ad37c6738` resta immutato. Il documento Spring di riferimento
+proviene dal main aggiornato; canonical e alias Quarkus sono rigenerati da Maven.
+Verifica del lotto: 667 test senza failure/errori/skipped, inclusi 297 casi
+token/sicurezza/spec-driven su ciascun runtime e i gate OpenAPI esatti.
+Le regressioni onboarding-ms arrivate da main passano: 178 test senza skip.
+Le fixture Cucumber del contratto sono aggiornate; la loro esecuzione Docker
+e prevista nella verifica del lotto ST03, non inclusa nelle evidenze di questo merge.
+
 La baseline ha gia evidenze di parita HTTP (538 scenari Spring e 538 Quarkus),
 59 scenari Cucumber e verifica del runtime container. Queste evidenze sono storiche:
 non certificano il risultato del futuro refactoring. Il builder Maven del Dockerfile
@@ -686,8 +702,10 @@ risoluzione del workspace Nx e bloccata; i comandi Maven seguenti sono il fallba
 gia documentato nel [README](README.md#tests), non un'attivita di riparazione Nx.
 Richiedono Java 17 e le credenziali Maven previste dal repository.
 
-Per i gate Spring impostare `SPRING_ORACLE_JAR` al FATJAR immutabile della baseline
-`ad37c6738939e707068f3c8fa0e0dceb16ee3f19`, senza ricostruirlo dal BFF modificato.
+Per i gate Spring impostare `SPRING_ORACLE_JAR` al FATJAR immutabile del main
+`cd0a2751f`, con lo SHA-256 registrato nell'integrazione del 2026-10-09,
+senza ricostruirlo dal BFF Quarkus modificato. Le evidenze ST01/ST02 conservano
+il proprio oracolo storico `ad37c6738939e707068f3c8fa0e0dceb16ee3f19`.
 I comandi seguenti sono **da eseguire durante l'implementazione**, non risultati
 gia ottenuti con questa modifica documentale.
 

@@ -17,6 +17,7 @@ import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.jwt.auth.principal.DefaultJWTCallerPrincipal;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.User;
+import it.pagopa.selfcare.onboarding.client.model.UserRequester;
 import it.pagopa.selfcare.onboarding.service.IamService;
 import it.pagopa.selfcare.onboarding.service.TokenService;
 import jakarta.ws.rs.WebApplicationException;
@@ -205,7 +206,93 @@ class AuthorizationServiceTest {
         verifyNoMoreInteractions(tokenService, iamService);
     }
 
-    private void givenOnboardingWithUsers(String... userIds) {
+    @Test
+    void requesterUidGrantsViewPermissionWithoutOnboardingUsers() {
+        // given
+        givenOnboardingWithRequester(USER_ID);
+        when(iamService.hasIamUserPermission(VIEW_DOCUMENTS, USER_ID, "", PRODUCT_ID)).thenReturn(false);
+
+        // when
+        boolean authorized = authorizationService.hasPermission(identityOf(USER_ID), ONBOARDING_ID, VIEW_DOCUMENTS);
+
+        // then
+        assertTrue(authorized);
+        verify(iamService).hasIamUserPermission(VIEW_DOCUMENTS, USER_ID, "", PRODUCT_ID);
+    }
+
+    @Test
+    void requesterUidMatchesIgnoringCaseForViewPage() {
+        // given
+        givenOnboardingWithRequester("USER-ID", "another-user");
+        when(iamService.hasIamUserPermission(VIEW_PAGE, USER_ID, "", PRODUCT_ID)).thenReturn(false);
+
+        // when
+        boolean authorized = authorizationService.hasPermission(identityOf(USER_ID), ONBOARDING_ID, VIEW_PAGE);
+
+        // then
+        assertTrue(authorized);
+    }
+
+    @Test
+    void requesterUidNeverGrantsManagementPermission() {
+        // given
+        givenOnboardingWithRequester(USER_ID);
+        when(iamService.hasIamUserPermission(MANAGE_PAGE, USER_ID, "", PRODUCT_ID)).thenReturn(false);
+
+        // when
+        boolean authorized = authorizationService.hasPermission(identityOf(USER_ID), ONBOARDING_ID, MANAGE_PAGE);
+
+        // then
+        assertFalse(authorized);
+    }
+
+    @Test
+    void mismatchedRequesterWithoutUsersIsDenied() {
+        // given
+        givenOnboardingWithRequester("another-user");
+        when(iamService.hasIamUserPermission(VIEW_PAGE, USER_ID, "", PRODUCT_ID)).thenReturn(false);
+
+        // when
+        boolean authorized = authorizationService.hasPermission(identityOf(USER_ID), ONBOARDING_ID, VIEW_PAGE);
+
+        // then
+        assertFalse(authorized);
+    }
+
+    @Test
+    void missingRequesterUidStillChecksOnboardingUsers() {
+        // given
+        givenOnboardingWithRequester(null, null, "USER-ID");
+        when(iamService.hasIamUserPermission(VIEW_DOCUMENTS, USER_ID, "", PRODUCT_ID)).thenReturn(false);
+
+        // when
+        boolean authorized = authorizationService.hasPermission(identityOf(USER_ID), ONBOARDING_ID, VIEW_DOCUMENTS);
+
+        // then
+        assertTrue(authorized);
+    }
+
+    @Test
+    void blankCallerCannotMatchBlankRequesterUid() {
+        // given
+        givenOnboardingWithRequester(" ", " ");
+        when(iamService.hasIamUserPermission(VIEW_DOCUMENTS, " ", "", PRODUCT_ID)).thenReturn(false);
+
+        // when
+        boolean authorized = authorizationService.hasPermission(identityOf(" "), ONBOARDING_ID, VIEW_DOCUMENTS);
+
+        // then
+        assertFalse(authorized);
+    }
+
+    private void givenOnboardingWithRequester(String requesterUid, String... userIds) {
+        OnboardingData data = givenOnboardingWithUsers(userIds);
+        UserRequester requester = new UserRequester();
+        requester.setUserRequestUid(requesterUid);
+        data.setUserRequester(requester);
+    }
+
+    private OnboardingData givenOnboardingWithUsers(String... userIds) {
         OnboardingData onboardingData = new OnboardingData();
         onboardingData.setProductId(PRODUCT_ID);
         List<User> users = new ArrayList<>();
@@ -216,6 +303,7 @@ class AuthorizationServiceTest {
         }
         onboardingData.setUsers(users);
         when(tokenService.getOnboardingWithUserInfo(ONBOARDING_ID)).thenReturn(onboardingData);
+        return onboardingData;
     }
 
     /** Identity backed by a JWT principal: the user id is the {@code uid} claim, the principal name is not set. */

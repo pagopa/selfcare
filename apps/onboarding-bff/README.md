@@ -15,6 +15,18 @@ bodies, headers, security, calls to the downstream services) must stay identical
 Architectural realignment is tracked in the [migration plan](plan.md), with stories, implementation tasks,
 dependencies and acceptance criteria. It is a backlog, not evidence that the refactoring or release is complete.
 
+### Contract download authorization
+
+`GET /v2/tokens/{onboardingId}/contract` requires authentication but does not query IAM or
+onboarding-ms. It downloads the contract directly from document-ms, as required by the
+onboarding link flow. It is not an anonymous endpoint.
+
+`GET /v2/tokens/{onboardingId}/backstage/contract` retains the
+`Selc:ViewAccountDocuments` authorization check. When IAM denies a view permission,
+the onboarding requester identified by `userRequester.userRequestUid` or an onboarding
+user can still view it. Management permissions never use that fallback.
+Both routes preserve the binary body, filename and response headers.
+
 ## Build and run
 
 Run the commands from the repository root. Maven needs the credentials of the `selfcare-platform` (Azure DevOps) and
@@ -142,6 +154,10 @@ services replaced by a controlled in-JVM stub, against both applications:
    mvn -f apps/onboarding-bff/pom.xml test -Dtest=SpringReferenceParityTest \
      -Dparity.spring.jar=/path/to/selfcare-bff-spring-baseline/apps/onboarding-bff/target/onboarding-bff-<version>-FATJAR.jar
    ```
+
+   After merging upstream behavior changes, build a new untouched Spring oracle from the
+   merged `main` revision and record its SHA-256 in the migration plan. Keep previous
+   oracle jars unchanged; never certify new upstream routes against an older executable.
 
    Without `-Dparity.spring.jar` the class is reported as skipped with an explicit reason, and `ParityCatalogTest`
    keeps failing the build if the catalog shrinks below its validated size.

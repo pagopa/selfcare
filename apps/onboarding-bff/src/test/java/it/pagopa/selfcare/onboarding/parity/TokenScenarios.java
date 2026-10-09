@@ -71,6 +71,20 @@ final class TokenScenarios {
             .stub(Fx::iamAdminOnly)
             .expect(c -> c.status(200).json("/status", "PENDING")));
     s.add(
+        Scenario.api(G, "retrieve-requester-allowed-by-request-uid-without-users", BASE)
+            .as(User.REQUESTER)
+            .stub(st -> Fx.onboardingSubmittedBy(st, User.REQUESTER.uid.toUpperCase(java.util.Locale.ROOT)))
+            .stub(Fx::iamAdminOnly)
+            .expect(c -> c.status(200).json("/status", "PENDING")
+                .exactCalls(WUI, iam(User.REQUESTER, "ViewAccountPage"), WUI)));
+    s.add(
+        Scenario.api(G, "approve-denied-for-request-uid-without-users", "POST", BASE + "/approve")
+            .as(User.REQUESTER)
+            .stub(st -> Fx.onboardingSubmittedBy(st, User.REQUESTER.uid))
+            .stub(Fx::iamAdminOnly)
+            .expect(c -> c.problem(403, "Access Denied")
+                .exactCalls(WUI, iam(User.REQUESTER, "ManageAccountPage"))));
+    s.add(
         Scenario.api(G, "retrieve-denied-for-unrelated-user", BASE)
             .as(User.NO_PERMISSION)
             .stub(Fx::onboardingExists)
@@ -113,8 +127,6 @@ final class TokenScenarios {
     // contract
     s.add(
         Scenario.api(G, "contract-as-admin", BASE + "/contract")
-            .stub(Fx::onboardingExists)
-            .stub(Fx::iamAdminOnly)
             .stub(TokenScenarios::documentStubs)
             .expect(
                 c ->
@@ -123,35 +135,61 @@ final class TokenScenarios {
                         .header("Content-Disposition", "attachment; filename=contract.pdf")
                         .header("Access-Control-Expose-Headers", "Content-Disposition")
                         .bodyBytes(Fx.PDF)
-                        .exactCalls(
-                            WUI,
-                            iam(User.ADMIN, "ViewAccountDocuments"),
-                            "ms-document GET /v1/document-content/ob1/contract")
+                        .exactCalls("ms-document GET /v1/document-content/ob1/contract")
                         .propagatesIdentity()));
     s.add(
-        Scenario.api(G, "contract-requester-fallback", BASE + "/contract")
+        Scenario.api(G, "contract-requester-needs-no-iam", BASE + "/contract")
             .as(User.REQUESTER)
-            .stub(st -> Fx.onboardingExists(st, User.REQUESTER.uid))
-            .stub(Fx::iamAdminOnly)
             .stub(TokenScenarios::documentStubs)
             .expect(
                 c ->
                     c.status(200)
                         .header("Content-Disposition", "attachment; filename=contract.pdf")
-                        .bodyBytes(Fx.PDF)));
+                        .bodyBytes(Fx.PDF)
+                        .exactCalls("ms-document GET /v1/document-content/ob1/contract")));
     s.add(
-        Scenario.api(G, "contract-denied-no-document-call", BASE + "/contract")
+        Scenario.api(G, "contract-unrelated-user-needs-no-iam", BASE + "/contract")
+            .as(User.NO_PERMISSION)
+            .stub(TokenScenarios::documentStubs)
+            .expect(c -> c.status(200).bodyBytes(Fx.PDF)
+                .exactCalls("ms-document GET /v1/document-content/ob1/contract")));
+    s.add(
+        Scenario.api(G, "contract-document-not-found", BASE + "/contract")
+            .stub(st -> st.on(MS_DOCUMENT, "GET", "/v1/document-content/ob1/contract", Reply.status(404)))
+            .expect(c -> c.status(404).contentType("application/problem+json").callCount(MS_IAM, 0)));
+    s.add(
+        Scenario.api(G, "backstage-contract-as-admin", BASE + "/backstage/contract")
+            .stub(Fx::onboardingExists)
+            .stub(Fx::iamAdminOnly)
+            .stub(TokenScenarios::documentStubs)
+            .expect(c -> c.status(200).contentType("application/octet-stream")
+                .header("Content-Disposition", "attachment; filename=contract.pdf")
+                .header("Access-Control-Expose-Headers", "Content-Disposition")
+                .bodyBytes(Fx.PDF)
+                .exactCalls(WUI, iam(User.ADMIN, "ViewAccountDocuments"),
+                    "ms-document GET /v1/document-content/ob1/contract")
+                .propagatesIdentity()));
+    s.add(
+        Scenario.api(G, "backstage-contract-requester-fallback", BASE + "/backstage/contract")
+            .as(User.REQUESTER)
+            .stub(st -> Fx.onboardingSubmittedBy(st, User.REQUESTER.uid))
+            .stub(Fx::iamAdminOnly)
+            .stub(TokenScenarios::documentStubs)
+            .expect(c -> c.status(200).bodyBytes(Fx.PDF)
+                .exactCalls(WUI, iam(User.REQUESTER, "ViewAccountDocuments"),
+                    "ms-document GET /v1/document-content/ob1/contract")));
+    s.add(
+        Scenario.api(G, "backstage-contract-denied-no-document-call", BASE + "/backstage/contract")
             .as(User.NO_PERMISSION)
             .stub(Fx::onboardingExists)
             .stub(Fx::iamAdminOnly)
             .stub(TokenScenarios::documentStubs)
-            .expect(c -> c.problem(403, "Access Denied").callCount(MS_DOCUMENT, 0)));
+            .expect(c -> c.problem(403, "Access Denied")
+                .exactCalls(WUI, iam(User.NO_PERMISSION, "ViewAccountDocuments"))));
     s.add(
-        Scenario.api(G, "contract-document-not-found", BASE + "/contract")
-            .stub(Fx::onboardingExists)
-            .stub(Fx::iamAdminOnly)
-            .stub(st -> st.on(MS_DOCUMENT, "GET", "/v1/document-content/ob1/contract", Reply.status(404)))
-            .expect(c -> c.status(404).contentType("application/problem+json")));
+        Scenario.api(G, "backstage-contract-onboarding-not-found", BASE + "/backstage/contract")
+            .stub(st -> st.on(MS_ONBOARDING, "GET", "/v1/onboarding/ob1/withUserInfo", Reply.status(404)))
+            .expect(c -> c.status(404).callCount(MS_IAM, 0).callCount(MS_DOCUMENT, 0)));
 
     // available documents
     String available = "{\"attachments\":[\"a.pdf\",\"b.pdf\"],\"contractFilename\":\"contract.pdf\"}";

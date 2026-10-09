@@ -22,7 +22,7 @@ public class AuthorizationService {
 
     /**
      * Permissions that can also be granted, when IAM denies access, to the users listed in the
-     * onboarding itself (e.g. the citizen who submitted the request and has no IAM role yet). The
+     * onboarding itself or the requester identified by {@code userRequester.userRequestUid}. The
      * fallback is independent of the token issuer. Management permissions (approve/reject) are
      * excluded on purpose: they always require a positive IAM check.
      */
@@ -62,8 +62,12 @@ public class AuthorizationService {
     }
 
     private boolean isOnboardingRequester(String userId, OnboardingData onboardingData) {
-        if (StringUtils.isBlank(userId) || onboardingData.getUsers() == null) {
+        if (StringUtils.isBlank(userId)) {
             return false;
+        }
+        if (onboardingData.getUserRequester() != null
+                && userId.equalsIgnoreCase(onboardingData.getUserRequester().getUserRequestUid())) {
+            return true;
         }
         return onboardingData.getUsers().stream()
                 .map(User::getId)

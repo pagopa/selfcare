@@ -52,6 +52,16 @@ final class Fx {
     onboardingExists(stub, ParityJwt.User.ADMIN.uid);
   }
 
+  static void onboardingSubmittedBy(DownstreamStub stub, String requesterUid) {
+    stub.on(
+        MS_ONBOARDING,
+        "GET",
+        "/v1/onboarding/" + OB + "/withUserInfo",
+        Reply.json(200, "{\"id\":\"" + OB + "\",\"productId\":\"" + PRODUCT
+            + "\",\"status\":\"PENDING\",\"users\":[],\"userRequester\":{\"userRequestUid\":\""
+            + requesterUid + "\"}}"));
+  }
+
   /** IAM grants every permission to ADMIN and none to anybody else. */
   static void iamAdminOnly(DownstreamStub stub) {
     stub.on(

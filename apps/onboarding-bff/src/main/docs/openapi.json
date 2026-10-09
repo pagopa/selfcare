@@ -5321,6 +5321,100 @@
         } ]
       }
     },
+    "/v2/tokens/{onboardingId}/backstage/contract" : {
+      "get" : {
+        "summary" : "Service to download a specific onboarding contract from the backstage (IAM protected)",
+        "description" : "Service to download a specific onboarding contract from the backstage (IAM protected)",
+        "operationId" : "getContractBackstageUsingGET",
+        "tags" : [ "tokens" ],
+        "parameters" : [ {
+          "description" : "Onboarding's unique identifier",
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "format" : "byte",
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "description" : "Generic problem response",
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "description" : "Generic problem response",
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - user does not have permission to view account documents",
+            "content" : {
+              "application/octet-stream" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "format" : "byte",
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "description" : "Generic problem response",
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "description" : "Generic problem response",
+                  "type" : "object"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/v2/tokens/{onboardingId}/complete" : {
       "delete" : {
         "summary" : "Complete an onboarding request",
@@ -5606,20 +5700,6 @@
                 "schema" : {
                   "description" : "Generic problem response",
                   "type" : "object"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden - user does not have permission to view account documents",
-            "content" : {
-              "application/octet-stream" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "format" : "byte",
-                    "type" : "string"
-                  }
                 }
               }
             }

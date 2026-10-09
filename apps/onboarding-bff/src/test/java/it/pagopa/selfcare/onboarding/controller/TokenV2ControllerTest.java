@@ -173,20 +173,43 @@ class TokenV2ControllerTest {
     }
 
     @Test
-    void getContract_requiresViewAccountDocumentsAndExposesTheFileName() {
-        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+    void getContract_skipsIamAndExposesTheFileName() {
+        // given
         when(tokenService.getContract("42")).thenReturn(new BinaryData("contract.pdf", "content".getBytes()));
 
+        // when
         Response response = controller.getContract("42");
 
+        // then
         assertBinary(response, "contract.pdf", "content".getBytes());
+        verify(tokenService).getContract("42");
+        verifyNoInteractions(authorizationService);
     }
 
     @Test
-    void getContract_deniedIsAccessDenied() {
+    void getContractBackstage_requiresViewAccountDocumentsAndExposesTheFileName() {
+        // given
+        when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(true);
+        when(tokenService.getContract("42")).thenReturn(new BinaryData("contract.pdf", "content".getBytes()));
+
+        // when
+        Response response = controller.getContractBackstage("42");
+
+        // then
+        assertBinary(response, "contract.pdf", "content".getBytes());
+        verify(authorizationService).hasPermission(securityIdentity, "42", VIEW_DOCUMENTS);
+    }
+
+    @Test
+    void getContractBackstage_deniedIsAccessDenied() {
+        // given
         when(authorizationService.hasPermission(securityIdentity, "42", VIEW_DOCUMENTS)).thenReturn(false);
 
-        assertThrows(AccessDeniedException.class, () -> controller.getContract("42"));
+        // when
+        assertThrows(AccessDeniedException.class,
+                () -> controller.getContractBackstage("42"));
+
+        // then
         verifyNoInteractions(tokenService);
     }
 
