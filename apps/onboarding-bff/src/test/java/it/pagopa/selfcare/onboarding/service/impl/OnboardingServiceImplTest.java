@@ -99,6 +99,7 @@ class OnboardingServiceImplTest {
 
     @Test
     void onboarding_routesByInstitutionType() {
+        // given
         OnboardingData pa = onboardingData(InstitutionType.PA);
         OnboardingData psp = onboardingData(InstitutionType.PSP);
         OnboardingData other = onboardingData(InstitutionType.GSP);
@@ -117,10 +118,12 @@ class OnboardingServiceImplTest {
         when(onboardingApi.onboardingPsp(pspRequest)).thenReturn(Uni.createFrom().item(new OnboardingResponse()));
         when(onboardingApi.onboarding(defaultRequest)).thenReturn(Uni.createFrom().item(new OnboardingResponse()));
 
-        onboardingService.onboarding(pa);
-        onboardingService.onboarding(psp);
-        onboardingService.onboarding(other);
+        // when
+        onboardingService.onboarding(pa).await().indefinitely();
+        onboardingService.onboarding(psp).await().indefinitely();
+        onboardingService.onboarding(other).await().indefinitely();
 
+        // then
         verify(onboardingApi).onboardingPa(paRequest);
         verify(onboardingApi).onboardingPsp(pspRequest);
         verify(onboardingApi).onboarding(defaultRequest);
@@ -158,23 +161,33 @@ class OnboardingServiceImplTest {
 
     @Test
     void getOnboarding_andWithUserInfoDelegate() {
+        // given
         OnboardingGet plain = new OnboardingGet();
         OnboardingGet withUsers = new OnboardingGet();
         when(onboardingApi.getById("onb-1")).thenReturn(Uni.createFrom().item(plain));
         when(onboardingApi.getByIdWithUserInfo("onb-1")).thenReturn(Uni.createFrom().item(withUsers));
 
-        assertSame(plain, onboardingService.getOnboarding("onb-1"));
+        // when
+        var actualAsync1 = onboardingService.getOnboarding("onb-1").await().indefinitely();
+
+        // then
+        assertSame(plain, actualAsync1);
         assertSame(withUsers, onboardingService.getOnboardingWithUserInfo("onb-1"));
     }
 
     @Test
     void checkManager_returnsTheDownstreamFlag() {
+        // given
         CheckManagerRequest request = new CheckManagerRequest().productId("prod-io").userId(UUID.randomUUID());
         CheckManagerResponse response = new CheckManagerResponse();
         response.setResponse(true);
         when(onboardingApi.checkManager(request)).thenReturn(Uni.createFrom().item(response));
 
-        assertTrue(onboardingService.checkManager(request));
+        // when
+        var actualAsync1 = onboardingService.checkManager(request).await().indefinitely();
+
+        // then
+        assertTrue(actualAsync1);
     }
 
     @Test
@@ -235,20 +248,26 @@ class OnboardingServiceImplTest {
 
     @Test
     void verifyOnboarding_requiresProductId() {
+        // given
+        // when
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
-                () -> onboardingService.verifyOnboarding(" ", "tax", null, null, null, null));
+                () -> onboardingService.verifyOnboarding(" ", "tax", null, null, null, null).await().indefinitely());
 
+        // then
         assertEquals("A product Id is required", exception.getMessage());
         verifyNoInteractions(onboardingApi);
     }
 
     @Test
     void verifyOnboarding_forwardsAllFilters() {
+        // given
         when(onboardingApi.verifyOnboardingInfoByFilters("PA", "IPA", "oid", "prod-io", "SUB", "tax"))
                 .thenReturn(Uni.createFrom().item(Response.noContent().build()));
 
-        onboardingService.verifyOnboarding("prod-io", "tax", "IPA", "oid", "SUB", "PA");
+        // when
+        onboardingService.verifyOnboarding("prod-io", "tax", "IPA", "oid", "SUB", "PA").await().indefinitely();
 
+        // then
         verify(onboardingApi).verifyOnboardingInfoByFilters("PA", "IPA", "oid", "prod-io", "SUB", "tax");
     }
 
@@ -333,6 +352,7 @@ class OnboardingServiceImplTest {
 
     @Test
     void onboarding_invalidRequestsAreRejectedWithoutCallingTheDownstream() {
+        // given
         OnboardingData pa = onboardingData(InstitutionType.PA);
         OnboardingData psp = onboardingData(InstitutionType.PSP);
         OnboardingData other = onboardingData(InstitutionType.GSP);
@@ -340,17 +360,20 @@ class OnboardingServiceImplTest {
         when(onboardingMapper.toOnboardingPspRequest(psp)).thenReturn(new OnboardingPspRequest().productId(""));
         when(onboardingMapper.toOnboardingDefaultRequest(other)).thenReturn(new OnboardingDefaultRequest());
 
-        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboarding(pa)).getMessage()
+        // when
+        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboarding(pa).await().indefinitely()).getMessage()
                 .startsWith("_onboardingPa.onboardingPaRequest.institution: "));
-        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboarding(psp)).getMessage()
+        // then
+        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboarding(psp).await().indefinitely()).getMessage()
                 .startsWith("_onboardingPsp.onboardingPspRequest."));
-        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboarding(other)).getMessage()
+        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboarding(other).await().indefinitely()).getMessage()
                 .startsWith("_onboarding.onboardingDefaultRequest."));
         verifyNoInteractions(onboardingApi);
     }
 
     @Test
     void otherBodyCalls_areValidatedBeforeTheDownstreamCall() {
+        // given
         OnboardingData data = onboardingData(InstitutionType.PG);
         when(onboardingMapper.toOnboardingPgRequest(data)).thenReturn(new OnboardingPgRequest());
         when(onboardingMapper.toOnboardingPaAggregationRequest(data)).thenReturn(new OnboardingPaRequest());
@@ -358,12 +381,14 @@ class OnboardingServiceImplTest {
 
         assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboardingCompany(data))
                 .getMessage().startsWith("_onboardingPgCompletion.onboardingPgRequest."));
-        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboardingPaAggregation(data))
+        // when
+        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.onboardingPaAggregation(data).await().indefinitely())
                 .getMessage().startsWith("_onboardingPaAggregation.onboardingPaRequest."));
+        // then
         assertTrue(assertThrows(InvalidRequestException.class,
                 () -> onboardingService.onboardingUsersPgFromIcAndAde(data))
                 .getMessage().startsWith("_onboardingUsersPg.onboardingUserPgRequest."));
-        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.checkManager(new CheckManagerRequest()))
+        assertTrue(assertThrows(InvalidRequestException.class, () -> onboardingService.checkManager(new CheckManagerRequest()).await().indefinitely())
                 .getMessage().startsWith("_checkManager.checkManagerRequest."));
         verifyNoInteractions(onboardingApi);
     }

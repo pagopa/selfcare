@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.PartyProcessRestClient;
 import it.pagopa.selfcare.onboarding.client.model.BillingDataResponse;
 import it.pagopa.selfcare.onboarding.client.model.Institution;
@@ -68,37 +69,33 @@ public class PartyService {
      * The institutions of the user for the product. When the product has a parent, the institutions onboarded
      * on the parent product that are not yet onboarded on the product itself are returned.
      */
-    public List<InstitutionInfo> getInstitutionsByUser(Product product, String userId) {
+    public Uni<List<InstitutionInfo>> getInstitutionsByUser(Product product, String userId) {
         log.trace("getInstitutionsByUser start");
-        List<UserInstitutionResponse> userInstitutions = findActiveUserInstitutions(product.getId(), userId);
-
-        List<InstitutionInfo> result;
-        if (Objects.nonNull(product.getParentId())) {
-            List<UserInstitutionResponse> parentUserInstitutions = findActiveUserInstitutions(product.getParentId(), userId);
-            List<String> childInstitutionIds = userInstitutions.stream()
-                    .map(UserInstitutionResponse::getInstitutionId)
-                    .toList();
-            result = parentUserInstitutions.stream()
-                    .filter(parentInstitution -> !childInstitutionIds.contains(parentInstitution.getInstitutionId()))
-                    .map(institutionMapper::toInstitutionInfo)
-                    .toList();
-        } else {
-            result = Objects.requireNonNull(userInstitutions).stream()
-                    .map(institutionMapper::toInstitutionInfo)
-                    .toList();
-        }
-
-        Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> institutionsById = buildInstitutionMap(result);
-
-        List<String> allowedTypes = product.getInstitutionTypesAllowed();
-        List<InstitutionInfo> allowedInstitutions = Objects.isNull(allowedTypes) || allowedTypes.isEmpty()
-                ? result
-                : result.stream()
-                .filter(institutionInfo -> institutionsById.containsKey(institutionInfo.getId())
-                        && allowedTypes.contains(institutionsById.get(institutionInfo.getId()).getInstitutionType()))
-                .toList();
-        log.trace("getInstitutionsByUser end");
-        return allowedInstitutions;
+        return findActiveUserInstitutions(product.getId(), userId)
+                .chain(userInstitutions -> {
+                    if (Objects.nonNull(product.getParentId())) {
+                        return findActiveUserInstitutions(product.getParentId(), userId)
+                                .map(parentUserInstitutions -> {
+                                    List<String> childInstitutionIds = userInstitutions.stream()
+                                            .map(UserInstitutionResponse::getInstitutionId).toList();
+                                    return parentUserInstitutions.stream()
+                                            .filter(parent -> !childInstitutionIds.contains(parent.getInstitutionId()))
+                                            .map(institutionMapper::toInstitutionInfo).toList();
+                                });
+                    }
+                    return Uni.createFrom().item(Objects.requireNonNull(userInstitutions).stream()
+                            .map(institutionMapper::toInstitutionInfo).toList());
+                })
+                .chain(result -> buildInstitutionMap(result).map(institutionsById -> {
+                    List<String> allowedTypes = product.getInstitutionTypesAllowed();
+                    return Objects.isNull(allowedTypes) || allowedTypes.isEmpty()
+                            ? result
+                            : result.stream()
+                                    .filter(institution -> institutionsById.containsKey(institution.getId())
+                                            && allowedTypes.contains(institutionsById.get(institution.getId()).getInstitutionType()))
+                                    .toList();
+                }))
+                .invoke(result -> log.trace("getInstitutionsByUser end"));
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
@@ -174,21 +171,19 @@ public class PartyService {
         restClient.verifyOnboardingInfoByFilters(productId, externalId, taxCode, origin, originId, subunitCode);
     }
 
-    private List<UserInstitutionResponse> findActiveUserInstitutions(String productId, String userId) {
+    private Uni<List<UserInstitutionResponse>> findActiveUserInstitutions(String productId, String userId) {
         List<String> products = Objects.isNull(productId) ? null : List.of(productId);
-        return userApiClient.usersGet(null, null, null, products, null, USER_INSTITUTIONS_PAGE_SIZE, List.of(ACTIVE), userId)
-                .await().indefinitely();
+        return userApiClient.usersGet(null, null, null, products, null, USER_INSTITUTIONS_PAGE_SIZE, List.of(ACTIVE), userId);
     }
 
-    private Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse> buildInstitutionMap(List<InstitutionInfo> result) {
+    private Uni<Map<String, org.openapi.quarkus.onboarding_json.model.InstitutionResponse>> buildInstitutionMap(List<InstitutionInfo> result) {
         if (result.isEmpty()) {
-            return Map.of();
+            return Uni.createFrom().item(Map.of());
         }
-        List<org.openapi.quarkus.onboarding_json.model.InstitutionResponse> response =
-                institutionApiClient.getInstitutions(institutionMapper.toGetInstitutionRequest(result)).await().indefinitely();
-        return Objects.isNull(response)
-                ? Map.of()
-                : response.stream().collect(Collectors.toMap(
-                        org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity()));
+        return institutionApiClient.getInstitutions(institutionMapper.toGetInstitutionRequest(result))
+                .map(response -> Objects.isNull(response)
+                        ? Map.of()
+                        : response.stream().collect(Collectors.toMap(
+                                org.openapi.quarkus.onboarding_json.model.InstitutionResponse::getId, Function.identity())));
     }
 }

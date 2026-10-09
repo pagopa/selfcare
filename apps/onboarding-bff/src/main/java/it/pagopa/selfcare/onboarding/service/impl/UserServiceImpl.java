@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.service.*;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
@@ -74,12 +75,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean  checkManager(CheckManagerRequest checkManagerRequest) {
+    public Uni<Boolean> checkManager(CheckManagerRequest checkManagerRequest) {
         log.trace("checkManager start");
         log.debug("checkManager checkManagerRequest = {}", checkManagerRequest);
-        boolean checkManager = onboardingMsConnector.checkManager(checkManagerRequest);
-        log.trace("checkManager end");
-        return checkManager;
+        return onboardingMsConnector.checkManager(checkManagerRequest)
+                .invoke(result -> log.trace("checkManager end"));
     }
 
     private <T> boolean isValid(T field, CertifiedField<T> certifiedField) {

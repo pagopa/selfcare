@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.buffer.Buffer;
 import it.pagopa.selfcare.onboarding.client.DocumentContentRestClient;
 import it.pagopa.selfcare.onboarding.client.model.AttachmentTemplate;
@@ -55,13 +57,14 @@ public class DocumentService {
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public BinaryData getTemplateAttachment(String onboardingId,
+    public Uni<BinaryData> getTemplateAttachment(String onboardingId,
                                             String institutionDescription,
                                             String filename,
                                             String productId,
                                             String templatePath) {
-        return toBinaryData(documentContentClient
-                .getTemplateAttachment(onboardingId, institutionDescription, filename, productId, templatePath));
+        return Uni.createFrom().item(() -> toBinaryData(documentContentClient
+                        .getTemplateAttachment(onboardingId, institutionDescription, filename, productId, templatePath)))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool());
     }
 
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
@@ -79,17 +82,19 @@ public class DocumentService {
         return toBinaryData(documentContentClient.getAggregatesCsv(onboardingId, productId));
     }
 
-    public void uploadAttachment(String onboardingId,
+    public Uni<Void> uploadAttachment(String onboardingId,
                                  UploadedFile attachment,
                                  String attachmentName,
                                  String productId,
                                  AttachmentTemplate template) {
         DocumentBuilderRequest request = documentMapper.toDocumentBuilderRequest(
                 onboardingId, attachmentName, productId, template);
-        documentContentClient.uploadAttachment(multipart(attachment, request, DocumentBuilderRequest.class)).close();
+        return Uni.createFrom().voidItem()
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> documentContentClient.uploadAttachment(multipart(attachment, request, DocumentBuilderRequest.class)).close());
     }
 
-    public void uploadUserAttachment(String onboardingId,
+    public Uni<Void> uploadUserAttachment(String onboardingId,
                                      UploadedFile attachment,
                                      String productId,
                                      String attachmentId,
@@ -98,7 +103,9 @@ public class DocumentService {
                                      Integer maxDocumentsRequired) {
         UserAttachmentRequest request = documentMapper.toUserAttachmentRequest(
                 onboardingId, productId, attachmentId, attachmentDescription, attachmentName, maxDocumentsRequired);
-        documentContentClient.uploadUserAttachment(multipart(attachment, request, UserAttachmentRequest.class)).close();
+        return Uni.createFrom().voidItem()
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> documentContentClient.uploadUserAttachment(multipart(attachment, request, UserAttachmentRequest.class)).close());
     }
 
     public int headAttachment(String onboardingId, String filename) {

@@ -14,8 +14,9 @@ regressioni di caratterizzazione aggiunte e riferimento Spring riconfermato.
 Commit ST01: `2f821d6cd2f586bca3c7f0d178d0818cb844f88d`.
 **BFF-ST02 completata il 2026-10-08:** layout, DTO, injection e conversioni pure
 riallineati, mantenendo contratto pubblico e comportamento downstream.
-**BFF-ST03 in corso dal 2026-10-09:** traccia completa e primo lotto reattivo
-verificati; la storia non e ancora completata. **ST04-ST10 restano da fare.**
+**BFF-ST03 completata il 2026-10-09:** tutte le operazioni prodotti e i consumer
+istituzioni/token compongono `Uni`; contratto e sequenze downstream preservati.
+**ST04-ST10 restano da fare; ST04 e ora sbloccata.**
 Gli identificativi sono locali al piano, non ticket Jira gia creati.
 
 **Integrazione main del 2026-10-09:** incorporato `cd0a2751f`, preservando ST01/ST02.
@@ -33,7 +34,8 @@ token/sicurezza/spec-driven su ciascun runtime e i gate OpenAPI esatti.
 Le regressioni onboarding-ms arrivate da main passano: 178 test senza skip.
 Le fixture Cucumber del contratto sono aggiornate e verificate insieme al primo
 lotto ST03: 10 scenari contratto/prodotti passati con Docker. La suite completa
-Cucumber non e stata rieseguita in questo lotto.
+Cucumber non e stata rieseguita nel solo lotto merge/primi prodotti; la successiva
+chiusura ST03 certifica tutti i 63 scenari correnti.
 
 La baseline ha gia evidenze di parita HTTP (538 scenari Spring e 538 Quarkus),
 59 scenari Cucumber e verifica del runtime container. Queste evidenze sono storiche:
@@ -454,13 +456,13 @@ usare come modello concreto per gli altri flussi senza creare un nuovo framework
 - [x] **BFF-ST03-T01 - Ricostruire il percorso completo.** Elencare endpoint,
   chiamanti, mapping, failure e retry dei prodotti, associandoli ai casi esistenti.
   Includere i chiamanti interni prima di cambiare le firme.
-- [ ] **BFF-ST03-T02 - Propagare Uni end-to-end.** Restituire e comporre `Uni<T>`
+- [x] **BFF-ST03-T02 - Propagare Uni end-to-end.** Restituire e comporre `Uni<T>`
   gia prodotti dai client attraverso servizio e controller. Rimuovere gli await
   ordinari; aggiornare tutti i consumer nello stesso lotto compilabile.
-- [ ] **BFF-ST03-T03 - Preservare semantica e contesto.** Mantenere filtri,
+- [x] **BFF-ST03-T03 - Preservare semantica e contesto.** Mantenere filtri,
   ordinamenti, tenant, gestione errori, retry e numero delle chiamate. Non rendere
   parallele chiamate sequenziali senza averne provato l'equivalenza.
-- [ ] **BFF-ST03-T04 - Verificare il modello prima di estenderlo.** Adeguare i test
+- [x] **BFF-ST03-T04 - Verificare il modello prima di estenderlo.** Adeguare i test
   al risultato asincrono e coprire successo, vuoto e failure. Eseguire
   `ProductServiceImplTest`, `ProductControllerTest` e i casi di parita prodotti
   di entrambe le versioni API; confrontare il risultato con i servizi di riferimento.
@@ -471,7 +473,8 @@ i contratti v1/v2 e gli effetti downstream non cambiano.
 
 #### Registro ST03 - Traccia e primo lotto del 2026-10-09
 
-**T01 completato. T02-T04 in corso, con primo lotto verificato; storia aperta.**
+**Stato storico al termine del primo lotto, superato dal registro di chiusura sotto:**
+T01 completato; T02-T04 in corso, con primo lotto verificato e storia ancora aperta.
 Baseline: merge `08522fc5d`, che incorpora main `cd0a2751f` e mantiene ST01/ST02.
 Il lotto e identificato dal subject `Start reactive BFF product flows`.
 Nessuna modifica ai servizi di riferimento, nuovo framework o bridge sincrono.
@@ -549,6 +552,67 @@ Log: `bff-st03-targeted.log`, `bff-st03-final-gates.log`,
 quello immutabile del main con SHA-256 registrato sopra.
 La suite completa Cucumber, reactor misto, frontend/APIM, coverage/Sonar,
 builder/publish e rollout non sono certificati da questo lotto.
+
+#### Registro ST03 - Chiusura dei consumer residui del 2026-10-09
+
+**T01-T04 completati; ST03 chiusa.** Baseline del lotto: `661a8f7d6`.
+Il commit e identificato dal subject `Complete reactive BFF product flows`.
+Nessun servizio di riferimento modificato, nessuna nuova dipendenza o bridge
+async/sync aggiunto. Le sei route prodotti e tutti gli otto metodi del servizio
+usano ora `Uni`, inclusi lookup singolo/valid-product, documenti richiesti e policy
+enabled/tax-code.
+
+**Consumer migrati nello stesso lotto:** onboarding v1/v2 e aggregatore, ricerca
+istituzioni dell'utente, verifiche HEAD e wrapper GET, verifica esterna, Infocamere,
+check-manager, verifica token, template e upload attachment. I client gia Mutiny
+vengono composti direttamente; party-process, registry e document-content sono
+HTTP realmente sincroni, isolati con `emitOn`/`runSubscriptionOn` sul worker come
+nel riferimento document-ms. Context propagation e gia presente transitivamente.
+
+**Semantica preservata:** lookup child -> eventuale parent -> due verifiche
+enabled/tax-code -> ruoli -> registry/scritture; la seconda verifica parte anche
+se enabled e true. Business Infocamere elaborati sequenzialmente, con recovery
+soltanto del 404 nel perimetro originale verify/registry/check-manager. Il 404
+party non viene rimappato come prodotto mancante. Upload USER senza valid-product,
+con limite predefinito 1; SYSTEM risolve il prodotto solo dopo i documenti richiesti.
+Response documentali e di verifica chiuse; nessun retry aggiunto agli upload.
+Il controller multipart resta `@Blocking` per la lettura effettiva del file:
+lo spostamento dell'I/O e ancora ST05.
+
+**Correzioni emerse nella verifica:** i client generati restituiscono
+`Uni<OnboardingResponse>` / `Uni<Response>`, convertiti esplicitamente in `Uni<Void>`
+quando il body non e usato, chiudendo le Response. I mock dei precedenti metodi void
+devono restituire un Uni; per item null usare `nullItem()`, non l'overload supplier.
+La GET di verifica senza body dichiara `@Schema(implementation = Void.class)`:
+l'inferenza di `Uni<Response>` aggiungeva contenuto JSON all'OpenAPI. Corretto
+l'endpoint senza modificare golden, comparatori o filtro di compatibilita.
+
+| Esecuzione finale | Esito |
+|------------------|-------|
+| Surefire completo | 2106 test, zero failure/errori/skipped |
+| Catalogo Quarkus | `PARITY quarkus scenarios=550 attempted=550 passed=550 failed=0` |
+| Catalogo Spring main invariato | `PARITY spring-reference scenarios=550 attempted=550 passed=550 failed=0` |
+| Retry asincroni aggiunti | Lookup onboarding, check-manager e template: conteggi wire e intervalli identici a Spring |
+| OpenAPI esatto, alias, HTTPS, security, IAM e replay | Passati; canonical, alias e golden identici a HEAD dopo verify |
+| Cucumber completo con Docker | 63/63 scenari, 230/230 step; 73 test Failsafe inclusi lifecycle, zero skip |
+| Oracoli Spring corrente e storico | SHA-256 invariati |
+| Cleanup Docker | Risorse del task assenti; immagine user-ms e 106.2 MB di cache rimossi, baseline preservata; dati Azurite rimossi |
+
+Comando finale, da root con Java 17 e l'oracolo Spring main:
+
+```sh
+mvn -B -ntp -T 1 -f apps/onboarding-bff/pom.xml verify -Pintegration-tests \
+  -Dparity.spring.jar=/path/to/bff-spring-cd0a2751f-FATJAR.jar
+```
+
+Evidenza persistente: `bff-st03-rest-final-verify.log` nello spazio di sessione.
+Floor del catalogo portato a 550 dopo la doppia verifica dei tre nuovi scenari.
+Il prossimo lotto e **ST04-T01/T03 sui flussi istituzioni/registri residui**, poi
+utenti/IAM: i cambiamenti accoppiati a ST03 non chiudono ST04 o ST05. Restano 12
+await in OnboardingServiceImpl, due in DocumentService e uno in
+UserInstitutionServiceImpl, da tracciare nelle storie successive. Reactor misto,
+frontend/APIM, coverage/Sonar, pubblicazione Dockerfile, CI/review e smoke deployato
+non sono certificati da questa verifica locale. Nessun push o deploy eseguito.
 
 ### BFF-ST04 - Istituzioni, utenti, IAM e registri
 
@@ -720,7 +784,7 @@ valutare la migrazione senza affidarmi ai risultati della vecchia baseline.
   framework di architettura solo per automatizzare lo stile.
 - [ ] **BFF-ST10-T02 - Certificare il contratto completo.** Rieseguire l'intero
   catalogo Spring/Quarkus, Cucumber, OpenAPI/alias/codegen e HTTP/HTTPS. Attendere
-  almeno 547 casi per runtime e 59 scenari Cucumber, tutti tentati e passati;
+  almeno 550 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
   aggiunte lecite aumentano i conteggi, riduzioni richiedono una decisione esplicita.
 - [ ] **BFF-ST10-T03 - Verificare integrazione e coverage.** Rieseguire il reactor
   seriale con le altre app Quarkus coinvolte, la coverage e i gate CI. Verificare

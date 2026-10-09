@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.smallrye.mutiny.Uni;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.Mockito.verify;
@@ -74,13 +75,16 @@ class UserControllerTest {
 
     @Test
     void checkManager_returnsMappedBooleanResult() {
+        // given
         CheckManagerDto request = new CheckManagerDto();
         var checkRequest = new org.openapi.quarkus.onboarding_json.model.CheckManagerRequest();
         when(onboardingMapper.toCheckManagerData(request)).thenReturn(checkRequest);
-        when(userService.checkManager(checkRequest)).thenReturn(true);
+        when(userService.checkManager(checkRequest)).thenReturn(Uni.createFrom().item(true));
 
-        CheckManagerResponse response = userController.checkManager(request);
+        // when
+        CheckManagerResponse response = userController.checkManager(request).await().indefinitely();
 
+        // then
         assertEquals(true, response.isResult());
     }
 

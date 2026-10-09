@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.controller;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -11,6 +12,7 @@ import static org.mockito.Mockito.when;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.onboarding.client.model.OriginResult;
+import it.pagopa.selfcare.onboarding.client.model.RequiredDocumentModel;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
@@ -19,6 +21,7 @@ import it.pagopa.selfcare.onboarding.model.dto.response.RequiredDocumentsEnabled
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.UriInfo;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -139,5 +142,35 @@ class ProductV2ControllerTest {
 
         // then
         verifyNoInteractions(productService, productMapper);
+    }
+
+    @Test
+    void requiredDocumentsKeepTheTenantAndAnEmptyResult() {
+        // given
+        when(productService.getRequiredDocuments("PNPG", "prod-test", "PA", "IPA"))
+                .thenReturn(Uni.createFrom().item(List.of()));
+
+        // when
+        List<RequiredDocumentModel> result = controller.getRequiredDocuments("prod-test", "PA", "IPA", "PNPG")
+                .await().indefinitely();
+
+        // then
+        assertEquals(List.of(), result);
+        verify(productService).getRequiredDocuments("PNPG", "prod-test", "PA", "IPA");
+    }
+
+    @Test
+    void requiredDocumentsPropagateTheOriginalFailure() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing product");
+        when(productService.getRequiredDocuments("AR", "prod-test", "PA", "IPA"))
+                .thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<List<RequiredDocumentModel>> result = controller.getRequiredDocuments("prod-test", "PA", "IPA", "AR")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
     }
 }

@@ -42,41 +42,93 @@ class ProductControllerTest {
 
     @Test
     void getProduct_mapsTheServiceResult() {
+        // given
         Product product = new Product();
         ProductResource resource = new ProductResource();
-        when(productService.getProduct("prod-io", InstitutionType.PA)).thenReturn(product);
+        when(productService.getProduct("prod-io", InstitutionType.PA)).thenReturn(Uni.createFrom().item(product));
         when(productMapper.toResource(product)).thenReturn(resource);
 
-        assertSame(resource, controller.getProduct("prod-io", "PA"));
+        // when
+        var actualAsync1 = controller.getProduct("prod-io", "PA").await().indefinitely();
+
+        // then
+        assertSame(resource, actualAsync1);
     }
 
     @Test
     void getProduct_withoutInstitutionTypePassesNull() {
+        // given
         Product product = new Product();
-        when(productService.getProduct("prod-io", null)).thenReturn(product);
+        when(productService.getProduct("prod-io", null)).thenReturn(Uni.createFrom().item(product));
         when(productMapper.toResource(product)).thenReturn(new ProductResource());
 
-        controller.getProduct("prod-io", null);
-        controller.getProduct("prod-io", " ");
+        // when
+        controller.getProduct("prod-io", null).await().indefinitely();
+        controller.getProduct("prod-io", " ").await().indefinitely();
 
+        // then
         verify(productService, org.mockito.Mockito.times(2)).getProduct("prod-io", null);
     }
 
     @Test
     void getProduct_unknownProductIsReportedWithTheSpringMessage() {
-        when(productService.getProduct("missing", null)).thenThrow(new ResourceNotFoundException("{\"detail\":\"x\"}"));
+        // given
+        when(productService.getProduct("missing", null)).thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("{\"detail\":\"x\"}")));
 
+        // when
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> controller.getProduct("missing", null));
+                () -> controller.getProduct("missing", null).await().indefinitely());
 
+        // then
         assertEquals("No product found with id missing", exception.getMessage());
     }
 
     @Test
     void getProduct_invalidInstitutionTypeIsABadRequestWithoutDownstreamCall() {
-        assertThrows(InvalidRequestException.class, () -> controller.getProduct("prod-io", "NOT_A_TYPE"));
+        // given
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.getProduct("prod-io", "NOT_A_TYPE").await().indefinitely());
 
+        // then
         verifyNoInteractions(productService);
+    }
+
+    @Test
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void productMappingWaitsWithoutBlocking() {
+        // given
+        AtomicReference<UniEmitter<? super Product>> pending = new AtomicReference<>();
+        Product product = new Product();
+        ProductResource resource = new ProductResource();
+        when(productService.getProduct("prod-test", null))
+                .thenReturn(Uni.createFrom().<Product>emitter(pending::set));
+        when(productMapper.toResource(product)).thenReturn(resource);
+
+        // when
+        UniAssertSubscriber<ProductResource> result = controller.getProduct("prod-test", null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(productMapper);
+        pending.get().complete(product);
+        result.assertCompleted().assertItem(resource);
+    }
+
+    @Test
+    void productMappingFailureIsNotRewrittenAsAMissingProduct() {
+        // given
+        Product product = new Product();
+        ResourceNotFoundException failure = new ResourceNotFoundException("mapper failure");
+        when(productService.getProduct("prod-test", null)).thenReturn(Uni.createFrom().item(product));
+        when(productMapper.toResource(product)).thenThrow(failure);
+
+        // when
+        UniAssertSubscriber<ProductResource> result = controller.getProduct("prod-test", null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
     }
 
     @Test

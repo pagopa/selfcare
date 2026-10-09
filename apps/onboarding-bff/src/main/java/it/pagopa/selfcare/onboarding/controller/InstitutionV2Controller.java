@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
@@ -130,18 +131,16 @@ public class InstitutionV2Controller {
     @Path("/onboarding")
     @Operation(summary = "${openapi.onboarding.institutions.api.onboarding.subunit}",
             description = "${openapi.onboarding.institutions.api.onboarding.subunit}", operationId = "institutionOnboarding")
-    public Response onboarding(@Valid OnboardingProductDto request) {
+    public Uni<Response> onboarding(@Valid OnboardingProductDto request) {
         RequestParams.requiredBody(request);
         log.trace(ONBOARDING_START);
         log.debug("onboarding request = {}", LogUtils.sanitize(request));
-        institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId());
-        if (Boolean.TRUE.equals(request.getIsAggregator())) {
-            institutionService.onboardingPaAggregator(onboardingMapper.toEntity(request));
-        } else {
-            institutionService.onboardingProductV2(onboardingMapper.toEntity(request));
-        }
-        log.trace(ONBOARDING_END);
-        return Response.status(Response.Status.CREATED).build();
+        return institutionService.validateOnboardingByProductOrInstitutionTaxCode(request.getTaxCode(), request.getProductId())
+                .chain(() -> Boolean.TRUE.equals(request.getIsAggregator())
+                        ? institutionService.onboardingPaAggregator(onboardingMapper.toEntity(request))
+                        : institutionService.onboardingProductV2(onboardingMapper.toEntity(request)))
+                .invoke(() -> log.trace(ONBOARDING_END))
+                .replaceWith(() -> Response.status(Response.Status.CREATED).build());
     }
 
     @APIResponse(responseCode = "403",

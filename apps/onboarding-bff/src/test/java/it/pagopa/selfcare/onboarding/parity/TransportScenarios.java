@@ -42,6 +42,27 @@ final class TransportScenarios {
         MS_ONBOARDING);
     retried(
         s,
+        Scenario.api(G, "reactive-onboarding-lookup-connection-dropped-is-retried", "POST", "/v2/tokens/ob1/verify")
+            .stub(st -> st.on(MS_ONBOARDING, "GET", "/v1/onboarding/ob1", Reply.abort())),
+        MS_ONBOARDING);
+    s.add(
+        Scenario.api(G, "reactive-manager-check-connection-dropped-is-retried", "POST", "/v1/users/check-manager")
+            .json("{\"userId\":\"44444444-4444-4444-8444-444444444444\",\"productId\":\"prod-io\",\"taxCode\":\"00000000000\"}")
+            .stub(st -> st.on(MS_ONBOARDING, "POST", "/v1/onboarding/check-manager", Reply.abort()))
+            .expect(c -> failure(c).callCount(MS_ONBOARDING, 3).totalCalls(3)
+                .elapsedAtLeast(9_500).elapsedBelow(14_000).propagatesIdentity()));
+    s.add(
+        Scenario.api(G, "reactive-template-read-connection-dropped-is-retried", "/v2/tokens/ob1/template-attachment?attachmentName=tmpl")
+            .stub(st -> {
+              st.on(MS_ONBOARDING, "GET", "/v1/onboarding/ob1", Reply.json(200, Fx.onboarding(Fx.OB)));
+              st.on(MS_PRODUCT, "GET", "/product/prod-io/valid", Reply.json(200, TokenScenarios.withAttachmentContract("tmpl")));
+              st.on(MS_DOCUMENT, "GET", "/v1/document-content/ob1/template-attachment", Reply.abort());
+            })
+            .expect(c -> failure(c).callCount(MS_ONBOARDING, 1).callCount(MS_PRODUCT, 1)
+                .callCount(MS_DOCUMENT, 6).totalCalls(8)
+                .elapsedAtLeast(9_500).elapsedBelow(14_000).propagatesIdentity()));
+    retried(
+        s,
         Scenario.api(G, "ms-document-read-connection-dropped-is-retried", "/v2/tokens/ob1/attachment?name=a.pdf")
             .stub(st -> st.on(MS_DOCUMENT, "GET", "/v1/document-content/ob1/attachment", Reply.abort())),
         MS_DOCUMENT);

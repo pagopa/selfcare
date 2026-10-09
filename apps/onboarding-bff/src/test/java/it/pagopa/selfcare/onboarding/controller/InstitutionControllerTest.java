@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.smallrye.mutiny.Uni;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,24 +43,32 @@ class InstitutionControllerTest {
 
     @Test
     void onboarding_callsServiceAndReturnsCreated() {
+        // given
         OnboardingProductDto request = new OnboardingProductDto();
         OnboardingData onboardingData = new OnboardingData();
         when(onboardingMapper.toEntity(request)).thenReturn(onboardingData);
+        when(institutionService.onboardingProduct(onboardingData)).thenReturn(Uni.createFrom().voidItem());
 
-        Response response = institutionController.onboarding(request);
+        // when
+        Response response = institutionController.onboarding(request).await().indefinitely();
 
+        // then
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
         verify(institutionService).onboardingProduct(onboardingData);
     }
 
     @Test
     void onboardingCompany_callsServiceAndReturnsCreated() {
+        // given
         CompanyOnboardingDto request = new CompanyOnboardingDto();
         OnboardingData onboardingData = new OnboardingData();
         when(onboardingMapper.toEntity(request)).thenReturn(onboardingData);
+        when(institutionService.onboardingProduct(onboardingData)).thenReturn(Uni.createFrom().voidItem());
 
-        Response response = institutionController.onboarding(request);
+        // when
+        Response response = institutionController.onboarding(request).await().indefinitely();
 
+        // then
         assertEquals(Response.Status.CREATED.getStatusCode(), response.getStatus());
         verify(institutionService).onboardingProduct(onboardingData);
     }
@@ -91,8 +100,13 @@ class InstitutionControllerTest {
 
     @Test
     void verifyOnboarding_callsService() {
-        institutionController.verifyOnboarding("extId", "prodId");
+        // given
+        when(institutionService.verifyOnboarding("extId", "prodId")).thenReturn(Uni.createFrom().voidItem());
 
+        // when
+        institutionController.verifyOnboarding("extId", "prodId").await().indefinitely();
+
+        // then
         verify(institutionService).verifyOnboarding("extId", "prodId");
     }
 }

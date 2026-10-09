@@ -68,7 +68,7 @@ public class ProductV2Controller {
     @Operation(summary = "Get required documents for a product",
             description = "Returns the list of required documents for the given product, institutionType and origin.",
             operationId = "getRequiredDocuments")
-    public List<RequiredDocumentModel> getRequiredDocuments(@Parameter(description = "The product id")
+    public Uni<List<RequiredDocumentModel>> getRequiredDocuments(@Parameter(description = "The product id")
                                                             @PathParam("productId") String productId,
                                                             @Parameter(required = true) @QueryParam("institutionType") String institutionType,
                                                             @Parameter(required = true) @QueryParam("origin") String origin,
@@ -82,11 +82,12 @@ public class ProductV2Controller {
                 Encode.forJava(productId),
                 Encode.forJava(institutionType),
                 Encode.forJava(origin));
-        List<RequiredDocumentModel> result = productService.getRequiredDocuments(
-                requiredTenantId(tenantHeader), productId, institutionType, origin);
-        log.debug("getRequiredDocuments size = {}", result.size());
-        log.trace("getRequiredDocuments end");
-        return result;
+        return productService.getRequiredDocuments(
+                        requiredTenantId(tenantHeader), productId, institutionType, origin)
+                .invoke(result -> {
+                    log.debug("getRequiredDocuments size = {}", result.size());
+                    log.trace("getRequiredDocuments end");
+                });
     }
 
     @GET

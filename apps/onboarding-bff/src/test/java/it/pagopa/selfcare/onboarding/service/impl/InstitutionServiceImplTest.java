@@ -17,6 +17,8 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniEmitter;
 import it.pagopa.selfcare.onboarding.client.model.AooResponse;
 import it.pagopa.selfcare.onboarding.client.model.AggregateResult;
 import it.pagopa.selfcare.onboarding.client.model.Billing;
@@ -76,8 +78,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -124,34 +129,45 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingProductV2_delegatesToOnboardingMs() {
+        // given
         OnboardingData data = new OnboardingData();
+        when(onboardingService.onboarding(data)).thenReturn(Uni.createFrom().voidItem());
 
-        service.onboardingProductV2(data);
+        // when
+        service.onboardingProductV2(data).await().indefinitely();
 
+        // then
         verify(onboardingService).onboarding(data);
         verifyNoInteractions(partyService, productService);
     }
 
     @Test
     void onboardingPaAggregator_requiresAggregates() {
+        // given
         OnboardingData withNull = new OnboardingData();
         OnboardingData withEmpty = new OnboardingData();
         withEmpty.setAggregates(List.of());
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingPaAggregator(withNull));
-        assertThrows(ValidationException.class, () -> service.onboardingPaAggregator(withEmpty));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingPaAggregator(withNull).await().indefinitely());
+        assertThrows(ValidationException.class, () -> service.onboardingPaAggregator(withEmpty).await().indefinitely());
 
+        // then
         assertEquals("Aggregate institutions are required if given institution is an Aggregator", e.getMessage());
         verifyNoInteractions(onboardingService);
     }
 
     @Test
     void onboardingPaAggregator_delegatesWhenAggregatesArePresent() {
+        // given
         OnboardingData data = new OnboardingData();
         data.setAggregates(List.of(new Institution()));
+        when(onboardingService.onboardingPaAggregation(data)).thenReturn(Uni.createFrom().voidItem());
 
-        service.onboardingPaAggregator(data);
+        // when
+        service.onboardingPaAggregator(data).await().indefinitely();
 
+        // then
         verify(onboardingService).onboardingPaAggregation(data);
     }
 
@@ -223,63 +239,80 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingProduct_requiresEveryMandatorySection() {
-        assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(null));
+        // given
+        // when
+        assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(null).await().indefinitely());
 
         OnboardingData noBilling = baseData(InstitutionType.PA, "IPA");
         noBilling.setBilling(null);
+        // then
         assertEquals("Institution's billing data are required",
-                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(noBilling)).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(noBilling).await().indefinitely()).getMessage());
 
         OnboardingData noType = baseData(InstitutionType.PA, "IPA");
         noType.setInstitutionType(null);
         assertEquals("An institution type is required",
-                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(noType)).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(noType).await().indefinitely()).getMessage());
 
         OnboardingData noUpdate = baseData(InstitutionType.PA, "IPA");
         noUpdate.setInstitutionUpdate(null);
         assertEquals("InsitutionUpdate is required",
-                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(noUpdate)).getMessage());
+                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(noUpdate).await().indefinitely()).getMessage());
         verifyNoInteractions(productService, partyService);
     }
 
     @Test
     void onboardingProduct_pspRequiresPspData() {
+        // given
         OnboardingData data = baseData(InstitutionType.PSP, "IPA");
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         assertEquals("Field 'pspData' is required for PSP institution onboarding", e.getMessage());
         verifyNoInteractions(productService);
     }
 
     @Test
     void onboardingProduct_locationIsRequiredOnlyOutsideIpaAdeInfocamere() {
+        // given
         OnboardingData selc = baseData(InstitutionType.GSP, "SELC");
         selc.setLocation(null);
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(selc));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(selc).await().indefinitely());
 
+        // then
         assertEquals("Location infos are required", e.getMessage());
         verifyNoInteractions(productService);
     }
 
     @Test
     void onboardingProduct_productNotFound() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(null);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(Uni.createFrom().nullItem());
 
-        assertEquals("Product is required",
-                assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(data)).getMessage());
+        // when
+        IllegalArgumentException failure = assertThrows(IllegalArgumentException.class,
+                () -> service.onboardingProduct(data).await().indefinitely());
+
+        // then
+        assertEquals("Product is required", failure.getMessage());
     }
 
     @Test
     void onboardingProduct_ptRequiresADelegableProduct() {
+        // given
         OnboardingData data = baseData(InstitutionType.PT, "IPA");
         Product product = product(false);
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PT)).thenReturn(product);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PT)).thenReturn(Uni.createFrom().item(product));
 
-        OnboardingNotAllowedException e = assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingProduct(data));
+        // when
+        OnboardingNotAllowedException e = assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         assertEquals("Institution with external id '" + TAX_CODE + "' is not allowed to onboard '" + PRODUCT_ID + "' product",
                 e.getMessage());
         verifyNoInteractions(partyService);
@@ -287,19 +320,23 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingProduct_phaseOutProductIsRejected() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         Product product = product(true);
         product.setStatus(ProductStatus.PHASE_OUT);
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(product);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(Uni.createFrom().item(product));
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         assertEquals("Unable to complete the onboarding for institution with taxCode '" + TAX_CODE
                 + "' to product '" + PRODUCT_ID + "', the product is dismissed.", e.getMessage());
     }
 
     @Test
     void onboardingProduct_existingInstitutionAndUsers_newUserIsSavedAndRoleMapped() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(product(true), InstitutionType.PA, true, false);
         Institution institution = institution("ext-id");
@@ -309,8 +346,10 @@ class InstitutionServiceImplTest {
         userId.setId(UUID.fromString(USER_UUID));
         when(userRegistryService.saveUser(any())).thenReturn(userId);
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
+        // then
         assertEquals("Prod IO", data.getProductName());
         assertEquals("path/pa.pdf", data.getContractPath());
         assertEquals("v1", data.getContractVersion());
@@ -323,6 +362,7 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingProduct_existingUserIsUpdatedWhenFieldsDiffer() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(product(true), InstitutionType.PA, true, false);
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, null)).thenReturn(List.of(institution("ext-id")));
@@ -332,9 +372,11 @@ class InstitutionServiceImplTest {
         found.setFamilyName(certified(Certification.NONE, "Rossi"));
         when(userRegistryService.search(eq("USER_TAX"), any())).thenReturn(Optional.of(found));
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
         ArgumentCaptor<MutableUserFieldsDto> update = ArgumentCaptor.forClass(MutableUserFieldsDto.class);
+        // then
         verify(userRegistryService).updateUser(eq(UUID.fromString(USER_UUID)), update.capture());
         assertEquals("Mario", update.getValue().getName().getValue());
         assertNull(update.getValue().getFamilyName());
@@ -346,6 +388,7 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingProduct_unchangedUserIsNotUpdated() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(product(true), InstitutionType.PA, true, false);
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, null)).thenReturn(List.of(institution("ext-id")));
@@ -358,14 +401,17 @@ class InstitutionServiceImplTest {
         found.setWorkContacts(Map.of("institution-id", contact));
         when(userRegistryService.search(eq("USER_TAX"), any())).thenReturn(Optional.of(found));
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
+        // then
         verify(userRegistryService, never()).updateUser(any(), any());
         verify(partyService).onboardingOrganization(data);
     }
 
     @Test
     void onboardingProduct_certifiedValueMismatchIsNotAllowed() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(product(true), InstitutionType.PA, true, false);
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, null)).thenReturn(List.of(institution("ext-id")));
@@ -374,8 +420,10 @@ class InstitutionServiceImplTest {
         found.setName(certified(Certification.SPID, "Another"));
         when(userRegistryService.search(eq("USER_TAX"), any())).thenReturn(Optional.of(found));
 
-        assertThrows(UpdateNotAllowedException.class, () -> service.onboardingProduct(data));
+        // when
+        assertThrows(UpdateNotAllowedException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         verify(partyService, never()).onboardingOrganization(any());
     }
 
@@ -388,6 +436,7 @@ class InstitutionServiceImplTest {
     }
 
     private void assertInstitutionCreation(InstitutionType type, String origin, String subunitType, String expectedCall) {
+        // given
         PartyService party = mock(PartyService.class);
         ProductService products = mock(ProductService.class);
         UserRegistryService users = mock(UserRegistryService.class);
@@ -399,8 +448,9 @@ class InstitutionServiceImplTest {
         product.setInstitutionContractMappings(Map.of("DEFAULT", template("path/default.pdf", "v1")));
         product.setRoleMappingsByInstitutionType(null);
         product.setRoleMappings(roleMappings());
-        when(products.getProduct(PRODUCT_ID, type)).thenReturn(product);
-        when(products.isProductEnabled(PRODUCT_ID)).thenReturn(true);
+        when(products.getProduct(PRODUCT_ID, type)).thenReturn(Uni.createFrom().item(product));
+        when(products.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().item(true));
+        when(products.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE)).thenReturn(Uni.createFrom().item(false));
         when(party.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, null)).thenReturn(List.of());
         Institution created = institution("created-ext");
         when(users.search(anyString(), any())).thenReturn(Optional.of(registeredUser()));
@@ -411,8 +461,10 @@ class InstitutionServiceImplTest {
             default -> throw new IllegalArgumentException(expectedCall);
         }
 
-        local.onboardingProduct(data);
+        // when
+        local.onboardingProduct(data).await().indefinitely();
 
+        // then
         assertEquals("created-ext", data.getInstitutionExternalId());
         verify(party).onboardingOrganization(data);
         verify(party, never()).createInstitution(any());
@@ -420,6 +472,7 @@ class InstitutionServiceImplTest {
 
     @Test
     void onboardingProduct_missingInstitutionPresentOnIpaIsCreatedFromIpa() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         data.setSubunitType("AOO");
         data.setSubunitCode("AOO1");
@@ -429,14 +482,17 @@ class InstitutionServiceImplTest {
         when(partyService.createInstitutionFromIpa(TAX_CODE, "AOO1", "AOO")).thenReturn(institution("ipa-ext"));
         when(userRegistryService.search(anyString(), any())).thenReturn(Optional.of(registeredUser()));
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
+        // then
         assertEquals("ipa-ext", data.getInstitutionExternalId());
         verify(partyService, never()).createInstitution(any());
     }
 
     @Test
     void onboardingProduct_uoAndPlainIpaLookups() {
+        // given
         OnboardingData uo = baseData(InstitutionType.PA, "IPA");
         uo.setSubunitType("UO");
         uo.setSubunitCode("UO1");
@@ -446,14 +502,17 @@ class InstitutionServiceImplTest {
         when(partyService.createInstitutionFromIpa(TAX_CODE, "UO1", "UO")).thenReturn(institution("uo-ext"));
         when(userRegistryService.search(anyString(), any())).thenReturn(Optional.of(registeredUser()));
 
-        service.onboardingProduct(uo);
+        // when
+        service.onboardingProduct(uo).await().indefinitely();
 
+        // then
         verify(registryProxyService).getUoById("UO1");
         assertEquals("uo-ext", uo.getInstitutionExternalId());
     }
 
     @Test
     void onboardingProduct_missingInstitutionNotOnIpaIsCreatedAsIs() {
+        // given
         OnboardingData data = baseData(InstitutionType.GSP, "SELC");
         data.setLocation(new InstitutionLocation());
         stubProductAndGate(product(true), InstitutionType.GSP, true, false);
@@ -462,26 +521,32 @@ class InstitutionServiceImplTest {
         when(partyService.createInstitution(data)).thenReturn(institution("plain-ext"));
         when(userRegistryService.search(anyString(), any())).thenReturn(Optional.of(registeredUser()));
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
+        // then
         assertEquals("plain-ext", data.getInstitutionExternalId());
         verify(partyService, never()).createInstitutionFromIpa(any(), any(), any());
     }
 
     @Test
     void onboardingProduct_roleMappingValidation() {
+        // given
         Product noRoles = product(true);
         noRoles.setRoleMappingsByInstitutionType(Map.of("PA", Map.of()));
         OnboardingData missingRole = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(noRoles, InstitutionType.PA, true, false);
 
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(missingRole));
+        // when
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> service.onboardingProduct(missingRole).await().indefinitely());
 
+        // then
         assertEquals("At least one Product role related to MANAGER Party role is required", e.getMessage());
     }
 
     @Test
     void onboardingProduct_moreThanOneProductRoleIsAmbiguous() {
+        // given
         Product ambiguous = product(true);
         ProductRoleInfo info = new ProductRoleInfo();
         info.setRoles(List.of(productRole("admin"), productRole("operator")));
@@ -489,38 +554,47 @@ class InstitutionServiceImplTest {
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(ambiguous, InstitutionType.PA, true, false);
 
-        IllegalStateException e = assertThrows(IllegalStateException.class, () -> service.onboardingProduct(data));
+        // when
+        IllegalStateException e = assertThrows(IllegalStateException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         assertEquals("More than one Product role related to MANAGER Party role is available. Cannot automatically set the Product role",
                 e.getMessage());
     }
 
     @Test
     void onboardingProduct_notEnabledProductAndNotAllowedInstitutionIsRejected() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         Product product = product(true);
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(product);
-        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(false);
-        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE)).thenReturn(false);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(Uni.createFrom().item(product));
+        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().item(false));
+        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE)).thenReturn(Uni.createFrom().item(false));
 
-        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingProduct(data));
+        // when
+        assertThrows(OnboardingNotAllowedException.class, () -> service.onboardingProduct(data).await().indefinitely());
+        // then
         verifyNoInteractions(partyService);
     }
 
     @Test
     void onboardingProduct_allowedInstitutionPassesEvenWhenProductIsNotEnabled() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         stubProductAndGate(product(true), InstitutionType.PA, false, true);
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, null)).thenReturn(List.of(institution("ext-id")));
         when(userRegistryService.search(anyString(), any())).thenReturn(Optional.of(registeredUser()));
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
+        // then
         verify(partyService).onboardingOrganization(data);
     }
 
     @Test
     void onboardingProduct_childProductRequiresTheParentOnboardingAndUsesParentRoles() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         Product child = product(true);
         child.setId("prod-child");
@@ -529,75 +603,93 @@ class InstitutionServiceImplTest {
         child.setRoleMappings(null);
         Product base = product(true);
         base.setId("prod-base");
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(child);
-        when(productService.getProduct("prod-base", null)).thenReturn(base);
-        when(productService.isProductEnabled("prod-base")).thenReturn(true);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(Uni.createFrom().item(child));
+        when(productService.getProduct("prod-base", null)).thenReturn(Uni.createFrom().item(base));
+        when(productService.isProductEnabled("prod-base")).thenReturn(Uni.createFrom().item(true));
+        when(productService.verifyAllowedByInstitutionTaxCode("prod-base", TAX_CODE)).thenReturn(Uni.createFrom().item(false));
         when(partyService.getInstitutionsByTaxCodeAndSubunitCode(TAX_CODE, null)).thenReturn(List.of(institution("ext-id")));
         when(userRegistryService.search(anyString(), any())).thenReturn(Optional.of(registeredUser()));
 
-        service.onboardingProduct(data);
+        // when
+        service.onboardingProduct(data).await().indefinitely();
 
+        // then
         verify(partyService).verifyOnboarding("prod-base", null, TAX_CODE, "IPA", null, null);
         assertEquals("admin", data.getUsers().get(0).getProductRole());
     }
 
     @Test
     void onboardingProduct_childProductWithoutParentOnboardingIsAValidationError() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         Product child = product(true);
         child.setId("prod-child");
         child.setParentId("prod-base");
         Product base = product(true);
         base.setId("prod-base");
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(child);
-        when(productService.getProduct("prod-base", null)).thenReturn(base);
-        when(productService.isProductEnabled("prod-base")).thenReturn(true);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(Uni.createFrom().item(child));
+        when(productService.getProduct("prod-base", null)).thenReturn(Uni.createFrom().item(base));
+        when(productService.isProductEnabled("prod-base")).thenReturn(Uni.createFrom().item(true));
+        when(productService.verifyAllowedByInstitutionTaxCode("prod-base", TAX_CODE)).thenReturn(Uni.createFrom().item(false));
         org.mockito.Mockito.doThrow(new ResourceNotFoundException()).when(partyService)
                 .verifyOnboarding("prod-base", null, TAX_CODE, "IPA", null, null);
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         assertEquals("Unable to complete the onboarding for institution with taxCode '" + TAX_CODE
                 + "' to product 'prod-child'. Please onboard first the 'prod-base' product for the same institution", e.getMessage());
     }
 
     @Test
     void onboardingProduct_dismissedParentProductIsRejected() {
+        // given
         OnboardingData data = baseData(InstitutionType.PA, "IPA");
         Product child = product(true);
         child.setParentId("prod-base");
         Product base = product(true);
         base.setId("prod-base");
         base.setStatus(ProductStatus.PHASE_OUT);
-        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(child);
-        when(productService.getProduct("prod-base", null)).thenReturn(base);
+        when(productService.getProduct(PRODUCT_ID, InstitutionType.PA)).thenReturn(Uni.createFrom().item(child));
+        when(productService.getProduct("prod-base", null)).thenReturn(Uni.createFrom().item(base));
 
-        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data));
+        // when
+        ValidationException e = assertThrows(ValidationException.class, () -> service.onboardingProduct(data).await().indefinitely());
 
+        // then
         assertEquals("Unable to complete the onboarding for institution with taxCode '" + TAX_CODE
                 + "' to product 'prod-base', the base product is dismissed.", e.getMessage());
     }
 
     @Test
     void getInstitutions_returnsTheUserInstitutions() {
+        // given
         Product product = product(true);
         InstitutionInfo info = new InstitutionInfo();
-        when(productService.getProduct(PRODUCT_ID, null)).thenReturn(product);
-        when(partyService.getInstitutionsByUser(product, "uid")).thenReturn(List.of(info));
+        when(productService.getProduct(PRODUCT_ID, null)).thenReturn(Uni.createFrom().item(product));
+        when(partyService.getInstitutionsByUser(product, "uid")).thenReturn(Uni.createFrom().item(List.of(info)));
 
-        assertEquals(List.of(info), service.getInstitutions(PRODUCT_ID, "uid"));
+        // when
+        var actualAsync1 = service.getInstitutions(PRODUCT_ID, "uid").await().indefinitely();
+
+        // then
+        assertEquals(List.of(info), actualAsync1);
     }
 
     @Test
     void getInstitutions_unknownProductAndEmptyResultAreNotFound() {
-        when(productService.getProduct("missing", null)).thenThrow(new ResourceNotFoundException("raw downstream"));
+        // given
+        when(productService.getProduct("missing", null)).thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("raw downstream")));
         Product product = product(true);
-        when(productService.getProduct(PRODUCT_ID, null)).thenReturn(product);
-        when(partyService.getInstitutionsByUser(product, "uid")).thenReturn(List.of());
+        when(productService.getProduct(PRODUCT_ID, null)).thenReturn(Uni.createFrom().item(product));
+        when(partyService.getInstitutionsByUser(product, "uid")).thenReturn(Uni.createFrom().item(List.of()));
 
-        ResourceNotFoundException unknown = assertThrows(ResourceNotFoundException.class, () -> service.getInstitutions("missing", "uid"));
-        ResourceNotFoundException empty = assertThrows(ResourceNotFoundException.class, () -> service.getInstitutions(PRODUCT_ID, "uid"));
+        // when
+        ResourceNotFoundException unknown = assertThrows(ResourceNotFoundException.class, () -> service.getInstitutions("missing", "uid").await().indefinitely());
+        ResourceNotFoundException empty = assertThrows(ResourceNotFoundException.class, () -> service.getInstitutions(PRODUCT_ID, "uid").await().indefinitely());
 
+        // then
         assertEquals("No product found with id missing", unknown.getMessage());
         assertEquals("No institutions found for product " + PRODUCT_ID, empty.getMessage());
     }
@@ -835,62 +927,86 @@ class InstitutionServiceImplTest {
 
     @Test
     void verifyOnboarding_byExternalIdChecksAllowanceThenParty() {
-        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(true);
+        // given
+        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().item(true));
+        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, "ext")).thenReturn(Uni.createFrom().item(false));
 
-        service.verifyOnboarding("ext", PRODUCT_ID);
+        // when
+        service.verifyOnboarding("ext", PRODUCT_ID).await().indefinitely();
 
+        // then
         verify(partyService).verifyOnboarding("ext", PRODUCT_ID);
     }
 
     @Test
     void verifyOnboarding_notAllowedDoesNotCallTheParty() {
-        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(false);
-        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, "ext")).thenReturn(false);
+        // given
+        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().item(false));
+        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, "ext")).thenReturn(Uni.createFrom().item(false));
 
+        // when
         OnboardingNotAllowedException e = assertThrows(OnboardingNotAllowedException.class,
-                () -> service.verifyOnboarding("ext", PRODUCT_ID));
+                () -> service.verifyOnboarding("ext", PRODUCT_ID).await().indefinitely());
 
+        // then
         assertEquals("Institution with external id 'ext' is not allowed to onboard '" + PRODUCT_ID + "' product", e.getMessage());
         verifyNoInteractions(partyService);
     }
 
     @Test
     void verifyOnboarding_bySubunitRequiresAnotherParameterAlongWithProductId() {
+        // given
+        // when
         InvalidRequestException e = assertThrows(InvalidRequestException.class,
-                () -> service.verifyOnboarding(PRODUCT_ID, null, "", null, "", null));
+                () -> service.verifyOnboarding(PRODUCT_ID, null, "", null, "", null).await().indefinitely());
 
+        // then
         assertEquals("At least one other parameter must be provided along with productId", e.getMessage());
         verifyNoInteractions(productService, onboardingService);
     }
 
     @Test
     void verifyOnboarding_bySubunitDelegatesToOnboardingMs() {
-        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(true);
+        // given
+        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().item(true));
+        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE)).thenReturn(Uni.createFrom().item(false));
+        when(onboardingService.verifyOnboarding(PRODUCT_ID, TAX_CODE, "IPA", "origin-id", "sub", "PA"))
+                .thenReturn(Uni.createFrom().voidItem());
 
-        service.verifyOnboarding(PRODUCT_ID, TAX_CODE, "IPA", "origin-id", "sub", "PA");
+        // when
+        service.verifyOnboarding(PRODUCT_ID, TAX_CODE, "IPA", "origin-id", "sub", "PA").await().indefinitely();
 
+        // then
         verify(onboardingService).verifyOnboarding(PRODUCT_ID, TAX_CODE, "IPA", "origin-id", "sub", "PA");
     }
 
     @Test
     void checkOrganization_callsTheOrganizationApi() {
+        // given
         when(organizationApi.checkOrganization("CF", "VAT")).thenReturn(Uni.createFrom().item(Response.noContent().build()));
 
-        service.checkOrganization(PRODUCT_ID, "CF", "VAT");
+        // when
+        service.checkOrganization(PRODUCT_ID, "CF", "VAT").await().indefinitely();
 
+        // then
         verify(organizationApi).checkOrganization("CF", "VAT");
     }
 
     @Test
     void getInstitutionsByUser_removesBusinessesAlreadyOnboardedByTheUser() {
+        // given
         InstitutionInfoIC result = new InstitutionInfoIC();
         BusinessInfoIC notOnboarded = business("1");
         BusinessInfoIC onboardedByUser = business("2");
         BusinessInfoIC onboardedByOther = business("3");
         result.setBusinesses(List.of(notOnboarded, onboardedByUser, onboardedByOther));
         when(registryProxyService.getInstitutionsByUserFiscalCode("USER_CF")).thenReturn(result);
-        org.mockito.Mockito.doThrow(new ResourceNotFoundException()).when(onboardingService)
-                .verifyOnboarding("prod-pn-pg", "1", null, null, null, null);
+        when(onboardingService.verifyOnboarding("prod-pn-pg", "1", null, null, null, null))
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException()));
+        when(onboardingService.verifyOnboarding("prod-pn-pg", "2", null, null, null, null))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(onboardingService.verifyOnboarding("prod-pn-pg", "3", null, null, null, null))
+                .thenReturn(Uni.createFrom().voidItem());
         UserId userId = new UserId();
         userId.setId(UUID.fromString(USER_UUID));
         when(userRegistryService.searchUser("USER_CF")).thenReturn(userId);
@@ -900,11 +1016,13 @@ class InstitutionServiceImplTest {
         no.setTaxCode("3");
         when(onboardingMapper.toCheckManagerRequest(USER_UUID, "2", "prod-pn-pg")).thenReturn(yes);
         when(onboardingMapper.toCheckManagerRequest(USER_UUID, "3", "prod-pn-pg")).thenReturn(no);
-        when(onboardingService.checkManager(yes)).thenReturn(true);
-        when(onboardingService.checkManager(no)).thenReturn(false);
+        when(onboardingService.checkManager(yes)).thenReturn(Uni.createFrom().item(true));
+        when(onboardingService.checkManager(no)).thenReturn(Uni.createFrom().item(false));
 
-        InstitutionInfoIC filtered = service.getInstitutionsByUser("USER_CF");
+        // when
+        InstitutionInfoIC filtered = service.getInstitutionsByUser("USER_CF").await().indefinitely();
 
+        // then
         assertEquals(List.of(notOnboarded, onboardedByOther), filtered.getBusinesses());
     }
 
@@ -1002,25 +1120,144 @@ class InstitutionServiceImplTest {
 
     @Test
     void validateOnboardingByProductOrInstitutionTaxCode_passesWhenEitherCheckPasses() {
-        when(productService.isProductEnabled("enabled")).thenReturn(true);
-        when(productService.isProductEnabled("restricted")).thenReturn(false);
-        when(productService.verifyAllowedByInstitutionTaxCode("enabled", TAX_CODE)).thenReturn(false);
-        when(productService.verifyAllowedByInstitutionTaxCode("restricted", TAX_CODE)).thenReturn(true);
-        when(productService.isProductEnabled("blocked")).thenReturn(false);
-        when(productService.verifyAllowedByInstitutionTaxCode("blocked", TAX_CODE)).thenReturn(false);
+        // given
+        when(productService.isProductEnabled("enabled")).thenReturn(Uni.createFrom().item(true));
+        when(productService.isProductEnabled("restricted")).thenReturn(Uni.createFrom().item(false));
+        when(productService.verifyAllowedByInstitutionTaxCode("enabled", TAX_CODE)).thenReturn(Uni.createFrom().item(false));
+        when(productService.verifyAllowedByInstitutionTaxCode("restricted", TAX_CODE)).thenReturn(Uni.createFrom().item(true));
+        when(productService.isProductEnabled("blocked")).thenReturn(Uni.createFrom().item(false));
+        when(productService.verifyAllowedByInstitutionTaxCode("blocked", TAX_CODE)).thenReturn(Uni.createFrom().item(false));
 
-        service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, "enabled");
-        service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, "restricted");
+        // when
+        service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, "enabled").await().indefinitely();
+        service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, "restricted").await().indefinitely();
         assertThrows(OnboardingNotAllowedException.class,
-                () -> service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, "blocked"));
+                () -> service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, "blocked").await().indefinitely());
+        // then
         assertFalse(EnumSet.noneOf(RegistryUser.Fields.class).contains(RegistryUser.Fields.name));
     }
 
     private void stubProductAndGate(Product product, InstitutionType type, boolean enabled, boolean allowed) {
-        when(productService.getProduct(PRODUCT_ID, type)).thenReturn(product);
-        when(productService.isProductEnabled(product.getParentId() == null ? product.getId() : product.getParentId())).thenReturn(enabled);
+        when(productService.getProduct(PRODUCT_ID, type)).thenReturn(Uni.createFrom().item(product));
+        when(productService.isProductEnabled(product.getParentId() == null ? product.getId() : product.getParentId())).thenReturn(Uni.createFrom().item(enabled));
         when(productService.verifyAllowedByInstitutionTaxCode(
-                product.getParentId() == null ? product.getId() : product.getParentId(), TAX_CODE)).thenReturn(allowed);
+                product.getParentId() == null ? product.getId() : product.getParentId(), TAX_CODE)).thenReturn(Uni.createFrom().item(allowed));
+    }
+
+    @Test
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void enabledProductStillWaitsForTheSequentialTaxCodeLookup() {
+        // given
+        AtomicReference<UniEmitter<? super Boolean>> enabled = new AtomicReference<>();
+        AtomicReference<UniEmitter<? super Boolean>> allowed = new AtomicReference<>();
+        when(productService.isProductEnabled(PRODUCT_ID))
+                .thenReturn(Uni.createFrom().<Boolean>emitter(enabled::set));
+        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE))
+                .thenReturn(Uni.createFrom().<Boolean>emitter(allowed::set));
+
+        // when
+        UniAssertSubscriber<Void> result = service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, PRODUCT_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verify(productService, never()).verifyAllowedByInstitutionTaxCode(any(), any());
+        enabled.get().complete(true);
+        result.assertNotTerminated();
+        verify(productService).verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE);
+        allowed.get().complete(false);
+        result.assertCompleted().assertItem(null);
+    }
+
+    @Test
+    void validationFailureDoesNotStartTheNextLookup() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing product");
+        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> result = service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, PRODUCT_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verify(productService, never()).verifyAllowedByInstitutionTaxCode(any(), any());
+    }
+
+    @Test
+    void taxCodeFailureIsNotIgnoredForAnEnabledProduct() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing tax-code policy");
+        when(productService.isProductEnabled(PRODUCT_ID)).thenReturn(Uni.createFrom().item(true));
+        when(productService.verifyAllowedByInstitutionTaxCode(PRODUCT_ID, TAX_CODE))
+                .thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> result = service.validateOnboardingByProductOrInstitutionTaxCode(TAX_CODE, PRODUCT_ID)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verifyNoInteractions(partyService, userRegistryService);
+    }
+
+    @Test
+    void institutionLookupFailureKeepsItsMessageInsteadOfTheProductMessage() {
+        // given
+        Product product = product(true);
+        ResourceNotFoundException failure = new ResourceNotFoundException("party lookup failed");
+        when(productService.getProduct(PRODUCT_ID, null)).thenReturn(Uni.createFrom().item(product));
+        when(partyService.getInstitutionsByUser(product, "uid")).thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<List<InstitutionInfo>> result = service.getInstitutions(PRODUCT_ID, "uid")
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+    }
+
+    @Test
+    void infocamereRegistryNotFoundStillKeepsTheBusiness() {
+        // given
+        InstitutionInfoIC businesses = new InstitutionInfoIC();
+        BusinessInfoIC business = business("1");
+        businesses.setBusinesses(List.of(business));
+        when(registryProxyService.getInstitutionsByUserFiscalCode("USER_CF")).thenReturn(businesses);
+        when(onboardingService.verifyOnboarding("prod-pn-pg", "1", null, null, null, null))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(userRegistryService.searchUser("USER_CF")).thenThrow(new ResourceNotFoundException("missing user"));
+
+        // when
+        InstitutionInfoIC result = service.getInstitutionsByUser("USER_CF").await().atMost(Duration.ofSeconds(2));
+
+        // then
+        assertEquals(List.of(business), result.getBusinesses());
+        verify(onboardingService, never()).checkManager(any());
+    }
+
+    @Test
+    void infocamereManagerNotFoundStillKeepsTheBusiness() {
+        // given
+        InstitutionInfoIC businesses = new InstitutionInfoIC();
+        BusinessInfoIC business = business("1");
+        businesses.setBusinesses(List.of(business));
+        when(registryProxyService.getInstitutionsByUserFiscalCode("USER_CF")).thenReturn(businesses);
+        when(onboardingService.verifyOnboarding("prod-pn-pg", "1", null, null, null, null))
+                .thenReturn(Uni.createFrom().voidItem());
+        UserId user = new UserId();
+        user.setId(UUID.fromString(USER_UUID));
+        when(userRegistryService.searchUser("USER_CF")).thenReturn(user);
+        CheckManagerRequest request = new CheckManagerRequest();
+        when(onboardingMapper.toCheckManagerRequest(USER_UUID, "1", "prod-pn-pg")).thenReturn(request);
+        when(onboardingService.checkManager(request))
+                .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("missing manager")));
+
+        // when
+        InstitutionInfoIC result = service.getInstitutionsByUser("USER_CF").await().atMost(Duration.ofSeconds(2));
+
+        // then
+        assertEquals(List.of(business), result.getBusinesses());
     }
 
     private static OnboardingData baseData(InstitutionType type, String origin) {

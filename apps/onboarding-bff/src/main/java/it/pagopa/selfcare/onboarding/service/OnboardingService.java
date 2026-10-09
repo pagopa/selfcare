@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingResult;
 import it.pagopa.selfcare.onboarding.client.model.RecipientCodeStatusResult;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public interface OnboardingService {
 
-    void onboarding(OnboardingData onboardingData);
+    Uni<Void> onboarding(OnboardingData onboardingData);
 
     void onboardingUsers(OnboardingData onboardingData);
 
@@ -31,19 +32,19 @@ public interface OnboardingService {
 
     void rejectOnboarding(String onboardingId, String reason, String userUid);
 
-    OnboardingGet getOnboarding(String onboardingId);
+    Uni<OnboardingGet> getOnboarding(String onboardingId);
 
     OnboardingGet getOnboardingWithUserInfo(String onboardingId);
 
-    void onboardingPaAggregation(OnboardingData onboardingData);
+    Uni<Void> onboardingPaAggregation(OnboardingData onboardingData);
 
     List<OnboardingResponse> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
-    boolean checkManager(CheckManagerRequest request);
+    Uni<Boolean> checkManager(CheckManagerRequest request);
 
     RecipientCodeStatusResult checkRecipientCode(String originId, String recipientCode);
 
-    void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
+    Uni<Void> verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
 
     void onboardingUsersPgFromIcAndAde(OnboardingData onboardingData);
 

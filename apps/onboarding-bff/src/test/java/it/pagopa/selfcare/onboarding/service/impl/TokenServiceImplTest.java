@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniEmitter;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -29,7 +32,9 @@ import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -60,12 +65,17 @@ class TokenServiceImplTest {
 
     @Test
     void verifyOnboarding_mapsTheOnboarding() {
+        // given
         OnboardingGet downstream = new OnboardingGet();
         OnboardingData mapped = new OnboardingData();
-        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(downstream);
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(downstream));
         when(onboardingMapper.toOnboardingData(downstream)).thenReturn(mapped);
 
-        assertSame(mapped, tokenService.verifyOnboarding(ONBOARDING_ID));
+        // when
+        var actualAsync1 = tokenService.verifyOnboarding(ONBOARDING_ID).await().indefinitely();
+
+        // then
+        assertSame(mapped, actualAsync1);
         verify(onboardingMsConnector, never()).getOnboardingWithUserInfo(any());
     }
 
@@ -122,7 +132,9 @@ class TokenServiceImplTest {
 
     @Test
     void requiredArgumentsAreChecked() {
-        assertThrows(NullPointerException.class, () -> tokenService.verifyOnboarding(null));
+        // given
+        // when
+        assertThrows(NullPointerException.class, () -> tokenService.verifyOnboarding(null).await().indefinitely());
         assertThrows(NullPointerException.class, () -> tokenService.getOnboardingWithUserInfo(null));
         assertThrows(NullPointerException.class, () -> tokenService.approveOnboarding(null, "uid"));
         assertThrows(NullPointerException.class, () -> tokenService.rejectOnboarding(null, "reason", "uid"));
@@ -137,45 +149,60 @@ class TokenServiceImplTest {
         assertThrows(NullPointerException.class, () -> tokenService.getAggregatesCsv(ONBOARDING_ID, null));
         assertThrows(NullPointerException.class, () -> tokenService.headAttachment(null, "att"));
         assertThrows(NullPointerException.class, () -> tokenService.headAttachment(ONBOARDING_ID, null));
+        // then
         verifyNoInteractions(onboardingMsConnector, documentMsClient, productService);
     }
 
     @Test
     void getTemplateAttachment_resolvesTheTemplatePathFromTheProduct() {
+        // given
         OnboardingData onboarding = onboarding();
-        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(new OnboardingGet());
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(new OnboardingGet()));
         when(onboardingMapper.toOnboardingData(any(OnboardingGet.class))).thenReturn(onboarding);
-        when(productService.getProductValid(PRODUCT_ID)).thenReturn(product("Allegato 1", "template/path"));
+        when(productService.getProductValid(PRODUCT_ID)).thenReturn(Uni.createFrom().item(product("Allegato 1", "template/path")));
         BinaryData expected = new BinaryData("template.pdf", new byte[]{1});
         when(documentMsClient.getTemplateAttachment(ONBOARDING_ID, "Comune di Test", "Allegato 1", PRODUCT_ID, "template/path"))
-                .thenReturn(expected);
+                .thenReturn(Uni.createFrom().item(expected));
 
-        assertSame(expected, tokenService.getTemplateAttachment(ONBOARDING_ID, "Allegato 1"));
+        // when
+        var actualAsync1 = tokenService.getTemplateAttachment(ONBOARDING_ID, "Allegato 1").await().indefinitely();
+
+        // then
+        assertSame(expected, actualAsync1);
     }
 
     @Test
     void getTemplateAttachment_unknownAttachmentIsNotFound() {
-        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(new OnboardingGet());
+        // given
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(new OnboardingGet()));
         when(onboardingMapper.toOnboardingData(any(OnboardingGet.class))).thenReturn(onboarding());
-        when(productService.getProductValid(PRODUCT_ID)).thenReturn(product("Allegato 1", "template/path"));
+        when(productService.getProductValid(PRODUCT_ID)).thenReturn(Uni.createFrom().item(product("Allegato 1", "template/path")));
 
+        // when
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> tokenService.getTemplateAttachment(ONBOARDING_ID, "Missing"));
+                () -> tokenService.getTemplateAttachment(ONBOARDING_ID, "Missing").await().indefinitely());
 
+        // then
         assertEquals("Attachment with name Missing not found", exception.getMessage());
         verifyNoInteractions(documentMsClient);
     }
 
     @Test
     void uploadAttachment_systemStorageUsesTheProductTemplate() {
+        // given
         OnboardingData onboarding = onboarding();
-        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(new OnboardingGet());
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(new OnboardingGet()));
         when(onboardingMapper.toOnboardingData(any(OnboardingGet.class))).thenReturn(onboarding);
-        when(productService.getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA")).thenReturn(List.of());
-        when(productService.getProductValid(PRODUCT_ID)).thenReturn(product("Allegato 1", "template/path"));
+        when(productService.getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA")).thenReturn(Uni.createFrom().item(List.of()));
+        when(productService.getProductValid(PRODUCT_ID)).thenReturn(Uni.createFrom().item(product("Allegato 1", "template/path")));
 
-        tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, "Allegato 1", null, null);
+        when(documentMsClient.uploadAttachment(eq(ONBOARDING_ID), eq(FILE), eq("Allegato 1"), eq(PRODUCT_ID), any()))
+                .thenReturn(Uni.createFrom().voidItem());
 
+        // when
+        tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, "Allegato 1", null, null).await().indefinitely();
+
+        // then
         verify(documentMsClient).uploadAttachment(
                 eq(ONBOARDING_ID),
                 eq(FILE),
@@ -187,8 +214,9 @@ class TokenServiceImplTest {
 
     @Test
     void uploadAttachment_userStorageForwardsTheRequiredDocumentLimit() {
+        // given
         OnboardingData onboarding = onboarding();
-        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(new OnboardingGet());
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(new OnboardingGet()));
         when(onboardingMapper.toOnboardingData(any(OnboardingGet.class))).thenReturn(onboarding);
         RequiredDocumentModel required = new RequiredDocumentModel();
         required.setId("statuto");
@@ -197,10 +225,14 @@ class TokenServiceImplTest {
         RequiredDocumentModel other = new RequiredDocumentModel();
         other.setId("other");
         other.setStorageOrigin(StorageOrigin.SYSTEM);
-        when(productService.getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA")).thenReturn(List.of(other, required));
+        when(productService.getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA")).thenReturn(Uni.createFrom().item(List.of(other, required)));
+        when(documentMsClient.uploadUserAttachment(ONBOARDING_ID, FILE, PRODUCT_ID, "statuto", "descrizione", "Statuto", 3))
+                .thenReturn(Uni.createFrom().voidItem());
 
-        tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, "Statuto", "statuto", "descrizione");
+        // when
+        tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, "Statuto", "statuto", "descrizione").await().indefinitely();
 
+        // then
         verify(documentMsClient).uploadUserAttachment(ONBOARDING_ID, FILE, PRODUCT_ID, "statuto", "descrizione", "Statuto", 3);
         verify(documentMsClient, never()).uploadAttachment(any(), any(), any(), any(), any());
         verify(productService, never()).getProductValid(any());
@@ -208,10 +240,93 @@ class TokenServiceImplTest {
 
     @Test
     void uploadAttachment_requiresIdNameAndFile() {
-        assertThrows(NullPointerException.class, () -> tokenService.uploadAttachment("AR", null, FILE, "n", null, null));
-        assertThrows(NullPointerException.class, () -> tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, null, null, null));
-        assertThrows(NullPointerException.class, () -> tokenService.uploadAttachment("AR", ONBOARDING_ID, null, "n", null, null));
+        // given
+        // when
+        assertThrows(NullPointerException.class, () -> tokenService.uploadAttachment("AR", null, FILE, "n", null, null).await().indefinitely());
+        assertThrows(NullPointerException.class, () -> tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, null, null, null).await().indefinitely());
+        assertThrows(NullPointerException.class, () -> tokenService.uploadAttachment("AR", ONBOARDING_ID, null, "n", null, null).await().indefinitely());
+        // then
         verifyNoInteractions(onboardingMsConnector, documentMsClient, productService);
+    }
+
+    @Test
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void systemUploadWaitsForOnboardingThenDocumentsThenProduct() {
+        // given
+        AtomicReference<UniEmitter<? super OnboardingGet>> onboarding = new AtomicReference<>();
+        AtomicReference<UniEmitter<? super List<RequiredDocumentModel>>> documents = new AtomicReference<>();
+        AtomicReference<UniEmitter<? super Product>> product = new AtomicReference<>();
+        OnboardingGet downstream = new OnboardingGet();
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID))
+                .thenReturn(Uni.createFrom().<OnboardingGet>emitter(onboarding::set));
+        when(onboardingMapper.toOnboardingData(downstream)).thenReturn(onboarding());
+        when(productService.getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA"))
+                .thenReturn(Uni.createFrom().<List<RequiredDocumentModel>>emitter(documents::set));
+        when(productService.getProductValid(PRODUCT_ID))
+                .thenReturn(Uni.createFrom().<Product>emitter(product::set));
+        when(documentMsClient.uploadAttachment(eq(ONBOARDING_ID), eq(FILE), eq("Allegato 1"), eq(PRODUCT_ID), any()))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        // when
+        UniAssertSubscriber<Void> result = tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, "Allegato 1", null, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(productService, documentMsClient);
+        onboarding.get().complete(downstream);
+        verify(productService).getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA");
+        verify(productService, never()).getProductValid(any());
+        documents.get().complete(List.of());
+        verify(productService).getProductValid(PRODUCT_ID);
+        verifyNoInteractions(documentMsClient);
+        product.get().complete(product("Allegato 1", "template/path"));
+        result.assertCompleted();
+        verify(documentMsClient, never()).uploadUserAttachment(any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void userUploadKeepsTheDefaultLimitWithoutLookingUpAValidProduct() {
+        // given
+        OnboardingGet downstream = new OnboardingGet();
+        RequiredDocumentModel document = new RequiredDocumentModel();
+        document.setId("statuto");
+        document.setStorageOrigin(StorageOrigin.USER);
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(downstream));
+        when(onboardingMapper.toOnboardingData(downstream)).thenReturn(onboarding());
+        when(productService.getRequiredDocuments("PNPG", PRODUCT_ID, "PA", "IPA"))
+                .thenReturn(Uni.createFrom().item(List.of(document)));
+        when(documentMsClient.uploadUserAttachment(ONBOARDING_ID, FILE, PRODUCT_ID, "statuto", null, "Statuto", 1))
+                .thenReturn(Uni.createFrom().voidItem());
+
+        // when
+        tokenService.uploadAttachment("PNPG", ONBOARDING_ID, FILE, "Statuto", "statuto", null).await().indefinitely();
+
+        // then
+        verify(documentMsClient).uploadUserAttachment(ONBOARDING_ID, FILE, PRODUCT_ID, "statuto", null, "Statuto", 1);
+        verify(productService, never()).getProductValid(any());
+        verify(documentMsClient, never()).uploadAttachment(any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void documentLookupFailureStopsTheUploadWithoutRetry() {
+        // given
+        OnboardingGet downstream = new OnboardingGet();
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing required documents");
+        when(onboardingMsConnector.getOnboarding(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(downstream));
+        when(onboardingMapper.toOnboardingData(downstream)).thenReturn(onboarding());
+        when(productService.getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA"))
+                .thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<Void> result = tokenService.uploadAttachment("AR", ONBOARDING_ID, FILE, "Allegato 1", null, null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verify(productService, never()).getProductValid(any());
+        verifyNoInteractions(documentMsClient);
+        verify(productService).getRequiredDocuments("AR", PRODUCT_ID, "PA", "IPA");
     }
 
     private static OnboardingData onboarding() {

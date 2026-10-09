@@ -14,8 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.product_json.api.ProductApi;
 import org.openapi.quarkus.product_json.model.Origin;
-import org.openapi.quarkus.product_json.model.ProductResponse;
-import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 import org.owasp.encoder.Encode;
 
 import java.util.List;
@@ -51,17 +49,18 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<RequiredDocumentModel> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin) {
+    public Uni<List<RequiredDocumentModel>> getRequiredDocuments(String tenantId, String productId, String institutionType, String origin) {
         log.trace("getRequiredDocuments start");
         String tenant = Encode.forJava(tenantId);
         String product = Encode.forJava(productId);
         org.openapi.quarkus.product_json.model.InstitutionType type = parseInstitutionType(Encode.forJava(institutionType));
         Origin documentOrigin = parseOrigin(Encode.forJava(origin));
-        List<RequiredDocumentResponse> response = productApi.getRequiredDocuments(product, type, documentOrigin, tenant).await().indefinitely();
-        List<RequiredDocumentModel> result = productMapper.toRequiredDocumentModelList(Objects.requireNonNull(response));
-        log.debug("getRequiredDocuments size = {}", result.size());
-        log.trace("getRequiredDocuments end");
-        return result;
+        return productApi.getRequiredDocuments(product, type, documentOrigin, tenant)
+                .map(response -> productMapper.toRequiredDocumentModelList(Objects.requireNonNull(response)))
+                .invoke(result -> {
+                    log.debug("getRequiredDocuments size = {}", result.size());
+                    log.trace("getRequiredDocuments end");
+                });
     }
 
     @Override
@@ -84,25 +83,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Product getProduct(String id, InstitutionType institutionType) {
+    public Uni<Product> getProduct(String id, InstitutionType institutionType) {
         log.trace("getProduct start");
         log.debug("getProduct id = {}, institutionType = {}", Encode.forJava(id), institutionType);
         Objects.requireNonNull(id, "ProductId is required");
-        ProductResponse response = productApi.getProductById(Encode.forJava(id), TENANT_FROM_HEADER).await().indefinitely();
-        Product product = productMapper.toProduct(response);
-        log.trace("getProduct end");
-        return product;
+        return productApi.getProductById(Encode.forJava(id), TENANT_FROM_HEADER)
+                .map(productMapper::toProduct)
+                .invoke(product -> log.trace("getProduct end"));
     }
 
     @Override
-    public Product getProductValid(String id) {
+    public Uni<Product> getProductValid(String id) {
         log.trace("getProductValid start");
         log.debug("getProductValid id = {}", Encode.forJava(id));
         Objects.requireNonNull(id, "ProductId is required");
-        ProductResponse response = productApi.getValidProductById(Encode.forJava(id), TENANT_FROM_HEADER).await().indefinitely();
-        Product product = productMapper.toProduct(response);
-        log.trace("getProductValid end");
-        return product;
+        return productApi.getValidProductById(Encode.forJava(id), TENANT_FROM_HEADER)
+                .map(productMapper::toProduct)
+                .invoke(product -> log.trace("getProductValid end"));
     }
 
     @Override
@@ -120,22 +117,24 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public boolean isProductEnabled(String productId) {
-        return getValidProduct(productId).isEnabled();
+    public Uni<Boolean> isProductEnabled(String productId) {
+        return getValidProduct(productId).map(Product::isEnabled);
     }
 
     @Override
-    public boolean verifyAllowedByInstitutionTaxCode(String productId, String institutionTaxCode) {
-        List<String> allowedInstitutionTaxCodes = getValidProduct(productId).getAllowedInstitutionTaxCode();
-        String taxCode = Encode.forJava(institutionTaxCode);
-        return allowedInstitutionTaxCodes != null && allowedInstitutionTaxCodes.stream()
-                .anyMatch(allowedTaxCode -> allowedTaxCode.equalsIgnoreCase(taxCode));
+    public Uni<Boolean> verifyAllowedByInstitutionTaxCode(String productId, String institutionTaxCode) {
+        return getValidProduct(productId).map(product -> {
+            List<String> allowedInstitutionTaxCodes = product.getAllowedInstitutionTaxCode();
+            String taxCode = Encode.forJava(institutionTaxCode);
+            return allowedInstitutionTaxCodes != null && allowedInstitutionTaxCodes.stream()
+                    .anyMatch(allowedTaxCode -> allowedTaxCode.equalsIgnoreCase(taxCode));
+        });
     }
 
-    private Product getValidProduct(String productId) {
+    private Uni<Product> getValidProduct(String productId) {
         String id = Encode.forJava(productId);
-        ProductResponse response = productApi.getValidProductById(id, TENANT_FROM_HEADER).await().indefinitely();
-        return productMapper.toProduct(Objects.requireNonNull(response));
+        return productApi.getValidProductById(id, TENANT_FROM_HEADER)
+                .map(response -> productMapper.toProduct(Objects.requireNonNull(response)));
     }
 
     // The downstream contract is strict, unlike the case-insensitive generated fromString

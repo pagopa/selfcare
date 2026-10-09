@@ -42,7 +42,7 @@ public class ProductController {
     @Path("/v1/product/{id}")
     @Operation(summary = "${openapi.onboarding.product.api.getProduct}",
             description = "${openapi.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
-    public ProductResource getProduct(@Parameter(description = "${openapi.onboarding.product.model.id}")
+    public Uni<ProductResource> getProduct(@Parameter(description = "${openapi.onboarding.product.model.id}")
                                       @PathParam("id")
                                       String id,
                                       @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}",
@@ -52,16 +52,14 @@ public class ProductController {
         log.trace("getProduct start");
         InstitutionType type = RequestParams.optionalEnum("institutionType", institutionType, InstitutionType.class);
         log.debug("getProduct id = {}, institutionType = {}", Encode.forJava(id), type);
-        Product product;
-        try {
-            product = productService.getProduct(id, type);
-        } catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("No product found with id " + id);
-        }
-        ProductResource resource = productMapper.toResource(product);
-        log.debug("getProduct result = {}", resource);
-        log.trace("getProduct end");
-        return resource;
+        return productService.getProduct(id, type)
+                .onFailure(ResourceNotFoundException.class)
+                .transform(failure -> new ResourceNotFoundException("No product found with id " + id))
+                .map(productMapper::toResource)
+                .invoke(resource -> {
+                    log.debug("getProduct result = {}", resource);
+                    log.trace("getProduct end");
+                });
     }
 
     @GET

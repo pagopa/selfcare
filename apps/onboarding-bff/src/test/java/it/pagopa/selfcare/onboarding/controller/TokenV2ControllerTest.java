@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.smallrye.mutiny.Uni;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -84,12 +85,17 @@ class TokenV2ControllerTest {
 
     @Test
     void verifyOnboarding_returnsMappedResult() {
+        // given
         OnboardingData onboardingData = new OnboardingData();
         OnboardingVerify expected = new OnboardingVerify();
-        when(tokenService.verifyOnboarding("42")).thenReturn(onboardingData);
+        when(tokenService.verifyOnboarding("42")).thenReturn(Uni.createFrom().item(onboardingData));
         when(onboardingMapper.toOnboardingVerify(onboardingData)).thenReturn(expected);
 
-        assertSame(expected, controller.verifyOnboarding("42"));
+        // when
+        var actualAsync1 = controller.verifyOnboarding("42").await().indefinitely();
+
+        // then
+        assertSame(expected, actualAsync1);
     }
 
     @Test
@@ -215,18 +221,24 @@ class TokenV2ControllerTest {
 
     @Test
     void getTemplateAttachment_requiresAttachmentNameAndSkipsIam() {
-        assertThrows(InvalidRequestException.class, () -> controller.getTemplateAttachment("42", null));
+        // given
+        // when
+        assertThrows(InvalidRequestException.class, () -> controller.getTemplateAttachment("42", null).await().indefinitely());
+        // then
         verifyNoInteractions(tokenService, authorizationService);
     }
 
     @Test
     void getTemplateAttachment_returnsTheBinary() {
+        // given
         when(tokenService.getTemplateAttachment("42", "template.pdf"))
-                .thenReturn(new BinaryData("template.pdf", "content".getBytes()));
+                .thenReturn(Uni.createFrom().item(new BinaryData("template.pdf", "content".getBytes())));
 
-        Response response = controller.getTemplateAttachment("42", "template.pdf");
+        // when
+        Response response = controller.getTemplateAttachment("42", "template.pdf").await().indefinitely();
 
         assertBinary(response, "template.pdf", "content".getBytes());
+        // then
         verifyNoInteractions(authorizationService);
     }
 
@@ -354,33 +366,42 @@ class TokenV2ControllerTest {
 
     @Test
     void uploadAttachment_requiresAttachmentNameBeforeAnyWork() {
+        // given
         FileUpload upload = mock(FileUpload.class);
 
+        // when
         assertThrows(InvalidRequestException.class,
-                () -> controller.uploadAttachment("42", null, null, null, upload, "tenant"));
+                () -> controller.uploadAttachment("42", null, null, null, upload, "tenant").await().indefinitely());
+        // then
         verifyNoInteractions(tokenService);
     }
 
     @Test
     void uploadAttachment_requiresTheFilePart() {
+        // given
+        // when
         InvalidRequestException e = assertThrows(InvalidRequestException.class,
-                () -> controller.uploadAttachment("42", "att", null, null, null, "tenant"));
+                () -> controller.uploadAttachment("42", "att", null, null, null, "tenant").await().indefinitely());
 
+        // then
         assertEquals("Required part 'attachment' is not present.", e.getMessage());
         verifyNoInteractions(tokenService);
     }
 
     @Test
     void uploadAttachment_requiresATenant() throws Exception {
+        // given
         Path tempFile = pdf();
         try {
             FileUpload upload = upload(tempFile, "contract.pdf", "application/pdf");
 
+            // when
             InvalidRequestException blank = assertThrows(InvalidRequestException.class,
-                    () -> controller.uploadAttachment("42", "att", null, null, upload, " "));
+                    () -> controller.uploadAttachment("42", "att", null, null, upload, " ").await().indefinitely());
             InvalidRequestException missing = assertThrows(InvalidRequestException.class,
-                    () -> controller.uploadAttachment("42", "att", null, null, upload, null));
+                    () -> controller.uploadAttachment("42", "att", null, null, upload, null).await().indefinitely());
 
+            // then
             assertEquals("Tenant context is required", blank.getMessage());
             assertEquals("Tenant context is required", missing.getMessage());
             verifyNoInteractions(tokenService);
@@ -391,14 +412,17 @@ class TokenV2ControllerTest {
 
     @Test
     void uploadAttachment_rejectsFormatsOtherThanPdfAndP7m() throws Exception {
+        // given
         Path tempFile = Files.createTempFile("token-upload-", ".txt");
         Files.writeString(tempFile, "text");
         try {
             FileUpload upload = upload(tempFile, "contract.txt", "text/plain");
 
+            // when
             InvalidRequestException e = assertThrows(InvalidRequestException.class,
-                    () -> controller.uploadAttachment("42", "att", null, null, upload, "tenant"));
+                    () -> controller.uploadAttachment("42", "att", null, null, upload, "tenant").await().indefinitely());
 
+            // then
             assertEquals("Formato file non supportato. Ammessi: [.pdf, .p7m]", e.getMessage());
             verifyNoInteractions(tokenService);
         } finally {
@@ -408,12 +432,17 @@ class TokenV2ControllerTest {
 
     @Test
     void uploadAttachment_forwardsTenantNameAndMultipartFields() throws Exception {
+        // given
         Path tempFile = pdf();
         try {
             FileUpload upload = upload(tempFile, "contract.pdf", "application/pdf");
+            when(tokenService.uploadAttachment(eq("tenant-1"), eq("42"), any(UploadedFile.class),
+                    eq("att"), eq("att-id"), eq("att description"))).thenReturn(Uni.createFrom().voidItem());
 
-            Response response = controller.uploadAttachment("42", "att", "att-id", "att description", upload, "tenant-1");
+            // when
+            Response response = controller.uploadAttachment("42", "att", "att-id", "att description", upload, "tenant-1").await().indefinitely();
 
+            // then
             assertEquals(204, response.getStatus());
             verify(tokenService).uploadAttachment(eq("tenant-1"), eq("42"), any(UploadedFile.class),
                     eq("att"), eq("att-id"), eq("att description"));

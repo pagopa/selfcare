@@ -15,10 +15,17 @@ bodies, headers, security, calls to the downstream services) must stay identical
 Architectural realignment is tracked in the [migration plan](plan.md), with stories, implementation tasks,
 dependencies and acceptance criteria. It is a backlog, not evidence that the refactoring or release is complete.
 
-ST01/ST02 are complete; ST03 is in progress. Product lists (public and admin), origins and the
-required-documents enabled flag now compose `Uni` from the REST client through service and controller.
-The single-product lookup and required-document list still share synchronous consumers in the
-institution/token flows; they remain part of ST03, not evidence of completed reactive migration.
+ST01/ST02/ST03 are complete. All product operations compose `Uni` from the REST client through service
+and controller, including single-product lookup, required documents and their institution/token consumers.
+Enabled and tax-code checks remain sequential even when enabled is true; USER uploads never acquire the
+SYSTEM valid-product lookup. Only genuinely synchronous registry/party/document HTTP and file I/O use
+explicit worker boundaries. The multipart attachment endpoint remains `@Blocking` while it reads the file;
+moving that I/O out of the controller is still ST05, not completed by ST03.
+
+The ST03 candidate passes the complete 550-scenario catalog on both untouched Spring main and Quarkus,
+and all 63 Cucumber scenarios. The published OpenAPI, legacy alias and Spring golden are unchanged.
+The bodyless verification GET explicitly declares `Void` in its response schema so `Uni<Response>` does
+not introduce inferred JSON content. ST04-ST10 and release/review gates remain open.
 
 ### Contract download authorization
 

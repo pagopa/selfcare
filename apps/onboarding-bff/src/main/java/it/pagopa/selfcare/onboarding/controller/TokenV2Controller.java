@@ -2,6 +2,8 @@ package it.pagopa.selfcare.onboarding.controller;
 
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.mutiny.Uni;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
@@ -129,14 +131,15 @@ public class TokenV2Controller {
     @Path("/{onboardingId}/verify")
     @Operation(description = "${openapi.tokens.verify}",
             summary = "${openapi.tokens.verify}", operationId = "verifyOnboardingUsingPOST")
-    public OnboardingVerify verifyOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
+    public Uni<OnboardingVerify> verifyOnboarding(@Parameter(description = "${openapi.tokens.onboardingId}") @PathParam("onboardingId") String onboardingId) {
         String sanitizedOnboardingId = onboardingId.replace("\n", "").replace("\r", "");
         log.debug("Verify token identified with {}", sanitizedOnboardingId);
-        final OnboardingData onboardingData = tokenService.verifyOnboarding(sanitizedOnboardingId);
-        OnboardingVerify result = onboardingResourceMapper.toOnboardingVerify(onboardingData);
-        log.debug("Verify token identified result = {}", result);
-        log.trace("Verify token identified end");
-        return result;
+        return tokenService.verifyOnboarding(sanitizedOnboardingId)
+                .map(onboardingResourceMapper::toOnboardingVerify)
+                .invoke(result -> {
+                    log.debug("Verify token identified result = {}", result);
+                    log.trace("Verify token identified end");
+                });
     }
 
     @GET
@@ -233,7 +236,7 @@ public class TokenV2Controller {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     @Operation(summary = "${openapi.tokens.getTemplateAttachment}",
             description = "${openapi.tokens.getTemplateAttachment}", operationId = "getTemplateAttachmentUsingGET")
-    public Response getTemplateAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
+    public Uni<Response> getTemplateAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                           @PathParam("onboardingId")
                                           String onboardingId,
                                           @Parameter(description = "${openapi.tokens.attachmentName}", required = true)
@@ -243,8 +246,7 @@ public class TokenV2Controller {
         log.trace("getTemplateAttachment start");
         String sanitizedFilename = attachmentName.replaceAll(SANITIZIER, "_");
         log.debug("getTemplateAttachment onboardingId = {}, filename = {}", Encode.forJava(onboardingId), sanitizedFilename);
-        BinaryData contract = tokenService.getTemplateAttachment(onboardingId, attachmentName);
-        return binaryResponse(contract);
+        return tokenService.getTemplateAttachment(onboardingId, attachmentName).map(TokenV2Controller::binaryResponse);
     }
 
     @GET
@@ -374,7 +376,8 @@ public class TokenV2Controller {
             schema = @Schema(requiredProperties = "attachment")))
     @APIResponse(responseCode = "204", description = "No Content")
     @Operation(description = "${openapi.tokens.uploadAttachment}", summary = "${openapi.tokens.uploadAttachment}", operationId = "uploadAttachmentUsingPOST")
-    public Response uploadAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
+    @Blocking
+    public Uni<Response> uploadAttachment(@Parameter(description = "${openapi.tokens.onboardingId}")
                                      @PathParam("onboardingId") String onboardingId,
                                      @Parameter(required = true) @QueryParam("attachmentName") String attachmentName,
                                      @RestForm("attachmentId") String attachmentId,
@@ -389,9 +392,9 @@ public class TokenV2Controller {
         String sanitizedFileName = Encode.forJava(uploadedFile.fileName());
         String sanitizedOnboardingId = onboardingId.replaceAll(SANITIZIER, "");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "upload Attachment tokenId = {}, file = {}", sanitizedOnboardingId, sanitizedFileName);
-        tokenService.uploadAttachment(requiredTenantId(tenantId), onboardingId, uploadedFile,
-                attachmentName, attachmentId, attachmentDescription);
-        return Response.noContent().build();
+        return tokenService.uploadAttachment(requiredTenantId(tenantId), onboardingId, uploadedFile,
+                attachmentName, attachmentId, attachmentDescription)
+                .replaceWith(() -> Response.noContent().build());
     }
 
     @GET

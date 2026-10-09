@@ -8,9 +8,15 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import it.pagopa.selfcare.onboarding.client.model.InstitutionProxyInfo;
+import io.smallrye.mutiny.Uni;
+import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import io.smallrye.mutiny.subscription.UniEmitter;
+import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
+import it.pagopa.selfcare.onboarding.model.dto.request.OnboardingProductDto;
 import it.pagopa.selfcare.onboarding.client.model.IpaInstitutionsSearchResult;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 import it.pagopa.selfcare.onboarding.client.model.VerifyAggregateResult;
@@ -25,8 +31,13 @@ import it.pagopa.selfcare.onboarding.service.InstitutionService;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -45,6 +56,47 @@ class InstitutionV2ControllerTest {
 
     private InstitutionV2Controller controller() {
         return new InstitutionV2Controller(institutionService, onboardingMapper, institutionMapper, registryProxyMapper);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void onboardingWaitsForValidationBeforeMappingAndDispatch(boolean aggregator) {
+        // given
+        AtomicReference<UniEmitter<? super Void>> pending = new AtomicReference<>();
+        OnboardingProductDto request = new OnboardingProductDto();
+        request.setTaxCode("00000000000");
+        request.setProductId("prod-test");
+        request.setIsAggregator(aggregator);
+        OnboardingData data = new OnboardingData();
+        when(institutionService.validateOnboardingByProductOrInstitutionTaxCode("00000000000", "prod-test"))
+                .thenReturn(Uni.createFrom().<Void>emitter(pending::set));
+        when(onboardingMapper.toEntity(request)).thenReturn(data);
+        if (aggregator) {
+            when(institutionService.onboardingPaAggregator(data)).thenReturn(Uni.createFrom().voidItem());
+        } else {
+            when(institutionService.onboardingProductV2(data)).thenReturn(Uni.createFrom().voidItem());
+        }
+
+        // when
+        UniAssertSubscriber<Response> result = controller().onboarding(request)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(onboardingMapper);
+        verify(institutionService, never()).onboardingPaAggregator(any());
+        verify(institutionService, never()).onboardingProductV2(any());
+        pending.get().complete(null);
+        result.assertCompleted();
+        assertEquals(201, result.getItem().getStatus());
+        if (aggregator) {
+            verify(institutionService).onboardingPaAggregator(data);
+            verify(institutionService, never()).onboardingProductV2(any());
+        } else {
+            verify(institutionService).onboardingProductV2(data);
+            verify(institutionService, never()).onboardingPaAggregator(any());
+        }
     }
 
     @Test

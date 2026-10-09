@@ -117,6 +117,7 @@ class ProductServiceImplTest {
 
     @Test
     void getRequiredDocuments_mapsTypedParametersAndResult() {
+        // given
         RequiredDocumentResponse dto = new RequiredDocumentResponse();
         dto.setId("doc-1");
         RequiredDocumentModel model = new RequiredDocumentModel();
@@ -125,28 +126,77 @@ class ProductServiceImplTest {
                 .thenReturn(Uni.createFrom().item(List.of(dto)));
         when(productMapper.toRequiredDocumentModelList(List.of(dto))).thenReturn(List.of(model));
 
-        List<RequiredDocumentModel> result = productService.getRequiredDocuments("AR", "prod-test", "PA", "IPA");
+        // when
+        List<RequiredDocumentModel> result = productService.getRequiredDocuments("AR", "prod-test", "PA", "IPA").await().indefinitely();
 
+        // then
         assertEquals(List.of(model), result);
         verify(productApi).getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA, "AR");
         verifyNoMoreInteractions(productApi);
     }
 
     @Test
+    @Timeout(value = 2, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+    void productLookupDoesNotMapBeforeTheDownstreamItem() {
+        // given
+        AtomicReference<UniEmitter<? super ProductResponse>> pending = new AtomicReference<>();
+        ProductResponse response = new ProductResponse();
+        Product product = new Product();
+        when(productApi.getProductById("prod-test", null))
+                .thenReturn(Uni.createFrom().<ProductResponse>emitter(pending::set));
+        when(productMapper.toProduct(response)).thenReturn(product);
+
+        // when
+        UniAssertSubscriber<Product> result = productService.getProduct("prod-test", null)
+                .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        result.assertNotTerminated();
+        verifyNoInteractions(productMapper);
+        pending.get().complete(response);
+        result.assertCompleted().assertItem(product);
+    }
+
+    @Test
+    void requiredDocumentsPropagateFailureWithoutMapping() {
+        // given
+        ResourceNotFoundException failure = new ResourceNotFoundException("missing documents");
+        when(productApi.getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA, "AR"))
+                .thenReturn(Uni.createFrom().failure(failure));
+
+        // when
+        UniAssertSubscriber<List<RequiredDocumentModel>> result =
+                productService.getRequiredDocuments("AR", "prod-test", "PA", "IPA")
+                        .subscribe().withSubscriber(UniAssertSubscriber.create());
+
+        // then
+        assertSame(failure, result.getFailure());
+        verifyNoInteractions(productMapper);
+    }
+
+    @Test
     void getRequiredDocuments_emptyList() {
+        // given
         when(productApi.getRequiredDocuments("prod-test", InstitutionType.PA, Origin.IPA, "AR"))
                 .thenReturn(Uni.createFrom().item(List.of()));
         when(productMapper.toRequiredDocumentModelList(List.of())).thenReturn(List.of());
 
-        assertTrue(productService.getRequiredDocuments("AR", "prod-test", "PA", "IPA").isEmpty());
+        // when
+        var actualAsync1 = productService.getRequiredDocuments("AR", "prod-test", "PA", "IPA").await().indefinitely();
+
+        // then
+        assertTrue(actualAsync1.isEmpty());
     }
 
     @Test
     void getRequiredDocuments_unknownInstitutionTypeIsRejectedWithoutCall() {
+        // given
+        // when
         assertThrows(IllegalArgumentException.class,
-                () -> productService.getRequiredDocuments("AR", "prod-test", "pa", "IPA"));
+                () -> productService.getRequiredDocuments("AR", "prod-test", "pa", "IPA").await().indefinitely());
         assertThrows(IllegalArgumentException.class,
-                () -> productService.getRequiredDocuments("AR", "prod-test", "PA", "ipa"));
+                () -> productService.getRequiredDocuments("AR", "prod-test", "PA", "ipa").await().indefinitely());
+        // then
         verifyNoInteractions(productApi);
     }
 
@@ -196,43 +246,64 @@ class ProductServiceImplTest {
 
     @Test
     void getProduct_delegatesTenantToHeader() {
+        // given
         ProductResponse response = new ProductResponse();
         Product product = new Product();
         when(productApi.getProductById("prod-io", null)).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toProduct(response)).thenReturn(product);
 
-        assertSame(product, productService.getProduct("prod-io", null));
+        // when
+        var actualAsync1 = productService.getProduct("prod-io", null).await().indefinitely();
+
+        // then
+        assertSame(product, actualAsync1);
         verify(productApi).getProductById("prod-io", null);
         verifyNoMoreInteractions(productApi);
     }
 
     @Test
     void getProduct_sanitizesSpecialCharacters() {
+        // given
         String raw = "prod\"io\n";
         ProductResponse response = new ProductResponse();
         Product product = new Product();
         when(productApi.getProductById(Encode.forJava(raw), null)).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toProduct(response)).thenReturn(product);
 
-        assertSame(product, productService.getProduct(raw, null));
+        // when
+        var actualAsync1 = productService.getProduct(raw, null).await().indefinitely();
+
+        // then
+        assertSame(product, actualAsync1);
     }
 
     @Test
     void getProduct_propagatesNotFound() {
+        // given
         when(productApi.getProductById("missing", null))
                 .thenReturn(Uni.createFrom().failure(new ResourceNotFoundException("No product found with id missing")));
 
-        assertThrows(ResourceNotFoundException.class, () -> productService.getProduct("missing", null));
+        // when
+        assertThrows(ResourceNotFoundException.class, () -> productService.getProduct("missing", null).await().indefinitely());
+
+        // then
+        verify(productApi).getProductById("missing", null);
+        verifyNoInteractions(productMapper);
     }
 
     @Test
     void getProductValid_usesValidEndpoint() {
+        // given
         ProductResponse response = new ProductResponse();
         Product product = new Product();
         when(productApi.getValidProductById("prod-io", null)).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toProduct(response)).thenReturn(product);
 
-        assertSame(product, productService.getProductValid("prod-io"));
+        // when
+        var actualAsync1 = productService.getProductValid("prod-io").await().indefinitely();
+
+        // then
+        assertSame(product, actualAsync1);
         verify(productApi).getValidProductById("prod-io", null);
         verifyNoMoreInteractions(productApi);
     }
@@ -348,6 +419,7 @@ class ProductServiceImplTest {
 
     @Test
     void isProductEnabled_readsFeatureFromValidProduct() {
+        // given
         ProductResponse enabledResponse = mock(ProductResponse.class);
         ProductResponse disabledResponse = mock(ProductResponse.class);
         when(productApi.getValidProductById("prod-io", null)).thenReturn(Uni.createFrom().item(enabledResponse));
@@ -355,31 +427,49 @@ class ProductServiceImplTest {
         when(productMapper.toProduct(enabledResponse)).thenReturn(product("prod-io", ProductStatus.ACTIVE, true));
         when(productMapper.toProduct(disabledResponse)).thenReturn(product("prod-disabled", ProductStatus.ACTIVE, false));
 
-        assertTrue(productService.isProductEnabled("prod-io"));
-        assertFalse(productService.isProductEnabled("prod-disabled"));
+        // when
+        var actualAsync1 = productService.isProductEnabled("prod-io").await().indefinitely();
+
+        // then
+        assertTrue(actualAsync1);
+        var actualAsync2 = productService.isProductEnabled("prod-disabled").await().indefinitely();
+
+        assertFalse(actualAsync2);
     }
 
     @Test
     void verifyAllowedByInstitutionTaxCode_ignoresCase() {
+        // given
         ProductResponse response = new ProductResponse();
         Product product = new Product();
         product.setAllowedInstitutionTaxCode(List.of("ABC123"));
         when(productApi.getValidProductById("prod-io", null)).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toProduct(response)).thenReturn(product);
 
-        assertTrue(productService.verifyAllowedByInstitutionTaxCode("prod-io", "abc123"));
+        // when
+        var actualAsync1 = productService.verifyAllowedByInstitutionTaxCode("prod-io", "abc123").await().indefinitely();
+
+        // then
+        assertTrue(actualAsync1);
     }
 
     @Test
     void verifyAllowedByInstitutionTaxCode_falseWhenNotListedOrListMissing() {
+        // given
         ProductResponse response = new ProductResponse();
         Product listed = new Product();
         listed.setAllowedInstitutionTaxCode(List.of("ABC123"));
         when(productApi.getValidProductById("prod-io", null)).thenReturn(Uni.createFrom().item(response));
         when(productMapper.toProduct(response)).thenReturn(listed).thenReturn(new Product());
 
-        assertFalse(productService.verifyAllowedByInstitutionTaxCode("prod-io", "XYZ999"));
-        assertFalse(productService.verifyAllowedByInstitutionTaxCode("prod-io", "ABC123"));
+        // when
+        var actualAsync1 = productService.verifyAllowedByInstitutionTaxCode("prod-io", "XYZ999").await().indefinitely();
+
+        // then
+        assertFalse(actualAsync1);
+        var actualAsync2 = productService.verifyAllowedByInstitutionTaxCode("prod-io", "ABC123").await().indefinitely();
+
+        assertFalse(actualAsync2);
     }
 
     private static Product product(String id, ProductStatus status, boolean enabled) {

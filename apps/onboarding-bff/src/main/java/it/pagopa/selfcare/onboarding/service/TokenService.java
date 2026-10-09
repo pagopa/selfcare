@@ -1,12 +1,13 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.model.BinaryData;
 import it.pagopa.selfcare.onboarding.client.model.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.UploadedFile;
 
 public interface TokenService {
-  OnboardingData verifyOnboarding(String onboardingId);
+  Uni<OnboardingData> verifyOnboarding(String onboardingId);
 
   default void approveOnboarding(String onboardingId) {
     approveOnboarding(onboardingId, null);
@@ -30,7 +31,7 @@ public interface TokenService {
 
   BinaryData getContractSigned(String onboardingId);
 
-  BinaryData getTemplateAttachment(String onboardingId, String filename);
+  Uni<BinaryData> getTemplateAttachment(String onboardingId, String filename);
 
   BinaryData getAttachment(String onboardingId, String filename);
 
@@ -38,7 +39,7 @@ public interface TokenService {
 
   BinaryData getAggregatesCsv(String onboardingId, String productId);
 
-  void uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
+  Uni<Void> uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
                         String attachmentId, String attachmentDescription);
 
   int headAttachment(String onboardingId, String filename);

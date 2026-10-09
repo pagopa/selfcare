@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -175,11 +176,19 @@ class UserServiceImplTest {
 
     @Test
     void checkManager_returnsTheDownstreamAnswer() {
+        // given
         CheckManagerRequest request = new CheckManagerRequest();
-        when(onboardingMsClient.checkManager(request)).thenReturn(true, false);
+        when(onboardingMsClient.checkManager(request))
+                .thenReturn(Uni.createFrom().item(true), Uni.createFrom().item(false));
 
-        assertTrue(userService.checkManager(request));
-        assertFalse(userService.checkManager(request));
+        // when
+        var actualAsync1 = userService.checkManager(request).await().indefinitely();
+
+        // then
+        assertTrue(actualAsync1);
+        var actualAsync2 = userService.checkManager(request).await().indefinitely();
+
+        assertFalse(actualAsync2);
     }
 
     @Test

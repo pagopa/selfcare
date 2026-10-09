@@ -1,19 +1,20 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.model.*;
 import java.util.List;
 
 public interface InstitutionService {
 
-    void onboardingProductV2(OnboardingData onboardingData);
+    Uni<Void> onboardingProductV2(OnboardingData onboardingData);
 
     void onboardingCompanyV2(OnboardingData onboardingData, String userFiscalCode);
 
-    void onboardingProduct(OnboardingData onboardingData);
+    Uni<Void> onboardingProduct(OnboardingData onboardingData);
 
-    void onboardingPaAggregator(OnboardingData entity);
+    Uni<Void> onboardingPaAggregator(OnboardingData entity);
 
-    List<InstitutionInfo> getInstitutions(String productId, String userId);
+    Uni<List<InstitutionInfo>> getInstitutions(String productId, String userId);
 
     IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize);
 
@@ -31,16 +32,16 @@ public interface InstitutionService {
 
     List<GeographicTaxonomy> getGeographicTaxonomyList(String taxCode, String subunitCode);
 
-    void verifyOnboarding(String externalInstitutionId, String productId);
+    Uni<Void> verifyOnboarding(String externalInstitutionId, String productId);
 
-    void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
+    Uni<Void> verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType);
 
-    void checkOrganization(String productId, String fiscalCode, String vatNumber);
+    Uni<Void> checkOrganization(String productId, String fiscalCode, String vatNumber);
     MatchInfoResult matchInstitutionAndUser(String externalInstitutionId, User user);
 
     InstitutionLegalAddressData getInstitutionLegalAddress(String externalInstitutionId);
 
-    InstitutionInfoIC getInstitutionsByUser(String taxCode);
+    Uni<InstitutionInfoIC> getInstitutionsByUser(String taxCode);
 
     List<Institution> getByFilters(String productId, String taxCode, String origin, String originId, String subunitCode);
 
@@ -54,7 +55,7 @@ public interface InstitutionService {
 
     List<OnboardingResult> getOnboardingWithFilter(String taxCode, String status);
 
-    void validateOnboardingByProductOrInstitutionTaxCode(String taxCode, String productId);
+    Uni<Void> validateOnboardingByProductOrInstitutionTaxCode(String taxCode, String productId);
 
     void triggerOnboardingRequest(String onboardingId);
 }

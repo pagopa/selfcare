@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
 import io.vertx.core.buffer.Buffer;
 import it.pagopa.selfcare.onboarding.client.OnboardingUploadRestClient;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
@@ -28,7 +29,6 @@ import org.openapi.quarkus.onboarding_json.api.OnboardingControllerApi;
 import org.openapi.quarkus.onboarding_json.api.SupportApi;
 import org.openapi.quarkus.onboarding_json.model.ApproveRequest;
 import org.openapi.quarkus.onboarding_json.model.CheckManagerRequest;
-import org.openapi.quarkus.onboarding_json.model.CheckManagerResponse;
 import org.openapi.quarkus.onboarding_json.model.OnboardingGet;
 import org.openapi.quarkus.onboarding_json.model.OnboardingGetResponse;
 import org.openapi.quarkus.onboarding_json.model.OnboardingResponse;
@@ -80,13 +80,16 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboarding(OnboardingData onboardingData) {
+    public Uni<Void> onboarding(OnboardingData onboardingData) {
         if (onboardingData.getInstitutionType() == InstitutionType.PA) {
-            onboardingApi.onboardingPa(validated("_onboardingPa", "onboardingPaRequest", onboardingMapper.toOnboardingPaRequest(onboardingData))).await().indefinitely();
+            return onboardingApi.onboardingPa(validated("_onboardingPa", "onboardingPaRequest", onboardingMapper.toOnboardingPaRequest(onboardingData)))
+                    .replaceWithVoid();
         } else if (onboardingData.getInstitutionType() == InstitutionType.PSP) {
-            onboardingApi.onboardingPsp(validated("_onboardingPsp", "onboardingPspRequest", onboardingMapper.toOnboardingPspRequest(onboardingData))).await().indefinitely();
+            return onboardingApi.onboardingPsp(validated("_onboardingPsp", "onboardingPspRequest", onboardingMapper.toOnboardingPspRequest(onboardingData)))
+                    .replaceWithVoid();
         } else {
-            onboardingApi.onboarding(validated("_onboarding", "onboardingDefaultRequest", onboardingMapper.toOnboardingDefaultRequest(onboardingData))).await().indefinitely();
+            return onboardingApi.onboarding(validated("_onboarding", "onboardingDefaultRequest", onboardingMapper.toOnboardingDefaultRequest(onboardingData)))
+                    .replaceWithVoid();
         }
     }
 
@@ -151,8 +154,8 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public OnboardingGet getOnboarding(String onboardingId) {
-        return onboardingApi.getById(onboardingId).await().indefinitely();
+    public Uni<OnboardingGet> getOnboarding(String onboardingId) {
+        return onboardingApi.getById(onboardingId);
     }
 
     @Override
@@ -163,8 +166,9 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public void onboardingPaAggregation(OnboardingData onboardingData) {
-        onboardingApi.onboardingPaAggregation(validated("_onboardingPaAggregation", "onboardingPaRequest", onboardingMapper.toOnboardingPaAggregationRequest(onboardingData))).await().indefinitely();
+    public Uni<Void> onboardingPaAggregation(OnboardingData onboardingData) {
+        return onboardingApi.onboardingPaAggregation(validated("_onboardingPaAggregation", "onboardingPaRequest", onboardingMapper.toOnboardingPaAggregationRequest(onboardingData)))
+                .replaceWithVoid();
     }
 
     @Override
@@ -185,9 +189,9 @@ public class OnboardingServiceImpl implements OnboardingService {
 
     @Override
     @Retry(maxRetries = 2, delay = 5000, delayUnit = ChronoUnit.MILLIS, jitter = 0, retryOn = {ProcessingException.class, IOException.class})
-    public boolean checkManager(CheckManagerRequest request) {
-        CheckManagerResponse response = onboardingApi.checkManager(validated("_checkManager", "checkManagerRequest", request)).await().indefinitely();
-        return Objects.requireNonNull(response).getResponse();
+    public Uni<Boolean> checkManager(CheckManagerRequest request) {
+        return onboardingApi.checkManager(validated("_checkManager", "checkManagerRequest", request))
+                .map(response -> Objects.requireNonNull(response).getResponse());
     }
 
     @Override
@@ -196,12 +200,13 @@ public class OnboardingServiceImpl implements OnboardingService {
     }
 
     @Override
-    public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
+    public Uni<Void> verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
         log.trace("verifyOnboarding start");
         Preconditions.hasText(productId, REQUIRED_PRODUCT_ID_MESSAGE);
-        onboardingApi.verifyOnboardingInfoByFilters(institutionType, origin, originId, productId, subunitCode, taxCode)
-                .await().indefinitely().close();
-        log.trace("verifyOnboarding end");
+        return onboardingApi.verifyOnboardingInfoByFilters(institutionType, origin, originId, productId, subunitCode, taxCode)
+                .invoke(Response::close)
+                .invoke(response -> log.trace("verifyOnboarding end"))
+                .replaceWithVoid();
     }
 
     @Override

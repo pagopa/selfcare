@@ -1,5 +1,8 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
+import jakarta.ws.rs.core.Response;
+import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.onboarding.service.*;
 
 import it.pagopa.selfcare.onboarding.client.model.*;
@@ -79,20 +82,20 @@ class InstitutionServiceImpl implements InstitutionService {
         this.pgManagerVerifier = pgManagerVerifier;
     }
     @Override
-    public void onboardingProductV2(OnboardingData onboardingData) {
+    public Uni<Void> onboardingProductV2(OnboardingData onboardingData) {
         log.trace("onboardingProductAsync start");
         log.debug("onboardingProductAsync onboardingData = {}", onboardingData);
-        onboardingMsConnector.onboarding(onboardingData);
-        log.trace("onboarding end");
+        return onboardingMsConnector.onboarding(onboardingData)
+                .invoke(() -> log.trace("onboarding end"));
     }
     @Override
-    public void onboardingPaAggregator(OnboardingData onboardingData) {
+    public Uni<Void> onboardingPaAggregator(OnboardingData onboardingData) {
         log.trace("onboardingPaAggregator start");
         if(isEmptyCollection(onboardingData.getAggregates())){
             throw new ValidationException(REQUIRED_AGGREGATE_INSTITUTIONS);
         }
-        onboardingMsConnector.onboardingPaAggregation(onboardingData);
-        log.trace("onboarding end");
+        return onboardingMsConnector.onboardingPaAggregation(onboardingData)
+                .invoke(() -> log.trace("onboarding end"));
     }
     @Override
     public void onboardingCompanyV2(OnboardingData onboardingData, String userFiscalCode) {
@@ -138,7 +141,7 @@ class InstitutionServiceImpl implements InstitutionService {
         }
     }
     @Override
-    public void onboardingProduct(OnboardingData onboardingData) {
+    public Uni<Void> onboardingProduct(OnboardingData onboardingData) {
         log.trace("onboarding start");
         log.debug("onboarding onboardingData = {}", onboardingData);
         Preconditions.notNull(onboardingData, REQUIRED_ONBOARDING_DATA_MESSAGE);
@@ -151,18 +154,24 @@ class InstitutionServiceImpl implements InstitutionService {
         if (isLocationInfoRequired(onboardingData.getOrigin()) && onboardingData.getLocation() == null){
             throw new ValidationException(LOCATION_INFO_IS_REQUIRED);
         }
-        Product product = productService.getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType());
-        Preconditions.notNull(product, "Product is required");
-        checkIfProductIsDelegable(onboardingData, product.isDelegable());
-        if(product.getStatus() == ProductStatus.PHASE_OUT){
-            throw new ValidationException(String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED,
-                    onboardingData.getTaxCode(),
-                    product.getId()));
-        }
-        onboardingData.setContractPath(product.getInstitutionContractTemplate(onboardingData.getInstitutionType().name()).getContractTemplatePath());
-        onboardingData.setContractVersion(product.getInstitutionContractTemplate(onboardingData.getInstitutionType().name()).getContractTemplateVersion());
-        checkIfProductIsActiveAndSetUserProductRole(product, onboardingData);
-        onboardingData.setProductName(product.getTitle());
+        return productService.getProduct(onboardingData.getProductId(), onboardingData.getInstitutionType())
+                .invoke(product -> {
+                    Preconditions.notNull(product, "Product is required");
+                    checkIfProductIsDelegable(onboardingData, product.isDelegable());
+                    if (product.getStatus() == ProductStatus.PHASE_OUT) {
+                        throw new ValidationException(String.format(UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED,
+                                onboardingData.getTaxCode(), product.getId()));
+                    }
+                    onboardingData.setContractPath(product.getInstitutionContractTemplate(onboardingData.getInstitutionType().name()).getContractTemplatePath());
+                    onboardingData.setContractVersion(product.getInstitutionContractTemplate(onboardingData.getInstitutionType().name()).getContractTemplateVersion());
+                })
+                .chain(product -> checkIfProductIsActiveAndSetUserProductRole(product, onboardingData)
+                        .invoke(() -> onboardingData.setProductName(product.getTitle())))
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> onboardInstitutionAndUsers(onboardingData));
+    }
+
+    private void onboardInstitutionAndUsers(OnboardingData onboardingData) {
         Institution institution;
         try {
             institution = partyConnector.getInstitutionsByTaxCodeAndSubunitCode(onboardingData.getTaxCode(), onboardingData.getSubunitCode())
@@ -221,30 +230,29 @@ class InstitutionServiceImpl implements InstitutionService {
             return false;
         }
     }
-    private void checkIfProductIsActiveAndSetUserProductRole(Product product, OnboardingData onboardingData) {
-        Map<PartyRole, ProductRoleInfo> roleMappings;
+    private Uni<Void> checkIfProductIsActiveAndSetUserProductRole(Product product, OnboardingData onboardingData) {
         if (product.getParentId() != null) {
-            final Product baseProduct = productService.getProduct(product.getParentId(), null);
-            if(baseProduct.getStatus() == ProductStatus.PHASE_OUT){
-                throw new ValidationException(String.format("Unable to complete the onboarding for institution with taxCode '%s' to product '%s', the base product is dismissed.",
-                        onboardingData.getTaxCode(),
-                        baseProduct.getId()));
-            }
-            validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), baseProduct.getId());
-            try {
-                partyConnector.verifyOnboarding(baseProduct.getId(), null, onboardingData.getTaxCode(), onboardingData.getOrigin(), null, onboardingData.getSubunitCode());
-            } catch (RuntimeException e) {
-                throw new ValidationException(String.format("Unable to complete the onboarding for institution with taxCode '%s' to product '%s'. Please onboard first the '%s' product for the same institution",
-                        onboardingData.getTaxCode(),
-                        product.getId(),
-                        baseProduct.getId()));
-            }
-            roleMappings = baseProduct.getRoleMappings(onboardingData.getInstitutionType().name());
-        } else {
-            validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), product.getId());
-            roleMappings = product.getRoleMappings(onboardingData.getInstitutionType().name());
+            return productService.getProduct(product.getParentId(), null)
+                    .chain(baseProduct -> {
+                        if (baseProduct.getStatus() == ProductStatus.PHASE_OUT) {
+                            throw new ValidationException(String.format("Unable to complete the onboarding for institution with taxCode '%s' to product '%s', the base product is dismissed.",
+                                    onboardingData.getTaxCode(), baseProduct.getId()));
+                        }
+                        return validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), baseProduct.getId())
+                                .emitOn(Infrastructure.getDefaultWorkerPool())
+                                .invoke(() -> {
+                                    try {
+                                        partyConnector.verifyOnboarding(baseProduct.getId(), null, onboardingData.getTaxCode(), onboardingData.getOrigin(), null, onboardingData.getSubunitCode());
+                                    } catch (RuntimeException e) {
+                                        throw new ValidationException(String.format("Unable to complete the onboarding for institution with taxCode '%s' to product '%s'. Please onboard first the '%s' product for the same institution",
+                                                onboardingData.getTaxCode(), product.getId(), baseProduct.getId()));
+                                    }
+                                    validateProductRole(onboardingData.getUsers(), baseProduct.getRoleMappings(onboardingData.getInstitutionType().name()));
+                                });
+                    });
         }
-        validateProductRole(onboardingData.getUsers(), roleMappings);
+        return validateOnboardingByProductOrInstitutionTaxCode(onboardingData.getTaxCode(), product.getId())
+                .invoke(() -> validateProductRole(onboardingData.getUsers(), product.getRoleMappings(onboardingData.getInstitutionType().name())));
     }
     private void validateProductRole(List<User> users, Map<PartyRole, ProductRoleInfo> roleMappings) {
         Preconditions.notNull(roleMappings, "Role mappings is required");
@@ -306,21 +314,19 @@ class InstitutionServiceImpl implements InstitutionService {
         return isToUpdate;
     }
     @Override
-    public List<InstitutionInfo> getInstitutions(String productId, String userId) {
+    public Uni<List<InstitutionInfo>> getInstitutions(String productId, String userId) {
         log.trace("getInstitutions start");
-        Product product;
-        try {
-            product = productService.getProduct(productId, null);
-        } catch (ResourceNotFoundException e) {
-            throw new ResourceNotFoundException("No product found with id " + productId);
-        }
-        List<InstitutionInfo> result = partyConnector.getInstitutionsByUser(product, userId);
-        if (result.isEmpty()) {
-            throw new ResourceNotFoundException("No institutions found for product " + productId);
-        }
-        log.debug("getInstitutions result = {}", result);
-        log.trace("getInstitutions end");
-        return result;
+        return productService.getProduct(productId, null)
+                .onFailure(ResourceNotFoundException.class)
+                .transform(failure -> new ResourceNotFoundException("No product found with id " + productId))
+                .chain(product -> partyConnector.getInstitutionsByUser(product, userId))
+                .invoke(result -> {
+                    if (result.isEmpty()) {
+                        throw new ResourceNotFoundException("No institutions found for product " + productId);
+                    }
+                    log.debug("getInstitutions result = {}", result);
+                    log.trace("getInstitutions end");
+                });
     }
     @Override
     public IpaInstitutionsSearchResult searchIpaInstitutions(String search, String category, Integer page, Integer pageSize) {
@@ -407,21 +413,22 @@ class InstitutionServiceImpl implements InstitutionService {
                 .orElse(Collections.emptyList());
     }
     @Override
-    public void verifyOnboarding(String externalInstitutionId, String productId) {
+    public Uni<Void> verifyOnboarding(String externalInstitutionId, String productId) {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding externalInstitutionId = {}", LogUtils.sanitize(externalInstitutionId));
-        validateOnboardingByProductOrInstitutionTaxCode(externalInstitutionId, productId);
-        partyConnector.verifyOnboarding(externalInstitutionId, productId);
-        log.trace("verifyOnboarding end");
+        return validateOnboardingByProductOrInstitutionTaxCode(externalInstitutionId, productId)
+                .emitOn(Infrastructure.getDefaultWorkerPool())
+                .invoke(() -> partyConnector.verifyOnboarding(externalInstitutionId, productId))
+                .invoke(() -> log.trace("verifyOnboarding end"));
     }
     @Override
-    public void verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
+    public Uni<Void> verifyOnboarding(String productId, String taxCode, String origin, String originId, String subunitCode, String institutionType) {
         log.trace("verifyOnboardingSubunit start");
         validateParameter(taxCode, origin, originId, subunitCode);
         log.debug("verifyOnboardingSubunit taxCode = {}", LogUtils.sanitize(taxCode));
-        validateOnboardingByProductOrInstitutionTaxCode(taxCode, productId);
-        onboardingMsConnector.verifyOnboarding(productId, taxCode, origin, originId, subunitCode, institutionType);
-        log.trace("verifyOnboardingSubunit end");
+        return validateOnboardingByProductOrInstitutionTaxCode(taxCode, productId)
+                .chain(() -> onboardingMsConnector.verifyOnboarding(productId, taxCode, origin, originId, subunitCode, institutionType))
+                .invoke(() -> log.trace("verifyOnboardingSubunit end"));
     }
     private static boolean isNullOrEmpty(String value) {
         return value == null || value.isEmpty();
@@ -434,56 +441,74 @@ class InstitutionServiceImpl implements InstitutionService {
         }
     }
     @Override
-    public void checkOrganization(String productId, String fiscalCode, String vatNumber) {
+    public Uni<Void> checkOrganization(String productId, String fiscalCode, String vatNumber) {
         log.trace("checkOrganization start");
         log.debug("checkOrganization productId = {}, fiscalCode = {}, vatNumber = {}",
                 LogUtils.sanitize(productId), LogUtils.sanitize(fiscalCode), LogUtils.sanitize(vatNumber));
-        organizationApi.checkOrganization(fiscalCode, vatNumber).await().indefinitely();
-        log.trace("checkOrganization end");
+        return organizationApi.checkOrganization(fiscalCode, vatNumber)
+                .invoke(Response::close)
+                .invoke(() -> log.trace("checkOrganization end"))
+                .replaceWithVoid();
     }
-    public void validateOnboardingByProductOrInstitutionTaxCode(String externalInstitutionId, String productId) {
+    public Uni<Void> validateOnboardingByProductOrInstitutionTaxCode(String externalInstitutionId, String productId) {
         log.trace("validate start");
         log.debug("validate productId = {}, externalInstitutionId = {}",
                 LogUtils.sanitize(productId), LogUtils.sanitize(externalInstitutionId));
-        boolean productEnabled = productService.isProductEnabled(productId);
-        boolean institutionAllowed = productService.verifyAllowedByInstitutionTaxCode(productId, externalInstitutionId);
-        log.debug("validate result = {}", productEnabled || institutionAllowed);
-        log.trace("validate end");
-        if (!productEnabled && !institutionAllowed) {
-            throw new OnboardingNotAllowedException(String.format(ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE,
-                    externalInstitutionId,
-                    productId));
-        }
+        return productService.isProductEnabled(productId)
+                .chain(productEnabled -> productService.verifyAllowedByInstitutionTaxCode(productId, externalInstitutionId)
+                        .invoke(institutionAllowed -> {
+                            log.debug("validate result = {}", productEnabled || institutionAllowed);
+                            log.trace("validate end");
+                            if (!productEnabled && !institutionAllowed) {
+                                throw new OnboardingNotAllowedException(String.format(ONBOARDING_NOT_ALLOWED_ERROR_MESSAGE_TEMPLATE,
+                                        externalInstitutionId, productId));
+                            }
+                        }))
+                .replaceWithVoid();
     }
     @Override
-    public InstitutionInfoIC getInstitutionsByUser(String fiscalCode) {
+    public Uni<InstitutionInfoIC> getInstitutionsByUser(String fiscalCode) {
         log.trace("getInstitutionsByUserId start");
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserId user = {}", fiscalCode);
-        InstitutionInfoIC result = partyRegistryProxyConnector.getInstitutionsByUserFiscalCode(fiscalCode);
-        log.debug("found {} institutions for the user", result.getBusinesses().size());
-        List<BusinessInfoIC> institutionsNotOnboardedByUser = result.getBusinesses().stream()
-                .filter(businessInfoIC -> !isOnboardedByUser(businessInfoIC, fiscalCode))
-                .toList();
-        result.setBusinesses(institutionsNotOnboardedByUser);
-        log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserId result = {}", result);
-        log.trace("getInstitutionsByUserId end");
-        return result;
+        return Uni.createFrom().item(() -> partyRegistryProxyConnector.getInstitutionsByUserFiscalCode(fiscalCode))
+                .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                .chain(result -> {
+                    log.debug("found {} institutions for the user", result.getBusinesses().size());
+                    Uni<List<BusinessInfoIC>> filtered = Uni.createFrom().item(ArrayList::new);
+                    for (BusinessInfoIC business : result.getBusinesses()) {
+                        filtered = filtered.chain(businesses -> isOnboardedByUser(business, fiscalCode)
+                                .map(onboarded -> {
+                                    if (!onboarded) {
+                                        businesses.add(business);
+                                    }
+                                    return businesses;
+                                }));
+                    }
+                    return filtered.map(businesses -> {
+                        result.setBusinesses(businesses.stream().toList());
+                        return result;
+                    });
+                })
+                .invoke(result -> {
+                    log.debug(LogUtils.CONFIDENTIAL_MARKER, "getInstitutionsByUserId result = {}", result);
+                    log.trace("getInstitutionsByUserId end");
+                });
     }
-    private boolean isOnboardedByUser(BusinessInfoIC businessInfoIC, String fiscalCode) {
+    private Uni<Boolean> isOnboardedByUser(BusinessInfoIC businessInfoIC, String fiscalCode) {
         log.debug(LogUtils.CONFIDENTIAL_MARKER, "Checking if business with tax code {} is onboarded by user with fiscal code {}",
                 businessInfoIC.getBusinessTaxId(), fiscalCode);
-        try {
-            onboardingMsConnector.verifyOnboarding(PROD_PN_PG, businessInfoIC.getBusinessTaxId(), null, null, null, null);
-            log.debug("Business with tax code {} is already onboarded, checking if user with fiscal code {} is manager",
-                    businessInfoIC.getBusinessTaxId(), fiscalCode);
-            boolean isManager = onboardingMsConnector.checkManager(getCheckManagerRequest(fiscalCode, businessInfoIC));
-            log.debug(LogUtils.CONFIDENTIAL_MARKER, "User with fiscal code {} is manager of business with tax code {}",
-                    fiscalCode, businessInfoIC.getBusinessTaxId());
-            return isManager;
-        } catch (ResourceNotFoundException e) {
-            log.debug("Business with tax code {} is not onboarded", businessInfoIC.getBusinessTaxId());
-            return false;
-        }
+        return onboardingMsConnector.verifyOnboarding(PROD_PN_PG, businessInfoIC.getBusinessTaxId(), null, null, null, null)
+                .invoke(() -> log.debug("Business with tax code {} is already onboarded, checking if user with fiscal code {} is manager",
+                        businessInfoIC.getBusinessTaxId(), fiscalCode))
+                .chain(() -> Uni.createFrom().item(() -> getCheckManagerRequest(fiscalCode, businessInfoIC))
+                        .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
+                        .chain(onboardingMsConnector::checkManager))
+                .invoke(isManager -> log.debug(LogUtils.CONFIDENTIAL_MARKER, "User with fiscal code {} is manager of business with tax code {}",
+                        fiscalCode, businessInfoIC.getBusinessTaxId()))
+                .onFailure(ResourceNotFoundException.class).recoverWithItem(failure -> {
+                    log.debug("Business with tax code {} is not onboarded", businessInfoIC.getBusinessTaxId());
+                    return false;
+                });
     }
     private CheckManagerRequest getCheckManagerRequest(String fiscalCode, BusinessInfoIC businessInfoIC) {
         UserId userId = userConnector.searchUser(fiscalCode);

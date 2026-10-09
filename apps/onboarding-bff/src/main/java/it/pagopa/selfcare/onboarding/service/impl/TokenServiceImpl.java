@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service.impl;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.service.*;
 
 import it.pagopa.selfcare.onboarding.client.model.AttachmentTemplate;
@@ -35,14 +36,16 @@ public class TokenServiceImpl implements TokenService {
     private static final String TOKEN_ID_IS_REQUIRED = "TokenId is required";
 
     @Override
-    public OnboardingData verifyOnboarding(String onboardingId) {
+    public Uni<OnboardingData> verifyOnboarding(String onboardingId) {
         log.trace("verifyOnboarding start");
         log.debug("verifyOnboarding id = {}", onboardingId);
         Objects.requireNonNull(onboardingId, ONBOARDING_ID_REQUIRED_MESSAGE);
-        OnboardingData onboardingData = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboarding(onboardingId));
-        log.debug("verifyOnboarding result = success");
-        log.trace("verifyOnboarding end");
-        return onboardingData;
+        return onboardingMsConnector.getOnboarding(onboardingId)
+                .map(onboardingMapper::toOnboardingData)
+                .invoke(data -> {
+                    log.debug("verifyOnboarding result = success");
+                    log.trace("verifyOnboarding end");
+                });
     }
 
     @Override
@@ -119,25 +122,22 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public BinaryData getTemplateAttachment(String onboardingId, String filename) {
+    public Uni<BinaryData> getTemplateAttachment(String onboardingId, String filename) {
         log.trace("getTemplateAttachment start");
         log.debug("getTemplateAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(filename));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Objects.requireNonNull(filename, "filename is required");
 
-        OnboardingData onboarding = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboarding(onboardingId));
-        Product product = productService.getProductValid(onboarding.getProductId());
-        String templatePath = getAttachmentTemplate(filename, onboarding, product).getTemplatePath();
-
-        BinaryData resource = documentMsClient.getTemplateAttachment(
-                onboarding.getId(),
-                onboarding.getInstitutionUpdate().getDescription(),
-                filename,
-                onboarding.getProductId(),
-                templatePath);
-        log.debug("getTemplateAttachment result = success");
-        log.trace("getTemplateAttachment end");
-        return resource;
+        return onboardingMsConnector.getOnboarding(onboardingId)
+                .map(onboardingMapper::toOnboardingData)
+                .chain(onboarding -> productService.getProductValid(onboarding.getProductId())
+                        .chain(product -> documentMsClient.getTemplateAttachment(
+                                onboarding.getId(), onboarding.getInstitutionUpdate().getDescription(), filename,
+                                onboarding.getProductId(), getAttachmentTemplate(filename, onboarding, product).getTemplatePath())))
+                .invoke(resource -> {
+                    log.debug("getTemplateAttachment result = success");
+                    log.trace("getTemplateAttachment end");
+                });
     }
 
     @Override
@@ -176,42 +176,36 @@ public class TokenServiceImpl implements TokenService {
     }
 
     @Override
-    public void uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
+    public Uni<Void> uploadAttachment(String tenantId, String onboardingId, UploadedFile attachment, String attachmentName,
                                  String attachmentId, String attachmentDescription) {
         log.trace("uploadAttachment start");
         log.debug("uploadAttachment id = {}, filename = {}",  Encode.forJava(onboardingId),  Encode.forJava(attachmentName));
         Objects.requireNonNull(onboardingId, TOKEN_ID_IS_REQUIRED);
         Objects.requireNonNull(attachmentName, "filename is required");
         Objects.requireNonNull(attachment, "file is required");
-        OnboardingData onboarding = onboardingMapper.toOnboardingData(onboardingMsConnector.getOnboarding(onboardingId));
-
-        Optional<RequiredDocumentModel> requiredDocument = findRequiredDocument(tenantId, onboarding, attachmentId);
-        boolean userStorage = requiredDocument
-                .map(RequiredDocumentModel::getStorageOrigin)
-                .map(storageOrigin -> storageOrigin == StorageOrigin.USER)
-                .orElse(false);
-
-        if (userStorage) {
-            Integer maxDocumentsRequired = requiredDocument
-                    .map(RequiredDocumentModel::getMaxDocumentsRequired)
-                    .orElse(1);
-            log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
-            documentMsClient.uploadUserAttachment(
-                    onboardingId,
-                    attachment,
-                    onboarding.getProductId(),
-                    attachmentId,
-                    attachmentDescription,
-                    attachmentName,
-                    maxDocumentsRequired);
-        } else {
-            Product product = productService.getProductValid(onboarding.getProductId());
-            AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
-            log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
-            documentMsClient.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
-        }
-        log.debug("uploadAttachment result = success");
-        log.trace("uploadAttachment end");
+        return onboardingMsConnector.getOnboarding(onboardingId)
+                .map(onboardingMapper::toOnboardingData)
+                .chain(onboarding -> findRequiredDocument(tenantId, onboarding, attachmentId)
+                        .chain(requiredDocument -> {
+                            boolean userStorage = requiredDocument.map(RequiredDocumentModel::getStorageOrigin)
+                                    .map(storageOrigin -> storageOrigin == StorageOrigin.USER).orElse(false);
+                            if (userStorage) {
+                                Integer maxDocumentsRequired = requiredDocument.map(RequiredDocumentModel::getMaxDocumentsRequired).orElse(1);
+                                log.info("Upload attachment {} for onboardingId {} on user storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
+                                return documentMsClient.uploadUserAttachment(onboardingId, attachment, onboarding.getProductId(),
+                                        attachmentId, attachmentDescription, attachmentName, maxDocumentsRequired);
+                            }
+                            return productService.getProductValid(onboarding.getProductId())
+                                    .chain(product -> {
+                                        AttachmentTemplate template = getAttachmentTemplate(attachmentName, onboarding, product);
+                                        log.info("Upload attachment {} for onboardingId {} on system storage", Encode.forJava(attachmentName), Encode.forJava(onboardingId));
+                                        return documentMsClient.uploadAttachment(onboardingId, attachment, attachmentName, product.getId(), template);
+                                    });
+                        }))
+                .invoke(() -> {
+                    log.debug("uploadAttachment result = success");
+                    log.trace("uploadAttachment end");
+                });
     }
 
     @Override
@@ -226,16 +220,16 @@ public class TokenServiceImpl implements TokenService {
         return resource;
     }
 
-    private Optional<RequiredDocumentModel> findRequiredDocument(String tenantId, OnboardingData onboarding, String attachmentId) {
+    private Uni<Optional<RequiredDocumentModel>> findRequiredDocument(String tenantId, OnboardingData onboarding, String attachmentId) {
         return productService
                 .getRequiredDocuments(
                         tenantId,
                         onboarding.getProductId(),
                         onboarding.getInstitutionType().name(),
                         onboarding.getInstitutionUpdate().getOrigin())
-                .stream()
-                .filter(requiredDocumentModel -> requiredDocumentModel.getId().equals(attachmentId))
-                .findFirst();
+                .map(documents -> documents.stream()
+                        .filter(requiredDocumentModel -> requiredDocumentModel.getId().equals(attachmentId))
+                        .findFirst());
     }
 
     private AttachmentTemplate getAttachmentTemplate(String attachmentName, OnboardingData onboarding, Product product) {

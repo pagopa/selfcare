@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.client.model.OnboardingData;
 import it.pagopa.selfcare.onboarding.client.model.User;
 import it.pagopa.selfcare.onboarding.client.model.UserId;
@@ -12,7 +13,7 @@ public interface UserService {
 
   void onboardingUsersAggregator(OnboardingData onboardingData);
 
-  boolean checkManager(CheckManagerRequest checkManagerData);
+  Uni<Boolean> checkManager(CheckManagerRequest checkManagerData);
 
   User getManagerInfo(String onboardingId, String userTaxCode);
 

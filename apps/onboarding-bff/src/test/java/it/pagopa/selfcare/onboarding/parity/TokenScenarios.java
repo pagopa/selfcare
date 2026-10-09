@@ -604,7 +604,7 @@ final class TokenScenarios {
             .expect(c -> c.status(400).contentType("application/problem+json").totalCalls(0)));
   }
 
-  private static String withAttachmentContract(String name) {
+  static String withAttachmentContract(String name) {
     return "{\"productId\":\"prod-io\",\"tenantId\":\"PNPG\",\"title\":\"IO\",\"status\":\"ACTIVE\","
         + "\"features\":{\"enabled\":true},\"contracts\":[{\"onboardingType\":\"INSTITUTION\","
         + "\"institutionType\":\"PA\",\"contractType\":\"ATTACHMENT\",\"name\":\""

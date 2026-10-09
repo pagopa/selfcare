@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.controller;
 
+import io.smallrye.mutiny.Uni;
 import io.quarkus.security.Authenticated;
 import io.quarkus.security.identity.SecurityIdentity;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -121,12 +122,12 @@ public class UserController {
     @APIResponse(responseCode = "200", description = "OK")
     @Operation(summary = "${openapi.onboarding.users.api.check-manager}",
             description = "${openapi.onboarding.users.api.check-manager}", operationId = "checkManager")
-    public CheckManagerResponse checkManager(@Valid CheckManagerDto request) {
+    public Uni<CheckManagerResponse> checkManager(@Valid CheckManagerDto request) {
         RequestParams.requiredBody(request);
         log.trace("checkManager start");
-        boolean checkManager =  userService.checkManager(onboardingResourceMapper.toCheckManagerData(request));
-        log.trace("checkManager end");
-        return new CheckManagerResponse(checkManager);
+        return userService.checkManager(onboardingResourceMapper.toCheckManagerData(request))
+                .map(CheckManagerResponse::new)
+                .invoke(response -> log.trace("checkManager end"));
     }
 
     @APIResponse(responseCode = "403",
