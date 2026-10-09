@@ -18,7 +18,8 @@ ARG REPO_SELFCARE
 ARG REPO_USERNAME
 ARG REPO_PASSWORD
 
-RUN mvn --global-settings settings.xml -f apps/onboarding-bff/pom.xml \
+RUN --mount=type=secret,id=maven_settings,target=/src/settings.xml \
+    mvn --global-settings settings.xml -f apps/onboarding-bff/pom.xml \
     -DrepositoryId=${REPO_SELFCARE} -DrepoLogin=${REPO_USERNAME} -DrepoPwd=${REPO_PASSWORD} \
     clean package -DskipTests
 

@@ -73,8 +73,17 @@ The existing JaCoCo aggregate reports 78.66% line and 68.03% branch coverage. Wi
 executable scope, added lines versus `a8adee41c` measure 99.10% line / 98.36% branch coverage; versus
 `cd0a2751f`, they measure 92.33% / 85.56%. These diff measurements do not include classes already excluded
 by the aggregate and are not the Sonar new-code quality gate. No exclusions or dependencies were added.
-Actual frontend/APIM consumer runs, Sonar on a new published SHA, the real Docker builder/publish path,
-review/merge and rollout remain open. Both Docker integration runs restored their original resource sets.
+The actual frontend at `52d68ff2` passes its existing pre-generation, Swagger conversion, code generation,
+post-generation, TypeScript and Vite build against this candidate's alias, plus its three upload Problem
+decoder tests. Terraform `templatefile` renders that alias as JSON identical to the canonical document.
+These consumer checks ran in an isolated copy, without modifying frontend code, dependencies or assertions.
+The real Dockerfile also passes Maven packaging inside its builder and live runtime checks both without
+and with Application Insights 3.7.8: environment-only configuration, probe, exact OpenAPI, authentication,
+tenant, downstream headers, binary contract download without IAM and graceful shutdown. The local image
+is Linux/arm64; it is not a published release image. Task containers, image and build cache were removed,
+restoring the original resource sets.
+Deployed frontend/APIM and Azure telemetry smoke, Sonar on a new published SHA, pipeline publishing,
+review/merge and rollout remain open.
 
 ### Contract download authorization
 
@@ -98,7 +107,12 @@ Run the commands from the repository root. Maven needs the credentials of the `s
 | Build without tests | `mvn -f apps/onboarding-bff/pom.xml clean package -DskipTests` |
 | Run the packaged application | `JWT_TOKEN_PUBLIC_KEY="$(cat public-key.pem)" java -jar apps/onboarding-bff/target/quarkus-app/quarkus-run.jar` |
 | Dev mode with live reload | `JWT_TOKEN_PUBLIC_KEY=... mvn -f apps/onboarding-bff/pom.xml quarkus:dev` |
-| Container image | `docker build -f apps/onboarding-bff/Dockerfile --build-arg REPO_SELFCARE=selfcare --build-arg REPO_USERNAME=<user> --build-arg REPO_PASSWORD=<token> .` |
+| Container image | `docker build -f apps/onboarding-bff/Dockerfile --secret id=maven_settings,src="$HOME/.m2/settings.xml" --build-arg REPO_SELFCARE=selfcare .` |
+
+The optional BuildKit `maven_settings` secret mounts the existing Maven configuration only for the
+builder's Maven command; its contents are not copied into a layer. Existing CI build arguments remain
+supported when the secret is absent. Prefer the secret for local builds rather than putting credentials
+in build arguments.
 
 The build regenerates the OpenAPI document under `apps/onboarding-bff/src/main/docs/` (`openapi.json`,
 `openapi.yaml`): it is the canonical published specification and must be committed together with the code that

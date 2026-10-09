@@ -90,10 +90,10 @@ Non aggiungere `repository` o `entity`: il BFF non ha persistenza propria.
 
 ## Backlog e dipendenze
 
-**ST01-ST07 e ST09 sono completate nel perimetro locale; ST08-T01/T02/T03 e
-ST10-T01 sono completati.** ST08-T04 e ST10-T02/T03/T04 restano aperti per i
-consumer e gate esterni: le evidenze locali non certificano frontend/APIM,
-Sonar sul nuovo SHA, builder/publish e osservabilita deployata. Le decisioni esterne bloccate sono
+**ST01-ST09, ST10-T01/T02/T04 sono completati nel perimetro locale.**
+ST10-T03 resta parziale per CI/Sonar sul nuovo SHA: le evidenze locali non certificano
+il deployment frontend/APIM,
+Sonar sul nuovo SHA, publishing e osservabilita deployata. Le decisioni esterne bloccate sono
 elencate nel registro ST01 e non autorizzano rimozioni. Il completamento
 dell'inventario non chiude l'epic. Le dipendenze sono prerequisiti di implementazione, non un obbligo di
 lavorare in parallelo; i task di una storia si eseguono nell'ordine indicato.
@@ -186,10 +186,65 @@ mvn -T 1 -B -ntp --projects :test-coverage --also-make verify \
   -Ponboarding-bff,report,integration-tests -Dparity.spring.jar="$SPRING_ORACLE_JAR"
 ```
 
-**Stato:** reactor misto, contratto completo, integrazione e report locali verdi;
-checkbox riconciliate con le evidenze pertinenti. Consumer frontend/APIM reali, Sonar sul nuovo SHA, review,
-builder/publish e rollout restano gate espliciti. L'oracolo main cd0a2751f e
+**Consumer reale verificato:** frontend
+`52d68ff2aff4469aad16e058f02ec8bb877e68f2`, copia isolata dello SHA con dipendenze
+gia disponibili, alias del candidato come input. `yarn build` passa il suo
+pregen, conversione OpenAPI3/Swagger2, codegen, postgen, TypeScript e Vite;
+il test esistente `uploadProblemDecoding.test.ts` passa 3/3 casi.
+La prima suite non importava i test per il localStorage nativo di Node 26:
+rieseguita con `NODE_OPTIONS=--no-experimental-webstorage`, usando lo storage
+jsdom configurato dal consumer, senza modificare test o aspettative. Il frontend
+fissa Node 24.13.0 in CI; questa e una verifica locale Node 26.10.0, non la sua CI.
+Checkout frontend, manifest e lockfile immutati. Terraform 1.15.5 console,
+senza provider o backend, restituisce `true` per
+`jsondecode(templatefile(alias, {})) == jsondecode(file(canonical))`.
+Nessun import APIM o deployment Azure eseguito.
+Log: bff-final-frontend-consumer.log, bff-final-frontend-decoder.log e
+bff-final-apim-templatefile.log.
+
+**Stato:** reactor misto, contratto completo, consumer/codegen/templatefile,
+integrazione e report locali verdi; checkbox riconciliate con le evidenze pertinenti.
+Smoke frontend/APIM deployati, Sonar sul nuovo SHA, review,
+publishing e rollout restano gate espliciti. L'oracolo main cd0a2751f e
 lo SHA-256 registrato restano immutati.
+
+**Builder Docker reale e runtime finale:** percorso originale del Dockerfile con
+Maven dentro il builder, senza sostituire lo stage con un artefatto host.
+L'endpoint GitHub Packages dell'SDK richiede autenticazione (401 senza credenziali):
+interrotto il tentativo anonimo, ripristinata la baseline con rimozione dei suoi
+23 record cache. Aggiunto il solo mount BuildKit opzionale `maven_settings` per
+usare il file Maven esistente durante RUN, senza copiarne il contenuto nei layer;
+il percorso CI con gli argomenti preesistenti rimane supportato.
+Build autenticata **SUCCESS**, ID immagine locale Linux/arm64
+`sha256:c1a353b6d91111f3036a4ef6f924f80ff3bebc015c2866383cf640502882f933`.
+RepoDigests vuoto: non e una pubblicazione o un digest del registry.
+
+Gli smoke sulla stessa immagine passano sia senza agente sia con
+`JAVA_TOOL_OPTIONS=-javaagent:applicationinsights-agent.jar`: avvio con sole
+variabili di infrastruttura e chiave RSA effimera, health 200, utente 1001,
+Java PID 1, OpenAPI servito identico, autenticazione 401, tenant invalido 400,
+lookup prodotto con bearer/tenant/api-key, contratto binario byte-identico con
+una sola chiamata document-ms e nessuna IAM/onboarding. Agente 3.7.8 avviato
+con successo nel PID 1; trace_id/span_id presenti nei log. Telemetria indirizzata
+al solo stub locale: non certifica ingestion, dashboard o correlazione Azure.
+SIGTERM termina entrambi con 143 e hook Quarkus `stopped in` (0,016s / 0,058s).
+La prima assertion dello smoke cercava il nome dell'agente senza spazi: corretta
+al messaggio esatto di avvio riuscito e rieseguite tutte le verifiche, senza
+indebolire una condizione del BFF. Container rimossi dopo ciascun caso; immagine
+e tutti i 30 record cache del build autenticato rimossi. Container/immagini/reti/
+cache riportati agli stessi ID della baseline; copia temporanea frontend rimossa.
+Log: bff-real-builder-authenticated.log, bff-real-image-smoke-2.log e
+bff-real-image-{plain,agent}.log.
+
+**Qualita remota riconfermata:** API Sonar su `pagopa_selfcare`, PR220 ancora ad
+a8adee41c: quality ERROR soltanto per new_reliability_rating 4 (D), richiesto 1 (A).
+New coverage 89,6% rispetto a 80%, security/maintainability A, duplicazione 1,6%
+rispetto a 3%, hotspot reviewed 100%: risultati della baseline, non del nuovo SHA.
+Gli otto BUG `javabugs:S6416` CRITICAL puntano tutti al throw di
+Preconditions.hasText; i flow passano dai log con sanitize nullable alle guardie
+di input che intenzionalmente lanciano IllegalArgumentException. Nessun cambio
+di guardia, soppressione o triage remoto automatico: nuova analisi e decisione
+autorizzata restano necessarie per G01.
 
 ### Fotografia storica prima dell'avvio dei sottoagenti
 
@@ -935,7 +990,7 @@ controller/DTO, `application.properties`, `src/main/docs` e alias legacy.
 - [x] **BFF-ST08-T03 - Riesaminare le route legacy.** Verificare health/actuator,
   `/error`, Swagger e `/v3/api-docs` rispetto a probe e consumer. Coordinare errori
   e accessi con ST06/ST07; non rimuovere alias ancora consumati.
-- [ ] **BFF-ST08-T04 - Rigenerare e verificare tutti gli artefatti.** Usare la
+- [x] **BFF-ST08-T04 - Rigenerare e verificare tutti gli artefatti.** Usare la
   build, non modificare a mano OpenAPI o alias. Eseguire i gate strutturali e
   di uguaglianza esistenti, verificare `templatefile` APIM e il codegen consumer
   reale. Se il consumer non e disponibile, registrare il gate come bloccato.
@@ -981,15 +1036,15 @@ valutare la migrazione senza affidarmi ai risultati della vecchia baseline.
   service -> controller, await di produzione, I/O nei controller, codice morto
   e responsabilita duplicate. Esaminare ogni occorrenza, senza aggiungere un
   framework di architettura solo per automatizzare lo stile.
-- [ ] **BFF-ST10-T02 - Certificare il contratto completo.** Rieseguire l'intero
+- [x] **BFF-ST10-T02 - Certificare il contratto completo.** Rieseguire l'intero
   catalogo Spring/Quarkus, Cucumber, OpenAPI/alias/codegen e HTTP/HTTPS. Attendere
-  almeno 555 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
+  almeno 644 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
   aggiunte lecite aumentano i conteggi, riduzioni richiedono una decisione esplicita.
 - [ ] **BFF-ST10-T03 - Verificare integrazione e coverage.** Rieseguire il reactor
   seriale con le altre app Quarkus coinvolte, la coverage e i gate CI. Verificare
   la soglia vigente di nuova coverage (80% nella baseline), senza nuove esclusioni
   o riduzione dello scope di analisi. Riesaminare i finding Sonar sul nuovo SHA.
-- [ ] **BFF-ST10-T04 - Rinnovare evidenze runtime e documentazione.** Rieseguire
+- [x] **BFF-ST10-T04 - Rinnovare evidenze runtime e documentazione.** Rieseguire
   gli smoke runtime pertinenti, distinguendo test senza agente e con Application
   Insights. Aggiornare README e questo piano con comandi, risultati, SHA e limiti.
   Non dichiarare certificato il builder Docker completo usando solo un artefatto
@@ -1086,15 +1141,15 @@ senza toccare risorse preesistenti o di altre attivita.
 ## Definition of Done
 
 - [ ] BFF-ST01..BFF-ST10 completate con evidenze, non soltanto con checkbox.
-- [ ] Servizi indipendenti dai package dei controller e DTO nei package previsti.
-- [ ] Nessun await sui client gia reattivi nel percorso ordinario di produzione.
-- [ ] Nessun I/O di file o orchestrazione business nei controller; boundary
+- [x] Servizi indipendenti dai package dei controller e DTO nei package previsti.
+- [x] Nessun await sui client gia reattivi nel percorso ordinario di produzione.
+- [x] Nessun I/O di file o orchestrazione business nei controller; boundary
   bloccanti esplicite e contesto tenant preservato.
-- [ ] Ogni adattatore residuo ha requisito, consumer e regressione associati;
+- [x] Ogni adattatore residuo ha requisito, consumer e regressione associati;
   nessuna ricostruzione generica di Spring dentro config/security.
-- [ ] Nessun cambiamento funzionale, ampliamento degli accessi o modifica dei test
+- [x] Nessun cambiamento funzionale, ampliamento degli accessi o modifica dei test
   usati per nascondere una regressione.
-- [ ] Parita, Cucumber, OpenAPI/consumer, coverage e runtime verificati sul candidato
+- [x] Parita, Cucumber, OpenAPI/consumer, coverage e runtime verificati sul candidato
   finale, con limiti e blocchi dichiarati.
 - [ ] BFF-G01..BFF-G03 completati per dichiarare conclusa l'intera migrazione.
 
