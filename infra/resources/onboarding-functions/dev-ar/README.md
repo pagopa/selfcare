@@ -32,7 +32,9 @@
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_enable_function_app_public_network_access"></a> [enable\_function\_app\_public\_network\_access](#input\_enable\_function\_app\_public\_network\_access) | Temporarily keep public ingress enabled while verifying private endpoint access; set false for the final state | `bool` | `false` | no |
 
 ## Outputs
 
