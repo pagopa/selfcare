@@ -291,6 +291,8 @@ module "appgateway" {
   app_gateway_waf_enabled = true
   app_gateway_sku_name    = "WAF_v2"
   app_gateway_sku_tier    = "WAF_v2"
+
+  app_gateway_access_log_enabled = true
 }
 
 ###############################################################################

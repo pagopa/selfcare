@@ -76,7 +76,7 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
 
 ### Infrastructure changes and remaining limits
 
-- **G1 Source workspace.** Terraform routes App Gateway access diagnostics to each existing environment workspace (`selc-{d,u,p}-law`). Collection begins after deployment; prior history can be backfilled only if it already exists in that workspace.
+- **G1 Source workspace.** App Gateway access diagnostics reach each environment workspace (`selc-{d,u,p}-law`). UAT/PROD: Terraform setting `AccessLog_LogAnalytics` (`app_gateway_access_log_enabled = true`). DEV: the existing out-of-band setting `AuditLogs_LogAnalytics`, because Azure rejects a duplicate category to the same workspace. PROD's `sec-p-law` (Prod-Sec) settings are unchanged. Collection begins after deployment; prior history can be backfilled only if it already exists in that workspace.
 - **G2 Retention.** Terraform configures 90-day retention for the `AzureDiagnostics` table to support SELC-5.2/5.4 without changing retention for unrelated tables. The oldest partial day is skipped.
 - **G3 Table network path.** Terraform adds a Table private endpoint and links `privatelink.table.core.windows.net` to the core VNet used by the Container Apps environment. DEV/UAT retain their existing public-network-enabled setting; PROD remains disabled.
 - **G4 Reporting time range.** Logs Ingestion limits historical `TimeGenerated`, so the reporting copy uses ingestion time there and stores `ReferenceDate` separately. The Workbook time-range parameter filters on `ReferenceDate`; its table item implements the on-demand daily records view.

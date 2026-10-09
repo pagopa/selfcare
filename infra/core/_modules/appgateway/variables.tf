@@ -58,6 +58,17 @@ variable "log_analytics_workspace_id" {
   default     = null
 }
 
+variable "app_gateway_access_log_enabled" {
+  type        = bool
+  description = "Creates a diagnostic setting sending ApplicationGatewayAccessLog to log_analytics_workspace_id. Keep false where another setting already sends that category to the same workspace (Azure rejects duplicates)."
+  default     = false
+
+  validation {
+    condition     = !var.app_gateway_access_log_enabled || var.log_analytics_workspace_id != null
+    error_message = "log_analytics_workspace_id is required when app_gateway_access_log_enabled is true."
+  }
+}
+
 variable "app_gateway_sku_name" {
   type    = string
   default = "Standard_v2"
