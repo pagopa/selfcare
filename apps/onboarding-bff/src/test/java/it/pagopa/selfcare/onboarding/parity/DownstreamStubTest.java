@@ -3,6 +3,7 @@ package it.pagopa.selfcare.onboarding.parity;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -48,6 +49,23 @@ class DownstreamStubTest {
       request.header(headers[i], headers[i + 1]);
     }
     return CLIENT.send(request.build(), HttpResponse.BodyHandlers.ofByteArray());
+  }
+
+  @Test
+  void chunkedScenariosReallySendUnknownLengthBodiesIncludingEmptyOnes() {
+    for (byte[] body : new byte[][] {new byte[0], "{}".getBytes(StandardCharsets.UTF_8)}) {
+      Scenario.Exchange exchange = Scenario.post("self", "chunked-framing", "/framing")
+          .raw(null, body).chunked()
+          .stub(server -> server.on(DownstreamStub.MS_CORE, "POST", "/framing", Reply.status(204)))
+          .expect(check -> check.status(204).totalCalls(1))
+          .run(stub.url(DownstreamStub.MS_CORE), stub);
+
+      DownstreamStub.Call call = exchange.calls().get(0);
+      assertEquals("chunked", call.header("transfer-encoding"));
+      assertNull(call.header("content-length"));
+      assertNull(call.header("content-type"));
+      assertArrayEquals(body, call.body());
+    }
   }
 
   @Test

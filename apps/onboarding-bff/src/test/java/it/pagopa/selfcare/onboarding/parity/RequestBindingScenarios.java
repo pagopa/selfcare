@@ -141,6 +141,13 @@ final class RequestBindingScenarios {
       String detail = "Required request body is missing: public " + endpoint[1] + " " + controller + endpoint[2];
       scenarios.add(Scenario.api("binding-final", "empty-body-" + endpoint[0], "POST", endpoint[0])
           .json("").expect(check -> check.problem(400, detail).totalCalls(0)));
+      scenarios.add(Scenario.api("binding-final", "chunked-empty-body-" + endpoint[0], "POST", endpoint[0])
+          .raw(null, new byte[0]).chunked()
+          .expect(check -> check.problem(400, detail).totalCalls(0)));
+      scenarios.add(Scenario.api("binding-final", "chunked-body-without-content-type-" + endpoint[0],
+              "POST", endpoint[0])
+          .raw(null, "{}".getBytes(StandardCharsets.UTF_8)).chunked()
+          .expect(check -> check.problem(400, "Content-Type 'application/octet-stream' is not supported").totalCalls(0)));
     }
     scenarios.add(Scenario.api("binding-final", "json-null-required-body", "POST", "/v1/users/search-user")
         .json("null").expect(check -> check.problem(400, "Required request body is missing: public "
@@ -173,6 +180,28 @@ final class RequestBindingScenarios {
     scenarios.add(Scenario.api("binding-final", "multipart-without-content-type", "POST", "/v2/tokens/ob1/complete")
         .raw(null, "{}".getBytes(StandardCharsets.UTF_8))
         .expect(check -> check.problem(400, "Content-Type is not supported").totalCalls(0)));
+    scenarios.add(Scenario.api("binding-final", "chunked-multipart-without-content-type", "POST", "/v2/tokens/ob1/complete")
+        .raw(null, "{}".getBytes(StandardCharsets.UTF_8)).chunked()
+        .expect(check -> check.problem(400, "Content-Type is not supported").totalCalls(0)));
+    scenarios.add(Scenario.api("binding-final", "chunked-empty-multipart-without-content-type", "POST", "/v2/tokens/ob1/complete")
+        .raw(null, new byte[0]).chunked()
+        .expect(check -> check.problem(400, "Content-Type is not supported").totalCalls(0)));
+    scenarios.add(Scenario.api("binding-final", "chunked-malformed-body-without-content-type", "POST", "/v1/users/search-user")
+        .raw(null, "not-json".getBytes(StandardCharsets.UTF_8)).chunked()
+        .expect(check -> check.problem(400, "Content-Type 'application/octet-stream' is not supported").totalCalls(0)));
+    for (String media : List.of("application/json", "application/vnd.api+json")) {
+      scenarios.add(Scenario.api("binding-final", "chunked-explicit-json-" + media, "POST", "/v1/users/search-user")
+          .raw(media, "\"scalar\"".getBytes(StandardCharsets.UTF_8)).chunked()
+          .expect(check -> check.problem(400, scalarBody(SPRING_MODEL + "UserTaxCodeDto", "scalar")).totalCalls(0)));
+    }
+    scenarios.add(Scenario.api("binding-final", "chunked-empty-optional-pg-body", "POST", "/v2/institutions/onboarding/users/pg")
+        .raw(null, new byte[0]).chunked()
+        .expect(check -> check.problem(500, "Cannot invoke \"" + SPRING_MODEL
+            + "CompanyOnboardingUserDto.toString()\" because \"companyOnboardingUserDto\" is null").totalCalls(0)));
+    scenarios.add(Scenario.api("binding-final", "chunked-optional-pg-body-without-content-type",
+            "POST", "/v2/institutions/onboarding/users/pg")
+        .raw(null, "{}".getBytes(StandardCharsets.UTF_8)).chunked()
+        .expect(check -> check.problem(400, "Content-Type 'application/octet-stream' is not supported").totalCalls(0)));
     return scenarios;
   }
 

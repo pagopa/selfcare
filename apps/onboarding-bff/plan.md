@@ -167,7 +167,34 @@ generati rimossi; container, immagini, reti e cache preesistenti preservati.
 Log: bff-parallel-full-verify-2.log, bff-parallel-document-selection-2.log,
 bff-parallel-mixed-reactor.log e bff-parallel-coverage-verify.log.
 
-**Coverage misurata:** aggregate JaCoCo esistente, 80 classi, 3307/4204 linee
+### Correzione successiva: body chunked senza Content-Type
+
+- [x] **Preservare il rifiuto dei body chunked senza media type.** Il confronto
+  diretto ha confermato che Spring rifiutava il body non vuoto con 400 e zero
+  downstream, mentre il filtro precedente lasciava proseguire Quarkus fino a
+  User Registry. Il filtro ora marca solo i DTO interessati; un reader interceptor
+  server distingue il body vuoto da quello presente dopo il buffering nativo REST
+  o il passaggio dello stream a worker, senza leggere il socket nel filtro.
+  Multipart resta rifiutato al mapping; nessun intervento sui reader dei client.
+- [x] **Certificare framing e casi limite senza rilassare le attese.** Aggiunti
+  33 casi su DTO richiesti, body opzionale users-PG, multipart, JSON esplicito/
+  vendor e JSON malformato. Il test dell'harness verifica sul wire
+  Transfer-Encoding chunked, Content-Length assente e bytes, anche per body
+  vuoto. Conservati sia i descrittori required-body sia il 500 opzionale osservato.
+- [x] **Chiudere il gate locale sul codice corretto.** Clean verify seriale:
+  2572 Surefire, 73 Failsafe, 677/677 scenari per runtime, 63/63 Cucumber e
+  230/230 step, zero failure/errori/skip. Floor portato a 677 dopo entrambe le
+  esecuzioni complete. OpenAPI, alias, golden e comparatori invariati.
+  Checkout principale `feature/SELC-9237` non modificato; lavoro svolto sul
+  branch di migrazione in un worktree isolato. Nessun push o deploy.
+  Ripetuta anche la riproduzione iniziale sul fast-jar di produzione corretto:
+  quattro confronti identici a Spring, con zero downstream.
+  Immagine user-ms, 11 record cache e dati Azurite della prova rimossi;
+  container, immagini, reti e cache preesistenti preservati.
+  Log: bff-chunked-targeted.log, bff-chunked-full-verify.log e
+  bff-chunked-corrected-comparison.log.
+
+**Coverage misurata al checkpoint integrato:** aggregate JaCoCo esistente, 80 classi, 3307/4204 linee
 (78,66%) e 1017/1495 branch (68,03%). Linee aggiunte nel suo scope eseguibile:
 332/335 (99,10%) e 60/61 branch (98,36%) rispetto ad a8adee41c;
 2505/2713 (92,33%) e 818/956 branch (85,56%) rispetto a main cd0a2751f.
@@ -1038,7 +1065,7 @@ valutare la migrazione senza affidarmi ai risultati della vecchia baseline.
   framework di architettura solo per automatizzare lo stile.
 - [x] **BFF-ST10-T02 - Certificare il contratto completo.** Rieseguire l'intero
   catalogo Spring/Quarkus, Cucumber, OpenAPI/alias/codegen e HTTP/HTTPS. Attendere
-  almeno 644 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
+  almeno 677 casi per runtime e 63 scenari Cucumber, tutti tentati e passati;
   aggiunte lecite aumentano i conteggi, riduzioni richiedono una decisione esplicita.
 - [ ] **BFF-ST10-T03 - Verificare integrazione e coverage.** Rieseguire il reactor
   seriale con le altre app Quarkus coinvolte, la coverage e i gate CI. Verificare

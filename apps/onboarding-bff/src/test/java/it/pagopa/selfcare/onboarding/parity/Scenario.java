@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.parity;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -28,6 +29,7 @@ public final class Scenario {
   final List<String[]> headers = new ArrayList<>();
   byte[] body;
   String contentType;
+  boolean chunked;
   final List<Consumer<DownstreamStub>> stubbing = new ArrayList<>();
   Consumer<Check> expectation;
 
@@ -109,6 +111,11 @@ public final class Scenario {
     return this;
   }
 
+  public Scenario chunked() {
+    this.chunked = true;
+    return this;
+  }
+
   public Scenario multipart(Multipart.Builder builder) {
     this.body = builder.bytes();
     this.contentType = builder.contentType();
@@ -179,7 +186,9 @@ public final class Scenario {
                 method,
                 body == null
                     ? HttpRequest.BodyPublishers.noBody()
-                    : HttpRequest.BodyPublishers.ofByteArray(body));
+                    : chunked
+                        ? HttpRequest.BodyPublishers.ofInputStream(() -> new ByteArrayInputStream(body))
+                        : HttpRequest.BodyPublishers.ofByteArray(body));
     if (bearer != null) {
       request.header("Authorization", "Bearer " + bearer);
     }

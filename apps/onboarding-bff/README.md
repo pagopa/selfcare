@@ -55,8 +55,11 @@ authorization still completes before that service is invoked.
 Binding differences confirmed on the immutable Spring oracle remain explicit: radix/Unicode integer parsing,
 repeated-parameter errors, published DTO names and required-body method descriptors. Native JSON readers handle
 `application/*` while explicit OpenAPI request-body content preserves the published `application/json` contract;
-unsupported application media still fail. A scoped request filter rejects absent Content-Type before parsing
-a present DTO body or multipart mapping. Optional users-PG bodies retain the observed 500 behavior.
+unsupported application media still fail. A scoped server filter marks DTO bodies without Content-Type;
+its reader interceptor rejects a nonempty body before JSON parsing, after REST has buffered the input
+or moved its stream to a worker. This also covers chunked bodies without Content-Length. Multipart
+mapping still rejects the absent header in the filter. Empty required bodies and optional users-PG
+bodies retain their observed behavior, including the optional-body 500.
 
 `OpenApiApplication` declares the unchanged application root, server and bearer scheme natively.
 Automatic SmallRye server/security additions are disabled; the remaining OpenAPI filter handles only required
@@ -64,12 +67,20 @@ representation/compatibility adjustments. SDK JWT activation and legacy route re
 actual claim, tenant, probe and consumer requirements. Connection-drop replay resubscribes the cold client Uni
 at most once and remains distinct from the existing application retry policy.
 
-The final candidate passes 2500 Surefire tests, 73 Failsafe tests, 644/644 parity scenarios on each runtime,
+The integrated checkpoint passes 2500 Surefire tests, 73 Failsafe tests, 644/644 parity scenarios on each runtime,
 and all 63 Cucumber scenarios / 230 steps, with no failures, errors or skips. The serial mixed reactor
 also passes across nine modules, including BFF, IAM and the institution mail scheduler. The catalog floor
-is 644, raised only after both complete catalogs passed; the golden and comparators are unchanged.
+was raised to 644 only after both complete catalogs passed; the golden and comparators are unchanged.
 
-The existing JaCoCo aggregate reports 78.66% line and 68.03% branch coverage. Within that report's existing
+The subsequent chunked-body correction adds 33 framing scenarios across the DTO and multipart endpoints,
+including empty bodies, the optional users-PG body and explicit JSON/vendor media types. Its clean verify
+passes 2572 Surefire tests, 73 Failsafe tests, 677/677 scenarios on each runtime and all 63 Cucumber
+scenarios / 230 steps, without failures, errors or skips. The catalog floor is now 677. Nonempty DTO bodies
+with absent Content-Type are rejected with the unchanged Spring 400 Problem and zero downstream calls; generated
+OpenAPI, the legacy alias, golden and comparators remain unchanged.
+
+At the integrated checkpoint, the existing JaCoCo aggregate reports 78.66% line and 68.03% branch coverage.
+Within that report's existing
 executable scope, added lines versus `a8adee41c` measure 99.10% line / 98.36% branch coverage; versus
 `cd0a2751f`, they measure 92.33% / 85.56%. These diff measurements do not include classes already excluded
 by the aggregate and are not the Sonar new-code quality gate. No exclusions or dependencies were added.
