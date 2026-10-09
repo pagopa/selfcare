@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.logavailability.client;
 
 import com.azure.core.credential.TokenCredential;
+import com.azure.core.http.HttpClient;
 import com.azure.data.tables.TableClient;
 import com.azure.data.tables.TableClientBuilder;
 import com.azure.data.tables.models.TableEntity;
@@ -26,14 +27,21 @@ public class AzureTableAvailabilityWriter {
     public AzureTableAvailabilityWriter(
             TokenCredential credential,
             @ConfigProperty(name = "availability.storage-account-name") String storageAccountName) {
-        if (!storageAccountName.matches("[a-z0-9]{3,24}")) {
+        this(credential, storageAccountName, null);
+    }
+
+    AzureTableAvailabilityWriter(TokenCredential credential, String storageAccountName, HttpClient httpClient) {
+        if (storageAccountName == null || !storageAccountName.matches("[a-z0-9]{3,24}")) {
             throw new IllegalArgumentException("Storage account name is invalid");
         }
-        tableClient = new TableClientBuilder()
+        TableClientBuilder builder = new TableClientBuilder()
                 .endpoint("https://" + storageAccountName + ".table.core.windows.net")
                 .tableName(TABLE_NAME)
-                .credential(credential)
-                .buildClient();
+                .credential(credential);
+        if (httpClient != null) {
+            builder.httpClient(httpClient);
+        }
+        tableClient = builder.buildClient();
     }
 
     public void upsert(DailyAvailabilityRecord record) {

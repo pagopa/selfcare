@@ -22,14 +22,21 @@ public class AzureMonitorHttpClient {
     private final TokenCredential credential;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
+    private final Sleeper sleeper;
 
     @Inject
     public AzureMonitorHttpClient(TokenCredential credential, ObjectMapper objectMapper) {
+        this(credential, objectMapper,
+                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).build(),
+                Thread::sleep);
+    }
+
+    AzureMonitorHttpClient(
+            TokenCredential credential, ObjectMapper objectMapper, HttpClient httpClient, Sleeper sleeper) {
         this.credential = credential;
         this.objectMapper = objectMapper;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(20))
-                .build();
+        this.httpClient = httpClient;
+        this.sleeper = sleeper;
     }
 
     public String post(URI uri, String scope, Object payload) {
@@ -83,7 +90,7 @@ public class AzureMonitorHttpClient {
         return status == 429 || status >= 500;
     }
 
-    private static void waitBeforeRetry(String retryAfter, int attempt) {
+    private void waitBeforeRetry(String retryAfter, int attempt) {
         long seconds = attempt * 2L;
         if (retryAfter != null) {
             try {
@@ -93,11 +100,16 @@ public class AzureMonitorHttpClient {
             }
         }
         try {
-            Thread.sleep(Math.min(seconds, 30) * 1000);
+            sleeper.sleep(Math.min(seconds, 30) * 1000);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
             throw new IllegalStateException("Azure Monitor retry was interrupted", exception);
         }
+    }
+
+    @FunctionalInterface
+    interface Sleeper {
+        void sleep(long millis) throws InterruptedException;
     }
 
     public static class AzureRequestException extends RuntimeException {

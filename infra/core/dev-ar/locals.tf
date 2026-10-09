@@ -497,7 +497,7 @@ locals {
 
   auth_ms_private_dns_suffix = "whitemoss-eb7ef327.westeurope.azurecontainerapps.io"
 
-  vpn_sku     = "VpnGw1"
+  vpn_sku     = "VpnGw1AZ"
   vpn_pip_sku = "Standard"
 
   private_endpoint_network_policies = "Enabled"
