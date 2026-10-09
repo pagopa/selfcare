@@ -7,8 +7,8 @@ locals {
   )
 
   availability_records_query = <<-KQL
-    let rangeStart = startofday(datetime({TimeRange:start}));
-    let rangeEnd = startofday(datetime({TimeRange:end})) + 1d;
+    let rangeStart = startofday({TimeRange:start});
+    let rangeEnd = startofday({TimeRange:end}) + 1d;
     SelcAvailability_CL
     | where Environment == "${local.availability_environment}"
     | where ReferenceDate >= rangeStart and ReferenceDate < rangeEnd
@@ -16,8 +16,8 @@ locals {
   KQL
 
   availability_totals_query = <<-KQL
-    let rangeStart = startofday(datetime({TimeRange:start}));
-    let rangeEnd = startofday(datetime({TimeRange:end})) + 1d;
+    let rangeStart = startofday({TimeRange:start});
+    let rangeEnd = startofday({TimeRange:end}) + 1d;
     let records = SelcAvailability_CL
       | where Environment == "${local.availability_environment}"
       | where ReferenceDate >= rangeStart and ReferenceDate < rangeEnd
@@ -30,8 +30,8 @@ locals {
   KQL
 
   availability_pie_query = <<-KQL
-    let rangeStart = startofday(datetime({TimeRange:start}));
-    let rangeEnd = startofday(datetime({TimeRange:end})) + 1d;
+    let rangeStart = startofday({TimeRange:start});
+    let rangeEnd = startofday({TimeRange:end}) + 1d;
     let records = SelcAvailability_CL
       | where Environment == "${local.availability_environment}"
       | where ReferenceDate >= rangeStart and ReferenceDate < rangeEnd
@@ -59,11 +59,13 @@ locals {
               type       = 4
               isRequired = true
               value = {
-                durationMs            = 2592000000
-                grain                 = "1d"
-                useDashboardTimeRange = false
-                includeCustom         = true
-                availableDurationMs   = [86400000, 604800000, 2592000000, 7776000000, 63072000000]
+                durationMs = 2592000000
+              }
+              typeSettings = {
+                allowCustom = true
+                selectableValues = [
+                  for duration in [86400000, 604800000, 2592000000, 7776000000, 63072000000] : { durationMs = duration }
+                ]
               }
             }
           ]
