@@ -11,7 +11,6 @@ import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
 import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
-import it.pagopa.selfcare.onboarding.connector.exceptions.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
 import it.pagopa.selfcare.onboarding.core.TokenService;
@@ -237,17 +236,42 @@ public class TokenV2Controller {
     }
 
 
+    /**
+     * Downloads the contract to be signed. Intentionally NOT protected by IAM: any authenticated user
+     * who received the PEC with the onboarding link (e.g. a secretary of the legal representative) must
+     * be able to download the contract. The IAM-protected twin used by the backstage (Area Riservata)
+     * is {@link #getContractBackstage(String)}: both delegate to the same {@link TokenService#getContract(String)}.
+     */
     @GetMapping(value = "/{onboardingId}/contract", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     @ResponseStatus(HttpStatus.OK)
-    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
     @Operation(summary = "${swagger.tokens.getContract}",
             description = "${swagger.tokens.getContract}", operationId = "getContractUsingGET")
-    @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents")
     public ResponseEntity<byte[]> getContract(@Parameter(description = "${swagger.tokens.onboardingId}")
                                               @PathVariable("onboardingId")
                                               String onboardingId) throws IOException {
         log.trace("getContract start");
-        log.debug("getContract onboardingId = {}", onboardingId);
+        log.debug("getContract onboardingId = {}", Encode.forJava(onboardingId));
+        Resource contract = tokenService.getContract(onboardingId);
+        return getResponseEntity(contract);
+    }
+
+    /**
+     * Downloads the contract to be signed from the backstage (Area Riservata).
+     * Same behaviour as {@link #getContract(String)} but protected by the IAM permission
+     * {@link PermissionConstants#SELC_VIEW_ACCOUNT_DOCUMENTS}.
+     */
+    @GetMapping(value = "/{onboardingId}/backstage/contract", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
+    @Operation(summary = "Service to download a specific onboarding contract from the backstage (IAM protected)",
+            description = "Service to download a specific onboarding contract from the backstage (IAM protected)",
+            operationId = "getContractBackstageUsingGET")
+    @ApiResponse(responseCode = "403", description = "Forbidden - user does not have permission to view account documents")
+    public ResponseEntity<byte[]> getContractBackstage(@Parameter(description = "${swagger.tokens.onboardingId}")
+                                                       @PathVariable("onboardingId")
+                                                       String onboardingId) throws IOException {
+        log.trace("getContractBackstage start");
+        log.debug("getContractBackstage onboardingId = {}", Encode.forJava(onboardingId));
         Resource contract = tokenService.getContract(onboardingId);
         return getResponseEntity(contract);
     }

@@ -22,6 +22,17 @@ module "onboarding_fn_snet" {
   }
 }
 
+data "azurerm_subnet" "private_endpoints" {
+  name                 = var.private_endpoint_subnet_name
+  virtual_network_name = var.vnet_name
+  resource_group_name  = var.vnet_resource_group_name
+}
+
+data "azurerm_private_dns_zone" "privatelink_azurewebsites_net" {
+  name                = "privatelink.azurewebsites.net"
+  resource_group_name = var.vnet_resource_group_name
+}
+
 module "selc_onboarding_fn" {
   source = "github.com/pagopa/terraform-azurerm-v4.git//function_app?ref=v10.17.0"
 
@@ -37,15 +48,37 @@ module "selc_onboarding_fn" {
   runtime_version                          = "~4"
   minimum_tls_version                      = "1.2"
 
-  system_identity_enabled = true
-  user_identity_ids       = var.user_assigned_identity_ids
-  storage_account_name    = replace(format("%s-sa", var.functions_name), "-", "")
-  export_keys             = true
-  app_service_plan_type   = local.app_service_plan_info.type
-  app_service_plan_info   = local.app_service_plan_info
-  storage_account_info    = local.storage_account_info
+  system_identity_enabled                   = true
+  user_identity_ids                         = var.user_assigned_identity_ids
+  storage_account_name                      = replace("${var.functions_name}-sa", "-", "")
+  export_keys                               = true
+  app_service_plan_type                     = local.app_service_plan_info.type
+  app_service_plan_info                     = local.app_service_plan_info
+  storage_account_info                      = local.storage_account_info
+  enable_function_app_public_network_access = var.enable_function_app_public_network_access
 
   app_settings = var.app_settings
+
+  tags = var.tags
+}
+
+resource "azurerm_private_endpoint" "onboarding_fn" {
+  name                = "${var.functions_name}-pep"
+  location            = azurerm_resource_group.fn_rg.location
+  resource_group_name = azurerm_resource_group.fn_rg.name
+  subnet_id           = data.azurerm_subnet.private_endpoints.id
+
+  private_service_connection {
+    name                           = "${var.functions_name}-private-link"
+    private_connection_resource_id = module.selc_onboarding_fn.id
+    is_manual_connection           = false
+    subresource_names              = ["sites"]
+  }
+
+  private_dns_zone_group {
+    name                 = "default"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.privatelink_azurewebsites_net.id]
+  }
 
   tags = var.tags
 }

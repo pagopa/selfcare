@@ -11,7 +11,7 @@
 
 | Name | Version |
 | ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 3.117.1 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
 
 ## Modules
 
@@ -26,11 +26,14 @@
 | ---- | ---- |
 | [azurerm_key_vault_access_policy.fn_keyvault_access_policy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_key_vault_secret.fn_primary_key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
+| [azurerm_private_endpoint.onboarding_fn](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_resource_group.fn_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_subnet_nat_gateway_association.fn_subnet_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_nat_gateway_association) | resource |
 | [azurerm_key_vault_secret.appinsights_connection_string](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 | [azurerm_nat_gateway.fn_nat_gateway](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/nat_gateway) | data source |
+| [azurerm_private_dns_zone.privatelink_azurewebsites_net](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
 | [azurerm_resource_group.fn_nat_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
+| [azurerm_subnet.private_endpoints](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 
 ## Inputs
 
@@ -41,11 +44,13 @@
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | Application Insights connection string for linking diagnostics | `string` | `null` | no |
 | <a name="input_application_insights_connection_string_secret_name"></a> [application\_insights\_connection\_string\_secret\_name](#input\_application\_insights\_connection\_string\_secret\_name) | Key Vault secret name for the Application Insights connection string | `string` | `"appinsights-connection-string"` | no |
 | <a name="input_application_insights_key"></a> [application\_insights\_key](#input\_application\_insights\_key) | Application Insights instrumentation key | `string` | `null` | no |
+| <a name="input_enable_function_app_public_network_access"></a> [enable\_function\_app\_public\_network\_access](#input\_enable\_function\_app\_public\_network\_access) | Temporarily keep public ingress enabled while verifying private endpoint access; set false for the final state | `bool` | `false` | no |
 | <a name="input_functions_name"></a> [functions\_name](#input\_functions\_name) | Name of the onboarding function app | `string` | n/a | yes |
 | <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | n/a | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"westeurope"` | no |
 | <a name="input_nat_gateway_name"></a> [nat\_gateway\_name](#input\_nat\_gateway\_name) | Name of NAT Gateway | `string` | n/a | yes |
 | <a name="input_nat_resource_group_name"></a> [nat\_resource\_group\_name](#input\_nat\_resource\_group\_name) | Name of NAT Resource Group | `string` | n/a | yes |
+| <a name="input_private_endpoint_subnet_name"></a> [private\_endpoint\_subnet\_name](#input\_private\_endpoint\_subnet\_name) | Name of the shared VNet subnet reserved for private endpoints | `string` | n/a | yes |
 | <a name="input_replication_type"></a> [replication\_type](#input\_replication\_type) | Storage account replication type | `string` | `"LRS"` | no |
 | <a name="input_service_plan_sku"></a> [service\_plan\_sku](#input\_service\_plan\_sku) | SKU of the service plan for the function app | `string` | `"B2"` | no |
 | <a name="input_service_plan_worker_count"></a> [service\_plan\_worker\_count](#input\_service\_plan\_worker\_count) | Worker count | `number` | `1` | no |
