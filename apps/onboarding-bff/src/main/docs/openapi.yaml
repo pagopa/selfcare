@@ -1,0 +1,4630 @@
+---
+openapi: 3.0.1
+components:
+  schemas:
+    AdditionalInformations:
+      description: GSP institution's additional informations
+      type: object
+      properties:
+        belongRegulatedMarket:
+          description: The institution belongs to a regulated market
+          type: boolean
+        regulatedMarketNote:
+          description: regulatedMarket Note
+          type: string
+        ipa:
+          description: The institution is registered on IPA
+          type: boolean
+        ipaCode:
+          description: IPA code
+          type: string
+        establishedByRegulatoryProvision:
+          description: The institution is a company established by a regulatory provision
+          type: boolean
+        establishedByRegulatoryProvisionNote:
+          description: establishedByRegulatoryProvision Note
+          type: string
+        agentOfPublicService:
+          description: The institution is an agent of a public service
+          type: boolean
+        agentOfPublicServiceNote:
+          description: agentOfPublicService Note
+          type: string
+        otherNote:
+          description: Other note
+          type: string
+    AdditionalInformationsDto:
+      description: GSP institution's additional informations
+      type: object
+      properties:
+        belongRegulatedMarket:
+          description: The institution belongs to a regulated market
+          type: boolean
+        regulatedMarketNote:
+          description: regulatedMarket Note
+          type: string
+        ipa:
+          description: The institution is registered on IPA
+          type: boolean
+        ipaCode:
+          description: IPA code
+          type: string
+        establishedByRegulatoryProvision:
+          description: The institution is a company established by a regulatory provision
+          type: boolean
+        establishedByRegulatoryProvisionNote:
+          description: establishedByRegulatoryProvision Note
+          type: string
+        agentOfPublicService:
+          description: The institution is an agent of a public service
+          type: boolean
+        agentOfPublicServiceNote:
+          description: agentOfPublicService Note
+          type: string
+        otherNote:
+          description: Other note
+          type: string
+    AggregateInstitution:
+      description: "List of Aggregate Institutions, not empty only if isAggregator\
+        \ field's value is True"
+      required:
+      - description
+      - taxCode
+      type: object
+      properties:
+        taxCode:
+          type: string
+        description:
+          type: string
+        subunitCode:
+          type: string
+        subunitType:
+          type: string
+        geographicTaxonomies:
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyDto"
+        address:
+          type: string
+        zipCode:
+          type: string
+        originId:
+          type: string
+        origin:
+          enum:
+          - MOCK
+          - IPA
+          - SELC
+          - ANAC
+          - UNKNOWN
+          - ADE
+          - INFOCAMERE
+          - IVASS
+          - PDND_INFOCAMERE
+          type: string
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserDto"
+        iban:
+          type: string
+        recipientCode:
+          type: string
+        vatNumber:
+          type: string
+        digitalAddress:
+          type: string
+        city:
+          type: string
+        county:
+          type: string
+        parentDescription:
+          type: string
+    AggregateResult:
+      type: object
+      properties:
+        subunitCode:
+          type: string
+        subunitType:
+          type: string
+        description:
+          type: string
+        recipientCode:
+          type: string
+        digitalAddress:
+          type: string
+        taxCode:
+          type: string
+        vatNumber:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        county:
+          type: string
+        zipCode:
+          type: string
+        originId:
+          type: string
+        origin:
+          type: string
+        iban:
+          type: string
+        parentDescription:
+          type: string
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AggregateUserResult"
+    AggregateUserResult:
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        taxCode:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+    AssistanceContactsDto:
+      description: Institution's assistance contacts
+      type: object
+      properties:
+        supportEmail:
+          description: Institution's support email contact
+          type: string
+        supportPhone:
+          description: Institution's support phone contact
+          type: string
+    AssistanceContactsResource:
+      description: Institution's assistance contacts
+      type: object
+      properties:
+        supportEmail:
+          description: Institution's support email contact
+          type: string
+        supportPhone:
+          description: Institution's support phone contact
+          type: string
+    AvailableDocumentsResource:
+      description: Aggregated list of documents available for download for a given
+        onboarding.
+      type: object
+      properties:
+        attachments:
+          description: Names of the attachments available for the onboarding. Empty
+            list if none.
+          type: array
+          items:
+            description: Names of the attachments available for the onboarding. Empty
+              list if none.
+            type: string
+        contractFilename:
+          description: Filename of the signed contract available for download. Null
+            when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).
+          type: string
+    Billing:
+      type: object
+      properties:
+        vatNumber:
+          type: string
+        recipientCode:
+          type: string
+        publicServices:
+          type: boolean
+        taxCodeInvoicing:
+          type: string
+    BillingDataDto:
+      description: Institution's billing information
+      required:
+      - businessName
+      - digitalAddress
+      - registeredOffice
+      type: object
+      properties:
+        businessName:
+          description: Institution's legal name
+          type: string
+        registeredOffice:
+          description: Institution's physical address
+          type: string
+        digitalAddress:
+          description: Institution's digitalAddress
+          type: string
+        zipCode:
+          description: Institution's zipCode
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        taxCodeInvoicing:
+          description: Institution's taxCodeInvoicing for electronic invoicing
+          type: string
+        vatNumber:
+          description: Institution's VAT number
+          type: string
+        recipientCode:
+          description: Billing recipient code
+          type: string
+        publicServices:
+          description: Institution's service type
+          type: boolean
+        certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
+          type: boolean
+        legalForm:
+          description: Legal form of the legal representative
+          type: string
+    BillingDataResponseDto:
+      description: Institution's billing information
+      type: object
+      properties:
+        businessName:
+          description: Institution's legal name
+          type: string
+        registeredOffice:
+          description: Institution's physical address
+          type: string
+        digitalAddress:
+          description: Institution's digitalAddress
+          type: string
+        zipCode:
+          description: Institution's zipCode
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        vatNumber:
+          description: Institution's VAT number
+          type: string
+        recipientCode:
+          description: Billing recipient code
+          type: string
+        publicServices:
+          description: Institution's service type
+          type: boolean
+        certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
+          type: boolean
+    BusinessResourceIC:
+      description: Legal Representative's institutions list
+      type: object
+      properties:
+        businessName:
+          description: Legal Representative's institutions name
+          type: string
+        businessTaxId:
+          description: Legal Representative's institutions tax ID
+          type: string
+    CheckManagerDto:
+      required:
+      - productId
+      - userId
+      type: object
+      properties:
+        userId:
+          format: uuid
+          description: User's id
+          type: string
+        institutionType:
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        origin:
+          description: Institution data origin
+          type: string
+        originId:
+          description: Institution's details origin Id
+          type: string
+        productId:
+          description: Product's unique identifier
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        subunitCode:
+          description: Institution's subunitCode
+          type: string
+    CheckManagerResponse:
+      required:
+      - result
+      type: object
+      properties:
+        result:
+          description: Is the given user manager of the institution
+          type: boolean
+    CompanyBillingDataDto:
+      description: Institution's billing information
+      required:
+      - businessName
+      - certified
+      - taxCode
+      type: object
+      properties:
+        businessName:
+          description: Institution's legal name
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
+          type: boolean
+        digitalAddress:
+          description: Institution's digitalAddress
+          type: string
+    CompanyInformationsDto:
+      description: "GPS, SCP, PT optional data"
+      type: object
+      properties:
+        rea:
+          description: Institution's REA
+          type: string
+        shareCapital:
+          description: Institution's share capital value
+          type: string
+        businessRegisterPlace:
+          description: Institution's business register place
+          type: string
+    CompanyInformationsResource:
+      description: "GPS, SCP, PT optional data"
+      type: object
+      properties:
+        rea:
+          description: Institution's REA
+          type: string
+        shareCapital:
+          description: Institution's share capital value
+          type: string
+        businessRegisterPlace:
+          description: Institution's business register place
+          type: string
+    CompanyOnboardingDto:
+      required:
+      - billingData
+      - institutionType
+      - productId
+      - taxCode
+      - users
+      type: object
+      properties:
+        users:
+          description: List of onboarding users
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanyUserDto"
+        billingData:
+          $ref: "#/components/schemas/CompanyBillingDataDto"
+        institutionType:
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        productId:
+          description: Product's unique identifier
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+    CompanyOnboardingUserDto:
+      required:
+      - certified
+      - institutionType
+      - productId
+      - taxCode
+      - users
+      type: object
+      properties:
+        users:
+          description: List of onboarding users
+          type: array
+          items:
+            $ref: "#/components/schemas/CompanyUserDto"
+        institutionType:
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        productId:
+          description: Product's unique identifier
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        certified:
+          description: Indicates whether the institution values come from INFOCAMERE
+            (true) or MANUAL (false)
+          type: boolean
+    CompanyUserDto:
+      description: List of onboarding users
+      required:
+      - name
+      - role
+      - surname
+      - taxCode
+      type: object
+      properties:
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
+        email:
+          description: User's email
+          type: string
+        taxCode:
+          description: User's fiscal code
+          type: string
+        role:
+          description: User's role
+          enum:
+          - MANAGER
+          - DELEGATE
+          - SUB_DELEGATE
+          - OPERATOR
+          - ADMIN_EA
+          type: string
+    DataProtectionOfficer:
+      description: Data protection officer
+      type: object
+      properties:
+        address:
+          type: string
+        email:
+          type: string
+        pec:
+          type: string
+    DpoData:
+      description: Data Protection Officer (DPO) specific data
+      required:
+      - address
+      - email
+      - pec
+      type: object
+      properties:
+        address:
+          description: DPO's address
+          type: string
+        pec:
+          description: DPO's PEC
+          type: string
+        email:
+          description: DPO's email
+          type: string
+    DpoDataDto:
+      description: Data Protection Officer (DPO) specific data
+      required:
+      - address
+      - email
+      - pec
+      type: object
+      properties:
+        address:
+          description: DPO's address
+          type: string
+        pec:
+          description: DPO's PEC
+          type: string
+        email:
+          description: DPO's email
+          type: string
+    GPUData:
+      description: Institution's GPU data
+      type: object
+      properties:
+        businessRegisterNumber:
+          type: string
+        legalRegisterNumber:
+          type: string
+        legalRegisterName:
+          type: string
+        longTermPayments:
+          type: boolean
+        manager:
+          type: boolean
+        managerAuthorized:
+          type: boolean
+        managerEligible:
+          type: boolean
+        managerProsecution:
+          type: boolean
+        institutionCourtMeasures:
+          type: boolean
+    GeographicTaxonomyDto:
+      required:
+      - code
+      - desc
+      type: object
+      properties:
+        code:
+          description: Institution's geographic taxonomy ISTAT code
+          type: string
+        desc:
+          description: Institution's geographic taxonomy extended name
+          type: string
+    GeographicTaxonomyResource:
+      type: object
+      properties:
+        code:
+          description: Institution's geographic taxonomy ISTAT code
+          type: string
+        desc:
+          description: Institution's geographic taxonomy extended name
+          type: string
+    InstitutionData:
+      description: Institution's billing and type information
+      type: object
+      properties:
+        id:
+          description: Institution's unique internal Id
+          type: string
+        institutionType:
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        billingData:
+          $ref: "#/components/schemas/BillingDataResponseDto"
+        city:
+          description: Institution's city
+          type: string
+        county:
+          description: Institution's county
+          type: string
+        country:
+          description: Institution's country
+          type: string
+        origin:
+          description: Institution data origin
+          type: string
+        originId:
+          description: Institution's details origin Id
+          type: string
+        paymentServiceProvider:
+          $ref: "#/components/schemas/PaymentServiceProvider"
+        dataProtectionOfficer:
+          $ref: "#/components/schemas/DataProtectionOfficer"
+        gpuData:
+          $ref: "#/components/schemas/GPUData"
+        companyInformations:
+          $ref: "#/components/schemas/CompanyInformationsResource"
+        assistanceContacts:
+          $ref: "#/components/schemas/AssistanceContactsResource"
+    InstitutionInfo:
+      description: Institution specific data
+      required:
+      - address
+      - fiscalCode
+      - institutionType
+      - mailAddress
+      - name
+      - vatNumber
+      - zipCode
+      type: object
+      properties:
+        id:
+          description: Institution's unique internal Id
+          type: string
+        name:
+          description: Institution's legal name
+          type: string
+        institutionType:
+          description: Institution's type
+          type: string
+        address:
+          description: Institution's physical address
+          type: string
+        zipCode:
+          description: Institution's zipCode
+          type: string
+        city:
+          description: Institution's city
+          type: string
+        country:
+          description: Institution's country
+          type: string
+        county:
+          description: Institution's county
+          type: string
+        mailAddress:
+          description: Institution's digitalAddress
+          type: string
+        fiscalCode:
+          description: Institution's taxCode
+          type: string
+        taxCodeInvoicing:
+          description: Institution's taxCodeInvoicing for electronic invoicing
+          type: string
+        vatNumber:
+          description: Institution's VAT number
+          type: string
+        recipientCode:
+          description: Billing recipient code
+          type: string
+        pspData:
+          $ref: "#/components/schemas/PspData"
+        dpoData:
+          $ref: "#/components/schemas/DpoData"
+        additionalInformations:
+          $ref: "#/components/schemas/AdditionalInformations"
+    InstitutionLegalAddressResource:
+      type: object
+      properties:
+        address:
+          description: Institution's physical address
+          type: string
+        zipCode:
+          description: Institution's zipCode
+          type: string
+    InstitutionLocationDataDto:
+      description: "Institution's location data, city, county, country information"
+      type: object
+      properties:
+        city:
+          description: Institution's city
+          type: string
+        county:
+          description: Institution's county
+          type: string
+        country:
+          description: Institution's country
+          type: string
+    InstitutionOnboarding:
+      type: object
+      properties:
+        productId:
+          type: string
+        tokenId:
+          type: string
+        status:
+          type: string
+        contract:
+          type: string
+        pricingPlan:
+          type: string
+        billing:
+          $ref: "#/components/schemas/Billing"
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+        closedAt:
+          format: date-time
+          type: string
+    InstitutionOnboardingInfoResource:
+      type: object
+      properties:
+        institution:
+          $ref: "#/components/schemas/InstitutionData"
+        geographicTaxonomies:
+          description: Institution's geographic taxonomy
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyResource"
+    InstitutionOnboardingResource:
+      type: object
+      properties:
+        institutionId:
+          type: string
+        businessName:
+          type: string
+        onboardings:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstitutionOnboarding"
+    InstitutionResource:
+      type: object
+      properties:
+        id:
+          format: uuid
+          description: Institution's unique internal Id
+          type: string
+        description:
+          description: Institution's legal name
+          type: string
+        parentDescription:
+          description: Institution's parent description
+          type: string
+        externalId:
+          description: Institution's unique external identifier
+          type: string
+        originId:
+          description: Institution's details origin Id
+          type: string
+        institutionType:
+          description: Institution's type
+          type: string
+        digitalAddress:
+          description: Institution's digitalAddress
+          type: string
+        address:
+          description: Institution's physical address
+          type: string
+        zipCode:
+          description: Institution's zipCode
+          type: string
+        city:
+          description: Institution's city
+          type: string
+        county:
+          description: Institution's county
+          type: string
+        country:
+          description: Institution's country
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        origin:
+          description: Institution data origin
+          type: string
+        userRole:
+          description: Logged user's role
+          enum:
+          - ADMIN
+          - LIMITED
+          - ADMIN_EA
+          type: string
+    InstitutionResourceIC:
+      type: object
+      properties:
+        legalTaxId:
+          description: Legal Representative's tax ID
+          type: string
+        requestDateTime:
+          description: Timestamp request institutions PNPG list
+          type: string
+        businesses:
+          description: Legal Representative's institutions list
+          type: array
+          items:
+            $ref: "#/components/schemas/BusinessResourceIC"
+    InvalidParam:
+      description: A list of invalid parameters details.
+      required:
+      - name
+      - reason
+      type: object
+      properties:
+        name:
+          description: Invalid parameter name.
+          type: string
+        reason:
+          description: Invalid parameter reason.
+          type: string
+    IpaInstitutionResource:
+      type: object
+      properties:
+        id:
+          type: string
+        originId:
+          type: string
+        o:
+          type: string
+        ou:
+          type: string
+        aoo:
+          type: string
+        taxCode:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        digitalAddress:
+          type: string
+        address:
+          type: string
+        zipCode:
+          type: string
+        origin:
+          type: string
+        istatCode:
+          type: string
+    IpaInstitutionsSearchResource:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/IpaInstitutionResource"
+        count:
+          format: int64
+          type: integer
+    ManagerInfoResponse:
+      required:
+      - name
+      - surname
+      type: object
+      properties:
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
+    MatchInfoResultResource:
+      type: object
+      properties:
+        verificationResult:
+          description: Legal Representative and Institution match result on Agenzia
+            delle Entrate
+          type: boolean
+    OnboardingProductDto:
+      required:
+      - institutionType
+      - productId
+      - users
+      type: object
+      properties:
+        users:
+          description: List of onboarding users
+          type: array
+          items:
+            $ref: "#/components/schemas/UserDto"
+        billingData:
+          $ref: "#/components/schemas/BillingDataDto"
+        institutionLocationData:
+          $ref: "#/components/schemas/InstitutionLocationDataDto"
+        institutionType:
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        origin:
+          description: Institution data origin
+          type: string
+        originId:
+          description: Institution's details origin Id
+          type: string
+        pricingPlan:
+          description: Product's pricing plan
+          type: string
+        pspData:
+          $ref: "#/components/schemas/PspDataDto"
+        geographicTaxonomies:
+          description: List of geographic Taxonomies
+          type: array
+          items:
+            $ref: "#/components/schemas/GeographicTaxonomyDto"
+        companyInformations:
+          $ref: "#/components/schemas/CompanyInformationsDto"
+        assistanceContacts:
+          $ref: "#/components/schemas/AssistanceContactsDto"
+        productId:
+          description: Product's unique identifier
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        subunitCode:
+          description: Institution's subunitCode
+          type: string
+        subunitType:
+          description: Institution's subunitType
+          type: string
+        additionalInformations:
+          $ref: "#/components/schemas/AdditionalInformationsDto"
+        isAggregator:
+          description: specified if given institution is an Aggregator
+          type: boolean
+        aggregates:
+          description: "List of Aggregate Institutions, not empty only if isAggregator\
+            \ field's value is True"
+          type: array
+          items:
+            $ref: "#/components/schemas/AggregateInstitution"
+        gpuData:
+          $ref: "#/components/schemas/GPUData"
+        istatCode:
+          description: Institution's istat code
+          type: string
+        atecoCodes:
+          description: Institution's ateco codes
+          type: array
+          items:
+            description: Institution's ateco codes
+            type: string
+        userRequester:
+          $ref: "#/components/schemas/UserRequestDto"
+    OnboardingRequestResource:
+      required:
+      - institutionInfo
+      - status
+      type: object
+      properties:
+        status:
+          description: Onboarding request's status
+          type: string
+        institutionInfo:
+          $ref: "#/components/schemas/InstitutionInfo"
+        manager:
+          $ref: "#/components/schemas/UserInfo"
+        admins:
+          description: Administrators specific data
+          type: array
+          items:
+            $ref: "#/components/schemas/UserInfo"
+        productId:
+          description: Product's unique identifier
+          type: string
+        updatedAt:
+          format: date-time
+          description: Onboarding request update date
+          type: string
+        expiringDate:
+          format: date-time
+          description: Onboarding request expiring date
+          type: string
+        reasonForReject:
+          description: Onboarding request rejection reason
+          type: string
+        attachments:
+          description: Onboarding's attachments
+          type: array
+          items:
+            description: Onboarding's attachments
+            type: string
+    OnboardingResult:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        productId:
+          type: string
+    OnboardingUserDto:
+      required:
+      - productId
+      - users
+      type: object
+      properties:
+        users:
+          description: List of onboarding users
+          type: array
+          items:
+            $ref: "#/components/schemas/UserDto"
+        institutionType:
+          description: Institution's type
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        origin:
+          description: Institution data origin
+          type: string
+        originId:
+          description: Institution's details origin Id
+          type: string
+        productId:
+          description: Product's unique identifier
+          type: string
+        taxCode:
+          description: Institution's taxCode
+          type: string
+        subunitCode:
+          description: Institution's subunitCode
+          type: string
+        toAddOnAggregates:
+          description: specified if should be added on aggregates
+          type: boolean
+    OnboardingVerify:
+      required:
+      - status
+      type: object
+      properties:
+        status:
+          description: Onboarding request's status
+          type: string
+        productId:
+          description: Product's unique identifier
+          type: string
+        expiringDate:
+          format: date-time
+          description: Onboarding request expiring date
+          type: string
+    OriginEntry:
+      description: Origin's unique identifier
+      type: object
+      properties:
+        institutionType:
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          - DEFAULT
+          type: string
+        origin:
+          enum:
+          - MOCK
+          - IPA
+          - SELC
+          - ANAC
+          - UNKNOWN
+          - ADE
+          - INFOCAMERE
+          - IVASS
+          - PDND_INFOCAMERE
+          type: string
+        labelKey:
+          type: string
+    OriginResponse:
+      type: object
+      properties:
+        origins:
+          description: Origin's unique identifier
+          type: array
+          items:
+            $ref: "#/components/schemas/OriginEntry"
+    PaymentServiceProvider:
+      description: Payment service provider
+      type: object
+      properties:
+        businessRegisterNumber:
+          type: string
+        legalRegisterNumber:
+          type: string
+        legalRegisterName:
+          type: string
+        longTermPayments:
+          type: boolean
+        abiCode:
+          type: string
+        vatNumberGroup:
+          type: boolean
+    Problem:
+      description: Generic problem response
+      type: object
+    ProductResource:
+      type: object
+      properties:
+        id:
+          description: Product's unique identifier
+          type: string
+        title:
+          description: Product's title
+          type: string
+        parentId:
+          description: Product's parent's Id
+          type: string
+        status:
+          description: Product's status
+          enum:
+          - ACTIVE
+          - TESTING
+          - PHASE_OUT
+          - INACTIVE
+          type: string
+        logo:
+          description: Product's logo
+          type: string
+        logoBgColor:
+          description: Product logo's background color
+          type: string
+    PspData:
+      description: Payment Service Provider (PSP) specific data
+      required:
+      - abiCode
+      - businessRegisterNumber
+      - legalRegisterName
+      - legalRegisterNumber
+      - vatNumberGroup
+      type: object
+      properties:
+        businessRegisterNumber:
+          description: PSP's Business Register number
+          type: string
+        legalRegisterName:
+          description: PSP's legal register name
+          type: string
+        legalRegisterNumber:
+          description: PSP's legal register number
+          type: string
+        abiCode:
+          description: PSP's ABI code
+          type: string
+        vatNumberGroup:
+          description: PSP's Vat Number group
+          type: boolean
+    PspDataDto:
+      description: Payment Service Provider (PSP) specific data
+      required:
+      - abiCode
+      - businessRegisterNumber
+      - dpoData
+      - legalRegisterName
+      - legalRegisterNumber
+      - vatNumberGroup
+      type: object
+      properties:
+        businessRegisterNumber:
+          description: PSP's Business Register number
+          type: string
+        legalRegisterName:
+          description: PSP's legal register name
+          type: string
+        legalRegisterNumber:
+          description: PSP's legal register number
+          type: string
+        abiCode:
+          description: PSP's ABI code
+          type: string
+        vatNumberGroup:
+          description: PSP's Vat Number group
+          type: boolean
+        dpoData:
+          $ref: "#/components/schemas/DpoDataDto"
+    ReasonForRejectDto:
+      type: object
+      properties:
+        reason:
+          description: Rejection reason of an onboarding request
+          type: string
+    RequiredDocumentModel:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        labelKey:
+          type: string
+        required:
+          type: boolean
+        mimeType:
+          type: string
+        maxDocumentsRequired:
+          format: int32
+          type: integer
+        storageOrigin:
+          enum:
+          - SYSTEM
+          - USER
+          type: string
+    RequiredDocumentsEnabledResource:
+      type: object
+      properties:
+        requiredDocumentsEnabled:
+          description: "True when the (productId, institutionType, origin) triplet\
+            \ has required-documents configured on product-ms, false otherwise."
+          type: boolean
+    RowErrorResponse:
+      type: object
+      properties:
+        riga:
+          format: int32
+          type: integer
+        codice fiscale:
+          type: string
+        errore:
+          type: string
+    UserDataValidationDto:
+      required:
+      - taxCode
+      type: object
+      properties:
+        taxCode:
+          description: User's fiscal code
+          type: string
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
+    UserDto:
+      required:
+      - name
+      - role
+      - surname
+      - taxCode
+      type: object
+      properties:
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
+        taxCode:
+          description: User's fiscal code
+          type: string
+        role:
+          description: User's role
+          enum:
+          - MANAGER
+          - DELEGATE
+          - SUB_DELEGATE
+          - OPERATOR
+          - ADMIN_EA
+          type: string
+        email:
+          description: User's email
+          type: string
+    UserId:
+      required:
+      - id
+      type: object
+      properties:
+        id:
+          format: uuid
+          type: string
+    UserInfo:
+      description: Administrators specific data
+      required:
+      - email
+      - fiscalCode
+      - id
+      - name
+      - surname
+      type: object
+      properties:
+        id:
+          format: uuid
+          description: User's unique identifier
+          type: string
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
+        email:
+          description: User's institutional email
+          type: string
+        fiscalCode:
+          description: User's fiscal code
+          type: string
+    UserRequestDto:
+      required:
+      - email
+      - name
+      - surname
+      type: object
+      properties:
+        name:
+          description: User's name
+          type: string
+        surname:
+          description: User's surname
+          type: string
+        email:
+          description: User's email
+          type: string
+    UserTaxCodeDto:
+      required:
+      - taxCode
+      type: object
+      properties:
+        taxCode:
+          description: User's fiscal code
+          type: string
+    VerificationLegalAddressRequest:
+      required:
+      - taxCode
+      type: object
+      properties:
+        taxCode:
+          type: string
+    VerificationMatchRequest:
+      required:
+      - taxCode
+      - userDto
+      type: object
+      properties:
+        taxCode:
+          type: string
+        userDto:
+          $ref: "#/components/schemas/UserDto"
+    VerifyAggregatesResponse:
+      type: object
+      properties:
+        aggregates:
+          type: array
+          items:
+            $ref: "#/components/schemas/AggregateResult"
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/RowErrorResponse"
+    VerifyManagerRequest:
+      required:
+      - companyTaxCode
+      type: object
+      properties:
+        companyTaxCode:
+          description: Institution's taxCode
+          type: string
+    VerifyManagerResponse:
+      type: object
+      properties:
+        origin:
+          description: Institution data origin
+          type: string
+        companyName:
+          description: Institution's legal name
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "A bearer token in the format of a JWS and conformed to the specifications\
+        \ included in [RFC8725](https://tools.ietf.org/html/RFC8725)"
+tags:
+- name: institutions
+  description: Institution operations
+- name: product
+  description: Product operations
+- name: user
+paths:
+  /v1/institutions:
+    get:
+      summary: The service retrieves all the onboarded institutions related to the
+        logged user and product's identifier.
+      description: The service retrieves all the onboarded institutions related to
+        the logged user and product's identifier.
+      operationId: getInstitutionsUsingGET
+      tags:
+      - institutions
+      parameters:
+      - description: A product to filter the institutions based on whether the institution
+          has an ACTIVE onboarding on the specified product.
+        name: productId
+        in: query
+        schema:
+          type: string
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/company/onboarding:
+    post:
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
+      operationId: onboardingCompanyUsingPOST
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyOnboardingDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/geographic-taxonomies:
+    get:
+      summary: The service retrieve the institution's geographic taxonomy
+      description: The service retrieve the institution's geographic taxonomy
+      operationId: getGeographicTaxonomiesByTaxCodeAndSubunitCodeUsingGET
+      tags:
+      - institutions
+      parameters:
+      - description: Institution's taxCode
+        required: true
+        name: taxCode
+        in: query
+        schema:
+          type: string
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeographicTaxonomyResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/onboarding:
+    head:
+      summary: Checks if the specified institution has been onboarded on the specified
+        product.
+      description: Checks if the specified institution has been onboarded on the specified
+        product.
+      operationId: verifyOnboardingUsingHEAD
+      tags:
+      - institutions
+      parameters:
+      - description: Institution's taxCode
+        name: taxCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Product's unique identifier
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      - description: Institution data origin
+        name: origin
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's details origin Id
+        name: originId
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's VAT number
+        name: vatNumber
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's type
+        name: institutionType
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Onboarding verification method type
+        schema:
+          enum:
+          - INTERNAL
+          - EXTERNAL
+          type: string
+        name: verifyType
+        in: query
+        required: false
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+    post:
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
+      operationId: onboardingUsingPOST
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProductDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+    get:
+      summary: The service retrieves the institutions Manager and institution informations
+      description: The service retrieves the institutions Manager and institution
+        informations
+      operationId: getInstitutionOnboardingInfoUsingGET
+      tags:
+      - institutions
+      parameters:
+      - description: Institution's unique internal Id
+        required: true
+        name: institutionId
+        in: query
+        schema:
+          type: string
+      - description: Product's unique identifier
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionOnboardingInfoResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/onboarding/verify:
+    get:
+      summary: Checks if the specified institution has been onboarded on the specified
+        product.
+      description: Checks if the specified institution has been onboarded on the specified
+        product.
+      operationId: verifyOnboardingUsingGET
+      tags:
+      - institutions
+      parameters:
+      - description: Institution's taxCode
+        name: taxCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Product's unique identifier
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      - description: Institution data origin
+        name: origin
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's details origin Id
+        name: originId
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's VAT number
+        name: vatNumber
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's type
+        name: institutionType
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Onboarding verification method type
+        schema:
+          enum:
+          - INTERNAL
+          - EXTERNAL
+          type: string
+        name: verifyType
+        in: query
+        required: false
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/verification/legal-address:
+    post:
+      summary: Get legal address by business tax id
+      description: Get legal address by business tax id
+      operationId: postVerificationLegalAddressUsingPOST
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationLegalAddressRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionLegalAddressResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/verification/match:
+    post:
+      summary: MatchLegal Representative and inserted Institution by querying on Agenzia
+        delle Entrate
+      description: MatchLegal Representative and inserted Institution by querying
+        on Agenzia delle Entrate
+      operationId: postVerificationMatchUsingPOST
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationMatchRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MatchInfoResultResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/{externalInstitutionId}/geographic-taxonomy:
+    get:
+      summary: The service retrieve the institution's geographic taxonomy
+      description: The service retrieve the institution's geographic taxonomy
+      operationId: getInstitutionGeographicTaxonomyUsingGET
+      tags:
+      - institutions
+      parameters:
+      - description: Institution's unique external identifier
+        name: externalInstitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeographicTaxonomyResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/{externalInstitutionId}/products/{productId}:
+    head:
+      summary: Checks if the specified institution has been onboarded on the specified
+        product.
+      description: Checks if the specified institution has been onboarded on the specified
+        product.
+      operationId: verifyOnboardingProductUsingHEAD
+      tags:
+      - institutions
+      parameters:
+      - description: Institution's unique external identifier
+        name: externalInstitutionId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Product's unique identifier
+        name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/product/{id}:
+    get:
+      summary: The service retrieves the product given its internal id
+      description: The service retrieves the product given its internal id
+      operationId: getProductUsingGET
+      tags:
+      - product
+      parameters:
+      - description: Product's unique identifier
+        name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Institution's type
+        schema:
+          enum:
+          - PA
+          - PG
+          - GSP
+          - SA
+          - PT
+          - SCP
+          - PSP
+          - AS
+          - REC
+          - CON
+          - PRV
+          - PRV_PF
+          - GPU
+          - SCEC
+          type: string
+        name: institutionType
+        in: query
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/products:
+    get:
+      summary: The service retrieves all products
+      description: The service retrieves all products
+      operationId: getProducts
+      tags:
+      - product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/products/admin:
+    get:
+      summary: The service retrieves all products for the addition administration
+        functionality
+      description: The service retrieves all products for the addition administration
+        functionality
+      operationId: getProductsAdmin
+      tags:
+      - product
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProductResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/users/check-manager:
+    post:
+      summary: Returns true if current manager and previous one are the same
+      description: Returns true if current manager and previous one are the same
+      operationId: checkManager
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckManagerDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckManagerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/users/onboarding:
+    post:
+      summary: The service allows the onboarding of Users
+      description: The service allows the onboarding of Users
+      operationId: onboardingUsers
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingUserDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/users/onboarding/aggregator:
+    post:
+      summary: The service allows the onboarding of Users for aggregators
+      description: The service allows the onboarding of Users for aggregators
+      operationId: onboardingAggregatorUsingPOST
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingUserDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/users/onboarding/{onboardingId}/manager:
+    get:
+      summary: Returns true if current manager and previous one are the same
+      description: Returns true if current manager and previous one are the same
+      operationId: getManagerInfo
+      tags:
+      - user
+      parameters:
+      - name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ManagerInfoResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/users/search-user:
+    post:
+      summary: Returns uuid of specific user from PDV
+      description: Returns uuid of specific user from PDV
+      operationId: searchUserId
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserTaxCodeDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserId"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/users/validate:
+    post:
+      summary: Check if requested user data are valid
+      description: Check if requested user data are valid
+      operationId: validateUsingPOST
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserDataValidationDto"
+        required: true
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions:
+    get:
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
+      operationId: v2GetInstitutionByFilters
+      tags:
+      - institutions
+      parameters:
+      - description: A product to filter the institutions based on whether the institution
+          has an ACTIVE onboarding on the specified product.
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      - description: Institution's taxCode
+        name: taxCode
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution data origin
+        name: origin
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's details origin Id
+        name: originId
+        in: query
+        schema:
+          type: string
+        required: false
+      - description: Institution's subunitCode
+        name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/company/onboarding:
+    post:
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
+      operationId: institutionOnboardingCompany
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyOnboardingDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/company/verify-manager:
+    post:
+      summary: The service allows to verify the legal representative on external registries
+        and retrieve the company name
+      description: The service allows to verify the legal representative on external
+        registries and retrieve the company name
+      operationId: verifyManagerUsingPOST
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyManagerRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyManagerResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/ipa:
+    get:
+      summary: Search IPA institutions
+      description: Searches IPA institutions indexed by the registry proxy. category
+        accepts a comma-separated list of IPA category codes.
+      operationId: searchIpaInstitutionsUsingGET
+      tags:
+      - institutions
+      parameters:
+      - schema:
+          default: '*'
+          type: string
+        name: search
+        in: query
+        required: false
+      - description: One IPA category code or a comma-separated list of IPA category
+          codes.
+        name: category
+        in: query
+        schema:
+          type: string
+        required: false
+      - schema:
+          format: int32
+          default: 0
+          type: integer
+        name: page
+        in: query
+        required: false
+      - schema:
+          format: int32
+          default: 50
+          type: integer
+        name: pageSize
+        in: query
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpaInstitutionsSearchResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/ipa/{taxCode}:
+    get:
+      summary: Find IPA institution by tax code
+      description: Returns the IPA institution with the exact tax code. category optionally
+        accepts a comma-separated list of IPA category codes.
+      operationId: findIpaInstitutionByTaxCodeUsingGET
+      tags:
+      - institutions
+      parameters:
+      - name: taxCode
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: One IPA category code or a comma-separated list of IPA category
+          codes.
+        name: category
+        in: query
+        schema:
+          type: string
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IpaInstitutionResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/onboarding:
+    post:
+      summary: The service allows the onboarding of Users to a subunit of an Institution
+      description: The service allows the onboarding of Users to a subunit of an Institution
+      operationId: institutionOnboarding
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingProductDto"
+        required: true
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "409":
+          description: Conflict
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/onboarding/active:
+    get:
+      summary: The service retrieves the active onboarding information for a given
+        tax code and product ID
+      description: The service retrieves the active onboarding information for a given
+        tax code and product ID
+      operationId: getActiveOnboardingUsingGET
+      tags:
+      - institutions
+      parameters:
+      - required: true
+        name: taxCode
+        in: query
+        schema:
+          type: string
+      - required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      - name: subunitCode
+        in: query
+        schema:
+          type: string
+        required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InstitutionOnboardingResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/onboarding/aggregation/verification:
+    post:
+      summary: The service allows to verify if the given csv contains valid aggregate
+        institutions
+      description: The service allows to verify if the given csv contains valid aggregate
+        institutions
+      operationId: verifyAggregatesCsvUsingPOST
+      tags:
+      - institutions
+      parameters:
+      - in: query
+        name: institutionType
+        schema:
+          type: string
+        required: false
+      - in: query
+        name: productId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - aggregates
+              type: object
+              properties:
+                aggregates:
+                  format: binary
+                  type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerifyAggregatesResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/onboarding/recipient-code/verification:
+    get:
+      summary: The service allows to verify if recipientCode is valid or not
+      description: The service allows to verify if recipientCode is valid or not
+      operationId: checkRecipientCodeUsingGET
+      tags:
+      - institutions
+      parameters:
+      - required: true
+        name: originId
+        in: query
+        schema:
+          type: string
+      - required: true
+        name: recipientCode
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                enum:
+                - ACCEPTED
+                - DENIED_NO_BILLING
+                - DENIED_NO_ASSOCIATION
+                type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/onboarding/users/pg:
+    post:
+      summary: The service allows the onboarding of Users to a PG Institution
+      description: The service allows the onboarding of Users to a PG Institution
+      operationId: onboardingUsersPgUsingPOST
+      tags:
+      - institutions
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompanyOnboardingUserDto"
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/onboardings:
+    get:
+      summary: Retrieve onboarding information for an institution filtered by tax
+        code and status
+      description: "Returns a list of onboarding processes associated with the institution\
+        \ identified by the provided tax code. The results can be filtered by the\
+        \ onboarding status. Each item in the response contains key details such as\
+        \ the onboarding ID, related product, and current status."
+      operationId: getOnboardingInfo
+      tags:
+      - institutions
+      parameters:
+      - required: true
+        name: taxCode
+        in: query
+        schema:
+          type: string
+      - required: true
+        name: status
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OnboardingResult"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/institutions/{onboardingId}:
+    put:
+      summary: Trigger onboarding request
+      description: "Idempotent trigger invoked after each document upload. If all\
+        \ mandatory documents are present, triggers orchestration to advance the onboarding\
+        \ from REQUEST to PENDING."
+      operationId: triggerOnboardingRequest
+      tags:
+      - institutions
+      parameters:
+      - description: The onboarding id
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/product:
+    get:
+      summary: Get product origins by productId
+      description: Retrieve the list of institution origins for the given product.
+      operationId: getOrigins
+      tags:
+      - product-ms
+      parameters:
+      - description: Institution's type
+        required: true
+        name: productId
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OriginResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/product/{productId}/required-documents:
+    get:
+      summary: Get required documents for a product
+      description: "Returns the list of required documents for the given product,\
+        \ institutionType and origin."
+      operationId: getRequiredDocuments
+      tags:
+      - product-ms
+      parameters:
+      - description: The product id
+        name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      - required: true
+        name: institutionType
+        in: query
+        schema:
+          type: string
+      - required: true
+        name: origin
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RequiredDocumentModel"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/product/{productId}/required-documents/enabled:
+    get:
+      summary: Check if required documents are enabled for a product
+      description: "Returns an object with the boolean flag requiredDocumentsEnabled\
+        \ = true when required documents are configured for the given product, institutionType\
+        \ and origin."
+      operationId: isRequiredDocumentsEnabled
+      tags:
+      - product-ms
+      parameters:
+      - description: The product id
+        name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      - required: true
+        name: institutionType
+        in: query
+        schema:
+          type: string
+      - required: true
+        name: origin
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequiredDocumentsEnabledResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}:
+    get:
+      summary: Service to retrieve a specific onboarding request
+      description: Service to retrieve a specific onboarding request
+      operationId: retrieveOnboardingRequestUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingRequestResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/approve:
+    post:
+      summary: Service to approve a specific onboarding request
+      description: Service to approve a specific onboarding request
+      operationId: approveOnboardingUsingPOST
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/attachment:
+    post:
+      summary: Upload a signed attachment
+      description: Upload a signed attachment
+      operationId: uploadAttachmentUsingPOST
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - required: true
+        name: attachmentName
+        in: query
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - attachment
+              type: object
+              properties:
+                attachmentId:
+                  type: string
+                attachmentDescription:
+                  type: string
+                attachment:
+                  format: binary
+                  type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+    get:
+      summary: Service to download a specific onboarding attachment
+      description: Service to download a specific onboarding attachment
+      operationId: getAttachmentUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Onboarding's attachment name
+        required: true
+        name: name
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/attachment/status:
+    head:
+      summary: Service to check the existence of a specific onboarding attachment
+      description: Service to check the existence of a specific onboarding attachment
+      operationId: headAttachmentUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - required: true
+        name: name
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+    get:
+      summary: Service to check the existence of a specific onboarding attachment
+      description: Service to check the existence of a specific onboarding attachment
+      operationId: getAttachmentStatusUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - required: true
+        name: name
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/available-documents:
+    get:
+      summary: Retrieve the list of documents available for download for the given
+        onboarding
+      description: "Returns the list of attachment names and, if present, the filename\
+        \ of the signed contract associated with the onboarding."
+      operationId: getAvailableDocumentsUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableDocumentsResource"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden - user does not have permission to view account documents
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailableDocumentsResource"
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/backstage/contract:
+    get:
+      summary: Service to download a specific onboarding contract from the backstage
+        (IAM protected)
+      description: Service to download a specific onboarding contract from the backstage
+        (IAM protected)
+      operationId: getContractBackstageUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden - user does not have permission to view account documents
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/complete:
+    delete:
+      summary: Complete an onboarding request
+      description: Complete an onboarding request
+      operationId: deleteUsingDELETE
+      tags:
+      - tokens
+      parameters:
+      - description: Contract's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+    post:
+      summary: Complete an onboarding request
+      description: Complete an onboarding request
+      operationId: completeUsingPOST
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - contract
+              type: object
+              properties:
+                contract:
+                  format: binary
+                  type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/complete-onboarding-users:
+    post:
+      summary: Complete an onboarding users request
+      description: Complete an onboarding users request
+      operationId: completeOnboardingUsersUsingPOST
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              required:
+              - contract
+              type: object
+              properties:
+                contract:
+                  format: binary
+                  type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/contract:
+    get:
+      summary: Service to download a specific onboarding contract
+      description: Service to download a specific onboarding contract
+      operationId: getContractUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/download:
+    get:
+      summary: Download a document (signed contract or attachment) for the given onboarding
+      description: When type=CONTRACT_SIGNED downloads the signed contract; when type=ATTACHMENT
+        the 'name' query parameter is required.
+      operationId: downloadDocumentUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Type of document to download
+        in: query
+        name: type
+        required: true
+        schema:
+          description: Type of document to download.
+          enum:
+          - CONTRACT_SIGNED
+          - ATTACHMENT
+          type: string
+      - description: "Name of the attachment. Required when type=ATTACHMENT, ignored\
+          \ otherwise."
+        in: query
+        name: name
+        schema:
+          type: string
+        required: false
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden - user does not have permission to view account documents
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/products/{productId}/aggregates-csv:
+    get:
+      summary: Service to download a specific onboarding aggregates csv
+      description: Service to download a specific onboarding aggregates csv
+      operationId: getAggregatesCsvUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Product's unique identifier
+        name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "403":
+          description: Forbidden - user does not have permission to view account documents
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/reject:
+    post:
+      summary: Service to reject a specific onboarding request
+      description: Service to reject a specific onboarding request
+      operationId: rejectOnboardingUsingPOST
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReasonForRejectDto"
+        required: true
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/template-attachment:
+    get:
+      summary: Service to download a specific template attachment
+      description: Service to download a specific template attachment
+      operationId: getTemplateAttachmentUsingGET
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: Onboarding's attachment name
+        required: true
+        name: attachmentName
+        in: query
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: array
+                items:
+                  format: byte
+                  type: string
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v2/tokens/{onboardingId}/verify:
+    post:
+      summary: Verify if the token is already consumed
+      description: Verify if the token is already consumed
+      operationId: verifyOnboardingUsingPOST
+      tags:
+      - tokens
+      parameters:
+      - description: Onboarding's unique identifier
+        name: onboardingId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingVerify"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+  /v1/institutions/from-infocamere/:
+    get:
+      summary: Get Legal Representative's PN PG institution List
+      description: Get Legal Representative's PN PG institution List
+      operationId: getInstitutionsFromInfocamereUsingGET
+      tags:
+      - institutions
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstitutionResourceIC"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "401":
+          description: Unauthorized
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "404":
+          description: Not Found
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                description: Generic problem response
+                type: object
+      security:
+      - bearerAuth:
+        - global
+info:
+  title: BFF Onboarding API
+  version: 0.1.0-SNAPSHOT
+  description: Self Care OnBoarding API documentation
+  contact:
+    name: PagoPA
+    url: https://www.pagopa.gov.it
+servers:
+- url: http://localhost
+  description: Generated server url

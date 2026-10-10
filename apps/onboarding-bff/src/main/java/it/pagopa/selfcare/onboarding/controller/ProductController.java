@@ -1,0 +1,95 @@
+package it.pagopa.selfcare.onboarding.controller;
+
+import io.quarkus.security.Authenticated;
+import io.smallrye.mutiny.Uni;
+import org.eclipse.microprofile.openapi.annotations.Operation;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
+import org.eclipse.microprofile.openapi.annotations.tags.Tag;
+import it.pagopa.selfcare.onboarding.client.model.Product;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.service.ProductService;
+import it.pagopa.selfcare.onboarding.model.dto.response.ProductResource;
+import it.pagopa.selfcare.onboarding.mapper.InstitutionMapper;
+import it.pagopa.selfcare.onboarding.util.RequestParams;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import java.util.List;
+import java.util.Objects;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
+
+@Slf4j
+@ApplicationScoped
+@Authenticated
+@Path("/")
+@Produces(MediaType.APPLICATION_JSON)
+@Tag(name = "product")
+@RequiredArgsConstructor
+public class ProductController {
+
+    private final ProductService productService;
+    private final InstitutionMapper productMapper;
+
+    @GET
+    @Path("/v1/product/{id}")
+    @Operation(summary = "${openapi.onboarding.product.api.getProduct}",
+            description = "${openapi.onboarding.product.api.getProduct}", operationId = "getProductUsingGET")
+    public Uni<ProductResource> getProduct(@Parameter(description = "${openapi.onboarding.product.model.id}")
+                                      @PathParam("id")
+                                      String id,
+                                      @Parameter(description = "${openapi.onboarding.institutions.model.institutionType}",
+                                              schema = @Schema(implementation = InstitutionType.class))
+                                      @QueryParam("institutionType")
+                                      String institutionType) {
+        log.trace("getProduct start");
+        InstitutionType type = RequestParams.optionalEnum("institutionType", institutionType, InstitutionType.class);
+        log.debug("getProduct id = {}, institutionType = {}", Encode.forJava(id), type);
+        return productService.getProduct(id, type)
+                .onFailure(ResourceNotFoundException.class)
+                .transform(failure -> new ResourceNotFoundException("No product found with id " + id))
+                .map(productMapper::toResource)
+                .invoke(resource -> {
+                    log.debug("getProduct result = {}", resource);
+                    log.trace("getProduct end");
+                });
+    }
+
+    @GET
+    @Path("/v1/products")
+    @Operation(summary = "${openapi.onboarding.product.api.getProducts}",
+            description = "${openapi.onboarding.product.api.getProducts}", operationId = "getProducts")
+    public Uni<List<ProductResource>> getProducts() {
+        log.trace("getProducts start");
+        return productService.getProducts(false)
+                .map(products -> products.stream().map(productMapper::toResource).toList())
+                .invoke(resources -> {
+                    log.debug("getProducts result = {}", resources);
+                    log.trace("getProducts end");
+                });
+    }
+
+    @GET
+    @Path("/v1/products/admin")
+    @Operation(summary = "${openapi.onboarding.product.api.getProductsAdmin}",
+            description = "${openapi.onboarding.product.api.getProductsAdmin}", operationId = "getProductsAdmin")
+    public Uni<List<ProductResource>> getProductsAdmin() {
+        log.trace("getProductsAdmin start");
+        return productService.getProducts(true)
+                .map(products -> products.stream()
+                        .filter(product -> Objects.nonNull(product.getUserContractTemplate(Product.CONTRACT_TYPE_DEFAULT).getContractTemplatePath()))
+                        .map(productMapper::toResource)
+                        .toList())
+                .invoke(resources -> {
+                    log.debug("getProductsAdmin result = {}", resources);
+                    log.trace("getProductsAdmin end");
+                });
+    }
+}

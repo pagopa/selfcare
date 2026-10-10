@@ -1,0 +1,17 @@
+package it.pagopa.selfcare.onboarding.model.dto.request;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import lombok.Data;
+
+@Data
+@Schema(description = "${openapi.onboarding.institution.model.locationData}")
+public class InstitutionLocationDataDto {
+    @Schema(description = "${openapi.onboarding.institutions.model.city}")
+    private String city;
+
+    @Schema(description = "${openapi.onboarding.institutions.model.county}")
+    private String county;
+
+    @Schema(description = "${openapi.onboarding.institutions.model.country}")
+    private String country;
+}

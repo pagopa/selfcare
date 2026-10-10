@@ -1,0 +1,17 @@
+package it.pagopa.selfcare.onboarding.model.dto.response;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+public class CertifiedFieldResource<T> {
+
+    @Schema(description = "${openapi.model.certifiedField.certified}")
+    private boolean certified;
+
+    @Schema(description = "${openapi.model.certifiedField.value}")
+    private T value;
+
+}
