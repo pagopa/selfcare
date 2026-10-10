@@ -38,6 +38,9 @@ info:
     version: "@project.version@"
 
 app:
+  startup:
+    ipa-institution-indexing:
+      enabled: ${IPA_INSTITUTION_STARTUP_INDEXING_ENABLED:false}
   data:
     encryption:
       key: ${ONBOARDING_DATA_ENCRIPTION_KEY:0123456789ABCDEF0123456789ABCDEF}
