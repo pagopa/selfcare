@@ -14,6 +14,7 @@ import org.springframework.data.redis.connection.jedis.JedisClientConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.time.Duration;
 
@@ -28,10 +29,22 @@ public class RedisConfig {
     private int redisPort;
     @Value("${redis.password}")
     private String redisPassword;
+    @Value("${redis.connect-timeout}")
+    private Duration connectTimeout;
+    @Value("${redis.read-timeout}")
+    private Duration readTimeout;
 
     @Bean
     JedisConnectionFactory jedisConnectionFactory() {
-        JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder().useSsl().build();
+        // Reuse TLS connections instead of opening a new one for every cache access and health check
+        JedisClientConfiguration jedisClientConfiguration = JedisClientConfiguration.builder()
+                .connectTimeout(connectTimeout)
+                .readTimeout(readTimeout)
+                .useSsl()
+                .and()
+                .usePooling()
+                .poolConfig(new JedisPoolConfig())
+                .build();
         return new JedisConnectionFactory(getRedisStandaloneConfiguration(), jedisClientConfiguration);
     }
 
