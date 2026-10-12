@@ -53,6 +53,11 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
       String normalizedTenant = tenantRegistry.normalizeTenantId(tenant);
       tenantContext.setTenantId(normalizedTenant);
       MDC.put(TENANT_MDC_KEY, normalizedTenant);
+      log.info(
+          "Tenant resolved for request: tenant={} method={} path={}",
+          normalizedTenant,
+          requestContext.getMethod(),
+          TenantLogUtils.sanitize(requestContext.getUriInfo().getPath()));
     } catch (RuntimeException exception) {
       log.warn(
           "Rejected request with invalid tenant context: tenant={}",
