@@ -1,11 +1,9 @@
 package it.pagopa.selfcare.iam.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.mongodb.panache.common.MongoEntity;
-import io.quarkus.mongodb.panache.reactive.ReactivePanacheMongoEntityBase;
-import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import java.util.List;
-import java.util.Optional;
 import lombok.*;
 import lombok.experimental.FieldNameConstants;
 import org.bson.codecs.pojo.annotations.BsonId;
@@ -21,8 +19,9 @@ import org.bson.codecs.pojo.annotations.BsonId;
  *
  * <pre>
  * {
- *   "_id": "user@example.com",
- *   "uid": "uuid",
+ *   "_id": "uuid",
+ *   "tenantId": "AR",
+ *   "email": "encrypted email",
  *   "productRoles": [
  *     {
  *       "productId": "product1",
@@ -43,72 +42,33 @@ import org.bson.codecs.pojo.annotations.BsonId;
  * <h2>Indexes</h2>
  *
  * <ul>
- *   <li>Primary: _id (email)
- *   <li>Secondary: uid (unique)
+ *   <li>Primary: _id (uid)
+ *   <li>Secondary: (tenantId, email)
  * </ul>
+ *
+ * <h2>Tenant</h2>
+ *
+ * <p>Each document belongs to one tenant (top-level {@code tenantId}); the same email can exist
+ * once per tenant. Access goes through {@link
+ * it.pagopa.selfcare.iam.repository.UserClaimsRepository}, which applies the tenant filter.
  *
  * @see ProductRoles
  * @see Roles
- * @see UserPermissionsRepository#getUserPermissions
+ * @see it.pagopa.selfcare.iam.repository.UserPermissionsRepository#getUserPermissions
  */
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = true)
 @FieldNameConstants(asEnum = true)
 @MongoEntity(collection = "userClaims")
-public class UserClaims extends ReactivePanacheMongoEntityBase {
+public class UserClaims {
 
   @BsonId private String uid;
+  @JsonIgnore private String tenantId;
   private String email;
   private String name;
   private String familyName;
   @Builder.Default private List<ProductRoles> productRoles = List.of();
   private boolean test;
-
-  public static Uni<UserClaims> findByUid(String uid) {
-    return find("_id", uid).firstResult().map(entity -> (UserClaims) entity);
-  }
-
-  public static Uni<UserClaims> findByEmail(String email) {
-    return find("email", email).firstResult().map(entity -> (UserClaims) entity);
-  }
-
-  public static Uni<UserClaims> findByUidProductIdTenantId(
-      String uid, String productId, String tenantId) {
-    return Optional.ofNullable(productId)
-        .map(
-            pid ->
-                find(
-                        "_id = ?1 and productRoles.productId = ?2 and productRoles.tenantId = ?3",
-                        uid,
-                        pid,
-                        tenantId)
-                    .firstResult()
-                    .map(entity -> (UserClaims) entity)
-                    .onItem()
-                    .ifNull()
-                    .switchTo(
-                        () ->
-                            find(
-                                    "_id = ?1 and productRoles.productId = ?2 and productRoles.tenantId = ?3",
-                                    uid,
-                                    "ALL",
-                                    tenantId)
-                                .firstResult()
-                                .map(entity -> (UserClaims) entity)))
-        .orElseGet(() -> findByUid(uid));
-  }
-
-  public static Uni<List<UserClaims>> findByProductIdAndTenantId(
-      String productId, String tenantId) {
-    return Optional.ofNullable(productId)
-        .map(
-            pid ->
-                find("productRoles.productId = ?1 and productRoles.tenantId = ?3", pid, tenantId)
-                    .list()
-                    .map(list -> list.stream().map(entity -> (UserClaims) entity).toList()))
-        .orElseGet(() -> Uni.createFrom().item(List.of()));
-  }
 }

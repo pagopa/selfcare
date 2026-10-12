@@ -1,9 +1,15 @@
 package it.pagopa.selfcare.iam.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import io.quarkus.test.InjectMock;
-import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
-import io.quarkus.test.mongodb.MongoTestResource;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
 import it.pagopa.selfcare.iam.controller.request.SaveUserRequest;
@@ -12,28 +18,33 @@ import it.pagopa.selfcare.iam.exception.InternalException;
 import it.pagopa.selfcare.iam.exception.InvalidRequestException;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.*;
+import it.pagopa.selfcare.iam.repository.UserClaimsRepository;
 import it.pagopa.selfcare.iam.repository.UserPermissionsRepository;
 import it.pagopa.selfcare.iam.util.DataEncryptionConfig;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.inject.Inject;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.when;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @QuarkusTest
-@QuarkusTestResource(value = MongoTestResource.class, restrictToAnnotatedClass = true)
 class IamServiceImplTest {
 
   @Inject IamServiceImpl service;
+  @Inject TenantContext tenantContext;
+  @Inject DataEncryptionConfig dataEncryptionConfig;
 
   @InjectMock UserPermissionsRepository userPermissionsRepository;
+  @InjectMock UserClaimsRepository userClaimsRepository;
+
+  @BeforeEach
+  void setUp() {
+    tenantContext.setTenantId("AR");
+    when(userClaimsRepository.upsert(any())).thenReturn(Uni.createFrom().voidItem());
+    when(userClaimsRepository.findByEmail(anyString())).thenReturn(Uni.createFrom().nullItem());
+  }
 
   @Test
   void ping_shouldReturnOK() {
@@ -47,7 +58,7 @@ class IamServiceImplTest {
   void saveUser_shouldThrowInvalidRequestException_whenRequestIsNull() {
     assertThrows(
         InvalidRequestException.class,
-        () -> service.saveUser(null, "productA", "AR").await().indefinitely());
+        () -> service.saveUser(null, "productA").await().indefinitely());
   }
 
   @Test
@@ -58,7 +69,7 @@ class IamServiceImplTest {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> service.saveUser(request, "productA", "AR").await().indefinitely());
+        () -> service.saveUser(request, "productA").await().indefinitely());
   }
 
   @Test
@@ -69,7 +80,7 @@ class IamServiceImplTest {
 
     assertThrows(
         InvalidRequestException.class,
-        () -> service.saveUser(request, "productA", "AR").await().indefinitely());
+        () -> service.saveUser(request, "productA").await().indefinitely());
   }
 
   @Test
@@ -81,13 +92,11 @@ class IamServiceImplTest {
     request.setProductRoles(
         List.of(ProductRoles.builder().productId("productA").roles(List.of("admin")).build()));
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByEmail("new@example.com"))
+    {
+      when(userClaimsRepository.findByEmail("new@example.com"))
           .thenReturn(Uni.createFrom().nullItem());
 
-      UserClaims result = service.saveUser(request, "productA", "AR").await().indefinitely();
+      UserClaims result = service.saveUser(request, "productA").await().indefinitely();
 
       assertNotNull(result);
       assertEquals("new@example.com", result.getEmail());
@@ -123,13 +132,11 @@ class IamServiceImplTest {
 
     UserClaims spyUser = spy(existingUser);
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByEmail("AEpJ4wSTGoucJLy8OCYfL23M0kSt0WwYo9/cJ9jboUtEgxsJ"))
+    {
+      when(userClaimsRepository.findByEmail("AEpJ4wSTGoucJLy8OCYfL23M0kSt0WwYo9/cJ9jboUtEgxsJ"))
           .thenReturn(Uni.createFrom().item(spyUser));
 
-      UserClaims result = service.saveUser(request, "productA", "AR").await().indefinitely();
+      UserClaims result = service.saveUser(request, "productA").await().indefinitely();
 
       assertNotNull(result);
       assertEquals(existingUid, result.getUid());
@@ -159,13 +166,11 @@ class IamServiceImplTest {
 
     UserClaims spyUser = spy(existingUser);
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByEmail("CFdS9xW6EZS9LLSxMHgQJS7KuMuQ50MOy5zX05Tjt3L5"))
+    {
+      when(userClaimsRepository.findByEmail("CFdS9xW6EZS9LLSxMHgQJS7KuMuQ50MOy5zX05Tjt3L5"))
           .thenReturn(Uni.createFrom().item(spyUser));
 
-      UserClaims result = service.saveUser(request, "productB", "AR").await().indefinitely();
+      UserClaims result = service.saveUser(request, "productB").await().indefinitely();
 
       assertNotNull(result);
       assertEquals(2, spyUser.getProductRoles().size());
@@ -206,13 +211,12 @@ class IamServiceImplTest {
 
     UserClaims spyUser = spy(existingUser);
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByEmail("F1dQ/BGZEay5OaWwJToWZCDA0H9W7CtYk084i1dg1crtqEc="))
+    {
+      tenantContext.setTenantId("PNPG");
+      when(userClaimsRepository.findByEmail(dataEncryptionConfig.encrypt("replace@example.com")))
           .thenReturn(Uni.createFrom().item(spyUser));
 
-      service.saveUser(request, "productA", "PNPG").await().indefinitely();
+      service.saveUser(request, "productA").await().indefinitely();
 
       assertEquals(1, spyUser.getProductRoles().size());
       assertEquals("productA", spyUser.getProductRoles().get(0).getProductId());
@@ -252,13 +256,12 @@ class IamServiceImplTest {
 
     UserClaims spyUser = spy(existingUser);
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByEmail("F1dQ/BGZEay5OaWwJToWZCDA0H9W7CtYk084i1dg1crtqEc="))
+    {
+      tenantContext.setTenantId("PNPG");
+      when(userClaimsRepository.findByEmail(dataEncryptionConfig.encrypt("replace@example.com")))
           .thenReturn(Uni.createFrom().item(spyUser));
 
-      service.saveUser(request, "productA", "PNPG").await().indefinitely();
+      service.saveUser(request, "productA").await().indefinitely();
 
       assertEquals(2, spyUser.getProductRoles().size());
       assertEquals("productA", spyUser.getProductRoles().get(0).getProductId());
@@ -293,14 +296,11 @@ class IamServiceImplTest {
 
     UserClaims spyUser = spy(existingUser);
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(
-              () -> UserClaims.findByEmail("F1dQ/BGZEY2wLYS4LTceOi/Kk0rnREus5wvMa9zMPRSkuA26a5Y="))
+    {
+      when(userClaimsRepository.findByEmail("F1dQ/BGZEY2wLYS4LTceOi/Kk0rnREus5wvMa9zMPRSkuA26a5Y="))
           .thenReturn(Uni.createFrom().item(spyUser));
 
-      service.saveUser(request, null, "AR").await().indefinitely();
+      service.saveUser(request, null).await().indefinitely();
 
       assertEquals(3, spyUser.getProductRoles().size());
       assertEquals("productC", spyUser.getProductRoles().get(2).getProductId());
@@ -313,7 +313,6 @@ class IamServiceImplTest {
   void getUser_shouldReturnUser_whenUserExists() {
     String userId = "user-123";
     String productId = "productA";
-    String tenantId = "AR";
 
     UserClaims foundUser =
         UserClaims.builder()
@@ -325,13 +324,11 @@ class IamServiceImplTest {
                     ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
             .build();
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByUidProductIdTenantId(userId, productId, tenantId))
+    {
+      when(userClaimsRepository.findByUidAndProductId(userId, productId))
           .thenReturn(Uni.createFrom().item(foundUser));
 
-      UserClaims result = service.getUser(userId, productId, "AR").await().indefinitely();
+      UserClaims result = service.getUser(userId, productId).await().indefinitely();
 
       assertNotNull(result);
       assertEquals(userId, result.getUid());
@@ -344,7 +341,6 @@ class IamServiceImplTest {
   void getUser_shouldReturnUser_whenUserExists_withProductALL() {
     String userId = "user-123";
     String productId = "productA";
-    String tenantId = "AR";
 
     UserClaims foundUser =
         UserClaims.builder()
@@ -355,13 +351,11 @@ class IamServiceImplTest {
             .test(false)
             .build();
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByUidProductIdTenantId(userId, productId, tenantId))
+    {
+      when(userClaimsRepository.findByUidAndProductId(userId, productId))
           .thenReturn(Uni.createFrom().item(foundUser));
 
-      UserClaims result = service.getUser(userId, productId, "AR").await().indefinitely();
+      UserClaims result = service.getUser(userId, productId).await().indefinitely();
 
       assertNotNull(result);
       assertEquals(userId, result.getUid());
@@ -374,16 +368,14 @@ class IamServiceImplTest {
   void getUser_shouldThrowResourceNotFoundException_whenUserNotFound() {
     String userId = "non-existing-user";
     String productId = "productA";
-    String tenantId = "AR";
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic
-          .when(() -> UserClaims.findByUidProductIdTenantId(userId, productId, tenantId))
+    {
+      when(userClaimsRepository.findByUidAndProductId(userId, productId))
           .thenReturn(Uni.createFrom().nullItem());
 
       assertThrows(
           ResourceNotFoundException.class,
-          () -> service.getUser(userId, productId, "AR").await().indefinitely());
+          () -> service.getUser(userId, productId).await().indefinitely());
     }
   }
 
@@ -401,13 +393,11 @@ class IamServiceImplTest {
                     ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
             .build();
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByUidProductIdTenantId(userId, null, null))
+    {
+      when(userClaimsRepository.findByUidAndProductId(userId, null))
           .thenReturn(Uni.createFrom().item(foundUser));
 
-      UserClaims result = service.getUser(userId, null, null).await().indefinitely();
+      UserClaims result = service.getUser(userId, null).await().indefinitely();
 
       assertNotNull(result);
       assertEquals(2, result.getProductRoles().size());
@@ -420,7 +410,7 @@ class IamServiceImplTest {
   void getUserByEmail_shouldReturnUser_whenUserExistsAndProductIdMatches() {
     String email = "found@example.com";
     String productId = "productA";
-    String encryptedEmail = "encrypted_found@example.com";
+    String encryptedEmail = dataEncryptionConfig.encrypt(email);
 
     UserClaims foundUser =
         UserClaims.builder()
@@ -432,20 +422,11 @@ class IamServiceImplTest {
                     ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
             .build();
 
-    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
-        MockedStatic<DataEncryptionConfig> mockedEncryption =
-            Mockito.mockStatic(DataEncryptionConfig.class)) {
-
-      mockedUserClaims.when(UserClaims::builder).thenCallRealMethod();
-
-      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
-      mockedEncryption.when(() -> DataEncryptionConfig.decrypt(encryptedEmail)).thenReturn(email);
-
-      mockedUserClaims
-          .when(() -> UserClaims.findByEmail(encryptedEmail))
+    {
+      when(userClaimsRepository.findByEmail(encryptedEmail))
           .thenReturn(Uni.createFrom().item(foundUser));
 
-      UserClaims result = service.getUserByEmail(email, productId, "AR").await().indefinitely();
+      UserClaims result = service.getUserByEmail(email, productId).await().indefinitely();
 
       assertNotNull(result);
       assertEquals("user-123", result.getUid());
@@ -459,7 +440,7 @@ class IamServiceImplTest {
   void getUserByEmail_shouldThrowResourceNotFound_whenProductIdDoesNotMatch() {
     String email = "found@example.com";
     String productId = "productC";
-    String encryptedEmail = "encrypted_found@example.com";
+    String encryptedEmail = dataEncryptionConfig.encrypt(email);
 
     UserClaims foundUser =
         UserClaims.builder()
@@ -470,19 +451,13 @@ class IamServiceImplTest {
                     ProductRoles.builder().productId("productA").roles(List.of("admin")).build()))
             .build();
 
-    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
-        MockedStatic<DataEncryptionConfig> mockedEncryption =
-            Mockito.mockStatic(DataEncryptionConfig.class)) {
-
-      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
-
-      mockedUserClaims
-          .when(() -> UserClaims.findByEmail(encryptedEmail))
+    {
+      when(userClaimsRepository.findByEmail(encryptedEmail))
           .thenReturn(Uni.createFrom().item(foundUser));
 
       assertThrows(
           ResourceNotFoundException.class,
-          () -> service.getUserByEmail(email, productId, "AR").await().indefinitely());
+          () -> service.getUserByEmail(email, productId).await().indefinitely());
     }
   }
 
@@ -490,7 +465,7 @@ class IamServiceImplTest {
   void getUserByEmail_shouldReturnUser_whenUserHasProductAll() {
     String email = "found@example.com";
     String productId = "productC"; // Requested product C
-    String encryptedEmail = "encrypted_found@example.com";
+    String encryptedEmail = dataEncryptionConfig.encrypt(email);
 
     UserClaims foundUser =
         UserClaims.builder()
@@ -501,19 +476,11 @@ class IamServiceImplTest {
                     ProductRoles.builder().productId("ALL").roles(List.of("super-admin")).build()))
             .build();
 
-    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
-        MockedStatic<DataEncryptionConfig> mockedEncryption =
-            Mockito.mockStatic(DataEncryptionConfig.class)) {
-
-      mockedUserClaims.when(UserClaims::builder).thenCallRealMethod();
-      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
-      mockedEncryption.when(() -> DataEncryptionConfig.decrypt(encryptedEmail)).thenReturn(email);
-
-      mockedUserClaims
-          .when(() -> UserClaims.findByEmail(encryptedEmail))
+    {
+      when(userClaimsRepository.findByEmail(encryptedEmail))
           .thenReturn(Uni.createFrom().item(foundUser));
 
-      UserClaims result = service.getUserByEmail(email, productId, "AR").await().indefinitely();
+      UserClaims result = service.getUserByEmail(email, productId).await().indefinitely();
 
       assertNotNull(result);
       assertEquals(1, result.getProductRoles().size());
@@ -525,21 +492,15 @@ class IamServiceImplTest {
   void getUserByEmail_shouldThrowResourceNotFound_whenUserNotFound() {
     String email = "missing@example.com";
     String productId = "productA";
-    String encryptedEmail = "encrypted_missing@example.com";
+    String encryptedEmail = dataEncryptionConfig.encrypt(email);
 
-    try (MockedStatic<UserClaims> mockedUserClaims = Mockito.mockStatic(UserClaims.class);
-        MockedStatic<DataEncryptionConfig> mockedEncryption =
-            Mockito.mockStatic(DataEncryptionConfig.class)) {
-
-      mockedEncryption.when(() -> DataEncryptionConfig.encrypt(email)).thenReturn(encryptedEmail);
-
-      mockedUserClaims
-          .when(() -> UserClaims.findByEmail(encryptedEmail))
+    {
+      when(userClaimsRepository.findByEmail(encryptedEmail))
           .thenReturn(Uni.createFrom().nullItem());
 
       assertThrows(
           ResourceNotFoundException.class,
-          () -> service.getUserByEmail(email, productId, "AR").await().indefinitely());
+          () -> service.getUserByEmail(email, productId).await().indefinitely());
     }
   }
 
@@ -628,11 +589,11 @@ class IamServiceImplTest {
     ProductRolePermissionsList productRolePermissionsList =
         ProductRolePermissionsList.builder().items(productRolePermissions).build();
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
         .thenReturn(Uni.createFrom().item(productRolePermissions));
 
     ProductRolePermissionsList result =
-        service.getProductRolePermissionsList(userId, productId, "AR").await().indefinitely();
+        service.getProductRolePermissionsList(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(1, result.getItems().size());
@@ -654,11 +615,11 @@ class IamServiceImplTest {
 
     List<ProductRolePermissions> productRolePermissions = List.of(prp1);
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
         .thenReturn(Uni.createFrom().item(productRolePermissions));
 
     ProductRolePermissionsList result =
-        service.getProductRolePermissionsList(userId, productId, "AR").await().indefinitely();
+        service.getProductRolePermissionsList(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(1, result.getItems().size());
@@ -677,11 +638,11 @@ class IamServiceImplTest {
             .permissions(List.of("read:specific"))
             .build();
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
         .thenReturn(Uni.createFrom().item(List.of(specificPermission)));
 
     ProductRolePermissionsList result =
-        service.getProductRolePermissionsList(userId, productId, "AR").await().indefinitely();
+        service.getProductRolePermissionsList(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(1, result.getItems().size());
@@ -693,11 +654,11 @@ class IamServiceImplTest {
     String userId = "user-123";
     String productId = "productA";
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
         .thenReturn(Uni.createFrom().item(Collections.emptyList()));
 
     ProductRolePermissionsList result =
-        service.getProductRolePermissionsList(userId, productId, "AR").await().indefinitely();
+        service.getProductRolePermissionsList(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertTrue(result.getItems().isEmpty());
@@ -708,11 +669,11 @@ class IamServiceImplTest {
     String userId = "user-123";
     String productId = "productA";
 
-    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRolePermissionsList(userId, productId))
         .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
 
     Uni<ProductRolePermissionsList> result =
-        service.getProductRolePermissionsList(userId, productId, "AR");
+        service.getProductRolePermissionsList(userId, productId);
 
     result
         .subscribe()
@@ -737,11 +698,11 @@ class IamServiceImplTest {
             .permissions(List.of("read:users", "write:users"))
             .build();
 
-    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId), "AR"))
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
         .thenReturn(Uni.createFrom().item(userPermissions));
 
     Boolean result =
-        service.hasPermission(userId, permission, productId, null, "AR").await().indefinitely();
+        service.hasPermission(userId, permission, productId, null).await().indefinitely();
 
     assertTrue(result);
   }
@@ -760,11 +721,11 @@ class IamServiceImplTest {
             .permissions(List.of("read:users", "write:users"))
             .build();
 
-    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId), "AR"))
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
         .thenReturn(Uni.createFrom().item(userPermissions));
 
     Boolean result =
-        service.hasPermission(userId, permission, productId, null, "AR").await().indefinitely();
+        service.hasPermission(userId, permission, productId, null).await().indefinitely();
 
     assertFalse(result);
   }
@@ -783,11 +744,11 @@ class IamServiceImplTest {
             .permissions(List.of())
             .build();
 
-    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId), "AR"))
+    when(userPermissionsRepository.getUserPermissions(userId, permission, List.of(productId)))
         .thenReturn(Uni.createFrom().item(userPermissions));
 
     Boolean result =
-        service.hasPermission(userId, permission, productId, null, "AR").await().indefinitely();
+        service.hasPermission(userId, permission, productId, null).await().indefinitely();
 
     assertFalse(result);
   }
@@ -827,13 +788,11 @@ class IamServiceImplTest {
                         .build()))
             .build();
 
-    try (MockedStatic<UserClaims> mockedStatic = Mockito.mockStatic(UserClaims.class)) {
-      mockedStatic.when(UserClaims::builder).thenCallRealMethod();
-      mockedStatic
-          .when(() -> UserClaims.findByProductIdAndTenantId(productId, "AR"))
+    {
+      when(userClaimsRepository.findByProductId(productId))
           .thenReturn(Uni.createFrom().item(List.of(u1, u2)));
 
-      List<UserClaims> result = service.getUsers(productId, "AR").await().indefinitely();
+      List<UserClaims> result = service.getUsers(productId).await().indefinitely();
 
       assertNotNull(result);
       assertEquals(2, result.size());
@@ -855,11 +814,10 @@ class IamServiceImplTest {
     ProductRole productRole =
         ProductRole.builder().productId(productId).tenantId("AR").roles(List.of(role)).build();
 
-    when(userPermissionsRepository.getUserProductRoles(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
         .thenReturn(Uni.createFrom().item(List.of(productRole)));
 
-    List<ProductRole> result =
-        service.getProductRoles(userId, productId, "AR").await().indefinitely();
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(1, result.size());
@@ -881,10 +839,10 @@ class IamServiceImplTest {
     ProductRole productB =
         ProductRole.builder().productId("product-B").roles(List.of(operatorRole)).build();
 
-    when(userPermissionsRepository.getUserProductRoles(userId, null, "AR"))
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
         .thenReturn(Uni.createFrom().item(List.of(productA, productB)));
 
-    List<ProductRole> result = service.getProductRoles(userId, null, "AR").await().indefinitely();
+    List<ProductRole> result = service.getProductRoles(userId, null).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(2, result.size());
@@ -902,11 +860,10 @@ class IamServiceImplTest {
     ProductRole productRole =
         ProductRole.builder().productId(productId).roles(List.of(adminRole, operatorRole)).build();
 
-    when(userPermissionsRepository.getUserProductRoles(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
         .thenReturn(Uni.createFrom().item(List.of(productRole)));
 
-    List<ProductRole> result =
-        service.getProductRoles(userId, productId, "AR").await().indefinitely();
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(1, result.size());
@@ -919,10 +876,10 @@ class IamServiceImplTest {
   void getProductRoles_shouldReturnEmptyList_whenUserHasNoRoles() {
     String userId = "user-no-roles";
 
-    when(userPermissionsRepository.getUserProductRoles(userId, null, "AR"))
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
         .thenReturn(Uni.createFrom().item(Collections.emptyList()));
 
-    List<ProductRole> result = service.getProductRoles(userId, null, "AR").await().indefinitely();
+    List<ProductRole> result = service.getProductRoles(userId, null).await().indefinitely();
 
     assertNotNull(result);
     assertTrue(result.isEmpty());
@@ -938,11 +895,10 @@ class IamServiceImplTest {
     ProductRole productRole =
         ProductRole.builder().productId(productId).roles(List.of(unknownRole)).build();
 
-    when(userPermissionsRepository.getUserProductRoles(userId, productId, "AR"))
+    when(userPermissionsRepository.getUserProductRoles(userId, productId))
         .thenReturn(Uni.createFrom().item(List.of(productRole)));
 
-    List<ProductRole> result =
-        service.getProductRoles(userId, productId, "AR").await().indefinitely();
+    List<ProductRole> result = service.getProductRoles(userId, productId).await().indefinitely();
 
     assertNotNull(result);
     assertEquals(1, result.size());
@@ -954,11 +910,84 @@ class IamServiceImplTest {
   void getProductRoles_shouldPropagateFailure_whenRepositoryFails() {
     String userId = "user-error";
 
-    when(userPermissionsRepository.getUserProductRoles(userId, null, "AR"))
+    when(userPermissionsRepository.getUserProductRoles(userId, null))
         .thenReturn(Uni.createFrom().failure(new InternalException("Database error")));
 
     assertThrows(
         InternalException.class,
-        () -> service.getProductRoles(userId, null, "AR").await().indefinitely());
+        () -> service.getProductRoles(userId, null).await().indefinitely());
+  }
+
+  // ========== Tenant isolation Tests ==========
+
+  @Test
+  void saveUser_shouldRejectProductRoleOfAnotherTenant() {
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("cross@example.com");
+    request.setProductRoles(
+        List.of(
+            ProductRoles.builder()
+                .productId("productA")
+                .tenantId("PNPG")
+                .roles(List.of("admin"))
+                .build()));
+
+    assertThrows(
+        InvalidRequestException.class,
+        () -> service.saveUser(request, "productA").await().indefinitely());
+    verify(userClaimsRepository, never()).upsert(any());
+  }
+
+  @Test
+  void saveUser_shouldBindProductRolesToCurrentTenant() {
+    tenantContext.setTenantId("PNPG");
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("pnpg@example.com");
+    request.setProductRoles(
+        List.of(ProductRoles.builder().productId("productA").roles(List.of("admin")).build()));
+
+    UserClaims result = service.saveUser(request, "productA").await().indefinitely();
+
+    assertEquals("pnpg@example.com", result.getEmail());
+    assertEquals("PNPG", result.getProductRoles().get(0).getTenantId());
+  }
+
+  @Test
+  void saveUser_shouldLookUpEmailWithTenantKey() {
+    String encryptedAr = dataEncryptionConfig.encrypt("same@example.com");
+    tenantContext.setTenantId("PNPG");
+    String encryptedPnpg = dataEncryptionConfig.encrypt("same@example.com");
+    assertNotEquals(encryptedAr, encryptedPnpg);
+
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("same@example.com");
+    service.saveUser(request, null).await().indefinitely();
+
+    verify(userClaimsRepository).findByEmail(encryptedPnpg);
+    verify(userClaimsRepository, never()).findByEmail(encryptedAr);
+  }
+
+  @Test
+  void getUser_shouldExcludeProductRolesOfOtherTenants() {
+    String userId = "user-mixed";
+    UserClaims foundUser =
+        UserClaims.builder()
+            .uid(userId)
+            .productRoles(
+                List.of(
+                    ProductRoles.builder()
+                        .productId("productA")
+                        .tenantId("PNPG")
+                        .roles(List.of("admin"))
+                        .build(),
+                    ProductRoles.builder().productId("productB").roles(List.of("viewer")).build()))
+            .build();
+    when(userClaimsRepository.findByUidAndProductId(userId, null))
+        .thenReturn(Uni.createFrom().item(foundUser));
+
+    UserClaims result = service.getUser(userId, null).await().indefinitely();
+
+    assertEquals(1, result.getProductRoles().size());
+    assertEquals("productB", result.getProductRoles().get(0).getProductId());
   }
 }

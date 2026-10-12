@@ -6,6 +6,8 @@ import io.quarkiverse.cucumber.CucumberQuarkusTest;
 import io.quarkus.test.junit.TestProfile;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.config.HeaderConfig;
+import io.restassured.config.RestAssuredConfig;
 import it.pagopa.selfcare.iam.cucumber.config.IntegrationProfile;
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +51,11 @@ public class CucumberSuiteTest extends CucumberQuarkusTest {
     RestAssured.port = 8081;
     RestAssured.requestSpecification =
         new RequestSpecBuilder().addHeader("X-Tenant-Id", "AR").build();
+    // The SDK login step sets X-Tenant-Id from the JWT claim: overwrite instead of sending
+    // "AR,AR", which the tenant filter rejects as invalid.
+    RestAssured.config =
+        RestAssuredConfig.config()
+            .headerConfig(HeaderConfig.headerConfig().overwriteHeadersWithName("X-Tenant-Id"));
 
     tokenTest = ConfigProvider.getConfig().getValue(JWT_BEARER_TOKEN_ENV, String.class);
 

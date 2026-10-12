@@ -33,7 +33,8 @@ The module is built using:
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
 | `_id` | String | PK, Required | Unique identifier (UUID)  |
-| `email` | String | Unique, Required | User's email (primary key) |
+| `tenantId` | String | Set on insert | Tenant owning the document (`AR`, `PNPG`); not exposed by the API |
+| `email` | String | Unique per tenant, Required | User's email, encrypted with the tenant key |
 | `name` | String | Optional | User's first name |
 | `familyName` | String | Optional | User's last name |
 | `productRoles` | Array<ProductRoles> | Optional | List of roles per product |
@@ -357,15 +358,30 @@ iamService.saveUser(request, "product2")
 
 ## Configuration
 
-### MongoDB Connection
+### Multitenancy
+The tenant of each request is resolved by `TenantResolutionFilter` from the optional
+`tenantId` query parameter or the `X-Tenant-Id` header (a conflict between them, or with the
+JWT `tenant_id` claim, returns 400). When `TENANT_ENFORCEMENT_ENABLED=false`, requests without
+tenant fall back to `TENANT_DEFAULT`. The header is propagated to institution-ms.
+
 ```properties
-quarkus.mongodb.connection-string=${MONGODB_CONNECTION_STRING:mongodb://localhost:27017}
-quarkus.mongodb.database=selcIam
+# Per-tenant Mongo database and JWT key (selfcare-sdk-tenant registry)
+TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"...","database":"selcIam","connectionStringEnvVar":"MONGODB_CONNECTION_STRING_AR"},"jwt":{"publicKeyEnvVar":"JWT_PUBLIC_KEY_AR"}}}
+TENANT_SUPPORTED_TENANTS=AR
+# Per-tenant email encryption key/iv
+SELFCARE_DATA_ENCRIPTION_KEY_AR=...
+SELFCARE_DATA_ENCRIPTION_IV_AR=...
+# true once the tenantId backfill is verified: hides documents without tenantId
+SELFCARE_TENANT_STRICT_DATA_ISOLATION=false
 ```
+
+`userClaims` and the global `roles` collection must live in the same tenant database
+(`$lookup`). All userClaims queries are scoped by `TenantDataFilter`.
 
 ### Indexes (MongoDB Shell)
 ```javascript
 db.userClaims.createIndex({ "email": 1 }, { unique: true })
+db.userClaims.createIndex({ "tenantId": 1, "email": 1 })
 db.userClaims.createIndex({ "productRoles.productId": 1 })
 db.roles.createIndex({ "_id": 1 }, { unique: true })
 ```

@@ -6,6 +6,9 @@ mongoimport --host localhost --db selcIam --collection userClaims --file /docker
 echo "insert roles"
 mongoimport --host localhost --db selcIam --collection roles --file /docker-entrypoint-initdb.d/roles.json --jsonArray
 
+echo "insert roles (PNPG tenant database)"
+mongoimport --host localhost --db selcIamPnpg --collection roles --file /docker-entrypoint-initdb.d/roles.json --jsonArray
+
 echo "insert institutions"
 mongoimport --host localhost --db selcMsCore --collection Institution --file /docker-entrypoint-initdb.d/institution.json --jsonArray
 
