@@ -28,16 +28,17 @@ public final class AvailabilityKqlQuery {
                 | where ResourceProvider == "MICROSOFT.NETWORK"
                     and Category == "ApplicationGatewayAccessLog"
                     and _ResourceId =~ "%s"
-                | where listenerName_s in ("api", "api-pnpg")
+                | where listenerName_s in ("api-listener", "api-pnpg-listener")
                 | where isnull(requestUri_s) or requestUri_s !in ("/spid/v1/metadata", "dummy")
                 | extend statusCode = toint(httpStatus_d)
                 | extend validStatus = isnotnull(httpStatus_d)
                     and isnotnull(statusCode)
                     and todouble(statusCode) == httpStatus_d
                     and statusCode between (100 .. 599)
+                | extend available = validStatus and (statusCode < 300 or statusCode == 404)
                 | summarize
-                    CountLt500 = countif(validStatus and statusCode < 500),
-                    CountGte500 = countif(not(validStatus) or statusCode >= 500)
+                    CountLt500 = countif(available),
+                    CountGte500 = countif(not(available))
                 """.formatted(start, end, applicationGatewayResourceId);
     }
 }
