@@ -16,8 +16,10 @@ import it.pagopa.selfcare.external_api.model.product.ProductResource;
 import it.pagopa.selfcare.external_api.model.user.User;
 import it.pagopa.selfcare.external_api.model.user.UserProductResponse;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.ContractTemplateConfig;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.ContractType;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.OnboardingType;
+import it.pagopa.selfcare.product.generated.openapi.v1.dto.ProductResponse;
 import it.pagopa.selfcare.registry_proxy.generated.openapi.v1.dto.LegalVerificationResult;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserInstitutionResponse;
@@ -59,7 +61,7 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
     private MsCoreRestClient msCoreRestClient;
 
     @MockBean
-    private it.pagopa.selfcare.product.service.ProductService productService;
+    private ProductMsService productMsService;
 
     @MockBean
     private MsUserApiRestClient msUserApiRestClient;
@@ -101,9 +103,9 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
         when(msUserApiRestClient._retrieveUsers(institutionId, userId, userId, null, null, null, List.of(ACTIVE.name())))
                 .thenReturn(ResponseEntity.ok(List.of(userDataResponse)));
 
-        Product product = dummyProduct("456");
-        Product product2 = dummyProduct("123");
-        when(productService.getProducts(true, true)).thenReturn(List.of(product, product2));
+        ProductResponse product = dummyProduct("456");
+        ProductResponse product2 = dummyProduct("123");
+        when(productMsService.getProducts(true, true)).thenReturn(List.of(product, product2));
         when(institutionApiClient._retrieveInstitutionByIdUsingGET(institutionId, null)).thenReturn(ResponseEntity.ok(dummyInstitutionResponse()) );
 
         List<ProductResource> productResources = institutionService.getInstitutionUserProductsV2(institutionId, userId);
@@ -118,14 +120,16 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
         return institutionResponse;
     }
 
-    Product dummyProduct(String id) {
-        Product product = new Product();
-        product.setId(id);
-
-        ContractTemplate contractTemplate = new ContractTemplate();
-        contractTemplate.setContractTemplatePath("setContractTemplatePath");
-        contractTemplate.setContractTemplateVersion("setContractTemplateVersion");
-        product.setInstitutionContractMappings(Map.of(InstitutionType.PA.name(), contractTemplate));
+    ProductResponse dummyProduct(String id) {
+        ProductResponse product = new ProductResponse();
+        product.setProductId(id);
+        ContractTemplateConfig contractTemplate = new ContractTemplateConfig();
+        contractTemplate.setOnboardingType(OnboardingType.INSTITUTION);
+        contractTemplate.setInstitutionType(it.pagopa.selfcare.product.generated.openapi.v1.dto.InstitutionType.PA);
+        contractTemplate.setContractType(ContractType.CONTRACT);
+        contractTemplate.setPath("setContractTemplatePath");
+        contractTemplate.setVersion("setContractTemplateVersion");
+        product.setContracts(List.of(contractTemplate));
         return product;
     }
 
@@ -140,16 +144,14 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
         it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse onboardedProductResponse = new it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse();
         onboardedProductResponse.setProductId("id");
         it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse onboardedProductResponse2 = new it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse();
-        onboardedProductResponse.setProductId("id2");
+        onboardedProductResponse2.setProductId("id2");
         userDataResponse.setProducts(List.of(onboardedProductResponse, onboardedProductResponse2));
         when(msUserApiRestClient._retrieveUsers(institutionId, userId, userId, null, null, null, List.of(ACTIVE.name())))
                 .thenReturn(ResponseEntity.ok(List.of(userDataResponse)));
 
-        Product product = new Product();
-        product.setId("id");
-        Product product2 = new Product();
-        product.setId("id2");
-        when(productService.getProducts(true, true)).thenReturn(List.of(product, product2));
+        ProductResponse product = dummyProduct("id");
+        ProductResponse product2 = dummyProduct("id2");
+        when(productMsService.getProducts(true, true)).thenReturn(List.of(product, product2));
         when(institutionApiClient._retrieveInstitutionByIdUsingGET(institutionId, null)).thenReturn(ResponseEntity.ok(new InstitutionResponse()) );
 
         List<ProductResource> expectation = institutionService.getInstitutionUserProductsV2(institutionId, userId);
@@ -210,7 +212,7 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
         });
         Mockito.when(msUserApiRestClient._retrievePaginatedAndFilteredUser(institutionId, null, null, List.of(productId), null, null, List.of(ACTIVE.name()), userId))
                 .thenReturn(ResponseEntity.ok(userInstitutions));
-        when(productService.getProductRaw(productId)).thenReturn(dummyProduct(productId));
+        when(productMsService.getProductRaw(productId)).thenReturn(dummyProduct(productId));
 
         ClassPathResource userResource = new ClassPathResource("expectations/User.json");
         byte[] userStream = Files.readAllBytes(userResource.getFile().toPath());
@@ -245,7 +247,7 @@ class InstitutionServiceImplTest extends BaseServiceTestUtils {
         byte[] userStream = Files.readAllBytes(userResource.getFile().toPath());
         User user = objectMapper.readValue(userStream, User.class);
         when(userRegistryRestClient.getUserByInternalId(any(), any())).thenReturn(user);
-        when(productService.getProductRaw(productId)).thenReturn(dummyProduct(productId));
+        when(productMsService.getProductRaw(productId)).thenReturn(dummyProduct(productId));
 
         Collection<UserProductResponse> result = institutionService.getInstitutionProductUsersV2(institutionId, productId, userId, null, xSelfCareUid);
 

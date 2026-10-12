@@ -20,7 +20,6 @@ import it.pagopa.selfcare.external_api.model.user.UserDetailsWrapper;
 import it.pagopa.selfcare.external_api.model.user.UserInfoWrapper;
 import it.pagopa.selfcare.external_api.model.user.UserInstitution;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
-import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,7 +69,7 @@ class UserServiceImplTest extends BaseServiceTestUtils {
     private MsUserApiRestClient msUserApiRestClient;
 
     @Mock
-    private ProductService productService;
+    private ProductMsService productMsService;
 
 
     static final String PRODUCT_ID = "product1";
@@ -93,8 +92,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
         });
         Mockito.when(msUserApiRestClient._retrievePaginatedAndFilteredUser(institutionId, null, null, List.of(PRODUCT_ID), null, null, null,userId))
                 .thenReturn(ResponseEntity.ok(userInstitutions));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
 
         ClassPathResource expectationResource = new ClassPathResource("expectations/UserDetailsWrapper.json");
@@ -117,8 +116,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
         });
         Mockito.when(msUserApiRestClient._retrievePaginatedAndFilteredUser(institutionId, null, null, List.of(PRODUCT_ID), null, null, null,userId))
                 .thenReturn(ResponseEntity.ok(userInstitutions));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
         UserDetailsWrapper result = userService.getUserOnboardedProductsDetailsV2(userId, institutionId, PRODUCT_ID);
         Assertions.assertNotNull(result.getProductDetails().getCreatedAt());
@@ -134,8 +133,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
         });
         Mockito.when(msUserApiRestClient._retrievePaginatedAndFilteredUser(institutionId, null, null, List.of(PRODUCT_ID), null, null, null,userId))
                 .thenReturn(ResponseEntity.ok(userInstitutions));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
         UserDetailsWrapper result = userService.getUserOnboardedProductsDetailsV2(userId, institutionId, PRODUCT_ID);
         Assertions.assertNull(result.getProductDetails());
@@ -153,8 +152,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
         });
         Mockito.when(msUserApiRestClient._retrievePaginatedAndFilteredUser(null, null, null, List.of(PRODUCT_ID), null, null, List.of(ACTIVE.name()),userId))
                 .thenReturn(ResponseEntity.ok(userInstitutions));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
         InstitutionResponse institution = getInstitutionResponse(PRODUCT_ID, productIdDeleted, institutionId, false);
         institution.getOnboarding().forEach(onboardedProductResponse -> onboardedProductResponse.setStatus(OnboardedProductResponse.StatusEnum.SUSPENDED));
@@ -194,8 +193,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
         Mockito.when(institutionMapper.toInstitution(any())).thenReturn(institutionMapped);
         }
         Mockito.when(institutionApiClient._retrieveInstitutionByIdUsingGET(institutionId, PRODUCT_ID)).thenReturn(ResponseEntity.ok(institution));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
         List<OnboardedInstitutionResource> result = userService.getOnboardedInstitutionsDetailsActive(userId, PRODUCT_ID);
         Assertions.assertNotNull(result);
@@ -240,8 +239,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
         Mockito.when(msUserApiRestClient._retrievePaginatedAndFilteredUser(null, null, null, null, null, 350, null,user.getId()))
                 .thenReturn(ResponseEntity.ok(userInstitutions));
         Mockito.when(msUserApiRestClient._getUserOtpEmailInfo(anyString())).thenReturn(ResponseEntity.ok(new UserOtpEmailInfoResponse()));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
         UserInfoWrapper userInfoWrapper = userService.getUserInfoV2(taxCode, List.of(ACTIVE), PRODUCT_ID);
 
@@ -274,8 +273,8 @@ class UserServiceImplTest extends BaseServiceTestUtils {
                 .thenReturn(ResponseEntity.ok(userInstitutions));
         Mockito.when(msUserApiRestClient._getUserOtpEmailInfo(anyString())).thenReturn(ResponseEntity.ok(UserOtpEmailInfoResponse.builder()
                 .otpEmail("contact2@work.it").build()));
-        Mockito.when(userMapper.getProductService()).thenReturn(productService);
-        Mockito.when(productService.getProductRaw(any())).thenReturn(TestUtils.dummyProduct(PRODUCT_ID));
+        Mockito.when(userMapper.getProductMsService()).thenReturn(productMsService);
+        Mockito.when(productMsService.getProductRaw(any())).thenReturn(TestUtils.dummyProductResponse(PRODUCT_ID));
 
         InstitutionResponse institution = getInstitutionResponse("product1", "product2", "123e4567-e89b-12d3-a456-426614174000", false);
         Mockito.when(institutionApiClient._retrieveInstitutionByIdUsingGET("123e4567-e89b-12d3-a456-426614174000", PRODUCT_ID)).thenReturn(ResponseEntity.ok(institution));

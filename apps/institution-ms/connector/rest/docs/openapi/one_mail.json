@@ -1,0 +1,1167 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "OneMail Dispatcher API",
+    "version": "1.10.10",
+    "description": "Service that manages the orchestration and dispatching of high-volume email queues.",
+    "contact": {
+      "email": "team-one-mail@pagopa.it"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://uat.onemail.pagopa.it",
+      "description": "UAT environment"
+    },
+    {
+      "url": "https://onemail.pagopa.it",
+      "description": "Production environment"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "api_key": {
+        "type": "apiKey",
+        "name": "x-api-key",
+        "in": "header"
+      }
+    },
+    "schemas": {
+      "EmailStatusItemResponseDTO": {
+        "type": "object",
+        "properties": {
+          "emailId": {
+            "type": "string",
+            "description": "Unique identifier of the email"
+          },
+          "status": {
+            "$ref": "#/components/schemas/EmailStatus"
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "HIGH",
+              "LOW"
+            ],
+            "description": "Priority of the tracked email request"
+          },
+          "to": {
+            "$ref": "#/components/schemas/EmailAddress"
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "$ref": "#/components/schemas/EmailStatus"
+                },
+                "changedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "ISO 8601 timestamp of the status change event"
+                },
+                "reason": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255,
+                  "description": "Optional detail or reason for the status change"
+                }
+              },
+              "required": [
+                "status",
+                "changedAt"
+              ],
+              "description": "Single history event for the email status"
+            },
+            "description": "Chronological history of status changes"
+          },
+          "attempts": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Number of dispatch attempts"
+          }
+        },
+        "required": [
+          "emailId",
+          "status",
+          "priority",
+          "to",
+          "history",
+          "attempts"
+        ]
+      },
+      "EmailStatus": {
+        "type": "string",
+        "enum": [
+          "Delivered",
+          "Dispatched",
+          "HardBounce",
+          "NonRetryableSoftBounce",
+          "Queued",
+          "Rejected",
+          "DryRunError",
+          "SoftBounce",
+          "Complaint",
+          "MaxRetriesReached"
+        ],
+        "description": "Status of the email"
+      },
+      "EmailAddress": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "pattern": "^[^\\r\\n]+$",
+            "description": "Name associated with the email address"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Recipient email address"
+      },
+      "ErrorResponseDTO": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "errorCode": {
+            "type": "string",
+            "description": "Application-specific error code"
+          },
+          "timestamp": {
+            "type": "string",
+            "description": "Timestamp of when the error occurred"
+          }
+        },
+        "required": [
+          "message",
+          "timestamp"
+        ]
+      },
+      "EmailSuccessResponseDTO": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Unique identifier for the request, used for checking the status of the emails in the system"
+          }
+        },
+        "required": [
+          "requestId"
+        ]
+      },
+      "EmailHighPriorityBodyDTO": {
+        "allOf": [
+          {
+            "type": "object",
+            "properties": {
+              "from": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  },
+                  {
+                    "description": "Sender of the email"
+                  }
+                ]
+              },
+              "to": {
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/EmailAddress"
+                  },
+                  {
+                    "description": "Recipient of the email, ignored in case of dryRun"
+                  }
+                ]
+              },
+              "extendedHeaders": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/NameValue"
+                },
+                "description": "Custom headers for the email"
+              },
+              "tag": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255
+                },
+                "description": "Custom tags/categories for the email"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ]
+          },
+          {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "templateContent": {
+                    "type": "object",
+                    "properties": {
+                      "templateId": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Identifier of the email template"
+                      },
+                      "templateAttributes": {
+                        "$ref": "#/components/schemas/TemplateAttributes"
+                      }
+                    },
+                    "required": [
+                      "templateId"
+                    ],
+                    "description": "Template content of the email to be sent if emailContent is not provided"
+                  }
+                },
+                "required": [
+                  "templateContent"
+                ]
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "emailContent": {
+                    "type": "object",
+                    "properties": {
+                      "subject": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "description": "Subject of the email"
+                      },
+                      "html": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 150000,
+                        "description": "HTML content of the email"
+                      },
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 50000,
+                        "description": "Text content of the email used as fallback if HTML content is not supported by the email client"
+                      }
+                    },
+                    "required": [
+                      "subject",
+                      "html"
+                    ],
+                    "description": "Content of the email to be sent if templateContent is not provided"
+                  }
+                },
+                "required": [
+                  "emailContent"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "NameValue": {
+        "type": "object",
+        "properties": {
+          "N": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 126,
+            "description": "Key"
+          },
+          "V": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 995,
+            "description": "Value"
+          }
+        },
+        "required": [
+          "N",
+          "V"
+        ]
+      },
+      "TemplateAttributes": {
+        "type": "object",
+        "additionalProperties": {
+          "description": "Value for the template attribute. Can be a string, number, boolean, object, or array."
+        },
+        "description": "Dynamic attributes for template rendering. Each key represents the attribute name used in the template (e.g., \"user_name\"), and its value will be substituted during rendering.",
+        "example": {
+          "user_name": "John Doe",
+          "payment_id": 12345,
+          "items": [
+            "book",
+            "pen"
+          ],
+          "metadata": {
+            "source": "web"
+          }
+        }
+      },
+      "EmailLowPriorityBodyDTO": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailAddress"
+              },
+              {
+                "description": "Sender of the email"
+              }
+            ]
+          },
+          "tag": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "description": "Custom tags/categories for the email"
+          },
+          "replyTo": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailAddress"
+              },
+              {
+                "description": "Reply-to address for the email"
+              }
+            ]
+          },
+          "templateId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255,
+            "description": "Identifier of the email template"
+          },
+          "sendingInfo": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "to": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/EmailAddress"
+                    },
+                    {
+                      "description": "Recipient of the email, ignored in case of dryRun"
+                    }
+                  ]
+                },
+                "extendedHeaders": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NameValue"
+                  },
+                  "description": "Custom headers for the email"
+                },
+                "templateAttributes": {
+                  "$ref": "#/components/schemas/TemplateAttributes"
+                }
+              },
+              "required": [
+                "to"
+              ]
+            },
+            "maxItems": 10,
+            "description": "Information about the recipients and their template email content"
+          }
+        },
+        "required": [
+          "from",
+          "templateId",
+          "sendingInfo"
+        ]
+      },
+      "SanitizeHtmlResponseDTO": {
+        "type": "object",
+        "properties": {
+          "sanitizedHtml": {
+            "type": "string",
+            "description": "Sanitized HTML content"
+          },
+          "isSanitized": {
+            "type": "boolean",
+            "description": "Indicates if the HTML content was sanitized"
+          }
+        },
+        "required": [
+          "sanitizedHtml",
+          "isSanitized"
+        ]
+      },
+      "SanitizeHtmlBodyDTO": {
+        "type": "object",
+        "properties": {
+          "htmlContent": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 150000,
+            "description": "HTML content to be sanitized",
+            "example": "<p>Hello <strong>World</strong></p>"
+          }
+        },
+        "required": [
+          "htmlContent"
+        ]
+      },
+      "HealthResponseDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthStatus"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the health check"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Uptime of the service in seconds"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "db": {
+                "type": "string",
+                "enum": [
+                  "Initialized",
+                  "NotInitialized",
+                  "Unavailable"
+                ],
+                "description": "Status of the DynamoDB service"
+              },
+              "queue": {
+                "type": "object",
+                "properties": {
+                  "highPriority": {
+                    "type": "string",
+                    "enum": [
+                      "Initialized",
+                      "NotInitialized",
+                      "Unavailable"
+                    ],
+                    "description": "Status of the high priority queue"
+                  },
+                  "lowPriority": {
+                    "type": "string",
+                    "enum": [
+                      "Initialized",
+                      "NotInitialized",
+                      "Unavailable"
+                    ],
+                    "description": "Status of the low priority queue"
+                  }
+                },
+                "required": [
+                  "highPriority",
+                  "lowPriority"
+                ],
+                "description": "Status of SQS queues"
+              }
+            },
+            "required": [
+              "db",
+              "queue"
+            ],
+            "description": "Status of individual services"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "uptime",
+          "services"
+        ]
+      },
+      "HealthStatus": {
+        "type": "string",
+        "enum": [
+          "Healthy",
+          "Unhealthy"
+        ],
+        "description": "Overall health status of the service"
+      },
+      "SimpleHealthResponseDTO": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/HealthStatus"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp of the health check"
+          },
+          "uptime": {
+            "type": "number",
+            "description": "Uptime of the service in seconds"
+          }
+        },
+        "required": [
+          "status",
+          "timestamp",
+          "uptime"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/v1/emails/statuses": {
+      "get": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Get email status history",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Unique identifier for the request, used for checking the status of the emails in the system"
+            },
+            "required": true,
+            "description": "Unique identifier for the request, used for checking the status of the emails in the system",
+            "name": "requestId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email status history retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EmailStatusItemResponseDTO"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/emails/send/high": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Send high priority single email",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "description": "Indicates whether the request is a dry run, ignored in production"
+            },
+            "required": false,
+            "description": "Indicates whether the request is a dry run, ignored in production",
+            "name": "dryRun",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailHighPriorityBodyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Email accepted for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailSuccessResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/emails/send/low": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Send low priority email with single or multiple recipients",
+        "security": [
+          {
+            "api_key": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "boolean",
+              "default": false,
+              "description": "Indicates whether the request is a dry run, ignored in production"
+            },
+            "required": false,
+            "description": "Indicates whether the request is a dry run, ignored in production",
+            "name": "dryRun",
+            "in": "query"
+          }
+        ],
+        "requestBody": {
+          "description": "Request body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmailLowPriorityBodyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Email accepted for processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailSuccessResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/emails/sanitize-html": {
+      "post": {
+        "tags": [
+          "Emails"
+        ],
+        "summary": "Test HTML content sanitization of the email, only available in non-production environments",
+        "requestBody": {
+          "description": "Request body",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SanitizeHtmlBodyDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Email sanitized successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SanitizeHtmlResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Perform readiness check of the service",
+        "responses": {
+          "200": {
+            "description": "Service is ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Perform liveness check of the service",
+        "responses": {
+          "200": {
+            "description": "Service is alive",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SimpleHealthResponseDTO"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - authentication required or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - permission denied to perform the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict - resource already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Generic error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDTO"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
