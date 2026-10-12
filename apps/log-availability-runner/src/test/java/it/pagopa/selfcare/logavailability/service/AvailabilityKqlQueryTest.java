@@ -19,18 +19,19 @@ class AvailabilityKqlQueryTest {
 
         assertTrue(query.contains("datetime(2026-10-07T00:00:00Z)"));
         assertTrue(query.contains("datetime(2026-10-08T00:00:00Z)"));
-        assertTrue(query.contains("listenerName_s in (\"api\", \"api-pnpg\")"));
+        assertTrue(query.contains("listenerName_s in (\"api-listener\", \"api-pnpg-listener\")"));
         assertTrue(query.contains("requestUri_s !in (\"/spid/v1/metadata\", \"dummy\")"));
     }
 
     @Test
-    void countsOnlyValidStatusesBelow500AsAvailable() {
+    void countsOnlyValidStatusesBelow300Or404AsAvailable() {
         String query = AvailabilityKqlQuery.forReferenceDate(
                 LocalDate.parse("2026-10-07"), APP_GATEWAY_ID);
 
         assertTrue(query.contains("statusCode between (100 .. 599)"));
-        assertTrue(query.contains("countif(validStatus and statusCode < 500)"));
-        assertTrue(query.contains("countif(not(validStatus) or statusCode >= 500)"));
+        assertTrue(query.contains("available = validStatus and (statusCode < 300 or statusCode == 404)"));
+        assertTrue(query.contains("CountLt500 = countif(available)"));
+        assertTrue(query.contains("CountGte500 = countif(not(available))"));
     }
 
     @Test
