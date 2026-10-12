@@ -61,7 +61,7 @@ Safe, durable defaults grounded in known facts. Each rule cites its source so th
   - Reference date: parse as `yyyy-MM-dd` into a date type; reject today or future dates and dates outside retention (SELC-5.3, 5.4).
   - Reject everything else and fail without writing (SELC-4.5).
   - Source: OWASP CS *Input Validation*.
-- **SEC-3.2** Build KQL only from constants and validated, typed values (e.g. `datetime(<ISO-8601 from parsed date>)`). Never concatenate raw parameter strings into the query. Keep the listener allow-list (`api`, `api-pnpg`) and the URI exclusions (`/spid/v1/metadata`, `dummy`) as code constants (SELC-2.6, 2.7).
+- **SEC-3.2** Build KQL only from constants and validated, typed values (e.g. `datetime(<ISO-8601 from parsed date>)`). Never concatenate raw parameter strings into the query. Keep the listener allow-list (`api-listener`, `api-pnpg-listener`) and the URI exclusions (`/spid/v1/metadata`, `dummy`) as code constants (SELC-2.6, 2.7).
   - Source: OWASP CS *Injection Prevention*.
 - **SEC-3.3** Treat query results as untrusted: check types, non-negative counts, `total = count_lt_500 + count_gte_500`, and availability in `[0, 100]` before writing. Any mismatch fails the run.
   - Source: OWASP OPC C5 *Validate All Inputs*.
