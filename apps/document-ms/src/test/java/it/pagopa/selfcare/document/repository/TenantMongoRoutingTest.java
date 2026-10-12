@@ -109,6 +109,7 @@ class TenantMongoRoutingTest {
                             + "\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcDocumentPnpg\","
                             + "\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"}}}",
                     "tenant.supported-tenants", "AR,PNPG",
+                    "tenant.storage.mandatory-keys", "",
                     "MONGODB_CONNECTION_STRING_PNPG", "mongodb://localhost:27018");
         }
     }

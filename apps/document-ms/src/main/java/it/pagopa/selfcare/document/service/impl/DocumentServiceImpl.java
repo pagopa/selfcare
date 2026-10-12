@@ -7,7 +7,6 @@ import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import it.pagopa.selfcare.azurestorage.error.SelfcareAzureStorageException;
 import it.pagopa.selfcare.document.config.DocumentMsConfig;
-import it.pagopa.selfcare.document.config.StorageRegistry;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
@@ -21,6 +20,8 @@ import it.pagopa.selfcare.document.repository.DocumentRepository;
 import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.document.service.DocumentMsTelemetryService;
 import it.pagopa.selfcare.document.service.SignatureService;
+import it.pagopa.selfcare.document.storage.TemplateStorage;
+import it.pagopa.selfcare.document.storage.TenantBlobClientProvider;
 import it.pagopa.selfcare.document.util.DocumentFileUtils;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -45,21 +46,24 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentMsConfig documentMsConfig;
     private final DocumentMsTelemetryService telemetryService;
-    private final StorageRegistry storageRegistry;
+    private final TenantBlobClientProvider blobClientProvider;
     private final DocumentMapper documentMapper;
+    private final TemplateStorage templateStorage;
 
     @Inject
     SignatureService signatureService;
 
     public DocumentServiceImpl(DocumentRepository documentRepository, DocumentMsConfig documentMsConfig,
                                DocumentMsTelemetryService telemetryService,
-                               StorageRegistry storageRegistry,
-                               DocumentMapper documentMapper) {
+                               TenantBlobClientProvider blobClientProvider,
+                               DocumentMapper documentMapper,
+                               TemplateStorage templateStorage) {
         this.documentRepository = documentRepository;
         this.documentMsConfig = documentMsConfig;
         this.telemetryService = telemetryService;
-        this.storageRegistry = storageRegistry;
+        this.blobClientProvider = blobClientProvider;
         this.documentMapper = documentMapper;
+        this.templateStorage = templateStorage;
     }
 
     @Override
@@ -140,7 +144,7 @@ public class DocumentServiceImpl implements DocumentService {
         return documentRepository.findByOnboardingId(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
-                        Uni.createFrom().item(() -> storageRegistry.clientFor(document.getStorageOrigin()).getFileAsPdf(document.getContractSigned()))
+                        Uni.createFrom().item(() -> blobClientProvider.clientForCurrentTenant(document.getStorageOrigin()).getFileAsPdf(document.getContractSigned()))
                                 .runSubscriptionOn(Infrastructure.getDefaultExecutor())
                                 .onItem().transform(contract -> {
                                     signatureService.verifySignature(contract);
@@ -187,6 +191,7 @@ public class DocumentServiceImpl implements DocumentService {
     public Uni<Document> saveDocument(DocumentBuilderRequest request) {
         log.info("Saving document for onboarding: {}, documentType: {}",
                 sanitize(request.getOnboardingId()), sanitize(String.valueOf(request.getDocumentType())));
+        templateStorage.validateTemplatePath(request.getTemplatePath());
 
         if (request.isAttachment()) {
             return handleAttachmentDocument(request);
@@ -283,7 +288,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         Document document = createBaseDocument(request.getOnboardingId(),
                 request.getProductId(),
-                request.getTemplatePath(),
+                templateStorage.validateTemplatePath(request.getTemplatePath()),
                 request.getTemplateVersion()
         );
         document.setContractSigned(request.getContractFilePath());
@@ -325,7 +330,7 @@ public class DocumentServiceImpl implements DocumentService {
         // 2. Dati di base
         document.setType(request.getDocumentType());
         document.setProductId(request.getProductId());
-        document.setContractTemplate(request.getTemplatePath());
+        document.setContractTemplate(templateStorage.validateTemplatePath(request.getTemplatePath()));
         document.setContractVersion(request.getTemplateVersion());
         document.setChecksum(digest);
         document.setAttachmentName(request.getAttachmentName());
@@ -372,7 +377,7 @@ public class DocumentServiceImpl implements DocumentService {
                 ? document.getAttachmentPath()
                 : document.getContractSigned();
         try {
-            storageRegistry.clientFor(document.getStorageOrigin()).getProperties(blobPath);
+            blobClientProvider.clientForCurrentTenant(document.getStorageOrigin()).getProperties(blobPath);
             log.info("Attachment found in {} storage onboardingId={}, attachmentName={}", sanitize(String.valueOf(document.getStorageOrigin())), sanitize(onboardingId), sanitize(attachmentName));
             return true;
         } catch (SelfcareAzureStorageException e) {
@@ -385,7 +390,7 @@ public class DocumentServiceImpl implements DocumentService {
         log.info("{} not found in DB for onboarding {}. Calculating digest from original template: {}",
                 logDocType, sanitize(onboardingId), sanitize(azureFilePath));
 
-        return Uni.createFrom().item(() -> storageRegistry.clientFor(StorageOrigin.SYSTEM).getFileAsPdf(azureFilePath))
+        return Uni.createFrom().item(() -> blobClientProvider.clientForCurrentTenant(StorageOrigin.SYSTEM).getFileAsPdf(azureFilePath))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
                 .onItem().transform(file -> {
                     DSSDocument dssDocument = new FileDocument(file);
