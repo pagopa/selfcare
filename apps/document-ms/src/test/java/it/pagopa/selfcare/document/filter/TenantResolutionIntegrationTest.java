@@ -126,13 +126,12 @@ class TenantResolutionIntegrationTest {
   }
 
   @Test
-  void shouldRejectSpidTokenWhenHeaderCaseDiffersFromClaim() {
-    // The SDK reconciles SPID claim and header with an exact, case-sensitive comparison.
+  void shouldNormalizeHeaderForSpidTokens() {
     given()
         .auth().oauth2(token("SPID", "AR", AR_KEYS))
-        .header(HEADER, "ar")
+        .header(HEADER, " ar ")
         .when().get(DOCUMENT_PATH)
-        .then().statusCode(401);
+        .then().statusCode(200).body("id", equalTo("AR"));
   }
 
   @Test
@@ -187,6 +186,7 @@ class TenantResolutionIntegrationTest {
               + "\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},"
               + "\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"}}}",
           "tenant.supported-tenants", "AR,PNPG",
+          "tenant.storage.mandatory-keys", "",
           "tenant.enforcement.enabled", "true",
           "MONGODB_CONNECTION_STRING_PNPG", "mongodb://localhost:27017",
           "JWT_PUBLIC_KEY_AR", TenantJwtTestSupport.pem(AR_KEYS.getPublic()),

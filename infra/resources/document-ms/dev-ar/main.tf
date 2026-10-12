@@ -113,7 +113,7 @@ locals {
       value = "sc-d-usrattach-blob"
     },
     {
-      name  = "NAMIRIAL_BASE_URL"
+      name  = "NAMIRIAL_BASE_URL_AR"
       value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
@@ -133,20 +133,23 @@ locals {
       value = data.azurerm_user_assigned_identity.document_storage_blob_identity.client_id
     },
     {
+      name  = "AZURE_CLIENT_ID_AR_DOCUMENTS"
+      value = data.azurerm_user_assigned_identity.document_storage_blob_identity.client_id
+    },
+    {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "AR"
     }
   ]
 
   secrets_names_document_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "JWT_PUBLIC_KEY"                          = "jwt-public-key"
-    "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_PUBLIC_KEY"                        = "jwt-public-key"
     # Tenant-bound references used by tenant.registry.json (Multitenant Step 2)
-    "MONGODB_CONNECTION_STRING_AR" = "mongodb-connection-string"
-    "JWT_PUBLIC_KEY_AR"            = "jwt-public-key"
+    "MONGODB_CONNECTION_STRING_AR"               = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_AR"                          = "jwt-public-key"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER_AR"     = "namirial-sign-service-user"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD_AR" = "namirial-sign-service-psw"
   }
 }
 
