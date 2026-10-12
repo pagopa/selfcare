@@ -37,8 +37,8 @@ locals {
       | where ReferenceDate >= rangeStart and ReferenceDate < rangeEnd
       | summarize arg_max(GenerationTimestamp, CountLt500, CountGte500, Total, Availability) by ReferenceDate, Environment;
     let totals = records | summarize CountLt500 = sum(CountLt500), CountGte500 = sum(CountGte500);
-    print Status = "Available (<500)", Requests = toscalar(totals | project CountLt500)
-    | union (print Status = "Unavailable (>=500 or invalid)", Requests = toscalar(totals | project CountGte500))
+    print Status = "Available (<300 or 404)", Requests = toscalar(totals | project CountLt500)
+    | union (print Status = "Unavailable (other or invalid)", Requests = toscalar(totals | project CountGte500))
   KQL
 
   availability_workbook = {
@@ -134,12 +134,12 @@ locals {
             seriesLabelSettings = [
               {
                 seriesName = "CountLt500"
-                label      = "Available (<500)"
+                label      = "Available (<300 or 404)"
                 color      = "green"
               },
               {
                 seriesName = "CountGte500"
-                label      = "Unavailable (>=500 or invalid)"
+                label      = "Unavailable (other or invalid)"
                 color      = "red"
               }
             ]
