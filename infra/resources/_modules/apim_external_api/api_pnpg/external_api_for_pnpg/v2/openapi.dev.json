@@ -282,6 +282,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -350,6 +358,14 @@
           },
           {
             "name": "createdBy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
             "in": "query",
             "schema": {
               "type": "string"
@@ -437,6 +453,14 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -497,6 +521,14 @@
             "name": "productId",
             "in": "path",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
+            "name": "tenantId",
+            "in": "query",
             "schema": {
               "type": "string"
             }
@@ -1629,6 +1661,9 @@
           "productId": {
             "type": "string"
           },
+          "tenantId": {
+            "type": "string"
+          },
           "status": {
             "$ref": "#/components/schemas/ProductStatus"
           }
@@ -1668,11 +1703,16 @@
       },
       "ProductCreateRequest": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -2191,11 +2231,16 @@
       },
       "ProductPatchRequest": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },
@@ -2299,11 +2344,16 @@
       },
       "ProductResponse": {
         "required": [
-          "productId"
+          "productId",
+          "tenantId"
         ],
         "type": "object",
         "properties": {
           "productId": {
+            "pattern": "\\S",
+            "type": "string"
+          },
+          "tenantId": {
             "pattern": "\\S",
             "type": "string"
           },

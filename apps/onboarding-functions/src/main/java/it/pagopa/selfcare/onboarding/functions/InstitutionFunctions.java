@@ -33,22 +33,24 @@ import org.slf4j.LoggerFactory;
 public class InstitutionFunctions {
   private static final Logger logger = LoggerFactory.getLogger(InstitutionFunctions.class.getName());
   private static final String FORMAT_LOGGER_INSTITUTION_STRING = "%s: %s";
-  private static final String CREATED_DELETE_INSTITUTION_ORCHESTRATION_WITH_INSTANCE_ID_MSG = "Created new DeleteInstitutionAndUser orchestration with instance ID = ";
   private final InstitutionService institutionService;
   private final UserService userService;
   private final OnboardingService onboardingService;
   private final ObjectMapper objectMapper;
+  private final FunctionInvocationLogger functionInvocationLogger;
   private final TaskOptions optionsRetry;
 
   public InstitutionFunctions(ObjectMapper objectMapper,
                               UserService userService,
                               InstitutionService institutionService,
                               OnboardingService onboardingService,
-                              RetryPolicyConfig retryPolicyConfig) {
+                              RetryPolicyConfig retryPolicyConfig,
+                              FunctionInvocationLogger functionInvocationLogger) {
     this.objectMapper = objectMapper;
     this.institutionService = institutionService;
     this.userService = userService;
     this.onboardingService = onboardingService;
+    this.functionInvocationLogger = functionInvocationLogger;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -65,7 +67,13 @@ public class InstitutionFunctions {
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
 
     final ExecutionContext context) {
-    context.getLogger().info("TriggerDeleteInstitutionAndUser processed a request");
+    String userId = functionInvocationLogger.logInvocation("TriggerDeleteInstitutionAndUser", request);
+    if (FunctionInvocationLogger.isMissingUserId(userId)) {
+      return request
+        .createResponseBuilder(HttpStatus.BAD_REQUEST)
+        .body(FunctionInvocationLogger.USER_ID_HEADER + " header cannot be null or blank")
+        .build();
+    }
 
     final String onboardingId = request.getQueryParameters().get("onboardingId");
     if (Objects.isNull(onboardingId) || StringUtils.isBlank(onboardingId)) {
@@ -76,7 +84,8 @@ public class InstitutionFunctions {
     }
     DurableTaskClient client = durableContext.getClient();
     String instanceId = client.scheduleNewOrchestrationInstance("DeleteInstitutionAndUserOnboarding", onboardingId);
-    context.getLogger().info(() -> String.format("%s %s", CREATED_DELETE_INSTITUTION_ORCHESTRATION_WITH_INSTANCE_ID_MSG, instanceId));
+    functionInvocationLogger.logOrchestrationStarted(
+      "TriggerDeleteInstitutionAndUser", userId, instanceId);
 
     return durableContext.createCheckStatusResponse(request, instanceId);
   }

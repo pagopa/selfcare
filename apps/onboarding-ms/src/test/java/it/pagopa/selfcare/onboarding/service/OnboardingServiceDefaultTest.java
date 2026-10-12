@@ -2754,6 +2754,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void approve() {
+        // given
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         ApproveRequest approveRequest = new ApproveRequest();
@@ -2768,17 +2769,21 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
-        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any()))
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
                 .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
 
+        // when
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
+        // then
         OnboardingGet actual = subscriber.awaitItem().getItem();
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
+        verify(orchestrationService)
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
     }
 
     @Test
@@ -2801,6 +2806,7 @@ class OnboardingServiceDefaultTest {
 
     @Test
     void approveCompletion() {
+        // given
         Onboarding onboarding = createDummyOnboarding();
         onboarding.setStatus(OnboardingStatus.TOBEVALIDATED);
         PanacheMock.mock(Onboarding.class);
@@ -2815,17 +2821,22 @@ class OnboardingServiceDefaultTest {
 
         mockVerifyOnboardingNotFound();
 
+        when(orchestrationService.triggerOrchestrationIfEnabled(any(), any(), any()))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+
+        // when
         UniAssertSubscriber<OnboardingGet> subscriber = onboardingService
                 .approve(onboarding.getId(), approveRequest)
                 .subscribe()
                 .withSubscriber(UniAssertSubscriber.create());
 
+        // then
         OnboardingGet actual = subscriber.awaitItem().getItem();
         Assertions.assertNotNull(actual);
         Assertions.assertEquals(onboarding.getId(), actual.getId());
 
         verify(orchestrationService, times(1))
-                .triggerOrchestrationIfEnabled(any(), any());
+                .triggerOrchestrationIfEnabled(onboarding.getId(), null, approveRequest.getUserUid());
     }
 
     @Test
@@ -5293,6 +5304,39 @@ class OnboardingServiceDefaultTest {
 
         asserter.assertFailedWith(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
                 InvalidRequestException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboarding_whenRequiredRecipientCodeAndRecipientCodeMissingForPT_shouldSucceed(UniAsserter asserter) {
+        Onboarding request = createDummyOnboarding();
+        request.setProductId(PROD_PAGOPA.getValue());
+        Institution institution = request.getInstitution();
+        institution.setOrigin(Origin.SELC);
+        institution.setInstitutionType(InstitutionType.PT);
+        institution.setDescription(DESCRIPTION_FIELD);
+        institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
+        // no billing / recipientCode set on purpose: PT onboarding has no SDI field
+
+        mockPersistOnboarding(asserter);
+        mockSimpleSearchPOSTAndPersist(asserter);
+        ProductResponse product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        // PT onboarding requires a delegable product; product-ms flag requires the recipient code
+        product.getFeatures().setDelegable(true);
+        product.getFeatures().setRequiredRecipientCode(true);
+        mockVerifyOnboardingNotFound();
+
+        asserter.execute(() -> {
+            when(productService.isRequiredDocuments(any(), any(), any()))
+                    .thenReturn(Uni.createFrom().item(Boolean.FALSE));
+            when(userRegistryApi.updateUsingPATCH(any(), any()))
+                    .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+            when(userRegistryApi.findByIdUsingGET(any(), any()))
+                    .thenReturn(Uni.createFrom().item(managerResourceWk));
+        });
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
     }
 
     @Test
