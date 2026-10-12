@@ -113,7 +113,7 @@ locals {
       value = "sc-p-usrattach-blob"
     },
     {
-      name  = "NAMIRIAL_BASE_URL"
+      name  = "NAMIRIAL_BASE_URL_AR"
       value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
     {
@@ -139,13 +139,13 @@ locals {
   ]
 
   secrets_names_document_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
-    "JWT_PUBLIC_KEY"                          = "jwt-public-key"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
-    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "JWT_PUBLIC_KEY"                        = "jwt-public-key"
     # Tenant-bound references used by tenant.registry.json (Multitenant Step 2)
-    "MONGODB_CONNECTION_STRING_AR" = "mongodb-connection-string"
-    "JWT_PUBLIC_KEY_AR"            = "jwt-public-key"
+    "MONGODB_CONNECTION_STRING_AR"               = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_AR"                          = "jwt-public-key"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER_AR"     = "namirial-sign-service-user"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD_AR" = "namirial-sign-service-psw"
   }
 }
 

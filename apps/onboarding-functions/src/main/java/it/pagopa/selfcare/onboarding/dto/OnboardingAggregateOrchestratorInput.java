@@ -14,6 +14,7 @@ import java.util.List;
 public class OnboardingAggregateOrchestratorInput {
 
     private String id;
+    private String tenantId;
     private String productId;
     private List<String> testEnvProductIds;
     private WorkflowType workflowType;

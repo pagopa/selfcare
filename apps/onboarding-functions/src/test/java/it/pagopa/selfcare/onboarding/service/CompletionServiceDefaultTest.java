@@ -9,6 +9,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import it.pagopa.selfcare.onboarding.common.*;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.OnboardingAggregateOrchestratorInput;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.entity.Billing;
@@ -51,6 +52,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.logging.Logger;
 
+import static it.pagopa.selfcare.onboarding.common.ProductId.PROD_CED;
 import static it.pagopa.selfcare.onboarding.service.OnboardingService.USERS_FIELD_LIST;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -867,6 +869,45 @@ public class CompletionServiceDefaultTest {
                 .sendCompletedEmail(any(), any(), any());
         Mockito.verify(productService, times(0))
                 .getValidProduct(any());
+    }
+
+    @Test
+    void sendDeletedEmail_shouldReadTemplateUnderTheTenantOfTheOnboarding() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setProductId(PROD_CED.getValue());
+        onboarding.setTenantId("AR");
+        onboarding.getInstitution().setDigitalAddress("test@pec.it");
+        when(onboardingRepository.findByIdOptional("onboardingId")).thenReturn(Optional.of(onboarding));
+        List<String> tenantsSeenByProduct = new ArrayList<>();
+        when(productService.getValidProduct(PROD_CED.getValue())).thenAnswer(invocation -> {
+            tenantsSeenByProduct.add(TenantContext.currentTenant());
+            return createDummyProduct();
+        });
+        List<String> tenantsSeenByNotification = new ArrayList<>();
+        doAnswer(invocation -> {
+            tenantsSeenByNotification.add(TenantContext.currentTenant());
+            return null;
+        }).when(notificationService).sendDeletedEmail(any(), any(), any());
+
+        completionServiceDefault.sendDeletedEmail("onboardingId");
+
+        assertEquals(List.of("AR"), tenantsSeenByProduct);
+        assertEquals(List.of("AR"), tenantsSeenByNotification);
+        assertNull(TenantContext.currentTenant());
+    }
+
+    @Test
+    void sendDeletedEmail_shouldFailWithoutTenantOnTheOnboarding() {
+        Onboarding onboarding = createOnboarding();
+        onboarding.setProductId(PROD_CED.getValue());
+        onboarding.getInstitution().setDigitalAddress("test@pec.it");
+        when(onboardingRepository.findByIdOptional("onboardingId")).thenReturn(Optional.of(onboarding));
+        when(productService.getValidProduct(PROD_CED.getValue())).thenReturn(createDummyProduct());
+
+        assertThrows(IllegalArgumentException.class, () -> completionServiceDefault.sendDeletedEmail("onboardingId"));
+
+        Mockito.verify(productService, times(0)).getValidProduct(any());
+        Mockito.verify(notificationService, times(0)).sendDeletedEmail(any(), any(), any());
     }
 
     @Test
