@@ -59,7 +59,7 @@ public class TenantBlobClientProvider {
 
     public AzureBlobClient clientFor(String tenantId, String logicalStorageKey) {
         TenantDefinition.StorageDefinition storage = tenantRegistry.storage(tenantId, logicalStorageKey);
-        log.info(
+        log.debug(
                 "Resolved blob storage: tenant={}, key={}, account={}, container={}, pathPrefix={}",
                 tenantId,
                 logicalStorageKey,
