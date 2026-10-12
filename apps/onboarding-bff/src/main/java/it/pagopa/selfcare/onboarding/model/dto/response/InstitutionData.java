@@ -1,0 +1,45 @@
+package it.pagopa.selfcare.onboarding.model.dto.response;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.client.model.DataProtectionOfficer;
+import it.pagopa.selfcare.onboarding.client.model.GPUData;
+import it.pagopa.selfcare.onboarding.client.model.PaymentServiceProvider;
+import lombok.Data;
+
+import jakarta.validation.Valid;
+
+@Data
+@Schema(description = "${openapi.onboarding.institutions.model.institutionData}")
+public class InstitutionData {
+
+
+    @Schema(description = "${openapi.onboarding.institutions.model.id}")
+    private String id;
+    @Schema(description = "${openapi.onboarding.institutions.model.institutionType}")
+    private InstitutionType institutionType;
+    @Schema(description = "${openapi.onboarding.institutions.model.billingData}")
+    private BillingDataResponseDto billingData;
+    @Schema(description = "${openapi.onboarding.institutions.model.city}")
+    private String city;
+    @Schema(description = "${openapi.onboarding.institutions.model.county}")
+    private String county;
+    @Schema(description = "${openapi.onboarding.institutions.model.country}")
+    private String country;
+    @Schema(description = "${openapi.onboarding.institutions.model.origin}")
+    private String origin;
+    @Schema(description = "${openapi.onboarding.institutions.model.originId}")
+    private String originId;
+    @Schema(description = "${openapi.onboarding.institutions.model.paymentServiceProvider}")
+    private PaymentServiceProvider paymentServiceProvider;
+    @Schema(description = "${openapi.onboarding.institutions.model.dataProtectionOfficer}")
+    private DataProtectionOfficer dataProtectionOfficer;
+    @Schema(description = "${openapi.onboarding.institutions.model.gpuData}")
+    private GPUData gpuData;
+    @Schema(description = "${openapi.onboarding.institutions.model.companyInformations}")
+    @Valid
+    private CompanyInformationsResource companyInformations;
+    @Schema(description = "${openapi.onboarding.institutions.model.assistance}")
+    @Valid
+    private AssistanceContactsResource assistanceContacts;
+}

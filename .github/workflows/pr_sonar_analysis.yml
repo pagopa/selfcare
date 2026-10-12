@@ -135,7 +135,9 @@ jobs:
           PROJECTS="${{ steps.scope.outputs.projects }}"
           THREADS="1C"
 
-          if [[ "$MODE" != "partial" || ",$PROJECTS," == *",apps/onboarding-functions,"* ]]; then
+          # Mixed-version Quarkus reactors fail BFF test-class discovery when built in parallel.
+          if [[ "$MODE" != "partial" || ",$PROJECTS," == *",apps/onboarding-functions,"* ||
+                ",$PROJECTS," == *",apps/onboarding-bff,"* ]]; then
             THREADS="1"
           fi
 

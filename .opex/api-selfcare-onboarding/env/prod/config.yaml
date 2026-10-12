@@ -1,4 +1,4 @@
-oa3_spec: apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json
+oa3_spec: apps/onboarding-bff/src/main/docs/openapi.json
 name: opex_api-onboarding
 location: West Europe
 timespan: 5m

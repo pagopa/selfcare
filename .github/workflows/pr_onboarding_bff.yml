@@ -49,4 +49,7 @@ jobs:
     secrets: inherit
     with:
       module: "onboarding-bff"
-      path_openapi_docs: "apps/onboarding-bff/app/src/main/docs/openapi.json"
+      path_openapi_docs: "apps/onboarding-bff/src/main/docs/openapi.json"
+      # The Spring document published to APIM, Opex and the frontend: breaking changes are checked against it.
+      # Drop this line once the Quarkus document is on the base branch.
+      base_path_openapi_docs: "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"

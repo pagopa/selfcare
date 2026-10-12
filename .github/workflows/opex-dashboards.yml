@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+      - "apps/onboarding-bff/src/main/docs/openapi.json"
       - "apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
       - "apps/auth/src/main/docs/openapi.json"
       - "apps/iam/src/main/docs/openapi.json"
@@ -22,7 +22,7 @@ on:
       - reopened
       - ready_for_review
     paths:
-      - "apps/onboarding-bff/app/src/main/resources/swagger/api-docs.json"
+      - "apps/onboarding-bff/src/main/docs/openapi.json"
       - "apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
       - "apps/auth/src/main/docs/openapi.json"
       - "apps/iam/src/main/docs/openapi.json"

@@ -1,0 +1,17 @@
+package it.pagopa.selfcare.onboarding.model.dto.response;
+
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import lombok.Data;
+
+import java.util.List;
+
+@Data
+public class InstitutionOnboardingInfoResource {
+
+    @Schema(description = "${openapi.onboarding.institutions.model.institutionData}")
+    private InstitutionData institution;
+
+    @Schema(description = "${openapi.onboarding.institutions.model.geographicTaxonomy}")
+    private List<GeographicTaxonomyResource> geographicTaxonomies;
+
+}
