@@ -133,6 +133,10 @@ locals {
       value = data.azurerm_user_assigned_identity.document_storage_blob_identity.client_id
     },
     {
+      name  = "AZURE_CLIENT_ID_AR_DOCUMENTS"
+      value = data.azurerm_user_assigned_identity.document_storage_blob_identity.client_id
+    },
+    {
       name  = "TENANT_SUPPORTED_TENANTS"
       value = "AR"
     }
