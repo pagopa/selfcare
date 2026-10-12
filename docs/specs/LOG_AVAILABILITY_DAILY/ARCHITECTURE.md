@@ -5,7 +5,7 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
 ## Required Architecture Inputs
 
 - Requirements source: REQUIREMENTS.md
-- System purpose: Each night, compute the previous UTC day's API availability for each environment (DEV, UAT, PROD) from Application Gateway access logs (`< 500` available vs `>= 500`/invalid unavailable). Store one record per day and report it on an Azure Portal Dashboard over any date range.
+- System purpose: Each night, compute the previous UTC day's API availability for each environment (DEV, UAT, PROD) from Application Gateway access logs (`< 300` or `404` available vs any other or invalid status unavailable). Store one record per day and report it on an Azure Portal Dashboard over any date range.
 - Primary use cases: (1) scheduled D-1 computation and persistence (SELC-1, 2, 3, 4); (2) go-live backfill and on-demand regeneration of a past date (SELC-5.2–5.4); (3) failure notification (SELC-5.1); (4) range reporting: pie chart, daily column charts, totals, on-demand table (SELC-6).
 - Target users / actors: Scheduled job (system actor, Managed Identity). Operators receiving Slack failure notifications. Report consumers: users of the environment's Azure subscription (SELC-6.8).
 - Runtime environment: Azure Container Apps Job in each environment's existing Container Apps Environment; Terraform module `infra/resources/_modules/container_app_job`; Docker image in `ghcr.io/pagopa/*`. Scheduled Container Apps cron expressions are evaluated in UTC.
@@ -46,7 +46,7 @@ Primary source of truth: [REQUIREMENTS.md](./REQUIREMENTS.md). Requirement IDs (
   - Assumption: query them resource-context on the gateway, as the existing dashboard does, so the job does not depend on which workspace holds them (see G1).
 - **C2 Availability job.** A stateless batch process, one instance per environment.
   - Input: environment, plus a reference date (default D-1 UTC, overridable for backfill or on-demand runs).
-  - Steps: run one KQL aggregation over `[D-1 00:00Z, D 00:00Z)` restricted to listeners `api` and `api-pnpg`, excluding `/spid/v1/metadata` and `dummy`. Classify statuses (valid `100–499` → `count_lt_500`; anything else, including missing or invalid → `count_gte_500`), compute availability, write C3, then write C4.
+  - Steps: run one KQL aggregation over `[D-1 00:00Z, D 00:00Z)` restricted to `listenerName_s` `api-listener` and `api-pnpg-listener`, excluding `/spid/v1/metadata` and `dummy`. Classify statuses (valid `100–299` or `404` → `count_lt_500`; anything else, including missing or invalid → `count_gte_500`), compute availability, write C3, then write C4.
   - Exit status: non-zero if any step fails. Nothing is written if the query fails (SELC-4.5).
 - **C3 System of record.** Table `SelcAvailability` in `selcdweusynthmon` / `selcuweusynthmon` / `selcpweusynthmon`, created by Terraform; the job only upserts entities. Upsert on (`PartitionKey`, `RowKey`). No lifecycle deletion.
 - **C4 Reporting copy.** Custom table `SelcAvailability_CL` in the environment workspace (`selc-{d,u,p}-law`), fed through a DCR, with 730 days of Analytics retention set on the table. `TimeGenerated` is ingestion/generation time; `ReferenceDate` carries the day being reported.

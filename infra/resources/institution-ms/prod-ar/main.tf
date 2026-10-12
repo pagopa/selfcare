@@ -272,7 +272,7 @@ locals {
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
     "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
     "JWT_TOKEN_PUBLIC_KEY"                     = "jwt-public-key"
-    "ONE_MAIL_API_KEY"                         = "onemail-api-key"
+    "ONE_MAIL_API_KEY"                         = "onemail-api-key-prod"
   }
 }
 
