@@ -205,7 +205,7 @@ public class InstitutionV2Controller {
 
     @Operation(summary = "${swagger.dashboard.institutions.delegations}", description = "${swagger.dashboard.institutions.delegations}", operationId = "#getDelegationsUsingToUsingGET_1")
     @GetMapping(value = "/{institutionId}/institutions", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewDelegations')")
+    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:ViewManagedInstitutions')")
     public ResponseEntity<DelegationWithPagination> getDelegationsUsingTo(@Parameter(description = "${swagger.dashboard.delegation.model.to}")
                                                                           @PathVariable("institutionId") String institutionId,
                                                                           @Parameter(description = "${swagger.dashboard.delegation.model.productId}")
