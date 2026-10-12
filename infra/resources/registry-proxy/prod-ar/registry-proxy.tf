@@ -161,6 +161,10 @@ locals {
       value = "false"
     },
     {
+      name  = "IPA_INSTITUTION_STARTUP_INDEXING_ENABLED"
+      value = "false"
+    },
+    {
       name  = "MOCK_OPEN_DATA_URL"
       value = "https://selcdcheckoutsa.z6.web.core.windows.net/resources"
     },
