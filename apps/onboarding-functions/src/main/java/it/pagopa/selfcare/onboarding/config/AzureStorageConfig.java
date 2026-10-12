@@ -9,25 +9,16 @@ public interface AzureStorageConfig {
 
   Optional<String> connectionStringContract();
 
-  Optional<String> connectionStringProduct();
-
   Optional<String> accountNameContract();
-
-  Optional<String> accountNameProduct();
 
   Optional<String> managedIdentityClientIdContract();
 
-  Optional<String> managedIdentityClientIdProduct();
-
   String containerContract();
-
-  String containerProduct();
 
   String contractPath();
 
   String deletedPath();
 
-  String productFilepath();
 
   String aggregatesPath();
 

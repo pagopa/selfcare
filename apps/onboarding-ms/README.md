@@ -10,6 +10,18 @@ It implements CRUD operations for the 'onboarding' object and the business logic
 
 After the data is saved, it invokes the function implemented by onboarding-functions to trigger asynchronous onboarding activities. 
 
+### Onboarding Functions requester identity
+
+Calls to HTTP-triggered onboarding functions propagate the requester through the
+`x-selfcare-uid` header. Approval-triggered orchestration uses the user identifier
+from `ApproveRequest`; background flows use the stable service identity
+`m2m:onboarding-ms`.
+
+The orchestration client does not perform the HTTP call when the requester is null
+or blank and emits a warning instead. The generated OpenAPI contract marks the
+header as required for operations that start an onboarding or deletion
+orchestration.
+
 ### Disable starting async onboarding workflow
 
 ````properties

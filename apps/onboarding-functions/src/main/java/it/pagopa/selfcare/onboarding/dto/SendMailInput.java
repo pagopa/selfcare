@@ -1,11 +1,11 @@
 package it.pagopa.selfcare.onboarding.dto;
 
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import lombok.Data;
 
 @Data
 public class SendMailInput {
-    Product product;
+    ProductResponse product;
     String userRequestName;
     // Used in case of workflowType USER
     String previousManagerName;

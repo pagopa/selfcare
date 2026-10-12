@@ -28,7 +28,6 @@ services:
       - azurite
     volumes:
       - "./blobStorageInit/init_azurite.sh:/init_azurite.sh"
-      - "./blobStorageInit/products.json:/workspace/products.json"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
     networks:

@@ -63,9 +63,16 @@ public class AuthorizationService {
 
     private boolean isOnboardingRequester(SelfCareUser selfCareUser, OnboardingData onboardingData) {
         String userId = selfCareUser.getId();
-        if (StringUtils.isBlank(userId) || onboardingData.getUsers() == null) {
+        if (StringUtils.isBlank(userId)) {
             return false;
         }
+        // The user who submitted the onboarding request is stored in userRequester.userRequestUid
+        // and is not necessarily one of the onboarding's users (e.g. managers/delegates).
+        if (onboardingData.getUserRequester() != null
+                && userId.equalsIgnoreCase(onboardingData.getUserRequester().getUserRequestUid())) {
+            return true;
+        }
+        // getUsers() never returns null (empty list when users are missing)
         return onboardingData.getUsers().stream()
                 .map(User::getId)
                 .filter(StringUtils::isNotBlank)

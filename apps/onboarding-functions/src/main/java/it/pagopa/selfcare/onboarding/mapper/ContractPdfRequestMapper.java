@@ -1,7 +1,7 @@
 package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.entity.*;
-import it.pagopa.selfcare.product.entity.Product;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.mapstruct.Mapper;
@@ -16,7 +16,7 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 public interface ContractPdfRequestMapper {
 
   @Mapping(target = "onboardingId", source = "onboarding.id")
-  @Mapping(target = "productId", source = "product.id")
+  @Mapping(target = "productId", source = "product.productId")
   @Mapping(target = "productName", source = "product.title")
   @Mapping(target = "pricingPlan", source = "onboarding.pricingPlan")
   @Mapping(target = "isAggregator", source = "onboarding.isAggregator")
@@ -30,7 +30,7 @@ public interface ContractPdfRequestMapper {
           Onboarding onboarding,
           UserResource manager,
           List<UserResource> delegates,
-          Product product,
+          ProductResponse product,
           String contractTemplatePath,
           String aggregatesCsvBaseUrl);
 

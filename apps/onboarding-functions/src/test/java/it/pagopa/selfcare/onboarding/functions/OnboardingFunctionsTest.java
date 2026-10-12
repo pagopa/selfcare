@@ -19,6 +19,7 @@ import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionGetEmailRequest;
 import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 import it.pagopa.selfcare.onboarding.dto.UserMail;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
@@ -27,15 +28,10 @@ import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
+import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.utils.Utils;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.ManagingInstitution;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.entity.SigningConfiguration;
-import it.pagopa.selfcare.product.service.ProductService;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
@@ -45,6 +41,12 @@ import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.openapi.quarkus.core_json.model.DelegationResponse;
 import org.openapi.quarkus.document_json.api.DocumentContentControllerApi;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ContractType;
+import org.openapi.quarkus.product_json.model.ManagingInstitution;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
+import org.openapi.quarkus.product_json.model.SigningConfiguration;
 
 import java.time.Duration;
 import java.util.*;
@@ -109,8 +111,10 @@ class OnboardingFunctionsTest {
 
   @Test
   void startAndWaitOrchestration_failedOrchestration() throws Exception {
+    // given
     @SuppressWarnings("unchecked")
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     final Map<String, String> queryParams = new HashMap<>();
     final String onboardingId = "onboardingId";
@@ -142,10 +146,35 @@ class OnboardingFunctionsTest {
             .when(client)
             .scheduleNewOrchestrationInstance("Onboardings", onboardingId);
 
+    // when
     HttpResponseMessage responseMessage = function.startOrchestration(req, durableContext, context);
 
+    // then
     verify(client, times(1)).waitForInstanceCompletion(anyString(), any(), anyBoolean());
     assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), responseMessage.getStatusCode());
+  }
+
+  @Test
+  void startOrchestration_missingRequester_returnsBadRequestWithoutStartingOrchestration() {
+    // given
+    @SuppressWarnings("unchecked")
+    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    when(req.getQueryParameters()).thenReturn(Map.of("onboardingId", "onboarding-id"));
+    when(req.getHeaders()).thenReturn(Map.of());
+    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
+        .thenReturn(
+            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                .status(HttpStatus.BAD_REQUEST));
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+    ExecutionContext context = mock(ExecutionContext.class);
+
+    // when
+    HttpResponseMessage response = function.startOrchestration(req, durableContext, context);
+
+    // then
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
+    assertEquals("x-selfcare-uid header cannot be null or blank", response.getBody());
+    verifyNoInteractions(durableContext);
   }
 
   @Test
@@ -1165,9 +1194,10 @@ class OnboardingFunctionsTest {
 
   @Test
   void buildAttachmentsAndSaveTokens_validBody_returnsAccepted() {
-    // Mock HttpRequestMessage with valid body
+    // given
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
     doReturn(Optional.of(onboardingString)).when(req).getBody();
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -1196,19 +1226,20 @@ class OnboardingFunctionsTest {
                             .status(HttpStatus.ACCEPTED)
                             .build());
 
-    // Invoke
+    // when
     HttpResponseMessage responseMessage =
             function.buildAttachmentsAndSaveTokens(req, durableContext, context);
 
-    // Verify
+    // then
     assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
   }
 
   @Test
   void buildAttachmentsAndSaveTokens_emptyBody_returnsBadRequest() {
-    // Mock HttpRequestMessage with empty body
+    // given
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
     doReturn(Optional.empty()).when(req).getBody();
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     doAnswer(
             (Answer<HttpResponseMessage.Builder>)
@@ -1225,20 +1256,40 @@ class OnboardingFunctionsTest {
 
     final DurableClientContext durableContext = mock(DurableClientContext.class);
 
-    // Invoke
+    // when
     HttpResponseMessage responseMessage =
             function.buildAttachmentsAndSaveTokens(req, durableContext, context);
 
-    // Verify
+    // then
     assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     assertEquals("Body can not be empty", responseMessage.getBody());
   }
 
   @Test
+  void buildAttachmentsAndSaveTokens_missingRequester_doesNotStartOrchestration() {
+    // given
+    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    when(req.getHeaders()).thenReturn(Map.of());
+    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
+        .thenReturn(
+            new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+                .status(HttpStatus.BAD_REQUEST));
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+
+    // when
+    HttpResponseMessage response =
+        function.buildAttachmentsAndSaveTokens(req, durableContext, executionContext);
+
+    // then
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
+    verifyNoInteractions(durableContext);
+  }
+
+  @Test
   void buildAttachmentAndSaveToken_invokeActivity() throws JsonProcessingException {
     // given
-    Product product = createDummyProduct();
-    when(productService.getProductIsValid(anyString())).thenReturn(product);
+    ProductResponse product = createDummyProduct();
+    when(productService.getValidProduct(anyString())).thenReturn(product);
 
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
     when(orchestrationContext.getInput(String.class)).thenReturn(onboardingString);
@@ -1252,16 +1303,16 @@ class OnboardingFunctionsTest {
     function.buildAttachmentAndSaveToken(orchestrationContext, executionContext);
 
     // then
-    verify(productService, times(1)).getProductIsValid(anyString());
+    verify(productService, times(1)).getValidProduct(anyString());
     Mockito.verify(orchestrationContext, times(2)).callActivity(any(), any(), any(), any());
   }
 
   @Test
   void buildAttachmentAndSaveToken_noAttachments_invokeActivity() throws JsonProcessingException {
     // given
-    Product product = createDummyProduct();
+    ProductResponse product = createDummyProduct();
 
-    when(productService.getProductIsValid(anyString())).thenReturn(product);
+    when(productService.getValidProduct(anyString())).thenReturn(product);
 
     TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
     when(orchestrationContext.getInput(String.class)).thenReturn(onboardingString2);
@@ -1275,7 +1326,7 @@ class OnboardingFunctionsTest {
     function.buildAttachmentAndSaveToken(orchestrationContext, executionContext);
 
     // then
-    verify(productService, times(1)).getProductIsValid(anyString());
+    verify(productService, times(1)).getValidProduct(anyString());
   }
 
   @Test
@@ -1397,21 +1448,21 @@ class OnboardingFunctionsTest {
   @Test
   void getSigningConfiguration() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    when(productService.getProductIsValid(any())).thenReturn(createDummyProduct());
+    when(productService.getValidProduct(any())).thenReturn(createDummyProduct());
 
     function.getSigningConfiguration(onboardingStringBase, executionContext);
 
-    verify(productService, times(1)).getProductIsValid(any());
+    verify(productService, times(1)).getValidProduct(any());
   }
 
   @Test
   void getManagingInstitutions() {
     when(executionContext.getLogger()).thenReturn(Logger.getGlobal());
-    when(productService.getProductIsValid(any())).thenReturn(createDummyProduct());
+    when(productService.getValidProduct(any())).thenReturn(createDummyProduct());
 
     function.getManagingInstitutions(onboardingStringBase, executionContext);
 
-    verify(productService, times(1)).getProductIsValid(any());
+    verify(productService, times(1)).getValidProduct(any());
   }
 
   @Test
@@ -2149,12 +2200,16 @@ class OnboardingFunctionsTest {
     verify(service, times(1)).updateOnboardingStatus(onboarding.getId(), OnboardingStatus.PENDING_IN_REVIEW);
   }
 
-  private Product createDummyProduct() {
-    Product product = new Product();
+  private ProductResponse createDummyProduct() {
+    ProductResponse product = new ProductResponse();
     product.setTitle("Title");
-    product.setId("test");
-    product.setInstitutionContractMappings(createDummyContractTemplateInstitution());
-    product.setUserContractMappings(createDummyContractTemplateInstitution());
+    product.setProductId("test");
+    product.setContracts(List.of(createContract(OnboardingType.INSTITUTION, ContractType.CONTRACT),
+        createContract(OnboardingType.INSTITUTION, ContractType.ATTACHMENT),
+        createContract(OnboardingType.USER, ContractType.CONTRACT)));
+    SigningConfiguration signingConfiguration = new SigningConfiguration();
+    signingConfiguration.setRequiredSignatures(1);
+    product.setSigningConfiguration(signingConfiguration);
     product.setManagingInstitutions(List.of(createDummyManagingInstitution()));
 
     return product;
@@ -2171,25 +2226,18 @@ class OnboardingFunctionsTest {
     return task;
   }
 
-  private static Map<String, ContractTemplate> createDummyContractTemplateInstitution() {
-    Map<String, ContractTemplate> institutionTemplate = new HashMap<>();
-
-    List<AttachmentTemplate> attachments = new ArrayList<>();
-
-    AttachmentTemplate attachmentTemplate = new AttachmentTemplate();
-    attachmentTemplate.setTemplatePath("path");
-    attachmentTemplate.setWorkflowState(OnboardingStatus.REQUEST);
-    attachmentTemplate.setWorkflowType(List.of(WorkflowType.FOR_APPROVE));
-
-    attachments.add(attachmentTemplate);
-
-    ContractTemplate conctractTemplate = new ContractTemplate();
-    conctractTemplate.setContractTemplatePath("example");
-    conctractTemplate.setContractTemplateVersion("version");
-    conctractTemplate.setAttachments(attachments);
-
-    institutionTemplate.put(Product.CONTRACT_TYPE_DEFAULT, conctractTemplate);
-    return institutionTemplate;
+  private static ContractTemplateConfig createContract(OnboardingType onboardingType, ContractType contractType) {
+    ContractTemplateConfig config = new ContractTemplateConfig();
+    config.setOnboardingType(onboardingType);
+    config.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.DEFAULT);
+    config.setContractType(contractType);
+    config.setEnabled(true);
+    config.setPath(contractType == ContractType.ATTACHMENT ? "path" : "example");
+    config.setVersion("version");
+    config.setName("attachment");
+    config.setWorkflowState(OnboardingStatus.REQUEST.name());
+    config.setWorkflowType(List.of(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE));
+    return config;
   }
 
   private static ManagingInstitution createDummyManagingInstitution() {

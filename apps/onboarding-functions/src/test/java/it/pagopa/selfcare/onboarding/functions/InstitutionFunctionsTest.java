@@ -60,7 +60,9 @@ public class InstitutionFunctionsTest {
 
   @Test
   void deleteInstitutionAndUser_validRequest_returnsAccepted() {
+    // given
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
 
     final Map<String, String> queryParams = new HashMap<>();
     final String onboardingId = "onboardingId";
@@ -82,25 +84,26 @@ public class InstitutionFunctionsTest {
     doReturn(client).when(durableContext).getClient();
     doReturn(instanceId)
       .when(client)
-      .scheduleNewOrchestrationInstance("DeleteInstitutionAndUser", onboardingId);
+      .scheduleNewOrchestrationInstance("DeleteInstitutionAndUserOnboarding", onboardingId);
     when(durableContext.createCheckStatusResponse(any(), any()))
       .thenReturn(
         new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
           .status(HttpStatus.ACCEPTED)
           .build());
 
-    // Invoke
+    // when
     HttpResponseMessage responseMessage =
       function.deleteInstitutionAndUserTrigger(req, durableContext, executionContext);
 
-    // Verify
+    // then
     assertEquals(HttpStatus.ACCEPTED.value(), responseMessage.getStatusCode());
   }
 
   @Test
   void deleteInstitutionAndUser_emptyRequest_returnsBadRequest() {
-    // Mock HttpRequestMessage with empty body
+    // given
     final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    doReturn(Map.of("x-selfcare-uid", "requester-id")).when(req).getHeaders();
     final Map<String, String> queryParams = new HashMap<>();
     doReturn(queryParams).when(req).getQueryParameters();
 
@@ -114,13 +117,33 @@ public class InstitutionFunctionsTest {
 
     final DurableClientContext durableContext = mock(DurableClientContext.class);
 
-    // Invoke
+    // when
     HttpResponseMessage responseMessage =
       function.deleteInstitutionAndUserTrigger(req, durableContext, context);
 
-    // Verify
+    // then
     assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
     assertEquals("onboardingId can't be null or empty", responseMessage.getBody());
+  }
+
+  @Test
+  void deleteInstitutionAndUser_missingRequester_doesNotStartOrchestration() {
+    // given
+    HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+    when(req.getHeaders()).thenReturn(Map.of());
+    when(req.createResponseBuilder(HttpStatus.BAD_REQUEST))
+      .thenReturn(
+        new HttpResponseMessageMock.HttpResponseMessageBuilderMock()
+          .status(HttpStatus.BAD_REQUEST));
+    DurableClientContext durableContext = mock(DurableClientContext.class);
+
+    // when
+    HttpResponseMessage response =
+      function.deleteInstitutionAndUserTrigger(req, durableContext, executionContext);
+
+    // then
+    assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode());
+    verifyNoInteractions(durableContext);
   }
 
   @Test
@@ -193,4 +216,3 @@ public class InstitutionFunctionsTest {
   }
 
 }
-

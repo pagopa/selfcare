@@ -18,8 +18,9 @@ import it.pagopa.selfcare.onboarding.entity.OnboardingWorkflow;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.NotificationService;
-import it.pagopa.selfcare.product.entity.EmailTemplate;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.utils.ProductConfigUtils;
+import org.openapi.quarkus.product_json.model.EmailTemplateConfig;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import org.apache.commons.text.StringSubstitutor;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -299,7 +300,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendCompletedEmail(List<String> destinationMails, Product product, OnboardingWorkflow onboardingWorkflow) {
+    public void sendCompletedEmail(List<String> destinationMails, ProductResponse product, OnboardingWorkflow onboardingWorkflow) {
         Onboarding onboarding = onboardingWorkflow.getOnboarding();
         String templatePath = getTemplateMailPath(
                 product,
@@ -323,7 +324,7 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendDeletedEmail(List<String> destinationMails, Product product, Onboarding onboarding) {
+    public void sendDeletedEmail(List<String> destinationMails, ProductResponse product, Onboarding onboarding) {
         String templatePath = getTemplateMailPath(product, templatePathConfig.deletePath(), onboarding, OnboardingStatus.DELETED);
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
@@ -339,12 +340,12 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     @Override
-    public void sendMailRejection(List<String> destinationMails, Product product, Onboarding onboarding) {
+    public void sendMailRejection(List<String> destinationMails, ProductResponse product, Onboarding onboarding) {
         String templatePath = getTemplateMailPath(product, templatePathConfig.rejectPath(), onboarding, OnboardingStatus.REJECTED);
         Map<String, String> mailParameter = new HashMap<>();
         mailParameter.put(templatePlaceholdersConfig.completeProductName(), product.getTitle());
         mailParameter.put(templatePlaceholdersConfig.reasonForReject(), onboarding.getReasonForReject());
-        mailParameter.put(templatePlaceholdersConfig.rejectOnboardingUrlPlaceholder(), templatePlaceholdersConfig.rejectOnboardingUrlValue() + product.getId());
+        mailParameter.put(templatePlaceholdersConfig.rejectOnboardingUrlPlaceholder(), templatePlaceholdersConfig.rejectOnboardingUrlValue() + product.getProductId());
         sendMail(NotificationMailRequest.builder()
                 .type(NotificationMailType.REJECTION)
                 .destinationMails(destinationMails)
@@ -417,17 +418,17 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    private String getTemplateMailPath(Product product, String defaultTemplatePath, Onboarding onboarding, OnboardingStatus templateStatus) {
+    private String getTemplateMailPath(ProductResponse product, String defaultTemplatePath, Onboarding onboarding, OnboardingStatus templateStatus) {
         log.info("Retrieving emailTemplate given institutionType {}, workflowType: {}, status: {}",
                 onboarding.getInstitution().getInstitutionType().name(),
                 onboarding.getWorkflowType().name(),
                 templateStatus.name());
         logEmailTemplatesMap(product);
-        Optional<EmailTemplate> emailTemplateOpt =
-                product.getEmailTemplate(
-                        onboarding.getInstitution().getInstitutionType().name(),
-                        onboarding.getWorkflowType().name(),
-                        templateStatus.name());
+        Optional<EmailTemplateConfig> emailTemplateOpt = ProductConfigUtils.emailTemplate(
+                product,
+                onboarding.getInstitution().getInstitutionType().name(),
+                onboarding.getWorkflowType().name(),
+                templateStatus.name());
         if (emailTemplateOpt.isPresent()) {
             String emailTemplatePath = emailTemplateOpt.get().getPath();
             log.debug("Using custom email template path: {}", emailTemplatePath);
@@ -438,37 +439,14 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
-    private static void logEmailTemplatesMap(Product product) {
-        // Log structured view of the email templates map to ease debugging
-        Map<String, Map<String, List<EmailTemplate>>> templates = product.getEmailTemplates();
+    private static void logEmailTemplatesMap(ProductResponse product) {
+        List<EmailTemplateConfig> templates = product.getEmailTemplates();
         if (templates == null) {
-            log.info("Email templates map is null for product {}", product.getAlias());
-        } else {
-            templates.forEach(
-                    (institutionType, workflowMap) -> {
-                        log.info("Email templates institutionType {} workflowTypes {}",
-                                institutionType,
-                                workflowMap != null ? workflowMap.keySet() : null);
-                        if (workflowMap != null) {
-                            workflowMap.forEach(
-                                    (workflowType, emailTemplates) -> {
-                                        if (emailTemplates == null) {
-                                            log.info("Email templates institutionType {} workflowType {}: none",
-                                                    institutionType,
-                                                    workflowType);
-                                            return;
-                                        }
-                                        emailTemplates.forEach(
-                                                template -> log.info(
-                                                        "Email template entry institutionType {} workflowType {} status {} path {} version {}",
-                                                        institutionType,
-                                                        workflowType,
-                                                        template.getStatus(),
-                                                        template.getPath(),
-                                                        template.getVersion()));
-                                    });
-                        }
-                    });
+            log.info("Email templates are null for product {}", product.getProductId());
+            return;
         }
+        templates.forEach(template -> log.info(
+                "Email template entry institutionType {} workflowType {} status {} path {} version {}",
+                template.getInstitutionType(), template.getType(), template.getStatus(), template.getPath(), template.getVersion()));
     }
 }

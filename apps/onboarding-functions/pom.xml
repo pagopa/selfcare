@@ -238,14 +238,8 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selfcare-onboarding-sdk-product</artifactId>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
             <version>${commons-sdk-version}</version>
-          <exclusions>
-            <exclusion>
-              <groupId>com.azure</groupId>
-              <artifactId>azure-core-http-netty</artifactId>
-            </exclusion>
-          </exclusions>
         </dependency>
     </dependencies>
     <build>

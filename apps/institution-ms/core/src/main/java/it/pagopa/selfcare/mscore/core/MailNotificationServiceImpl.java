@@ -42,10 +42,13 @@ public class MailNotificationServiceImpl implements MailNotificationService {
             }
             mailParameters = mailParametersMapper.getDelegationNotificationParameter(institutionName, product.getTitle(), partnerInstitution.getDescription());
             log.debug(MAIL_PARAMETER_LOG, mailParameters);
-            List<String> userDestinationMail = getUsersEmailByInstitutionAndProductV2(partnerInstitution.getId(), productId);
-            log.info(DESTINATION_MAIL_LOG, userDestinationMail);
-            userNotificationService.sendDelegationUserNotification(userDestinationMail, mailParametersMapper.getDelegationUserNotificationPath(), product.getTitle(), mailParameters);
-            log.info("create-delegation-user-email-notification :: Email successful sent");
+
+            if (coreConfig.isMailEnabled()) {
+                List<String> userDestinationMail = getUsersEmailByInstitutionAndProductV2(partnerInstitution.getId(), productId);
+                log.info(DESTINATION_MAIL_LOG, userDestinationMail);
+                userNotificationService.sendDelegationUserNotification(userDestinationMail, mailParameters);
+                log.info("create-delegation-user-email-notification :: Email notification processed");
+            }
 
             if (coreConfig.isEnableSendDelegationMail()) {
                 List<String> institutionDestinationMail = getDestinationMails(partnerInstitution);

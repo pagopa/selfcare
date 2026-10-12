@@ -102,22 +102,21 @@ locals {
       value = "PNPG"
     },
     {
-      name  = "TENANT_REGISTRY_JSON"
-      value = "{\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcProduct\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"},\"storages\":{\"contracts\":{\"account\":\"documents-storage\",\"container\":\"sc-d-documents-blob\",\"pathPrefix\":\"\",\"authentication\":{\"type\":\"CONNECTION_STRING\",\"connectionStringEnvVar\":\"BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE_PNPG\"}}}}}"
+      name  = "TENANT_STORAGE_MANDATORY_KEYS"
+      value = ""
     },
     {
-      name  = "BLOB_STORAGE_CONTAINER_CONTRACT_TEMPLATE"
-      value = "sc-d-documents-blob"
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"PNPG\":{\"mongo\":{\"account\":\"cosmos-pnpg\",\"database\":\"selcProduct\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_PNPG\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_PNPG\"}}}"
     }
   ]
 
   secrets_names_product_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING"                 = "appinsights-connection-string"
-    "SELFCARE_DATA_ENCRIPTION_KEY"                          = "selfcare-data-encryption-key"
-    "SELFCARE_DATA_ENCRIPTION_IV"                           = "selfcare-data-encryption-iv"
-    "MONGODB_CONNECTION_STRING_PNPG"                        = "mongodb-connection-string"
-    "JWT_PUBLIC_KEY_PNPG"                                   = "jwt-public-key"
-    "BLOB_STORAGE_CONNECTION_STRING_CONTRACT_TEMPLATE_PNPG" = "documents-storage-connection-string"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
+    "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
+    "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
+    "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
   }
 }
 

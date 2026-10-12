@@ -11,10 +11,7 @@ import it.pagopa.selfcare.onboarding.dto.ManagingInstitutionSendEmail;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import it.pagopa.selfcare.onboarding.mapper.UserMapper;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.ContractTemplate;
-import it.pagopa.selfcare.product.entity.Product;
-import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -24,6 +21,10 @@ import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
 import org.openapi.quarkus.document_json.model.ContractPdfRequest;
 import org.openapi.quarkus.document_json.model.DocumentBuilderRequest;
 import org.openapi.quarkus.document_json.model.DocumentResponse;
+import org.openapi.quarkus.product_json.model.ContractTemplateConfig;
+import org.openapi.quarkus.product_json.model.ContractType;
+import org.openapi.quarkus.product_json.model.OnboardingType;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.user_json.model.SendMailDto;
 import org.openapi.quarkus.user_json.model.UserInstitutionResponse;
 import org.openapi.quarkus.user_registry_json.model.CertifiableFieldResourceOfstring;
@@ -63,19 +64,6 @@ class OnboardingServiceTest {
 
     private static OnboardingWorkflow getOnboardingWorkflowInstitution(Onboarding onboarding) {
         return new OnboardingWorkflowInstitution(onboarding, "INSTITUTION");
-    }
-
-    private static Map<String, ContractTemplate> createDummyContractTemplateInstitution() {
-        Map<String, ContractTemplate> institutionTemplate = new HashMap<>();
-        List<AttachmentTemplate> attachments = new ArrayList<>();
-        AttachmentTemplate attachmentTemplate = createDummyAttachmentTemplate();
-        attachments.add(attachmentTemplate);
-        ContractTemplate conctractTemplate = new ContractTemplate();
-        conctractTemplate.setAttachments(attachments);
-        conctractTemplate.setContractTemplatePath("example");
-        conctractTemplate.setContractTemplateVersion("version");
-        institutionTemplate.put(Product.CONTRACT_TYPE_DEFAULT, conctractTemplate);
-        return institutionTemplate;
     }
 
     private static AttachmentTemplate createDummyAttachmentTemplate() {
@@ -154,10 +142,10 @@ class OnboardingServiceTest {
         when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, user.getId()))
                 .thenReturn(userResource);
 
-        Product product = new Product();
+        ProductResponse product = new ProductResponse();
         product.setTitle("title");
 
-        when(productService.getProductIsValid(any())).thenReturn(product);
+        when(productService.getValidProduct(any())).thenReturn(product);
 
         assertThrows(
                 GenericOnboardingException.class,
@@ -176,12 +164,12 @@ class OnboardingServiceTest {
         manager.setUserMailUuid("ID_MAIL#TEST-123");
         onboarding.setUsers(List.of(manager));
 
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
 
         when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, manager.getId()))
                 .thenReturn(userResource);
 
-        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(product);
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(product);
 
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
         onboardingService.createContract(onboardingWorkflow);
@@ -189,7 +177,7 @@ class OnboardingServiceTest {
         Mockito.verify(pdvUserRegistryService, Mockito.times(1))
                 .getUserById(USERS_WORKS_FIELD_LIST, manager.getId());
 
-        Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
+        Mockito.verify(productService, Mockito.times(1)).getValidProduct(onboarding.getProductId());
 
         ArgumentCaptor<ContractPdfRequest> captorRequest = ArgumentCaptor.forClass(ContractPdfRequest.class);
         Mockito.verify(documentService, Mockito.times(1))
@@ -197,8 +185,7 @@ class OnboardingServiceTest {
         assertEquals(
                 captorRequest.getValue().getContractTemplatePath(),
                 product
-                        .getInstitutionContractTemplate(Product.CONTRACT_TYPE_DEFAULT)
-                        .getContractTemplatePath());
+                        .getContracts().get(0).getPath());
     }
 
     @Test
@@ -219,7 +206,7 @@ class OnboardingServiceTest {
         delegate.setUserMailUuid("ID_MAIL#TEST-123");
         onboarding.setUsers(List.of(manager, delegate));
 
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
 
         when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, manager.getId()))
                 .thenReturn(userResource);
@@ -227,7 +214,7 @@ class OnboardingServiceTest {
         when(pdvUserRegistryService.getUserById(USERS_WORKS_FIELD_LIST, delegate.getId()))
                 .thenReturn(delegateResource);
 
-        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(product);
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(product);
 
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
         onboardingService.createContract(onboardingWorkflow);
@@ -238,7 +225,7 @@ class OnboardingServiceTest {
         Mockito.verify(pdvUserRegistryService, Mockito.times(1))
                 .getUserById(USERS_WORKS_FIELD_LIST, delegate.getId());
 
-        Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
+        Mockito.verify(productService, Mockito.times(1)).getValidProduct(onboarding.getProductId());
 
         ArgumentCaptor<ContractPdfRequest> captorRequest = ArgumentCaptor.forClass(ContractPdfRequest.class);
         Mockito.verify(documentService, Mockito.times(1))
@@ -246,8 +233,7 @@ class OnboardingServiceTest {
         assertEquals(
                 captorRequest.getValue().getContractTemplatePath(),
                 product
-                        .getInstitutionContractTemplate(Product.CONTRACT_TYPE_DEFAULT)
-                        .getContractTemplatePath());
+                        .getContracts().get(0).getPath());
     }
 
     @Test
@@ -261,12 +247,12 @@ class OnboardingServiceTest {
         onboarding.setUsers(List.of(user));
 
         AttachmentTemplate attachmentTemplate = createDummyAttachmentTemplate();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         OnboardingAttachment onboardingAttachment = new OnboardingAttachment();
         onboardingAttachment.setAttachment(attachmentTemplate);
         onboardingAttachment.setOnboarding(onboarding);
 
-        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(product);
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(product);
 
         UserResource userResource = new UserResource();
         userResource.setId(UUID.randomUUID());
@@ -280,22 +266,38 @@ class OnboardingServiceTest {
         onboardingService.createAttachment(onboardingAttachment);
 
         // Assert
-        Mockito.verify(productService, Mockito.times(1)).getProductIsValid(onboarding.getProductId());
+        Mockito.verify(productService, Mockito.times(1)).getValidProduct(onboarding.getProductId());
         ArgumentCaptor<AttachmentPdfRequest> captorRequest = ArgumentCaptor.forClass(AttachmentPdfRequest.class);
         Mockito.verify(documentService, Mockito.times(1))
                 .createAttachmentPdf(captorRequest.capture());
         assertEquals(attachmentTemplate.getTemplatePath(), captorRequest.getValue().getAttachmentTemplatePath());
     }
 
-    private Product createDummyProduct() {
-        Product product = new Product();
+    private ProductResponse createDummyProduct() {
+        ProductResponse product = new ProductResponse();
         product.setTitle("Title");
-        product.setId(productId);
-        product.setInstitutionContractMappings(createDummyContractTemplateInstitution());
-        product.setUserContractMappings(createDummyContractTemplateInstitution());
-        product.setExpirationDate(30);
+        product.setProductId(productId);
+        product.setContracts(List.of(
+                createContract(OnboardingType.INSTITUTION, ContractType.CONTRACT),
+                createContract(OnboardingType.INSTITUTION, ContractType.ATTACHMENT),
+                createContract(OnboardingType.USER, ContractType.CONTRACT),
+                createContract(OnboardingType.USER, ContractType.ATTACHMENT)));
 
         return product;
+    }
+
+    private ContractTemplateConfig createContract(OnboardingType onboardingType, ContractType contractType) {
+        ContractTemplateConfig config = new ContractTemplateConfig();
+        config.setOnboardingType(onboardingType);
+        config.setInstitutionType(org.openapi.quarkus.product_json.model.InstitutionType.DEFAULT);
+        config.setContractType(contractType);
+        config.setEnabled(true);
+        config.setPath("example");
+        config.setVersion("version");
+        config.setName("name");
+        config.setWorkflowState(OnboardingStatus.REQUEST.name());
+        config.setWorkflowType(List.of(org.openapi.quarkus.product_json.model.WorkflowType.FOR_APPROVE));
+        return config;
     }
 
     @Test
@@ -303,8 +305,8 @@ class OnboardingServiceTest {
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution();
         Onboarding onboarding = createOnboarding();
         onboardingWorkflow.setOnboarding(onboarding);
-        Product productExpected = createDummyProduct();
-        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
+        ProductResponse productExpected = createDummyProduct();
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(productExpected);
         onboardingService.saveTokenWithContract(onboardingWorkflow);
         ArgumentCaptor<DocumentBuilderRequest> requestCaptor =
                 ArgumentCaptor.forClass(DocumentBuilderRequest.class);
@@ -315,14 +317,10 @@ class OnboardingServiceTest {
                 org.openapi.quarkus.document_json.model.DocumentType.INSTITUTION,
                 requestCaptor.getValue().getDocumentType());
         assertEquals(
-                productExpected
-                        .getInstitutionContractTemplate(Product.CONTRACT_TYPE_DEFAULT)
-                        .getContractTemplatePath(),
+                productExpected.getContracts().get(0).getPath(),
                 requestCaptor.getValue().getTemplatePath());
         assertEquals(
-                productExpected
-                        .getInstitutionContractTemplate(Product.CONTRACT_TYPE_DEFAULT)
-                        .getContractTemplateVersion(),
+                productExpected.getContracts().get(0).getVersion(),
                 requestCaptor.getValue().getTemplateVersion());
     }
 
@@ -334,8 +332,8 @@ class OnboardingServiceTest {
         onboardingAttachment.setOnboarding(onboarding);
         onboardingAttachment.setAttachment(attachmentTemplate);
 
-        Product productExpected = createDummyProduct();
-        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
+        ProductResponse productExpected = createDummyProduct();
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(productExpected);
         onboardingService.saveTokenWithAttachment(onboardingAttachment);
         ArgumentCaptor<DocumentBuilderRequest> requestCaptor =
                 ArgumentCaptor.forClass(DocumentBuilderRequest.class);
@@ -355,8 +353,8 @@ class OnboardingServiceTest {
         Onboarding onboarding = createOnboarding();
         OnboardingWorkflow onboardingWorkflow = new OnboardingWorkflowInstitution();
         onboardingWorkflow.setOnboarding(onboarding);
-        Product productExpected = createDummyProduct();
-        when(productService.getProductIsValid(onboarding.getProductId())).thenReturn(productExpected);
+        ProductResponse productExpected = createDummyProduct();
+        when(productService.getValidProduct(onboarding.getProductId())).thenReturn(productExpected);
         doThrow(new GenericOnboardingException("ko"))
                 .when(documentService)
                 .saveDocument(any(DocumentBuilderRequest.class));
@@ -370,7 +368,7 @@ class OnboardingServiceTest {
     void sendMailRegistrationWithContract() {
 
         Onboarding onboarding = createOnboarding();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
@@ -462,7 +460,7 @@ class OnboardingServiceTest {
     void sendMailRegistrationWithContractAggregator() {
 
         Onboarding onboarding = createOnboarding();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
@@ -470,7 +468,7 @@ class OnboardingServiceTest {
 
         when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(expirationDate);
 
         when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
@@ -493,21 +491,21 @@ class OnboardingServiceTest {
                         userResource.getName().getValue(),
                         userResource.getFamilyName().getValue(),
                         product.getTitle(),
-                        product.getExpirationDate().toString());
+                        String.valueOf(expirationDate));
     }
 
     @Test
     void sendMailRegistrationWithContractWhenApprove() {
 
         Onboarding onboarding = createOnboarding();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         DocumentResponse document = createDummyToken();
 
         Integer expirationDate = 30;
 
         when(documentService.getDocumentByOnboardingId(onboarding.getId())).thenReturn(document);
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(expirationDate);
 
         OnboardingWorkflow onboardingWorkflow = getOnboardingWorkflowInstitution(onboarding);
 
@@ -551,13 +549,13 @@ class OnboardingServiceTest {
     void sendMailRegistration() {
 
         UserResource userResource = createUserResource();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
 
         Integer expirationDate = 30;
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(expirationDate);
 
         when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
@@ -568,7 +566,7 @@ class OnboardingServiceTest {
                         onboarding.getInstitution().getDigitalAddress(),
                         userResource.getName().getValue(),
                         userResource.getFamilyName().getValue(),
-                        product.getTitle(), product.getExpirationDate().toString());
+                        product.getTitle(), String.valueOf(expirationDate));
 
         onboardingService.sendMailRegistration(onboarding);
 
@@ -585,7 +583,7 @@ class OnboardingServiceTest {
     void sendMailRegistration_with_deletedManager() {
 
         UserResource userResource = createUserResource();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setOrigin(Origin.IPA);
         onboarding.setPreviousManagerId("previousManagerId");
@@ -593,7 +591,7 @@ class OnboardingServiceTest {
         Integer expirationDate = 30;
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(expirationDate);
 
         when(pdvUserRegistryService.getUserById(USERS_FIELD_LIST, onboarding.getUserRequester().getUserRequestUid()))
                 .thenReturn(userResource);
@@ -618,14 +616,14 @@ class OnboardingServiceTest {
                         onboarding.getInstitution().getDigitalAddress(),
                         userResource.getName().getValue(),
                         userResource.getFamilyName().getValue(),
-                        product.getTitle(), product.getExpirationDate().toString());
+                        product.getTitle(), String.valueOf(expirationDate));
     }
 
     @Test
     void sendMailRegistration_with_check_userMS() {
 
         UserResource userResource = createUserResource();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         Onboarding onboarding = createOnboarding();
         onboarding.getInstitution().setOrigin(Origin.IPA);
         onboarding.setPreviousManagerId("previousManagerId");
@@ -633,7 +631,7 @@ class OnboardingServiceTest {
         Integer expirationDate = 30;
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDate);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(expirationDate);
 
         when(pdvUserRegistryService.getUserById(any(), any()))
                 .thenReturn(userResource);
@@ -665,14 +663,14 @@ class OnboardingServiceTest {
                         onboarding.getInstitution().getDigitalAddress(),
                         userResource.getName().getValue(),
                         userResource.getFamilyName().getValue(),
-                        product.getTitle(), product.getExpirationDate().toString());
+                        product.getTitle(), String.valueOf(expirationDate));
     }
 
     @Test
     void sendMailRegistrationApprove() {
 
         Onboarding onboarding = createOnboarding();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         UserResource userResource = createUserResource();
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
@@ -707,7 +705,7 @@ class OnboardingServiceTest {
     void sendMailOnboardingApprove() {
 
         Onboarding onboarding = createOnboarding();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         UserResource userResource = createUserResource();
 
         when(productService.getProduct(onboarding.getProductId())).thenReturn(product);
@@ -744,14 +742,14 @@ class OnboardingServiceTest {
 
         ExecutionContext context = getExecutionContext();
 
-        Product product1 = new Product();
-        product1.setId("product1");
+        ProductResponse product1 = new ProductResponse();
+        product1.setProductId("product1");
         when(productService.getProducts(false, false)).thenReturn(List.of(product1));
 
         when(onboardingRepositoryService.countByQuery(any())).thenReturn(5L).thenReturn(3L);
 
         List<NotificationCountResult> results =
-                onboardingService.countNotifications(product1.getId(), from, to, context);
+                onboardingService.countNotifications(product1.getProductId(), from, to, context);
 
         assertEquals(1, results.size());
         assertEquals(8, results.get(0).getNotificationCount());
@@ -813,7 +811,7 @@ class OnboardingServiceTest {
     void sendMailRegistrationWithContractOK() {
 
         Onboarding onboarding = createOnboarding();
-        Product product = createDummyProduct();
+        ProductResponse product = createDummyProduct();
         UserResource userResource = createUserResource();
         DocumentResponse document = createDummyToken();
 
@@ -848,7 +846,7 @@ class OnboardingServiceTest {
     void updateOnboardingExpiringDate_shouldUpdateCorrectExpiringDateAndPersist() {
         Onboarding onboarding = createOnboarding();
         Integer expirationDays = 30;
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(expirationDays);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(expirationDays);
 
         onboardingService.updateOnboardingExpiringDate(onboarding);
 
@@ -862,7 +860,7 @@ class OnboardingServiceTest {
     @Test
     void updateOnboardingExpiringDate_shouldHandleNullExpirationDays() {
         Onboarding onboarding = createOnboarding();
-        when(productService.getProductExpirationDate(onboarding.getProductId())).thenReturn(null);
+        when(productService.getProductExpirationDays(onboarding.getProductId())).thenReturn(null);
 
         assertThrows(NullPointerException.class, () -> onboardingService.updateOnboardingExpiringDate(onboarding));
         verify(onboardingRepositoryService, never()).update(any(Onboarding.class));
@@ -872,7 +870,7 @@ class OnboardingServiceTest {
     void updateOnboardingExpiringDate_shouldHandleInvalidProductId() {
         Onboarding onboarding = createOnboarding();
         onboarding.setProductId("invalid-product-id");
-        when(productService.getProductExpirationDate(onboarding.getProductId()))
+        when(productService.getProductExpirationDays(onboarding.getProductId()))
                 .thenThrow(new GenericOnboardingException("Product not found"));
 
         assertThrows(GenericOnboardingException.class, () -> onboardingService.updateOnboardingExpiringDate(onboarding));

@@ -2,8 +2,8 @@ package it.pagopa.selfcare.onboarding.mapper;
 
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.product.entity.AttachmentTemplate;
-import it.pagopa.selfcare.product.entity.Product;
+import it.pagopa.selfcare.onboarding.dto.AttachmentTemplate;
+import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.openapi.quarkus.document_json.model.AttachmentPdfRequest;
@@ -14,14 +14,14 @@ import org.openapi.quarkus.user_registry_json.model.UserResource;
 @Mapper(componentModel = "cdi")
 public interface AttachmentPdfRequestMapper {
   @Mapping(target = "onboardingId", source = "onboarding.id")
-  @Mapping(target = "productId", source = "product.id")
+  @Mapping(target = "productId", source = "product.productId")
   @Mapping(target = "productName", source = "product.title")
   @Mapping(target = "attachmentTemplatePath", source = "attachment.templatePath")
   @Mapping(target = "attachmentName", source = "attachment.name")
   @Mapping(target = "institution", source = "onboarding.institution")
   @Mapping(target = "manager", source = "manager")
   AttachmentPdfRequest toRequest(
-      Onboarding onboarding, AttachmentTemplate attachment, Product product, UserResource manager);
+      Onboarding onboarding, AttachmentTemplate attachment, ProductResponse product, UserResource manager);
 
   InstitutionPdfData toInstitutionPdfData(Institution institution);
 

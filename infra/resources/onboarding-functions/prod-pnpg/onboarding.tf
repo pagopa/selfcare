@@ -58,6 +58,7 @@ locals {
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-user-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_CORE_URL"                                        = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
       "MS_DOCUMENT_URL"                                    = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-document-ms-ca.${module.local.config.private_dns_name_domain}"
+      "MS_PRODUCT_URL"                                     = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
       "JWT_BEARER_TOKEN"                                   = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/jwt-bearer-token-functions/)"
       "MS_PARTY_REGISTRY_URL"                              = "https://selc-${module.local.config.env_short}-${module.local.config.domain}-party-reg-proxy-ca.${module.local.config.private_dns_name_domain}"
       "PAGOPA_LOGO_ENABLE"                                 = "false"
@@ -136,19 +137,21 @@ data "azurerm_user_assigned_identity" "documents_storage_blob_identity" {
 module "onboarding_functions" {
   source = "../../_modules/functions"
 
-  functions_name            = local.onboarding_functions.name
-  subnet_cidr               = local.onboarding_functions.subnet_cidr
-  always_on                 = local.onboarding_functions.always_on
-  service_plan_sku          = local.onboarding_functions.service_plan_sku
-  service_plan_worker_count = local.onboarding_functions.service_plan_worker_count
-  nat_resource_group_name   = local.onboarding_functions.nat_resource_group_name
-  nat_gateway_name          = local.onboarding_functions.nat_gateway_name
-  vnet_resource_group_name  = module.local.vnet_resource_group_name
-  vnet_name                 = module.local.vnet_selc_name
-  key_vault_id              = module.local.key_vault_id
-  tenant_id                 = module.local.tenant_id
-  replication_type          = "LRS"
-  app_settings              = local.onboarding_functions.app_settings
+  functions_name                            = local.onboarding_functions.name
+  subnet_cidr                               = local.onboarding_functions.subnet_cidr
+  always_on                                 = local.onboarding_functions.always_on
+  service_plan_sku                          = local.onboarding_functions.service_plan_sku
+  service_plan_worker_count                 = local.onboarding_functions.service_plan_worker_count
+  nat_resource_group_name                   = local.onboarding_functions.nat_resource_group_name
+  nat_gateway_name                          = local.onboarding_functions.nat_gateway_name
+  vnet_resource_group_name                  = module.local.vnet_resource_group_name
+  vnet_name                                 = module.local.vnet_selc_name
+  private_endpoint_subnet_name              = "${module.local.config.project}-private-endpoints-snet"
+  enable_function_app_public_network_access = var.enable_function_app_public_network_access
+  key_vault_id                              = module.local.key_vault_id
+  tenant_id                                 = module.local.tenant_id
+  replication_type                          = "LRS"
+  app_settings                              = local.onboarding_functions.app_settings
   user_assigned_identity_ids = [
     data.azurerm_user_assigned_identity.product_storage_blob_identity.id,
     data.azurerm_user_assigned_identity.documents_storage_blob_identity.id,
