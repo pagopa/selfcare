@@ -5,9 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.helpers.test.UniAssertSubscriber;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.onboarding.controller.request.UserRequest;
 import it.pagopa.selfcare.onboarding.entity.Billing;
+import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.util.ErrorMessage;
@@ -156,6 +158,61 @@ class OnboardingValidationHelperTest {
         assertEquals(ErrorMessage.RECIPIENT_CODE_REQUIRED.getCode(), ex.getCode());
     }
 
+    @Test
+    void verifyRequiredRecipientCode_requiredAndMissingForPT_skipsValidation() {
+        // PT institutions never provide a recipient code → exempted even if the product requires it.
+        ProductResponse product = productWithRequiredRecipientCode(true);
+        Onboarding onboarding = onboardingWithRecipientCode(null, InstitutionType.PT);
+
+        helper.verifyRequiredRecipientCode(onboarding, product)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertCompleted()
+                .assertItem(null);
+    }
+
+    @Test
+    void verifyRequiredRecipientCode_requiredAndNullBillingForPT_skipsValidation() {
+        // PT without any billing block → still exempted.
+        ProductResponse product = productWithRequiredRecipientCode(true);
+        Onboarding onboarding = new Onboarding();
+        onboarding.setInstitution(institution(InstitutionType.PT));
+
+        helper.verifyRequiredRecipientCode(onboarding, product)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertCompleted()
+                .assertItem(null);
+    }
+
+    @Test
+    void verifyRequiredRecipientCode_requiredAndMissingForPA_failsWithInvalidRequest() {
+        // Non-exempted institution type → the product flag is still enforced.
+        ProductResponse product = productWithRequiredRecipientCode(true);
+        Onboarding onboarding = onboardingWithRecipientCode(null, InstitutionType.PA);
+
+        Throwable failure = helper.verifyRequiredRecipientCode(onboarding, product)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailed()
+                .getFailure();
+
+        InvalidRequestException ex = assertInstanceOf(InvalidRequestException.class, failure);
+        assertEquals(ErrorMessage.RECIPIENT_CODE_REQUIRED.getCode(), ex.getCode());
+    }
+
+    @Test
+    void verifyRequiredRecipientCode_requiredAndMissingWithNullInstitutionType_failsWithInvalidRequest() {
+        // Institution present but without type → not exempted.
+        ProductResponse product = productWithRequiredRecipientCode(true);
+        Onboarding onboarding = onboardingWithRecipientCode(null, null);
+
+        Throwable failure = helper.verifyRequiredRecipientCode(onboarding, product)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .assertFailed()
+                .getFailure();
+
+        InvalidRequestException ex = assertInstanceOf(InvalidRequestException.class, failure);
+        assertEquals(ErrorMessage.RECIPIENT_CODE_REQUIRED.getCode(), ex.getCode());
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -184,6 +241,18 @@ class OnboardingValidationHelperTest {
         Onboarding onboarding = new Onboarding();
         onboarding.setBilling(billing);
         return onboarding;
+    }
+
+    private static Onboarding onboardingWithRecipientCode(String recipientCode, InstitutionType institutionType) {
+        Onboarding onboarding = onboardingWithRecipientCode(recipientCode);
+        onboarding.setInstitution(institution(institutionType));
+        return onboarding;
+    }
+
+    private static Institution institution(InstitutionType institutionType) {
+        Institution institution = new Institution();
+        institution.setInstitutionType(institutionType);
+        return institution;
     }
 
     private static UserRequest user(PartyRole role, String taxCode, String email) {

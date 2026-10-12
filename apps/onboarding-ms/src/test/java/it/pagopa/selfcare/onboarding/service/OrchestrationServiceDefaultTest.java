@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.onboarding.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 import io.quarkus.test.InjectMock;
@@ -10,6 +12,7 @@ import it.pagopa.selfcare.onboarding.service.impl.OrchestrationServiceDefault;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.openapi.quarkus.onboarding_functions_json.api.OrchestrationApi;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
 
@@ -30,7 +33,7 @@ class OrchestrationServiceDefaultTest {
         String onboardingId = "onb-123";
         OrchestrationResponse response = mock(OrchestrationResponse.class);
         when(orchestrationApi.apiStartOnboardingOrchestrationGet(
-                onboardingId, null, OrchestrationService.ONBOARDING_MS_CALLER_ID))
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null))
                 .thenReturn(Uni.createFrom().item(response));
 
         // when
@@ -41,7 +44,37 @@ class OrchestrationServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
         sub.assertCompleted().assertItem(response);
         verify(orchestrationApi).apiStartOnboardingOrchestrationGet(
-                onboardingId, null, OrchestrationService.ONBOARDING_MS_CALLER_ID);
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null);
+        verifyNoMoreInteractions(orchestrationApi);
+    }
+
+    @Test
+    void triggerOrchestration_passesRequesterAsHeaderAndTimeoutAsQueryParam() {
+        // given
+        String onboardingId = "onb-sync";
+        String timeout = "60";
+        String requesterUserId = "user-uid-123";
+        OrchestrationResponse response = mock(OrchestrationResponse.class);
+        when(orchestrationApi.apiStartOnboardingOrchestrationGet(anyString(), anyString(), anyString()))
+                .thenReturn(Uni.createFrom().item(response));
+
+        // when
+        Uni<OrchestrationResponse> uni = orchestrationServiceDefault
+                .triggerOrchestrationIfEnabled(onboardingId, timeout, requesterUserId);
+
+        // then
+        UniAssertSubscriber<OrchestrationResponse> sub = uni.subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+        sub.assertCompleted().assertItem(response);
+
+        ArgumentCaptor<String> onboardingIdCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> xSelfcareUidCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> timeoutCaptor = ArgumentCaptor.forClass(String.class);
+        verify(orchestrationApi).apiStartOnboardingOrchestrationGet(
+                onboardingIdCaptor.capture(), xSelfcareUidCaptor.capture(), timeoutCaptor.capture());
+        assertEquals(onboardingId, onboardingIdCaptor.getValue());
+        assertEquals(requesterUserId, xSelfcareUidCaptor.getValue());
+        assertEquals(timeout, timeoutCaptor.getValue());
         verifyNoMoreInteractions(orchestrationApi);
     }
 
@@ -51,7 +84,7 @@ class OrchestrationServiceDefaultTest {
         String onboardingId = "onb-err";
         RuntimeException boom = new RuntimeException("boom");
         when(orchestrationApi.apiStartOnboardingOrchestrationGet(
-                onboardingId, null, OrchestrationService.ONBOARDING_MS_CALLER_ID))
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null))
                 .thenReturn(Uni.createFrom().failure(boom));
 
         // when
@@ -62,7 +95,7 @@ class OrchestrationServiceDefaultTest {
                 .withSubscriber(UniAssertSubscriber.create());
         sub.assertFailedWith(RuntimeException.class);
         verify(orchestrationApi).apiStartOnboardingOrchestrationGet(
-                onboardingId, null, OrchestrationService.ONBOARDING_MS_CALLER_ID);
+                onboardingId, OrchestrationService.ONBOARDING_MS_CALLER_ID, null);
         verifyNoMoreInteractions(orchestrationApi);    }
 
     @Test

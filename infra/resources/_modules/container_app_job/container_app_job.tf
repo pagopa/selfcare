@@ -11,11 +11,8 @@ resource "azurerm_container_app_job" "container_app_job" {
 
   # Managed Identity
   identity {
-    type = "SystemAssigned, UserAssigned"
-    identity_ids = concat(
-      [data.azurerm_user_assigned_identity.cae_identity.id],
-      var.additional_user_assigned_identity_ids
-    )
+    type         = local.identity_type
+    identity_ids = local.user_assigned_identity_ids
   }
 
   # Secrets configuration
@@ -24,7 +21,7 @@ resource "azurerm_container_app_job" "container_app_job" {
     content {
       name                = secret.value.name
       key_vault_secret_id = secret.value.key_vault_secret_name
-      identity            = data.azurerm_user_assigned_identity.cae_identity.id
+      identity            = data.azurerm_user_assigned_identity.cae_identity[0].id
     }
   }
 

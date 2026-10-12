@@ -5308,6 +5308,39 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void onboarding_whenRequiredRecipientCodeAndRecipientCodeMissingForPT_shouldSucceed(UniAsserter asserter) {
+        Onboarding request = createDummyOnboarding();
+        request.setProductId(PROD_PAGOPA.getValue());
+        Institution institution = request.getInstitution();
+        institution.setOrigin(Origin.SELC);
+        institution.setInstitutionType(InstitutionType.PT);
+        institution.setDescription(DESCRIPTION_FIELD);
+        institution.setDigitalAddress(DIGITAL_ADDRESS_FIELD);
+        // no billing / recipientCode set on purpose: PT onboarding has no SDI field
+
+        mockPersistOnboarding(asserter);
+        mockSimpleSearchPOSTAndPersist(asserter);
+        ProductResponse product = mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+        // PT onboarding requires a delegable product; product-ms flag requires the recipient code
+        product.getFeatures().setDelegable(true);
+        product.getFeatures().setRequiredRecipientCode(true);
+        mockVerifyOnboardingNotFound();
+
+        asserter.execute(() -> {
+            when(productService.isRequiredDocuments(any(), any(), any()))
+                    .thenReturn(Uni.createFrom().item(Boolean.FALSE));
+            when(userRegistryApi.updateUsingPATCH(any(), any()))
+                    .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+            when(userRegistryApi.findByIdUsingGET(any(), any()))
+                    .thenReturn(Uni.createFrom().item(managerResourceWk));
+        });
+
+        asserter.assertThat(() -> onboardingService.onboarding(request, List.of(manager), null, newUserRequesterDto()),
+                Assertions::assertNotNull);
+    }
+
+    @Test
+    @RunOnVertxContext
     void onboarding_whenAllowManagerAsDelegateWithSameTaxCodeAndDifferentEmail_shouldThrowInvalidRequestException(UniAsserter asserter) {
         String companyTaxCode = "12345678901";
 
