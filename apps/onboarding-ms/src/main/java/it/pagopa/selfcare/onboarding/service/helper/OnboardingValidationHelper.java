@@ -50,6 +50,13 @@ public class OnboardingValidationHelper {
     private static final Pattern INDIVIDUAL_CF_PATTERN =
             Pattern.compile("^[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]$");
 
+    /**
+     * Institution types for which the recipient code (SDI) is never required, regardless of the
+     * product flag {@code features.requiredRecipientCode}.
+     */
+    private static final Set<InstitutionType> RECIPIENT_CODE_EXEMPT_INSTITUTION_TYPES =
+            EnumSet.of(InstitutionType.PT);
+
     @Inject
     it.pagopa.selfcare.onboarding.service.ProductService productService;
 
@@ -234,6 +241,10 @@ public class OnboardingValidationHelper {
      * validation fails with a {@link InvalidRequestException} (HTTP 400) and a custom message.
      * When the flag is {@code false} or not set, the check is simply skipped.
      *
+     * <p>The check is also skipped for institution types that never provide a recipient code
+     * (see {@link #RECIPIENT_CODE_EXEMPT_INSTITUTION_TYPES}, e.g. {@link InstitutionType#PT}),
+     * even when the product flag is {@code true}.
+     *
      * @param onboarding the onboarding request carrying the billing information
      * @param product    the product configuration
      * @return a {@link Uni} that fails with {@link InvalidRequestException} when the recipient
@@ -248,6 +259,17 @@ public class OnboardingValidationHelper {
                 .orElse(Boolean.FALSE);
 
         if (!requiredRecipientCode) {
+            return Uni.createFrom().voidItem();
+        }
+
+        InstitutionType institutionType = Optional.ofNullable(onboarding)
+                .map(Onboarding::getInstitution)
+                .map(Institution::getInstitutionType)
+                .orElse(null);
+
+        if (institutionType != null && RECIPIENT_CODE_EXEMPT_INSTITUTION_TYPES.contains(institutionType)) {
+            log.info("Skipping recipient code check for productId={} and institutionType={}",
+                    productId, institutionType);
             return Uni.createFrom().voidItem();
         }
 
