@@ -43,6 +43,10 @@ locals {
       value = "60000"
     },
     {
+      name  = "MS_PRODUCT_URL"
+      value = "https://selc-${module.local.config.env_short}-pnpg-product-ms-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
       name  = "JAVA_TOOL_OPTIONS"
       value = "-javaagent:applicationinsights-agent.jar -Djava.net.preferIPv4Stack=true -Dnetworkaddress.cache.ttl=30 -Dnetworkaddress.cache.negative.ttl=1"
     },

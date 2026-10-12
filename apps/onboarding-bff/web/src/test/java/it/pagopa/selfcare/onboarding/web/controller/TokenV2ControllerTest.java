@@ -46,6 +46,7 @@ import static it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType.ATTAC
 import static it.pagopa.selfcare.onboarding.web.model.DownloadDocumentType.CONTRACT_SIGNED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
@@ -469,9 +470,44 @@ class TokenV2ControllerTest {
 
 
     @Test
-    void getContract_shouldRequireViewAccountDocumentsPermission() throws NoSuchMethodException {
-        // given
+    void getContract_shouldNotRequireIamPermission() throws NoSuchMethodException {
+        // given: anyone who received the PEC link must be able to download the contract
         Method controllerMethod = TokenV2Controller.class.getMethod("getContract", String.class);
+
+        // when
+        PreAuthorize preAuthorize = controllerMethod.getAnnotation(PreAuthorize.class);
+
+        // then
+        assertNull(preAuthorize);
+    }
+
+    /**
+     * Method under test: {@link TokenV2Controller#getContractBackstage(String)}
+     */
+    @Test
+    void getContractBackstage() throws Exception {
+        // given
+        String onboardingId = "onboardingId";
+        InputStream is = new ByteArrayInputStream("String".getBytes());
+        Resource resource = Mockito.mock(Resource.class);
+        Mockito.when(tokenService.getContract(onboardingId)).thenReturn(resource);
+        Mockito.when(resource.getInputStream()).thenReturn(is);
+
+        // when
+        mvc.perform(MockMvcRequestBuilders
+                        .get("/v2/tokens/{onboardingId}/backstage/contract", onboardingId)
+                        .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // then
+        verify(tokenService, times(1)).getContract(onboardingId);
+    }
+
+    @Test
+    void getContractBackstage_shouldRequireViewAccountDocumentsPermission() throws NoSuchMethodException {
+        // given
+        Method controllerMethod = TokenV2Controller.class.getMethod("getContractBackstage", String.class);
         String expectedExpression = "@authorizationService.hasPermission(authentication, #onboardingId, '"
                 + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')";
 

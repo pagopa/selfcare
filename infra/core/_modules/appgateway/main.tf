@@ -482,3 +482,17 @@ module "app_gw" {
 
   tags = var.tags
 }
+
+# Sends only the access log to the environment workspace, which the
+# log-availability-runner queries to compute daily API availability.
+resource "azurerm_monitor_diagnostic_setting" "app_gw_access_log" {
+  count = var.app_gateway_access_log_enabled ? 1 : 0
+
+  name                       = "AccessLog_LogAnalytics"
+  target_resource_id         = module.app_gw.id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category = "ApplicationGatewayAccessLog"
+  }
+}
