@@ -35,6 +35,14 @@ class TenantRegistryConfigTest {
     }
 
     @Test
+    void arStorageBindingsAreTenantBoundAndMandatory() {
+        assertEquals(Set.of("contracts", "user-attachments"), tenantRegistry.mandatoryStorageKeys());
+        assertEquals("sc-d-documents-blob", tenantRegistry.storage("AR", "contracts").container());
+        assertEquals("sc-d-usrattach-blob", tenantRegistry.storage("AR", "user-attachments").container());
+        assertEquals("", tenantRegistry.storage("AR", "contracts").pathPrefix());
+    }
+
+    @Test
     void unsupportedTenantIsRejected() {
         assertThrows(UnknownTenantException.class, () -> tenantRegistry.resolve("PNPG"));
         assertThrows(UnknownTenantException.class, () -> tenantRegistry.resolve("UNKNOWN"));

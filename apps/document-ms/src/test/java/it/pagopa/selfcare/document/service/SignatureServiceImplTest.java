@@ -18,7 +18,7 @@ import eu.europa.esig.validationreport.jaxb.ValidationStatusType;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import io.smallrye.mutiny.Uni;
-import it.pagopa.selfcare.document.config.PagoPaSignatureConfig;
+import it.pagopa.selfcare.document.config.TenantPadesSignServiceResolver;
 import it.pagopa.selfcare.document.exception.InvalidRequestException;
 import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.FormItem;
@@ -26,6 +26,7 @@ import it.pagopa.selfcare.document.model.entity.Document;
 import it.pagopa.selfcare.document.service.impl.SignatureServiceImpl;
 import it.pagopa.selfcare.onboarding.crypto.PadesSignService;
 import it.pagopa.selfcare.onboarding.crypto.entity.SignatureInformation;
+import it.pagopa.selfcare.tenant.TenantContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -58,7 +59,8 @@ import static org.mockito.Mockito.*;
 class SignatureServiceImplTest {
 
     private TrustedListsCertificateSource trustedListsCertificateSource;
-    private PagoPaSignatureConfig pagoPaSignatureConfig;
+    private TenantPadesSignServiceResolver tenantPadesSignServiceResolver;
+    private TenantContext tenantContext;
     private PadesSignService padesSignService;
     private DocumentMsTelemetryService telemetryService;
 
@@ -75,11 +77,16 @@ class SignatureServiceImplTest {
         trustedListsCertificateSource = Mockito.mock(TrustedListsCertificateSource.class);
         lenient().when(trustedListsCertificateSource.getCertificateSourceType())
                 .thenReturn(CertificateSourceType.TRUSTED_LIST);
-        pagoPaSignatureConfig = Mockito.mock(PagoPaSignatureConfig.class);
+        tenantPadesSignServiceResolver = Mockito.mock(TenantPadesSignServiceResolver.class);
+        tenantContext = Mockito.mock(TenantContext.class);
         padesSignService = Mockito.mock(PadesSignService.class);
         telemetryService = Mockito.mock(DocumentMsTelemetryService.class);
 
-        service = new SignatureServiceImpl(trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService, telemetryService);
+        when(tenantContext.requiredTenantId()).thenReturn("AR");
+        when(tenantPadesSignServiceResolver.resolve("AR")).thenReturn(signature("namirial", "Reason"));
+
+        service = new SignatureServiceImpl(
+                trustedListsCertificateSource, tenantPadesSignServiceResolver, tenantContext, telemetryService);
         setField(service, "isVerifyEnabled", Boolean.TRUE);
         setField(service, "documentService", documentService);
     }
@@ -94,6 +101,11 @@ class SignatureServiceImplTest {
         } catch (Exception e) {
             throw new RuntimeException("Failed to set field: " + fieldName, e);
         }
+    }
+
+    private TenantPadesSignServiceResolver.ResolvedPadesSignService signature(String source, String reason) {
+        return new TenantPadesSignServiceResolver.ResolvedPadesSignService(
+                "AR", source, "Signer", "Location", reason, padesSignService);
     }
 
     private AdvancedSignature createMockSignature(String id, Date signingTime, SignatureForm form) {
@@ -154,7 +166,7 @@ class SignatureServiceImplTest {
      */
     private SignatureServiceImpl createSpyService() {
         SignatureServiceImpl spyService = spy(new SignatureServiceImpl(
-                trustedListsCertificateSource, pagoPaSignatureConfig, padesSignService, telemetryService));
+                trustedListsCertificateSource, tenantPadesSignServiceResolver, tenantContext, telemetryService));
         setField(spyService, "isVerifyEnabled", Boolean.TRUE);
         setField(spyService, "documentService", documentService);
         return spyService;
@@ -1018,7 +1030,8 @@ class SignatureServiceImplTest {
 
     @Test
     void signDocument_shouldReturnOriginalFileWhenDisabled() throws Exception {
-        when(pagoPaSignatureConfig.source()).thenReturn("disabled");
+        when(tenantPadesSignServiceResolver.resolve("AR"))
+                .thenReturn(signature("disabled", "Reason"));
         File pdf = createTempFile("content");
 
         File result = service.signDocument(pdf, "Institution", "product").await().indefinitely();
@@ -1029,11 +1042,6 @@ class SignatureServiceImplTest {
 
     @Test
     void signDocument_shouldCallPadesSignServiceWhenEnabled() throws Exception {
-        when(pagoPaSignatureConfig.source()).thenReturn("enabled");
-        when(pagoPaSignatureConfig.applyOnboardingTemplateReason()).thenReturn("Reason");
-        when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
-        when(pagoPaSignatureConfig.location()).thenReturn("Location");
-
         File pdf = createTempFile("content");
         doNothing().when(padesSignService).padesSign(any(File.class), any(File.class), any());
 
@@ -1045,11 +1053,8 @@ class SignatureServiceImplTest {
 
     @Test
     void signDocument_shouldInterpolatePlaceholders() throws Exception {
-        when(pagoPaSignatureConfig.source()).thenReturn("active");
-        when(pagoPaSignatureConfig.applyOnboardingTemplateReason())
-                .thenReturn("Firma per ${institutionName} - ${productName}");
-        when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
-        when(pagoPaSignatureConfig.location()).thenReturn("Location");
+        when(tenantPadesSignServiceResolver.resolve("AR"))
+                .thenReturn(signature("namirial", "Firma per ${institutionName} - ${productName}"));
 
         File pdf = createTempFile("content");
 
@@ -1063,11 +1068,6 @@ class SignatureServiceImplTest {
 
     @Test
     void signDocument_shouldThrowWhenPadesSignServiceFails() throws Exception {
-        when(pagoPaSignatureConfig.source()).thenReturn("enabled");
-        when(pagoPaSignatureConfig.applyOnboardingTemplateReason()).thenReturn("Reason");
-        when(pagoPaSignatureConfig.signer()).thenReturn("Signer");
-        when(pagoPaSignatureConfig.location()).thenReturn("Location");
-
         File pdf = createTempFile("content");
         doThrow(new RuntimeException("Signing failed")).when(padesSignService)
                 .padesSign(any(File.class), any(File.class), any());

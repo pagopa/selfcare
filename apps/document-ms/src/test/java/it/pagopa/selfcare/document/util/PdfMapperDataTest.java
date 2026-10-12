@@ -70,7 +70,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -136,7 +136,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -181,7 +181,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -216,7 +216,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -249,7 +249,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -282,7 +282,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -318,7 +318,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -361,7 +361,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .attachmentTemplatePath("/templates/attachment.html")
+                .attachmentTemplatePath("templates/attachment.html")
                 .attachmentName("Allegato A")
                 .institution(institution)
                 .manager(manager)
@@ -404,7 +404,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .attachmentTemplatePath("/templates/attachment.html")
+                .attachmentTemplatePath("templates/attachment.html")
                 .attachmentName("Allegato A")
                 .institution(institution)
                 .manager(manager)
@@ -443,7 +443,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .attachmentTemplatePath("/templates/attachment.html")
+                .attachmentTemplatePath("templates/attachment.html")
                 .attachmentName("Allegato A")
                 .institution(institution)
                 .manager(manager)
@@ -499,7 +499,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -549,7 +549,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -584,7 +584,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -674,7 +674,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -714,7 +714,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -762,7 +762,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -807,7 +807,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -845,7 +845,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -883,7 +883,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -921,7 +921,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -962,7 +962,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -999,7 +999,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1109,7 +1109,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1151,7 +1151,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1185,7 +1185,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1221,7 +1221,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-456")
                 .productId("prod-pn")
                 .productName("PN")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1257,7 +1257,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1291,7 +1291,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-io")
                 .productName("IO")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1335,7 +1335,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1383,7 +1383,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1435,7 +1435,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1482,7 +1482,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)
@@ -1530,7 +1530,7 @@ class PdfMapperDataTest {
                 .onboardingId("onb-123")
                 .productId("prod-pagopa")
                 .productName("PagoPA")
-                .contractTemplatePath("/templates/contract.html")
+                .contractTemplatePath("templates/contract.html")
 
                 .institution(institution)
                 .manager(manager)

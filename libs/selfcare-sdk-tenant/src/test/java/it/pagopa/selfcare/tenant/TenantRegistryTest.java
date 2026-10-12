@@ -115,6 +115,7 @@ class TenantRegistryTest {
             assertTrue(registry.mandatoryStorageKeys().isEmpty());
             assertTrue(registry.oneIdentityCredentials("AR").isEmpty());
             assertTrue(registry.userRegistryCredentials("AR").isEmpty());
+            assertTrue(registry.signatureCredentials("AR").isEmpty());
         } finally {
             System.clearProperty("SDK_TENANT_TEST_MONGO_AR");
         }
@@ -365,6 +366,126 @@ class TenantRegistryTest {
             System.clearProperty("MONGODB_CONNECTION_STRING_AR");
             System.clearProperty("BLOB_STORAGE_CONN_STRING_AR_PRODUCTS");
             System.clearProperty("AZURE_CLIENT_ID_AR_PRODUCTS");
+        }
+    }
+
+    @Test
+    void signatureCredentials_resolveNamirialWithoutExposingSecrets() {
+        String json = "{\"AR\":{" + AR_MONGO + ",\"signature\":{\"source\":\"namirial\","
+                + "\"signer\":\"PagoPA S.p.A.\",\"location\":\"Roma\",\"reason\":\"Firma\","
+                + "\"namirial\":{\"baseUrlEnvVar\":\"SDK_TENANT_TEST_NAMIRIAL_BASE_URL\","
+                + "\"userEnvVar\":\"SDK_TENANT_TEST_NAMIRIAL_USER\","
+                + "\"passwordEnvVar\":\"SDK_TENANT_TEST_NAMIRIAL_PASSWORD\"}}}}";
+        TenantRegistry registry = newRegistry(json, "AR", "");
+        System.setProperty("SDK_TENANT_TEST_MONGO_AR", "mongodb://ar");
+        System.setProperty("SDK_TENANT_TEST_NAMIRIAL_BASE_URL", "https://namirial.example");
+        System.setProperty("SDK_TENANT_TEST_NAMIRIAL_USER", "tenant-user");
+        System.setProperty("SDK_TENANT_TEST_NAMIRIAL_PASSWORD", "tenant-password");
+        try {
+            registry.initialize();
+            TenantRegistry.SignatureCredentials credentials =
+                    registry.signatureCredentials("ar").orElseThrow();
+            assertEquals("namirial", credentials.source());
+            assertEquals("PagoPA S.p.A.", credentials.signer());
+            assertEquals("Roma", credentials.location());
+            assertEquals("Firma", credentials.reason());
+            TenantRegistry.NamirialSignatureCredentials namirial =
+                    credentials.namirial().orElseThrow();
+            assertEquals("https://namirial.example", namirial.baseUrl());
+            assertEquals("tenant-user", namirial.username());
+            assertEquals("tenant-password", namirial.password());
+            assertFalse(credentials.toString().contains("tenant-password"));
+            assertFalse(namirial.toString().contains("tenant-password"));
+        } finally {
+            System.clearProperty("SDK_TENANT_TEST_MONGO_AR");
+            System.clearProperty("SDK_TENANT_TEST_NAMIRIAL_BASE_URL");
+            System.clearProperty("SDK_TENANT_TEST_NAMIRIAL_USER");
+            System.clearProperty("SDK_TENANT_TEST_NAMIRIAL_PASSWORD");
+        }
+    }
+
+    @Test
+    void signatureCredentials_resolveArubaAndOptionalTimeouts() {
+        String json = "{\"AR\":{" + AR_MONGO + ",\"signature\":{\"source\":\"aruba\","
+                + "\"signer\":\"PagoPA S.p.A.\",\"location\":\"Roma\",\"reason\":\"Firma\","
+                + "\"aruba\":{\"baseUrlEnvVar\":\"SDK_TENANT_TEST_ARUBA_BASE_URL\","
+                + "\"typeOtpAuthEnvVar\":\"SDK_TENANT_TEST_ARUBA_TYPE\","
+                + "\"otpPwdEnvVar\":\"SDK_TENANT_TEST_ARUBA_OTP\","
+                + "\"userEnvVar\":\"SDK_TENANT_TEST_ARUBA_USER\","
+                + "\"delegatedUserEnvVar\":\"SDK_TENANT_TEST_ARUBA_DELEGATED_USER\","
+                + "\"delegatedPasswordEnvVar\":\"SDK_TENANT_TEST_ARUBA_DELEGATED_PASSWORD\","
+                + "\"delegatedDomainEnvVar\":\"SDK_TENANT_TEST_ARUBA_DELEGATED_DOMAIN\","
+                + "\"connectTimeoutMsEnvVar\":\"SDK_TENANT_TEST_ARUBA_CONNECT_TIMEOUT\"}}}}";
+        TenantRegistry registry = newRegistry(json, "AR", "");
+        System.setProperty("SDK_TENANT_TEST_MONGO_AR", "mongodb://ar");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_BASE_URL", "https://aruba.example");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_TYPE", "type");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_OTP", "otp");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_USER", "user");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_DELEGATED_USER", "delegated-user");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_DELEGATED_PASSWORD", "delegated-password");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_DELEGATED_DOMAIN", "domain");
+        System.setProperty("SDK_TENANT_TEST_ARUBA_CONNECT_TIMEOUT", "1000");
+        try {
+            registry.initialize();
+            TenantRegistry.ArubaSignatureCredentials aruba =
+                    registry.signatureCredentials("AR").orElseThrow().aruba().orElseThrow();
+            assertEquals("https://aruba.example", aruba.baseUrl());
+            assertEquals(1000, aruba.connectTimeoutMs());
+            assertEquals(0, aruba.requestTimeoutMs());
+            assertEquals("type", aruba.typeOtpAuth());
+            assertFalse(aruba.toString().contains("delegated-password"));
+        } finally {
+            System.clearProperty("SDK_TENANT_TEST_MONGO_AR");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_BASE_URL");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_TYPE");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_OTP");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_USER");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_DELEGATED_USER");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_DELEGATED_PASSWORD");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_DELEGATED_DOMAIN");
+            System.clearProperty("SDK_TENANT_TEST_ARUBA_CONNECT_TIMEOUT");
+        }
+    }
+
+    @Test
+    void signatureCredentials_allowExplicitDisabledWithoutSecrets() {
+        TenantRegistry registry = newRegistry(
+                "{\"AR\":{" + AR_MONGO + ",\"signature\":{\"source\":\"disabled\"}}}", "AR", "");
+        System.setProperty("SDK_TENANT_TEST_MONGO_AR", "mongodb://ar");
+        try {
+            registry.initialize();
+            TenantRegistry.SignatureCredentials credentials =
+                    registry.signatureCredentials("AR").orElseThrow();
+            assertEquals("disabled", credentials.source());
+            assertTrue(credentials.namirial().isEmpty());
+            assertTrue(credentials.aruba().isEmpty());
+        } finally {
+            System.clearProperty("SDK_TENANT_TEST_MONGO_AR");
+        }
+    }
+
+    @Test
+    void signatureCredentials_failForIncompleteOrUnsupportedConfiguration() {
+        System.setProperty("SDK_TENANT_TEST_MONGO_AR", "mongodb://ar");
+        try {
+            String[] invalidSignatures = {
+                    "\"signature\":{}",
+                    "\"signature\":{\"source\":\"local\"}",
+                    "\"signature\":{\"source\":\"namirial\"}",
+                    "\"signature\":{\"source\":\"namirial\",\"signer\":\"Signer\",\"location\":\"Roma\","
+                            + "\"reason\":\"Firma\",\"namirial\":{\"baseUrlEnvVar\":\"BAD REF\","
+                            + "\"userEnvVar\":\"SDK_TENANT_TEST_NAMIRIAL_USER\","
+                            + "\"passwordEnvVar\":\"SDK_TENANT_TEST_NAMIRIAL_PASSWORD\"}}",
+                    "\"signature\":{\"source\":\"aruba\",\"signer\":\"Signer\",\"location\":\"Roma\","
+                            + "\"reason\":\"Firma\",\"aruba\":{}}"
+            };
+            for (String signature : invalidSignatures) {
+                TenantRegistry registry = newRegistry("{\"AR\":{" + AR_MONGO + "," + signature + "}}", "AR", "");
+                assertThrows(IllegalStateException.class, registry::initialize, signature);
+            }
+        } finally {
+            System.clearProperty("SDK_TENANT_TEST_MONGO_AR");
         }
     }
 

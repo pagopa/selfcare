@@ -12,7 +12,8 @@ public record TenantDefinition(
         @JsonProperty("jwt") JwtDefinition jwt,
         @JsonProperty("storages") Map<String, StorageDefinition> storages,
         @JsonProperty("oneIdentity") OneIdentityDefinition oneIdentity,
-        @JsonProperty("userRegistry") UserRegistryDefinition userRegistry) {
+        @JsonProperty("userRegistry") UserRegistryDefinition userRegistry,
+        @JsonProperty("signature") SignatureDefinition signature) {
 
     public TenantDefinition {
         storages = copyStorages(storages);
@@ -23,7 +24,16 @@ public record TenantDefinition(
     }
 
     public TenantDefinition(MongoDefinition mongo, JwtDefinition jwt, Map<String, StorageDefinition> storages) {
-        this(mongo, jwt, storages, null, null);
+        this(mongo, jwt, storages, null, null, null);
+    }
+
+    public TenantDefinition(
+            MongoDefinition mongo,
+            JwtDefinition jwt,
+            Map<String, StorageDefinition> storages,
+            OneIdentityDefinition oneIdentity,
+            UserRegistryDefinition userRegistry) {
+        this(mongo, jwt, storages, oneIdentity, userRegistry, null);
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -34,6 +44,36 @@ public record TenantDefinition(
 
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record UserRegistryDefinition(@JsonProperty("apiKeyEnvVar") String apiKeyEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SignatureDefinition(
+            @JsonProperty("source") String source,
+            @JsonProperty("signer") String signer,
+            @JsonProperty("location") String location,
+            @JsonProperty("reason") String reason,
+            @JsonProperty("namirial") NamirialSignatureDefinition namirial,
+            @JsonProperty("aruba") ArubaSignatureDefinition aruba) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record NamirialSignatureDefinition(
+            @JsonProperty("baseUrlEnvVar") String baseUrlEnvVar,
+            @JsonProperty("userEnvVar") String userEnvVar,
+            @JsonProperty("passwordEnvVar") String passwordEnvVar) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ArubaSignatureDefinition(
+            @JsonProperty("baseUrlEnvVar") String baseUrlEnvVar,
+            @JsonProperty("typeOtpAuthEnvVar") String typeOtpAuthEnvVar,
+            @JsonProperty("otpPwdEnvVar") String otpPwdEnvVar,
+            @JsonProperty("userEnvVar") String userEnvVar,
+            @JsonProperty("delegatedUserEnvVar") String delegatedUserEnvVar,
+            @JsonProperty("delegatedPasswordEnvVar") String delegatedPasswordEnvVar,
+            @JsonProperty("delegatedDomainEnvVar") String delegatedDomainEnvVar,
+            @JsonProperty("connectTimeoutMsEnvVar") String connectTimeoutMsEnvVar,
+            @JsonProperty("requestTimeoutMsEnvVar") String requestTimeoutMsEnvVar) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)

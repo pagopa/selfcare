@@ -2,7 +2,7 @@ package it.pagopa.selfcare.onboarding.service.impl;
 import it.pagopa.selfcare.onboarding.service.*;
 
 
-import it.pagopa.selfcare.azurestorage.AzureBlobClient;
+import it.pagopa.selfcare.onboarding.storage.ContractBlobClientProvider;
 import it.pagopa.selfcare.onboarding.entity.*;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -39,7 +39,7 @@ import static it.pagopa.selfcare.onboarding.utils.GenericError.*;
 public class ContractServiceImpl implements ContractService {
 
   private final UserApi userRegistryApi;
-  private final AzureBlobClient azureBlobClient;
+  private final ContractBlobClientProvider contractBlobClientProvider;
   private final String logoPath;
   private final boolean isLogoEnable;
 
@@ -53,11 +53,11 @@ public class ContractServiceImpl implements ContractService {
   private static final String DATE_PATTERN_YYYY_M_MDD_H_HMMSS = "yyyyMMddHHmmss";
 
   public ContractServiceImpl(
-            AzureBlobClient azureBlobClient,
+            ContractBlobClientProvider contractBlobClientProvider,
             @ConfigProperty(name = "onboarding-functions.logo-path") String logoPath,
             @ConfigProperty(name = "onboarding-functions.logo-enable") Boolean isLogoEnable,
             @RestClient UserApi userRegistryApi) {
-        this.azureBlobClient = azureBlobClient;
+        this.contractBlobClientProvider = contractBlobClientProvider;
         this.logoPath = logoPath;
         this.isLogoEnable = isLogoEnable;
         this.userRegistryApi = userRegistryApi;
@@ -173,7 +173,7 @@ public class ContractServiceImpl implements ContractService {
       stringBuilder.append("_").append(UUID.randomUUID()).append("_logo");
       try {
         Path path = createSafeTempFile(stringBuilder.toString(), ".png");
-        Files.writeString(path, azureBlobClient.getFileAsText(logoPath));
+        Files.writeString(path, contractBlobClientProvider.forCurrentTenant().getFileAsText(logoPath));
         return Optional.of(path.toFile());
       } catch (IOException e) {
         throw new IllegalArgumentException(
