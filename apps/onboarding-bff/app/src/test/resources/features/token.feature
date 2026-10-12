@@ -140,11 +140,21 @@ Feature: Token
   Scenario: Failed to get contract when onboarding is not found
     Given User login with username "j.doe" and password "test"
     When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10001/contract"
+    Then The status code is 502
+
+  Scenario: Success to get Contract from backstage
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i103/backstage/contract"
+    Then The status code is 200
+
+  Scenario: Failed to get contract from backstage when onboarding is not found
+    Given User login with username "j.doe" and password "test"
+    When I send a GET request to "/v2/tokens/89ad7142-24bb-48ad-8504-9c9231137i10001/backstage/contract"
     Then The status code is 404
 
-  Scenario: Forbidden to get contract when user has no permission
+  Scenario: Forbidden to get contract from backstage when user has no permission
     Given User login with username "r.balboa" and password "test"
-    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/contract"
+    When I send a GET request to "/v2/tokens/37f7609b-5a4b-4200-82e7-2117756d64aa/backstage/contract"
     Then The status code is 403
     And The response body contains:
       | detail | Access Denied |

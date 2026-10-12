@@ -137,9 +137,8 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
-            <artifactId>selfcare-onboarding-sdk-product</artifactId>
+            <artifactId>selfcare-onboarding-sdk-common</artifactId>
             <version>${commons-sdk-version}</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>com.microsoft.azure</groupId>
@@ -149,6 +148,29 @@
 
     <build>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                        <configuration>
+                            <append>true</append>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -168,6 +190,39 @@
                 <artifactId>openapi-generator-maven-plugin</artifactId>
                 <version>6.3.0</version>
                 <executions>
+                    <execution>
+                        <id>selfcare-ms-product</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/docs/openapi/api-selfcare-product-docs.json</inputSpec>
+                            <generatorName>spring</generatorName>
+                            <library>spring-cloud</library>
+                            <modelNameSuffix/>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <configOptions>
+                                <generateForOpenFeign>true</generateForOpenFeign>
+                                <basePackage>${project.groupId}.product.generated.openapi.v1</basePackage>
+                                <modelPackage>${project.groupId}.product.generated.openapi.v1.dto</modelPackage>
+                                <apiPackage>${project.groupId}.product.generated.openapi.v1.api</apiPackage>
+                                <configPackage>${project.groupId}.product.generated.openapi.v1.config</configPackage>
+                                <additionalModelTypeAnnotations>@lombok.Builder; @lombok.NoArgsConstructor; @lombok.AllArgsConstructor</additionalModelTypeAnnotations>
+                                <dateLibrary>java8</dateLibrary>
+                                <delegatePattern>true</delegatePattern>
+                                <interfaceOnly>true</interfaceOnly>
+                                <annotationLibrary>none</annotationLibrary>
+                                <documentationProvider>source</documentationProvider>
+                                <openApiNullable>false</openApiNullable>
+                                <skipDefaultInterface>false</skipDefaultInterface>
+                                <useTags>true</useTags>
+                                <java8>true</java8>
+                                <useSpringBoot3>true</useSpringBoot3>
+                            </configOptions>
+                        </configuration>
+                    </execution>
                     <execution>
                         <id>selfcare-ms-core</id>
                         <goals>

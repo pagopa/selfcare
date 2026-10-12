@@ -17,10 +17,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {OpenDataLoader.class})
+@TestPropertySource(properties = "app.startup.ipa-institution-indexing.enabled=true")
 class OpenDataLoaderTest {
 
   @MockBean private OpenDataConnector openDataConnector;
@@ -70,6 +72,43 @@ class OpenDataLoaderTest {
     verify(uoIndexWriterService, times(1)).adds(uos);
     verify(pdndIndexWriterService, times(1)).adds(stations);
     verify(anacService, times(1)).loadStations();
+    verify(ivassIndexWriterService, times(1)).adds(insuranceCompanies);
+  }
+
+  @Test
+  void run_ipaIndexingDisabled() {
+    // given
+    final List categories = List.of();
+    when(openDataConnector.getCategories()).thenReturn(categories);
+    final List aoos = List.of();
+    when(openDataConnector.getAOOs()).thenReturn(aoos);
+    final List uos = List.of();
+    when(openDataConnector.getUOs()).thenReturn(uos);
+    final List stations = List.of();
+    final List insuranceCompanies = List.of();
+    when(anacService.loadStations()).thenReturn(stations);
+    when(ivassDataConnector.getInsurances()).thenReturn(insuranceCompanies);
+    OpenDataLoader loader =
+        new OpenDataLoader(
+            List.of(openDataConnector),
+            institutionIndexWriterService,
+            categoryIndexWriterService,
+            aooIndexWriterService,
+            uoIndexWriterService,
+            pdndIndexWriterService,
+            ivassIndexWriterService,
+            anacService,
+            ivassDataConnector,
+            false);
+    // when
+    loader.run();
+    // then
+    verify(openDataConnector, never()).getInstitutions();
+    verifyNoInteractions(institutionIndexWriterService);
+    verify(categoryIndexWriterService, times(1)).adds(categories);
+    verify(aooIndexWriterService, times(1)).adds(aoos);
+    verify(uoIndexWriterService, times(1)).adds(uos);
+    verify(pdndIndexWriterService, times(1)).adds(stations);
     verify(ivassIndexWriterService, times(1)).adds(insuranceCompanies);
   }
 }
