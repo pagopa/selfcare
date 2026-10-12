@@ -64,7 +64,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public Uni<Document> getDocumentById(String documentId) {
-        return documentRepository.findById(documentId)
+        return documentRepository.findDocumentById(documentId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(String.format("Document with id %s not found", documentId)));
     }
 

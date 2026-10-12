@@ -253,7 +253,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                 .call(document -> uploadToAzureReactive(document, file)
                         .onFailure().call(azureError -> {
                             log.error("Upload to Azure failed for attachment {}. Rolling back DB record...", sanitize(request.getAttachmentName()));
-                            return documentRepository.delete(document)
+                            return documentRepository.deleteDocument(document.getId())
                                     .onFailure().invoke(e -> log.error("CRITICAL: Rollback failed for DB document {}", document.getId(), e));
                         })
                 )
@@ -326,7 +326,7 @@ public class DocumentContentServiceImpl implements DocumentContentService {
                         .onFailure().call(azureError -> {
                             log.error("Upload to USER storage failed for attachmentName {}. Rolling back DB record...",
                                     sanitize(attachmentName));
-                            return documentRepository.delete(document)
+                            return documentRepository.deleteDocument(document.getId())
                                     .onFailure().invoke(e -> log.error(
                                             "CRITICAL: Rollback failed for DB document {}", document.getId(), e));
                         }))
