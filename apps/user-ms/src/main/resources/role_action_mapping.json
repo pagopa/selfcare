@@ -41,6 +41,16 @@
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
     ],
+    "prod-pagopa-pt": [
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ViewInstitutionData"
+    ],
     "prod-pn": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -390,6 +400,16 @@
       "Selc:ViewInstitutionData",
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
+    ],
+    "prod-pagopa-pt": [
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ViewInstitutionData"
     ],
     "prod-pn": [
       "Selc:UploadLogo",
@@ -741,6 +761,16 @@
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
     ],
+    "prod-pagopa-pt": [
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ViewInstitutionData"
+    ],
     "prod-pn": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -1079,6 +1109,16 @@
       "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
     ],
+    "prod-pagopa-pt": [
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewManagedInstitutions",
+      "Selc:CreateProductUsers",
+      "Selc:UpdateProductUsers",
+      "Selc:DeleteProductUsers",
+      "Selc:ListProductUsers",
+      "Selc:ViewInstitutionData"
+    ],
     "default": [
       "Selc:UploadLogo",
       "Selc:ViewBilling",
@@ -1097,6 +1137,11 @@
     ]
   },
   "OPERATOR": {
+    "prod-pagopa-pt": [
+      "Selc:ListActiveProducts",
+      "Selc:AccessProductBackoffice",
+      "Selc:ViewInstitutionData"
+    ],
     "default": [
       "Selc:ViewBilling",
       "Selc:AccessProductBackoffice",
