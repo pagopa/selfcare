@@ -86,7 +86,7 @@ locals {
   spring_boot_health_probes = [
     {
       httpGet = {
-        path   = "/actuator/health"
+        path   = "/actuator/health/liveness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -97,7 +97,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "/actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -108,7 +108,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "/actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -283,7 +283,7 @@ locals {
       value = "false"
     },
     {
-      name = "PDND_INVITALIA_PRODUCTS"
+      name  = "PDND_INVITALIA_PRODUCTS"
       value = "prod-idpay-merchant, prod-registro-beni"
     }
   ]
@@ -317,7 +317,7 @@ locals {
   probes = [
     {
       httpGet = {
-        path   = "actuator/health"
+        path   = "/actuator/health/liveness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -328,7 +328,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -339,7 +339,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
