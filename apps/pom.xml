@@ -229,6 +229,17 @@
       </modules>
     </profile>
     <profile>
+      <id>log-availability-runner</id>
+      <activation>
+        <file>
+          <exists>log-availability-runner/pom.xml</exists>
+        </file>
+      </activation>
+      <modules>
+        <module>log-availability-runner</module>
+      </modules>
+    </profile>
+    <profile>
       <id>dashboard-bff</id>
       <activation>
         <file>
