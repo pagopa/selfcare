@@ -2,13 +2,13 @@
 
 Daily API availability log for the Selfcare platform (PagoPA), computed from the previous day's Application Gateway access logs and stored for date-based reporting.
 
-Reference queries: `azurerm_portal_dashboard.monitoring-dashboard` in `infra/core/_modules/monitor/main.tf` (template `infra/core/_modules/dashboards/monitoring.json.tpl`). Application Gateway: `module "app_gw"` in `infra/core/_modules/appgateway/main.tf`. There is one gateway for each `-ar` environment, with listener `api` for SELC and listener `api-pnpg` for PNPG.
+Reference queries: `azurerm_portal_dashboard.monitoring-dashboard` in `infra/core/_modules/monitor/main.tf` (template `infra/core/_modules/dashboards/monitoring.json.tpl`). Application Gateway: `module "app_gw"` in `infra/core/_modules/appgateway/main.tf`. There is one gateway for each `-ar` environment, with listener `api` for SELC and listener `api-pnpg` for PNPG; in the access logs they appear as `listenerName_s` `api-listener` and `api-pnpg-listener`.
 
 ## Required Requirement Inputs
 
 - Project purpose: Selfcare platform (PagoPA) for managing identity, onboarding, products and webhooks for the Italian public sector, on two platforms: SELC (Self Care) and PNPG (Piattaforma Notifiche PG). This feature produces one availability record per day for APIs served through Application Gateway, so reports can cover any date range.
 - Primary users / actors: Scheduled daily job (system actor); report consumers: users of the environment's Azure subscription.
-- Core workflows: (1) daily computation of D-1 request counts split by HTTP status `< 500` / `>= 500`; (2) availability calculation; (3) persistence to a Storage Account table; (4) reporting dashboard over a selected time range: pie chart, daily column chart, numeric and percentage totals, on-demand data table.
+- Core workflows: (1) daily computation of D-1 request counts split into available (HTTP status `< 300` or `404`) and unavailable (any other status); (2) availability calculation; (3) persistence to a Storage Account table; (4) reporting dashboard over a selected time range: pie chart, daily column chart, numeric and percentage totals, on-demand data table.
 - Business objects / data entities: Application Gateway access log entries (`AzureDiagnostics`, Category `ApplicationGatewayAccessLog`); Daily Availability Record (date, counts, availability).
 - External integrations: Azure Log Analytics workspace (Application Gateway diagnostics, and a custom table holding the reporting copy of the records), Azure Storage Account Table (`SelcAvailability` in `selc{d,u,p}weusynthmon`). Reporting UI: new Azure Monitor Workbook. Failure notifications: Slack (`prod_self_care_status`, `selfcare_status_uat`).
 - Authentication / roles: The writer (the job that generates records) authenticates with Azure Managed Identity. Readers are users of the Azure subscription who can access the dashboard.
@@ -25,13 +25,13 @@ Reference queries: `azurerm_portal_dashboard.monitoring-dashboard` in `infra/cor
 
 ### 2. Request counting
 
-- **SELC-2.1** For D-1, the system MUST count the API requests with a valid HTTP status code `< 500`, i.e. `100–499` (`count_lt_500`). These are the available requests, including all `4xx`. Confirmed decision: this deliberately differs from the stricter success filters in the monitoring dashboard (`< 300 or == 404`, status allow-lists).
-- **SELC-2.2** For D-1, the system MUST count the API requests whose HTTP status code is `>= 500` (`count_gte_500`). This count also includes the requests covered by SELC-2.4.
+- **SELC-2.1** For D-1, the system MUST count as available the API requests with a valid HTTP status code `< 300` (`100–299`) or equal to `404` (`count_lt_500`). Confirmed decision: this matches the monitoring dashboard success filter (`httpStatus_d < 300 or httpStatus_d == 404`). The field keeps its historical name `count_lt_500` (`CountLt500`) so the record schema does not change.
+- **SELC-2.2** For D-1, the system MUST count as unavailable every other API request (`count_gte_500`): `3xx`, `4xx` other than `404`, and `5xx`. This count also includes the requests covered by SELC-2.4. The field keeps its historical name `count_gte_500` (`CountGte500`).
 - **SELC-2.3** Counts MUST be cumulative for the whole day (a single daily total, see SELC-2.7; not hourly or 5-minute bins).
 - **SELC-2.4** Requests with a missing HTTP status or an invalid one (empty, non-numeric, `0`, or outside `100–599`) MUST be counted as unavailable, i.e. added to `count_gte_500` (confirmed decision). Each request MUST be counted in exactly one bucket.
 - **SELC-2.5** Counts MUST be computed only from Application Gateway access logs, using `httpStatus_d` as the status code. Application Insights data MUST NOT contribute to the counts, so that requests are not double-counted and sampling does not distort them. Confirmed decision.
 - **SELC-2.6** Requests with `requestUri_s == "/spid/v1/metadata"` or `requestUri_s == "dummy"` MUST be excluded from all counts (confirmed decision). The exclusions MUST be the same every day.
-- **SELC-2.7** The counts MUST be a single combined daily total across the `api` (SELC) and `api-pnpg` (PNPG) listeners. They MUST NOT be split by platform or API path. Requests on other listeners MUST NOT be counted. Confirmed decision: all SELC and PNPG API traffic passes through these two listeners.
+- **SELC-2.7** The counts MUST be a single combined daily total across the `api` (SELC) and `api-pnpg` (PNPG) listeners (`listenerName_s` `api-listener` and `api-pnpg-listener`). They MUST NOT be split by platform or API path. Requests on other listeners MUST NOT be counted. Confirmed decision: all SELC and PNPG API traffic passes through these two listeners.
 
 ### 3. Availability calculation
 
