@@ -7,6 +7,7 @@ sleep 5
 
 # Containers
 az storage container create --name sc-d-documents-blob --connection-string "$CONN" >/dev/null
+az storage container create --name sc-d-usrattach-blob --connection-string "$CONN" >/dev/null
 az storage container create --name products --connection-string "$CONN" >/dev/null
 
 # Contract templates (html/pdf) used by scenarios
