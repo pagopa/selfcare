@@ -38,6 +38,11 @@ variable "app_settings" {
 variable "secrets_names" {
   type        = map(string)
   description = "KeyVault secrets to get values from <env,secret-ref>"
+
+  validation {
+    condition     = length(var.secrets_names) == 0 || var.environment_identity_enabled
+    error_message = "Key Vault secret references require the Container Apps Environment identity."
+  }
 }
 
 variable "image_name" {
@@ -80,6 +85,12 @@ variable "additional_user_assigned_identity_ids" {
   type        = list(string)
   default     = []
   description = "Additional user-assigned managed identity IDs to attach to the container app job"
+}
+
+variable "environment_identity_enabled" {
+  type        = bool
+  default     = true
+  description = "Attach the Container Apps Environment identity for Key Vault secret references."
 }
 
 variable "replica_timeout_in_seconds" {
