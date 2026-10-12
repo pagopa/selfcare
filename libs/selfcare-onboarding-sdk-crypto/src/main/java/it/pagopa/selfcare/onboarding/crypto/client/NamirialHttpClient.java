@@ -11,9 +11,17 @@ import java.io.InputStream;
 
 public class NamirialHttpClient {
 
-    private static final String NAMIRIAL_BASE_URL = System.getenv("NAMIRIAL_BASE_URL");
+    private static final String SIGN_PADES_PATH = "/SignEngineWeb/rest/service/signPAdES";
 
-    private static final String NAMIRIAL_SIGN_PADES_URL = NAMIRIAL_BASE_URL + "/SignEngineWeb/rest/service/signPAdES";
+    private final String signPadesUrl;
+
+    public NamirialHttpClient() {
+        this(System.getenv("NAMIRIAL_BASE_URL"));
+    }
+
+    public NamirialHttpClient(String baseUrl) {
+        this.signPadesUrl = baseUrl + SIGN_PADES_PATH;
+    }
 
     public byte[] signDocument(SignRequest request) throws IOException {
         // Initialize HTTP Transport and Request Factory
@@ -58,7 +66,7 @@ public class NamirialHttpClient {
 
         // Build and execute the HTTP POST request
         HttpRequest httpRequest = requestFactory.buildPostRequest(
-                new GenericUrl(NAMIRIAL_SIGN_PADES_URL), multipartContent);
+                new GenericUrl(signPadesUrl), multipartContent);
 
         // Set any required headers
         httpRequest.getHeaders().setContentType("multipart/form-data; boundary=" + boundary);
@@ -71,5 +79,9 @@ public class NamirialHttpClient {
         } catch (HttpResponseException e) {
             throw new IllegalStateException("Something gone wrong when invoking Namirial in order to calculate pkcs7 hash sign request", e);
         }
+    }
+
+    String signPadesUrl() {
+        return signPadesUrl;
     }
 }

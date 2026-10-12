@@ -17,6 +17,7 @@ public class Onboarding {
 
     @BsonId
     private String id;
+    private String tenantId;
     private String productId;
     private List<String> testEnvProductIds;
     private WorkflowType workflowType;
@@ -51,6 +52,7 @@ public class Onboarding {
     public String toString() {
         return "Onboarding{" +
                 "id='" + id + '\'' +
+                ", tenantId='" + tenantId + '\'' +
                 ", productId='" + productId + '\'' +
                 ", testEnvProductIds=" + testEnvProductIds +
                 ", workflowType=" + workflowType +
