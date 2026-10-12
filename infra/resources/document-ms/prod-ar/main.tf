@@ -145,7 +145,6 @@ locals {
   secrets_names_document_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"   = "appinsights-connection-string"
     "JWT_PUBLIC_KEY"                          = "jwt-public-key"
-    "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
     "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
     # Tenant-bound references used by tenant.registry.json (Multitenant Step 2)
