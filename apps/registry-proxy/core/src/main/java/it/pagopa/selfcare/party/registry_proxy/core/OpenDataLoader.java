@@ -7,6 +7,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,7 @@ public class OpenDataLoader implements CommandLineRunner {
   private final IndexWriterService<InsuranceCompany> ivassIndexWriterService;
   private final ANACService anacService;
   private final IvassDataConnector ivassDataConnector;
+  private final boolean ipaStartupIndexingEnabled;
 
   @Autowired
   public OpenDataLoader(
@@ -34,7 +36,8 @@ public class OpenDataLoader implements CommandLineRunner {
       IndexWriterService<Station> stationIndexWriterService,
       IndexWriterService<InsuranceCompany> ivassIndexWriterService,
       ANACService anacService,
-      IvassDataConnector ivassDataConnector) {
+      IvassDataConnector ivassDataConnector,
+      @Value("${app.startup.ipa-institution-indexing.enabled:false}") boolean ipaStartupIndexingEnabled) {
     log.trace("Initializing {}", OpenDataLoader.class.getSimpleName());
     this.openDataConnectors = openDataConnectors;
     this.institutionIndexWriterService = institutionIndexWriterService;
@@ -45,6 +48,7 @@ public class OpenDataLoader implements CommandLineRunner {
     this.ivassIndexWriterService = ivassIndexWriterService;
     this.anacService = anacService;
     this.ivassDataConnector = ivassDataConnector;
+    this.ipaStartupIndexingEnabled = ipaStartupIndexingEnabled;
   }
 
   @Override
@@ -52,8 +56,7 @@ public class OpenDataLoader implements CommandLineRunner {
     log.trace("run start");
     openDataConnectors.forEach(
         openDataConnector -> {
-          List<? extends Institution> institutions = openDataConnector.getInstitutions();
-          institutionIndexWriterService.adds(institutions);
+          loadIpaInstitutions(openDataConnector);
           categoryIndexWriterService.adds(openDataConnector.getCategories());
           aooIndexWriterService.adds(openDataConnector.getAOOs());
           uoIndexWriterService.adds(openDataConnector.getUOs());
@@ -61,5 +64,16 @@ public class OpenDataLoader implements CommandLineRunner {
           ivassIndexWriterService.adds(ivassDataConnector.getInsurances());
         });
     log.trace("run end");
+  }
+
+  /** Indexes the IPA institutions unless inhibited by config. */
+  private void loadIpaInstitutions(OpenDataConnector openDataConnector) {
+    if (!ipaStartupIndexingEnabled) {
+      log.info(
+          "IPA institutions startup indexing is disabled (app.startup.ipa-institution-indexing.enabled=false)");
+      return;
+    }
+    List<? extends Institution> institutions = openDataConnector.getInstitutions();
+    institutionIndexWriterService.adds(institutions);
   }
 }
