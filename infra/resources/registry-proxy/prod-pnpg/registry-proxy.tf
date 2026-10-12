@@ -34,7 +34,7 @@ locals {
   spring_boot_health_probes = [
     {
       httpGet = {
-        path   = "/actuator/health"
+        path   = "/actuator/health/liveness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -45,7 +45,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "/actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -56,7 +56,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "/actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -82,6 +82,10 @@ locals {
     },
     {
       name  = "MOCK_OPEN_DATA_ENABLED"
+      value = "false"
+    },
+    {
+      name  = "IPA_INSTITUTION_STARTUP_INDEXING_ENABLED"
       value = "false"
     },
     {
@@ -159,7 +163,7 @@ locals {
   probes = [
     {
       httpGet = {
-        path   = "actuator/health"
+        path   = "/actuator/health/liveness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -170,7 +174,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }
@@ -181,7 +185,7 @@ locals {
     },
     {
       httpGet = {
-        path   = "actuator/health"
+        path   = "/actuator/health/readiness"
         port   = 8080
         scheme = "HTTP"
       }

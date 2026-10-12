@@ -73,6 +73,17 @@ variable "vnet_name" {
   description = "Name of the Virtual Network"
 }
 
+variable "private_endpoint_subnet_name" {
+  type        = string
+  description = "Name of the shared VNet subnet reserved for private endpoints"
+}
+
+variable "enable_function_app_public_network_access" {
+  type        = bool
+  description = "Temporarily keep public ingress enabled while verifying private endpoint access; set false for the final state"
+  default     = false
+}
+
 variable "key_vault_id" {
   type = string
 }

@@ -1,6 +1,6 @@
 # SelfCare Container App Job
 
-This module deploys SelfCare jobs on a Container App Job. It gives the job access to the KeyVault instance to grab secrets.
+This module deploys SelfCare jobs on a Container Apps Job. When Key Vault secret references are configured, it attaches the Container Apps Environment identity to resolve them. Jobs without Key Vault references can disable that identity and use only the system-assigned identity.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
@@ -29,8 +29,6 @@ No modules.
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_container_app_environment.container_app_environment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/container_app_environment) | data source |
 | [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
-| [azurerm_key_vault_secret.keyvault_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
-| [azurerm_key_vault_secrets.key_vault_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secrets) | data source |
 | [azurerm_resource_group.resource_group_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_user_assigned_identity.cae_identity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 
@@ -44,6 +42,7 @@ No modules.
 | <a name="input_container_app_environment_name"></a> [container\_app\_environment\_name](#input\_container\_app\_environment\_name) | Container app environment name to use | `string` | n/a | yes |
 | <a name="input_container_app_name"></a> [container\_app\_name](#input\_container\_app\_name) | Container App Job name suffix | `string` | n/a | yes |
 | <a name="input_env_short"></a> [env\_short](#input\_env\_short) | Environment short name | `string` | n/a | yes |
+| <a name="input_environment_identity_enabled"></a> [environment\_identity\_enabled](#input\_environment\_identity\_enabled) | Attach the Container Apps Environment identity for Key Vault secret references. | `bool` | `true` | no |
 | <a name="input_image_name"></a> [image\_name](#input\_image\_name) | Name of the image to use, hosted on GitHub container registry | `string` | n/a | yes |
 | <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Image tag to use for the container | `string` | `"latest"` | no |
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Key Vault name (for custom domain certificate) | `string` | n/a | yes |
@@ -65,5 +64,7 @@ No modules.
 | <a name="output_cae_identity_id"></a> [cae\_identity\_id](#output\_cae\_identity\_id) | n/a |
 | <a name="output_cae_identity_principal_id"></a> [cae\_identity\_principal\_id](#output\_cae\_identity\_principal\_id) | n/a |
 | <a name="output_container_app_environment_name"></a> [container\_app\_environment\_name](#output\_container\_app\_environment\_name) | n/a |
+| <a name="output_container_app_job_id"></a> [container\_app\_job\_id](#output\_container\_app\_job\_id) | Resource ID of the Container Apps Job. |
 | <a name="output_container_app_job_name"></a> [container\_app\_job\_name](#output\_container\_app\_job\_name) | n/a |
+| <a name="output_system_assigned_identity_principal_id"></a> [system\_assigned\_identity\_principal\_id](#output\_system\_assigned\_identity\_principal\_id) | n/a |
 <!-- END_TF_DOCS -->

@@ -36,6 +36,7 @@ on:
           - document-ms
           - institution-ms
           - institution-send-mail-scheduler
+          - log-availability-runner
           - onboarding-bff
           - onboarding-cdc
           - onboarding-ms

@@ -25,8 +25,4 @@ public class MailParametersMapper {
         return mailTemplateConfig.getDelegationNotificationPath();
     }
 
-    public String getDelegationUserNotificationPath() {
-        return mailTemplateConfig.getDelegationUserNotificationPath();
-    }
-
 }
