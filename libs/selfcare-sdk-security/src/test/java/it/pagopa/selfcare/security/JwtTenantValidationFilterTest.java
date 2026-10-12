@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.security;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -8,6 +10,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.core.Response;
+import java.util.Map;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -85,5 +88,34 @@ class JwtTenantValidationFilterTest {
     var responseCaptor = org.mockito.ArgumentCaptor.forClass(Response.class);
     verify(requestContext).abortWith(responseCaptor.capture());
     assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), responseCaptor.getValue().getStatus());
+  }
+
+  @Test
+  void filter_acceptsTenantHeaderWithDifferentCase() {
+    when(securityIdentity.getPrincipal()).thenReturn(jsonWebToken);
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn("AR");
+    when(requestContext.getHeaderString("X-Tenant-Id")).thenReturn("ar");
+
+    filter.filter(requestContext);
+
+    verify(tenantContext).setTenantId("AR");
+    verify(requestContext, never()).abortWith(any());
+  }
+
+  @Test
+  void filter_rejectsMissingTenantClaimWhenClaimIsRequired() {
+    filter.tenantValidator =
+        JwtTenantValidator.fromEnvironment(Map.of("JWT_TENANT_CLAIM_REQUIRED", "true")::get);
+    when(securityIdentity.getPrincipal()).thenReturn(jsonWebToken);
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn(null);
+
+    filter.filter(requestContext);
+
+    var responseCaptor = org.mockito.ArgumentCaptor.forClass(Response.class);
+    verify(requestContext).abortWith(responseCaptor.capture());
+    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), responseCaptor.getValue().getStatus());
+    verify(tenantContext, never()).setTenantId(any());
   }
 }

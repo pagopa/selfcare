@@ -37,16 +37,22 @@ locals {
     nat_resource_group_name   = module.local.config.nat_rg_name
     nat_gateway_name          = module.local.config.nat_gw_name
     app_settings = {
-      "APPLICATIONINSIGHTS_CONNECTION_STRING"              = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
-      "USER_REGISTRY_URL"                                  = "https://api.pdv.pagopa.it/user-registry/v1"
-      "MONGODB_CONNECTION_URI"                             = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
-      "USER_REGISTRY_API_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
-      "BLOB_STORAGE_ACCOUNT_NAME_PRODUCT"                  = data.azurerm_storage_account.product_storage.name
-      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT"    = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
-      "STORAGE_CONTAINER_PRODUCT"                          = "selc-p-product"
-      "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT"                 = data.azurerm_storage_account.documents_storage.name
-      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT"   = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
-      "STORAGE_CONTAINER_CONTRACT"                         = "$web"
+      "APPLICATIONINSIGHTS_CONNECTION_STRING"            = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/appinsights-connection-string/)"
+      "USER_REGISTRY_URL"                                = "https://api.pdv.pagopa.it/user-registry/v1"
+      "MONGODB_CONNECTION_URI"                           = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/mongodb-connection-string/)"
+      "USER_REGISTRY_API_KEY"                            = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/user-registry-api-key/)"
+      "BLOB_STORAGE_ACCOUNT_NAME_PRODUCT"                = data.azurerm_storage_account.product_storage.name
+      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_PRODUCT"  = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
+      "STORAGE_CONTAINER_PRODUCT"                        = "selc-p-product"
+      "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT"               = data.azurerm_storage_account.documents_storage.name
+      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT" = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
+      "STORAGE_CONTAINER_CONTRACT"                       = "$web"
+
+      # per-tenant contract storage binding (SELC-DMS-08.04), same values as the legacy settings
+      "STORAGE_CONTAINER_CONTRACT_PNPG"                       = "$web"
+      "BLOB_STORAGE_ACCOUNT_NAME_CONTRACT_PNPG"               = data.azurerm_storage_account.documents_storage.name
+      "BLOB_STORAGE_MANAGED_IDENTITY_CLIENT_ID_CONTRACT_PNPG" = data.azurerm_user_assigned_identity.documents_storage_blob_identity.client_id
+
       "MAIL_DESTINATION_TEST"                              = "false"
       "MAIL_DESTINATION_TEST_ADDRESS"                      = "pectest@pec.pagopa.it"
       "MAIL_SENDER_ADDRESS"                                = "@Microsoft.KeyVault(SecretUri=https://selc-p-pnpg-kv.vault.azure.net/secrets/smtp-usr/)"
