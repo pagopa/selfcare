@@ -13,6 +13,7 @@ import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.response.ValidatableResponse;
 import io.restassured.specification.RequestSpecification;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
@@ -55,6 +56,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     private static final long STATUS_POLL_TIMEOUT_MS = 40_000L;
     private static final long STATUS_POLL_INTERVAL_MS = 1_000L;
     private static final String INTEGRATION_TEST_CALLER_ID = "m2m:onboarding-functions-it";
+    private static final String INTEGRATION_TEST_TENANT = "AR";
 
     private ValidatableResponse validatableResponse;
     private static ObjectMapper objectMapper;
@@ -119,6 +121,9 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
             onboarding = integrationOnboardingResources.getOnboardingJsonTemplate(onboardingId);
 
             if (!Objects.isNull(onboarding)) {
+                if (onboarding.getTenantId() == null || onboarding.getTenantId().isBlank()) {
+                    onboarding.setTenantId(INTEGRATION_TEST_TENANT);
+                }
                 integrationOperationUtils.persistIntoMongo(onboarding);
             } else {
                 throw new IllegalStateException("Errore nel caricamento del json di test per " + onboardingId);
@@ -135,6 +140,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
                         .log()
                         .all()
                         .header(FunctionInvocationLogger.USER_ID_HEADER, INTEGRATION_TEST_CALLER_ID)
+                        .header(TenantContext.TENANT_HEADER, INTEGRATION_TEST_TENANT)
                         .queryParam("onboardingId", getOnboardingId())
                         // .queryParam("timeout", 55000)
                         .when()
