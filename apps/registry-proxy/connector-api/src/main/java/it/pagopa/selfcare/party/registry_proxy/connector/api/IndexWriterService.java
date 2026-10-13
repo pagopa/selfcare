@@ -8,6 +8,11 @@ public interface IndexWriterService<T> {
 
     void adds(List<? extends T> items);
 
+    /** Writes all items, bypassing any "already up to date" check the implementation may apply. */
+    default void addsForced(List<? extends T> items) {
+        adds(items);
+    }
+
     void deleteAll();
 
     void cleanIndex(String entityType);

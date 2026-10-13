@@ -24,6 +24,15 @@ public class AiSearchInstitutionIndexWriterService implements IndexWriterService
 
   @Override
   public void adds(List<? extends Institution> items) {
+    doAdds(items, false);
+  }
+
+  @Override
+  public void addsForced(List<? extends Institution> items) {
+    doAdds(items, true);
+  }
+
+  private void doAdds(List<? extends Institution> items, boolean force) {
     log.trace("adds start");
     log.debug("adds items = {}", items.size());
     List<Institution> institutions = (List<Institution>) items;
@@ -34,7 +43,7 @@ public class AiSearchInstitutionIndexWriterService implements IndexWriterService
       return;
     }
 
-    List<Institution> toIndex = institutions.stream().filter(this::needsUpdate).toList();
+    List<Institution> toIndex = force ? institutions : institutions.stream().filter(this::needsUpdate).toList();
 
     if (toIndex.isEmpty()) {
       log.info("adds doInstitutionsIndex: AI Search IPA institution index is already up to date");
