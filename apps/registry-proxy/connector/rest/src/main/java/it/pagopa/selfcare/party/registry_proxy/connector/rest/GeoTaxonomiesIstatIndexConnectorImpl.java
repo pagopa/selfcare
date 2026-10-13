@@ -37,7 +37,6 @@ public class GeoTaxonomiesIstatIndexConnectorImpl implements GeoTaxonomiesIstatI
             return Optional.empty();
         }
 
-        final String safeCode = Encode.forJava(code);
         String filter = "id eq '" + code + "'";
         try {
             SearchServiceIndexResponse<GeoTaxonomyIstatIndex> response =
@@ -68,4 +67,5 @@ public class GeoTaxonomiesIstatIndexConnectorImpl implements GeoTaxonomiesIstatI
         return geographicTaxonomy;
     }
 }
+
 
