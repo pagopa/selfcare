@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.iam.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.quarkus.mongodb.panache.common.MongoEntity;
 import it.pagopa.selfcare.iam.model.ProductRoles;
 import java.util.List;
@@ -20,7 +19,6 @@ import org.bson.codecs.pojo.annotations.BsonId;
  * <pre>
  * {
  *   "_id": "uuid",
- *   "tenantId": "AR",
  *   "email": "encrypted email",
  *   "productRoles": [
  *     {
@@ -43,14 +41,16 @@ import org.bson.codecs.pojo.annotations.BsonId;
  *
  * <ul>
  *   <li>Primary: _id (uid)
- *   <li>Secondary: (tenantId, email)
+ *   <li>Unique: email
+ *   <li>Secondary: (productRoles.tenantId, productRoles.productId)
  * </ul>
  *
  * <h2>Tenant</h2>
  *
- * <p>Each document belongs to one tenant (top-level {@code tenantId}); the same email can exist
- * once per tenant. Access goes through {@link
- * it.pagopa.selfcare.iam.repository.UserClaimsRepository}, which applies the tenant filter.
+ * <p>The identity (uid, email, name) is shared by every tenant: one document per email. Each
+ * embedded {@link ProductRoles} carries the {@code tenantId} that enables the product, and only the
+ * roles of the current tenant are read or written (see {@link
+ * it.pagopa.selfcare.iam.repository.TenantDataFilter}).
  *
  * @see ProductRoles
  * @see Roles
@@ -65,7 +65,6 @@ import org.bson.codecs.pojo.annotations.BsonId;
 public class UserClaims {
 
   @BsonId private String uid;
-  @JsonIgnore private String tenantId;
   private String email;
   private String name;
   private String familyName;

@@ -31,7 +31,7 @@ public class UserPermissionsRepository {
   public Uni<UserPermissions> getUserPermissions(
       String uid, String permission, List<String> products) {
     List<Bson> pipeline = new ArrayList<>();
-    pipeline.add(Aggregates.match(tenantDataFilter.scoped(new Document("_id", uid))));
+    pipeline.add(Aggregates.match(new Document("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
 
     List<String> productIds =
@@ -88,7 +88,7 @@ public class UserPermissionsRepository {
   public Uni<List<ProductRolePermissions>> getUserProductRolePermissionsList(
       String uid, String productId) {
     List<Bson> pipeline = new ArrayList<>();
-    pipeline.add(Aggregates.match(tenantDataFilter.scoped(new Document("_id", uid))));
+    pipeline.add(Aggregates.match(new Document("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
     pipeline.add(Aggregates.match(tenantDataFilter.productRoleFilter(PRODUCT_ROLES)));
     Optional.ofNullable(productId)
@@ -140,7 +140,7 @@ public class UserPermissionsRepository {
   /** Aggregation query to extract a list of product, role for a specific user. */
   public Uni<List<ProductRole>> getUserProductRoles(String uid, String productId) {
     List<Bson> pipeline = new ArrayList<>();
-    pipeline.add(Aggregates.match(tenantDataFilter.scoped(new Document("_id", uid))));
+    pipeline.add(Aggregates.match(new Document("_id", uid)));
     pipeline.add(Aggregates.unwind("$productRoles"));
     Optional.ofNullable(productId)
         .ifPresent(

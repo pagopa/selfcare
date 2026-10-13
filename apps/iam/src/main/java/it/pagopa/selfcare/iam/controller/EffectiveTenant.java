@@ -8,10 +8,11 @@ import jakarta.ws.rs.BadRequestException;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 /**
- * Resolves the optional {@code tenantId} query parameter. When omitted, the value comes from the
- * {@code X-Tenant-Id} header (already stored in {@link TenantContext}) or, if that is absent, from
- * the JWT {@code tenant_id} claim. The security attribute {@code jwt.tenant} is not a default
- * source.
+ * Resolves the optional {@code tenantId} query parameter and stores the result in {@link
+ * TenantContext}, which repositories, encryption and outgoing clients read. When omitted, the value
+ * comes from the {@code X-Tenant-Id} header (already stored in {@link TenantContext}) or, if that
+ * is absent, from the JWT {@code tenant_id} claim. The security attribute {@code jwt.tenant} is not
+ * a default source.
  */
 @ApplicationScoped
 public class EffectiveTenant {
@@ -34,7 +35,17 @@ public class EffectiveTenant {
     this.securityIdentity = securityIdentity;
   }
 
-  public String resolve(String requestedTenantId) {
+  public void bindToContext(String requestedTenantId) {
+    String tenant = tenantRegistry.normalizeTenantId(resolve(requestedTenantId));
+    try {
+      tenantRegistry.resolve(tenant);
+    } catch (RuntimeException exception) {
+      throw new BadRequestException("Unknown tenant");
+    }
+    tenantContext.setTenantId(tenant);
+  }
+
+  String resolve(String requestedTenantId) {
     String trustedTenant = trustedTenant();
     if (requestedTenantId == null || requestedTenantId.isBlank()) {
       if (trustedTenant == null) {

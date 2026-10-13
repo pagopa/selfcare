@@ -107,8 +107,7 @@ public class IamServiceImpl implements IamService {
                     .onItem()
                     .transformToUni(
                         userClaims ->
-                            userClaimsRepository
-                                .findByEmail(userClaims.getEmail())
+                            findByEmail(req.getEmail())
                                 .onItem()
                                 .ifNull()
                                 .continueWith(
@@ -121,9 +120,18 @@ public class IamServiceImpl implements IamService {
                                 .transform(
                                     existing -> {
                                       userClaims.setUid(existing.getUid());
-                                      Optional.ofNullable(userClaims.getName())
+                                      String ownerTenantId =
+                                          ownerTenantId(req.getEmail(), existing.getEmail());
+                                      Optional.ofNullable(req.getName())
+                                          .map(
+                                              name ->
+                                                  dataEncryptionConfig.encrypt(name, ownerTenantId))
                                           .ifPresent(existing::setName);
-                                      Optional.ofNullable(userClaims.getFamilyName())
+                                      Optional.ofNullable(req.getFamilyName())
+                                          .map(
+                                              familyName ->
+                                                  dataEncryptionConfig.encrypt(
+                                                      familyName, ownerTenantId))
                                           .ifPresent(existing::setFamilyName);
 
                                       Optional.ofNullable(productId)
@@ -153,8 +161,8 @@ public class IamServiceImpl implements IamService {
                                                                     epr ->
                                                                         epr.getProductId()
                                                                                 .equals(pid)
-                                                                            && matchesTenantId(
-                                                                                epr, tenantId))
+                                                                            && tenantDataFilter
+                                                                                .matches(epr))
                                                                 .findFirst()
                                                                 .ifPresentOrElse(
                                                                     existingProductRole -> {
@@ -189,10 +197,8 @@ public class IamServiceImpl implements IamService {
                                                                                   .equals(
                                                                                       newRole
                                                                                           .getProductId())
-                                                                              && matchesTenantId(
-                                                                                  cr,
-                                                                                  newRole
-                                                                                      .getTenantId()));
+                                                                              && tenantDataFilter
+                                                                                  .matches(cr));
                                                                   currentRoles.add(newRole);
                                                                 });
 
@@ -208,6 +214,28 @@ public class IamServiceImpl implements IamService {
                     .onItem()
                     .ifNull()
                     .failWith(() -> new InvalidRequestException("Email cannot be null")));
+  }
+
+  /**
+   * Finds the user by email whatever the tenant whose key encrypted it, trying the key of the
+   * current tenant first.
+   */
+  private Uni<UserClaims> findByEmail(String email) {
+    Uni<UserClaims> result = Uni.createFrom().nullItem();
+    for (String encryptedEmail : dataEncryptionConfig.encryptForEveryTenant(email).values()) {
+      result =
+          result.onItem().ifNull().switchTo(() -> userClaimsRepository.findByEmail(encryptedEmail));
+    }
+    return result;
+  }
+
+  /** Tenant whose key encrypted {@code encryptedEmail}: personal data keep the creator's key. */
+  private String ownerTenantId(String email, String encryptedEmail) {
+    return dataEncryptionConfig.encryptForEveryTenant(email).entrySet().stream()
+        .filter(entry -> entry.getValue().equals(encryptedEmail))
+        .map(Map.Entry::getKey)
+        .findFirst()
+        .orElseGet(tenantDataFilter::currentTenant);
   }
 
   private UserClaims decryptUser(UserClaims userClaims) {
@@ -256,8 +284,7 @@ public class IamServiceImpl implements IamService {
    */
   @Override
   public Uni<UserClaims> getUserByEmail(String email, String productId) {
-    return userClaimsRepository
-        .findByEmail(dataEncryptionConfig.encrypt(email))
+    return findByEmail(email)
         .onItem()
         .ifNotNull()
         .transformToUni(
@@ -384,8 +411,8 @@ public class IamServiceImpl implements IamService {
   }
 
   /**
-   * Rejects product roles explicitly bound to a tenant other than the current one: a user document
-   * belongs to a single tenant.
+   * Rejects product roles explicitly bound to a tenant other than the current one: a request can
+   * only enable products in its own tenant, roles of other tenants are left untouched.
    *
    * @param productRoles the product roles of the request
    * @param tenantId the current tenant

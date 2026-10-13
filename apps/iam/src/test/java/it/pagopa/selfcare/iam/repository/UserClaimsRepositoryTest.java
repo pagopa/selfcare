@@ -2,6 +2,7 @@ package it.pagopa.selfcare.iam.repository;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.mongodb.client.model.IndexOptions;
 import io.quarkus.test.common.QuarkusTestResource;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.iam.entity.UserClaims;
@@ -26,90 +27,57 @@ class UserClaimsRepositoryTest {
 
   @BeforeEach
   void clean() {
-    for (String tenant : List.of("PNPG", "AR")) {
-      tenantContext.setTenantId(tenant);
-      collection().deleteMany(new Document()).await().indefinitely();
-    }
+    tenantContext.setTenantId("AR");
+    collection().deleteMany(new Document()).await().indefinitely();
   }
 
   @Test
-  void upsert_shouldWriteIntoTenantDatabaseAndSetTenantOnInsert() {
-    repository.upsert(user("uid-1", "enc-ar")).await().indefinitely();
+  void upsert_shouldStoreTenantOnlyInProductRoles() {
+    repository.upsert(user("uid-1", "enc", role("prod-a", "AR"))).await().indefinitely();
 
     Document stored =
         collection().find(new Document("_id", "uid-1")).collect().first().await().indefinitely();
-    assertEquals("AR", stored.getString("tenantId"));
-    assertEquals("AR", repository.findByUid("uid-1").await().indefinitely().getTenantId());
-
-    tenantContext.setTenantId("PNPG");
-    assertNull(repository.findByUid("uid-1").await().indefinitely());
-    assertEquals(0L, collection().countDocuments().await().indefinitely());
+    assertFalse(stored.containsKey("tenantId"));
+    assertEquals("AR", stored.getList("productRoles", Document.class).get(0).getString("tenantId"));
   }
 
   @Test
-  void upsert_shouldUpdateWithoutChangingTenant() {
-    repository.upsert(user("uid-1", "enc-ar")).await().indefinitely();
-    UserClaims updated = user("uid-1", "enc-ar");
-    updated.setName("updated");
+  void identity_shouldBeSharedByEveryTenant() {
+    repository.upsert(user("uid-1", "enc", role("prod-a", "AR"))).await().indefinitely();
 
+    tenantContext.setTenantId("PNPG");
+    assertEquals("uid-1", repository.findByUid("uid-1").await().indefinitely().getUid());
+    assertEquals("uid-1", repository.findByEmail("enc").await().indefinitely().getUid());
+
+    UserClaims updated = user("uid-1", "enc", role("prod-a", "AR"), role("prod-b", "PNPG"));
+    updated.setName("updated");
     repository.upsert(updated).await().indefinitely();
 
+    tenantContext.setTenantId("AR");
     UserClaims result = repository.findByUid("uid-1").await().indefinitely();
     assertEquals("updated", result.getName());
-    assertEquals("AR", result.getTenantId());
+    assertEquals(2, result.getProductRoles().size());
+    assertEquals(1L, collection().countDocuments().await().indefinitely());
   }
 
   @Test
-  void interleavedTenants_shouldKeepDataSeparated() {
-    repository.upsert(user("uid-1", "enc-ar")).await().indefinitely();
-    tenantContext.setTenantId("PNPG");
-    repository.upsert(user("uid-1", "enc-pnpg")).await().indefinitely();
-    tenantContext.setTenantId("AR");
-    UserClaims ar = repository.findByEmail("enc-ar").await().indefinitely();
-    assertNull(repository.findByEmail("enc-pnpg").await().indefinitely());
-    tenantContext.setTenantId("PNPG");
-    UserClaims pnpg = repository.findByEmail("enc-pnpg").await().indefinitely();
-    assertNull(repository.findByEmail("enc-ar").await().indefinitely());
-
-    assertEquals("AR", ar.getTenantId());
-    assertEquals("PNPG", pnpg.getTenantId());
-  }
-
-  @Test
-  void documentOfAnotherTenant_shouldBeInvisibleAndNotOverwritten() {
+  void upsert_shouldFailWhenEmailBelongsToAnotherUser() {
     collection()
-        .insertOne(new Document("_id", "uid-x").append("tenantId", "PNPG").append("email", "enc-x"))
+        .createIndex(new Document("email", 1), new IndexOptions().unique(true))
         .await()
         .indefinitely();
+    repository.upsert(user("uid-1", "enc", role("prod-a", "AR"))).await().indefinitely();
 
-    assertNull(repository.findByUid("uid-x").await().indefinitely());
-    assertNull(repository.findByEmail("enc-x").await().indefinitely());
     assertThrows(
         ConflictException.class,
-        () -> repository.upsert(user("uid-x", "enc-ar")).await().indefinitely());
-
-    Document stored =
-        collection().find(new Document("_id", "uid-x")).collect().first().await().indefinitely();
-    assertEquals("PNPG", stored.getString("tenantId"));
-    assertEquals("enc-x", stored.getString("email"));
+        () -> repository.upsert(user("uid-2", "enc", role("prod-a", "AR"))).await().indefinitely());
   }
 
   @Test
-  void legacyDocumentWithoutTenant_shouldBeVisibleWhenNotStrict() {
-    collection()
-        .insertOne(new Document("_id", "uid-legacy").append("email", "enc-legacy"))
-        .await()
-        .indefinitely();
-
-    assertNotNull(repository.findByEmail("enc-legacy").await().indefinitely());
-  }
-
-  @Test
-  void findByUidAndProductId_shouldMatchOnlyRolesOfCurrentTenant() {
+  void productLookups_shouldMatchOnlyRolesOfCurrentTenant() {
     collection()
         .insertOne(
             new Document("_id", "uid-2")
-                .append("tenantId", "AR")
                 .append(
                     "productRoles",
                     List.of(
@@ -120,23 +88,53 @@ class UserClaimsRepositoryTest {
 
     UserClaims result = repository.findByUidAndProductId("uid-2", "prod-a").await().indefinitely();
     assertNotNull(result);
-    assertTrue(result.getProductRoles().stream().anyMatch(pr -> "ALL".equals(pr.getProductId())));
-
     assertTrue(repository.findByProductId("prod-a").await().indefinitely().isEmpty());
     assertEquals(1, repository.findByProductId("ALL").await().indefinitely().size());
+
+    tenantContext.setTenantId("PNPG");
+    assertNotNull(repository.findByUidAndProductId("uid-2", "prod-a").await().indefinitely());
+    assertEquals(1, repository.findByProductId("prod-a").await().indefinitely().size());
+    assertTrue(repository.findByProductId("ALL").await().indefinitely().isEmpty());
+    assertNull(repository.findByUidAndProductId("uid-2", "prod-b").await().indefinitely());
+  }
+
+  @Test
+  void legacyProductRoleWithoutTenant_shouldBeVisibleWhenNotStrict() {
+    collection()
+        .insertOne(
+            new Document("_id", "uid-legacy")
+                .append("productRoles", List.of(new Document("productId", "prod-l"))))
+        .await()
+        .indefinitely();
+
+    assertEquals(1, repository.findByProductId("prod-l").await().indefinitely().size());
+    tenantContext.setTenantId("PNPG");
+    assertNotNull(repository.findByUidAndProductId("uid-legacy", "prod-l").await().indefinitely());
+  }
+
+  @Test
+  void findByProductId_shouldReturnEmptyWithoutProduct() {
+    assertTrue(repository.findByProductId(null).await().indefinitely().isEmpty());
   }
 
   private io.quarkus.mongodb.reactive.ReactiveMongoCollection<Document> collection() {
     return tenantMongoClientProducer.databaseForCurrentTenant().getCollection("userClaims");
   }
 
-  private static UserClaims user(String uid, String email) {
+  private static ProductRoles role(String productId, String tenantId) {
+    return ProductRoles.builder()
+        .productId(productId)
+        .tenantId(tenantId)
+        .roles(List.of("admin"))
+        .build();
+  }
+
+  private static UserClaims user(String uid, String email, ProductRoles... productRoles) {
     return UserClaims.builder()
         .uid(uid)
         .email(email)
         .name("name")
-        .productRoles(
-            List.of(ProductRoles.builder().productId("prod-a").roles(List.of("admin")).build()))
+        .productRoles(List.of(productRoles))
         .build();
   }
 }

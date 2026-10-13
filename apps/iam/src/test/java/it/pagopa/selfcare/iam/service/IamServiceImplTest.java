@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 @QuarkusTest
 class IamServiceImplTest {
@@ -953,18 +954,110 @@ class IamServiceImplTest {
   }
 
   @Test
-  void saveUser_shouldLookUpEmailWithTenantKey() {
-    String encryptedAr = dataEncryptionConfig.encrypt("same@example.com");
+  void saveUser_shouldKeepProductRolesOfOtherTenants() {
+    String encryptedEmail = dataEncryptionConfig.encrypt("shared@example.com");
+    UserClaims existingUser =
+        UserClaims.builder()
+            .uid("shared-uid")
+            .email(encryptedEmail)
+            .productRoles(
+                List.of(
+                    ProductRoles.builder()
+                        .productId("productA")
+                        .tenantId("AR")
+                        .roles(List.of("admin"))
+                        .build(),
+                    ProductRoles.builder()
+                        .productId("productB")
+                        .tenantId("PNPG")
+                        .roles(List.of("viewer"))
+                        .build()))
+            .build();
     tenantContext.setTenantId("PNPG");
-    String encryptedPnpg = dataEncryptionConfig.encrypt("same@example.com");
-    assertNotEquals(encryptedAr, encryptedPnpg);
+    when(userClaimsRepository.findByEmail(encryptedEmail))
+        .thenReturn(Uni.createFrom().item(existingUser));
 
     SaveUserRequest request = new SaveUserRequest();
-    request.setEmail("same@example.com");
-    service.saveUser(request, null).await().indefinitely();
+    request.setEmail("shared@example.com");
+    request.setProductRoles(
+        List.of(
+            ProductRoles.builder().productId("productA").roles(List.of("operator")).build(),
+            ProductRoles.builder().productId("productB").roles(List.of("admin")).build()));
 
-    verify(userClaimsRepository).findByEmail(encryptedPnpg);
-    verify(userClaimsRepository, never()).findByEmail(encryptedAr);
+    UserClaims result = service.saveUser(request, null).await().indefinitely();
+
+    assertEquals("shared-uid", result.getUid());
+    ArgumentCaptor<UserClaims> saved = ArgumentCaptor.forClass(UserClaims.class);
+    verify(userClaimsRepository).upsert(saved.capture());
+    List<ProductRoles> roles = saved.getValue().getProductRoles();
+    assertEquals(3, roles.size());
+    assertTrue(
+        roles.contains(
+            ProductRoles.builder()
+                .productId("productA")
+                .tenantId("AR")
+                .roles(List.of("admin"))
+                .build()));
+    assertTrue(
+        roles.contains(
+            ProductRoles.builder()
+                .productId("productA")
+                .tenantId("PNPG")
+                .roles(List.of("operator"))
+                .build()));
+    assertTrue(
+        roles.contains(
+            ProductRoles.builder()
+                .productId("productB")
+                .tenantId("PNPG")
+                .roles(List.of("admin"))
+                .build()));
+  }
+
+  @Test
+  void saveUser_shouldFindUserCreatedByAnotherTenantAndKeepItsKey() {
+    String arEmail = dataEncryptionConfig.encrypt("owner@example.com", "AR");
+    UserClaims existingUser = UserClaims.builder().uid("owner-uid").email(arEmail).build();
+    tenantContext.setTenantId("PNPG");
+    when(userClaimsRepository.findByEmail(arEmail)).thenReturn(Uni.createFrom().item(existingUser));
+
+    SaveUserRequest request = new SaveUserRequest();
+    request.setEmail("owner@example.com");
+    request.setName("Mario");
+    UserClaims result = service.saveUser(request, null).await().indefinitely();
+
+    assertEquals("owner-uid", result.getUid());
+    assertEquals("Mario", result.getName());
+    verify(userClaimsRepository).findByEmail(dataEncryptionConfig.encrypt("owner@example.com"));
+    ArgumentCaptor<UserClaims> saved = ArgumentCaptor.forClass(UserClaims.class);
+    verify(userClaimsRepository).upsert(saved.capture());
+    assertEquals(arEmail, saved.getValue().getEmail());
+    assertEquals(dataEncryptionConfig.encrypt("Mario", "AR"), saved.getValue().getName());
+  }
+
+  @Test
+  void getUserByEmail_shouldFindUserEncryptedWithAnotherTenantKey() {
+    String pnpgEmail = dataEncryptionConfig.encrypt("pnpg@example.com", "PNPG");
+    UserClaims user =
+        UserClaims.builder()
+            .uid("pnpg-uid")
+            .email(pnpgEmail)
+            .name(dataEncryptionConfig.encrypt("Anna", "PNPG"))
+            .productRoles(
+                List.of(
+                    ProductRoles.builder()
+                        .productId("productA")
+                        .tenantId("AR")
+                        .roles(List.of("admin"))
+                        .build()))
+            .build();
+    when(userClaimsRepository.findByEmail(pnpgEmail)).thenReturn(Uni.createFrom().item(user));
+
+    UserClaims result =
+        service.getUserByEmail("pnpg@example.com", "productA").await().indefinitely();
+
+    assertEquals("pnpg@example.com", result.getEmail());
+    assertEquals("Anna", result.getName());
   }
 
   @Test

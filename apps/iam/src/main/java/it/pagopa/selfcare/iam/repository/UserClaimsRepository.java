@@ -14,7 +14,10 @@ import java.util.List;
 import java.util.Optional;
 import org.bson.Document;
 
-/** Tenant-scoped access to the userClaims collection. */
+/**
+ * Access to the userClaims collection. The identity is shared by every tenant; product role lookups
+ * are restricted to the current tenant through {@link TenantDataFilter}.
+ */
 @ApplicationScoped
 public class UserClaimsRepository
     implements ReactivePanacheMongoRepositoryBase<UserClaims, String> {
@@ -29,11 +32,11 @@ public class UserClaimsRepository
   }
 
   public Uni<UserClaims> findByUid(String uid) {
-    return find(tenantDataFilter.scoped(new Document("_id", uid))).firstResult();
+    return find(new Document("_id", uid)).firstResult();
   }
 
   public Uni<UserClaims> findByEmail(String email) {
-    return find(tenantDataFilter.scoped(new Document("email", email))).firstResult();
+    return find(new Document("email", email)).firstResult();
   }
 
   /**
@@ -54,31 +57,28 @@ public class UserClaimsRepository
     if (productId == null) {
       return Uni.createFrom().item(List.of());
     }
-    return find(tenantDataFilter.scoped(productRoleMatch(productId))).list();
+    return find(productRoleMatch(productId)).list();
   }
 
   /**
-   * Inserts or updates the user of the current tenant. The tenant is written only on insert;
-   * documents of other tenants never match the filter, so a colliding {@code _id} or email results
-   * in a {@link ConflictException} instead of an overwrite.
+   * Inserts or updates the user. {@code user} must already hold the product roles of every tenant
+   * (see {@code IamServiceImpl#saveUser}); an email already bound to another uid results in a
+   * {@link ConflictException}.
    */
   public Uni<Void> upsert(UserClaims user) {
-    Document filter = tenantDataFilter.scoped(new Document("_id", user.getUid()));
+    Document filter = new Document("_id", user.getUid());
     Document update =
         new Document(
-                "$set",
-                new Document(UserClaims.Fields.email.name(), user.getEmail())
-                    .append(UserClaims.Fields.name.name(), user.getName())
-                    .append(UserClaims.Fields.familyName.name(), user.getFamilyName())
-                    .append(
-                        UserClaims.Fields.productRoles.name(),
-                        Optional.ofNullable(user.getProductRoles()).orElse(List.of()).stream()
-                            .map(this::toDocument)
-                            .toList())
-                    .append(UserClaims.Fields.test.name(), user.isTest()))
-            .append(
-                "$setOnInsert",
-                new Document(TenantDataFilter.TENANT_ID, tenantDataFilter.currentTenant()));
+            "$set",
+            new Document(UserClaims.Fields.email.name(), user.getEmail())
+                .append(UserClaims.Fields.name.name(), user.getName())
+                .append(UserClaims.Fields.familyName.name(), user.getFamilyName())
+                .append(
+                    UserClaims.Fields.productRoles.name(),
+                    Optional.ofNullable(user.getProductRoles()).orElse(List.of()).stream()
+                        .map(this::toDocument)
+                        .toList())
+                .append(UserClaims.Fields.test.name(), user.isTest()));
     return mongoCollection()
         .updateOne(filter, update, new UpdateOptions().upsert(true))
         .onFailure(UserClaimsRepository::isDuplicateKey)
@@ -87,8 +87,7 @@ public class UserClaimsRepository
   }
 
   private Uni<UserClaims> findByUidAndProductRole(String uid, String productId) {
-    return find(tenantDataFilter.scoped(productRoleMatch(productId).append("_id", uid)))
-        .firstResult();
+    return find(productRoleMatch(productId).append("_id", uid)).firstResult();
   }
 
   private Document productRoleMatch(String productId) {

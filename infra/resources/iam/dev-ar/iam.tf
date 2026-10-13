@@ -62,11 +62,7 @@ module "collection_iam_user" {
 
   indexes = [
     { keys = ["_id"], unique = true },
-    { keys = ["email"], unique = true },
-    # Tenant-scoped lookups. Make it unique (and drop the email index) only after the
-    # tenantId backfill and the AR/PNPG database merge: Cosmos DB requires an empty
-    # collection to add a unique index.
-    { keys = ["tenantId", "email"], unique = false }
+    { keys = ["email"], unique = true }
   ]
 
   depends_on = [module.cosmosdb]

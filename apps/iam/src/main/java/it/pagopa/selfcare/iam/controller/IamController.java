@@ -113,7 +113,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService
         .saveUser(saveUserRequest, productId)
         .onItem()
@@ -175,7 +175,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService
         .getUser(userId, productId)
         .onItem()
@@ -235,7 +235,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService
         .getUserByEmail(email, productId)
         .onItem()
@@ -286,7 +286,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService.getUsers(productId).onItem().transform(user -> Response.ok(user).build());
   }
 
@@ -330,7 +330,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService
         .getProductRolePermissionsList(userId, productId)
         .onItem()
@@ -391,7 +391,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService
         .getProductRoles(userId, productId)
         .onItem()
@@ -454,7 +454,7 @@ public class IamController {
       @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
           @QueryParam("tenantId")
           String tenantId) {
-    effectiveTenant.resolve(tenantId);
+    effectiveTenant.bindToContext(tenantId);
     return iamService
         .hasPermission(userId, permission, productId, institutionId)
         .onItem()

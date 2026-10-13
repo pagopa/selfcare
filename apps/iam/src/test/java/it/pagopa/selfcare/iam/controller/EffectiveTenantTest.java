@@ -11,6 +11,7 @@ import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.TenantRegistry;
+import it.pagopa.selfcare.tenant.UnknownTenantException;
 import jakarta.ws.rs.BadRequestException;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,5 +80,30 @@ class EffectiveTenantTest {
     when(tenantRegistry.normalizeTenantId("PNPG")).thenReturn("PNPG");
 
     assertThrows(BadRequestException.class, () -> effectiveTenant.resolve(null));
+  }
+
+  @Test
+  void bindToContextStoresTenantResolvedFromJwtClaim() {
+    when(tenantContext.isInitialized()).thenReturn(false);
+    when(securityIdentity.getPrincipal()).thenReturn(jwt);
+    when(jwt.getClaim(EffectiveTenant.JWT_TENANT_CLAIM)).thenReturn("pnpg");
+    when(tenantRegistry.normalizeTenantId("pnpg")).thenReturn("PNPG");
+
+    effectiveTenant.bindToContext(null);
+
+    verify(tenantRegistry).resolve("PNPG");
+    verify(tenantContext).setTenantId("PNPG");
+  }
+
+  @Test
+  void bindToContextRejectsUnknownTenant() {
+    when(tenantContext.isInitialized()).thenReturn(false);
+    when(securityIdentity.getPrincipal()).thenReturn(jwt);
+    when(jwt.getClaim(EffectiveTenant.JWT_TENANT_CLAIM)).thenReturn("XX");
+    when(tenantRegistry.normalizeTenantId("XX")).thenReturn("XX");
+    when(tenantRegistry.resolve("XX")).thenThrow(new UnknownTenantException("XX"));
+
+    assertThrows(BadRequestException.class, () -> effectiveTenant.bindToContext(null));
+    verify(tenantContext, never()).setTenantId(any());
   }
 }

@@ -7,11 +7,12 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import it.pagopa.selfcare.iam.entity.UserClaims;
-import it.pagopa.selfcare.iam.exception.ConflictException;
+import it.pagopa.selfcare.iam.model.ProductRoles;
 import it.pagopa.selfcare.iam.testsupport.TenantMongoTestResource;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import jakarta.inject.Inject;
+import java.util.List;
 import java.util.Map;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +31,7 @@ class UserClaimsRepositoryStrictTest {
   }
 
   @Inject UserClaimsRepository repository;
+  @Inject TenantDataFilter tenantDataFilter;
   @Inject TenantContext tenantContext;
   @Inject TenantMongoClientProducer tenantMongoClientProducer;
 
@@ -40,24 +42,23 @@ class UserClaimsRepositoryStrictTest {
   }
 
   @Test
-  void legacyDocumentWithoutTenant_shouldBeHidden() {
+  void legacyProductRoleWithoutTenant_shouldBeHidden() {
     collection()
-        .insertOne(new Document("_id", "uid-legacy").append("email", "enc-legacy"))
+        .insertOne(
+            new Document("_id", "uid-legacy")
+                .append("email", "enc-legacy")
+                .append("productRoles", List.of(new Document("productId", "prod-l"))))
         .await()
         .indefinitely();
 
-    assertNull(repository.findByEmail("enc-legacy").await().indefinitely());
-    assertThrows(
-        ConflictException.class,
-        () ->
-            repository
-                .upsert(UserClaims.builder().uid("uid-legacy").email("enc-legacy").build())
-                .await()
-                .indefinitely());
+    assertNotNull(repository.findByEmail("enc-legacy").await().indefinitely());
+    assertTrue(repository.findByProductId("prod-l").await().indefinitely().isEmpty());
+    assertNull(repository.findByUidAndProductId("uid-legacy", "prod-l").await().indefinitely());
+    assertFalse(tenantDataFilter.matches(ProductRoles.builder().productId("prod-l").build()));
   }
 
   @Test
-  void upsert_shouldInsertAndUpdateTenantDocument() {
+  void upsert_shouldInsertAndUpdateUser() {
     repository
         .upsert(UserClaims.builder().uid("uid-1").email("enc").build())
         .await()
@@ -67,9 +68,7 @@ class UserClaimsRepositoryStrictTest {
         .await()
         .indefinitely();
 
-    UserClaims result = repository.findByEmail("enc").await().indefinitely();
-    assertEquals("AR", result.getTenantId());
-    assertEquals("updated", result.getName());
+    assertEquals("updated", repository.findByEmail("enc").await().indefinitely().getName());
   }
 
   private io.quarkus.mongodb.reactive.ReactiveMongoCollection<Document> collection() {

@@ -13,6 +13,8 @@ import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.mongodb.TenantMongoClientProducer;
 import jakarta.inject.Inject;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.bson.Document;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,24 +29,19 @@ class UserPermissionsRepositoryTest {
 
   @BeforeEach
   void setUp() {
-    for (String tenant : List.of("PNPG", "AR")) {
-      tenantContext.setTenantId(tenant);
-      database().getCollection("userClaims").deleteMany(new Document()).await().indefinitely();
-      database().getCollection("roles").deleteMany(new Document()).await().indefinitely();
-      database()
-          .getCollection("roles")
-          .insertOne(
-              new Document("_id", "admin")
-                  .append("group", "g")
-                  .append("permissions", List.of("read:users")))
-          .await()
-          .indefinitely();
-    }
-    // Same uid in both tenants: AR document also embeds a PNPG role that must stay invisible.
     tenantContext.setTenantId("AR");
-    insertUser("AR", List.of(role("prod-ar", "AR"), role("prod-x", "PNPG")));
-    tenantContext.setTenantId("PNPG");
-    insertUser("PNPG", List.of(role("prod-pnpg", null)));
+    database().getCollection("userClaims").deleteMany(new Document()).await().indefinitely();
+    database().getCollection("roles").deleteMany(new Document()).await().indefinitely();
+    database()
+        .getCollection("roles")
+        .insertOne(
+            new Document("_id", "admin")
+                .append("group", "g")
+                .append("permissions", List.of("read:users")))
+        .await()
+        .indefinitely();
+    // One identity shared by both tenants; each role is visible only in its own tenant.
+    insertUser(List.of(role("prod-ar", "AR"), role("prod-x", "PNPG"), role("prod-legacy", null)));
   }
 
   @Test
@@ -54,8 +51,12 @@ class UserPermissionsRepositoryTest {
     tenantContext.setTenantId("PNPG");
     List<ProductRole> pnpg = repository.getUserProductRoles("uid-1", null).await().indefinitely();
 
-    assertEquals(List.of("prod-ar"), ar.stream().map(ProductRole::getProductId).toList());
-    assertEquals(List.of("prod-pnpg"), pnpg.stream().map(ProductRole::getProductId).toList());
+    assertEquals(
+        Set.of("prod-ar", "prod-legacy"),
+        ar.stream().map(ProductRole::getProductId).collect(Collectors.toSet()));
+    assertEquals(
+        Set.of("prod-x", "prod-legacy"),
+        pnpg.stream().map(ProductRole::getProductId).collect(Collectors.toSet()));
     assertEquals("g", ar.get(0).getRoles().get(0).getGroup());
   }
 
@@ -98,12 +99,11 @@ class UserPermissionsRepositoryTest {
     assertEquals("ALL", result.get(0).getProductId());
   }
 
-  private void insertUser(String tenantId, List<Document> productRoles) {
+  private void insertUser(List<Document> productRoles) {
     database()
         .getCollection("userClaims")
         .insertOne(
             new Document("_id", "uid-1")
-                .append("tenantId", tenantId)
                 .append("email", "enc")
                 .append("productRoles", productRoles))
         .await()
