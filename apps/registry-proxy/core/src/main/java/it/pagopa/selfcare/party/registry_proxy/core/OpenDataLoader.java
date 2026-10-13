@@ -4,6 +4,7 @@ import it.pagopa.selfcare.party.registry_proxy.connector.api.IndexWriterService;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.IvassDataConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.OpenDataConnector;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.*;
+import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +25,8 @@ public class OpenDataLoader implements CommandLineRunner {
   private final IndexWriterService<InsuranceCompany> ivassIndexWriterService;
   private final ANACService anacService;
   private final IvassDataConnector ivassDataConnector;
+  static final String FORCE_REINDEX_ARG = "--force-reindex";
+
   private final boolean ipaStartupIndexingEnabled;
 
   @Autowired
@@ -54,9 +57,10 @@ public class OpenDataLoader implements CommandLineRunner {
   @Override
   public void run(String... args) {
     log.trace("run start");
+    final boolean forceReindex = Arrays.asList(args).contains(FORCE_REINDEX_ARG);
     openDataConnectors.forEach(
         openDataConnector -> {
-          loadIpaInstitutions(openDataConnector);
+          loadIpaInstitutions(openDataConnector, forceReindex);
           categoryIndexWriterService.adds(openDataConnector.getCategories());
           aooIndexWriterService.adds(openDataConnector.getAOOs());
           uoIndexWriterService.adds(openDataConnector.getUOs());
@@ -66,14 +70,19 @@ public class OpenDataLoader implements CommandLineRunner {
     log.trace("run end");
   }
 
-  /** Indexes the IPA institutions unless inhibited by config. */
-  private void loadIpaInstitutions(OpenDataConnector openDataConnector) {
-    if (!ipaStartupIndexingEnabled) {
+  /** Indexes the IPA institutions unless inhibited by config; --force-reindex overrides both. */
+  private void loadIpaInstitutions(OpenDataConnector openDataConnector, boolean forceReindex) {
+    if (!ipaStartupIndexingEnabled && !forceReindex) {
       log.info(
           "IPA institutions startup indexing is disabled (app.startup.ipa-institution-indexing.enabled=false)");
       return;
     }
     List<? extends Institution> institutions = openDataConnector.getInstitutions();
-    institutionIndexWriterService.adds(institutions);
+    if (forceReindex) {
+      log.info("Forced IPA institutions reindex: skipping up-to-date checks");
+      institutionIndexWriterService.addsForced(institutions);
+    } else {
+      institutionIndexWriterService.adds(institutions);
+    }
   }
 }
