@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -16,6 +17,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -44,6 +47,8 @@ class InstitutionIndexWriterServiceTest {
   private IpaInstitutionIndex buildIndexDoc(String id, String updateDate) {
     IpaInstitutionIndex idx = new IpaInstitutionIndex();
     idx.setId(id);
+    idx.setTaxCode(id);
+    idx.setOrigin("IPA");
     idx.setUpdateDate(updateDate);
     return idx;
   }
@@ -183,5 +188,122 @@ class InstitutionIndexWriterServiceTest {
 
     List<?> values = captor.getValue().getValue();
     assertEquals(1, values.size());
+  }
+
+  @Test
+  void testIndex_IstatCodeChangedWithSameUpdateDate_Reindexed() {
+    // Provincia di Oristano: IPA changed the ISTAT code without changing Data_aggiornamento
+    IpaInstitutionIndex indexed = buildIndexDoc("80004010957", "2025-12-15");
+    indexed.setIstatCode("095038");
+    IpaInstitutionIndex unchanged = buildIndexDoc("ID2", "2025-12-15");
+    unchanged.setIstatCode("058091");
+    when(azureSearchRestClient.search(
+            eq("ipa-inst-idx"),
+            eq("2023-11-01"),
+            any(),
+            eq(InstitutionIndexWriterService.COMPARED_FIELDS),
+            eq(true),
+            eq(1000),
+            eq(0),
+            any()))
+        .thenReturn(buildFetchAllResponse(List.of(indexed, unchanged)));
+
+    IpaInstitution oristano = buildInstitution("80004010957", "2025-12-15");
+    oristano.setIstatCode("115045");
+    IpaInstitution other = buildInstitution("ID2", "2025-12-15");
+    other.setIstatCode("058091");
+
+    service.index(List.of(oristano, other));
+
+    ArgumentCaptor<SearchServiceIndexRequest> captor =
+        ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
+    verify(azureSearchRestClient, times(1))
+        .index(eq("ipa-inst-idx"), eq("2023-11-01"), captor.capture());
+    List<?> values = captor.getValue().getValue();
+    assertEquals(1, values.size());
+    IpaInstitutionIndex upserted = (IpaInstitutionIndex) values.get(0);
+    assertEquals("80004010957", upserted.getId());
+    assertEquals("115045", upserted.getIstatCode());
+  }
+
+  @Test
+  void testIndex_OtherFieldChangedWithSameUpdateDate_Reindexed() {
+    IpaInstitutionIndex indexed = buildIndexDoc("ID1", "2023-01-01");
+    indexed.setDescription("Old description");
+    when(azureSearchRestClient.search(
+            eq("ipa-inst-idx"), eq("2023-11-01"), any(), any(), eq(true), eq(1000), eq(0), any()))
+        .thenReturn(buildFetchAllResponse(List.of(indexed)));
+
+    IpaInstitution inst = buildInstitution("ID1", "2023-01-01");
+    inst.setDescription("New description");
+
+    service.index(List.of(inst));
+
+    verify(azureSearchRestClient, times(1))
+        .index(eq("ipa-inst-idx"), eq("2023-11-01"), any(SearchServiceIndexRequest.class));
+  }
+
+  @Test
+  void testIndex_NullAndEmptyAreEqual_NotReindexed() {
+    IpaInstitutionIndex indexed = buildIndexDoc("ID1", "2023-01-01");
+    indexed.setDigitalAddress(null);
+    indexed.setZipCode("");
+    when(azureSearchRestClient.search(
+            eq("ipa-inst-idx"), eq("2023-11-01"), any(), any(), eq(true), eq(1000), eq(0), any()))
+        .thenReturn(buildFetchAllResponse(List.of(indexed)));
+
+    IpaInstitution inst = buildInstitution("ID1", "2023-01-01");
+    inst.setDigitalAddress("");
+    inst.setZipCode(null);
+
+    service.index(List.of(inst));
+
+    verify(azureSearchRestClient, never())
+        .index(any(), any(), any(SearchServiceIndexRequest.class));
+  }
+
+  private static IpaInstitution fullInstitution() {
+    IpaInstitution inst = new IpaInstitution();
+    inst.setOriginId("p_or");
+    inst.setTaxCode("80004010957");
+    inst.setDescription("Provincia di Oristano");
+    inst.setCategory("L5");
+    inst.setDigitalAddress("provincia.oristano@cert.legalmail.it");
+    inst.setAddress("Via Enrico Carboni");
+    inst.setZipCode("09170");
+    inst.setIstatCode("115045");
+    inst.setUpdateDate("2025-12-15");
+    return inst;
+  }
+
+  @Test
+  void testHasContentChanged_AllFieldsEqual_False() {
+    IpaInstitution inst = fullInstitution();
+    assertFalse(service.hasContentChanged(IpaInstitutionIndex.fromInstitution(inst), inst));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "originId",
+        "taxCode",
+        "description",
+        "category",
+        "digitalAddress",
+        "address",
+        "zipCode",
+        "istatCode",
+        "origin"
+      })
+  void testHasContentChanged_SingleFieldDiffers_True(String field) {
+    IpaInstitution inst = fullInstitution();
+    IpaInstitutionIndex indexed = IpaInstitutionIndex.fromInstitution(inst);
+    ReflectionTestUtils.setField(indexed, field, "changed");
+    assertTrue(service.hasContentChanged(indexed, inst));
+  }
+
+  @Test
+  void testGetSelectFields_ContainsComparedFields() {
+    assertEquals(InstitutionIndexWriterService.COMPARED_FIELDS, service.getSelectFields());
   }
 }

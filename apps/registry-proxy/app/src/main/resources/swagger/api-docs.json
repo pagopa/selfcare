@@ -887,57 +887,6 @@
         } ]
       }
     },
-    "/institutions/ipa/{taxCode}" : {
-      "get" : {
-        "tags" : [ "institution", "external-v2", "support" ],
-        "summary" : "Find IPA institution by tax code",
-        "description" : "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
-        "operationId" : "findIpaInstitutionByTaxCodeOnSearchEngine",
-        "parameters" : [ {
-          "name" : "taxCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "category",
-          "in" : "query",
-          "description" : "Filter from origin category. Multiple comma-separated values are supported",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/InstitutionResource"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized"
-          },
-          "404" : {
-            "description" : "Not Found"
-          },
-          "409" : {
-            "description" : "Conflict"
-          },
-          "500" : {
-            "description" : "Internal Server Error"
-          }
-        },
-        "security" : [ {
-          "bearerAuth" : [ "global" ]
-        } ]
-      }
-    },
     "/institutions/ipa" : {
       "get" : {
         "tags" : [ "institution", "external-v2", "support" ],
@@ -1012,9 +961,60 @@
         } ]
       }
     },
+    "/institutions/ipa/{taxCode}" : {
+      "get" : {
+        "tags" : [ "institution", "external-v2", "support" ],
+        "summary" : "Find IPA institution by tax code",
+        "description" : "Returns the single IPA institution matching the exact tax code and optional comma-separated category filter from the Azure AI Search index",
+        "operationId" : "findIpaInstitutionByTaxCodeOnSearchEngine",
+        "parameters" : [ {
+          "name" : "taxCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "category",
+          "in" : "query",
+          "description" : "Filter from origin category. Multiple comma-separated values are supported",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/InstitutionResource"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request"
+          },
+          "401" : {
+            "description" : "Unauthorized"
+          },
+          "404" : {
+            "description" : "Not Found"
+          },
+          "500" : {
+            "description" : "Internal Server Error"
+          }
+        },
+        "security" : [ {
+          "bearerAuth" : [ "global" ]
+        } ]
+      }
+    },
     "/infocamere-pdnd/institutions" : {
       "get" : {
-        "tags" : [ "pdnd-info-camere-controller" ],
+        "tags" : [ "internal-v1", "infocamere-pdnd" ],
         "summary" : "Get institutions by institution description",
         "description" : "Get the list of companies represented by description of the institutions passed as a parameter",
         "operationId" : "institutionsPdndByDescriptionUsingGET",
@@ -1067,7 +1067,7 @@
     },
     "/infocamere-pdnd/institutions/rea/{rea}" : {
       "get" : {
-        "tags" : [ "pdnd-info-camere-controller" ],
+        "tags" : [ "internal-v1", "infocamere-pdnd" ],
         "summary" : "Get institutions detail by institution rea",
         "description" : "Get the company represented by rea of the institution passed as a parameter",
         "operationId" : "institutionsPdndByReaGET",
@@ -2137,10 +2137,10 @@
           "mail3" : {
             "type" : "string"
           },
-          "cap" : {
+          "uriprotocolloInformatico" : {
             "type" : "string"
           },
-          "uriprotocolloInformatico" : {
+          "cap" : {
             "type" : "string"
           }
         }
