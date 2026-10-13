@@ -2,6 +2,8 @@ package it.pagopa.selfcare.document.exception.handler;
 
 import it.pagopa.selfcare.document.exception.*;
 import it.pagopa.selfcare.document.model.dto.response.Problem;
+import it.pagopa.selfcare.tenant.UnknownTenantException;
+import it.pagopa.selfcare.tenant.UnresolvedTenantException;
 import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.NotAllowedException;
@@ -19,6 +21,8 @@ public class ExceptionHandler {
   public static final String FORBIDDEN = "Forbidden";
   public static final String CONFLICT = "Conflict";
   public static final String PREFIX_LOGGER = "{}: {}";
+  public static final String INVALID_TENANT_CONTEXT = "Invalid tenant context";
+  public static final String PROBLEM_JSON = "application/problem+json";
   private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionHandler.class);
 
   @PostConstruct
@@ -134,5 +138,24 @@ public class ExceptionHandler {
             exception.getCode(),
             null);
     return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(problem).build();
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(UnknownTenantException exception) {
+    LOGGER.warn(PREFIX_LOGGER, INVALID_TENANT_CONTEXT, "unknown tenant");
+    return tenantProblem(Response.Status.BAD_REQUEST);
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(UnresolvedTenantException exception) {
+    LOGGER.warn(PREFIX_LOGGER, INVALID_TENANT_CONTEXT, "tenant context not resolved");
+    return tenantProblem(Response.Status.UNAUTHORIZED);
+  }
+
+  private static Response tenantProblem(Response.Status status) {
+    Problem problem =
+        new Problem(
+            INVALID_TENANT_CONTEXT, null, status.getStatusCode(), INVALID_TENANT_CONTEXT, null);
+    return Response.status(status).type(PROBLEM_JSON).entity(problem).build();
   }
 }
