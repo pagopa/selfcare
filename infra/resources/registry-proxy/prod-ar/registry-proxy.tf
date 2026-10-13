@@ -169,7 +169,7 @@ locals {
     },
     {
       name  = "IPA_INSTITUTION_STARTUP_INDEXING_ENABLED"
-      value = "false"
+      value = "true"
     },
     {
       name  = "MOCK_OPEN_DATA_URL"
