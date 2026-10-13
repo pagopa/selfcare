@@ -40,7 +40,7 @@ public class DocumentFunctionsTest {
 
   @Test
   void deleteContract() throws JsonProcessingException {
-    EntityFilter entity = EntityFilter.builder().value("123").build();
+    EntityFilter entity = EntityFilter.builder().value("123").tenantId("AR").build();
     String params = objectMapper.writeValueAsString(entity);
     when(documentService.deleteContract("123")).thenReturn(Response.ok().build());
     function.deleteContract(params, executionContext);
@@ -50,7 +50,7 @@ public class DocumentFunctionsTest {
 
   @Test
   void deleteContract_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
-    EntityFilter entity = EntityFilter.builder().value("123").build();
+    EntityFilter entity = EntityFilter.builder().value("123").tenantId("AR").build();
     String params = objectMapper.writeValueAsString(entity);
     when(documentService.deleteContract("123")).thenReturn(Response.status(500).build());
 
@@ -60,7 +60,7 @@ public class DocumentFunctionsTest {
 
   @Test
   void deleteUserAttachments() throws JsonProcessingException {
-    EntityFilter entity = EntityFilter.builder().value("onb-user-1").build();
+    EntityFilter entity = EntityFilter.builder().value("onb-user-1").tenantId("AR").build();
     String params = objectMapper.writeValueAsString(entity);
     when(documentService.deleteUserAttachments("onb-user-1")).thenReturn(Response.ok("2/2 deleted").build());
 
@@ -71,7 +71,7 @@ public class DocumentFunctionsTest {
 
   @Test
   void deleteUserAttachments_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
-    EntityFilter entity = EntityFilter.builder().value("onb-user-2").build();
+    EntityFilter entity = EntityFilter.builder().value("onb-user-2").tenantId("AR").build();
     String params = objectMapper.writeValueAsString(entity);
     when(documentService.deleteUserAttachments("onb-user-2")).thenReturn(Response.status(500).build());
 
@@ -84,6 +84,7 @@ public class DocumentFunctionsTest {
   void getLatestDocument_success() throws JsonProcessingException {
     Onboarding onboarding = new Onboarding();
     onboarding.setId("onb-1");
+    onboarding.setTenantId("AR");
     onboarding.setProductId("prod-1");
     String onboardingString = objectMapper.writeValueAsString(onboarding);
 
@@ -102,6 +103,7 @@ public class DocumentFunctionsTest {
   void getLatestDocument_shouldThrowWhenDocumentServiceFails() throws JsonProcessingException {
     Onboarding onboarding = new Onboarding();
     onboarding.setId("onb-2");
+    onboarding.setTenantId("AR");
     onboarding.setProductId("prod-2");
     String onboardingString = objectMapper.writeValueAsString(onboarding);
 

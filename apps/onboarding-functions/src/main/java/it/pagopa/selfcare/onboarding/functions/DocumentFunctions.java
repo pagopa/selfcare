@@ -13,6 +13,7 @@ import com.microsoft.durabletask.azurefunctions.DurableActivityTrigger;
 import it.pagopa.selfcare.onboarding.dto.EntityFilter;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.GenericOnboardingException;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import jakarta.ws.rs.core.Response;
@@ -57,7 +58,8 @@ public class DocumentFunctions {
     context
       .getLogger()
       .info(() -> String.format("Deleting contract for onboardingId=%s", onboardingId));
-    try (Response response = documentService.deleteContract(onboardingId)) {
+    try (TenantContext.Scope ignored = TenantContext.open(entityFilter.getTenantId());
+        Response response = documentService.deleteContract(onboardingId)) {
       ensureSuccessfulDocumentResponse(response, "delete contract", onboardingId);
     }
   }
@@ -81,7 +83,8 @@ public class DocumentFunctions {
     context
         .getLogger()
         .info(() -> String.format("Deleting user attachments for onboardingId=%s", onboardingId));
-    try (Response response = documentService.deleteUserAttachments(onboardingId)) {
+    try (TenantContext.Scope ignored = TenantContext.open(entityFilter.getTenantId());
+        Response response = documentService.deleteUserAttachments(onboardingId)) {
       ensureSuccessfulDocumentResponse(response, "delete user attachments", onboardingId);
     }
   }
@@ -101,7 +104,10 @@ public class DocumentFunctions {
             Map.of(
                     "onboardingId", onboarding.getId(),
                     "productId", onboarding.getProductId()));
-    DocumentResponse document = documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
+    DocumentResponse document;
+    try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
+      document = documentService.getDocumentByOnboardingIdOrNull(onboarding.getId());
+    }
     if (document == null) {
       context
           .getLogger()

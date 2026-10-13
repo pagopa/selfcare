@@ -36,12 +36,12 @@ class DocumentContentControllerTest {
     private static final String DOCUMENT_ID = "doc-456";
     private static final String ONBOARDING_ID = "onboarding-123";
     private static final String ATTACHMENT_NAME = "attachment.pdf";
-    private static final String TEMPLATE_PATH = "templates/contract.ftl";
+    private static final String TEMPLATE_PATH = "templates/contract.html";
     private static final String INSTITUTION_DESCRIPTION = "Test Institution";
     private static final String PRODUCT_ID = "Product-123";
     private static final String PRODUCT_NAME = "PagoPA";
-    private static final String CONTRACT_TEMPLATE_PATH = "templates/contract.ftl";
-    private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.ftl";
+    private static final String CONTRACT_TEMPLATE_PATH = "templates/contract.html";
+    private static final String ATTACHMENT_TEMPLATE_PATH = "templates/attachment.html";
     private static final String STORAGE_PATH = "contracts/signed/contract-123.pdf";
     private static final String FILENAME = "contract-123.pdf";
     private static final String BASE_PATH = "/v1/document-content/";

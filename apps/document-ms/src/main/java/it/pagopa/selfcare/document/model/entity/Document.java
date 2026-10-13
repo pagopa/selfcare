@@ -19,6 +19,7 @@ public class Document extends ReactivePanacheMongoEntityBase {
     @BsonId
     @Schema(description = "Chiave surrogata (Surrogate Key) generata come UUID randomico. Sostituisce l'onboardingId come Primary Key per prevenire anomalie.")
     private String id;
+    private String tenantId;
     @Schema(description = "Discriminante polimorfica che indica la natura del documento (INSTITUTION, USER, ATTACHMENT).")
     private DocumentType type;
     @Schema(description = "ID del processo di onboarding specifico. Per il tipo ATTACHMENT, non avendo un flusso dedicato, coincide con il rootOnboardingId.")
@@ -52,4 +53,3 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private Integer signingStep;
 
 }
-
