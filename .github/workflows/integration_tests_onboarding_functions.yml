@@ -85,6 +85,9 @@ jobs:
 
       - name: Startup services
         working-directory: apps/onboarding-functions
+        env:
+          # buildx bake rejects the maven_settings secret without an explicit --allow=fs.read
+          COMPOSE_BAKE: "false"
         run: |
           docker compose -f src/test/resources/docker-compose.yml up -d
 
