@@ -55,8 +55,8 @@ public class TenantResolutionFilter implements ContainerRequestFilter {
       MDC.put(TENANT_MDC_KEY, normalizedTenant);
       log.info(
           "Tenant resolved for request: tenant={} method={} path={}",
-          normalizedTenant,
-          requestContext.getMethod(),
+          TenantLogUtils.sanitize(normalizedTenant),
+          TenantLogUtils.sanitize(requestContext.getMethod()),
           TenantLogUtils.sanitize(requestContext.getUriInfo().getPath()));
     } catch (RuntimeException exception) {
       log.warn(

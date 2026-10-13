@@ -113,6 +113,10 @@ locals {
       value = "sc-p-usrattach-blob"
     },
     {
+      name  = "NAMIRIAL_BASE_URL"
+      value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
       name  = "NAMIRIAL_BASE_URL_AR"
       value = "https://selc-${module.local.config.env_short}-namirial-sws-ca.${module.local.config.private_dns_name_domain}"
     },
@@ -145,6 +149,11 @@ locals {
   secrets_names_document_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
     "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+    # Legacy names, still read by the image currently deployed. Remove them once the
+    # tenant-aware image is rolled out (SELC-DMS-07.02).
+    "MONGODB_CONNECTION_STRING"               = "mongodb-connection-string"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_USER"     = "namirial-sign-service-user"
+    "NAMIRIAL_SIGN_SERVICE_IDENTITY_PASSWORD" = "namirial-sign-service-psw"
     # Tenant-bound references used by tenant.registry.json (Multitenant Step 2)
     "MONGODB_CONNECTION_STRING_AR"               = "mongodb-connection-string"
     "JWT_PUBLIC_KEY_AR"                          = "jwt-public-key"

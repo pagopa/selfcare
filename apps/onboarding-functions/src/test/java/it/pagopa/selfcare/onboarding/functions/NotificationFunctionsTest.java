@@ -65,7 +65,7 @@ public class NotificationFunctionsTest {
     CompletionService completionService;
 
 
-    final String onboardinString = "{\"onboardingId\":\"onboardingId\"}";
+    final String onboardinString = "{\"onboardingId\":\"onboardingId\",\"tenantId\":\"AR\"}";
 
     static ExecutionContext executionContext;
 
@@ -135,6 +135,71 @@ public class NotificationFunctionsTest {
         doReturn(Logger.getGlobal()).when(context).getLogger();
 
         HttpResponseMessage responseMessage = function.sendNotification(req, context);
+
+        Mockito.verify(notificationEventService, never()).send(any(), any(), any());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        assertEquals("Invalid tenant context", responseMessage.getBody());
+    }
+
+    @Test
+    public void sendNotificationTriggerInheritsHeaderTenantWhenPayloadHasNone() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Optional.of("{\"onboardingId\":\"onboardingId\"}")).when(req).getBody();
+        doReturn(Map.of("X-Tenant-Id", "ar")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.sendNotification(req, context);
+
+        ArgumentCaptor<Onboarding> onboardingCaptor = ArgumentCaptor.forClass(Onboarding.class);
+        Mockito.verify(notificationEventService, times(1)).send(any(), onboardingCaptor.capture(), any());
+        assertEquals("AR", onboardingCaptor.getValue().getTenantId());
+        assertEquals(HttpStatus.OK.value(), responseMessage.getStatusCode());
+    }
+
+    @Test
+    public void sendNotificationTriggerRejectsPayloadTenantDifferentFromHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        doReturn(Optional.of("{\"onboardingId\":\"onboardingId\",\"tenantId\":\"PNPG\"}")).when(req).getBody();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+
+        HttpResponseMessage responseMessage = function.sendNotification(req, context);
+
+        Mockito.verify(notificationEventService, never()).send(any(), any(), any());
+        assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());
+        assertEquals("Invalid tenant context", responseMessage.getBody());
+    }
+
+    @Test
+    public void resendNotificationTriggerRejectsOnboardingTenantDifferentFromHeader() {
+        @SuppressWarnings("unchecked") final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
+        final String onboardingId = "onboardingId";
+        doReturn(Map.of("onboardingId", onboardingId)).when(req).getQueryParameters();
+        doReturn(Map.of("X-Tenant-Id", "AR")).when(req).getHeaders();
+        doAnswer((Answer<HttpResponseMessage.Builder>) invocation -> {
+            HttpStatus status = (HttpStatus) invocation.getArguments()[0];
+            return new HttpResponseMessageMock.HttpResponseMessageBuilderMock().status(status);
+        }).when(req).createResponseBuilder(any(HttpStatus.class));
+
+        final ExecutionContext context = mock(ExecutionContext.class);
+        doReturn(Logger.getGlobal()).when(context).getLogger();
+        Onboarding onboarding = new Onboarding();
+        onboarding.setTenantId("PNPG");
+        when(onboardingService.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
+
+        HttpResponseMessage responseMessage = function.resendNotification(req, context);
 
         Mockito.verify(notificationEventService, never()).send(any(), any(), any());
         assertEquals(HttpStatus.BAD_REQUEST.value(), responseMessage.getStatusCode());

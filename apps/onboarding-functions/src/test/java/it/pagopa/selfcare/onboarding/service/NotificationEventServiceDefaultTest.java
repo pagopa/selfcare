@@ -8,6 +8,7 @@ import it.pagopa.selfcare.onboarding.client.eventhub.EventHubRestClient;
 import it.pagopa.selfcare.onboarding.client.webhook.WebhookRestClient;
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.dto.*;
 import it.pagopa.selfcare.onboarding.dto.QueueEvent;
 import it.pagopa.selfcare.onboarding.dto.UserToNotify;
@@ -83,6 +84,42 @@ public class NotificationEventServiceDefaultTest {
     verify(webhookRestClient, times(3))
       .sendNotification(any(NotificationRequest.class));
     verify(documentService, never()).getRelatedDocuments(anyString());
+  }
+
+  @Test
+  void sendMessageRejectsOnboardingTenantDifferentFromOuterTenant() {
+    final Onboarding onboarding = createOnboarding();
+    onboarding.setTenantId("PNPG");
+    ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(Logger.getGlobal()).when(context).getLogger();
+
+    try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> notificationServiceDefault.send(context, onboarding, QueueEvent.ADD));
+      assertEquals("Conflicting tenant context", exception.getMessage());
+      assertEquals("AR", TenantContext.currentTenant());
+    }
+
+    verifyNoInteractions(productService, eventHubRestClient, webhookRestClient);
+  }
+
+  @Test
+  void sendMessageAcceptsOnboardingTenantEqualToOuterTenant() {
+    final Onboarding onboarding = createOnboarding();
+    when(productService.getProduct(any())).thenReturn(createProduct());
+    mockNotificationMapper(true);
+    when(documentService.getDocumentByOnboardingIdOrNull(any())).thenReturn(new DocumentResponse());
+    when(institutionApi.retrieveInstitutionByIdUsingGET(any(), any())).thenReturn(new InstitutionResponse());
+    ExecutionContext context = mock(ExecutionContext.class);
+    doReturn(Logger.getGlobal()).when(context).getLogger();
+
+    try (TenantContext.Scope ignored = TenantContext.open("ar")) {
+      notificationServiceDefault.send(context, onboarding, QueueEvent.ADD);
+    }
+
+    verify(eventHubRestClient, times(3)).sendMessage(anyString(), anyString());
   }
 
   @Test

@@ -37,6 +37,8 @@ import org.openapi.quarkus.user_json.model.UserDataResponse;
 
 @ApplicationScoped
 public class NotificationEventServiceImpl implements NotificationEventService {
+    private static final String CONFLICTING_TENANT_CONTEXT = "Conflicting tenant context";
+
     private final TelemetryService telemetryService;
     @RestClient
     @Inject
@@ -88,7 +90,18 @@ public class NotificationEventServiceImpl implements NotificationEventService {
     @Override
     public void send(ExecutionContext context, Onboarding onboarding, QueueEvent queueEvent,
             String notificationEventTraceId) {
-        try (TenantContext.Scope ignored = TenantContext.open(onboarding.getTenantId())) {
+        String onboardingTenant = TenantContext.resolve(onboarding.getTenantId());
+        String outerTenant = TenantContext.currentTenant();
+        if (outerTenant != null && !outerTenant.equals(onboardingTenant)) {
+            throw new IllegalArgumentException(CONFLICTING_TENANT_CONTEXT);
+        }
+        try (TenantContext.Scope ignored = TenantContext.open(onboardingTenant)) {
+            sendInTenantScope(context, onboarding, queueEvent, notificationEventTraceId);
+        }
+    }
+
+    private void sendInTenantScope(ExecutionContext context, Onboarding onboarding, QueueEvent queueEvent,
+            String notificationEventTraceId) {
         context.getLogger()
                 .info(() -> String.format("Starting send method for onboarding with ID %s", onboarding.getId()));
         if (isNotInstitutionOnboarding(onboarding)) {
@@ -132,7 +145,6 @@ public class NotificationEventServiceImpl implements NotificationEventService {
                     notificationEventTraceId);
             // prepareAndSendUserNotification(context, product, consumerConfig,
             // notificationsResources, notificationEventTraceId);
-        }
         }
     }
 
