@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -16,6 +17,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -257,5 +260,50 @@ class InstitutionIndexWriterServiceTest {
 
     verify(azureSearchRestClient, never())
         .index(any(), any(), any(SearchServiceIndexRequest.class));
+  }
+
+  private static IpaInstitution fullInstitution() {
+    IpaInstitution inst = new IpaInstitution();
+    inst.setOriginId("p_or");
+    inst.setTaxCode("80004010957");
+    inst.setDescription("Provincia di Oristano");
+    inst.setCategory("L5");
+    inst.setDigitalAddress("provincia.oristano@cert.legalmail.it");
+    inst.setAddress("Via Enrico Carboni");
+    inst.setZipCode("09170");
+    inst.setIstatCode("115045");
+    inst.setUpdateDate("2025-12-15");
+    return inst;
+  }
+
+  @Test
+  void testHasContentChanged_AllFieldsEqual_False() {
+    IpaInstitution inst = fullInstitution();
+    assertFalse(service.hasContentChanged(IpaInstitutionIndex.fromInstitution(inst), inst));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "originId",
+        "taxCode",
+        "description",
+        "category",
+        "digitalAddress",
+        "address",
+        "zipCode",
+        "istatCode",
+        "origin"
+      })
+  void testHasContentChanged_SingleFieldDiffers_True(String field) {
+    IpaInstitution inst = fullInstitution();
+    IpaInstitutionIndex indexed = IpaInstitutionIndex.fromInstitution(inst);
+    ReflectionTestUtils.setField(indexed, field, "changed");
+    assertTrue(service.hasContentChanged(indexed, inst));
+  }
+
+  @Test
+  void testGetSelectFields_ContainsComparedFields() {
+    assertEquals(InstitutionIndexWriterService.COMPARED_FIELDS, service.getSelectFields());
   }
 }
