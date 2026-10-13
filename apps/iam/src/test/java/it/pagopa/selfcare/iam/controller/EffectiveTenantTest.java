@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.ws.rs.BadRequestException;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@QuarkusTest
 @ExtendWith(MockitoExtension.class)
 class EffectiveTenantTest {
 
