@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest;
 
 
 
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.BadGatewayException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ServiceUnavailableException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.GeographicTaxonomy;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static it.pagopa.selfcare.party.registry_proxy.connector.rest.GeoTaxonomiesConnectorImpl.CODE_S_NOT_FOUND;
+import static it.pagopa.selfcare.party.registry_proxy.connector.rest.GeoTaxonomiesConnectorImpl.GEO_TAXONOMIES_SERVICE_UNAVAILABLE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -212,8 +214,37 @@ class GeoTaxonomiesConnectorImplTest {
     }
 
     @Test
-    void fallbackGetExtByCodeTest(){
-        Assertions.assertThrows(ResourceNotFoundException.class, () -> geoTaxonomiesConnectorImpl.fallbackGetExtByCode(new ServiceUnavailableException()));
+    void fallbackGetExtByCode_notFound_keepsNotFoundWithMessage(){
+        ResourceNotFoundException e = Assertions.assertThrows(ResourceNotFoundException.class,
+                () -> geoTaxonomiesConnectorImpl.fallbackGetExtByCode("111001", new ResourceNotFoundException("Not Found")));
+        assertEquals(String.format(CODE_S_NOT_FOUND, "111001"), e.getMessage());
+    }
+
+    @Test
+    void fallbackGetExtByCode_serviceUnavailable_badGateway(){
+        BadGatewayException e = Assertions.assertThrows(BadGatewayException.class,
+                () -> geoTaxonomiesConnectorImpl.fallbackGetExtByCode("111001", new ServiceUnavailableException()));
+        assertEquals(GEO_TAXONOMIES_SERVICE_UNAVAILABLE, e.getMessage());
+    }
+
+    @Test
+    void fallbackGetExtByCode_badGateway_badGateway(){
+        Assertions.assertThrows(BadGatewayException.class,
+                () -> geoTaxonomiesConnectorImpl.fallbackGetExtByCode("111001", new BadGatewayException("Internal Server Error")));
+    }
+
+    @Test
+    void fallbackGetExtByCode_genericError_badGateway(){
+        Assertions.assertThrows(BadGatewayException.class,
+                () -> geoTaxonomiesConnectorImpl.fallbackGetExtByCode("111001", new IllegalStateException("circuit breaker open")));
+    }
+
+    @Test
+    void fallbackGetExtByCode_illegalArgument_rethrown(){
+        IllegalArgumentException original = new IllegalArgumentException("Code is required");
+        IllegalArgumentException e = Assertions.assertThrows(IllegalArgumentException.class,
+                () -> geoTaxonomiesConnectorImpl.fallbackGetExtByCode(null, original));
+        assertSame(original, e);
     }
 
 
