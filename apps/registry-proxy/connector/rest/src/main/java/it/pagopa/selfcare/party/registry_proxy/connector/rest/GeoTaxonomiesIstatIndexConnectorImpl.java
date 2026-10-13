@@ -30,9 +30,10 @@ public class GeoTaxonomiesIstatIndexConnectorImpl implements GeoTaxonomiesIstatI
 
     @Override
     public Optional<GeographicTaxonomy> findByCode(String code) {
+        final String safeCode = Objects.isNull(code) ? null : Encode.forJava(code);
         if (Objects.isNull(code) || !VALID_CODE_PATTERN.matcher(code).matches()) {
             log.warn("Invalid geotaxonomy code format for fallback ISTAT index lookup: {}",
-                    Objects.isNull(code) ? null : Encode.forJava(code));
+                    safeCode);
             return Optional.empty();
         }
 
@@ -42,12 +43,12 @@ public class GeoTaxonomiesIstatIndexConnectorImpl implements GeoTaxonomiesIstatI
                     azureSearchRestClient.searchGeoTaxonomyIstat(filter, 1);
 
             if (Objects.isNull(response) || Objects.isNull(response.getValue()) || response.getValue().isEmpty()) {
-                log.debug("Geotaxonomy code {} not present on fallback ISTAT index", code);
+                log.debug("Geotaxonomy code {} not present on fallback ISTAT index", safeCode);
                 return Optional.empty();
             }
             return Optional.of(toGeographicTaxonomy(response.getValue().get(0)));
         } catch (Exception e) {
-            log.error("Error querying fallback ISTAT index for geotaxonomy code {}: {}", code, e.getMessage(), e);
+            log.error("Error querying fallback ISTAT index for geotaxonomy code {}: {}", safeCode, e.getMessage(), e);
             return Optional.empty();
         }
     }
