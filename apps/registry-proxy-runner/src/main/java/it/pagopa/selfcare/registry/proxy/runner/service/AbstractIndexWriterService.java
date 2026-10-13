@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.registry.proxy.runner.service;
 
 import it.pagopa.selfcare.registry.proxy.runner.client.AzureSearchRestClient;
+import it.pagopa.selfcare.registry.proxy.runner.model.IpaInstitutionIndex;
 import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexRequest;
 import it.pagopa.selfcare.registry.proxy.runner.model.SearchServiceIndexResponse;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
       return;
     }
 
-    Map<String, String> itemsIndexed = fetchAll();
+    Map<String, IpaInstitutionIndex> itemsIndexed = fetchAll();
 
     List<T> toIndex =
         items.stream()
@@ -98,6 +99,41 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
   }
 
   /**
+   * Determines whether the item needs to be re-indexed: the document is new, its updateDate changed,
+   * or its content changed even though the updateDate did not (e.g. IPA bulk updates of ISTAT codes
+   * applied without changing Data_aggiornamento).
+   */
+  protected boolean needsUpdate(IpaInstitutionIndex indexed, T item) {
+    if (indexed == null) {
+      return true;
+    }
+    if (needsUpdate(indexed.getUpdateDate(), item)) {
+      return true;
+    }
+    if (hasContentChanged(indexed, item)) {
+      log.info(
+          "[{}] Document '{}' changed with unchanged updateDate, it will be re-indexed",
+          getEntityName(),
+          getId(item));
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Hook to detect content changes not reflected by the updateDate. The indexed document contains
+   * only the fields returned by {@link #getSelectFields()}. Default: no content comparison.
+   */
+  protected boolean hasContentChanged(IpaInstitutionIndex indexed, T item) {
+    return false;
+  }
+
+  /** Fields retrieved from the index for change detection. */
+  protected String getSelectFields() {
+    return "id,updateDate";
+  }
+
+  /**
    * Determines whether the item needs to be re-indexed by comparing the updateDate from the CSV
    * with the one stored in AI Search.
    */
@@ -129,8 +165,8 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
     }
   }
 
-  private Map<String, String> fetchAll() {
-    Map<String, String> result = new HashMap<>();
+  private Map<String, IpaInstitutionIndex> fetchAll() {
+    Map<String, IpaInstitutionIndex> result = new HashMap<>();
     int skip = 0;
     while (true) {
       try {
@@ -139,7 +175,7 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
                 getIndexName(),
                 getApiVersion(),
                 "*",
-                "id,updateDate",
+                getSelectFields(),
                 true,
                 BATCH_SIZE,
                 skip,
@@ -154,7 +190,7 @@ public abstract class AbstractIndexWriterService<T, D> implements IndexWriterSer
             .forEach(
                 doc -> {
                   if (doc.getId() != null) {
-                    result.put(doc.getId(), doc.getUpdateDate());
+                    result.put(doc.getId(), doc);
                   }
                 });
         if (response.getValue().size() < BATCH_SIZE) {

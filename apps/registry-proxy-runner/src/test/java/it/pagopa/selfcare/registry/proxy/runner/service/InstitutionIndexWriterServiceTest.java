@@ -44,6 +44,8 @@ class InstitutionIndexWriterServiceTest {
   private IpaInstitutionIndex buildIndexDoc(String id, String updateDate) {
     IpaInstitutionIndex idx = new IpaInstitutionIndex();
     idx.setId(id);
+    idx.setTaxCode(id);
+    idx.setOrigin("IPA");
     idx.setUpdateDate(updateDate);
     return idx;
   }
@@ -183,5 +185,77 @@ class InstitutionIndexWriterServiceTest {
 
     List<?> values = captor.getValue().getValue();
     assertEquals(1, values.size());
+  }
+
+  @Test
+  void testIndex_IstatCodeChangedWithSameUpdateDate_Reindexed() {
+    // Provincia di Oristano: IPA changed the ISTAT code without changing Data_aggiornamento
+    IpaInstitutionIndex indexed = buildIndexDoc("80004010957", "2025-12-15");
+    indexed.setIstatCode("095038");
+    IpaInstitutionIndex unchanged = buildIndexDoc("ID2", "2025-12-15");
+    unchanged.setIstatCode("058091");
+    when(azureSearchRestClient.search(
+            eq("ipa-inst-idx"),
+            eq("2023-11-01"),
+            any(),
+            eq(InstitutionIndexWriterService.COMPARED_FIELDS),
+            eq(true),
+            eq(1000),
+            eq(0),
+            any()))
+        .thenReturn(buildFetchAllResponse(List.of(indexed, unchanged)));
+
+    IpaInstitution oristano = buildInstitution("80004010957", "2025-12-15");
+    oristano.setIstatCode("115045");
+    IpaInstitution other = buildInstitution("ID2", "2025-12-15");
+    other.setIstatCode("058091");
+
+    service.index(List.of(oristano, other));
+
+    ArgumentCaptor<SearchServiceIndexRequest> captor =
+        ArgumentCaptor.forClass(SearchServiceIndexRequest.class);
+    verify(azureSearchRestClient, times(1))
+        .index(eq("ipa-inst-idx"), eq("2023-11-01"), captor.capture());
+    List<?> values = captor.getValue().getValue();
+    assertEquals(1, values.size());
+    IpaInstitutionIndex upserted = (IpaInstitutionIndex) values.get(0);
+    assertEquals("80004010957", upserted.getId());
+    assertEquals("115045", upserted.getIstatCode());
+  }
+
+  @Test
+  void testIndex_OtherFieldChangedWithSameUpdateDate_Reindexed() {
+    IpaInstitutionIndex indexed = buildIndexDoc("ID1", "2023-01-01");
+    indexed.setDescription("Old description");
+    when(azureSearchRestClient.search(
+            eq("ipa-inst-idx"), eq("2023-11-01"), any(), any(), eq(true), eq(1000), eq(0), any()))
+        .thenReturn(buildFetchAllResponse(List.of(indexed)));
+
+    IpaInstitution inst = buildInstitution("ID1", "2023-01-01");
+    inst.setDescription("New description");
+
+    service.index(List.of(inst));
+
+    verify(azureSearchRestClient, times(1))
+        .index(eq("ipa-inst-idx"), eq("2023-11-01"), any(SearchServiceIndexRequest.class));
+  }
+
+  @Test
+  void testIndex_NullAndEmptyAreEqual_NotReindexed() {
+    IpaInstitutionIndex indexed = buildIndexDoc("ID1", "2023-01-01");
+    indexed.setDigitalAddress(null);
+    indexed.setZipCode("");
+    when(azureSearchRestClient.search(
+            eq("ipa-inst-idx"), eq("2023-11-01"), any(), any(), eq(true), eq(1000), eq(0), any()))
+        .thenReturn(buildFetchAllResponse(List.of(indexed)));
+
+    IpaInstitution inst = buildInstitution("ID1", "2023-01-01");
+    inst.setDigitalAddress("");
+    inst.setZipCode(null);
+
+    service.index(List.of(inst));
+
+    verify(azureSearchRestClient, never())
+        .index(any(), any(), any(SearchServiceIndexRequest.class));
   }
 }
