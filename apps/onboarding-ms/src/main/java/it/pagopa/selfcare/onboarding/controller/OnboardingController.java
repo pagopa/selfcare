@@ -442,6 +442,7 @@ public class OnboardingController {
                                                               @QueryParam(value = "from") String from,
                                                               @QueryParam(value = "to") String to,
                                                               @QueryParam(value = "status") OnboardingStatus status,
+                                                              @QueryParam(value = "workflowType") WorkflowType workflowType,
                                                               @QueryParam(value = "userId") String userId,
                                                               @QueryParam(value = "productIds") List<String> productIds,
                                                               @QueryParam(value = "page") @DefaultValue("0") Integer page,
@@ -456,6 +457,7 @@ public class OnboardingController {
                 .from(from)
                 .to(to)
                 .status(status)
+                .workflowType(workflowType)
                 .userId(userId)
                 .productIds(productIds)
                 .page(page)

@@ -217,6 +217,10 @@ paths:
         in: query
         schema:
           type: string
+      - name: workflowType
+        in: query
+        schema:
+          $ref: "#/components/schemas/WorkflowType"
       responses:
         "200":
           description: OK
@@ -2014,6 +2018,8 @@ components:
           type: array
           items:
             type: string
+        contractUpdateRequired:
+          type: boolean
     OnboardingGetResponse:
       type: object
       properties:
@@ -2424,6 +2430,26 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/RowError"
+    WorkflowType:
+      enum:
+      - CONTRACT_REGISTRATION
+      - CONTRACT_WITH_COUNTERSIGNATURE
+      - CONTRACT_UPDATE
+      - FOR_APPROVE
+      - FOR_APPROVE_PT
+      - FOR_APPROVE_GPU
+      - CONFIRMATION
+      - USERS
+      - USERS_IMPORT
+      - IMPORT
+      - IMPORT_AGGREGATION
+      - CONTRACT_REGISTRATION_AGGREGATOR
+      - CONFIRMATION_AGGREGATE
+      - INCREMENT_REGISTRATION_AGGREGATOR
+      - CONFIRMATION_AGGREGATOR
+      - USERS_PG
+      - USERS_EA
+      type: string
   securitySchemes:
     SecurityScheme:
       type: http

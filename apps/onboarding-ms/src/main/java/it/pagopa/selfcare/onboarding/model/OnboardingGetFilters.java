@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.model;
 
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +19,7 @@ public class OnboardingGetFilters {
     private String subunitCode;
     private String taxCode;
     private OnboardingStatus status;
+    private WorkflowType workflowType;
     private String from;
     private String to;
     private String userId;
