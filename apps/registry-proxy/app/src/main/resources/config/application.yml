@@ -36,6 +36,11 @@ ivass:
     connector:
       type: "rest"
 
+geotax:
+  istat-fallback:
+    # Enables lookup on the custom ISTAT AI Search index when the datalake does not return a geotaxonomy
+    enabled: ${GEOTAX_ISTAT_FALLBACK_ENABLED:false}
+
 info:
   build:
     artifact: "@project.parent.artifactId@"
@@ -74,7 +79,7 @@ logging:
   pattern:
     level: "%5p [${spring.application.name:},%X{trace_id:-},%X{span_id:-}]"
     additional-info: ",%X{X-Client-Ip:-}]"
-    
+
   appinsights:
     enabled: ${LOGGING_APPINSIGHTS_ENABLED:true}
     batch:

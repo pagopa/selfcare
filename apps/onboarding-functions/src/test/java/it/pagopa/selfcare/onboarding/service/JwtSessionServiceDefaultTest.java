@@ -5,6 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.quarkus.test.junit.QuarkusTestProfile;
 import io.quarkus.test.junit.TestProfile;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
+import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.service.impl.JwtSessionServiceImpl;
 
 import jakarta.inject.Inject;
@@ -61,7 +62,10 @@ class JwtSessionServiceDefaultTest {
         userResource.setName(certifiedField);
         userResource.setFamilyName(certifiedField);
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(userResource);
-        String jwt = tokenService.createJwt(userId);
+        String jwt;
+        try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+            jwt = tokenService.createJwt(userId);
+        }
         assertTrue(Objects.nonNull(jwt));
     }
 
@@ -77,6 +81,15 @@ class JwtSessionServiceDefaultTest {
         when(userRegistryApi.findByIdUsingGET(any(), any())).thenThrow(new ResourceNotFoundException("An error occurred", "Code"));
         String jwt = tokenService.createJwt(userId);
         assertTrue(Objects.isNull(jwt));
+    }
+
+    @Test
+    void createMachineJwt() {
+        String jwt;
+        try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+            jwt = tokenService.createMachineJwt();
+        }
+        assertTrue(Objects.nonNull(jwt));
     }
 
 }

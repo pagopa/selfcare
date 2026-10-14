@@ -2,5 +2,12 @@ MONGODB_CONNECTION_STRING=mongodb://mongodb:27017/
 JWT_PUBLIC_KEY=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB
 
 STORAGE_CONTAINER_CONTRACT=resources
+# Multi-tenant document-ms (SELC-DMS): registry override pointing to Azurite and the compose Mongo
+TENANT_ENFORCEMENT_ENABLED=false
+TENANT_DEFAULT=AR
+MONGODB_CONNECTION_STRING_AR=mongodb://mongodb:27017/
+JWT_PUBLIC_KEY_AR=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnpt9gVNzDW6FpBk/TwNCqd+URprAD3tfGhYWhq2sAxDAP5u9GxgHybFQ8XGNY3yeb9rp5lxLqAcxOg5j19i0tvjkK/Q7GUezteY8xpEfRLJxglIaux/sM8M82YiHCwAjgQPF+EmIPboER5fLLnvDXyl+FYzcGhwPc8Z8AGlYjv8mgijrffSpbjtd7FF0I6WxIqKFHFhIsfUMezBa7NTMSIrxp5dACCMetrKkggTK3Yq8DP86nWuSdDsjIGLrIQFuMQOALr46cSafvHMFK5B/iIDfFLAek7Kg2tELHXWdcctjdPwsc38EXb3P2Fi70WOcLg9lAx9EDgizVLaG5obCCQIDAQAB
+AZURITE_CONNECTION_STRING_AR=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"cosmos-ar","database":"selcDocument","connectionStringEnvVar":"MONGODB_CONNECTION_STRING_AR"},"jwt":{"publicKeyEnvVar":"JWT_PUBLIC_KEY_AR"},"storages":{"contracts":{"account":"devstoreaccount1","container":"resources","pathPrefix":"","authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"AZURITE_CONNECTION_STRING_AR"}},"user-attachments":{"account":"devstoreaccount1","container":"resources","pathPrefix":"","authentication":{"type":"CONNECTION_STRING","connectionStringEnvVar":"AZURITE_CONNECTION_STRING_AR"}}}}}
 BLOB_STORAGE_CONTRACT_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
 JAVA_TOOL_OPTIONS=-Duser.timezone=GMT -Duser.language=en -Duser.country=US
