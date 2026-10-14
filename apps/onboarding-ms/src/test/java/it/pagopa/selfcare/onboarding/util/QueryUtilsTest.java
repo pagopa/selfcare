@@ -2,9 +2,11 @@ package it.pagopa.selfcare.onboarding.util;
 
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.OnboardingStatus;
+import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Billing;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import org.junit.jupiter.api.Test;
 import org.wildfly.common.Assert;
 
@@ -71,5 +73,28 @@ class QueryUtilsTest {
     Assert.assertTrue(onboardingMap.get("institution.parentDescription").equals("parentDescription"));
     Assert.assertTrue(onboardingMap.get("institution.origin").equals("MOCK"));
     Assert.assertTrue(onboardingMap.get("institution.originId").equals("MOCK1"));
+  }
+
+  @Test
+  void testOnboardingQueryMap_workflowType() {
+    OnboardingGetFilters filters = OnboardingGetFilters.builder()
+      .institutionId("inst-1")
+      .productId("prod-io")
+      .status(OnboardingStatus.PENDING)
+      .workflowType(WorkflowType.CONTRACT_UPDATE)
+      .build();
+
+    Map<String, Object> queryMap = QueryUtils.createMapForOnboardingQueryParameter(filters);
+
+    Assert.assertTrue("CONTRACT_UPDATE".equals(queryMap.get("workflowType")));
+    Assert.assertTrue(QueryUtils.buildQuery(queryMap).toJson().contains("\"workflowType\": \"CONTRACT_UPDATE\""));
+  }
+
+  @Test
+  void testOnboardingQueryMap_withoutWorkflowType() {
+    Map<String, Object> queryMap = QueryUtils.createMapForOnboardingQueryParameter(
+      OnboardingGetFilters.builder().productId("prod-io").build());
+
+    Assert.assertTrue(!queryMap.containsKey("workflowType"));
   }
 }
