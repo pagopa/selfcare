@@ -54,3 +54,19 @@ variable "law" {
     resource_group_name = string
   })
 }
+
+variable "container" {
+  type = object({
+    cpu    = number
+    memory = string
+    image  = string
+  })
+
+  default = {
+    cpu    = 0.5
+    memory = "1Gi"
+    image  = "ghcr.io/pagopa/github-self-hosted-runner-azure:latest"
+  }
+
+  description = "Job Container configuration"
+}
