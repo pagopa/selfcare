@@ -158,7 +158,15 @@ locals {
     {
       name  = "INSTITUTION_API_URL"
       value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
-    }
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"AR\":{\"mongo\":{\"account\":\"cosmos-ar\",\"database\":\"selcIam\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_AR\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_AR\"}}}"
+    },
   ]
 
   secrets_names_iam_ms = {
