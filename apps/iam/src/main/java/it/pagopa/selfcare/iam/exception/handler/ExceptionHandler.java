@@ -3,6 +3,7 @@ package it.pagopa.selfcare.iam.exception.handler;
 import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.iam.exception.*;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAllowedException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
@@ -61,6 +62,12 @@ public class ExceptionHandler {
   public Response toResponse(UnimplementedException exception) {
     logHandledException(Response.Status.NOT_IMPLEMENTED, exception);
     return problem(Response.Status.NOT_IMPLEMENTED, "Not implemented");
+  }
+
+  @ServerExceptionMapper
+  public Response toResponse(BadRequestException exception) {
+    logHandledException(Response.Status.BAD_REQUEST, exception);
+    return problem(Response.Status.BAD_REQUEST, exception.getMessage());
   }
 
   @ServerExceptionMapper

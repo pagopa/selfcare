@@ -78,9 +78,9 @@ another tenant's signing key.
 
 `mp.jwt.verify.publickey` is kept as a **legacy fallback only**: it is used solely when
 no tenant in the registry configures a `jwt.publicKeyEnvVar`. Apps that already wire
-the tenant JWT registry (`onboarding-ms`, `product`, `user-group-ms`) resolve keys
+the tenant JWT registry (`iam`, `onboarding-ms`, `product`, `user-group-ms`) resolve keys
 from `jwt.publicKeyEnvVar`. Remaining apps sharing `selfcare-sdk-security`
-(`document-ms`, `iam`, `user-ms`, `webhook`) stay backward compatible until they
+(`document-ms`, `user-ms`, `webhook`) stay backward compatible until they
 configure a tenant JWT registry.
 
 ## Key selection at verification time

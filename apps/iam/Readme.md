@@ -33,10 +33,13 @@ The module is built using:
 | Field | Type | Constraints | Description |
 |-------|------|-------------|-------------|
 | `_id` | String | PK, Required | Unique identifier (UUID)  |
-| `email` | String | Unique, Required | User's email (primary key) |
+| `email` | String | Unique, Required | User's email, encrypted with the key of the tenant that created the user |
 | `name` | String | Optional | User's first name |
 | `familyName` | String | Optional | User's last name |
-| `productRoles` | Array<ProductRoles> | Optional | List of roles per product |
+| `productRoles` | Array<ProductRoles> | Optional | List of roles per product; each item has `productId`, `tenantId` and `roles` |
+
+The identity (`_id`, `email`, name) is shared by every tenant: one document per email. The tenant
+(`AR`, `PNPG`) is carried by each `productRoles` item and enables that product only in its tenant.
 
 **Indexes:**
 - Primary: `_id` (userId)
@@ -52,10 +55,12 @@ The module is built using:
   "productRoles": [
     {
       "productId": "product1",
+      "tenantId": "AR",
       "roles": ["admin", "operator"]
     },
     {
       "productId": "product2",
+      "tenantId": "PNPG",
       "roles": ["viewer"]
     }
   ]
@@ -357,11 +362,51 @@ iamService.saveUser(request, "product2")
 
 ## Configuration
 
-### MongoDB Connection
+### Multitenancy
+The tenant of each request is resolved by `TenantResolutionFilter` (from `selfcare-sdk-security`,
+enabled with `selfcare.tenant.resolution-filter.enabled=true`) from the optional
+`tenantId` query parameter or the `X-Tenant-Id` header (a conflict between them, or with the
+JWT `tenant_id` claim, returns 400). When `TENANT_ENFORCEMENT_ENABLED=false`, requests without
+tenant fall back to `TENANT_DEFAULT`. The header is propagated to institution-ms.
+
 ```properties
-quarkus.mongodb.connection-string=${MONGODB_CONNECTION_STRING:mongodb://localhost:27017}
-quarkus.mongodb.database=selcIam
+# Per-tenant Mongo database and JWT key (selfcare-sdk-tenant registry)
+TENANT_REGISTRY_JSON={"AR":{"mongo":{"account":"...","database":"selcIam","connectionStringEnvVar":"MONGODB_CONNECTION_STRING_AR"},"jwt":{"publicKeyEnvVar":"JWT_PUBLIC_KEY_AR"}}}
+TENANT_SUPPORTED_TENANTS=AR
+# Per-tenant encryption key/iv for email, name and familyName
+SELFCARE_DATA_ENCRIPTION_KEY_AR=...
+SELFCARE_DATA_ENCRIPTION_IV_AR=...
+# true once every productRoles item has a tenantId: hides legacy roles without tenantId
+SELFCARE_TENANT_STRICT_DATA_ISOLATION=false
 ```
+
+`userClaims` and the global `roles` collection must live in the same database (`$lookup`).
+Users are looked up by `_id`/`email` regardless of the tenant; `TenantDataFilter` restricts the
+product roles that are read and written to those of the current tenant, so saving a user from one
+tenant never changes the roles of another.
+
+Personal data keep the key of the tenant that created the user. Email lookups encrypt the email
+with every tenant key (current tenant first), and decryption tries the current tenant key, then the
+others (AES-GCM rejects a wrong key). A shared deployment therefore needs the keys of every tenant
+in `TENANT_REGISTRY_JSON`.
+
+### Migration
+Each `-ar`/`-pnpg` stack keeps its own database until the merge. Before merging:
+1. Tag legacy roles and fix the PNPG ones, which were defaulted to `AR` before multitenancy:
+   ```javascript
+   // AR database
+   db.userClaims.updateMany({}, { $set: { "productRoles.$[r].tenantId": "AR" } },
+     { arrayFilters: [{ "r.tenantId": null }] })
+   // PNPG database
+   db.userClaims.updateMany({}, { $set: { "productRoles.$[r].tenantId": "PNPG" } },
+     { arrayFilters: [{ "r.tenantId": { $ne: "PNPG" } }] })
+   ```
+2. Merge the PNPG documents into the AR database. No re-encryption is needed: PNPG documents keep
+   the PNPG key. Match users present in both tenants by decrypted email (the ciphertexts differ),
+   append the PNPG `productRoles` to the AR document and keep the AR `_id` and ciphertexts (record
+   the PNPG→AR uid mapping for callers).
+3. Point every tenant of `TENANT_REGISTRY_JSON` to the merged database, configure the keys of
+   both tenants, then set `SELFCARE_TENANT_STRICT_DATA_ISOLATION=true`.
 
 ### Indexes (MongoDB Shell)
 ```javascript

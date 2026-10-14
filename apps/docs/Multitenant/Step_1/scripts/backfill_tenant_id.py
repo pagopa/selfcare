@@ -36,10 +36,11 @@ from pymongo.uri_parser import parse_uri
 # out of scope, in particular the product catalogue database used by `product`/`product-cdc`: it
 # holds the global, cross-tenant product definitions and tagging it would be wrong, not merely
 # unnecessary.
+# `selcIam.userClaims` is excluded too: the user identity is shared by every tenant and the tenant
+# lives in each embedded `productRoles.tenantId` (see apps/iam/Readme.md).
 TENANT_SCOPED_COLLECTIONS = {
     "selcAuth": ["otpFlows"],
     "selcDocument": ["documents"],
-    "selcIam": ["userClaims"],
     "selcMsCore": ["Institution", "Delegations", "MailNotification"],
     "selcOnboarding": ["onboardings", "tokens"],
     "selcUser": ["userInfo", "userInstitutions"],

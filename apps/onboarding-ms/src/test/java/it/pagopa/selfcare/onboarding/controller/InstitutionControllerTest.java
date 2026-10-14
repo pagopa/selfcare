@@ -14,7 +14,7 @@ import it.pagopa.selfcare.onboarding.common.InstitutionType;
 import it.pagopa.selfcare.onboarding.controller.request.GetInstitutionRequest;
 import it.pagopa.selfcare.onboarding.controller.response.InstitutionResponse;
 import it.pagopa.selfcare.onboarding.service.InstitutionService;
-import it.pagopa.selfcare.onboarding.filter.TenantResolutionFilter;
+import it.pagopa.selfcare.security.tenant.TenantResolutionFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
