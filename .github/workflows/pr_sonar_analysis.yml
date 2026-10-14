@@ -140,9 +140,9 @@ jobs:
           fi
 
           if [[ "$MODE" == "partial" ]]; then
-            mvn -T "$THREADS" -B -ntp clean test --projects "$PROJECTS" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+            mvn -T "$THREADS" -B -ntp clean test --projects "$PROJECTS" --also-make -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0 -Dquarkus.generate-code.serialize-test-model=false
           else
-            mvn -T "$THREADS" -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0
+            mvn -T "$THREADS" -B -ntp clean test -Dquarkus.http.test-port=0 -Dquarkus.management.test-port=0 -Dquarkus.generate-code.serialize-test-model=false
           fi
 
       - name: Set up JDK 21 for Sonar
