@@ -18,6 +18,12 @@ module "github_runner" {
     subnet_cidr_block        = "10.1.146.0/23"
   }
 
+  container = {
+    cpu    = 2
+    memory = "4Gi"
+    image  = "ghcr.io/pagopa/github-self-hosted-runner-azure:latest"
+  }
+
   law = {
     name                = "${local.project}-law"
     resource_group_name = "${local.project}-monitor-rg"
