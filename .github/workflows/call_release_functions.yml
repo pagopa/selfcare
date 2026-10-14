@@ -37,13 +37,15 @@ jobs:
     name: ${{ inputs.target == 'ar' && '[Dev]' || '[Dev-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') != true && inputs.env == null) || inputs.env == 'dev' }}
     needs: [infra_dev]
-    runs-on: self-hosted
+    runs-on: [self-hosted, dev]
     environment:
       name: dev-cd
       url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
     permissions:
       id-token: write
       packages: read
+    env:
+      MAVEN_OPTS: "-Xmx4g"
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
@@ -62,8 +64,6 @@ jobs:
         run: |
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
-        env:
-          MAVEN_OPTS: "-Xmx4g"
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
       - name: Deploy Function App
@@ -93,13 +93,15 @@ jobs:
     name: ${{ inputs.target == 'ar' && '[Uat]' || '[Uat-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ (startsWith(github.ref_name, 'releases/') == true && inputs.env == null) || inputs.env == 'uat' }}
     needs: [infra_uat]
-    runs-on: self-hosted
+    runs-on: [self-hosted, uat]
     environment:
       name: uat-cd
       url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'u' || 'u-pnpg') }}
     permissions:
       id-token: write
       packages: read
+    env:
+      MAVEN_OPTS: "-Xmx4g"
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
@@ -147,13 +149,15 @@ jobs:
     name: ${{ inputs.target == 'ar' && '[Prod]' || '[Prod-PNPG]' }} - ${{ inputs.app }} Release
     if: ${{ inputs.env == 'prod' }}
     needs: [infra_prod]
-    runs-on: self-hosted
+    runs-on: [self-hosted, prod]
     environment:
       name: prod-cd
       url: ${{ format('https://selc-{0}-onboarding-fn.azurewebsites.net', inputs.target == 'ar' && 'p' || 'p-pnpg') }}
     permissions:
       id-token: write
       packages: read
+    env:
+      MAVEN_OPTS: "-Xmx4g"
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 #v4
