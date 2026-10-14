@@ -111,4 +111,33 @@ class OpenDataLoaderTest {
     verify(pdndIndexWriterService, times(1)).adds(stations);
     verify(ivassIndexWriterService, times(1)).adds(insuranceCompanies);
   }
+
+  @Test
+  void run_forceReindexOverridesDisabledFlag() {
+    // given
+    final List institutions = List.of();
+    when(openDataConnector.getInstitutions()).thenReturn(institutions);
+    when(openDataConnector.getCategories()).thenReturn(List.of());
+    when(openDataConnector.getAOOs()).thenReturn(List.of());
+    when(openDataConnector.getUOs()).thenReturn(List.of());
+    when(anacService.loadStations()).thenReturn(List.of());
+    when(ivassDataConnector.getInsurances()).thenReturn(List.of());
+    OpenDataLoader loader =
+        new OpenDataLoader(
+            List.of(openDataConnector),
+            institutionIndexWriterService,
+            categoryIndexWriterService,
+            aooIndexWriterService,
+            uoIndexWriterService,
+            pdndIndexWriterService,
+            ivassIndexWriterService,
+            anacService,
+            ivassDataConnector,
+            false);
+    // when
+    loader.run("--force-reindex");
+    // then
+    verify(institutionIndexWriterService, times(1)).addsForced(institutions);
+    verify(institutionIndexWriterService, never()).adds(any());
+  }
 }

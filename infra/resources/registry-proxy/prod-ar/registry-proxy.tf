@@ -68,6 +68,13 @@ module "ai_search_ipa" {
   srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
 }
 
+module "ai_search_geotax" {
+  source                   = "../../_modules/ai_search_geotax"
+  domain                   = module.local.config.domain
+  srch_service_name        = data.azurerm_search_service.srch_service.name
+  srch_service_primary_key = data.azurerm_search_service.srch_service.primary_key
+}
+
 
 ###############################################################################
 # DAPR
@@ -162,7 +169,7 @@ locals {
     },
     {
       name  = "IPA_INSTITUTION_STARTUP_INDEXING_ENABLED"
-      value = "false"
+      value = "true"
     },
     {
       name  = "MOCK_OPEN_DATA_URL"
@@ -267,6 +274,14 @@ locals {
     {
       name  = "AZURE_SEARCH_IPA_CATEGORY_INDEX"
       value = module.ai_search_ipa.category_index_name
+    },
+    {
+      name  = "AZURE_SEARCH_GEOTAX_ISTAT_SEARCH_PATH"
+      value = "indexes/${module.ai_search_geotax.geotax_istat_index_name}/docs?api-version=2023-11-01"
+    },
+    {
+      name  = "GEOTAX_ISTAT_FALLBACK_ENABLED"
+      value = "true"
     },
     {
       name  = "ANAC_FTP_MODE"

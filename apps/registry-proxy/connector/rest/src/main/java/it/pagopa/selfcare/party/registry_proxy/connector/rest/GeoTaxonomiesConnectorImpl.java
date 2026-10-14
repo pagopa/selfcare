@@ -4,12 +4,14 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import it.pagopa.selfcare.commons.base.logging.LogUtils;
 import it.pagopa.selfcare.party.registry_proxy.connector.api.GeoTaxonomiesConnector;
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.BadGatewayException;
 import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.GeographicTaxonomy;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.client.GeoTaxonomiesRestClient;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.geotaxonomy.GeographicTaxonomiesResponse;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.geotaxonomy.GeographicTaxonomyResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.owasp.encoder.Encode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -24,6 +26,7 @@ public class GeoTaxonomiesConnectorImpl implements GeoTaxonomiesConnector {
 
     public static final String CODE_S_NOT_FOUND = "Code %s not found!";
     public static final String ERROR_GEO_TAXONOMIES_REST_CLIENT_MESSAGE = "Error geo-taxonomies rest client, message: %s";
+    public static final String GEO_TAXONOMIES_SERVICE_UNAVAILABLE = "Geo-taxonomies service unavailable";
     private final GeoTaxonomiesRestClient restClient;
     @Autowired
     public GeoTaxonomiesConnectorImpl(GeoTaxonomiesRestClient restClient) {
@@ -63,9 +66,21 @@ public class GeoTaxonomiesConnectorImpl implements GeoTaxonomiesConnector {
         return toGeoTaxonomy(result);
     }
 
-    public GeographicTaxonomy fallbackGetExtByCode(RuntimeException e) {
-        log.error(String.format(ERROR_GEO_TAXONOMIES_REST_CLIENT_MESSAGE, e.getMessage()));
-        throw new ResourceNotFoundException("");
+    /**
+     * Preserves the real outcome of the datalake call:
+     * - 404 / empty body -> {@link ResourceNotFoundException} (HTTP 404)
+     * - any other error (5xx, timeout, circuit breaker open, ...) -> {@link BadGatewayException} (HTTP 502)
+     */
+    public GeographicTaxonomy fallbackGetExtByCode(String code, RuntimeException e) {
+        if (e instanceof ResourceNotFoundException) {
+            log.info("Geotaxonomy code {} not found on datalake", Encode.forJava(code));
+            throw new ResourceNotFoundException(String.format(CODE_S_NOT_FOUND, code));
+        }
+        if (e instanceof IllegalArgumentException) {
+            throw e;
+        }
+        log.error(String.format(ERROR_GEO_TAXONOMIES_REST_CLIENT_MESSAGE, e.getClass().getSimpleName() + " - " + e.getMessage()));
+        throw new BadGatewayException(GEO_TAXONOMIES_SERVICE_UNAVAILABLE);
     }
 
     private GeographicTaxonomy toGeoTaxonomy(GeographicTaxonomyResponse geographicTaxonomyResponse) {

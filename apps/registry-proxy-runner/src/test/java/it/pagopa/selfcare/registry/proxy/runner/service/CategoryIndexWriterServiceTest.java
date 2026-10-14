@@ -33,6 +33,16 @@ class CategoryIndexWriterServiceTest {
   }
 
   @Test
+  void testDefaultChangeDetectionHooks() {
+    // writers that do not override the hooks compare only the updateDate
+    org.junit.jupiter.api.Assertions.assertEquals("id,updateDate", service.getSelectFields());
+    org.junit.jupiter.api.Assertions.assertFalse(
+        service.hasContentChanged(
+            new it.pagopa.selfcare.registry.proxy.runner.model.IpaInstitutionIndex(),
+            new IpaCategory()));
+  }
+
+  @Test
   void testIndex_AlwaysUpdates() {
     IpaCategory cat = new IpaCategory();
     cat.setCode("CAT1");

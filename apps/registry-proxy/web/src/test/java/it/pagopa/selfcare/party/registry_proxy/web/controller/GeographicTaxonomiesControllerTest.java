@@ -1,14 +1,18 @@
 package it.pagopa.selfcare.party.registry_proxy.web.controller;
 
 
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.BadGatewayException;
+import it.pagopa.selfcare.party.registry_proxy.connector.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.party.registry_proxy.connector.model.GeographicTaxonomy;
 import it.pagopa.selfcare.party.registry_proxy.core.GeographicTaxonomiesService;
 import it.pagopa.selfcare.party.registry_proxy.web.config.WebTestConfig;
+import it.pagopa.selfcare.party.registry_proxy.web.handler.PartyRegistryProxyExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -16,13 +20,15 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ContextConfiguration(classes = {GeographicTaxonomiesController.class, WebTestConfig.class})
+@ContextConfiguration(classes = {GeographicTaxonomiesController.class, PartyRegistryProxyExceptionHandler.class, WebTestConfig.class})
 @WebMvcTest(value = {GeographicTaxonomiesController.class}, excludeAutoConfiguration = SecurityAutoConfiguration.class)
 public class GeographicTaxonomiesControllerTest {
     private static final String BASE_URL = "/geotaxonomies";
@@ -117,5 +123,46 @@ public class GeographicTaxonomiesControllerTest {
                 .retriveGeoTaxonomyByCode(anyString());
         verifyNoMoreInteractions(geographicTaxonomiesService);
 
+    }
+
+    @Test
+    void retrieveGeoTaxonomiesByCode_notFound() throws Exception {
+        //given
+        String code = "111001";
+        when(geographicTaxonomiesService.retriveGeoTaxonomyByCode(code))
+                .thenThrow(new ResourceNotFoundException("Code 111001 not found!"));
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/{code}", code)
+                        .contentType(APPLICATION_JSON_VALUE))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status", is(404)))
+                .andExpect(jsonPath("$.detail", is("Code 111001 not found!")));
+
+        //then
+        verify(geographicTaxonomiesService, times(1)).retriveGeoTaxonomyByCode(code);
+        verifyNoMoreInteractions(geographicTaxonomiesService);
+    }
+
+    @Test
+    void retrieveGeoTaxonomiesByCode_badGateway() throws Exception {
+        //given
+        String code = "111001";
+        when(geographicTaxonomiesService.retriveGeoTaxonomyByCode(code))
+                .thenThrow(new BadGatewayException("Geo-taxonomies service unavailable"));
+
+        //when
+        mvc.perform(MockMvcRequestBuilders
+                        .get(BASE_URL + "/{code}", code)
+                        .contentType(APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadGateway())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status", is(502)));
+
+        //then
+        verify(geographicTaxonomiesService, times(1)).retriveGeoTaxonomyByCode(code);
+        verifyNoMoreInteractions(geographicTaxonomiesService);
     }
 }

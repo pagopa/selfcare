@@ -13,6 +13,8 @@ module "container_app_job" {
   environment_name = module.container_app_environment_runner.name
   environment_rg   = module.container_app_environment_runner.resource_group_name
 
+  container = var.container
+
   job = {
     name = "infra"
   }
