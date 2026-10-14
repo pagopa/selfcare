@@ -2,6 +2,7 @@ package it.pagopa.selfcare.party.registry_proxy.connector.rest.client;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.AzureSearchRestClientConfig;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.GeoTaxonomyIstatIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.IpaInstitutionIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
@@ -39,5 +40,9 @@ public interface AzureSearchRestClient {
                                                                         @RequestParam(value = "$top", required = false) Integer top,
                                                                         @RequestParam(value = "$skip", required = false) Integer skip,
                                                                         @RequestParam(value = "$filter", required = false) String filter);
+
+  @GetMapping("${rest-client.ai-search.geotax-istat.search.path}")
+  SearchServiceIndexResponse<GeoTaxonomyIstatIndex> searchGeoTaxonomyIstat(@RequestParam(value = "$filter") String filter,
+                                                                           @RequestParam(value = "$top", required = false) Integer top);
 
 }

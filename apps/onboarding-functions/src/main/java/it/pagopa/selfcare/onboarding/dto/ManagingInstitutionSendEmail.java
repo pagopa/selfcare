@@ -15,4 +15,5 @@ public class ManagingInstitutionSendEmail {
     private String onboardingInstitutionDescription;
     private String userMailUuid;
     private String userId;
+    private String tenantId;
 }

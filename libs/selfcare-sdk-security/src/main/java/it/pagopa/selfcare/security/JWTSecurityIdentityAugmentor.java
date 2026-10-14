@@ -15,6 +15,7 @@ import java.util.Set;
 @ApplicationScoped
 public class JWTSecurityIdentityAugmentor implements SecurityIdentityAugmentor {
 
+  JwtTenantValidator tenantValidator = JwtTenantValidator.fromEnvironment();
 
   @Override
   public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
@@ -35,7 +36,7 @@ public class JWTSecurityIdentityAugmentor implements SecurityIdentityAugmentor {
     if (issuer.equals("SPID")) {
       try {
         builder.addAttribute(
-            JwtTenantValidator.TENANT_ATTRIBUTE, JwtTenantValidator.resolveTokenTenant(jwt));
+            JwtTenantValidator.TENANT_ATTRIBUTE, tenantValidator.resolveTokenTenant(jwt));
       } catch (TenantValidationException exception) {
         // An invalid tenant claim means the JWT itself cannot be trusted, so this must surface
         // as an authentication failure (401), not propagate as an unmapped exception (500).

@@ -95,6 +95,9 @@ public class NotificationFunctions {
       return invalidTenantResponse(request, context);
     }
     try (TenantContext.Scope ignored = tenantScope) {
+      if (!matchesRequestTenant(onboarding)) {
+        return invalidTenantResponse(request, context);
+      }
       notificationEventService.send(context, onboarding, queueEvent);
       return request.createResponseBuilder(HttpStatus.OK).build();
     }
@@ -134,8 +137,27 @@ public class NotificationFunctions {
       return invalidTenantResponse(request, context);
     }
     try (TenantContext.Scope ignored = tenantScope) {
+      if (!matchesRequestTenant(onboarding.get())) {
+        return invalidTenantResponse(request, context);
+      }
       notificationEventService.send(context, onboarding.get(), queueEvent);
       return request.createResponseBuilder(HttpStatus.OK).build();
+    }
+  }
+
+  /**
+   * Payloads without a tenant (e.g. the ones sent by onboarding-cdc) inherit the already validated
+   * request tenant; a different tenant in the payload is rejected.
+   */
+  private static boolean matchesRequestTenant(Onboarding onboarding) {
+    if (onboarding.getTenantId() == null || onboarding.getTenantId().isBlank()) {
+      onboarding.setTenantId(TenantContext.requiredTenant());
+      return true;
+    }
+    try {
+      return TenantContext.resolve(onboarding.getTenantId()).equals(TenantContext.requiredTenant());
+    } catch (IllegalArgumentException exception) {
+      return false;
     }
   }
 
