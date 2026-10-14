@@ -10,7 +10,7 @@ import it.pagopa.selfcare.iam.entity.UserClaims;
 import it.pagopa.selfcare.iam.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.iam.model.ProductRolePermissionsList;
 import it.pagopa.selfcare.iam.service.IamService;
-import it.pagopa.selfcare.iam.util.GeneralUtils;
+import it.pagopa.selfcare.security.tenant.EffectiveTenant;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
+import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
 import org.eclipse.microprofile.openapi.annotations.tags.Tag;
@@ -33,6 +34,7 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 public class IamController {
 
   private final IamService iamService;
+  private final EffectiveTenant effectiveTenant;
 
   @Inject SecurityIdentity securityIdentity;
 
@@ -109,9 +111,12 @@ public class IamController {
   public Uni<Response> users(
       @Valid SaveUserRequest saveUserRequest,
       @QueryParam("productId") String productId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
     return iamService
-        .saveUser(saveUserRequest, productId, tenantId)
+        .saveUser(saveUserRequest, productId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -168,9 +173,12 @@ public class IamController {
   public Uni<Response> getUser(
       @PathParam("uid") String userId,
       @QueryParam("productId") String productId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
     return iamService
-        .getUser(userId, productId, tenantId)
+        .getUser(userId, productId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -225,9 +233,12 @@ public class IamController {
   public Uni<Response> getUserByEmail(
       @QueryParam("email") String email,
       @QueryParam("productId") String productId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
     return iamService
-        .getUserByEmail(email, productId, tenantId)
+        .getUserByEmail(email, productId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -273,11 +284,11 @@ public class IamController {
   @Produces(MediaType.APPLICATION_JSON)
   public Uni<Response> getUsers(
       @QueryParam("productId") String productId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
-    return iamService
-        .getUsers(productId, tenantId)
-        .onItem()
-        .transform(user -> Response.ok(user).build());
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
+    return iamService.getUsers(productId).onItem().transform(user -> Response.ok(user).build());
   }
 
   /**
@@ -317,9 +328,12 @@ public class IamController {
   public Uni<Response> getProductRolePermissionsList(
       @PathParam("uid") String userId,
       @QueryParam("productId") String productId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
     return iamService
-        .getProductRolePermissionsList(userId, productId, tenantId)
+        .getProductRolePermissionsList(userId, productId)
         .onItem()
         .transform(user -> Response.ok(user).build());
   }
@@ -375,9 +389,12 @@ public class IamController {
   public Uni<Response> getProductRoles(
       @PathParam("uid") String userId,
       @QueryParam("productId") String productId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
     return iamService
-        .getProductRoles(userId, productId, tenantId)
+        .getProductRoles(userId, productId)
         .onItem()
         .transform(roles -> Response.ok(roles).build());
   }
@@ -435,9 +452,12 @@ public class IamController {
       @PathParam("permission") String permission,
       @QueryParam("productId") String productId,
       @QueryParam("institutionId") String institutionId,
-      @QueryParam("tenantId") @DefaultValue(GeneralUtils.DEFAULT_TENANT_ID) String tenantId) {
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId) {
+    effectiveTenant.bindToContext(tenantId);
     return iamService
-        .hasPermission(userId, permission, productId, institutionId, tenantId)
+        .hasPermission(userId, permission, productId, institutionId)
         .onItem()
         .transform(hasPermission -> Response.ok(new PermissionResponse(hasPermission)).build());
   }

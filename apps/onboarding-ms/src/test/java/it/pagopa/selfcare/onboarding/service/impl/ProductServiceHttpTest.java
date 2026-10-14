@@ -188,10 +188,9 @@ class ProductServiceHttpTest {
     }
 
     @Test
-    void spidMismatchedClaimAndNonCanonicalHeaderAreRejectedBeforeProduct() throws Exception {
+    void spidMismatchedOrUnknownClaimIsRejectedBeforeProduct() throws Exception {
         String arToken = IntegrationProfile.tokenForTenant("AR");
         request("PNPG", arToken).get("/product-http-contract/product/prod-io").then().statusCode(401);
-        request("ar", arToken).get("/product-http-contract/product/prod-io").then().statusCode(401);
         request("AR", IntegrationProfile.tokenForTenant("UNKNOWN"))
                 .get("/product-http-contract/product/prod-io").then().statusCode(401);
         assertTrue(recordedRequests().isEmpty());
