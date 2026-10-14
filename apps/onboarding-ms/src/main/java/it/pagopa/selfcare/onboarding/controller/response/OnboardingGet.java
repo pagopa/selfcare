@@ -25,4 +25,5 @@ public class OnboardingGet {
     private UserRequesterResponse userRequester;
     private String reasonForReject;
     private List<String> attachments;
+    private Boolean contractUpdateRequired;
 }

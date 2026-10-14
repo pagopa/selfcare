@@ -49,6 +49,7 @@ public class Onboarding extends ReactivePanacheMongoEntityBase {
     private Boolean sendMailForImport;
 
     private UserRequester userRequester;
+    private Boolean contractUpdateRequired;
 
     @BsonIgnore
     private Boolean skipVerifyLegal;

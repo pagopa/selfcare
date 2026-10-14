@@ -33,6 +33,7 @@ public class QueryUtils {
     }
 
     public static final String STATUS = "status";
+    public static final String WORKFLOW_TYPE = "workflowType";
     public static final String FROM = "from";
     public static final String TO = "to";
     public static final String PRODUCT = "productId";
@@ -88,6 +89,7 @@ public class QueryUtils {
     Optional.ofNullable(filters.getTaxCode()).ifPresent(value -> queryParameterMap.put(INSTITUTION_TAX_CODE, value));
     Optional.ofNullable(filters.getSubunitCode()).ifPresent(value -> queryParameterMap.put(INSTITUTION_SUBUNIT_CODE, value));
     Optional.ofNullable(filters.getStatus()).ifPresent(value -> queryParameterMap.put(STATUS, value.name()));
+    Optional.ofNullable(filters.getWorkflowType()).ifPresent(value -> queryParameterMap.put(WORKFLOW_TYPE, value.name()));
     Optional.ofNullable(filters.getFrom()).ifPresent(value -> queryParameterMap.put(FROM, value));
     Optional.ofNullable(filters.getTo()).ifPresent(value -> queryParameterMap.put(TO, value));
     Optional.ofNullable(filters.getInstitutionId()).ifPresent(value -> queryParameterMap.put(INSTITUTION_ID, value));
