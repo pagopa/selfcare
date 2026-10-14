@@ -62,6 +62,8 @@ jobs:
         run: |
           mvn --projects :${{ inputs.app }} --also-make package install -DskipTests \
             -Dquarkus.azure-functions.app-name=${{ format('selc-{0}-onboarding-fn', inputs.target == 'ar' && 'd' || 'd-pnpg') }}
+        env:
+          MAVEN_OPTS: "-Xmx4g"
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
       - name: Deploy Function App
