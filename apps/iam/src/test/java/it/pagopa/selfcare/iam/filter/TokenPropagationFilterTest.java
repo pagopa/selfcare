@@ -6,6 +6,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.quarkus.test.junit.QuarkusTest;
+import it.pagopa.selfcare.security.tenant.TenantResolutionFilter;
 import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.core.HttpHeaders;

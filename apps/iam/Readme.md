@@ -363,7 +363,8 @@ iamService.saveUser(request, "product2")
 ## Configuration
 
 ### Multitenancy
-The tenant of each request is resolved by `TenantResolutionFilter` from the optional
+The tenant of each request is resolved by `TenantResolutionFilter` (from `selfcare-sdk-security`,
+enabled with `selfcare.tenant.resolution-filter.enabled=true`) from the optional
 `tenantId` query parameter or the `X-Tenant-Id` header (a conflict between them, or with the
 JWT `tenant_id` claim, returns 400). When `TENANT_ENFORCEMENT_ENABLED=false`, requests without
 tenant fall back to `TENANT_DEFAULT`. The header is propagated to institution-ms.

@@ -1,4 +1,5 @@
-name: Release SDK
+name: Release SDKs
+run-name: Release SDK ${{ inputs.module }}
 
 on:
   push:
