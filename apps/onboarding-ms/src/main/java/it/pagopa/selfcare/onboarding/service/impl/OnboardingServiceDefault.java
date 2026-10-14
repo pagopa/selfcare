@@ -630,6 +630,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                              ProductResponse product,
                                                                             OnboardingImportContract contract) {
         return rm.isValid()
+                .onItem().transformToUni(ignored -> rm.validateInstitutionType(product))
                 .onItem().transformToUni(ignored -> rm.customValidation(product))
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
                 .onItem().transformToUni(ignored ->
