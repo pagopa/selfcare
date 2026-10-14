@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.filter;
 
 
+import it.pagopa.selfcare.security.tenant.TenantLogUtils;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.ext.Provider;
 import org.jboss.logging.Logger;

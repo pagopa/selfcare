@@ -33,6 +33,7 @@ public class JwtTenantValidationFilter implements ContainerRequestFilter {
 
   @Inject SecurityIdentity securityIdentity;
   @Inject TenantContext tenantContext;
+  @Inject JwtTenantValidator jwtTenantValidator;
 
   @Override
   public void filter(ContainerRequestContext requestContext) {
@@ -42,8 +43,8 @@ public class JwtTenantValidationFilter implements ContainerRequestFilter {
     }
 
     try {
-      String tenantId = JwtTenantValidator.resolveTokenTenant(jwt);
-      JwtTenantValidator.validateHeader(
+      String tenantId = jwtTenantValidator.resolveTokenTenant(jwt);
+      jwtTenantValidator.validateHeader(
           tenantId, requestContext.getHeaderString(JwtTenantValidator.TENANT_HEADER));
       tenantContext.setTenantId(tenantId);
     } catch (TenantValidationException exception) {

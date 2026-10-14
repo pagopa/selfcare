@@ -7,6 +7,7 @@ import io.quarkus.security.identity.SecurityIdentityAugmentor;
 import io.quarkus.security.runtime.QuarkusSecurityIdentity;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.Set;
@@ -15,6 +16,13 @@ import java.util.Set;
 @ApplicationScoped
 public class JWTSecurityIdentityAugmentor implements SecurityIdentityAugmentor {
 
+  @Inject JwtTenantValidator jwtTenantValidator;
+
+  public JWTSecurityIdentityAugmentor() {}
+
+  JWTSecurityIdentityAugmentor(JwtTenantValidator jwtTenantValidator) {
+    this.jwtTenantValidator = jwtTenantValidator;
+  }
 
   @Override
   public Uni<SecurityIdentity> augment(SecurityIdentity identity, AuthenticationRequestContext context) {
@@ -35,7 +43,7 @@ public class JWTSecurityIdentityAugmentor implements SecurityIdentityAugmentor {
     if (issuer.equals("SPID")) {
       try {
         builder.addAttribute(
-            JwtTenantValidator.TENANT_ATTRIBUTE, JwtTenantValidator.resolveTokenTenant(jwt));
+            JwtTenantValidator.TENANT_ATTRIBUTE, jwtTenantValidator.resolveTokenTenant(jwt));
       } catch (TenantValidationException exception) {
         // An invalid tenant claim means the JWT itself cannot be trusted, so this must surface
         // as an authentication failure (401), not propagate as an unmapped exception (500).

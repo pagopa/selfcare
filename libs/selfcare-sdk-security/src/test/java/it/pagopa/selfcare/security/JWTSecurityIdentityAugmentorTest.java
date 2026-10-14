@@ -33,7 +33,7 @@ class JWTSecurityIdentityAugmentorTest {
 
   @BeforeEach
   void setUp() {
-    augmentor = new JWTSecurityIdentityAugmentor();
+    augmentor = new JWTSecurityIdentityAugmentor(TestJwtTenantValidators.supportingArAndPnpg());
   }
 
   @Test

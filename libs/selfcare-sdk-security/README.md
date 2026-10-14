@@ -13,8 +13,14 @@ Conditional Role Assignment: It conditionally augments the authenticated user's 
 
 Tenant Consistency Validation: For tokens issued by SPID, the validated
 `tenant_id` claim is reconciled with the trusted `X-Tenant-Id` request header.
-When the claim is absent, the effective tenant is `PNPG`; a missing, unknown,
-or mismatching header is rejected.
+When the claim is absent, the effective tenant is `DEFAULT_TENANT` (default
+`PNPG`); a missing, unknown or mismatching header is rejected. Claim and header
+must exactly match a tenant defined in `tenant.registry.json`.
+
+Tenant Resolution (opt-in): `TenantResolutionFilter` and `EffectiveTenant`
+resolve the tenant of the request from the `tenantId` query parameter, the
+`X-Tenant-Id` header and the JWT `tenant_id` claim. See
+[Tenant resolution](#tenant-resolution).
 
 Logging Context Enrichment: `LoggingContextFilter` copies a configurable set of
 JWT claims into the logging context (MDC) of every REST request, so that every
@@ -64,13 +70,45 @@ automatically. An application that is not tenant-aware yet can exclude
 `selfcare-sdk-tenant` from the dependency and keep only `LoggingContextFilter`:
 
 ```
-quarkus.arc.exclude-types=it.pagopa.selfcare.security.JWTCallerPrincipalFactory,it.pagopa.selfcare.security.JWTSecurityIdentityAugmentor
+quarkus.arc.exclude-types=it.pagopa.selfcare.security.JWTCallerPrincipalFactory,it.pagopa.selfcare.security.JWTSecurityIdentityAugmentor,it.pagopa.selfcare.security.JwtTenantValidator,it.pagopa.selfcare.security.tenant.EffectiveTenant
 selfcare.security.tenant-validation.enabled=false
 ```
 
 `JwtTenantValidationFilter` is a JAX-RS provider: RESTEasy Reactive registers it
 even when excluded from CDI, so it is disabled through the build-time property
 `selfcare.security.tenant-validation.enabled` (default `true`).
+
+### Tenant resolution
+
+Since `0.7.0` the SDK provides the tenant classes that tenant-aware services used
+to duplicate, in the package `it.pagopa.selfcare.security.tenant`:
+
+- `TenantResolutionFilter`: JAX-RS request filter (priority `AUTHENTICATION`)
+  that reads the tenant from the `tenantId` query parameter or the `X-Tenant-Id`
+  header, validates it with `TenantRegistry.resolve` and stores the normalized
+  value in `TenantContext`. Paths under `q/` are skipped. A conflicting, unknown
+  or missing tenant is rejected with `400` (`application/problem+json`, detail
+  `Invalid tenant context`) and logged on the `AUDIT_TENANT` logger.
+- `EffectiveTenant`: resolves the optional `tenantId` query parameter of an
+  endpoint. When omitted, it falls back to the tenant in `TenantContext` and
+  then to the JWT `tenant_id` claim; a conflicting value is rejected with `400`.
+  `resolve(tenantId)` returns the tenant, `bindToContext(tenantId)` also stores
+  it in `TenantContext`.
+- `TenantLogUtils`: reads the `X-Tenant-Id` header of inbound or outgoing
+  requests in a form that is safe to log.
+
+The filter is disabled by default and must be enabled at build time:
+
+```
+selfcare.tenant.resolution-filter.enabled=true
+```
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `selfcare.tenant.resolution-filter.enabled` | `false` | Build time. Registers `TenantResolutionFilter`. |
+| `selfcare.tenant.resolution-filter.query-param-enabled` | `true` | Reads the `tenantId` query parameter; when `false` only the header is used. |
+| `tenant.enforcement.enabled` | `true` | When `false`, a request without tenant uses `tenant.default`. |
+| `tenant.default` | `AR` | Tenant used when enforcement is disabled and no tenant is sent. |
 
 ### Logging Context (MDC)
 

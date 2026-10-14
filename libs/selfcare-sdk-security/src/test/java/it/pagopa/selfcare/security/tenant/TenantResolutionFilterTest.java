@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.iam.filter;
+package it.pagopa.selfcare.security.tenant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.lenient;
@@ -7,8 +7,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-import io.quarkus.test.junit.QuarkusTest;
-import it.pagopa.selfcare.iam.controller.response.Problem;
 import it.pagopa.selfcare.tenant.TenantContext;
 import it.pagopa.selfcare.tenant.TenantRegistry;
 import jakarta.ws.rs.container.ContainerRequestContext;
@@ -16,6 +14,7 @@ import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +22,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-@QuarkusTest
 @ExtendWith(MockitoExtension.class)
 class TenantResolutionFilterTest {
 
@@ -39,7 +37,7 @@ class TenantResolutionFilterTest {
 
   @BeforeEach
   void setUp() {
-    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, true, "AR");
+    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, true, "AR", true);
     when(requestContext.getUriInfo()).thenReturn(uriInfo);
     lenient().when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<>());
   }
@@ -65,7 +63,7 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldResolveAndNormalizeHeaderTenantWhenEnforcementIsEnabled() {
-    when(uriInfo.getPath()).thenReturn("iam/users");
+    when(uriInfo.getPath()).thenReturn("api/users");
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn(" ar ");
     when(tenantRegistry.normalizeTenantId(" ar ")).thenReturn("AR");
 
@@ -78,7 +76,7 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldPreferQueryTenantOverHeaderWhenPresent() {
-    when(uriInfo.getPath()).thenReturn("iam/users/uid-1");
+    when(uriInfo.getPath()).thenReturn("api/users/uid-1");
     when(uriInfo.getQueryParameters()).thenReturn(queryParameters("pnpg"));
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("pnpg");
     when(tenantRegistry.normalizeTenantId("pnpg")).thenReturn("PNPG");
@@ -92,7 +90,7 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldResolveQueryTenantWithoutHeader() {
-    when(uriInfo.getPath()).thenReturn("iam/users/search");
+    when(uriInfo.getPath()).thenReturn("api/users/search");
     when(uriInfo.getQueryParameters()).thenReturn(queryParameters("ar"));
     when(tenantRegistry.normalizeTenantId("ar")).thenReturn("AR");
 
@@ -105,7 +103,7 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldUseHeaderWhenQueryTenantIsAbsent() {
-    when(uriInfo.getPath()).thenReturn("iam/users/uid-1");
+    when(uriInfo.getPath()).thenReturn("api/users/uid-1");
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("AR");
     when(tenantRegistry.normalizeTenantId("AR")).thenReturn("AR");
 
@@ -117,7 +115,7 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldAbortWhenQueryTenantConflictsWithHeaderTenant() {
-    when(uriInfo.getPath()).thenReturn("iam/users/uid-1");
+    when(uriInfo.getPath()).thenReturn("api/users/uid-1");
     when(uriInfo.getQueryParameters()).thenReturn(queryParameters("ar"));
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("PNPG");
     when(tenantRegistry.normalizeTenantId("ar")).thenReturn("AR");
@@ -134,8 +132,8 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldUseDefaultTenantWhenEnforcementIsDisabledAndHeaderIsMissing() {
-    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "PNPG");
-    when(uriInfo.getPath()).thenReturn("iam/users");
+    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "PNPG", true);
+    when(uriInfo.getPath()).thenReturn("api/users");
     when(tenantRegistry.normalizeTenantId("PNPG")).thenReturn("PNPG");
 
     filter.filter(requestContext);
@@ -146,8 +144,8 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldUseDefaultTenantWhenEnforcementIsDisabledAndHeaderIsBlank() {
-    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "AR");
-    when(uriInfo.getPath()).thenReturn("iam/users");
+    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "AR", true);
+    when(uriInfo.getPath()).thenReturn("api/users");
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn(" ");
     when(tenantRegistry.normalizeTenantId("AR")).thenReturn("AR");
 
@@ -159,8 +157,8 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldPreferHeaderWhenEnforcementIsDisabled() {
-    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "AR");
-    when(uriInfo.getPath()).thenReturn("iam/users");
+    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, false, "AR", true);
+    when(uriInfo.getPath()).thenReturn("api/users");
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("pnpg");
     when(tenantRegistry.normalizeTenantId("pnpg")).thenReturn("PNPG");
 
@@ -172,7 +170,7 @@ class TenantResolutionFilterTest {
 
   @Test
   void filter_shouldAbortWithBadRequestWhenTenantCannotBeResolved() {
-    when(uriInfo.getPath()).thenReturn("iam/users");
+    when(uriInfo.getPath()).thenReturn("api/users");
     when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER))
         .thenReturn("UNKNOWN");
     when(tenantRegistry.resolve("UNKNOWN"))
@@ -184,14 +182,14 @@ class TenantResolutionFilterTest {
     verify(requestContext).abortWith(responseCaptor.capture());
     Response response = responseCaptor.getValue();
     assertEquals(Response.Status.BAD_REQUEST.getStatusCode(), response.getStatus());
-    assertEquals("Invalid tenant context", ((Problem) response.getEntity()).getDetail());
+    assertEquals("Invalid tenant context", ((Map<?, ?>) response.getEntity()).get("detail"));
     assertEquals("application/problem+json", response.getMediaType().toString());
     verify(tenantContext, never()).setTenantId(org.mockito.ArgumentMatchers.any());
   }
 
   @Test
   void filter_shouldAbortWhenTenantIsMissingAndEnforcementIsEnabled() {
-    when(uriInfo.getPath()).thenReturn("iam/users");
+    when(uriInfo.getPath()).thenReturn("api/users");
     when(tenantRegistry.resolve(null)).thenThrow(new IllegalArgumentException("Missing tenant"));
 
     filter.filter(requestContext);
@@ -201,6 +199,29 @@ class TenantResolutionFilterTest {
     assertEquals(
         Response.Status.BAD_REQUEST.getStatusCode(), responseCaptor.getValue().getStatus());
     verify(tenantContext, never()).setTenantId(org.mockito.ArgumentMatchers.any());
+  }
+
+  @Test
+  void filter_shouldIgnoreQueryTenantWhenQueryParamIsDisabled() {
+    filter = new TenantResolutionFilter(tenantRegistry, tenantContext, true, "AR", false);
+    when(uriInfo.getPath()).thenReturn("api/users");
+    when(requestContext.getHeaderString(TenantResolutionFilter.TENANT_HEADER)).thenReturn("AR");
+    when(tenantRegistry.normalizeTenantId("AR")).thenReturn("AR");
+
+    filter.filter(requestContext);
+
+    verify(tenantRegistry).resolve("AR");
+    verify(tenantContext).setTenantId("AR");
+    verify(uriInfo, never()).getQueryParameters();
+  }
+
+  @Test
+  void filter_shouldSkipQuarkusEndpointsWithLeadingSlash() {
+    when(uriInfo.getPath()).thenReturn("/q/health");
+
+    filter.filter(requestContext);
+
+    verifyNoInteractions(tenantRegistry, tenantContext);
   }
 
   private static MultivaluedMap<String, String> queryParameters(String tenantId) {

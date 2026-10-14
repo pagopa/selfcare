@@ -1,63 +1,56 @@
 package it.pagopa.selfcare.security;
 
-import java.util.Arrays;
-import java.util.Set;
-import java.util.stream.Collectors;
+import it.pagopa.selfcare.tenant.TenantRegistry;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
-final class JwtTenantValidator {
+/**
+ * Validates the {@code tenant_id} claim of SPID tokens and the {@code X-Tenant-Id} header against
+ * the tenants defined in the {@link TenantRegistry} ({@code tenant.registry.json}). Values are
+ * compared exactly. A token without the claim belongs to {@code DEFAULT_TENANT} (default {@code
+ * PNPG}).
+ */
+@Singleton
+class JwtTenantValidator {
 
   static final String TENANT_HEADER = "X-Tenant-Id";
   static final String TENANT_ATTRIBUTE = "jwt.tenant";
   private static final String CLAIM_TENANT_ID = "tenant_id";
-  private static final String DEFAULT_TENANT_ID = environmentValue("DEFAULT_TENANT", "PNPG");
-  private static final Set<String> SUPPORTED_TENANTS =
-      parseSupportedTenants(environmentValue("SUPPORTED_TENANTS", "AR,PNPG"));
 
-  static {
-    if (!SUPPORTED_TENANTS.contains(DEFAULT_TENANT_ID)) {
-      throw new IllegalArgumentException("DEFAULT_TENANT must be included in SUPPORTED_TENANTS");
-    }
+  private final TenantRegistry tenantRegistry;
+  private final String defaultTenantId;
+
+  @Inject
+  JwtTenantValidator(
+      TenantRegistry tenantRegistry,
+      @ConfigProperty(name = "DEFAULT_TENANT", defaultValue = "PNPG") String defaultTenantId) {
+    this.tenantRegistry = tenantRegistry;
+    this.defaultTenantId = defaultTenantId;
   }
 
-  private JwtTenantValidator() {}
-
-  private static String environmentValue(String name, String defaultValue) {
-    String value = System.getenv(name);
-    return value == null || value.isBlank() ? defaultValue : value.trim();
-  }
-
-  private static Set<String> parseSupportedTenants(String value) {
-    Set<String> tenants =
-        Arrays.stream(value.split(","))
-            .map(String::trim)
-            .filter(tenant -> !tenant.isEmpty())
-            .collect(Collectors.toUnmodifiableSet());
-    if (tenants.isEmpty()) {
-      throw new IllegalArgumentException("SUPPORTED_TENANTS must contain at least one tenant");
-    }
-    return tenants;
-  }
-
-  static String resolveTokenTenant(JsonWebToken jwt) {
+  String resolveTokenTenant(JsonWebToken jwt) {
     Object rawTenantId = jwt.getClaim(CLAIM_TENANT_ID);
     if (rawTenantId == null) {
-      return DEFAULT_TENANT_ID;
+      return defaultTenantId;
     }
-    if (rawTenantId instanceof String tenantId
-        && !tenantId.isBlank()
-        && SUPPORTED_TENANTS.contains(tenantId)) {
+    if (rawTenantId instanceof String tenantId && isKnownTenant(tenantId)) {
       return tenantId;
     }
     throw new TenantValidationException();
   }
 
-  static void validateHeader(String tenantId, String headerTenantId) {
-    if (headerTenantId == null
-        || headerTenantId.isBlank()
-        || !SUPPORTED_TENANTS.contains(headerTenantId)
-        || !tenantId.equals(headerTenantId)) {
+  void validateHeader(String tenantId, String headerTenantId) {
+    if (!isKnownTenant(headerTenantId) || !tenantId.equals(headerTenantId)) {
       throw new TenantValidationException();
     }
+  }
+
+  /** Claim and header must match a registry tenant exactly: non-canonical values are rejected. */
+  private boolean isKnownTenant(String tenantId) {
+    return tenantId != null
+        && !tenantId.isBlank()
+        && tenantRegistry.definitions().containsKey(tenantId);
   }
 }

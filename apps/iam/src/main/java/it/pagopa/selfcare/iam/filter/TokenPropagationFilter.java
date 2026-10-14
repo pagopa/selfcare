@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.iam.filter;
 
+import it.pagopa.selfcare.security.tenant.TenantResolutionFilter;
 import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;

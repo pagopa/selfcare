@@ -30,6 +30,7 @@ class JwtTenantValidationFilterTest {
     filter = new JwtTenantValidationFilter();
     filter.securityIdentity = securityIdentity;
     filter.tenantContext = tenantContext;
+    filter.jwtTenantValidator = TestJwtTenantValidators.supportingArAndPnpg();
   }
 
   @Test
@@ -79,6 +80,20 @@ class JwtTenantValidationFilterTest {
     when(jsonWebToken.getIssuer()).thenReturn("SPID");
     when(jsonWebToken.getClaim("tenant_id")).thenReturn(null);
     when(requestContext.getHeaderString("X-Tenant-Id")).thenReturn(null);
+
+    filter.filter(requestContext);
+
+    var responseCaptor = org.mockito.ArgumentCaptor.forClass(Response.class);
+    verify(requestContext).abortWith(responseCaptor.capture());
+    assertEquals(Response.Status.UNAUTHORIZED.getStatusCode(), responseCaptor.getValue().getStatus());
+  }
+
+  @Test
+  void filter_rejectsNonCanonicalTenantHeader() {
+    when(securityIdentity.getPrincipal()).thenReturn(jsonWebToken);
+    when(jsonWebToken.getIssuer()).thenReturn("SPID");
+    when(jsonWebToken.getClaim("tenant_id")).thenReturn("AR");
+    when(requestContext.getHeaderString("X-Tenant-Id")).thenReturn("ar");
 
     filter.filter(requestContext);
 

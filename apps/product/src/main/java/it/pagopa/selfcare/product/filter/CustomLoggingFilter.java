@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.product.filter;
 
+import it.pagopa.selfcare.security.tenant.TenantLogUtils;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.ext.Provider;
 import java.io.IOException;
