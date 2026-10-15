@@ -116,9 +116,9 @@ public class SupportServiceImpl implements SupportService {
                     : "?data=" + supportRequest.getData());
         }
         if(Objects.nonNull(supportRequest.getCategory())) {
-            urlBuilder.append(urlBuilder.indexOf("?") != -1 ?
-                    "&cat=" + supportRequest.getCategory()
-                    : "?cat=" + supportRequest.getCategory());
+            urlBuilder.append(urlBuilder.indexOf("?") != -1 ? "&cat=" : "?cat=")
+                    .append(java.net.URLEncoder.encode(supportRequest.getCategory(),
+                            java.nio.charset.StandardCharsets.UTF_8));
         }
         return urlBuilder.toString();
     }
