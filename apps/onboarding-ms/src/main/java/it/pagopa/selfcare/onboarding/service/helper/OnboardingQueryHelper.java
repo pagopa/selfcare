@@ -49,8 +49,7 @@ public class OnboardingQueryHelper {
         .onItem()
         .transformToUni(
             opt ->
-                opt.map(Onboarding.class::cast)
-                    .map(o -> Uni.createFrom().item(o))
+                opt.map(o -> Uni.createFrom().item(o))
                     .orElse(
                         Uni.createFrom()
                             .failure(
@@ -65,8 +64,7 @@ public class OnboardingQueryHelper {
         .onItem()
         .transformToUni(
             opt ->
-                opt.map(Onboarding.class::cast)
-                    .filter(
+                opt.filter(
                         o ->
                             OnboardingStatus.TOBEVALIDATED.equals(o.getStatus())
                                 || !isOnboardingExpired(o.getExpiringDate()))
