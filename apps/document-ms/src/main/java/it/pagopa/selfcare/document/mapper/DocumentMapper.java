@@ -1,11 +1,14 @@
 package it.pagopa.selfcare.document.mapper;
 
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentResponse;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
 import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
 import org.mapstruct.Mapper;
 
 import java.util.Objects;
+
+import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 
 @Mapper(componentModel = "cdi")
 public interface DocumentMapper {
@@ -20,6 +23,15 @@ public interface DocumentMapper {
                 .mimeType(resolveMimeType(filePath))
                 .createdAt(entity.getCreatedAt())
                 .filePath(filePath)
+                .build();
+    }
+
+    default AvailableDocumentResponse toAvailableDocumentResponse(Document entity) {
+        return AvailableDocumentResponse.builder()
+                .name(ATTACHMENT.equals(entity.getType()) ? entity.getAttachmentName() : entity.getContractFilename())
+                .type(entity.getType())
+                .onboardingId(entity.getOnboardingId())
+                .rootOnboardingId(entity.getRootOnboardingId())
                 .build();
     }
 

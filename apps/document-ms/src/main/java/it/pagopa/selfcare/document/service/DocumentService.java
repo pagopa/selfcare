@@ -21,8 +21,9 @@ public interface DocumentService {
     Uni<List<String>> getAttachments(String onboardingId);
 
     /**
-     * Returns the aggregated list of documents available for download for a given onboarding:
-     * the attachment names and, if present, the contractFilename.
+     * Returns the documents of the dossier available for download for a given onboarding
+     * (documents with onboardingId or rootOnboardingId equal to the given id):
+     * signed INSTITUTION/USER contracts and all ATTACHMENT documents.
     */
     Uni<AvailableDocumentsResponse> getAvailableDocuments(String onboardingId);
 
