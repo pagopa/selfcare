@@ -16,7 +16,7 @@ public interface ProductService {
     Product getProduct(String productId);
 
     Product getProductRaw(String productId);
-    
+
     Product getProductIsValid(String productId);
 
     ProductRole validateProductRole(String productId, String productRole, PartyRole role);

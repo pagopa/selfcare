@@ -93,6 +93,32 @@ class SupportControllerTest extends BaseControllerTest {
     }
 
     @Test
+    void testSendSupportRequestWithCategory() throws Exception {
+        Authentication authentication = Mockito.mock(Authentication.class);
+
+        SupportRequestDto supportRequestDto = new SupportRequestDto();
+        supportRequestDto.setEmail("user@example.com");
+        supportRequestDto.setCategory("contract-update");
+
+        SupportResponse supportResponse = SupportResponse.builder()
+                .redirectUrl("redirectUrl?cat=contract-update")
+                .build();
+
+        when(authentication.getPrincipal()).thenReturn(user);
+        when(supportService.sendRequest(Mockito.argThat(request -> "contract-update".equals(request.getCategory()))))
+                .thenReturn(supportResponse);
+
+        mockMvc.perform(MockMvcRequestBuilders
+                        .post("/v1/support")
+                        .principal(authentication)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(supportRequestDto)))
+                .andExpect(status().isOk())
+                .andExpect(content().json(objectMapper.writeValueAsString(supportResponse)))
+                .andReturn();
+    }
+
+    @Test
     void testSendBadRequest() throws Exception {
         SupportRequestDto supportRequest = new SupportRequestDto();
         supportRequest.setEmail("pp");

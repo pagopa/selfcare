@@ -115,6 +115,11 @@ public class SupportServiceImpl implements SupportService {
                     "&data=" + supportRequest.getData()
                     : "?data=" + supportRequest.getData());
         }
+        if(Objects.nonNull(supportRequest.getCategory())) {
+            urlBuilder.append(urlBuilder.indexOf("?") != -1 ?
+                    "&cat=" + supportRequest.getCategory()
+                    : "?cat=" + supportRequest.getCategory());
+        }
         return urlBuilder.toString();
     }
 }
