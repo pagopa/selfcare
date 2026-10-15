@@ -3947,6 +3947,14 @@ class OnboardingServiceDefaultTest {
         assertNotNull(result);
         assertEquals(productId, result.getProductId()); // verifica sui campi, non equals()
         assertEquals(institutionId, result.getInstitution().getId());
+
+        ArgumentCaptor<Document> queryCaptor = ArgumentCaptor.forClass(Document.class);
+        PanacheMock.verify(Onboarding.class).find(queryCaptor.capture());
+        List<Document> conditions = queryCaptor.getValue().getList("$and", Document.class);
+        Document onboardingQuery = conditions.get(1);
+        assertThat((Document) onboardingQuery.get("workflowType"))
+                .containsEntry("$ne", CONTRACT_UPDATE.name());
+        assertThat(onboardingQuery).doesNotContainKey("referenceOnboardingId");
     }
 
     @Test
