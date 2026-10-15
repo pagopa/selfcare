@@ -46,6 +46,7 @@ import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.PENDING;
+import static it.pagopa.selfcare.onboarding.common.WorkflowType.CONTRACT_UPDATE;
 import static it.pagopa.selfcare.onboarding.common.WorkflowType.USERS;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.DEFAULT_ERROR;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED;
@@ -308,7 +309,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<Long> rejectOnboarding(String onboardingId, ReasonRequest reason) {
         return onboardingRepository.findById(onboardingId)
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
                         COMPLETED.equals(o.getStatus())
                                 ? Uni.createFrom().failure(new InvalidRequestException(
@@ -323,7 +323,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<Long> deleteOnboarding(String onboardingId) {
         log.info("Deleting onboarding with id {}", onboardingId);
         return onboardingRepository.findById(onboardingId)
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o ->
                         USERS.equals(o.getWorkflowType())
@@ -348,7 +347,6 @@ public class OnboardingServiceDefault implements OnboardingService {
         return onboardingRepository.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o -> {
                     if (!USERS.equals(o.getWorkflowType())) {
@@ -405,8 +403,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingGet> onboardingGet(String onboardingId) {
         return onboardingRepository.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
-                        opt.map(Onboarding.class::cast)
-                                .map(onboardingResponseFactory::toGetResponse)
+                        opt.map(onboardingResponseFactory::toGetResponse)
                                 .orElseGet(() -> Uni.createFrom().failure(
                                         new ResourceNotFoundException(
                                                 String.format("Onboarding with id %s not found!", onboardingId)))));
@@ -416,8 +413,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingGet> onboardingGetWithUserInfo(String onboardingId) {
         return onboardingRepository.findByIdOptional(onboardingId)
                 .onItem().transformToUni(opt ->
-                        opt.map(Onboarding.class::cast)
-                                .map(Uni.createFrom()::item)
+                        opt.map(Uni.createFrom()::item)
                                 .orElseGet(() -> Uni.createFrom().failure(
                                         new ResourceNotFoundException(
                                                 String.format("Onboarding with id %s not found!", onboardingId)))))
@@ -452,7 +448,6 @@ public class OnboardingServiceDefault implements OnboardingService {
                 taxCode, subunitCode, origin, originId, status, null);
         Document query = QueryUtils.buildQuery(params);
         return onboardingRepository.find(query).stream()
-                .map(Onboarding.class::cast)
                 .map(onboardingMapper::toResponse)
                 .collect().asList();
     }
@@ -468,7 +463,6 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<Long> updateOnboarding(String onboardingId, Onboarding onboarding) {
         return onboardingRepository.findById(onboardingId)
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(o ->
                         Objects.isNull(o)
                                 ? Uni.createFrom().failure(new InvalidRequestException(
@@ -507,10 +501,10 @@ public class OnboardingServiceDefault implements OnboardingService {
     public Uni<OnboardingGet> retrieveOnboardingByInstitutionId(String institutionId, String productId) {
         Document query = new Document("institution.id", institutionId)
                 .append("productId", productId)
-                .append("status", COMPLETED.name());
+                .append("status", COMPLETED.name())
+                .append("workflowType", new Document("$ne", CONTRACT_UPDATE.name()));
         return onboardingRepository.find(query)
                 .firstResult()
-                .map(Onboarding.class::cast)
                 .onItem().ifNotNull().transformToUni(onboardingResponseFactory::toGetResponse)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with institutionId=%s and productId=%s not found",
@@ -630,6 +624,7 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                              ProductResponse product,
                                                                             OnboardingImportContract contract) {
         return rm.isValid()
+                .onItem().transformToUni(ignored -> rm.validateInstitutionType(product))
                 .onItem().transformToUni(ignored -> rm.customValidation(product))
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
                 .onItem().transformToUni(ignored ->
@@ -825,7 +820,6 @@ public class OnboardingServiceDefault implements OnboardingService {
         return onboardingRepository.findById(onboardingId)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with id %s not found", onboardingId)))
-                .onItem().transform(Onboarding.class::cast)
                 .onItem().transformToUni(onboarding -> {
                     // Idempotent: if already past REQUESTING status, do nothing
                     if (!OnboardingStatus.REQUESTING.equals(onboarding.getStatus())) {
