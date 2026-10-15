@@ -505,7 +505,6 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .append("workflowType", new Document("$ne", CONTRACT_UPDATE.name()));
         return onboardingRepository.find(query)
                 .firstResult()
-                .map(onboarding -> onboarding)
                 .onItem().ifNotNull().transformToUni(onboardingResponseFactory::toGetResponse)
                 .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding with institutionId=%s and productId=%s not found",
