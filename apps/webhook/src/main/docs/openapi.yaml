@@ -212,12 +212,16 @@ paths:
         required: true
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          pattern: \S
           type: string
-        required: true
+      - name: X-Tenant-Id
+        in: header
+        schema:
+          type: string
       responses:
         "200":
           description: OK
