@@ -145,10 +145,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       requestBody:
         content:
@@ -192,10 +193,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       responses:
         "200":
@@ -249,10 +251,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       responses:
         "200":
@@ -290,10 +293,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       responses:
         "200":
@@ -344,10 +348,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       responses:
         "200":
@@ -406,10 +411,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       responses:
         "200":
@@ -461,10 +467,11 @@ paths:
         in: query
         schema:
           type: string
-      - name: tenantId
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
         in: query
         schema:
-          default: AR
           type: string
       responses:
         "200":

@@ -14,7 +14,7 @@ import it.pagopa.selfcare.onboarding.model.VerifyAggregateResponse;
 import it.pagopa.selfcare.onboarding.service.AggregatesService;
 import jakarta.ws.rs.core.MediaType;
 import org.jboss.resteasy.reactive.RestResponse;
-import it.pagopa.selfcare.onboarding.filter.TenantResolutionFilter;
+import it.pagopa.selfcare.security.tenant.TenantResolutionFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

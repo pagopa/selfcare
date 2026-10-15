@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.product.filter;
+package it.pagopa.selfcare.security.tenant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;

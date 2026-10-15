@@ -7,7 +7,7 @@
     "productRoles": [
       {
         "productId": "product-A",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "ADMIN"
         ]
@@ -22,14 +22,14 @@
     "productRoles": [
       {
         "productId": "product-A",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "OPERATOR"
         ]
       },
       {
         "productId": "product-B",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "OPERATOR",
           "SUPPORT"
@@ -45,7 +45,7 @@
     "productRoles": [
       {
         "productId": "product-C",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "CUSTOM"
         ]
@@ -60,14 +60,14 @@
     "productRoles": [
       {
         "productId": "product-A",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "OPERATOR"
         ]
       },
       {
         "productId": "product-B",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "OPERATOR",
           "SUPPORT"
@@ -75,7 +75,7 @@
       },
       {
         "productId": "ALL",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "SUPPORT"
         ]
@@ -90,7 +90,7 @@
     "productRoles": [
       {
         "productId": "ALL",
-        "tenantId": "tenant-A",
+        "tenantId": "AR",
         "roles": [
           "SUPPORT"
         ]
