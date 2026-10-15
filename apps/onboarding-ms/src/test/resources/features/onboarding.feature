@@ -164,7 +164,7 @@ Feature: Onboarding collection
     When I send a POST request to "" with this request
     Then the response status code should be 400
     And the response body should not be empty
-    And the response should contain the text "institution with institution type PRV is not allowed to onboard product prod-pagopa"
+    And the response should contain the text "institution with institution type PRV and origin SELC is not allowed to onboard product prod-pagopa"
 
   #Scenario: Successfully store onboarding in status PENDING
    # Given I have a request object named "success_pg_request"

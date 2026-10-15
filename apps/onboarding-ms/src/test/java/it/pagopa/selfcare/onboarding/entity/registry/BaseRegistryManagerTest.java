@@ -92,7 +92,7 @@ class BaseRegistryManagerTest {
             // when & then
             InstitutionTypeNotAllowedException exception = assertThrows(InstitutionTypeNotAllowedException.class,
                     () -> registryManager.validateInstitutionType(product).await().indefinitely());
-            assertEquals("institution with institution type PRV is not allowed to onboard product prod-pagopa",
+            assertEquals("institution with institution type PRV and origin SELC is not allowed to onboard product prod-pagopa",
                     exception.getMessage());
             assertEquals(InstitutionTypeNotAllowedException.CODE, exception.getCode());
         }

@@ -6,8 +6,6 @@ import it.pagopa.selfcare.onboarding.exception.InstitutionTypeNotAllowedExceptio
 import org.openapi.quarkus.product_json.model.OriginEntry;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
@@ -18,11 +16,10 @@ import java.util.Optional;
  * Both values are mandatory: a request missing either one cannot be verified and is rejected.
  * A product without institutionOrigins accepts none.
  */
-@Slf4j
 public final class InstitutionTypeValidator {
 
     public static final String NOT_ALLOWED_INSTITUTION_TYPE =
-            "institution with institution type %s is not allowed to onboard product %s";
+            "institution with institution type %s and origin %s is not allowed to onboard product %s";
 
     private InstitutionTypeValidator() {
     }
@@ -35,10 +32,8 @@ public final class InstitutionTypeValidator {
                 && isAllowedByOrigins(product.getInstitutionOrigins(), institutionType, origin))) {
             return Optional.empty();
         }
-        log.warn("Institution type not allowed: institutionType={}, origin={}, productId={}",
-                institutionType, origin, product.getProductId());
         return Optional.of(new InstitutionTypeNotAllowedException(
-                String.format(NOT_ALLOWED_INSTITUTION_TYPE, institutionType, product.getProductId())));
+                String.format(NOT_ALLOWED_INSTITUTION_TYPE, institutionType, origin, product.getProductId())));
     }
 
     private static boolean isAllowedByOrigins(Collection<OriginEntry> origins, InstitutionType institutionType,

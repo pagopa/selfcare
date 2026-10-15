@@ -31,7 +31,7 @@ class InstitutionTypeValidatorTest {
                 InstitutionTypeValidator.validate(productWithOrigins("GPU", "PSP"), InstitutionType.PRV, Origin.SELC);
 
         assertTrue(result.isPresent());
-        assertEquals("institution with institution type PRV is not allowed to onboard product prod-pagopa",
+        assertEquals("institution with institution type PRV and origin SELC is not allowed to onboard product prod-pagopa",
                 result.get().getMessage());
     }
 
