@@ -6,6 +6,8 @@ import it.pagopa.selfcare.onboarding.connector.model.RecipientCodeStatusResult;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.Institution;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.ManagerVerification;
 import it.pagopa.selfcare.onboarding.connector.model.institutions.VerifyAggregateResult;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocument;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.CheckManagerData;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionOnboarding;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -43,6 +45,10 @@ public interface OnboardingResourceMapper {
     OnboardingData toEntity(OnboardingProductDto dto);
 
     VerifyManagerResponse toManagerVerification(ManagerVerification managerVerification);
+
+    AvailableDocumentsResource toAvailableDocumentsResource(AvailableDocuments availableDocuments);
+
+    AvailableDocumentResource toAvailableDocumentResource(AvailableDocument availableDocument);
 
     Institution toInstitution(AggregateInstitution aggregateInstitution);
 
