@@ -105,6 +105,35 @@ class DocumentRepositoryNonStrictIsolationTest {
                 .isEmpty();
     }
 
+    @Test
+    void findByOnboardingIdOrRootOnboardingIdReturnsWholeDossierForRootAndOnlyOwnDocumentsForChild() {
+        inRequest("AR", () -> {
+            Document userContract = contract("user-contract", "user-onboarding", "AR");
+            userContract.setType(DocumentType.USER);
+            userContract.setRootOnboardingId("dossier-onboarding");
+            userContract.setCreatedAt(LocalDateTime.now().plusMinutes(2));
+            Document rootContract = contract("root-contract", "dossier-onboarding", "AR");
+            rootContract.setCreatedAt(LocalDateTime.now().minusMinutes(1));
+            Document rootAttachment = attachment("root-attachment", "dossier-onboarding", "AR", "Allegato");
+            rootAttachment.setCreatedAt(LocalDateTime.now().plusMinutes(1));
+            Document otherTenant = contract("pnpg-dossier-contract", "dossier-onboarding", "PNPG");
+            Document.mongoCollection().insertOne(userContract).await().indefinitely();
+            Document.mongoCollection().insertOne(rootAttachment).await().indefinitely();
+            Document.mongoCollection().insertOne(rootContract).await().indefinitely();
+            Document.mongoCollection().insertOne(otherTenant).await().indefinitely();
+            return null;
+        });
+
+        assertThat(inRequest("AR", () -> documentRepository.findByOnboardingIdOrRootOnboardingId("dossier-onboarding").await().indefinitely()))
+                .extracting(Document::getId)
+                .containsExactly("root-contract", "root-attachment", "user-contract");
+        assertThat(inRequest("AR", () -> documentRepository.findByOnboardingIdOrRootOnboardingId("user-onboarding").await().indefinitely()))
+                .extracting(Document::getId)
+                .containsExactly("user-contract");
+        assertThat(inRequest("AR", () -> documentRepository.findByOnboardingIdOrRootOnboardingId("missing-onboarding").await().indefinitely()))
+                .isEmpty();
+    }
+
     private <T> T inRequest(String tenantId, Supplier<T> action) {
         ManagedContext requestContext = Arc.container().requestContext();
         requestContext.activate();

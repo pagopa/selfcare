@@ -38,6 +38,7 @@ import static it.pagopa.selfcare.document.util.Utils.CONTRACT_FILENAME_FUNC;
 import static it.pagopa.selfcare.document.util.Utils.createBaseDocument;
 import static it.pagopa.selfcare.onboarding.common.DocumentType.ATTACHMENT;
 import static it.pagopa.selfcare.onboarding.common.DocumentType.INSTITUTION;
+import static it.pagopa.selfcare.onboarding.common.DocumentType.USER;
 
 @Slf4j
 @ApplicationScoped
@@ -94,18 +95,27 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public Uni<AvailableDocumentsResponse> getAvailableDocuments(String onboardingId) {
         log.info("Retrieving available documents for onboardingId={}", sanitize(onboardingId));
-
-        Uni<List<String>> attachmentsUni = getAttachments(onboardingId);
-
-        Uni<String> contractFilenameUni =
-                documentRepository.findByOnboardingId(onboardingId)
-                        .onItem().transform(this::resolveSignedContractFilename);
-
-        return Uni.combine().all().unis(attachmentsUni, contractFilenameUni)
-                .with((attachments, contractFilename) -> AvailableDocumentsResponse.builder()
-                        .attachments(attachments)
-                        .contractFilename(contractFilename)
+        return documentRepository.findByOnboardingIdOrRootOnboardingId(onboardingId)
+                .onItem().transform(documents -> AvailableDocumentsResponse.builder()
+                        .documents(documents.stream()
+                                .filter(this::isAvailableForDownload)
+                                .map(documentMapper::toAvailableDocumentResponse)
+                                .toList())
                         .build());
+    }
+
+    /**
+     * INSTITUTION and USER contracts are available only once signed (contractSigned valued);
+     * ATTACHMENT documents are always available. Any other type is excluded.
+     */
+    private boolean isAvailableForDownload(Document document) {
+        if (ATTACHMENT.equals(document.getType())) {
+            return true;
+        }
+        if (INSTITUTION.equals(document.getType()) || USER.equals(document.getType())) {
+            return Objects.nonNull(document.getContractSigned()) && !document.getContractSigned().isBlank();
+        }
+        return false;
     }
 
     @Override
@@ -130,14 +140,6 @@ public class DocumentServiceImpl implements DocumentService {
                 document.getOnboardingId(), documentMsConfig.getContractPath(), document.getContractFilename());
     }
 
-    private String resolveSignedContractFilename(Document document) {
-        if (Objects.isNull(document)
-                || Objects.isNull(document.getContractSigned())
-                || document.getContractSigned().isBlank()) {
-            return null;
-        }
-        return document.getContractFilename();
-    }
 
     @Override
     public Uni<ContractSignedReport> reportContractSigned(String onboardingId) {

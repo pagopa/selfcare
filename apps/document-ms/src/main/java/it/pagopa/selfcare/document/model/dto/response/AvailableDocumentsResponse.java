@@ -19,10 +19,9 @@ import java.util.List;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class AvailableDocumentsResponse {
 
-    @Schema(description = "Names of the attachments available for the onboarding. Empty list if none.")
-    private List<String> attachments;
-
-    @Schema(description = "Filename of the signed contract available for download. Null when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).")
-    private String contractFilename;
+    @Schema(description = "Documents of the dossier available for download. For an institution onboarding: its signed contract, "
+            + "the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it. "
+            + "For a USER onboarding: only its signed contract. Empty list if none.")
+    private List<AvailableDocumentResponse> documents;
 }
 

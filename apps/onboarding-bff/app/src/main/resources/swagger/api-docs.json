@@ -2888,7 +2888,7 @@
       "get" : {
         "tags" : [ "tokens" ],
         "summary" : "Retrieve the list of documents available for download for the given onboarding",
-        "description" : "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
+        "description" : "Returns the documents of the onboarding dossier available for download (name, type, onboardingId, rootOnboardingId): for an institution onboarding its signed contract, the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it; for a USER onboarding only its signed contract.",
         "operationId" : "getAvailableDocumentsUsingGET",
         "parameters" : [ {
           "name" : "onboardingId",
@@ -5695,20 +5695,37 @@
         },
         "description" : "Administrators specific data"
       },
+      "AvailableDocumentResource" : {
+        "type" : "object",
+        "properties" : {
+          "name" : {
+            "type" : "string",
+            "description" : "Document name: contractFilename for INSTITUTION/USER documents, attachmentName for ATTACHMENT documents."
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "Document type (INSTITUTION, USER, ATTACHMENT)."
+          },
+          "onboardingId" : {
+            "type" : "string",
+            "description" : "Identifier of the onboarding the document belongs to."
+          },
+          "rootOnboardingId" : {
+            "type" : "string",
+            "description" : "Identifier of the root onboarding (institution adhesion) of the document dossier."
+          }
+        },
+        "description" : "Document of the onboarding dossier available for download."
+      },
       "AvailableDocumentsResource" : {
         "type" : "object",
         "properties" : {
-          "attachments" : {
+          "documents" : {
             "type" : "array",
-            "description" : "Names of the attachments available for the onboarding. Empty list if none.",
+            "description" : "Documents of the dossier available for download. For an institution onboarding: its signed contract, the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it. For a USER onboarding: only its signed contract.",
             "items" : {
-              "type" : "string",
-              "description" : "Names of the attachments available for the onboarding. Empty list if none."
+              "$ref" : "#/components/schemas/AvailableDocumentResource"
             }
-          },
-          "contractFilename" : {
-            "type" : "string",
-            "description" : "Filename of the signed contract available for download. Null when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED)."
           }
         },
         "description" : "Aggregated list of documents available for download for a given onboarding."
