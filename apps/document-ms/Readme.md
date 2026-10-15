@@ -27,7 +27,7 @@ Multiple endpoints are available, each designed for a specific use case:
 | --- | --- | --- |
 | Get the main contract metadata | `GET /v1/documents/onboarding/{onboardingId}` | Metadata of the main document (`INSTITUTION` or `USER`) |
 | List existing attachments | `GET /v1/documents/{onboardingId}/attachment-list` | List of attachment names (strings only) |
-| Check what is available for download | `GET /v1/documents/{onboardingId}/available-documents` | Attachment names + signed contract filename |
+| Check what is available for download | `GET /v1/documents/{onboardingId}/available-documents` | Documents of the dossier (`name`, `type`, `onboardingId`, `rootOnboardingId`): signed `INSTITUTION`/`USER` contracts and `ATTACHMENT`s |
 | Get full detail of all attachments | `GET /v1/documents/{onboardingId}/attachments-detail` | List of objects with complete metadata (`ATTACHMENT`, `INSTITUTION`) |
 | Check whether a specific attachment exists in storage | `HEAD /v1/documents/{onboardingId}/attachment/status?name={name}` | `204` if present, `404` if absent |
 | Download the unsigned contract | `GET /v1/document-content/{onboardingId}/contract` | Unsigned contract PDF |
@@ -49,7 +49,7 @@ Multiple endpoints are available, each designed for a specific use case:
 | `PUT` | `/v1/documents/{onboardingId}/updated-at` | Updates the document modification timestamp. |
 | `GET` | `/v1/documents/{onboardingId}/attachment-list` | Returns the attachment names associated with an onboarding. |
 | `HEAD` | `/v1/documents/{onboardingId}/attachment/status` | Checks whether a specific attachment is available. |
-| `GET` | `/v1/documents/{onboardingId}/available-documents` | Returns attachment names and the signed contract filename available for download. |
+| `GET` | `/v1/documents/{onboardingId}/available-documents` | Returns the documents of the dossier available for download (`onboardingId` or `rootOnboardingId` equal to the given id): `INSTITUTION`/`USER` contracts only if signed, `ATTACHMENT`s always. The presence of an `INSTITUTION` document means the contract is available. |
 | `GET` | `/v1/documents/{onboardingId}/attachments-detail` | Returns the complete detail of all `ATTACHMENT` and `INSTITUTION` documents. |
 | `GET` | `/v1/documents/contract-report` | Checks whether the signed contract is a CAdES document. |
 

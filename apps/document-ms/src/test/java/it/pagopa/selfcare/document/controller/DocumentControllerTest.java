@@ -7,6 +7,7 @@ import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.document.mapper.DocumentMapper;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentResponse;
 import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentsResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.DocumentResponse;
@@ -16,7 +17,6 @@ import it.pagopa.selfcare.document.service.DocumentService;
 import it.pagopa.selfcare.onboarding.common.DocumentType;
 import jakarta.ws.rs.core.MediaType;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -560,10 +560,27 @@ class DocumentControllerTest {
   }
 
   @Test
-  void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename_whenAvailable() {
+  void getAvailableDocuments_shouldReturnDocuments_whenAvailable() {
     AvailableDocumentsResponse response = AvailableDocumentsResponse.builder()
-            .attachments(Arrays.asList("attachment1.pdf", "attachment2.pdf"))
-            .contractFilename("contract.pdf")
+            .documents(List.of(
+                    AvailableDocumentResponse.builder()
+                            .name("signed_contratto_adesione.pdf.p7m")
+                            .type(DocumentType.INSTITUTION)
+                            .onboardingId(ONBOARDING_ID)
+                            .rootOnboardingId(ONBOARDING_ID)
+                            .build(),
+                    AvailableDocumentResponse.builder()
+                            .name("signed_contratto_utente.pdf.p7m")
+                            .type(DocumentType.USER)
+                            .onboardingId("user-onboarding")
+                            .rootOnboardingId(ONBOARDING_ID)
+                            .build(),
+                    AvailableDocumentResponse.builder()
+                            .name("Allegato tecnico")
+                            .type(DocumentType.ATTACHMENT)
+                            .onboardingId(ONBOARDING_ID)
+                            .rootOnboardingId(ONBOARDING_ID)
+                            .build()))
             .build();
 
     when(documentService.getAvailableDocuments(ONBOARDING_ID))
@@ -574,17 +591,25 @@ class DocumentControllerTest {
         .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
         .then()
         .statusCode(200)
-        .body("attachments.size()", is(2))
-        .body("attachments[0]", equalTo("attachment1.pdf"))
-        .body("attachments[1]", equalTo("attachment2.pdf"))
-        .body("contractFilename", equalTo("contract.pdf"));
+        .body("documents.size()", is(3))
+        .body("documents[0].name", equalTo("signed_contratto_adesione.pdf.p7m"))
+        .body("documents[0].type", equalTo("INSTITUTION"))
+        .body("documents[0].onboardingId", equalTo(ONBOARDING_ID))
+        .body("documents[0].rootOnboardingId", equalTo(ONBOARDING_ID))
+        .body("documents[1].name", equalTo("signed_contratto_utente.pdf.p7m"))
+        .body("documents[1].type", equalTo("USER"))
+        .body("documents[1].onboardingId", equalTo("user-onboarding"))
+        .body("documents[1].rootOnboardingId", equalTo(ONBOARDING_ID))
+        .body("documents[2].name", equalTo("Allegato tecnico"))
+        .body("documents[2].type", equalTo("ATTACHMENT"))
+        .body("$", not(hasKey("attachments")))
+        .body("$", not(hasKey("contractFilename")));
   }
 
   @Test
-  void getAvailableDocuments_shouldReturnEmptyAttachmentsAndNoContractFilename_whenNothingAvailable() {
+  void getAvailableDocuments_shouldReturnEmptyDocuments_whenNothingAvailable() {
     AvailableDocumentsResponse response = AvailableDocumentsResponse.builder()
-            .attachments(Collections.emptyList())
-            .contractFilename(null)
+            .documents(Collections.emptyList())
             .build();
 
     when(documentService.getAvailableDocuments(ONBOARDING_ID))
@@ -595,7 +620,8 @@ class DocumentControllerTest {
         .get("/v1/documents/" + ONBOARDING_ID + "/available-documents")
         .then()
         .statusCode(200)
-        .body("attachments.size()", is(0))
+        .body("documents.size()", is(0))
+        .body("$", not(hasKey("attachments")))
         .body("$", not(hasKey("contractFilename")));
   }
 
