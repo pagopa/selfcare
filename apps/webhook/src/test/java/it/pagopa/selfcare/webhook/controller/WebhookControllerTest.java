@@ -8,6 +8,9 @@ import static org.mockito.ArgumentMatchers.eq;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
+import io.quarkus.test.security.jwt.Claim;
+import io.quarkus.test.security.jwt.JwtSecurity;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.webhook.dto.NotificationRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
@@ -158,6 +161,130 @@ class WebhookControllerTest {
         .thenReturn(Uni.createFrom().nullItem());
 
     given().queryParam("tenantId", TENANT_ID).when().get("/webhooks/999").then().statusCode(404);
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {@Claim(key = "tenant_id", value = "AR")})
+  void getWebhookByProductId_shouldUseJwtTenant_whenTenantIdIsMissing() {
+    WebhookResponse response = new WebhookResponse();
+    response.setTenantId("AR");
+    response.setProductId(PROD_TEST);
+
+    Mockito.when(webhookService.getWebhookByProductId(PROD_TEST, "AR"))
+        .thenReturn(Uni.createFrom().item(response));
+
+    given()
+        .when()
+        .get("/webhooks/" + PROD_TEST)
+        .then()
+        .statusCode(200)
+        .body("tenantId", equalTo("AR"));
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {@Claim(key = "tenant_id", value = "AR")})
+  void getWebhookByProductId_shouldRejectQueryTenant_conflictingWithJwtTenant() {
+    given().queryParam("tenantId", "PNPG").when().get("/webhooks/" + PROD_TEST).then().statusCode(400);
+
+    Mockito.verify(webhookService, Mockito.never()).getWebhookByProductId(any(), any());
+  }
+
+  @Test
+  void getWebhookByProductId_shouldUseHeaderTenant_whenQueryAndJwtAreMissing() {
+    Mockito.when(webhookService.getWebhookByProductId(PROD_TEST, "AR"))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    given().header("X-Tenant-Id", "AR").when().get("/webhooks/" + PROD_TEST).then().statusCode(404);
+
+    Mockito.verify(webhookService).getWebhookByProductId(PROD_TEST, "AR");
+  }
+
+  @Test
+  void getWebhookByProductId_shouldRejectQueryTenant_conflictingWithHeaderTenant() {
+    given()
+        .header("X-Tenant-Id", "AR")
+        .queryParam("tenantId", "PNPG")
+        .when()
+        .get("/webhooks/" + PROD_TEST)
+        .then()
+        .statusCode(400);
+
+    Mockito.verify(webhookService, Mockito.never()).getWebhookByProductId(any(), any());
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {@Claim(key = "tenant_id", value = "AR")})
+  void getWebhookByProductId_shouldRejectHeaderTenant_conflictingWithJwtTenant() {
+    given().header("X-Tenant-Id", "PNPG").when().get("/webhooks/" + PROD_TEST).then().statusCode(400);
+
+    Mockito.verify(webhookService, Mockito.never()).getWebhookByProductId(any(), any());
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {@Claim(key = "tenant_id", value = "AR")})
+  void getWebhookByProductId_shouldAcceptMatchingQueryHeaderAndJwt() {
+    Mockito.when(webhookService.getWebhookByProductId(PROD_TEST, "AR"))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    given()
+        .header("X-Tenant-Id", "AR")
+        .queryParam("tenantId", "AR")
+        .when()
+        .get("/webhooks/" + PROD_TEST)
+        .then()
+        .statusCode(404);
+
+    Mockito.verify(webhookService).getWebhookByProductId(PROD_TEST, "AR");
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {
+      @Claim(key = "iss", value = "SPID"),
+      @Claim(key = "tenant_id", value = "AR")
+  })
+  void getWebhookByProductId_shouldAcceptSpidToken_withMatchingHeader() {
+    Mockito.when(webhookService.getWebhookByProductId(PROD_TEST, "AR"))
+        .thenReturn(Uni.createFrom().nullItem());
+
+    given().header("X-Tenant-Id", "AR").when().get("/webhooks/" + PROD_TEST).then().statusCode(404);
+
+    Mockito.verify(webhookService).getWebhookByProductId(PROD_TEST, "AR");
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {
+      @Claim(key = "iss", value = "SPID"),
+      @Claim(key = "tenant_id", value = "AR")
+  })
+  void getWebhookByProductId_shouldRejectSpidToken_withoutHeader() {
+    given().when().get("/webhooks/" + PROD_TEST).then().statusCode(401);
+
+    Mockito.verify(webhookService, Mockito.never()).getWebhookByProductId(any(), any());
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  @JwtSecurity(claims = {
+      @Claim(key = "iss", value = "SPID"),
+      @Claim(key = "tenant_id", value = "AR")
+  })
+  void getWebhookByProductId_shouldRejectSpidToken_withConflictingHeader() {
+    given().header("X-Tenant-Id", "PNPG").when().get("/webhooks/" + PROD_TEST).then().statusCode(401);
+
+    Mockito.verify(webhookService, Mockito.never()).getWebhookByProductId(any(), any());
+  }
+
+  @Test
+  void getWebhookByProductId_shouldReturnBadRequest_whenTenantIsMissingEverywhere() {
+    given().when().get("/webhooks/" + PROD_TEST).then().statusCode(400);
+
+    Mockito.verify(webhookService, Mockito.never()).getWebhookByProductId(any(), any());
   }
 
   @Test

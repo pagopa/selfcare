@@ -72,6 +72,28 @@ WEBHOOK_TIMEOUT_READ=10000
 
 ## Build & Run
 
+### Tenant e JWT
+
+Il servizio usa `selfcare-sdk-security` 0.8.0. Per
+`GET /webhooks/{productId}`, `tenantId` e' opzionale: se assente o vuoto viene
+risolto da `X-Tenant-Id`, oppure dal claim JWT `tenant_id`. Valori discordanti
+tra query, header e claim causano `400`; anche l'assenza di tutte le fonti causa `400`.
+Gli endpoint interni mantengono il comportamento precedente, senza un filtro
+globale che imponga il tenant.
+
+Il registro contiene `AR` e `PNPG` e non configura risorse Mongo per tenant:
+la persistenza resta sul database condiviso configurato per webhook.
+`TENANT_SUPPORTED_TENANTS` controlla i tenant del registro. La verifica JWT
+accetta gli issuer `SPID` e `PAGOPA` e usa ancora `JWT_PUBLIC_KEY` se nel registro
+non sono configurate chiavi per tenant.
+
+Il filtro SDK per i token `SPID` resta attivo: richiede `X-Tenant-Id` coerente
+con il tenant del token, altrimenti risponde `401`. Per i token legacy privi
+del claim, l'SDK usa `DEFAULT_TENANT` (default `PNPG`) e valida i tenant rispetto
+a `SUPPORTED_TENANTS` (default `AR,PNPG`). Queste variabili sono distinte da
+`TENANT_SUPPORTED_TENANTS`. `JWT_TENANT_CLAIM_REQUIRED=true` rifiuta i token SPID
+senza claim. Il default legacy non e' una fonte per `EffectiveTenant`.
+
 ### Locale con Maven
 
 ```bash
