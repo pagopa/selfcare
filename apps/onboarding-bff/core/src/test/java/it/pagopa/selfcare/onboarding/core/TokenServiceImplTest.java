@@ -6,6 +6,7 @@ import it.pagopa.selfcare.onboarding.connector.api.DocumentMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.OnboardingMsConnector;
 import it.pagopa.selfcare.onboarding.connector.api.PartyConnector;
 import it.pagopa.selfcare.onboarding.connector.api.ProductMsConnector;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocument;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -369,8 +370,12 @@ public class TokenServiceImplTest {
         // given
         String onboardingId = "onboarding-1";
         AvailableDocuments expected = new AvailableDocuments();
-        expected.setAttachments(List.of("attachment1.pdf", "attachment2.pdf"));
-        expected.setContractFilename("contract.pdf");
+        AvailableDocument institutionContract = new AvailableDocument();
+        institutionContract.setName("signed_contratto_adesione.pdf.p7m");
+        institutionContract.setType("INSTITUTION");
+        institutionContract.setOnboardingId(onboardingId);
+        institutionContract.setRootOnboardingId(onboardingId);
+        expected.setDocuments(List.of(institutionContract));
         when(documentMsConnector.getAvailableDocuments(onboardingId)).thenReturn(expected);
 
         // when
@@ -378,6 +383,8 @@ public class TokenServiceImplTest {
 
         // then
         Assertions.assertSame(expected, actual);
+        Assertions.assertEquals(1, actual.getDocuments().size());
+        Assertions.assertEquals("INSTITUTION", actual.getDocuments().get(0).getType());
         verify(documentMsConnector, times(1)).getAvailableDocuments(onboardingId);
         verifyNoMoreInteractions(documentMsConnector);
     }
@@ -387,8 +394,7 @@ public class TokenServiceImplTest {
         // given
         String onboardingId = "onboarding-2";
         AvailableDocuments expected = new AvailableDocuments();
-        expected.setAttachments(List.of());
-        expected.setContractFilename(null); // no signed contract (e.g. TOBEVALIDATED)
+        expected.setDocuments(List.of()); // no signed contract nor attachments
         when(documentMsConnector.getAvailableDocuments(onboardingId)).thenReturn(expected);
 
         // when
@@ -396,8 +402,7 @@ public class TokenServiceImplTest {
 
         // then
         Assertions.assertNotNull(actual);
-        Assertions.assertNull(actual.getContractFilename());
-        Assertions.assertTrue(actual.getAttachments().isEmpty());
+        Assertions.assertTrue(actual.getDocuments().isEmpty());
         verify(documentMsConnector, times(1)).getAvailableDocuments(onboardingId);
     }
 }

@@ -11,10 +11,9 @@ import java.util.List;
 @Schema(description = "Aggregated list of documents available for download for a given onboarding.")
 public class AvailableDocumentsResource {
 
-    @Schema(description = "Names of the attachments available for the onboarding. Empty list if none.")
-    private List<String> attachments;
-
-    @Schema(description = "Filename of the signed contract available for download. Null when the onboarding has no signed contract yet (e.g. state TOBEVALIDATED).")
-    private String contractFilename;
+    @Schema(description = "Documents of the dossier available for download. For an institution onboarding: its signed contract, "
+            + "the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it. "
+            + "For a USER onboarding: only its signed contract.")
+    private List<AvailableDocumentResource> documents;
 }
 
