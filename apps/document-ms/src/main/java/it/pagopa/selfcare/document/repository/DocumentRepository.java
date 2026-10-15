@@ -84,6 +84,18 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
                 .firstResult();
     }
 
+    /**
+     * Returns all documents of the dossier identified by the given id: documents whose {@code onboardingId}
+     * or {@code rootOnboardingId} matches it, ordered by creation date.
+     */
+    public Uni<List<Document>> findByOnboardingIdOrRootOnboardingId(String onboardingId) {
+        return find(scoped(Filters.or(
+                        Filters.eq("onboardingId", onboardingId),
+                        Filters.eq("rootOnboardingId", onboardingId))),
+                Sorts.ascending("createdAt"))
+                .list();
+    }
+
     public Uni<List<Document>> findAttachments(String onboardingId) {
         return find(scoped(Filters.and(
                 Filters.eq("onboardingId", onboardingId),

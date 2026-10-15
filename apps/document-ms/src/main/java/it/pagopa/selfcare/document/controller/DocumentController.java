@@ -111,7 +111,9 @@ public class DocumentController {
 
   @Operation(
           summary = "Retrieve the list of documents available for download for a given onboarding",
-          description = "Returns the attachments associated with the onboarding and, if present, the contractFilename."
+          description = "Returns the documents of the dossier available for download: for an institution onboarding its signed contract, "
+                  + "the signed contracts of the update onboardings, the attachments and the signed USER contracts linked to it; "
+                  + "for a USER onboarding only its signed contract."
   )
   @GET
   @Produces(MediaType.APPLICATION_JSON)

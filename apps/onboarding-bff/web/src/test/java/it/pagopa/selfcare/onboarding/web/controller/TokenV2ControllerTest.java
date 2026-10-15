@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import it.pagopa.selfcare.commons.base.security.SelfCareUser;
 import it.pagopa.selfcare.commons.web.security.JwtAuthenticationToken;
+import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocument;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.AvailableDocuments;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.InstitutionUpdate;
 import it.pagopa.selfcare.onboarding.connector.model.onboarding.OnboardingData;
@@ -560,12 +561,14 @@ class TokenV2ControllerTest {
    * Method under test: {@link TokenV2Controller#getAvailableDocuments(String)}
    */
   @Test
-  void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename() throws Exception {
+  void getAvailableDocuments_shouldReturnDocuments() throws Exception {
     // given
     String onboardingId = UUID.randomUUID().toString();
     AvailableDocuments source = new AvailableDocuments();
-    source.setAttachments(List.of("attachment1.pdf", "attachment2.pdf"));
-    source.setContractFilename("contract.pdf");
+    source.setDocuments(List.of(
+            availableDocument("signed_contratto_adesione.pdf.p7m", "INSTITUTION", onboardingId, onboardingId),
+            availableDocument("signed_contratto_utente.pdf.p7m", "USER", "user-onboarding", onboardingId),
+            availableDocument("Allegato tecnico", "ATTACHMENT", onboardingId, onboardingId)));
     when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(source);
 
     // when / then
@@ -573,26 +576,49 @@ class TokenV2ControllerTest {
                     .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
                     .accept(APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments", org.hamcrest.Matchers.hasSize(2)))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments[0]").value("attachment1.pdf"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments[1]").value("attachment2.pdf"))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").value("contract.pdf"));
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents", org.hamcrest.Matchers.hasSize(3)))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].name").value("signed_contratto_adesione.pdf.p7m"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].type").value("INSTITUTION"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].onboardingId").value(onboardingId))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[0].rootOnboardingId").value(onboardingId))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[1].name").value("signed_contratto_utente.pdf.p7m"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[1].type").value("USER"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[1].onboardingId").value("user-onboarding"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[1].rootOnboardingId").value(onboardingId))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[2].name").value("Allegato tecnico"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents[2].type").value("ATTACHMENT"))
+            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments").doesNotExist())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").doesNotExist());
 
     verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
   }
 
   /**
-   * When the onboarding has no signed contract (e.g. state TOBEVALIDATED),
-   * document-ms returns contractFilename=null and the BFF must not expose it
+   * When document-ms returns no documents list, the BFF must not expose it
    * (thanks to @JsonInclude(NON_NULL) on the resource).
    */
   @Test
-  void getAvailableDocuments_shouldOmitContractFilenameWhenAbsent() throws Exception {
+  void getAvailableDocuments_shouldOmitDocumentsWhenAbsent() throws Exception {
+    // given
+    String onboardingId = UUID.randomUUID().toString();
+    when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(new AvailableDocuments());
+
+    // when / then
+    mvc.perform(MockMvcRequestBuilders
+                    .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
+                    .accept(APPLICATION_JSON_VALUE))
+            .andExpect(status().isOk())
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents").doesNotExist());
+
+    verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
+  }
+
+  @Test
+  void getAvailableDocuments_shouldReturnEmptyDocuments() throws Exception {
     // given
     String onboardingId = UUID.randomUUID().toString();
     AvailableDocuments source = new AvailableDocuments();
-    source.setAttachments(List.of("attachment1.pdf"));
-    source.setContractFilename(null);
+    source.setDocuments(List.of());
     when(tokenService.getAvailableDocuments(onboardingId)).thenReturn(source);
 
     // when / then
@@ -600,10 +626,16 @@ class TokenV2ControllerTest {
                     .get("/v2/tokens/{onboardingId}/available-documents", onboardingId)
                     .accept(APPLICATION_JSON_VALUE))
             .andExpect(status().isOk())
-            .andExpect(MockMvcResultMatchers.jsonPath("$.attachments", org.hamcrest.Matchers.hasSize(1)))
-            .andExpect(MockMvcResultMatchers.jsonPath("$.contractFilename").doesNotExist());
+            .andExpect(MockMvcResultMatchers.jsonPath("$.documents", org.hamcrest.Matchers.hasSize(0)));
+  }
 
-    verify(tokenService, times(1)).getAvailableDocuments(onboardingId);
+  private static AvailableDocument availableDocument(String name, String type, String onboardingId, String rootOnboardingId) {
+    AvailableDocument document = new AvailableDocument();
+    document.setName(name);
+    document.setType(type);
+    document.setOnboardingId(onboardingId);
+    document.setRootOnboardingId(rootOnboardingId);
+    return document;
   }
 
   /**
