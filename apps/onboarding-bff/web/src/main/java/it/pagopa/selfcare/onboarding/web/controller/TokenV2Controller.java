@@ -312,7 +312,9 @@ public class TokenV2Controller {
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("@authorizationService.hasPermission(authentication, #onboardingId, '" + PermissionConstants.SELC_VIEW_ACCOUNT_DOCUMENTS + "')")
     @Operation(summary = "Retrieve the list of documents available for download for the given onboarding",
-            description = "Returns the list of attachment names and, if present, the filename of the signed contract associated with the onboarding.",
+            description = "Returns the documents of the onboarding dossier available for download (name, type, onboardingId, rootOnboardingId): "
+                    + "for an institution onboarding its signed contract, the signed contracts of the update onboardings, the attachments "
+                    + "and the signed USER contracts linked to it; for a USER onboarding only its signed contract.",
             operationId = "getAvailableDocumentsUsingGET")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successful operation"),
@@ -325,9 +327,7 @@ public class TokenV2Controller {
         log.trace("getAvailableDocuments start");
         log.debug("getAvailableDocuments onboardingId = {}", Encode.forJava(onboardingId));
         AvailableDocuments source = tokenService.getAvailableDocuments(onboardingId);
-        AvailableDocumentsResource resource = new AvailableDocumentsResource();
-        resource.setAttachments(source.getAttachments());
-        resource.setContractFilename(source.getContractFilename());
+        AvailableDocumentsResource resource = onboardingResourceMapper.toAvailableDocumentsResource(source);
         log.trace("getAvailableDocuments end");
         return resource;
     }

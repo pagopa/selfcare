@@ -14,6 +14,7 @@ import it.pagopa.selfcare.document.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.document.model.StorageOrigin;
 import it.pagopa.selfcare.document.model.dto.request.DocumentBuilderRequest;
 import it.pagopa.selfcare.document.model.dto.request.OnboardingDocumentRequest;
+import it.pagopa.selfcare.document.model.dto.response.AvailableDocumentResponse;
 import it.pagopa.selfcare.document.model.dto.response.ContractSignedReport;
 import it.pagopa.selfcare.document.model.dto.response.RelatedDocumentResponse;
 import it.pagopa.selfcare.document.model.entity.Document;
@@ -213,80 +214,156 @@ class DocumentServiceImplTest {
 
     // ---- getAvailableDocuments ----
 
-    @Test
-    void getAvailableDocuments_shouldReturnAttachmentsAndContractFilename_whenContractSigned() {
-        Document attachment = buildDocument();
-        attachment.setType(DocumentType.ATTACHMENT);
-        attachment.setAttachmentName("attachment-1");
+    private static final String ROOT_ONBOARDING_ID = "rootOnboardingId";
+    private static final String USER_ONBOARDING_ID = "userOnboardingId";
+    private static final String UPDATE_ONBOARDING_ID = "updateOnboardingId";
 
-        Document contractDoc = buildDocument();
-        contractDoc.setContractSigned("/path/signed.pdf");
-        contractDoc.setContractFilename("contract.pdf");
+    private Document buildDossierDocument(DocumentType type, String onboardingId, String contractSigned, String contractFilename, String attachmentName) {
+        Document doc = new Document();
+        doc.setId(new ObjectId().toHexString());
+        doc.setType(type);
+        doc.setOnboardingId(onboardingId);
+        doc.setRootOnboardingId(ROOT_ONBOARDING_ID);
+        doc.setContractSigned(contractSigned);
+        doc.setContractFilename(contractFilename);
+        doc.setAttachmentName(attachmentName);
+        return doc;
+    }
 
-        when(documentRepository.findAttachments(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of(attachment)));
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(contractDoc));
+    private Document signedInstitutionContract(String onboardingId, String contractFilename) {
+        return buildDossierDocument(DocumentType.INSTITUTION, onboardingId, "/contracts/" + onboardingId + "/" + contractFilename, contractFilename, null);
+    }
 
-        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
-                .await().indefinitely();
+    private Document attachmentDocument(String attachmentName) {
+        return buildDossierDocument(DocumentType.ATTACHMENT, ROOT_ONBOARDING_ID, null, "template-attachment.pdf", attachmentName);
+    }
 
+    private List<AvailableDocumentResponse> availableDocuments(String id, List<Document> documents) {
+        when(documentRepository.findByOnboardingIdOrRootOnboardingId(id))
+                .thenReturn(Uni.createFrom().item(documents));
+        var result = documentService.getAvailableDocuments(id).await().indefinitely();
         assertNotNull(result);
-        assertEquals(1, result.getAttachments().size());
-        assertTrue(result.getAttachments().contains("attachment-1"));
-        assertEquals("contract.pdf", result.getContractFilename());
+        assertNotNull(result.getDocuments());
+        verify(documentRepository).findByOnboardingIdOrRootOnboardingId(id);
+        return result.getDocuments();
     }
 
     @Test
-    void getAvailableDocuments_shouldReturnNullContractFilename_whenDocumentIsNull() {
-        when(documentRepository.findAttachments(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of()));
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().nullItem());
+    void getAvailableDocuments_shouldReturnSignedContractAndAttachment_whenInstitutionWithoutUpdates() {
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(
+                signedInstitutionContract(ROOT_ONBOARDING_ID, "signed_contratto_adesione.pdf.p7m"),
+                attachmentDocument("Allegato tecnico")));
 
-        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertNotNull(result.getAttachments());
-        assertTrue(result.getAttachments().isEmpty());
-        assertNull(result.getContractFilename());
+        assertEquals(2, result.size());
+        assertEquals("signed_contratto_adesione.pdf.p7m", result.get(0).getName());
+        assertEquals(DocumentType.INSTITUTION, result.get(0).getType());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(0).getOnboardingId());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(0).getRootOnboardingId());
+        assertEquals("Allegato tecnico", result.get(1).getName());
+        assertEquals(DocumentType.ATTACHMENT, result.get(1).getType());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(1).getOnboardingId());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(1).getRootOnboardingId());
     }
 
     @Test
-    void getAvailableDocuments_shouldReturnNullContractFilename_whenContractSignedIsNull() {
-        Document contractDoc = buildDocument();
-        contractDoc.setContractSigned(null);
-        contractDoc.setContractFilename("contract.pdf");
+    void getAvailableDocuments_shouldIncludeSignedUserContracts_whenLinkedToInstitution() {
+        Document userContract = buildDossierDocument(DocumentType.USER, USER_ONBOARDING_ID,
+                "/contracts/user/signed_contratto_utente.pdf.p7m", "signed_contratto_utente.pdf.p7m", null);
 
-        when(documentRepository.findAttachments(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of()));
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(contractDoc));
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(
+                signedInstitutionContract(ROOT_ONBOARDING_ID, "signed_contratto_adesione.pdf.p7m"),
+                userContract));
 
-        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
-                .await().indefinitely();
-
-        assertNotNull(result);
-        assertNull(result.getContractFilename());
+        assertEquals(2, result.size());
+        assertEquals("signed_contratto_utente.pdf.p7m", result.get(1).getName());
+        assertEquals(DocumentType.USER, result.get(1).getType());
+        assertEquals(USER_ONBOARDING_ID, result.get(1).getOnboardingId());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(1).getRootOnboardingId());
     }
 
     @Test
-    void getAvailableDocuments_shouldReturnNullContractFilename_whenContractSignedIsBlank() {
-        Document contractDoc = buildDocument();
-        contractDoc.setContractSigned("   ");
-        contractDoc.setContractFilename("contract.pdf");
+    void getAvailableDocuments_shouldReturnOnlyUserContract_whenIdIsUserOnboarding() {
+        Document userContract = buildDossierDocument(DocumentType.USER, USER_ONBOARDING_ID,
+                "/contracts/user/signed_contratto_utente.pdf.p7m", "signed_contratto_utente.pdf.p7m", null);
 
-        when(documentRepository.findAttachments(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(List.of()));
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
-                .thenReturn(Uni.createFrom().item(contractDoc));
+        var result = availableDocuments(USER_ONBOARDING_ID, List.of(userContract));
 
-        var result = documentService.getAvailableDocuments(ONBOARDING_ID)
-                .await().indefinitely();
+        assertEquals(1, result.size());
+        assertEquals(DocumentType.USER, result.get(0).getType());
+        assertEquals("signed_contratto_utente.pdf.p7m", result.get(0).getName());
+        assertEquals(USER_ONBOARDING_ID, result.get(0).getOnboardingId());
+    }
 
-        assertNotNull(result);
-        assertNull(result.getContractFilename());
+    @Test
+    void getAvailableDocuments_shouldExcludeUnsignedContracts_whenUpdateNotCompleted() {
+        Document pendingUpdate = buildDossierDocument(DocumentType.INSTITUTION, UPDATE_ONBOARDING_ID,
+                null, "contratto_aggiornamento.pdf", null);
+        Document blankSignedUpdate = buildDossierDocument(DocumentType.INSTITUTION, UPDATE_ONBOARDING_ID,
+                "   ", "contratto_aggiornamento_2.pdf", null);
+        Document unsignedUser = buildDossierDocument(DocumentType.USER, USER_ONBOARDING_ID,
+                null, "contratto_utente.pdf", null);
+
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(
+                signedInstitutionContract(ROOT_ONBOARDING_ID, "signed_contratto_adesione.pdf.p7m"),
+                pendingUpdate, blankSignedUpdate, unsignedUser));
+
+        assertEquals(1, result.size());
+        assertEquals("signed_contratto_adesione.pdf.p7m", result.get(0).getName());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(0).getOnboardingId());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldIncludeUpdateContract_whenUpdateCompleted() {
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(
+                signedInstitutionContract(ROOT_ONBOARDING_ID, "signed_contratto_adesione.pdf.p7m"),
+                signedInstitutionContract(UPDATE_ONBOARDING_ID, "signed_contratto_aggiornamento.pdf.p7m")));
+
+        assertEquals(2, result.size());
+        assertEquals(DocumentType.INSTITUTION, result.get(1).getType());
+        assertEquals("signed_contratto_aggiornamento.pdf.p7m", result.get(1).getName());
+        assertEquals(UPDATE_ONBOARDING_ID, result.get(1).getOnboardingId());
+        assertEquals(ROOT_ONBOARDING_ID, result.get(1).getRootOnboardingId());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldReturnNoInstitutionDocument_whenLegacyInstitutionWithoutSignedContract() {
+        Document legacyContract = buildDossierDocument(DocumentType.INSTITUTION, ROOT_ONBOARDING_ID,
+                null, "contratto_adesione.pdf", null);
+
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(legacyContract, attachmentDocument("Allegato tecnico")));
+
+        assertEquals(1, result.size());
+        assertTrue(result.stream().noneMatch(d -> DocumentType.INSTITUTION.equals(d.getType())));
+        assertEquals(DocumentType.ATTACHMENT, result.get(0).getType());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldUseAttachmentNameForAttachments_andContractFilenameForContracts() {
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(
+                signedInstitutionContract(ROOT_ONBOARDING_ID, "contract-name.pdf"),
+                attachmentDocument("attachment-name")));
+
+        assertEquals("contract-name.pdf", result.get(0).getName());
+        assertEquals("attachment-name", result.get(1).getName());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldExcludeDocumentsOfOtherTypes() {
+        Document legals = buildDossierDocument(DocumentType.LEGALS, ROOT_ONBOARDING_ID,
+                "/contracts/legals.pdf", "legals.pdf", null);
+
+        var result = availableDocuments(ROOT_ONBOARDING_ID, List.of(legals));
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void getAvailableDocuments_shouldReturnEmptyDocuments_whenOnboardingDoesNotExist() {
+        var result = availableDocuments(ONBOARDING_ID, List.of());
+
+        assertTrue(result.isEmpty());
+        verify(documentRepository, never()).findByOnboardingId(anyString());
+        verify(documentRepository, never()).findAttachments(anyString());
     }
 
     // ---- updateContractSigned ----
