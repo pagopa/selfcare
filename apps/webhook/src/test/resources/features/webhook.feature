@@ -29,6 +29,38 @@ Feature: Webhook Management
     Then the response status code should be 200
     And the response should contain "url" with value "http://old-url.com"
 
+  Scenario: Get webhook using only the PAGOPA JWT tenant
+    Given the webhook tenant is "AR"
+    And I have created a webhook for product "prod-test"
+    When I get the webhook using a "PAGOPA" JWT and tenant header ""
+    Then the response status code should be 200
+    And the response should contain "tenantId" with value "AR"
+
+  Scenario: Reject a tenant header conflicting with the PAGOPA JWT
+    Given the webhook tenant is "AR"
+    And I have created a webhook for product "prod-test"
+    When I get the webhook using a "PAGOPA" JWT and tenant header "PNPG"
+    Then the response status code should be 400
+
+  Scenario: Get webhook using a SPID JWT with its matching tenant header
+    Given the webhook tenant is "AR"
+    And I have created a webhook for product "prod-test"
+    When I get the webhook using a "SPID" JWT and tenant header "AR"
+    Then the response status code should be 200
+    And the response should contain "tenantId" with value "AR"
+
+  Scenario: Reject a SPID JWT without the tenant header
+    Given the webhook tenant is "AR"
+    And I have created a webhook for product "prod-test"
+    When I get the webhook using a "SPID" JWT and tenant header ""
+    Then the response status code should be 401
+
+  Scenario: Reject a SPID JWT with a conflicting tenant header
+    Given the webhook tenant is "AR"
+    And I have created a webhook for product "prod-test"
+    When I get the webhook using a "SPID" JWT and tenant header "PNPG"
+    Then the response status code should be 401
+
   Scenario: Send notification
     Given I have created a webhook for product "prod-io"
     When I send a notification for product "prod-io" with payload "{}"
