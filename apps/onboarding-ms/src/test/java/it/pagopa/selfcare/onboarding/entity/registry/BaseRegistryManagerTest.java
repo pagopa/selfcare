@@ -55,7 +55,8 @@ class BaseRegistryManagerTest {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(Origin.IPA);
-            ProductResponse product = productWithOrigins(org.openapi.quarkus.product_json.model.InstitutionType.PA,
+            ProductResponse product = productWithOrigins(org.openapi.quarkus.product_json.model.Origin.IPA,
+                    org.openapi.quarkus.product_json.model.InstitutionType.PA,
                     org.openapi.quarkus.product_json.model.InstitutionType.GSP);
 
             // when
@@ -66,11 +67,25 @@ class BaseRegistryManagerTest {
         }
 
         @Test
+        void givenInstitutionTypeWithDifferentOriginInProduct_whenValidate_thenThrowInstitutionTypeNotAllowedException() {
+            // given
+            institution.setInstitutionType(InstitutionType.GSP);
+            institution.setOrigin(Origin.SELC);
+            ProductResponse product = productWithOrigins(org.openapi.quarkus.product_json.model.Origin.IPA,
+                    org.openapi.quarkus.product_json.model.InstitutionType.GSP);
+
+            // when & then
+            assertThrows(InstitutionTypeNotAllowedException.class,
+                    () -> registryManager.validateInstitutionType(product).await().indefinitely());
+        }
+
+        @Test
         void givenInstitutionTypeNotInProductOrigins_whenValidate_thenThrowInstitutionTypeNotAllowedException() {
             // given
             institution.setInstitutionType(InstitutionType.PRV);
             institution.setOrigin(Origin.SELC);
-            ProductResponse product = productWithOrigins(org.openapi.quarkus.product_json.model.InstitutionType.GPU,
+            ProductResponse product = productWithOrigins(org.openapi.quarkus.product_json.model.Origin.SELC,
+                    org.openapi.quarkus.product_json.model.InstitutionType.GPU,
                     org.openapi.quarkus.product_json.model.InstitutionType.PSP);
             product.setProductId("prod-pagopa");
 
@@ -87,45 +102,39 @@ class BaseRegistryManagerTest {
     class ValidateInstitutionTypeByOrigin {
 
         @Test
-        void givenNullOrigin_whenValidate_thenReturnOnboarding() {
+        void givenNullOrigin_whenValidate_thenThrowInstitutionTypeNotAllowedException() {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(null);
             ProductResponse product = productAllowingAllTypes();
 
-            // when
-            Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
-
-            // then
-            assertEquals(onboarding, result);
+            // when & then
+            assertThrows(InstitutionTypeNotAllowedException.class,
+                    () -> registryManager.validateInstitutionType(product).await().indefinitely());
         }
 
         @Test
-        void givenNullInstitutionType_whenValidate_thenReturnOnboarding() {
+        void givenNullInstitutionType_whenValidate_thenThrowInstitutionTypeNotAllowedException() {
             // given
             institution.setInstitutionType(null);
             institution.setOrigin(Origin.IPA);
             ProductResponse product = productAllowingAllTypes();
 
-            // when
-            Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
-
-            // then
-            assertEquals(onboarding, result);
+            // when & then
+            assertThrows(InstitutionTypeNotAllowedException.class,
+                    () -> registryManager.validateInstitutionType(product).await().indefinitely());
         }
 
         @Test
-        void givenUnmappedOrigin_whenValidate_thenReturnOnboarding() {
+        void givenOriginNotConfiguredOnProduct_whenValidate_thenThrowInstitutionTypeNotAllowedException() {
             // given
             institution.setInstitutionType(InstitutionType.PA);
             institution.setOrigin(Origin.MOCK);
             ProductResponse product = productAllowingAllTypes();
 
-            // when
-            Onboarding result = registryManager.validateInstitutionType(product).await().indefinitely();
-
-            // then
-            assertEquals(onboarding, result);
+            // when & then
+            assertThrows(InstitutionTypeNotAllowedException.class,
+                    () -> registryManager.validateInstitutionType(product).await().indefinitely());
         }
 
         @ParameterizedTest
@@ -160,16 +169,22 @@ class BaseRegistryManagerTest {
         }
     }
 
-    static ProductResponse productWithOrigins(org.openapi.quarkus.product_json.model.InstitutionType... types) {
+    static ProductResponse productWithOrigins(org.openapi.quarkus.product_json.model.Origin origin,
+                                              org.openapi.quarkus.product_json.model.InstitutionType... types) {
         ProductResponse product = new ProductResponse();
         product.setInstitutionOrigins(Arrays.stream(types)
-                .map(t -> new OriginEntry().institutionType(t).origin(org.openapi.quarkus.product_json.model.Origin.SELC))
+                .map(t -> new OriginEntry().institutionType(t).origin(origin))
                 .toList());
         return product;
     }
 
     static ProductResponse productAllowingAllTypes() {
-        return productWithOrigins(org.openapi.quarkus.product_json.model.InstitutionType.values());
+        ProductResponse product = new ProductResponse();
+        product.setInstitutionOrigins(Arrays.stream(org.openapi.quarkus.product_json.model.Origin.values())
+                .flatMap(o -> Arrays.stream(org.openapi.quarkus.product_json.model.InstitutionType.values())
+                        .map(t -> new OriginEntry().institutionType(t).origin(o)))
+                .toList());
+        return product;
     }
 
     static Stream<Arguments> validOriginInstitutionTypeCombinations() {

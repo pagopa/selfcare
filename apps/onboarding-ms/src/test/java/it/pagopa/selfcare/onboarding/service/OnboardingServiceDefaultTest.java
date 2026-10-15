@@ -1569,7 +1569,8 @@ class OnboardingServiceDefaultTest {
 
     private static List<OriginEntry> originsOf(org.openapi.quarkus.product_json.model.InstitutionType... types) {
         return Arrays.stream(types)
-                .map(t -> new OriginEntry().institutionType(t).origin(org.openapi.quarkus.product_json.model.Origin.SELC))
+                .flatMap(t -> Arrays.stream(org.openapi.quarkus.product_json.model.Origin.values())
+                        .map(o -> new OriginEntry().institutionType(t).origin(o)))
                 .toList();
     }
 

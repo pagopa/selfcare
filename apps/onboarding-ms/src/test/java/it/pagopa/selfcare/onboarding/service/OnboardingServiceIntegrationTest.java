@@ -278,7 +278,9 @@ class OnboardingServiceIntegrationTest {
         return new ProductResponse().productId(productId).tenantId("AR").title("title")
                 .features(new Features().enabled(true).allowIndividualOnboarding(false).allowCompanyOnboarding(true))
                 .institutionOrigins(Arrays.stream(org.openapi.quarkus.product_json.model.InstitutionType.values())
-                        .map(t -> new org.openapi.quarkus.product_json.model.OriginEntry().institutionType(t))
+                        .flatMap(t -> Arrays.stream(org.openapi.quarkus.product_json.model.Origin.values())
+                                .map(o -> new org.openapi.quarkus.product_json.model.OriginEntry()
+                                        .institutionType(t).origin(o)))
                         .toList())
                 .roleMappings(List.of(
                         roleMapping(manager.getRole(), PRODUCT_ROLE_ADMIN_CODE, null),

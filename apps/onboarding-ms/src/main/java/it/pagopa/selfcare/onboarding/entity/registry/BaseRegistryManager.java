@@ -57,7 +57,8 @@ public abstract class BaseRegistryManager<T> implements RegistryManager<T> {
     }
 
     private Uni<Onboarding> validateInstitutionTypeByProduct(ProductResponse product) {
-        return InstitutionTypeValidator.validate(product, onboarding.getInstitution().getInstitutionType())
+        return InstitutionTypeValidator.validate(product, onboarding.getInstitution().getInstitutionType(),
+                        onboarding.getInstitution().getOrigin())
                 .<Uni<Onboarding>>map(ex -> Uni.createFrom().failure(ex))
                 .orElseGet(() -> Uni.createFrom().item(onboarding));
     }

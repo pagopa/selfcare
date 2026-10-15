@@ -1,18 +1,24 @@
 package it.pagopa.selfcare.onboarding.service.util;
 
 import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.Origin;
 import it.pagopa.selfcare.onboarding.exception.InstitutionTypeNotAllowedException;
 import org.openapi.quarkus.product_json.model.OriginEntry;
 import org.openapi.quarkus.product_json.model.ProductResponse;
+
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Checks the institutionType requested against the institutionOrigins configured on the product (product MS).
- * The institutionType must be listed there: a product without institutionOrigins accepts none.
+ * Checks the (institutionType, origin) pair requested against the institutionOrigins configured on the product
+ * (product MS). The same institutionType may be listed with different origins, so the pair must match.
+ * Both values are mandatory: a request missing either one cannot be verified and is rejected.
+ * A product without institutionOrigins accepts none.
  */
+@Slf4j
 public final class InstitutionTypeValidator {
 
     public static final String NOT_ALLOWED_INSTITUTION_TYPE =
@@ -22,18 +28,25 @@ public final class InstitutionTypeValidator {
     }
 
     public static Optional<InstitutionTypeNotAllowedException> validate(ProductResponse product,
-                                                                        InstitutionType institutionType) {
-        if (Objects.isNull(product) || Objects.isNull(institutionType)
-                || isAllowedByOrigins(product.getInstitutionOrigins(), institutionType)) {
+                                                                        InstitutionType institutionType,
+                                                                        Origin origin) {
+        if (Objects.isNull(product)
+                || (Objects.nonNull(institutionType) && Objects.nonNull(origin)
+                && isAllowedByOrigins(product.getInstitutionOrigins(), institutionType, origin))) {
             return Optional.empty();
         }
+        log.warn("Institution type not allowed: institutionType={}, origin={}, productId={}",
+                institutionType, origin, product.getProductId());
         return Optional.of(new InstitutionTypeNotAllowedException(
-                String.format(NOT_ALLOWED_INSTITUTION_TYPE, institutionType.name(), product.getProductId())));
+                String.format(NOT_ALLOWED_INSTITUTION_TYPE, institutionType, product.getProductId())));
     }
 
-    private static boolean isAllowedByOrigins(Collection<OriginEntry> origins, InstitutionType institutionType) {
+    private static boolean isAllowedByOrigins(Collection<OriginEntry> origins, InstitutionType institutionType,
+                                              Origin origin) {
         return Objects.nonNull(origins) && origins.stream()
                 .anyMatch(entry -> Objects.nonNull(entry.getInstitutionType())
-                        && institutionType.name().equals(entry.getInstitutionType().name()));
+                        && institutionType.name().equals(entry.getInstitutionType().name())
+                        && Objects.nonNull(entry.getOrigin())
+                        && origin.name().equals(entry.getOrigin().name()));
     }
 }
