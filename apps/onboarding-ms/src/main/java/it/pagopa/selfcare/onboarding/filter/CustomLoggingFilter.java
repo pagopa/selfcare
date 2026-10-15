@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.filter;
 
+import it.pagopa.selfcare.security.tenant.TenantLogUtils;
 import jakarta.annotation.Priority;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.Priorities;

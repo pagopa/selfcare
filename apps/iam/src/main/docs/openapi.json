@@ -212,10 +212,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -283,10 +283,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -366,10 +366,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -425,10 +425,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -505,10 +505,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -598,10 +598,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],
@@ -678,10 +678,10 @@
             "type" : "string"
           }
         }, {
+          "description" : "Optional. Defaults to the X-Tenant-Id header, or to the JWT tenant_id claim when the header is absent.",
           "name" : "tenantId",
           "in" : "query",
           "schema" : {
-            "default" : "AR",
             "type" : "string"
           }
         } ],

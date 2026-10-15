@@ -1,5 +1,7 @@
 package it.pagopa.selfcare.iam.filter;
 
+import it.pagopa.selfcare.security.tenant.TenantResolutionFilter;
+import it.pagopa.selfcare.tenant.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.client.ClientRequestContext;
@@ -15,6 +17,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 @ApplicationScoped
 public class TokenPropagationFilter implements ClientRequestFilter {
   @Inject JsonWebToken jwt;
+  @Inject TenantContext tenantContext;
 
   @Override
   public void filter(ClientRequestContext requestContext) throws IOException {
@@ -29,6 +32,17 @@ public class TokenPropagationFilter implements ClientRequestFilter {
       }
     } catch (Exception e) {
       log.error("Error fetching JWT token: {}", e.getMessage());
+    }
+    try {
+      if (tenantContext.isInitialized()) {
+        requestContext
+            .getHeaders()
+            .putSingle(TenantResolutionFilter.TENANT_HEADER, tenantContext.requiredTenantId());
+      } else {
+        log.warn("No tenant found in the current context. X-Tenant-Id will not be propagated.");
+      }
+    } catch (Exception e) {
+      log.error("Error fetching tenant: {}", e.getMessage());
     }
   }
 }

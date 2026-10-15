@@ -31,7 +31,7 @@ import it.pagopa.selfcare.onboarding.model.FormItem;
 import it.pagopa.selfcare.onboarding.model.OnboardingGetFilters;
 import it.pagopa.selfcare.onboarding.model.RecipientCodeStatus;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
-import it.pagopa.selfcare.onboarding.filter.TenantResolutionFilter;
+import it.pagopa.selfcare.security.tenant.TenantResolutionFilter;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -550,6 +550,29 @@ class OnboardingControllerTest {
 
         verify(onboardingService, times(1))
                 .onboardingGet((OnboardingGetFilters) any());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void getOnboardingWithWorkflowTypeFilter() {
+        when(onboardingService.onboardingGet((OnboardingGetFilters) any()))
+                .thenReturn(Uni.createFrom().item(getOnboardingGetResponse()));
+
+        given()
+                .when()
+                .queryParam("institutionId", "inst-1")
+                .queryParam("productId", "prod-io")
+                .queryParam("status", "PENDING")
+                .queryParam("workflowType", "CONTRACT_UPDATE")
+                .get()
+                .then()
+                .statusCode(200);
+
+        ArgumentCaptor<OnboardingGetFilters> captor = ArgumentCaptor.forClass(OnboardingGetFilters.class);
+        verify(onboardingService, times(1)).onboardingGet(captor.capture());
+        assertEquals(WorkflowType.CONTRACT_UPDATE, captor.getValue().getWorkflowType());
+        assertEquals(OnboardingStatus.PENDING, captor.getValue().getStatus());
+        assertEquals("inst-1", captor.getValue().getInstitutionId());
     }
 
     @Test

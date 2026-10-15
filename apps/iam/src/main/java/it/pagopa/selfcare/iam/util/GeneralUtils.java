@@ -14,7 +14,6 @@ import java.util.concurrent.TimeoutException;
 public class GeneralUtils {
 
   public static final String PRODUCT_ALL = "ALL";
-  public static final String DEFAULT_TENANT_ID = "AR";
   private static final String DELIMITER = ",";
 
   private GeneralUtils() {}

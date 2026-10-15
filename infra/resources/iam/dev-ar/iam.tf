@@ -90,6 +90,8 @@ module "collection_iam_roles" {
 ###############################################################################
 
 locals {
+  tenant_id_iam_ms = upper(module.local.config.domain)
+
   app_settings_iam_ms = [
     {
       name  = "JAVA_TOOL_OPTIONS"
@@ -98,6 +100,45 @@ locals {
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
       value = "iam-ms"
+    },
+    {
+      name = "TENANT_REGISTRY_JSON"
+      value = jsonencode({
+        for tenant_id, tenant in module.local.config.tenant_registry :
+        tenant_id => {
+          mongo = {
+            account                = module.local.config.mongo_db.cosmosdb_account_mongodb_name
+            database               = module.cosmosdb.database_name
+            connectionStringEnvVar = "MONGODB_CONNECTION_STRING_${tenant_id}"
+          }
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
+          }
+        } if tenant_id == local.tenant_id_iam_ms
+      })
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = local.tenant_id_iam_ms
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = local.tenant_id_iam_ms
+    },
+    {
+      # Tenant of SPID tokens without tenant_id claim (selfcare-sdk-security).
+      name  = "DEFAULT_TENANT"
+      value = local.tenant_id_iam_ms
+    },
+    {
+      # APIM strips X-Tenant-Id and not every internal caller sends it yet:
+      # requests without tenant fall back to TENANT_DEFAULT.
+      name  = "TENANT_ENFORCEMENT_ENABLED"
+      value = "false"
+    },
+    {
+      name  = "SELFCARE_TENANT_STRICT_DATA_ISOLATION"
+      value = tostring(module.local.config.strict_tenant_data_isolation)
     },
     {
       name  = "SHARED_ACCESS_KEY_NAME"
@@ -118,15 +159,23 @@ locals {
     {
       name  = "INSTITUTION_API_URL"
       value = "https://selc-${module.local.config.env_short}-institution-ms-ca.${module.local.config.private_dns_name_domain}"
-    }
+    },
+    {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "AR"
+    },
+    {
+      name  = "TENANT_REGISTRY_JSON"
+      value = "{\"AR\":{\"mongo\":{\"account\":\"cosmos-ar\",\"database\":\"selcIam\",\"connectionStringEnvVar\":\"MONGODB_CONNECTION_STRING_AR\"},\"jwt\":{\"publicKeyEnvVar\":\"JWT_PUBLIC_KEY_AR\"}}}"
+    },
   ]
 
   secrets_names_iam_ms = {
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = "appinsights-connection-string"
-    "SELFCARE_DATA_ENCRIPTION_KEY"          = "selfcare-data-encryption-key"
-    "SELFCARE_DATA_ENCRIPTION_IV"           = "selfcare-data-encryption-iv"
-    "MONGODB_CONNECTION_STRING"             = "mongodb-connection-string"
-    "JWT_PUBLIC_KEY"                        = "jwt-public-key"
+    "APPLICATIONINSIGHTS_CONNECTION_STRING"                  = "appinsights-connection-string"
+    "SELFCARE_DATA_ENCRIPTION_KEY_${local.tenant_id_iam_ms}" = "selfcare-data-encryption-key"
+    "SELFCARE_DATA_ENCRIPTION_IV_${local.tenant_id_iam_ms}"  = "selfcare-data-encryption-iv"
+    "MONGODB_CONNECTION_STRING_${local.tenant_id_iam_ms}"    = "mongodb-connection-string"
+    "JWT_PUBLIC_KEY_${local.tenant_id_iam_ms}"               = "jwt-public-key"
   }
 }
 

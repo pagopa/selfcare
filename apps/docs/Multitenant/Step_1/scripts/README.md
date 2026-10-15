@@ -20,7 +20,6 @@ Only the databases and collections whose entities declare a `tenantId` field:
 |----------|-------------|
 | `selcAuth` | `otpFlows` |
 | `selcDocument` | `documents` |
-| `selcIam` | `userClaims` |
 | `selcMsCore` | `Institution`, `Delegations`, `MailNotification` |
 | `selcOnboarding` | `onboardings`, `tokens` |
 | `selcUser` | `userInfo`, `userInstitutions` |
@@ -28,7 +27,9 @@ Only the databases and collections whose entities declare a `tenantId` field:
 | `selcWebhook` | `webhooks`, `webhookNotifications` |
 
 The product catalogue database is deliberately excluded: product definitions are global and shared
-between tenants, so tagging them would be wrong rather than merely useless. An expected collection
+between tenants, so tagging them would be wrong rather than merely useless. `selcIam.userClaims` is excluded
+as well: the user identity is shared by every tenant and the tenant is carried by each embedded
+`productRoles.tenantId`; its migration is described in `apps/iam/Readme.md`. An expected collection
 that is absent is a failure by default: otherwise a wrong or inaccessible host could verify
 successfully without inspecting data. A collection known to be intentionally absent must be named
 explicitly with `--allow-missing`.

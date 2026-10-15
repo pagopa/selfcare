@@ -16,6 +16,7 @@ import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.UserRole;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.security.tenant.EffectiveTenant;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.BadRequestException;
