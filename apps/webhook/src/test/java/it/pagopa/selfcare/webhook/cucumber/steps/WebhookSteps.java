@@ -7,11 +7,17 @@ import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.response.Response;
+import io.restassured.specification.RequestSpecification;
+import it.pagopa.selfcare.webhook.cucumber.CucumberTestProfile;
 import it.pagopa.selfcare.webhook.dto.NotificationRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookRequest;
 import it.pagopa.selfcare.webhook.dto.WebhookResponse;
 import it.pagopa.selfcare.webhook.repository.WebhookRepository;
+import it.pagopa.selfcare.webhook.util.JwtData;
+import it.pagopa.selfcare.webhook.util.JwtUtils;
 import jakarta.inject.Inject;
+import java.util.Map;
+import java.util.Objects;
 
 public class WebhookSteps {
 
@@ -21,6 +27,11 @@ public class WebhookSteps {
   private Response response;
   private String lastWebhookProductId;
   private String tenantId = "SELC";
+
+  @Given("the webhook tenant is {string}")
+  public void theWebhookTenantIs(String tenant) {
+    tenantId = tenant;
+  }
 
   @Given("the database is empty")
   public void theDatabaseIsEmpty() {
@@ -119,6 +130,25 @@ public class WebhookSteps {
             .body(updateRequest)
             .when()
             .put("/webhooks/" + lastWebhookProductId);
+  }
+
+  @When("I get the webhook using a {string} JWT and tenant header {string}")
+  public void iGetTheWebhookUsingJwt(String issuer, String headerTenant) {
+    Map<String, String> payload = CucumberTestProfile.buildJwtPayload();
+    payload.put("iss", issuer);
+    payload.put("tenant_id", tenantId);
+    String token =
+        Objects.requireNonNull(
+            JwtUtils.generateToken(
+                JwtData.builder()
+                    .jwtHeader(CucumberTestProfile.buildJwtHeader())
+                    .jwtPayload(payload)
+                    .build()));
+    RequestSpecification request = given().auth().oauth2(token);
+    if (!headerTenant.isBlank()) {
+      request.header("X-Tenant-Id", headerTenant);
+    }
+    response = request.when().get("/webhooks/" + lastWebhookProductId);
   }
 
   @When("I delete the webhook by its ID")
