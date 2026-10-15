@@ -69,6 +69,7 @@ import org.openapi.quarkus.document_json.api.DocumentControllerApi;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
 import org.openapi.quarkus.product_json.model.BackOfficeRole;
 import org.openapi.quarkus.product_json.model.Features;
+import org.openapi.quarkus.product_json.model.OriginEntry;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RoleMapping;
 import org.openapi.quarkus.product_json.model.SigningConfiguration;
@@ -516,6 +517,7 @@ class OnboardingServiceDefaultTest {
         onboardingRequest.setInstitution(institutionBaseRequest);
 
         ProductResponse productResource = new ProductResponse().productId(onboardingRequest.getProductId())
+                .institutionOrigins(originsOf(org.openapi.quarkus.product_json.model.InstitutionType.PT))
                 .features(new Features().enabled(false).delegable(false)).roleMappings(List.of());
         asserter.execute(() -> stubProduct(productResource));
 
@@ -533,6 +535,7 @@ class OnboardingServiceDefaultTest {
         onboardingRequest.getInstitution().setInstitutionType(InstitutionType.PG);
 
         ProductResponse productResource = new ProductResponse().productId(onboardingRequest.getProductId())
+                .institutionOrigins(originsOf(org.openapi.quarkus.product_json.model.InstitutionType.PG))
                 .features(new Features().enabled(false)).roleMappings(List.of());
         asserter.execute(() -> stubProduct(productResource));
 
@@ -1564,6 +1567,13 @@ class OnboardingServiceDefaultTest {
                 .backOfficeRoles(List.of(new BackOfficeRole().code(backOfficeRole)));
     }
 
+    private static List<OriginEntry> originsOf(org.openapi.quarkus.product_json.model.InstitutionType... types) {
+        return Arrays.stream(types)
+                .flatMap(t -> Arrays.stream(org.openapi.quarkus.product_json.model.Origin.values())
+                        .map(o -> new OriginEntry().institutionType(t).origin(o)))
+                .toList();
+    }
+
     ProductResponse createDummyProduct(String productId, boolean hasParent,
                                       boolean allowIndividualOnboarding,
                                       boolean allowCompanyOnboarding) {
@@ -1576,9 +1586,9 @@ class OnboardingServiceDefaultTest {
                         onboardingRole(PartyRole.MANAGER, PRODUCT_ROLE_ADMIN_PSP_CODE)
                                 .institutionType(org.openapi.quarkus.product_json.model.InstitutionType.PSP)));
 
-        if (PROD_DASHBOARD_PSP.getValue().equals(productId)) {
-            productResource.setInstitutionTypesAllowed(List.of(PSP.name()));
-        }
+        productResource.setInstitutionOrigins(PROD_DASHBOARD_PSP.getValue().equals(productId)
+                ? originsOf(org.openapi.quarkus.product_json.model.InstitutionType.PSP)
+                : originsOf(org.openapi.quarkus.product_json.model.InstitutionType.values()));
 
         if (hasParent) {
             productResource.setParentId("productParentId");
