@@ -144,6 +144,10 @@ The application, packaged as an _über-jar_, is now runnable using `java -jar ta
 
 ## Tests
 
+The shared tenant filters and logging helpers require `selfcare-sdk-security`
+0.8.0 or later. Keep `common-sdk-security-version` in `pom.xml` aligned with
+these imports; earlier SDK versions do not contain the `security.tenant` package.
+
 Run the module tests from the repository root with:
 
 ```shell
