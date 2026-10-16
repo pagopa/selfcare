@@ -12,5 +12,6 @@ public class SupportRequest {
     private String name;
     private UserField userFields;
     private String data;
+    private String category;
 
 }
