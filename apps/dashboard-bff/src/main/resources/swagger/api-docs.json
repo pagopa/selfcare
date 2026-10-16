@@ -4575,6 +4575,10 @@
           "data" : {
             "type" : "string",
             "description" : "Technical data"
+          },
+          "category" : {
+            "type" : "string",
+            "description" : "Support request category (e.g. contract-update)"
           }
         }
       },

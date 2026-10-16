@@ -109,6 +109,45 @@ public class SupportServiceImplTest extends BaseServiceTest {
     }
 
     @Test
+    void sendRequest_withCategory() throws IOException {
+
+        ReflectionTestUtils.setField(supportServiceImpl, "supportApiKey", "testSupportApiKeyLongerThan256bitsToAllowHS256Encoding");
+        ReflectionTestUtils.setField(supportServiceImpl, "returnTo", "testReturnTo");
+        ReflectionTestUtils.setField(supportServiceImpl, "zendeskOrganization", "testZendeskOrganization");
+        ReflectionTestUtils.setField(supportServiceImpl, "actionUrl", "testActionUrl");
+
+        ClassPathResource resource = new ClassPathResource("json/SupportRequest.json");
+        byte[] supportRequestStream = Files.readAllBytes(resource.getFile().toPath());
+        SupportRequest supportRequest = new ObjectMapper().readValue(supportRequestStream, new TypeReference<>() {
+        });
+        supportRequest.setUserId(null);
+        supportRequest.setCategory("contract-update");
+
+        SupportResponse response = supportServiceImpl.sendRequest(supportRequest);
+
+        Assertions.assertEquals("testReturnTo?product=productId&institution=institutionId&cat=contract-update", response.getRedirectUrl());
+        Assertions.assertNotNull(response.getJwt());
+    }
+
+    @Test
+    void sendRequest_withOnlyCategory() {
+
+        ReflectionTestUtils.setField(supportServiceImpl, "supportApiKey", "testSupportApiKeyLongerThan256bitsToAllowHS256Encoding");
+        ReflectionTestUtils.setField(supportServiceImpl, "returnTo", "testReturnTo");
+        ReflectionTestUtils.setField(supportServiceImpl, "zendeskOrganization", "testZendeskOrganization");
+        ReflectionTestUtils.setField(supportServiceImpl, "actionUrl", "testActionUrl");
+
+        SupportRequest supportRequest = new SupportRequest();
+        supportRequest.setEmail("test@test.it");
+        supportRequest.setCategory("contract-update");
+
+        SupportResponse response = supportServiceImpl.sendRequest(supportRequest);
+
+        Assertions.assertEquals("testReturnTo?cat=contract-update", response.getRedirectUrl());
+        Mockito.verifyNoInteractions(userRegistryRestClient);
+    }
+
+    @Test
     void sendRequest_userIdNotFound() throws IOException {
 
         ClassPathResource resource = new ClassPathResource("json/SupportRequest.json");

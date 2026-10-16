@@ -63,6 +63,16 @@ Feature: Support
     And the response should contain a JWT token
     And the response should contain a redirect URL with data
 
+  Scenario: Successfully sending a support request with category
+    Given user login with username "j.doe" and password "test"
+    And the following support request details:
+      | email        | productId  | category        |
+      | test@mail.it | product123 | contract-update |
+    When I send a POST request to "/v1/support" with the given details to send a support request
+    Then the response status should be 200
+    And the response should contain a JWT token
+    And the response should contain a redirect URL with productId and category
+
   Scenario: Bad request with data not url encoded
     Given user login with username "j.doe" and password "test"
     And the following support request details:

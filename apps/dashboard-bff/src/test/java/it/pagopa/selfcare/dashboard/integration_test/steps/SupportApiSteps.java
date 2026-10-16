@@ -107,4 +107,13 @@ public class SupportApiSteps{
         Assertions.assertNotNull(dashboardStepsUtil.responses.getSupportResponse().getRedirectUrl());
         Assertions.assertTrue(dashboardStepsUtil.responses.getSupportResponse().getRedirectUrl().contains("?data=" + expectedData));
     }
+
+    @And("the response should contain a redirect URL with productId and category")
+    public void theResponseShouldContainARedirectURLWithProductIdAndCategory() {
+        final String expectedProductId = dashboardStepsUtil.requests.getSupportRequestDto().getProductId();
+        final String expectedCategory = dashboardStepsUtil.requests.getSupportRequestDto().getCategory();
+        Assertions.assertNotNull(dashboardStepsUtil.responses.getSupportResponse().getRedirectUrl());
+        Assertions.assertTrue(dashboardStepsUtil.responses.getSupportResponse().getRedirectUrl().contains("?product=" + expectedProductId));
+        Assertions.assertTrue(dashboardStepsUtil.responses.getSupportResponse().getRedirectUrl().endsWith("&cat=" + expectedCategory));
+    }
 }
