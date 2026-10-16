@@ -20,6 +20,7 @@ public class InstitutionEntity {
 
     @Id
     private String id;
+    private String tenantId;
 
     @Indexed(unique = true)
     private String externalId;
