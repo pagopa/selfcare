@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.helper;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
+import static it.pagopa.selfcare.onboarding.common.WorkflowType.CONTRACT_UPDATE;
 import io.quarkus.mongodb.panache.common.reactive.Panache;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -155,6 +156,10 @@ public class OnboardingPersistenceHelper {
                 .invoke(prev -> {
                     onboarding.setReferenceOnboardingId(prev.getId());
                     onboarding.setBilling(prev.getBilling());
+                    if (CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
+                        onboarding.setPricingPlan(prev.getPricingPlan());
+                        onboarding.setAdditionalInformations(prev.getAdditionalInformations());
+                    }
                     if (inheritReferencedInstitution) {
                         inheritInstitutionFromReferenced(onboarding, prev);
                     }
@@ -166,7 +171,9 @@ public class OnboardingPersistenceHelper {
                     String prevManagerId = last.getUsers().stream()
                             .filter(u -> u.getRole().equals(PartyRole.MANAGER))
                             .map(User::getId).findFirst().orElse(null);
-                    onboarding.setPreviousManagerId(prevManagerId);
+                    if (!CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
+                        onboarding.setPreviousManagerId(prevManagerId);
+                    }
                 })
                 .replaceWith(onboarding);
     }

@@ -100,6 +100,20 @@ public class OnboardingController {
                         .onboardingUsers(onboardingRequest, userId, WorkflowType.USERS));
     }
 
+    @Operation(
+            summary = "Create a contract update request for an institution.",
+            description = "Creates a contract update onboarding linked to the institution's active onboarding."
+    )
+    @POST
+    @Path("/contract-update")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<OnboardingResponse> onboardingContractUpdate(
+            @Valid OnboardingContractUpdateRequest request, @Context SecurityContext ctx) {
+        return readUserIdFromToken(ctx)
+                .onItem().transformToUni(userId -> onboardingService.onboardingContractUpdate(request, userId));
+    }
+
 
     @Operation(
             summary = "Onboard users for aggregators, save user data, and trigger async onboarding activities.",
