@@ -117,10 +117,7 @@ public class OnboardingCdcService {
         ChangeStreamOptions options = new ChangeStreamOptions()
                 .fullDocument(FullDocument.UPDATE_LOOKUP);
 
-        Bson match = Aggregates.match(Filters.and(
-                Filters.in("operationType", asList("update", "replace", "insert")),
-                Filters.ne("fullDocument.status", REQUEST.name()),
-                Filters.ne("fullDocument.workflowType", WorkflowType.USERS.name())));
+        Bson match = registryIndexMatch();
         Bson project = Aggregates.project(fields(include("_id", "ns", DOCUMENT_KEY, "fullDocument")));
         List<Bson> pipeline = Arrays.asList(match, project);
 
@@ -145,6 +142,15 @@ public class OnboardingCdcService {
     protected void consumerOnboardingEvent(ChangeStreamDocument<Onboarding> document) {
         assert document.getFullDocument() != null;
         assert document.getDocumentKey() != null;
+
+        // This skips notifications for updates that only set `contractUpdateRequiredAt`,
+        // preventing a contract-update flag change from being treated as a completed onboarding change.
+        // The resume token is still saved so the CDC stream advances and does not reprocess the skipped event after restart.
+        if (isContractUpdateFlagOnly(document.getFullDocument())) {
+            log.info("Skipping contractUpdateRequired-only update for onboarding id {}", document.getFullDocument().getId());
+            updateLastResumeToken(document.getResumeToken());
+            return;
+        }
 
         log.info("Starting consumerOnboardingEvent ... ");
         log.info("Sending Onboarding notification having id {}", document.getFullDocument().getId());
@@ -182,6 +188,19 @@ public class OnboardingCdcService {
         log.info("End consumerRegistryIndexEvent ... ");
     }
 
+    static Bson registryIndexMatch() {
+        return Aggregates.match(Filters.and(
+                Filters.in("operationType", asList("update", "replace", "insert")),
+                Filters.ne("fullDocument.status", REQUEST.name()),
+                Filters.nin("fullDocument.workflowType", WorkflowType.USERS.name(), WorkflowType.CONTRACT_UPDATE.name())));
+    }
+
+    private boolean isContractUpdateFlagOnly(Onboarding onboarding) {
+        return onboarding.getContractUpdateRequiredAt() != null
+                && onboarding.getUpdatedAt() != null
+                && !onboarding.getContractUpdateRequiredAt().isBefore(onboarding.getUpdatedAt());
+    }
+
     private void updateLastResumeToken(BsonDocument resumeToken) {
         // Table CdCStartAt will be updated with the last resume token
         Map<String, Object> properties = new HashMap<>();
@@ -203,4 +222,3 @@ public class OnboardingCdcService {
         telemetryClient.trackEvent(EVENT_NAME, propertiesMap, metricsMap);
     }
 }
-
