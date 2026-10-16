@@ -28,4 +28,7 @@ public class SupportRequestDto {
     @UrlEncoded
     private String data;
 
+    @Schema(description = "${swagger.dashboard.support.model.category}")
+    private String category;
+
 }
