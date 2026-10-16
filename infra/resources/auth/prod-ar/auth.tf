@@ -224,7 +224,7 @@ locals {
     },
     {
       name  = "TENANT_AR_MAIL_SENDER"
-      value = "noreply@selfcare.pagopa.it"
+      value = "noreply@areariservata.pagopa.it"
     }
   ]
 
