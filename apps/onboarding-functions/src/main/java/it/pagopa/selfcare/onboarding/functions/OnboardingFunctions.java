@@ -392,7 +392,16 @@ public class OnboardingFunctions {
         case USERS_EA ->
             workflowExecutor =
                 new WorkflowExecutorForUsersEa(objectMapper, optionsRetry, onboardingMapper);
-        default -> throw new IllegalArgumentException("Workflow options not found!");
+        default -> {
+          String errorMessage =
+              String.format(
+                  "Workflow options not found for onboardingId %s and workflowType %s",
+                  onboardingId, onboarding.getWorkflowType());
+          if (!ctx.getIsReplaying()) {
+            functionContext.getLogger().severe(errorMessage);
+          }
+          throw new IllegalArgumentException(errorMessage);
+        }
       }
 
       Optional<OnboardingStatus> optNextStatus;
