@@ -2,6 +2,7 @@ package it.pagopa.selfcare.onboarding.event;
 
 import com.azure.data.tables.TableClient;
 import com.microsoft.applicationinsights.TelemetryClient;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.common.QuarkusTestResource;
@@ -13,12 +14,14 @@ import it.pagopa.selfcare.onboarding.event.entity.Onboarding;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.bson.BsonDocument;
+import org.bson.conversions.Bson;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse;
 
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -76,6 +79,56 @@ class OnboardingCdcServiceTest {
         verify(notificationService, times(1)).invokeNotificationApi(any(Onboarding.class));
         verify(tableClient, never()).upsertEntity(any());
         verify(telemetryClient, times(1)).trackEvent(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should skip notification when only contract update flag changes")
+    void consumerOnboardingEventShouldSkipContractUpdateFlagOnlyChange() {
+        LocalDateTime updatedAt = LocalDateTime.of(2026, 10, 1, 10, 0);
+        ChangeStreamDocument<Onboarding> campaignUpdate = mockChangeStreamDocument();
+        campaignUpdate.getFullDocument().setUpdatedAt(updatedAt);
+        campaignUpdate.getFullDocument().setContractUpdateRequired(true);
+        campaignUpdate.getFullDocument().setContractUpdateRequiredAt(updatedAt.plusDays(1));
+        ChangeStreamDocument<Onboarding> resetUpdate = mockChangeStreamDocument();
+        resetUpdate.getFullDocument().setUpdatedAt(updatedAt);
+        resetUpdate.getFullDocument().setContractUpdateRequired(false);
+        resetUpdate.getFullDocument().setContractUpdateRequiredAt(updatedAt.plusDays(2));
+
+        onboardingCdcService.consumerOnboardingEvent(campaignUpdate);
+        onboardingCdcService.consumerOnboardingEvent(resetUpdate);
+
+        verify(notificationService, never()).invokeNotificationApi(any(Onboarding.class));
+        verify(tableClient, times(2)).upsertEntity(any());
+        verify(telemetryClient, never()).trackEvent(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("Should notify when onboarding is deleted after a contract flag update")
+    void consumerOnboardingEventShouldNotifyDeletedOnboardingAfterFlagUpdate() {
+        ChangeStreamDocument<Onboarding> document = mockChangeStreamDocument();
+        LocalDateTime flagAt = LocalDateTime.of(2026, 10, 1, 10, 0);
+        document.getFullDocument().setStatus(OnboardingStatus.DELETED);
+        document.getFullDocument().setContractUpdateRequiredAt(flagAt);
+        document.getFullDocument().setUpdatedAt(flagAt.plusDays(1));
+        when(notificationService.invokeNotificationApi(any(Onboarding.class)))
+                .thenReturn(Uni.createFrom().item(new OrchestrationResponse()));
+
+        onboardingCdcService.consumerOnboardingEvent(document);
+        waitForAsyncCompletion();
+
+        verify(notificationService, times(1)).invokeNotificationApi(any(Onboarding.class));
+        verify(tableClient, times(1)).upsertEntity(any());
+    }
+
+    @Test
+    @DisplayName("Registry index stream excludes USERS and CONTRACT_UPDATE workflows")
+    void registryIndexMatchExcludesUsersAndContractUpdate() {
+        Bson filter = OnboardingCdcService.registryIndexMatch();
+        String renderedFilter = filter.toBsonDocument(BsonDocument.class, MongoClientSettings.getDefaultCodecRegistry()).toJson();
+
+        assertTrue(renderedFilter.contains("\"$nin\""));
+        assertTrue(renderedFilter.contains("\"USERS\""));
+        assertTrue(renderedFilter.contains("\"CONTRACT_UPDATE\""));
     }
 
     @Test
