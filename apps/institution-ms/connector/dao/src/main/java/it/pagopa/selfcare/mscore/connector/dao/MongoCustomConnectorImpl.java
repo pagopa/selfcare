@@ -25,50 +25,57 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
     private static final String ENTITY_ID = "_id";
     private static final String BINDINGS = "$bindings";
     private final MongoOperations mongoOperations;
+    private final TenantOwnershipPolicy tenantOwnershipPolicy;
 
-    public MongoCustomConnectorImpl(MongoOperations mongoOperations) {
+    public MongoCustomConnectorImpl(
+            MongoOperations mongoOperations,
+            TenantOwnershipPolicy tenantOwnershipPolicy) {
         this.mongoOperations = mongoOperations;
+        this.tenantOwnershipPolicy = tenantOwnershipPolicy;
     }
 
 
     @Override
     public <O> boolean exists(Query query, Class<O> outputType) {
-        return mongoOperations.exists(query, outputType);
+        return mongoOperations.exists(tenantOwnershipPolicy.scope(query), outputType);
     }
 
     @Override
     public <O> Long count(Query query, Class<O> outputType) {
-        return mongoOperations.count(query, outputType);
+        return mongoOperations.count(tenantOwnershipPolicy.scope(query), outputType);
     }
 
     @Override
     public <O> List<O> find(Query query, Class<O> outputType) {
-        return mongoOperations.find(query, outputType);
+        return mongoOperations.find(tenantOwnershipPolicy.scope(query), outputType);
     }
 
     @Override
     public <O> Page<O> find(Query query, Pageable pageable, Class<O> outputType) {
-        long count = mongoOperations.count(query, outputType);
+        Query scopedQuery = tenantOwnershipPolicy.scope(query);
+        long count = mongoOperations.count(scopedQuery, outputType);
         List<O> list = new ArrayList<>();
         if (count > 0) {
-            list = mongoOperations.find(query.with(pageable), outputType);
+            list = mongoOperations.find(scopedQuery.with(pageable), outputType);
         }
         return new PageImpl<>(list, pageable, count);
     }
 
     @Override
     public <O> O findAndModify(Query query, UpdateDefinition updateDefinition, FindAndModifyOptions findAndModifyOptions, Class<O> outputType) {
-        return mongoOperations.findAndModify(query, updateDefinition, findAndModifyOptions, outputType);
+        return mongoOperations.findAndModify(
+                tenantOwnershipPolicy.scope(query), updateDefinition, findAndModifyOptions, outputType);
     }
 
     @Override
     public <O> O findAndRemove(Query query, Class<O> outputType) {
-        return mongoOperations.findAndRemove(query, outputType);
+        return mongoOperations.findAndRemove(tenantOwnershipPolicy.scope(query), outputType);
     }
 
     @Override
     public <O> List<O> findUserInstitutionAggregation(UserInstitutionFilter filter, Class<O> outputType) {
-        MatchOperation matchUserId = Aggregation.match(Criteria.where(ENTITY_ID).is(filter.getUserId()));
+        MatchOperation matchUserId = Aggregation.match(tenantOwnershipPolicy.and(
+                Criteria.where(ENTITY_ID).is(filter.getUserId())));
         //Output a new document for each userBindings
         UnwindOperation unwindBindings = Aggregation.unwind(BINDINGS);
         //retrieve institution for each binding
@@ -77,6 +84,12 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
                 .connectFrom(INSTITUTION_ID)
                 .connectTo(ENTITY_ID)
                 .maxDepth(2);
+        Criteria graphLookupCriteria = tenantOwnershipPolicy.criteria();
+        if (StringUtils.hasText(filter.getExternalId())) {
+            graphLookupCriteria = tenantOwnershipPolicy.and(
+                    Criteria.where("externalId").is(filter.getExternalId()));
+        }
+        graphLookupInstitution.restrict(graphLookupCriteria);
         //Output a new document for each product in bindings
         UnwindOperation unwindProducts = Aggregation.unwind(BINDINGS + ".products");
         //remove document with product status not in filter
@@ -89,7 +102,6 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
             MatchOperation matchInstitutionId = checkIfInstitutionIdIsPresent(filter);
             aggregation = Aggregation.newAggregation(matchUserId, unwindBindings,  graphLookupInstitution.as(INSTITUTIONS), matchInstitutionId, unwindProducts, matchProductStatus, matchInstitutionExist);
         } else if (StringUtils.hasText(filter.getExternalId())) {
-            checkIfExternalIdIsPresent(filter, graphLookupInstitution);
             aggregation = Aggregation.newAggregation(matchUserId, unwindBindings, graphLookupInstitution.as(INSTITUTIONS), unwindProducts, matchProductStatus, matchInstitutionExist);
         } else {
             aggregation = Aggregation.newAggregation(matchUserId, unwindBindings, graphLookupInstitution.as(INSTITUTIONS), unwindProducts, matchProductStatus, matchInstitutionExist);
@@ -101,17 +113,14 @@ public class MongoCustomConnectorImpl implements MongoCustomConnector {
         return Aggregation.match(Criteria.where("bindings." + INSTITUTION_ID).is(filter.getInstitutionId()));
     }
 
-    private void checkIfExternalIdIsPresent(UserInstitutionFilter filter, GraphLookupOperation.GraphLookupOperationBuilder graphLookupOperation) {
-        graphLookupOperation.restrict(Criteria.where("externalId").is(filter.getExternalId()));
-    }
-
     @Override
     public <O> UpdateResult updateMulti(Query query, UpdateDefinition updateDefinition, Class<O> outputType){
-        return mongoOperations.updateMulti(query, updateDefinition, outputType);
+        return mongoOperations.updateMulti(
+                tenantOwnershipPolicy.scope(query), updateDefinition, outputType);
     }
 
     @Override
     public <O> UpdateResult upsert(Query query, UpdateDefinition updateDefinition, Class<O> outputType) {
-        return mongoOperations.upsert(query, updateDefinition, outputType);
+        return mongoOperations.upsert(tenantOwnershipPolicy.scope(query), updateDefinition, outputType);
     }
 }
