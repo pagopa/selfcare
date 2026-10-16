@@ -3898,6 +3898,24 @@ class OnboardingServiceDefaultTest {
     }
 
     @Test
+    void deleteOnboarding_workflowTypeCONTRACT_UPDATE() {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+        PanacheMock.mock(Onboarding.class);
+        when(Onboarding.findById(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(onboarding));
+
+        UniAssertSubscriber<Long> subscriber = onboardingService
+                .deleteOnboarding(onboarding.getId())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create());
+
+        subscriber.assertFailedWith(InvalidRequestException.class);
+        verifyNoInteractions(orchestrationService);
+    }
+
+    @Test
     void testDeleteOnboardingStatusOK() {
         Onboarding onboarding = createDummyOnboarding();
         PanacheMock.mock(Onboarding.class);

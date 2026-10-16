@@ -325,7 +325,7 @@ public class OnboardingServiceDefault implements OnboardingService {
         return onboardingRepository.findById(onboardingId)
                 .onItem().transformToUni(o -> validateOnboardingForDeletion(o, onboardingId))
                 .onItem().transformToUni(o ->
-                        USERS.equals(o.getWorkflowType())
+                        USERS.equals(o.getWorkflowType()) || CONTRACT_UPDATE.equals(o.getWorkflowType())
                                 ? Uni.createFrom().failure(new InvalidRequestException(
                                         String.format("Onboarding with id %s can't be deleted", onboardingId)))
                                 : Uni.createFrom().item(o))
