@@ -28,9 +28,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.allOf;
@@ -132,6 +135,18 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
         setOnboardingId(onboarding.getId());
     }
 
+    // The same test-only token the function container uses to call the other services: its public key is JWT_PUBLIC_KEY_AR.
+    private static String loadTestBearerToken() {
+        try (InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("test-integration-function.env")) {
+            Properties env = new Properties();
+            env.load(Objects.requireNonNull(in, "test-integration-function.env not found"));
+            return env.getProperty("JWT_BEARER_TOKEN");
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to load the integration test JWT", e);
+        }
+    }
+
     @When("I send a GET request with given onboardingId")
     public void sendPostRequest() {
 
@@ -141,6 +156,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
                         .all()
                         .header(FunctionInvocationLogger.USER_ID_HEADER, INTEGRATION_TEST_CALLER_ID)
                         .header(TenantContext.TENANT_HEADER, INTEGRATION_TEST_TENANT)
+                        .header("Authorization", "Bearer " + loadTestBearerToken())
                         .queryParam("onboardingId", getOnboardingId())
                         // .queryParam("timeout", 55000)
                         .when()
