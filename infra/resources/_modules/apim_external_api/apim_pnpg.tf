@@ -192,19 +192,19 @@ module "apim_pnpg_external_api_ms_v2" {
     {
       operation_id = "createProduct"
       xml_content = templatefile("${path.module}/api/base_ms_url_external_policy_post.xml.tpl", {
-        MS_BACKEND_URL = "https://selc-${var.env_short}-product-ms-ca.${var.ca_suffix_dns_private_name}/"
+        MS_BACKEND_URL = "https://selc-${var.env_short}-pnpg-product-ms-ca.${var.ca_pnpg_suffix_dns_private_name}/"
       })
     },
     {
       operation_id = "getProductById"
       xml_content = templatefile("${path.module}/api/base_ms_url_external_policy_get.xml.tpl", {
-        MS_BACKEND_URL = "https://selc-${var.env_short}-product-ms-ca.${var.ca_suffix_dns_private_name}/"
+        MS_BACKEND_URL = "https://selc-${var.env_short}-pnpg-product-ms-ca.${var.ca_pnpg_suffix_dns_private_name}/"
       })
     },
     {
       operation_id = "patchProductById"
       xml_content = templatefile("${path.module}/api/base_ms_url_external_policy_put.xml.tpl", {
-        MS_BACKEND_URL = "https://selc-${var.env_short}-product-ms-ca.${var.ca_suffix_dns_private_name}/"
+        MS_BACKEND_URL = "https://selc-${var.env_short}-pnpg-product-ms-ca.${var.ca_pnpg_suffix_dns_private_name}/"
       })
     }
   ]
