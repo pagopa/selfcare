@@ -15,9 +15,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.support.TestPropertySourceUtils;
 
 import java.net.SocketTimeoutException;
+import java.time.Duration;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -60,6 +62,8 @@ class OneMailRestClientTimeoutTest extends BaseFeignRestClientTest {
                 () -> restClient._v1EmailsSendHighPost(false, body));
 
         assertInstanceOf(SocketTimeoutException.class, exception.getCause());
-        wm.verify(postRequestedFor(urlPathEqualTo("/v1/emails/send/high")));
+        // The client can time out before WireMock records the request.
+        await().atMost(Duration.ofSeconds(5))
+                .untilAsserted(() -> wm.verify(postRequestedFor(urlPathEqualTo("/v1/emails/send/high"))));
     }
 }
