@@ -18,34 +18,46 @@ class AuthenticationPropagationHeadersFactoryTest {
 
     @Test
     void propagatesIncomingTenantHeader() {
+        // given
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
         incomingHeaders.put(TenantContext.TENANT_HEADER, List.of("AR"));
 
+        // when
         authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
 
+        // then
         assertEquals(List.of("AR"), outgoingHeaders.get(TenantContext.TENANT_HEADER));
+        assertEquals(List.of("Bearer test-technical-jwt"), outgoingHeaders.get("Authorization"));
     }
 
     @Test
     void propagatesTenantFromContext() {
+        // given
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
 
+        // when
         try (TenantContext.Scope ignored = TenantContext.open("AR")) {
             authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
         }
 
+        // then
         assertEquals(List.of("AR"), outgoingHeaders.get(TenantContext.TENANT_HEADER));
+        assertEquals(List.of("Bearer test-technical-jwt"), outgoingHeaders.get("Authorization"));
     }
 
     @Test
     void propagatesDefaultTenantWhenMissing() {
+        // given
         MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
         MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
 
+        // when
         authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders);
 
+        // then
         assertEquals(List.of("PNPG"), outgoingHeaders.get(TenantContext.TENANT_HEADER));
+        assertEquals(List.of("Bearer test-technical-jwt"), outgoingHeaders.get("Authorization"));
     }
 }

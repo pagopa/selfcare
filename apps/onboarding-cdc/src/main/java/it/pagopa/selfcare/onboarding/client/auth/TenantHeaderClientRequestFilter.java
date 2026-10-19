@@ -6,6 +6,7 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 
@@ -16,16 +17,22 @@ import java.util.List;
  * Forwards the tenant to clients that cannot register {@link AuthenticationPropagationHeadersFactory}
  * as {@code ClientHeadersFactory}, because the generator already registers its own one when the spec
  * declares security schemes (onboarding-functions authenticates with the function key).
- * Only {@code X-Tenant-Id} is copied, so the bearer token the factory adds is not sent.
+ * Both {@code X-Tenant-Id} and {@code Authorization} are copied. The function key already
+ * generated from the OpenAPI security scheme is preserved.
  */
 @ApplicationScoped
 public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
 
     private final AuthenticationPropagationHeadersFactory headersFactory;
+    private final String functionKey;
 
     @Inject
-    public TenantHeaderClientRequestFilter(AuthenticationPropagationHeadersFactory headersFactory) {
+    public TenantHeaderClientRequestFilter(
+            AuthenticationPropagationHeadersFactory headersFactory,
+            @ConfigProperty(name = "onboarding-cdc.onboarding-functions-api-key")
+            String functionKey) {
         this.headersFactory = headersFactory;
+        this.functionKey = functionKey;
     }
 
     @Override
@@ -36,5 +43,10 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         if (tenant != null) {
             requestContext.getHeaders().put(TenantContext.TENANT_HEADER, new ArrayList<>(tenant));
         }
+        List<String> authorization = headers.get("Authorization");
+        if (authorization != null) {
+            requestContext.getHeaders().put("Authorization", new ArrayList<>(authorization));
+        }
+        requestContext.getHeaders().putSingle("x-functions-key", functionKey);
     }
 }

@@ -4,6 +4,7 @@ import it.pagopa.selfcare.onboarding.context.TenantContext;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MultivaluedMap;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 
 import java.util.List;
@@ -13,7 +14,8 @@ import java.util.Objects;
 @ApplicationScoped
 public class AuthenticationPropagationHeadersFactory implements ClientHeadersFactory {
 
-    private static final String JWT_BEARER_TOKEN_ENV = "JWT_BEARER_TOKEN";
+    @ConfigProperty(name = "onboarding-cdc.jwt-bearer-token", defaultValue = "")
+    String bearerToken;
 
     public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {
         log.trace("AuthenticationPropagationHeadersFactory - incomingHeaders: {}", incomingHeaders.keySet());
@@ -21,11 +23,8 @@ public class AuthenticationPropagationHeadersFactory implements ClientHeadersFac
 
         propagateTenant(incomingHeaders, clientOutgoingHeaders);
 
-        final String bearerToken = System.getenv(JWT_BEARER_TOKEN_ENV);
-
-        if (Objects.isNull(bearerToken)) {
-            log.warn("AuthenticationPropagationHeadersFactory - JWT_BEARER_TOKEN environment variable is not set, skipping Authorization header");
-            return clientOutgoingHeaders;
+        if (Objects.isNull(bearerToken) || bearerToken.isBlank()) {
+            throw new IllegalStateException("JWT_BEARER_TOKEN is required to call onboarding-functions");
         }
 
         log.trace("AuthenticationPropagationHeadersFactory - JWT_BEARER_TOKEN is present, length: {}",
