@@ -8,8 +8,10 @@ import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.service.CheckOrganizationService;
+import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.stubbing.Answer;
 
 import java.util.HashMap;
@@ -27,6 +29,13 @@ import static org.mockito.Mockito.*;
     ExternalFunctions function;
     @InjectMock
     CheckOrganizationService checkOrganizationService;
+    @InjectMock
+    HttpJwtValidator httpJwtValidator;
+
+    @BeforeEach
+    void allowAuthenticatedRequests() {
+        when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+    }
 
     static final String ACK_PAYLOAD_OK = "{\"message\":\"message\"}";
     static final String ACK_PAYLOAD_BLANK = "{\"message\": \"\"}";

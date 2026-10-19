@@ -32,6 +32,7 @@ import it.pagopa.selfcare.onboarding.service.CompletionService;
 import it.pagopa.selfcare.onboarding.service.ContractService;
 import it.pagopa.selfcare.onboarding.service.DocumentService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
+import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.UserService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
@@ -80,6 +81,7 @@ public class OnboardingFunctions {
   private final UserService userService;
   private final TelemetryService telemetryService;
   private final FunctionInvocationLogger functionInvocationLogger;
+  private final HttpJwtValidator httpJwtValidator;
   private final ProductService productService;
 
   private final ObjectMapper objectMapper;
@@ -100,7 +102,8 @@ public class OnboardingFunctions {
       DocumentService documentService,
       TelemetryService telemetryService,
       UserService userService,
-      FunctionInvocationLogger functionInvocationLogger) {
+      FunctionInvocationLogger functionInvocationLogger,
+      HttpJwtValidator httpJwtValidator) {
     this.onboardingService = onboardingService;
     this.objectMapper = objectMapper;
     this.completionService = completionService;
@@ -112,6 +115,7 @@ public class OnboardingFunctions {
     this.telemetryService = telemetryService;
     this.userService = userService;
     this.functionInvocationLogger = functionInvocationLogger;
+    this.httpJwtValidator = httpJwtValidator;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -136,6 +140,10 @@ public class OnboardingFunctions {
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
 
+    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+    if (authenticationError.isPresent()) {
+      return authenticationError.get();
+    }
     String userId = functionInvocationLogger.logInvocation(START_ONBOARDING_ORCHESTRATION, request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
       return missingRequesterResponse(request);
@@ -453,6 +461,10 @@ public class OnboardingFunctions {
           HttpRequestMessage<Optional<String>> request,
       @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
       final ExecutionContext context) {
+    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+    if (authenticationError.isPresent()) {
+      return authenticationError.get();
+    }
     String userId =
         functionInvocationLogger.logInvocation(TRIGGER_BUILD_ATTACHMENTS_AND_SAVE_TOKENS, request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
@@ -1036,16 +1048,20 @@ public class OnboardingFunctions {
    * message on topics through the event bus
    */
   @FunctionName("TestSendEmail")
-  public void sendTestEmail(
+  public HttpResponseMessage sendTestEmail(
       @HttpTrigger(
               name = "req",
               methods = {HttpMethod.POST},
               authLevel = AuthorizationLevel.FUNCTION)
           HttpRequestMessage<Optional<String>> request,
       final ExecutionContext context) {
+    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+    if (authenticationError.isPresent()) {
+      return authenticationError.get();
+    }
     functionInvocationLogger.logInvocation("TestSendEmail", request);
     completionService.sendTestEmail(context);
-    request.createResponseBuilder(HttpStatus.OK).build();
+    return request.createResponseBuilder(HttpStatus.OK).build();
   }
 
   @FunctionName(CREATE_AGGREGATES_CSV_ACTIVITY)
