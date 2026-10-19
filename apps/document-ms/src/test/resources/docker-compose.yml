@@ -30,6 +30,7 @@ services:
       - develop-network
     volumes:
       - "./blobStorageInit:/workspace"
+      - "./pdf:/workspace/pdf:ro"
     environment:
       - SELFCARE_INFRA_PRIVATE_ENV=dev
 

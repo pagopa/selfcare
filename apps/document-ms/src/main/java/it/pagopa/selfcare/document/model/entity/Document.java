@@ -33,12 +33,13 @@ public class Document extends ReactivePanacheMongoEntityBase {
     private String contractTemplate;
     private String contractSigned;
     private String contractFilename;
-    @Schema(description = "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION.")
+    @Schema(description = "Identificativo della radice del Fascicolo Documentale. Per un contratto INSTITUTION di aggiornamento, corrisponde all'onboardingId dell'adesione.")
     private String rootOnboardingId;
     //@Indexed
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
+    @Schema(description = "Timestamp di attivazione del contratto dopo la presa in carico positiva dell'orchestrazione.")
     private LocalDateTime activatedAt;
 
     private StorageOrigin storageOrigin;
