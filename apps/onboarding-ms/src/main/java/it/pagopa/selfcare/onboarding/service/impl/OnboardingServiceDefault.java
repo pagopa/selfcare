@@ -181,22 +181,34 @@ public class OnboardingServiceDefault implements OnboardingService {
         return computeExpiry(request.getProductId(), null)
                 .onItem().transformToUni(expiringDate -> {
                     Onboarding onboarding = onboardingMapper.toEntity(request, userId, workflowType);
-                    onboarding.setInstitution(buildInstitutionFromUserRequest(request));
+                    onboarding.setInstitution(buildInstitution(request.getTaxCode(), request.getSubunitCode(),
+                            request.getInstitutionType(), request.getOrigin(), request.getOriginId()));
                     onboarding.setExpiringDate(expiringDate);
-                    return verifyExistingOnboarding(onboarding, request.getUsers());
+                    return persistReferencedOnboarding(onboarding, request.getUsers(), false);
                 });
     }
 
-    private Institution buildInstitutionFromUserRequest(OnboardingUserRequest request) {
-        Institution institution =
-                new Institution();
-        institution.setTaxCode(request.getTaxCode());
-        institution.setSubunitCode(request.getSubunitCode());
-        institution.setInstitutionType(request.getInstitutionType());
-        if (Objects.nonNull(request.getOrigin())) {
-            institution.setOrigin(Origin.valueOf(request.getOrigin()));
+    @Override
+    public Uni<OnboardingResponse> onboardingContractUpdate(OnboardingContractUpdateRequest request, String userId) {
+        log.info("Starting onboardingContractUpdate: origin={}, institutionType={}",
+                request.getOrigin(), request.getInstitutionType());
+        Onboarding onboarding = onboardingMapper.toEntity(request, userId, CONTRACT_UPDATE);
+        onboarding.setInstitution(buildInstitution(request.getTaxCode(), request.getSubunitCode(),
+                request.getInstitutionType(), request.getOrigin(), request.getOriginId()));
+        onboarding.setExpiringDate(LocalDateTime.now().plusDays(90));
+        return persistReferencedOnboarding(onboarding, request.getUsers(), true);
+    }
+
+    private Institution buildInstitution(String taxCode, String subunitCode, InstitutionType institutionType,
+                                         String origin, String originId) {
+        Institution institution = new Institution();
+        institution.setTaxCode(taxCode);
+        institution.setSubunitCode(subunitCode);
+        institution.setInstitutionType(institutionType);
+        if (Objects.nonNull(origin)) {
+            institution.setOrigin(Origin.valueOf(origin));
         }
-        institution.setOriginId(request.getOriginId());
+        institution.setOriginId(originId);
         return institution;
     }
 
@@ -640,13 +652,19 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().transform(onboardingMapper::toResponse);
     }
 
-    private Uni<OnboardingResponse> verifyExistingOnboarding(Onboarding onboarding, List<UserRequest> userRequests) {
+    private Uni<OnboardingResponse> persistReferencedOnboarding(Onboarding onboarding,
+                                                                 List<UserRequest> userRequests,
+                                                                 boolean contractUpdate) {
         onboarding.setCreatedAt(LocalDateTime.now());
         return getProductByOnboarding(onboarding)
                 .onItem().transformToUni(product ->
                         persistenceHelper.addReferencedOnboardingId(onboarding, true)
-                                .onItem().invoke(current -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
-                                .onItem().invoke(() -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
+                                .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
+                                .onItem().transformToUni(current -> contractUpdate
+                                        ? validationHelper.verifySameUserManagerAndDelegate(userRequests, product)
+                                                .replaceWith(current)
+                                        : Uni.createFrom().item(current)
+                                                .invoke(() -> validationHelper.verifyAllowManagerAsDelegate(userRequests)))
                                 .onItem().transformToUni(current ->
                                         persistenceHelper.persistOnboarding(onboarding, userRequests, product, null))
                                 .onItem().transformToUni(persistenceHelper::updateOnboarding)

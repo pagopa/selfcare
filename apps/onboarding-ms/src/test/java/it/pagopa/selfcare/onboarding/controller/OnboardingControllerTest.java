@@ -328,6 +328,44 @@ class OnboardingControllerTest {
 
     @Test
     @TestSecurity(user = "userJwt")
+    void onboardingContractUpdate() {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId("productId");
+        request.setInstitutionType(InstitutionType.PA);
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        request.setUsers(List.of(userDTO));
+
+        when(onboardingService.onboardingContractUpdate(any(), any()))
+                .thenReturn(Uni.createFrom().item(new OnboardingResponse()));
+
+        given()
+                .when()
+                .body(request)
+                .contentType(ContentType.JSON)
+                .post("/contract-update")
+                .then()
+                .statusCode(200);
+
+        verify(onboardingService).onboardingContractUpdate(any(OnboardingContractUpdateRequest.class), any());
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
+    void onboardingContractUpdate_shouldNotValidBody() {
+        given()
+                .when()
+                .body(new OnboardingContractUpdateRequest())
+                .contentType(ContentType.JSON)
+                .post("/contract-update")
+                .then()
+                .statusCode(400);
+
+        verifyNoInteractions(onboardingService);
+    }
+
+    @Test
+    @TestSecurity(user = "userJwt")
     void onboardingUsers_shouldNotValidBody() {
 
         given()
