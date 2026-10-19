@@ -51,15 +51,28 @@ public class DocumentController {
      */
 
     @Operation(
-            summary = "Retrieves the latest document for a given onboarding",
-            description = "Fetches the most recent document associated with the specified onboarding ID by filtering for type Institution and User"
+            summary = "Retrieves the current contract for a given onboarding",
+            description = "Returns the latest own INSTITUTION/USER document or, for a root onboarding, its latest signed and activated INSTITUTION update contract."
     )
     @GET
     @Path("/onboarding/{onboardingId}")
     public Uni<DocumentResponse> getDocumentByOnboardingId(@PathParam(value = "onboardingId") String onboardingId) {
         log.info("Getting document for onboardingId: {}", sanitize(onboardingId));
-        return documentService.getDocumentByOnboardingId(onboardingId)
+        return documentService.getCurrentSignedContract(onboardingId)
                 .map(documentMapper::toResponse);
+    }
+
+    @Operation(
+            summary = "Activate a signed contract",
+            description = "Marks the signed contract for the onboarding as active. Repeated calls are safe and do not change the activation timestamp."
+    )
+    @PUT
+    @Tag(name = "internal-v1")
+    @Path("/{onboardingId}/activate")
+    public Uni<Response> activateContract(@NotNull @PathParam("onboardingId") String onboardingId) {
+        log.info("Activating contract for onboardingId: {}", sanitize(onboardingId));
+        return documentService.activateContract(onboardingId)
+                .replaceWith(Response.noContent().build());
     }
 
     @Operation(

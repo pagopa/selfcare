@@ -21,6 +21,8 @@ import org.apache.http.HttpStatus;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mockito;
 import org.openapi.quarkus.user_registry_json.model.*;
 
@@ -726,6 +728,48 @@ class UserUtilTest {
       .assertCompleted();
 
     assertEquals(ACTIVE, p.getStatus());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "DELETED, SUSPENDED",
+    "DELETED, ACTIVE",
+    "PENDING, SUSPENDED",
+    "PENDING, ACTIVE",
+    "TOBEVALIDATED, SUSPENDED",
+    "TOBEVALIDATED, ACTIVE",
+    "REJECTED, SUSPENDED",
+    "REJECTED, ACTIVE"
+  })
+  void validateMultiroleAfterStatusUpdate_ignoresNonCurrentRoles(
+    OnboardedProductState nonCurrentStatus, OnboardedProductState newStatus) {
+
+    when(productService.getProduct("prod")).thenReturn(buildProductWithoutGroups());
+
+    OnboardedProduct historicalProduct = createOnboardedProduct("prod", PartyRole.MANAGER);
+    historicalProduct.setProductRole("admin");
+    historicalProduct.setStatus(nonCurrentStatus);
+
+    OnboardedProduct currentProduct = createOnboardedProduct("prod", PartyRole.MANAGER);
+    currentProduct.setProductRole("admin");
+    OnboardedProductState currentStatus = newStatus == ACTIVE ? OnboardedProductState.SUSPENDED : ACTIVE;
+    currentProduct.setStatus(currentStatus);
+
+    UserInstitution ui = new UserInstitution();
+    ui.setProducts(List.of(historicalProduct, currentProduct));
+
+    userUtils.validateMultiroleAfterStatusUpdate(
+        List.of(ui),
+        "prod",
+        null,
+        "admin",
+        newStatus)
+      .subscribe()
+      .withSubscriber(UniAssertSubscriber.create())
+      .assertCompleted();
+
+    assertEquals(nonCurrentStatus, historicalProduct.getStatus());
+    assertEquals(currentStatus, currentProduct.getStatus());
   }
 
   @Test

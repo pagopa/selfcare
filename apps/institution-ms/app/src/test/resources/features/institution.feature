@@ -1670,6 +1670,23 @@ Feature: Institution
 
 # GET /institutions/{id}
 
+  @RemoveMockInstitutionAfterScenario
+  Scenario Outline: Successfully get institution by id with at symbols in description
+    Given User login with username "j.doe" and password "test"
+    And A mock institution with id "3285c5c5-45f0-4f79-a172-ecacba780dd2" and description "<description>"
+    When I send a GET request to "/institutions/3285c5c5-45f0-4f79-a172-ecacba780dd2"
+    Then The status code is 200
+    And The response body contains:
+      | id          | 3285c5c5-45f0-4f79-a172-ecacba780dd2 |
+      | description | <description>                        |
+
+    Examples:
+      | description |
+      | A.S.D. TEST@ |
+      | TEST@NAME   |
+      | @           |
+      | TEST@@      |
+
   Scenario: Successfully get institution by id
     Given User login with username "j.doe" and password "test"
     And The following path params:
