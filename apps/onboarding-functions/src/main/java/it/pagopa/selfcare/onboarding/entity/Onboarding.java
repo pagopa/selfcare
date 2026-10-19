@@ -42,6 +42,8 @@ public class Onboarding {
     private String delegationId;
     private Boolean sendMailForImport;
     private Boolean toAddOnAggregates;
+    private AdditionalInformations additionalInformations;
+
 
     //This field is used in case of workflowType USER
     private String previousManagerId;
@@ -72,6 +74,7 @@ public class Onboarding {
                 ", aggregates=" + aggregates +
                 ", isAggregator='" + isAggregator + '\'' +
                 ", sendMailForImport='" + sendMailForImport + '\'' +
+                ", additionalInformations=" + additionalInformations +
                 ", referenceOnboardingId'" + referenceOnboardingId + '\'' +
                 '}';
     }
