@@ -229,7 +229,7 @@
             "type" : "string"
           },
           "rootOnboardingId" : {
-            "description" : "Identificativo della radice del Fascicolo Documentale. Per un contratto INSTITUTION di aggiornamento, corrisponde all'onboardingId dell'adesione.",
+            "description" : "Root dossier onboarding ID. For INSTITUTION contract updates, it matches the onboardingId of the adhesion onboarding.",
             "type" : "string"
           },
           "createdAt" : {
@@ -242,7 +242,7 @@
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "activatedAt" : {
-            "description" : "Timestamp di attivazione del contratto dopo la presa in carico positiva dell'orchestrazione.",
+            "description" : "Contract activation timestamp, set after the orchestration has completed successfully.",
             "type" : "string",
             "allOf" : [ {
               "$ref" : "#/components/schemas/LocalDateTime"
