@@ -2,6 +2,7 @@
     <inbound>
         <base/>
         <set-variable name="productId" value="prod-idpay-gi"/>
+        <set-variable name="tenantId" value="AR"/>
     </inbound>
     <backend>
         <base/>
