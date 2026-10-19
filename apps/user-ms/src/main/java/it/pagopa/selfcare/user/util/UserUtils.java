@@ -172,8 +172,8 @@ public class UserUtils {
 
         // SIMULATE FINAL STATE
         List<OnboardedProduct> finalState = products.stream()
-          .map(p -> simulateUpdate(p, productId, targetRole, targetProductRole, newStatus))
           .filter(p -> p.getStatus() == ACTIVE || p.getStatus() == SUSPENDED)
+          .map(p -> simulateUpdate(p, productId, targetRole, targetProductRole, newStatus))
           .toList();
 
         //VALIDATION
