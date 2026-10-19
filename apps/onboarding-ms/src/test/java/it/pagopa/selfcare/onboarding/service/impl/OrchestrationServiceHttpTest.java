@@ -42,36 +42,41 @@ class OrchestrationServiceHttpTest {
 
     @Test
     void startOrchestrationSendsValidatedTenantAndFunctionKey() throws Exception {
-        for (String tenant : List.of("AR", "PNPG", "AR")) {
-            request(tenant).get(BASE_PATH + "/start/onb-" + tenant).then().statusCode(200);
+        List<String> tenants = List.of("AR", "PNPG", "AR");
+        List<String> tokens = tenants.stream()
+                .map(tenant -> IntegrationProfile.tokenForTenant(tenant, "PAGOPA"))
+                .toList();
+        for (int index = 0; index < tenants.size(); index++) {
+            String tenant = tenants.get(index);
+            request(tenant, tokens.get(index))
+                    .get(BASE_PATH + "/start/onb-" + tenant).then().statusCode(200);
         }
 
         List<Map<String, String>> calls = recordedRequests();
         assertEquals(3, calls.size());
-        assertCall(calls.get(0), "AR", "/api/StartOnboardingOrchestration", "onboardingId=onb-AR");
-        assertCall(calls.get(1), "PNPG", "/api/StartOnboardingOrchestration", "onboardingId=onb-PNPG");
-        assertCall(calls.get(2), "AR", "/api/StartOnboardingOrchestration", "onboardingId=onb-AR");
+        assertCall(calls.get(0), "AR", tokens.get(0), "/api/StartOnboardingOrchestration", "onboardingId=onb-AR");
+        assertCall(calls.get(1), "PNPG", tokens.get(1), "/api/StartOnboardingOrchestration", "onboardingId=onb-PNPG");
+        assertCall(calls.get(2), "AR", tokens.get(2), "/api/StartOnboardingOrchestration", "onboardingId=onb-AR");
     }
 
     @Test
     void deleteInstitutionAndUserSendsValidatedTenantAndFunctionKey() throws Exception {
-        request("PNPG").get(BASE_PATH + "/delete/onb-1").then().statusCode(200);
+        String token = IntegrationProfile.tokenForTenant("PNPG", "PAGOPA");
+        request("PNPG", token).get(BASE_PATH + "/delete/onb-1").then().statusCode(200);
 
         List<Map<String, String>> calls = recordedRequests();
         assertEquals(1, calls.size());
-        assertCall(calls.get(0), "PNPG", "/api/TriggerDeleteInstitutionAndUser", "onboardingId=onb-1");
+        assertCall(calls.get(0), "PNPG", token, "/api/TriggerDeleteInstitutionAndUser", "onboardingId=onb-1");
     }
 
     @Test
     void tenantHeaderIsCanonicalized() throws Exception {
-        request("ar", IntegrationProfile.tokenForTenant("AR", "PAGOPA"))
+        String token = IntegrationProfile.tokenForTenant("AR", "PAGOPA");
+        request("ar", token)
                 .get(BASE_PATH + "/start/onb-1").then().statusCode(200);
 
         assertEquals("AR", recordedRequests().get(0).get("tenant"));
-    }
-
-    private RequestSpecification request(String tenant) {
-        return request(tenant, IntegrationProfile.tokenForTenant(tenant, "PAGOPA"));
+        assertEquals("Bearer " + token, recordedRequests().get(0).get("authorization"));
     }
 
     private RequestSpecification request(String tenant, String token) {
@@ -85,11 +90,15 @@ class OrchestrationServiceHttpTest {
         return MAPPER.readValue(body, new TypeReference<>() {});
     }
 
-    private void assertCall(Map<String, String> call, String tenant, String path, String query) {
+    private void assertCall(
+            Map<String, String> call, String tenant, String token, String path, String query) {
         assertEquals(path, call.get("path"));
         assertEquals(query, call.get("query"));
         assertEquals(tenant, call.get("tenant"));
         assertTrue(!call.get("functionKey").isBlank(), "function key must still be sent");
-        assertEquals("", call.get("authorization"), "caller Authorization must not reach onboarding-functions");
+        assertEquals(
+                "Bearer " + token,
+                call.get("authorization"),
+                "caller Authorization must reach onboarding-functions");
     }
 }
