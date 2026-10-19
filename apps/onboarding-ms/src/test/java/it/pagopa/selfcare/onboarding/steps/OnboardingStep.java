@@ -202,20 +202,24 @@ public class OnboardingStep extends CucumberQuarkusTest {
 
       Onboarding onboarding = createDummyOnboarding();
       Onboarding duplicatedOnboardingPA = createOnboardingForConflictScenario();
+      Onboarding contractUpdateOnboarding = createOnboardingForContractUpdateScenario();
       Token token = createDummyToken();
 
       Uni.combine().all().unis(
                       onboarding.persist(),
                       duplicatedOnboardingPA.persist(),
+                      contractUpdateOnboarding.persist(),
                       token.persist()
               ).asTuple()
               .invoke(tuple -> {
                 var persistedOnboarding = (Onboarding) tuple.getItem1();
                 var duplicatedOnboarding = (Onboarding) tuple.getItem2();
-                var persistedToken = (Token) tuple.getItem3();
+                var persistedContractUpdateOnboarding = (Onboarding) tuple.getItem3();
+                var persistedToken = (Token) tuple.getItem4();
 
                 assertNotNull(persistedOnboarding.getId());
                 assertNotNull(duplicatedOnboarding.getId());
+                assertNotNull(persistedContractUpdateOnboarding.getId());
                 assertNotNull(persistedToken.getId());
 
                 mongoDatabase.getCollection("onboardings")
@@ -294,6 +298,21 @@ public class OnboardingStep extends CucumberQuarkusTest {
   public void iSendPostRequestWithNamedRequestForUser(String url) throws JsonProcessingException {
     String requestBody = context.getCurrentRequestBody();
     OnboardingUserRequest request = objectMapper.readValue(requestBody, OnboardingUserRequest.class);
+    assertNotNull(request);
+    validatableResponse =
+            authenticatedRequest()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(request)
+                    .when()
+                    .post(url)
+                    .then();
+  }
+
+  @When("I send a POST request for contract update to {string} with this request")
+  public void iSendPostRequestWithNamedRequestForContractUpdate(String url) throws JsonProcessingException {
+    String requestBody = context.getCurrentRequestBody();
+    OnboardingContractUpdateRequest request =
+            objectMapper.readValue(requestBody, OnboardingContractUpdateRequest.class);
     assertNotNull(request);
     validatableResponse =
             authenticatedRequest()
@@ -525,6 +544,15 @@ public class OnboardingStep extends CucumberQuarkusTest {
     user.setRole(PartyRole.MANAGER);
     onboarding.setUsers(List.of(user));
 
+    return onboarding;
+  }
+
+  private static Onboarding createOnboardingForContractUpdateScenario() {
+    Onboarding onboarding = createOnboardingForConflictScenario();
+    onboarding.setContractUpdateRequired(true);
+    onboarding.getInstitution().setOriginId("c_h282");
+    onboarding.getInstitution().setDescription("Comune di Rieti");
+    onboarding.getInstitution().setTaxCode("00100700574");
     return onboarding;
   }
 
