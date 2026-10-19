@@ -16,6 +16,10 @@ public interface DocumentService {
 
     Uni<Document> getDocumentByOnboardingId(String onboardingId);
 
+    Uni<Document> getCurrentSignedContract(String onboardingId);
+
+    Uni<Void> activateContract(String onboardingId);
+
     Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath);
 
     Uni<List<String>> getAttachments(String onboardingId);

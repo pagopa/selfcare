@@ -128,6 +128,32 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
                 .firstResult();
     }
 
+    public Uni<Document> findCurrentSignedContract(String onboardingId) {
+        Bson ownContract = onboardingAndContractTypes(onboardingId);
+        Bson activatedUpdateContract = Filters.and(
+                Filters.eq("rootOnboardingId", onboardingId),
+                Filters.eq("type", INSTITUTION.name()),
+                signedContract(),
+                Filters.ne("activatedAt", null));
+
+        return find(scoped(Filters.or(ownContract, activatedUpdateContract)), Sorts.descending("createdAt"))
+                .firstResult();
+    }
+
+    public Uni<Long> activateContract(String onboardingId) {
+        LocalDateTime activatedAt = LocalDateTime.now();
+        return update("activatedAt = ?1", activatedAt)
+                .where(scoped(Filters.and(
+                        onboardingAndContractTypes(onboardingId),
+                        signedContract(),
+                        Filters.eq("activatedAt", null))));
+    }
+
+    public Uni<Boolean> existsSignedContract(String onboardingId) {
+        return count(scoped(Filters.and(onboardingAndContractTypes(onboardingId), signedContract())))
+                .map(count -> count > 0);
+    }
+
     public Uni<Long> updateContractSignedByOnboardingId(String onboardingId, String contractSignedPath) {
         return update("contractSigned = ?1", contractSignedPath)
                 .where(scoped(onboardingAndContractTypes(onboardingId)))
@@ -163,6 +189,10 @@ public class DocumentRepository implements ReactivePanacheMongoRepositoryBase<Do
         return Filters.and(
                 Filters.eq("onboardingId", onboardingId),
                 Filters.in("type", CONTRACT_TYPES));
+    }
+
+    private Bson signedContract() {
+        return Filters.regex("contractSigned", "\\S");
     }
 
     private void logIfNoWrite(String operation, String key, String value, Long count) {

@@ -330,7 +330,7 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("/path/to/signed/contract.pdf");
         File tempPdf = createTempPdf();
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempPdf);
 
@@ -344,12 +344,23 @@ class DocumentContentServiceImplTest {
     }
 
     @Test
+    void retrieveSignedFile_shouldReturnNotFound_whenNoCurrentContractExists() {
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().nullItem());
+
+        RestResponse<File> response = documentContentService.retrieveSignedFile(ONBOARDING_ID, false)
+                .await().indefinitely();
+
+        assertNotNull(response);
+        assertEquals(RestResponse.Status.NOT_FOUND.getStatusCode(), response.getStatus());
+    }
+
+    @Test
     void retrieveSignedFile_shouldReturnNotFoundResponse_whenAzureStorageThrowsException() {
         // given
         Document doc = buildDocument();
         doc.setContractSigned("/path/to/signed/contract.pdf");
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(anyString()))
                 .thenThrow(new SelfcareAzureStorageException("Storage error", "500"));
@@ -371,7 +382,7 @@ class DocumentContentServiceImplTest {
         File invalidFile = Files.createTempFile("invalid", ".pdf").toFile();
         Files.write(invalidFile.toPath(), "not-a-pdf-content".getBytes());
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(anyString())).thenReturn(invalidFile);
 
@@ -392,7 +403,7 @@ class DocumentContentServiceImplTest {
         File tempP7m = Files.createTempFile("signed-contract", ".p7m").toFile();
         File extractedPdf = createTempPdf();
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
         when(signatureService.verifySignature(tempP7m)).thenReturn(true);
@@ -418,7 +429,7 @@ class DocumentContentServiceImplTest {
         File tempP7m = Files.createTempFile("signed-contract", ".p7m").toFile();
         File extractedPdf = createTempPdf();
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
         when(signatureService.verifySignature(tempP7m)).thenReturn(true);
@@ -476,7 +487,7 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
         File tempP7m = createTempPdf();
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
         when(signatureService.verifySignature(any(File.class))).thenReturn(true);
@@ -501,7 +512,7 @@ class DocumentContentServiceImplTest {
         File invalidPdf = Files.createTempFile("invalid", ".pdf").toFile();
         Files.write(invalidPdf.toPath(), "not-a-pdf".getBytes());
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
         when(signatureService.verifySignature(any(File.class))).thenReturn(true);
@@ -523,7 +534,7 @@ class DocumentContentServiceImplTest {
         doc.setContractSigned("/path/to/signed/contract.pdf.p7m");
         File tempP7m = createTempPdf();
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(tempP7m);
         when(signatureService.verifySignature(any(File.class)))
@@ -548,7 +559,7 @@ class DocumentContentServiceImplTest {
         File invalidPdf = Files.createTempFile("invalid", ".pdf").toFile();
         Files.write(invalidPdf.toPath(), "not-a-valid-pdf".getBytes());
 
-        when(documentRepository.findByOnboardingId(ONBOARDING_ID))
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID))
                 .thenReturn(Uni.createFrom().item(doc));
         when(azureBlobClient.retrieveFile(doc.getContractSigned())).thenReturn(invalidPdf);
 

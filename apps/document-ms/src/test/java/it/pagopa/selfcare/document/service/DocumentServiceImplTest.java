@@ -116,6 +116,38 @@ class DocumentServiceImplTest {
         assertThrows(ResourceNotFoundException.class, awaiter::indefinitely);
     }
 
+    @Test
+    void getCurrentSignedContract_shouldUseCurrentContractRepositoryQuery() {
+        Document document = buildDocument();
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(document));
+
+        assertSame(document, documentService.getCurrentSignedContract(ONBOARDING_ID).await().indefinitely());
+        verify(documentRepository).findCurrentSignedContract(ONBOARDING_ID);
+    }
+
+    @Test
+    void getCurrentSignedContract_shouldThrowWhenNoDocumentExists() {
+        when(documentRepository.findCurrentSignedContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().nullItem());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> documentService.getCurrentSignedContract(ONBOARDING_ID).await().indefinitely());
+    }
+
+    @Test
+    void activateContract_shouldBeIdempotentAndReturnNotFoundForUnsignedOnboarding() {
+        when(documentRepository.activateContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().item(1L));
+        assertDoesNotThrow(() -> documentService.activateContract(ONBOARDING_ID).await().indefinitely());
+
+        when(documentRepository.activateContract("already-active")).thenReturn(Uni.createFrom().item(0L));
+        when(documentRepository.existsSignedContract("already-active")).thenReturn(Uni.createFrom().item(true));
+        assertDoesNotThrow(() -> documentService.activateContract("already-active").await().indefinitely());
+
+        when(documentRepository.activateContract("unsigned")).thenReturn(Uni.createFrom().item(0L));
+        when(documentRepository.existsSignedContract("unsigned")).thenReturn(Uni.createFrom().item(false));
+        assertThrows(ResourceNotFoundException.class,
+                () -> documentService.activateContract("unsigned").await().indefinitely());
+    }
+
     // ---- getAttachments ----
 
     @Test
@@ -558,6 +590,49 @@ class DocumentServiceImplTest {
         Document response = documentService.saveDocument(request).await().indefinitely();
 
         assertNotNull(response);
+    }
+
+    @Test
+    void saveDocument_institutionShouldUseProvidedRootOnboardingId() throws IOException {
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId("update-onboarding")
+                .rootOnboardingId("root-onboarding")
+                .productId("prod-io")
+                .documentType(DocumentType.INSTITUTION)
+                .templatePath("templates/template.pdf")
+                .templateVersion("1.0")
+                .productTitle("Product IO")
+                .build();
+        when(documentRepository.findByOnboardingId("update-onboarding")).thenReturn(Uni.createFrom().nullItem());
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(createTempPdf());
+        when(documentRepository.persist(any(Document.class)))
+                .thenAnswer(invocation -> Uni.createFrom().item(invocation.getArgument(0, Document.class)));
+
+        Document saved = documentService.saveDocument(request).await().indefinitely();
+
+        assertEquals("update-onboarding", saved.getOnboardingId());
+        assertEquals("root-onboarding", saved.getRootOnboardingId());
+    }
+
+    @Test
+    void saveDocument_institutionShouldFallBackToOnboardingIdWhenRootIsBlank() throws IOException {
+        DocumentBuilderRequest request = DocumentBuilderRequest.builder()
+                .onboardingId("update-onboarding")
+                .rootOnboardingId("  ")
+                .productId("prod-io")
+                .documentType(DocumentType.INSTITUTION)
+                .templatePath("templates/template.pdf")
+                .templateVersion("1.0")
+                .productTitle("Product IO")
+                .build();
+        when(documentRepository.findByOnboardingId("update-onboarding")).thenReturn(Uni.createFrom().nullItem());
+        when(azureBlobClient.getFileAsPdf(anyString())).thenReturn(createTempPdf());
+        when(documentRepository.persist(any(Document.class)))
+                .thenAnswer(invocation -> Uni.createFrom().item(invocation.getArgument(0, Document.class)));
+
+        Document saved = documentService.saveDocument(request).await().indefinitely();
+
+        assertEquals("update-onboarding", saved.getRootOnboardingId());
     }
 
     @Test
