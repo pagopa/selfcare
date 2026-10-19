@@ -51,7 +51,7 @@ class DocumentControllerTest {
     DocumentResponse response = new DocumentResponse();
     response.setId(DOCUMENT_ID);
 
-    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
+    when(documentService.getCurrentSignedContract(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().item(document));
     when(documentMapper.toResponse(document)).thenReturn(response);
 
@@ -61,6 +61,17 @@ class DocumentControllerTest {
         .then()
         .statusCode(200)
         .body("id", equalTo(DOCUMENT_ID));
+  }
+
+  @Test
+  void activateContract_shouldReturnNoContent_whenServiceSucceeds() {
+    when(documentService.activateContract(ONBOARDING_ID)).thenReturn(Uni.createFrom().voidItem());
+
+    given()
+        .when()
+        .put("/v1/documents/" + ONBOARDING_ID + "/activate")
+        .then()
+        .statusCode(204);
   }
 
   @Test
@@ -296,7 +307,7 @@ class DocumentControllerTest {
 
   @Test
   void getDocumentByOnboardingId_shouldReturnInternalServerError_whenServiceFails() {
-    when(documentService.getDocumentByOnboardingId(ONBOARDING_ID))
+    when(documentService.getCurrentSignedContract(ONBOARDING_ID))
         .thenReturn(Uni.createFrom().failure(new RuntimeException("Database error")));
 
     given()
