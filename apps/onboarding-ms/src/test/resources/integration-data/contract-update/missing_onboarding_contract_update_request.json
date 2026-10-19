@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "taxCode": "FRDSMN80A01F205Z",
+      "name": "Sigmund",
+      "surname": "Freud",
+      "email": "s.freud@test.email.it",
+      "role": "MANAGER"
+    }
+  ],
+  "institutionType": "PA",
+  "taxCode": "00095990644",
+  "originId": "c_a489",
+  "origin": "IPA",
+  "productId": "prod-io"
+}

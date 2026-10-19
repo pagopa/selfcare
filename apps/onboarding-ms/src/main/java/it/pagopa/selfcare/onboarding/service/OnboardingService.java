@@ -26,6 +26,8 @@ public interface OnboardingService {
     Uni<OnboardingResponse> onboardingUsers(
             OnboardingUserRequest onboardingUserRequest, String userId, WorkflowType workflowType);
 
+    Uni<OnboardingResponse> onboardingContractUpdate(OnboardingContractUpdateRequest request, String userId);
+
     Uni<OnboardingResponse> onboardingImport(
             Onboarding onboarding,
             List<UserRequest> userRequests,

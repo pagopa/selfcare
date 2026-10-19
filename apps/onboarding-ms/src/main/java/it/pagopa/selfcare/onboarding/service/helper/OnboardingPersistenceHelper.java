@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.service.helper;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
+import static it.pagopa.selfcare.onboarding.common.WorkflowType.CONTRACT_UPDATE;
 import io.quarkus.mongodb.panache.common.reactive.Panache;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
@@ -10,6 +11,7 @@ import it.pagopa.selfcare.onboarding.controller.request.UserRequest;
 import it.pagopa.selfcare.onboarding.entity.Institution;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.entity.User;
+import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import it.pagopa.selfcare.onboarding.exception.ResourceNotFoundException;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import it.pagopa.selfcare.onboarding.service.OrchestrationService;
@@ -152,9 +154,18 @@ public class OnboardingPersistenceHelper {
                 .failWith(() -> new ResourceNotFoundException(
                         String.format("Onboarding for taxCode %s, origin %s, originId %s, productId %s, subunitCode %s not found",
                                 taxCode, origin, originId, productId, subunitCode)))
+                .call(prev -> CONTRACT_UPDATE.equals(onboarding.getWorkflowType())
+                        && !Boolean.TRUE.equals(prev.getContractUpdateRequired())
+                        ? Uni.createFrom().failure(new InvalidRequestException(String.format(
+                                "Contract update not required for onboarding %s", prev.getId())))
+                        : Uni.createFrom().voidItem())
                 .invoke(prev -> {
                     onboarding.setReferenceOnboardingId(prev.getId());
                     onboarding.setBilling(prev.getBilling());
+                    if (CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
+                        onboarding.setPricingPlan(prev.getPricingPlan());
+                        onboarding.setAdditionalInformations(prev.getAdditionalInformations());
+                    }
                     if (inheritReferencedInstitution) {
                         inheritInstitutionFromReferenced(onboarding, prev);
                     }
@@ -166,7 +177,9 @@ public class OnboardingPersistenceHelper {
                     String prevManagerId = last.getUsers().stream()
                             .filter(u -> u.getRole().equals(PartyRole.MANAGER))
                             .map(User::getId).findFirst().orElse(null);
-                    onboarding.setPreviousManagerId(prevManagerId);
+                    if (!CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
+                        onboarding.setPreviousManagerId(prevManagerId);
+                    }
                 })
                 .replaceWith(onboarding);
     }
