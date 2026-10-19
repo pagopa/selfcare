@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.eclipse.microprofile.openapi.annotations.media.Schema;
 
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class DocumentBuilderRequest {
 
     private String attachmentName;
 
+    @Schema(description = "Root dossier onboarding ID. For INSTITUTION contract updates, identifies the adhesion onboarding linked to this update.")
     private String rootOnboardingId;
 
     /**
