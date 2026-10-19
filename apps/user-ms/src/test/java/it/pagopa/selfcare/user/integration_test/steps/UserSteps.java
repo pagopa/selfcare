@@ -44,66 +44,39 @@ public class UserSteps {
 
     @After("@RemoveUserInstitutionAfterCreateFromAPI")
     public void removeUserInstitutionAfterCreateFromAPI(Scenario scenario) {
-        UserInstitution.find("institutionId = ?1 and userId = ?2", mockInstitutionId2, mockUserId2)
-                        .firstResult()
-                                .subscribe()
-                                        .with(
-                                                success -> {
-                                                    UserInstitution userInstitution = (UserInstitution) success;
-                                                    if(!Objects.isNull(userInstitution)) {
-                                                        UserInstitution.deleteById(userInstitution.getId())
-                                                                .subscribe()
-                                                                .with(
-                                                                        deleteSuccess -> log.info("Deleted userInstitution with userId {} and institutionId {}", mockUserId2, mockInstitutionId2),
-                                                                        deleteFailure -> log.info("Failed to delete userInstitution with  userId {} and institutionId {}: {}", mockUserId2, mockInstitutionId2, deleteFailure.getMessage())
-                                                                );
-                                                    } else {
-                                                        log.info("No userInstitution with userId {} and institutionId {}", mockUserId2, mockInstitutionId2);
-                                                    }
-                                        },
-                                                failure -> log.info("Failed to find userInstitution with userId {} and institutionId {}", mockUserId2, mockInstitutionId2)
-                                        );
+        removeUserInstitutionByUserId(mockUserId2);
     }
 
     @After("@RemoveUserInstitutionWithMockUser3")
     public void removeUserInstitutionWithMockUser3(Scenario scenario) {
-        UserInstitution.find("institutionId = ?1 and userId = ?2", mockInstitutionId2, mockUserId3)
+        removeUserInstitutionByUserId(mockUserId3);
+    }
+
+    private void removeUserInstitutionByUserId(String userId) {
+        UserInstitution userInstitution = UserInstitution.<UserInstitution>find(
+                        "institutionId = ?1 and userId = ?2", mockInstitutionId2, userId)
                 .firstResult()
-                .subscribe()
-                .with(
-                        success -> {
-                            UserInstitution userInstitution = (UserInstitution) success;
-                            if(!Objects.isNull(userInstitution)) {
-                                UserInstitution.deleteById(userInstitution.getId())
-                                        .subscribe()
-                                        .with(
-                                                deleteSuccess -> log.info("Deleted userInstitution with userId {} and institutionId {}", mockUserId3, mockInstitutionId2),
-                                                deleteFailure -> log.info("Failed to delete userInstitution with  userId {} and institutionId {}: {}", mockUserId3, mockInstitutionId2, deleteFailure.getMessage())
-                                        );
-                            } else {
-                                log.info("No userInstitution with userId {} and institutionId {}", mockUserId3, mockInstitutionId2);
-                            }
-                        },
-                        failure -> log.info("Failed to find userInstitution with userId {} and institutionId {}", mockUserId3, mockInstitutionId2)
-                );
+                .await()
+                .indefinitely();
+        if (userInstitution != null) {
+            UserInstitution.deleteById(userInstitution.getId()).await().indefinitely();
+            log.info("Deleted userInstitution with userId {} and institutionId {}", userId, mockInstitutionId2);
+        } else {
+            log.info("No userInstitution with userId {} and institutionId {}", userId, mockInstitutionId2);
+        }
     }
 
     @After("@RemoveUserInstitutionAfterScenarioWithUnusedUser")
     public void removeInstitutionIdAfterScenarioWithUnusedUser(Scenario scenario) {
         UserInstitution.deleteById(new ObjectId(mockUserInstitutionId))
-                .subscribe().with(
-                        success -> {
-                            log.info("userInstitution with id {} deleted", mockUserInstitutionId);
-                        },
-                        failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId, failure.getMessage())
-                );
+                .await()
+                .indefinitely();
+        log.info("userInstitution with id {} deleted", mockUserInstitutionId);
+
         UserInstitution.deleteById(new ObjectId(mockUserInstitutionId2))
-                .subscribe().with(
-                        success -> {
-                            log.info("userInstitution with id {} deleted", mockUserInstitutionId2);
-                        },
-                        failure -> log.info("Failed to delete userInstitution with id {}: {}", mockUserInstitutionId2, failure.getMessage())
-                );
+                .await()
+                .indefinitely();
+        log.info("userInstitution with id {} deleted", mockUserInstitutionId2);
     }
 
   @And("A mock userInstitution with id {string} and the following data:")
