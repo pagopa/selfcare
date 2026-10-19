@@ -15,6 +15,7 @@ import jakarta.servlet.ServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
@@ -31,6 +32,21 @@ class LogFilterTest {
         doNothing().when(filterChain).doFilter(any(), any());
         logFilter.doFilter(request, response, filterChain);
         verify(filterChain).doFilter(any(), any());
+    }
+
+    @Test
+    void testDoFilterPreservesResponseWithTrailingAtInDescription() throws IOException, ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/institutions/test-institution");
+        request.setCharacterEncoding("UTF-8");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setCharacterEncoding("UTF-8");
+        String body = "{\"id\":\"test-institution\",\"description\":\"A.S.D. TEST@\"}";
+        FilterChain filterChain = (wrappedRequest, wrappedResponse) -> wrappedResponse.getWriter().write(body);
+
+        logFilter.doFilter(request, response, filterChain);
+
+        assertEquals(200, response.getStatus());
+        assertEquals(body, response.getContentAsString());
     }
 
     /**
@@ -60,4 +76,3 @@ class LogFilterTest {
         verify(filterChain).doFilter(any(), any());
     }
 }
-

@@ -17,6 +17,20 @@ class MaskDataUtilsTest {
 
     }
 
+    @Test
+    void testMaskInformationWithAtSymbols() {
+        assertEquals("{\"description\":\"E***ple@\"}",
+                MaskDataUtils.maskInformation("{\"description\":\"Example@\"}"));
+        assertEquals("{\"description\":\"@\"}",
+                MaskDataUtils.maskInformation("{\"description\":\"@\"}"));
+        assertEquals("{\"description\":\"@example.test\"}",
+                MaskDataUtils.maskInformation("{\"description\":\"@example.test\"}"));
+        assertEquals("{\"description\":\"E***ple@@\"}",
+                MaskDataUtils.maskInformation("{\"description\":\"Example@@\"}"));
+        assertEquals("{\"digitalAddress\":\"E***ple@example.test\"}",
+                MaskDataUtils.maskInformation("{\"digitalAddress\":\"Example@example.test\"}"));
+    }
+
     /**
      * Method under test: {@link MaskDataUtils#maskString(String)}
      */
@@ -26,4 +40,3 @@ class MaskDataUtilsTest {
         assertEquals("", MaskDataUtils.maskString(""));
     }
 }
-

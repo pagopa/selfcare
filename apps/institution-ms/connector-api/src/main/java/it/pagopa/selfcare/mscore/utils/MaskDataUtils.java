@@ -69,7 +69,7 @@ public class MaskDataUtils {
     }
 
     private static String maskEmailAddress(String strEmail) {
-        String[] parts = strEmail.split("@");
+        String[] parts = strEmail.split("@", 2);
         String strId = maskString(parts[0]);
         return strId + "@" + parts[1];
     }
