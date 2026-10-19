@@ -80,6 +80,30 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
+    public Uni<Document> getCurrentSignedContract(String onboardingId) {
+        return documentRepository.findCurrentSignedContract(onboardingId)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Document with onboardingId %s not found", onboardingId)))
+                .invoke(document -> log.info("Resolved current contract documentId={}, onboardingId={}, rootOnboardingId={}",
+                        sanitize(document.getId()), sanitize(onboardingId), sanitize(document.getRootOnboardingId())));
+    }
+
+    @Override
+    public Uni<Void> activateContract(String onboardingId) {
+        return documentRepository.activateContract(onboardingId)
+                .onItem().transformToUni(updated -> {
+                    if (updated > 0) {
+                        return Uni.createFrom().voidItem();
+                    }
+                    return documentRepository.existsSignedContract(onboardingId)
+                            .onItem().transformToUni(exists -> exists
+                                    ? Uni.createFrom().voidItem()
+                                    : Uni.createFrom().failure(new ResourceNotFoundException(
+                                            String.format("Signed contract for onboardingId %s not found", onboardingId))));
+                });
+    }
+
+    @Override
     public Uni<Long> updateContractSigned(String onboardingId, String documentSignedPath) {
         return documentRepository.updateContractSignedByOnboardingId(onboardingId, documentSignedPath);
     }
@@ -342,7 +366,14 @@ public class DocumentServiceImpl implements DocumentService {
         setContractFileName(request, document);
 
         switch (request.getDocumentType()) {
-            case INSTITUTION, ATTACHMENT -> {
+            case INSTITUTION -> {
+                document.setOnboardingId(request.getOnboardingId());
+                String rootOnboardingId = request.getRootOnboardingId();
+                document.setRootOnboardingId(rootOnboardingId != null && !rootOnboardingId.isBlank()
+                        ? rootOnboardingId
+                        : request.getOnboardingId());
+            }
+            case ATTACHMENT -> {
                 document.setOnboardingId(request.getOnboardingId());
                 document.setRootOnboardingId(request.getOnboardingId());
             }
