@@ -138,8 +138,10 @@ public class DocumentContentServiceImpl implements DocumentContentService {
 
     @Override
     public Uni<RestResponse<File>> retrieveSignedFile(String onboardingId, boolean downloadP7MFile) {
-        return documentRepository.findByOnboardingId(onboardingId)
+        return documentRepository.findCurrentSignedContract(onboardingId)
                 .onFailure().retry().withBackOff(Duration.ofMillis(retryMinBackoff), Duration.ofMillis(retryMaxBackoff)).atMost(retryMaxAttempts)
+                .onItem().ifNull().failWith(() -> new ResourceNotFoundException(
+                        String.format("Document with onboardingId %s not found", onboardingId)))
                 .onItem().transformToUni(document ->
                         fetchFileFromBlob(document.getContractSigned(), document.getStorageOrigin())
                                 .emitOn(Infrastructure.getDefaultWorkerPool())

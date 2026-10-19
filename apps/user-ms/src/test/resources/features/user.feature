@@ -1646,13 +1646,47 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAfterScenario
+  Scenario Outline: Successfully update user status when the same role has a deleted history
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
+      | onboardedProductState | role    | productRole | productId    |
+      | DELETED               | MANAGER | admin       | prod-interop |
+      | <currentStatus>       | MANAGER | admin       | prod-interop |
+    And The following path params:
+      | id | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    And The following query params:
+      | institutionId | d0d28367-1695-4c50-a260-6fda526e9aab |
+      | productId     | prod-interop                         |
+      | productRole   | admin                                |
+      | status        | <newStatus>                          |
+    When I send a PUT request to "users/{id}/status"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId | d0d28367-1695-4c50-a260-6fda526e9aab |
+    And The following query params:
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId    | role    | productRole | status      |
+      | prod-interop | MANAGER | admin       | DELETED     |
+      | prod-interop | MANAGER | admin       | <newStatus> |
+
+    Examples:
+      | currentStatus | newStatus |
+      | ACTIVE        | SUSPENDED |
+      | SUSPENDED     | ACTIVE    |
+
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update user status with invalid multirole configuration
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
       | onboardedProductState | role     | productRole | productId    |
       | ACTIVE                | OPERATOR | api         | prod-interop |
-      | DELETED               | OPERATOR | reviewer    | prod-interop |
-    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-interop"
+      | SUSPENDED             | OPERATOR | reviewer    | prod-interop |
     And The following path params:
       | id | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
     And The following query params:
@@ -2795,13 +2829,47 @@ Feature: User
     And The response body doesn't contain field "[0].products[0].roleId"
 
   @RemoveUserInstitutionAfterScenario
+  Scenario Outline: Successfully update user product status when the same role has a deleted history
+    Given User login with username "j.doe" and password "test"
+    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
+      | onboardedProductState | role    | productRole | productId    |
+      | DELETED               | MANAGER | admin       | prod-interop |
+      | <currentStatus>       | MANAGER | admin       | prod-interop |
+    And The following path params:
+      | id            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+      | institutionId | d0d28367-1695-4c50-a260-6fda526e9aab |
+      | productId     | prod-interop                         |
+    And The following query params:
+      | status      | <newStatus> |
+      | productRole | admin       |
+    When I send a PUT request to "users/{id}/institution/{institutionId}/product/{productId}/status"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId | d0d28367-1695-4c50-a260-6fda526e9aab |
+    And The following query params:
+      | userId | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
+    When I send a GET request to "institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains the list "[0].products" of size 2
+    And The response body contains at path "[0].products" the following list of objects in any order:
+      | productId    | role    | productRole | status      |
+      | prod-interop | MANAGER | admin       | DELETED     |
+      | prod-interop | MANAGER | admin       | <newStatus> |
+
+    Examples:
+      | currentStatus | newStatus |
+      | ACTIVE        | SUSPENDED |
+      | SUSPENDED     | ACTIVE    |
+
+  @RemoveUserInstitutionAfterScenario
   Scenario: Unsuccessfully update product status with invalid multirole configuration
     Given User login with username "j.doe" and password "test"
     And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and the following data:
       | onboardedProductState | role     | productRole | productId    |
-      | PENDING               | OPERATOR | security    | prod-interop |
+      | ACTIVE                | OPERATOR | security    | prod-interop |
       | ACTIVE                | OPERATOR | viewer      | prod-interop |
-    And A mock userInstitution with id "65a4b6c7d8e9f01234567890" and onboardedProductState "ACTIVE" and role "MANAGER" and productId "prod-pagopa"
     And The following path params:
       | id            | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7 |
       | institutionId | d0d28367-1695-4c50-a260-6fda526e9aab |

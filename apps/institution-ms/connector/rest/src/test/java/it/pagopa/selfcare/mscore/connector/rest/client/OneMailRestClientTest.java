@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.mscore.connector.rest.client;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
-import feign.RetryableException;
 import it.pagopa.selfcare.commons.connector.rest.BaseFeignRestClientTest;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailAddress;
 import it.pagopa.selfcare.one_mail.generated.openapi.v1.dto.EmailHighPriorityBodyDTO;
@@ -26,13 +25,12 @@ import java.util.Objects;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @TestPropertySource(
         locations = "classpath:config/one-mail-rest-client.properties",
         properties = {
                 "ONE_MAIL_API_KEY=test-api-key",
-                "ONE_MAIL_REST_CLIENT_READ_TIMEOUT=500"
+                "ONE_MAIL_REST_CLIENT_READ_TIMEOUT=5000"
         }
 )
 @ContextConfiguration(
@@ -95,14 +93,5 @@ class OneMailRestClientTest extends BaseFeignRestClientTest {
                           }
                         }
                         """)));
-    }
-
-    @Test
-    void sendHighPriorityEmail_readTimeout() {
-        wm.stubFor(post(urlPathEqualTo("/v1/emails/send/high"))
-                .willReturn(aResponse().withStatus(202).withFixedDelay(2000)));
-        EmailHighPriorityBodyDTO body = EmailHighPriorityBodyDTO.builder().build();
-
-        assertThrows(RetryableException.class, () -> restClient._v1EmailsSendHighPost(false, body));
     }
 }

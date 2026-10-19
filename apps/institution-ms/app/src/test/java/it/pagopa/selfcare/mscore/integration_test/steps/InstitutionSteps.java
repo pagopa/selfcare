@@ -98,6 +98,14 @@ public class InstitutionSteps {
         mailNotificationRepository.save(mailNotificationEntity);
     }
 
+    @And("A mock institution with id {string} and description {string}")
+    public void createMockInstitutionWithDescription(String id, String description) {
+        createMockInstitutionWithId(id);
+        final InstitutionEntity entity = institutionRepository.findById(id).orElseThrow();
+        entity.setDescription(description);
+        institutionRepository.save(entity);
+    }
+
     @And("A mock institution with id {string} without active onboardings")
     public void createMockInstitutionWithoutActiveOnboardings(String id) {
         final InstitutionEntity entity = new InstitutionEntity();

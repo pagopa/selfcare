@@ -152,6 +152,24 @@ class DocumentRepositoryStrictIsolationTest {
     }
 
     @Test
+    void currentContractLookupAndActivationAreTenantScoped() {
+        inRequest("AR", () -> {
+            Document root = contract("strict-current-root", "strict-current-root", "AR");
+            Document foreignUpdate = contract("strict-foreign-update", "strict-foreign-update", "PNPG");
+            foreignUpdate.setRootOnboardingId("strict-current-root");
+            foreignUpdate.setActivatedAt(LocalDateTime.now());
+            Document.mongoCollection().insertMany(java.util.List.of(root, foreignUpdate)).await().indefinitely();
+            return null;
+        });
+
+        assertThat(inRequest("AR", () -> documentRepository.findCurrentSignedContract("strict-current-root").await().indefinitely()))
+                .extracting(Document::getId)
+                .isEqualTo("strict-current-root");
+        assertThat(inRequest("AR", () -> documentRepository.activateContract("strict-foreign-update").await().indefinitely()))
+                .isZero();
+    }
+
+    @Test
     void persistAssignsTenantFromContext() {
         Document document = contract("new-ar-contract", "new-onboarding", "payload-tenant");
 

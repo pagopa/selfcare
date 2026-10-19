@@ -229,7 +229,7 @@
             "type" : "string"
           },
           "rootOnboardingId" : {
-            "description" : "Identificativo della radice del Fascicolo Documentale. Corrisponde all'onboardingId dell'INSTITUTION.",
+            "description" : "Root dossier onboarding ID. For INSTITUTION contract updates, it matches the onboardingId of the adhesion onboarding.",
             "type" : "string"
           },
           "createdAt" : {
@@ -242,7 +242,11 @@
             "$ref" : "#/components/schemas/LocalDateTime"
           },
           "activatedAt" : {
-            "$ref" : "#/components/schemas/LocalDateTime"
+            "description" : "Contract activation timestamp, set after the orchestration has completed successfully.",
+            "type" : "string",
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/LocalDateTime"
+            } ]
           },
           "storageOrigin" : {
             "$ref" : "#/components/schemas/StorageOrigin"
@@ -270,6 +274,7 @@
             "type" : "string"
           },
           "rootOnboardingId" : {
+            "description" : "Root dossier onboarding ID. For INSTITUTION contract updates, identifies the adhesion onboarding linked to this update.",
             "type" : "string"
           },
           "templatePath" : {
@@ -1510,8 +1515,8 @@
     },
     "/v1/documents/onboarding/{onboardingId}" : {
       "get" : {
-        "summary" : "Retrieves the latest document for a given onboarding",
-        "description" : "Fetches the most recent document associated with the specified onboarding ID by filtering for type Institution and User",
+        "summary" : "Retrieves the current contract for a given onboarding",
+        "description" : "Returns the latest own INSTITUTION/USER document or, for a root onboarding, its latest signed and activated INSTITUTION update contract.",
         "operationId" : "getDocumentByOnboardingId",
         "tags" : [ "Document Controller" ],
         "parameters" : [ {
@@ -1568,6 +1573,39 @@
                   "$ref" : "#/components/schemas/DocumentResponse"
                 }
               }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
+    "/v1/documents/{onboardingId}/activate" : {
+      "put" : {
+        "summary" : "Activate a signed contract",
+        "description" : "Marks the signed contract for the onboarding as active. Repeated calls are safe and do not change the activation timestamp.",
+        "operationId" : "activateContract",
+        "tags" : [ "internal-v1" ],
+        "parameters" : [ {
+          "name" : "onboardingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : { }
             }
           },
           "401" : {

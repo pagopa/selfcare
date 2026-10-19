@@ -635,6 +635,44 @@
         } ]
       }
     },
+    "/v1/onboarding/contract-update" : {
+      "post" : {
+        "tags" : [ "Onboarding Controller" ],
+        "summary" : "Create a contract update request for an institution.",
+        "description" : "Creates a contract update onboarding linked to the institution's active onboarding.",
+        "operationId" : "onboardingContractUpdate",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OnboardingContractUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OnboardingResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized"
+          },
+          "403" : {
+            "description" : "Not Allowed"
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      }
+    },
     "/v1/onboarding/import" : {
       "post" : {
         "tags" : [ "Onboarding Controller", "internal-v1" ],
@@ -2653,6 +2691,40 @@
           },
           "onboardingImportContract" : {
             "$ref" : "#/components/schemas/OnboardingImportContract"
+          }
+        }
+      },
+      "OnboardingContractUpdateRequest" : {
+        "required" : [ "productId", "origin", "originId", "users" ],
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "institutionType" : {
+            "$ref" : "#/components/schemas/InstitutionType"
+          },
+          "subunitCode" : {
+            "type" : "string"
+          },
+          "origin" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "originId" : {
+            "minLength" : 1,
+            "type" : "string"
+          },
+          "taxCode" : {
+            "type" : "string"
+          },
+          "users" : {
+            "minItems" : 1,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/UserRequest"
+            }
           }
         }
       },

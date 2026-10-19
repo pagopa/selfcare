@@ -374,6 +374,27 @@ Feature: Onboarding collection
     And the response should have field "workflowType" with value "USERS"
     And there is a document for onboardings with origin "IPA" originId "c_l186" and workflowType "USERS"
 
+  Scenario: Successfully store contract update onboarding in status REQUEST
+    Given I have a request object named "success_contract_update_request"
+    When I send a POST request for contract update to "/contract-update" with this request
+    Then the response status code should be 200
+    And the response body should not be empty
+    And the response should have field "status" with value "REQUEST"
+    And the response should have field "workflowType" with value "CONTRACT_UPDATE"
+    And there is a document for onboardings with origin "IPA" originId "c_h282" and workflowType "CONTRACT_UPDATE"
+
+  Scenario: Can't perform contract update when the institution is not flagged for update
+    Given I have a request object named "not_required_contract_update_request"
+    When I send a POST request for contract update to "/contract-update" with this request
+    Then the response status code should be 400
+    And the response should contain the text "Contract update not required for onboarding"
+
+  Scenario: Can't perform contract update for not existing onboarding
+    Given I have a request object named "missing_onboarding_contract_update_request"
+    When I send a POST request for contract update to "/contract-update" with this request
+    Then the response status code should be 404
+    And the response should contain the text "Onboarding for taxCode 00095990644, origin IPA, originId c_a489, productId prod-io, subunitCode null not found"
+
   Scenario: Successfully store onboarding for SCP in status REQUEST
     Given I have a request object named "success_scp_request"
     When I send a POST request to "" with this request
