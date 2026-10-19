@@ -12,6 +12,7 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Forwards the validated tenant to clients that cannot register {@link AuthenticationPropagationHeadersFactory}
@@ -29,15 +30,15 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
 
     private final AuthenticationPropagationHeadersFactory headersFactory;
     private final Instance<JsonWebToken> jsonWebToken;
-    private final String technicalToken;
+    private final Optional<String> technicalToken;
     private final String functionKey;
 
     @Inject
     public TenantHeaderClientRequestFilter(
             AuthenticationPropagationHeadersFactory headersFactory,
             Instance<JsonWebToken> jsonWebToken,
-            @ConfigProperty(name = "onboarding-ms.jwt-bearer-token", defaultValue = "")
-            String technicalToken,
+            @ConfigProperty(name = "onboarding-ms.jwt-bearer-token")
+            Optional<String> technicalToken,
             @ConfigProperty(name = "onboarding-ms.onboarding-functions-api-key")
             String functionKey) {
         this.headersFactory = headersFactory;
@@ -70,9 +71,9 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         } catch (RuntimeException ignored) {
             // There is no active HTTP security context: use the technical token below.
         }
-        if (technicalToken == null || technicalToken.isBlank()) {
-            throw new IllegalStateException("No bearer token available for onboarding-functions");
-        }
-        return technicalToken;
+        return technicalToken
+                .filter(token -> !token.isBlank())
+                .orElseThrow(() ->
+                        new IllegalStateException("No bearer token available for onboarding-functions"));
     }
 }

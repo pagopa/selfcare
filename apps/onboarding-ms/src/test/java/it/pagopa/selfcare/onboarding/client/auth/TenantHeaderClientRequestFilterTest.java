@@ -12,6 +12,7 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import java.util.List;
+import java.util.Optional;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ class TenantHeaderClientRequestFilterTest {
     when(token.getRawToken()).thenReturn("session-jwt");
     TenantHeaderClientRequestFilter filter =
         new TenantHeaderClientRequestFilter(
-            headersFactory, tokenInstance, "technical-jwt", "function-key");
+            headersFactory, tokenInstance, Optional.of("technical-jwt"), "function-key");
     MultivaluedMap<String, Object> outgoing = new MultivaluedHashMap<>();
 
     // when
@@ -60,7 +61,7 @@ class TenantHeaderClientRequestFilterTest {
     when(tokenInstance.isResolvable()).thenReturn(false);
     TenantHeaderClientRequestFilter filter =
         new TenantHeaderClientRequestFilter(
-            headersFactory, tokenInstance, "technical-jwt", "function-key");
+            headersFactory, tokenInstance, Optional.of("technical-jwt"), "function-key");
     MultivaluedMap<String, Object> outgoing = new MultivaluedHashMap<>();
 
     // when
@@ -76,7 +77,8 @@ class TenantHeaderClientRequestFilterTest {
     // given
     when(tokenInstance.isResolvable()).thenReturn(false);
     TenantHeaderClientRequestFilter filter =
-        new TenantHeaderClientRequestFilter(headersFactory, tokenInstance, "", "function-key");
+        new TenantHeaderClientRequestFilter(
+            headersFactory, tokenInstance, Optional.empty(), "function-key");
 
     // when / then
     assertThrows(
