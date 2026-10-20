@@ -22,6 +22,18 @@ or blank and emits a warning instead. The generated OpenAPI contract marks the
 header as required for operations that start an onboarding or deletion
 orchestration.
 
+Calls also propagate `Authorization`, `X-Tenant-Id`, and the Azure Function key.
+Within an authenticated HTTP request the original session JWT is forwarded. A
+background call uses `JWT_BEARER_TOKEN` as a fallback and rejects it locally when
+it is malformed, expired, not RS256, lacks `iss`/`uid`, or its `tenant_id` differs
+from the resolved tenant. The Function remains responsible for signature and
+issuer verification.
+
+The technical token is an expiring Key Vault secret. Rotate it before `exp` in
+every environment and verify that the replacement is signed by the key matching
+the stack's `JWT_PUBLIC_KEY_<TENANT>` configuration. A failed local consistency
+check is an operational configuration error and the downstream call is not sent.
+
 ### Disable starting async onboarding workflow
 
 ````properties
@@ -46,6 +58,7 @@ Before running you must set these properties as environment variables.
 | quarkus.rest-client."**.UoApi".url<br/>                | MS_PARTY_REGISTRY_URL                    |             |     yes      |
 | quarkus.rest-client."**.OrchestrationApi".url<br/>     | ONBOARDING_FUNCTIONS_URL                 |             |     yes      |
 | quarkus.rest-client."**.OrchestrationApi".api-key<br/> | ONBOARDING-FUNCTIONS-API-KEY             |             |     yes      |
+| onboarding-ms.jwt-bearer-token<br/>                    | JWT_BEARER_TOKEN                         |             | background calls |
 | quarkus.rest-client."**.InstitutionApi".url<br/>       | MS_USER_URL                              |             |     yes      |
 | quarkus.rest-client."**.ProductApi".url<br/>           | MS_PRODUCT_URL                           | localhost:8080 | yes in deployments |
 | tenant.supported-tenants<br/>                         | TENANT_SUPPORTED_TENANTS                 | AR,PNPG     | per deployment |

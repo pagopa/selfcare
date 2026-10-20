@@ -42,16 +42,20 @@ class OrchestrationServiceHttpTest {
 
     @Test
     void startOrchestrationSendsValidatedTenantAndFunctionKey() throws Exception {
+        // given
         List<String> tenants = List.of("AR", "PNPG", "AR");
         List<String> tokens = tenants.stream()
                 .map(tenant -> IntegrationProfile.tokenForTenant(tenant, "PAGOPA"))
                 .toList();
+
+        // when
         for (int index = 0; index < tenants.size(); index++) {
             String tenant = tenants.get(index);
             request(tenant, tokens.get(index))
                     .get(BASE_PATH + "/start/onb-" + tenant).then().statusCode(200);
         }
 
+        // then
         List<Map<String, String>> calls = recordedRequests();
         assertEquals(3, calls.size());
         assertCall(calls.get(0), "AR", tokens.get(0), "/api/StartOnboardingOrchestration", "onboardingId=onb-AR");
@@ -61,9 +65,13 @@ class OrchestrationServiceHttpTest {
 
     @Test
     void deleteInstitutionAndUserSendsValidatedTenantAndFunctionKey() throws Exception {
+        // given
         String token = IntegrationProfile.tokenForTenant("PNPG", "PAGOPA");
+
+        // when
         request("PNPG", token).get(BASE_PATH + "/delete/onb-1").then().statusCode(200);
 
+        // then
         List<Map<String, String>> calls = recordedRequests();
         assertEquals(1, calls.size());
         assertCall(calls.get(0), "PNPG", token, "/api/TriggerDeleteInstitutionAndUser", "onboardingId=onb-1");
@@ -71,10 +79,14 @@ class OrchestrationServiceHttpTest {
 
     @Test
     void tenantHeaderIsCanonicalized() throws Exception {
+        // given
         String token = IntegrationProfile.tokenForTenant("AR", "PAGOPA");
+
+        // when
         request("ar", token)
                 .get(BASE_PATH + "/start/onb-1").then().statusCode(200);
 
+        // then
         assertEquals("AR", recordedRequests().get(0).get("tenant"));
         assertEquals("Bearer " + token, recordedRequests().get(0).get("authorization"));
     }

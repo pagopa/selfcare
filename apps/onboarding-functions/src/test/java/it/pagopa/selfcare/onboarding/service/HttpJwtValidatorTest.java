@@ -13,6 +13,7 @@ import com.microsoft.azure.functions.HttpResponseMessage;
 import com.microsoft.azure.functions.HttpStatus;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
 import it.pagopa.selfcare.onboarding.config.JwtValidationConfig;
 import java.security.KeyPair;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 
+@QuarkusTest
 class HttpJwtValidatorTest {
 
   private static KeyPair arKeys;
@@ -67,6 +69,18 @@ class HttpJwtValidatorTest {
 
     // when
     Optional<HttpResponseMessage> response = validate(jwt, "AR");
+
+    // then
+    assertTrue(response.isEmpty());
+  }
+
+  @Test
+  void acceptsValidTokenForPnpgTenant() {
+    // given
+    String jwt = token(pnpgKeys, claims("PAGOPA", "fake-pnpg-user", "PNPG"), 60);
+
+    // when
+    Optional<HttpResponseMessage> response = validate(jwt, "PNPG");
 
     // then
     assertTrue(response.isEmpty());
@@ -138,6 +152,8 @@ class HttpJwtValidatorTest {
 
     // then
     assertStatus(response, HttpStatus.UNAUTHORIZED);
+    assertEquals("Bearer", response.orElseThrow().getHeader("WWW-Authenticate"));
+    assertEquals("Unauthorized", response.orElseThrow().getBody());
   }
 
   @Test
@@ -162,9 +178,13 @@ class HttpJwtValidatorTest {
             .setExpiration(new Date(System.currentTimeMillis() + 60_000))
             .compact();
 
-    // when / then
-    assertStatus(validate("not-a-jwt", "AR"), HttpStatus.UNAUTHORIZED);
-    assertStatus(validate(unsigned, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> malformedResponse = validate("not-a-jwt", "AR");
+    Optional<HttpResponseMessage> unsignedResponse = validate(unsigned, "AR");
+
+    // then
+    assertStatus(malformedResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(unsignedResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
@@ -194,9 +214,13 @@ class HttpJwtValidatorTest {
             .signWith(SignatureAlgorithm.RS256, arKeys.getPrivate())
             .compact();
 
-    // when / then
-    assertStatus(validate(expired, "AR"), HttpStatus.UNAUTHORIZED);
-    assertStatus(validate(withoutExpiration, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> expiredResponse = validate(expired, "AR");
+    Optional<HttpResponseMessage> withoutExpirationResponse = validate(withoutExpiration, "AR");
+
+    // then
+    assertStatus(expiredResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(withoutExpirationResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
@@ -205,9 +229,13 @@ class HttpJwtValidatorTest {
     String unknownKeyToken = token(unknownKeys, claims("SPID", "user-id", "AR"), 60);
     String otherTenantToken = token(pnpgKeys, claims("SPID", "user-id", "PNPG"), 60);
 
-    // when / then
-    assertStatus(validate(unknownKeyToken, "AR"), HttpStatus.UNAUTHORIZED);
-    assertStatus(validate(otherTenantToken, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> unknownKeyResponse = validate(unknownKeyToken, "AR");
+    Optional<HttpResponseMessage> otherTenantResponse = validate(otherTenantToken, "AR");
+
+    // then
+    assertStatus(unknownKeyResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(otherTenantResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
@@ -216,9 +244,13 @@ class HttpJwtValidatorTest {
     String unexpected = token(arKeys, claims("OTHER", "user-id", "AR"), 60);
     String missing = token(arKeys, claims(null, "user-id", "AR"), 60);
 
-    // when / then
-    assertStatus(validate(unexpected, "AR"), HttpStatus.UNAUTHORIZED);
-    assertStatus(validate(missing, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> unexpectedResponse = validate(unexpected, "AR");
+    Optional<HttpResponseMessage> missingResponse = validate(missing, "AR");
+
+    // then
+    assertStatus(unexpectedResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(missingResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
@@ -227,9 +259,13 @@ class HttpJwtValidatorTest {
     String missingUid = token(arKeys, claims("SPID", null, "AR"), 60);
     String missingTenant = token(arKeys, claims("SPID", "user-id", null), 60);
 
-    // when / then
-    assertStatus(validate(missingUid, "AR"), HttpStatus.UNAUTHORIZED);
-    assertStatus(validate(missingTenant, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> missingUidResponse = validate(missingUid, "AR");
+    Optional<HttpResponseMessage> missingTenantResponse = validate(missingTenant, "AR");
+
+    // then
+    assertStatus(missingUidResponse, HttpStatus.UNAUTHORIZED);
+    assertStatus(missingTenantResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test
@@ -251,15 +287,21 @@ class HttpJwtValidatorTest {
     JwtValidationConfig.TenantKey pnpgKey = tenantKey(pem(pnpgKeys));
     when(config.tenants()).thenReturn(Map.of("PNPG", pnpgKey));
 
-    // when / then
-    assertStatus(validate(jwt, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> missingKeyResponse = validate(jwt, "AR");
+
+    // then
+    assertStatus(missingKeyResponse, HttpStatus.UNAUTHORIZED);
 
     // given
     JwtValidationConfig.TenantKey invalidKey = tenantKey("not-a-key");
     when(config.tenants()).thenReturn(Map.of("AR", invalidKey));
 
-    // when / then
-    assertStatus(validate(jwt, "AR"), HttpStatus.UNAUTHORIZED);
+    // when
+    Optional<HttpResponseMessage> invalidKeyResponse = validate(jwt, "AR");
+
+    // then
+    assertStatus(invalidKeyResponse, HttpStatus.UNAUTHORIZED);
   }
 
   @Test

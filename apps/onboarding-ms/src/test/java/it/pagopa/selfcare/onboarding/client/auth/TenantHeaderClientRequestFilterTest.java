@@ -11,6 +11,9 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import org.eclipse.microprofile.jwt.JsonWebToken;
@@ -43,7 +46,7 @@ class TenantHeaderClientRequestFilterTest {
     when(token.getRawToken()).thenReturn("session-jwt");
     TenantHeaderClientRequestFilter filter =
         new TenantHeaderClientRequestFilter(
-            headersFactory, tokenInstance, Optional.of("technical-jwt"), "function-key");
+            headersFactory, tokenInstance, Optional.of(technicalJwt("AR")), "function-key");
     MultivaluedMap<String, Object> outgoing = new MultivaluedHashMap<>();
 
     // when
@@ -59,16 +62,17 @@ class TenantHeaderClientRequestFilterTest {
   void usesTechnicalTokenWithoutHttpSecurityContext() {
     // given
     when(tokenInstance.isResolvable()).thenReturn(false);
+    String technicalToken = technicalJwt("AR");
     TenantHeaderClientRequestFilter filter =
         new TenantHeaderClientRequestFilter(
-            headersFactory, tokenInstance, Optional.of("technical-jwt"), "function-key");
+            headersFactory, tokenInstance, Optional.of(technicalToken), "function-key");
     MultivaluedMap<String, Object> outgoing = new MultivaluedHashMap<>();
 
     // when
     filter.filter(requestContext(outgoing));
 
     // then
-    assertEquals(List.of("Bearer technical-jwt"), outgoing.get("Authorization"));
+    assertEquals(List.of("Bearer " + technicalToken), outgoing.get("Authorization"));
     assertEquals(List.of("function-key"), outgoing.get("x-functions-key"));
   }
 
@@ -80,10 +84,34 @@ class TenantHeaderClientRequestFilterTest {
         new TenantHeaderClientRequestFilter(
             headersFactory, tokenInstance, Optional.empty(), "function-key");
 
-    // when / then
-    assertThrows(
-        IllegalStateException.class,
-        () -> filter.filter(requestContext(new MultivaluedHashMap<>())));
+    // when
+    IllegalStateException exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> filter.filter(requestContext(new MultivaluedHashMap<>())));
+
+    // then
+    assertEquals("No bearer token available for onboarding-functions", exception.getMessage());
+  }
+
+  @Test
+  void rejectsTechnicalTokenForDifferentTenant() {
+    // given
+    when(tokenInstance.isResolvable()).thenReturn(false);
+    TenantHeaderClientRequestFilter filter =
+        new TenantHeaderClientRequestFilter(
+            headersFactory, tokenInstance, Optional.of(technicalJwt("PNPG")), "function-key");
+
+    // when
+    IllegalStateException exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> filter.filter(requestContext(new MultivaluedHashMap<>())));
+
+    // then
+    assertEquals(
+        "Invalid technical JWT for onboarding-functions: tenant_id does not match X-Tenant-Id",
+        exception.getMessage());
   }
 
   private static ClientRequestContext requestContext(MultivaluedMap<String, Object> outgoing) {
@@ -91,5 +119,19 @@ class TenantHeaderClientRequestFilterTest {
     when(requestContext.getHeaders()).thenReturn(outgoing);
     when(requestContext.getStringHeaders()).thenReturn(new MultivaluedHashMap<>());
     return requestContext;
+  }
+
+  private static String technicalJwt(String tenant) {
+    String header = "{\"alg\":\"RS256\",\"typ\":\"JWT\"}";
+    String payload = String.format(
+        "{\"exp\":%d,\"iss\":\"PAGOPA\",\"uid\":\"fake-onboarding-ms\",\"tenant_id\":\"%s\"}",
+        Instant.now().plusSeconds(300).getEpochSecond(), tenant);
+    return encode(header) + "." + encode(payload) + "." + encode("fake-signature");
+  }
+
+  private static String encode(String value) {
+    return Base64.getUrlEncoder()
+        .withoutPadding()
+        .encodeToString(value.getBytes(StandardCharsets.UTF_8));
   }
 }

@@ -60,11 +60,16 @@ class OnboardingFunctionsClientTenantPropagationConfigTest {
         // given
         Properties properties = mainApplicationProperties();
 
-        // when / then
-        assertEquals("false", properties.getProperty(
-                "quarkus.openapi-generator.codegen.spec.onboarding_functions_json.enable-security-generation"));
-        assertNotNull(properties.getProperty("onboarding-ms.onboarding-functions-api-key"));
-        assertNotNull(properties.getProperty("onboarding-ms.jwt-bearer-token"));
+        // when
+        String securityGeneration = properties.getProperty(
+                "quarkus.openapi-generator.codegen.spec.onboarding_functions_json.enable-security-generation");
+        String functionKey = properties.getProperty("onboarding-ms.onboarding-functions-api-key");
+        String bearerToken = properties.getProperty("onboarding-ms.jwt-bearer-token");
+
+        // then
+        assertEquals("false", securityGeneration);
+        assertNotNull(functionKey);
+        assertNotNull(bearerToken);
     }
 
     // The test classpath shadows application.properties with the test one, so the main file is read from disk.

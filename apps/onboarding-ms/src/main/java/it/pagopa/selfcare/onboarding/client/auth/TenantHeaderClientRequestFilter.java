@@ -55,12 +55,13 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         if (tenant != null) {
             requestContext.getHeaders().put(TENANT_HEADER, new ArrayList<>(tenant));
         }
+        String resolvedTenant = tenant == null || tenant.isEmpty() ? null : tenant.get(0);
         requestContext.getHeaders().putSingle(
-                AUTHORIZATION_HEADER, "Bearer " + resolveBearerToken());
+                AUTHORIZATION_HEADER, "Bearer " + resolveBearerToken(resolvedTenant));
         requestContext.getHeaders().putSingle(FUNCTION_KEY_HEADER, functionKey);
     }
 
-    private String resolveBearerToken() {
+    private String resolveBearerToken(String tenant) {
         try {
             if (jsonWebToken.isResolvable()) {
                 String rawToken = jsonWebToken.get().getRawToken();
@@ -71,9 +72,11 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         } catch (RuntimeException ignored) {
             // There is no active HTTP security context: use the technical token below.
         }
-        return technicalToken
-                .filter(token -> !token.isBlank())
+        String token = technicalToken
+                .filter(configuredToken -> !configuredToken.isBlank())
                 .orElseThrow(() ->
                         new IllegalStateException("No bearer token available for onboarding-functions"));
+        TechnicalJwtValidator.validate(token, tenant);
+        return token;
     }
 }

@@ -3,6 +3,9 @@ package it.pagopa.selfcare.onboarding.functions;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.microsoft.azure.functions.ExecutionContext;
@@ -13,8 +16,10 @@ import com.microsoft.durabletask.azurefunctions.DurableClientContext;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.HttpResponseMessageMock;
+import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
 import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import jakarta.inject.Inject;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.Logger;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +35,7 @@ class HttpTriggerJwtEnforcementTest {
   @Inject OnboardingFunctions onboardingFunctions;
 
   @InjectMock HttpJwtValidator httpJwtValidator;
+  @InjectMock FunctionInvocationLogger functionInvocationLogger;
 
   private HttpRequestMessage<Optional<String>> request;
   private ExecutionContext context;
@@ -58,38 +64,74 @@ class HttpTriggerJwtEnforcementTest {
 
   @Test
   void externalFunctionsRejectUnauthenticatedRequests() {
-    // when / then
-    assertUnauthorized(externalFunctions.testToken(request, context));
-    assertUnauthorized(externalFunctions.checkOrganization(request, context));
-    assertUnauthorized(
-        externalFunctions.messageAcknowledgment(request, "prod-test", "message-id", "ACK", context));
-    assertUnauthorized(externalFunctions.webhookTest(request, context));
+    // given
+    // the validator rejection is configured in setUp
+
+    // when
+    List<HttpResponseMessage> responses =
+        List.of(
+            externalFunctions.testToken(request, context),
+            externalFunctions.checkOrganization(request, context),
+            externalFunctions.messageAcknowledgment(
+                request, "fake-product", "fake-message-id", "ACK", context),
+            externalFunctions.webhookTest(request, context));
+
+    // then
+    responses.forEach(HttpTriggerJwtEnforcementTest::assertUnauthorized);
+    verify(httpJwtValidator, times(4)).validate(request, context);
+    verifyNoInteractions(functionInvocationLogger);
   }
 
   @Test
   void notificationFunctionsRejectUnauthenticatedRequests() throws Exception {
-    // when / then
-    assertUnauthorized(notificationFunctions.sendNotification(request, context));
-    assertUnauthorized(notificationFunctions.resendNotification(request, context));
-    assertUnauthorized(notificationFunctions.countNotifications(request, context));
-    assertUnauthorized(
-        notificationFunctions.resendNotifications(request, durableContext, context));
+    // given
+    // the validator rejection is configured in setUp
+
+    // when
+    List<HttpResponseMessage> responses =
+        List.of(
+            notificationFunctions.sendNotification(request, context),
+            notificationFunctions.resendNotification(request, context),
+            notificationFunctions.countNotifications(request, context),
+            notificationFunctions.resendNotifications(request, durableContext, context));
+
+    // then
+    responses.forEach(HttpTriggerJwtEnforcementTest::assertUnauthorized);
+    verify(httpJwtValidator, times(4)).validate(request, context);
+    verifyNoInteractions(functionInvocationLogger, durableContext);
   }
 
   @Test
   void institutionFunctionsRejectUnauthenticatedRequests() {
-    // when / then
-    assertUnauthorized(
-        institutionFunctions.deleteInstitutionAndUserTrigger(request, durableContext, context));
+    // given
+    // the validator rejection is configured in setUp
+
+    // when
+    HttpResponseMessage response =
+        institutionFunctions.deleteInstitutionAndUserTrigger(request, durableContext, context);
+
+    // then
+    assertUnauthorized(response);
+    verify(httpJwtValidator).validate(request, context);
+    verifyNoInteractions(functionInvocationLogger, durableContext);
   }
 
   @Test
   void onboardingFunctionsRejectUnauthenticatedRequests() {
-    // when / then
-    assertUnauthorized(onboardingFunctions.startOrchestration(request, durableContext, context));
-    assertUnauthorized(
-        onboardingFunctions.buildAttachmentsAndSaveTokens(request, durableContext, context));
-    assertUnauthorized(onboardingFunctions.sendTestEmail(request, context));
+    // given
+    // the validator rejection is configured in setUp
+
+    // when
+    List<HttpResponseMessage> responses =
+        List.of(
+            onboardingFunctions.startOrchestration(request, durableContext, context),
+            onboardingFunctions.buildAttachmentsAndSaveTokens(request, durableContext, context),
+            onboardingFunctions.sendTestEmail(request, context));
+
+    // then
+    responses.forEach(HttpTriggerJwtEnforcementTest::assertUnauthorized);
+    verify(httpJwtValidator, times(3)).validate(request, context);
+    verifyNoInteractions(functionInvocationLogger, durableContext);
   }
 
   private static void assertUnauthorized(HttpResponseMessage response) {
