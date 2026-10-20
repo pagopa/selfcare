@@ -309,6 +309,84 @@
       }
     },
     "/institutions/{institutionId}/products/{productId}/users" : {
+      "post" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Update the admin users of a product of an institution",
+        "description" : "Receives the complete list of administrators of the product (e.g. the ones indicated in a signed contract update; allowed roles: MANAGER, DELEGATE, ADMIN_EA) and aligns the user roles: missing users are added in ACTIVE, users with a different role are updated without sending emails, active administrators (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list are set to DELETED. Other roles are not affected.",
+        "operationId" : "updateProductUsers",
+        "parameters" : [ {
+          "name" : "institutionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "productId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateProductUsersDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Not Authorized",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/problem+json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "SecurityScheme" : [ ]
+        } ]
+      },
       "delete" : {
         "tags" : [ "Institution" ],
         "summary" : "Logically delete all the users associated with a product of an institution",
@@ -1994,6 +2072,31 @@
           }
         }
       },
+      "ProductUser" : {
+        "required" : [ "userId", "role", "productRoles" ],
+        "type" : "object",
+        "properties" : {
+          "userId" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "role" : {
+            "description" : "Available values: MANAGER, DELEGATE, ADMIN_EA",
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "productRoles" : {
+            "minItems" : 1,
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "userMailUuid" : {
+            "type" : "string"
+          }
+        }
+      },
       "QueueEvent" : {
         "enum" : [ "ADD", "UPDATE" ],
         "type" : "string"
@@ -2041,6 +2144,30 @@
           },
           "institutionRootName" : {
             "type" : "string"
+          }
+        }
+      },
+      "UpdateProductUsersDto" : {
+        "required" : [ "institutionDescription", "users" ],
+        "type" : "object",
+        "properties" : {
+          "institutionDescription" : {
+            "pattern" : "\\S",
+            "type" : "string"
+          },
+          "institutionRootName" : {
+            "type" : "string"
+          },
+          "tokenId" : {
+            "description" : "Onboarding id to set as tokenId on the created roles",
+            "type" : "string"
+          },
+          "users" : {
+            "minItems" : 1,
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductUser"
+            }
           }
         }
       },

@@ -7,6 +7,7 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.model.LoggedUser;
 import it.pagopa.selfcare.user.model.UserNotificationToSend;
@@ -49,6 +50,8 @@ public interface UserService {
     Uni<UserDetailResponse> searchUserByFiscalCode(String fiscalCode, String institutionId);
 
     Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, String productRole, LoggedUser loggedUser);
+
+    Uni<Void> updateProductUsers(String institutionId, String productId, UpdateProductUsersDto request, LoggedUser loggedUser);
 
     Uni<CreateOrUpdateUserByFiscalCodeResponse> createOrUpdateUserByFiscalCode(CreateUserDto userDto, LoggedUser loggedUser);
 

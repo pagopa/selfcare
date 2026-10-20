@@ -12,6 +12,7 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -96,6 +97,8 @@ public class UserServiceImpl implements UserService {
     public static final String USER_FIELD_LIST_WITHOUT_WORK_CONTACTS = "name,familyName,fiscalCode";
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
+    // Administrator roles ordered by precedence (the first is the highest)
+    private static final List<String> PRODUCT_ADMIN_ROLES = List.of(PartyRole.MANAGER.name(), PartyRole.DELEGATE.name(), PartyRole.ADMIN_EA.name(), PartyRole.SUB_DELEGATE.name());
 
     /**
      * The updateUserStatus function updates the status of a user's onboarded product.
@@ -337,8 +340,12 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, OnboardedProductState status, String productRole, LoggedUser loggedUser) {
+        return updateUserProductStatus(userId, institutionId, productId, null, status, productRole, loggedUser);
+    }
+
+    private Uni<Void> updateUserProductStatus(String userId, String institutionId, String productId, PartyRole role, OnboardedProductState status, String productRole, LoggedUser loggedUser) {
         PrepareNotificationData.PrepareNotificationDataBuilder prepareNotificationDataBuilder = PrepareNotificationData.builder();
-        return updateUserStatusWithOptionalFilter(userId, institutionId, productId, null, productRole, status)
+        return updateUserStatusWithOptionalFilter(userId, institutionId, productId, role, productRole, status)
                 .onItem().transformToUni(unused -> retrieveUserFromUserRegistryAndAddToPrepareNotificationData(prepareNotificationDataBuilder, userId))
                 .onItem().transformToUni(builder -> retrieveUserInstitutionAndAddToPrepareNotificationData(builder, userId, institutionId))
                 .onItem().transformToUni(builder -> retrieveProductAndAddToPrepareNotificationData(builder, productId))
@@ -348,6 +355,239 @@ public class UserServiceImpl implements UserService {
                         .replaceWith(prepareNotificationData))
                 .onFailure().invoke(throwable -> log.error("Error during update user status for userId: {}, institutionId: {}, productId:{} -> exception: {}", Encode.forJava(userId), Encode.forJava(institutionId), Encode.forJava(productId), throwable.getMessage(), throwable))
                 .replaceWithVoid();
+    }
+
+    /**
+     * Aligns the administrators of a product of an institution to the given list, which is the complete list of
+     * administrators indicated in the signed contract.
+     * The list is cleaned first: OPERATOR users are removed and, for the same userId, only the user with the highest
+     * role (MANAGER > DELEGATE > ADMIN_EA > SUB_DELEGATE) or, with the same role, the first one is kept.
+     * Only administrator roles (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) are removed; other roles are not affected
+     * unless the user is in the list.
+     * - user in the list without a role on the product: the role is created in ACTIVE with the request tokenId and an email is sent;
+     * - user in the list with the same role and productRoles: SUSPENDED roles are set to ACTIVE (sending the reactivation
+     *   email) and tokenId and userMailUuid are updated if different; if nothing changes the user is not modified;
+     * - user in the list with a different role or different productRoles: the previous role is set to DELETED
+     *   and the new role is added in ACTIVE, without sending emails;
+     * - administrator (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list: the role is set to DELETED and an email is sent.
+     * The operation is idempotent: a user already aligned is not modified.
+     */
+    @Override
+    public Uni<Void> updateProductUsers(String institutionId, String productId, UpdateProductUsersDto request, LoggedUser loggedUser) {
+        final List<UpdateProductUsersDto.ProductUser> users = cleanProductUsers(request.getUsers());
+        final Set<String> requestedUserIds = users.stream()
+                .map(UpdateProductUsersDto.ProductUser::getUserId)
+                .collect(Collectors.toSet());
+        return Multi.createFrom().iterable(users)
+                .onItem().transformToUniAndConcatenate(user -> userUtils.checkProductRolesAndValidateRequestMultirole(productId, PartyRole.valueOf(user.getRole()), user.getProductRoles()))
+                .collect().asList()
+                .onItem().transformToUni(ignore -> retrieveProductAdmins(institutionId, productId))
+                .onItem().transformToUni(currentAdmins -> Multi.createFrom().iterable(users)
+                        .onItem().transformToUniAndConcatenate(user -> syncProductUser(institutionId, productId, request, user, loggedUser))
+                        .collect().asList()
+                        .replaceWith(currentAdmins))
+                .onItem().transformToUni(currentAdmins -> Multi.createFrom().iterable(currentAdmins.entrySet())
+                        .filter(admin -> !requestedUserIds.contains(admin.getKey()))
+                        .onItem().transformToUniAndConcatenate(admin -> {
+                            log.info("Removing role {} on product {} for user {} of institution {}", admin.getValue(), Encode.forJava(productId), Encode.forJava(admin.getKey()), Encode.forJava(institutionId));
+                            return updateUserProductStatus(admin.getKey(), institutionId, productId, admin.getValue(), DELETED, null, loggedUser);
+                        })
+                        .collect().asList())
+                .onFailure().invoke(throwable -> log.error("Error during update of product users for institutionId: {}, productId: {} -> exception: {}", Encode.forJava(institutionId), Encode.forJava(productId), throwable.getMessage(), throwable))
+                .replaceWithVoid();
+    }
+
+    /**
+     * Removes the OPERATOR users and keeps only one occurrence of each userId: the one with the highest role
+     * (MANAGER > DELEGATE > ADMIN_EA > SUB_DELEGATE) or, with the same role, the first one.
+     */
+    private static List<UpdateProductUsersDto.ProductUser> cleanProductUsers(List<UpdateProductUsersDto.ProductUser> users) {
+        Map<String, UpdateProductUsersDto.ProductUser> uniqueUsers = new LinkedHashMap<>();
+        users.stream()
+                .filter(user -> !PartyRole.OPERATOR.name().equals(user.getRole()))
+                .forEach(user -> uniqueUsers.merge(user.getUserId(), user,
+                        (current, candidate) -> rolePriority(candidate.getRole()) < rolePriority(current.getRole()) ? candidate : current));
+        return new ArrayList<>(uniqueUsers.values());
+    }
+
+    private static int rolePriority(String role) {
+        int priority = PRODUCT_ADMIN_ROLES.indexOf(role);
+        return priority < 0 ? PRODUCT_ADMIN_ROLES.size() : priority;
+    }
+
+    /**
+     * Returns the users having an ACTIVE or SUSPENDED administrator role on the product, with their role.
+     */
+    private Uni<Map<String, PartyRole>> retrieveProductAdmins(String institutionId, String productId) {
+        var userInstitutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).build().constructMap();
+        var productFilters = OnboardedProductFilter.builder()
+                .productId(productId)
+                .role(PRODUCT_ADMIN_ROLES)
+                .status(List.of(ACTIVE.name(), SUSPENDED.name()))
+                .build().constructMap();
+        return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
+                .onItem().transform(userInstitutions -> {
+                    Map<String, PartyRole> admins = new LinkedHashMap<>();
+                    userInstitutions.forEach(userInstitution -> retrieveActiveProducts(userInstitution, productId).stream()
+                            .map(OnboardedProduct::getRole)
+                            .filter(role -> Objects.nonNull(role) && PRODUCT_ADMIN_ROLES.contains(role.name()))
+                            .findFirst()
+                            .ifPresent(role -> admins.put(userInstitution.getUserId(), role)));
+                    return admins;
+                });
+    }
+
+    private Uni<Void> syncProductUser(String institutionId, String productId, UpdateProductUsersDto request, UpdateProductUsersDto.ProductUser user, LoggedUser loggedUser) {
+        return userRegistryService.findByIdUsingGET(USERS_WORKS_FIELD_LIST, user.getUserId())
+                .onFailure(UserUtils::isUserNotFoundExceptionOnUserRegistry).transform(throwable -> new ResourceNotFoundException(String.format(USER_NOT_FOUND_ERROR.getMessage(), user.getUserId()), USER_NOT_FOUND_ERROR.getCode()))
+                .onItem().transformToUni(userResource -> userInstitutionService.findByUserIdAndInstitutionId(user.getUserId(), institutionId)
+                        .onItem().transformToUni(userInstitution -> {
+                            UserInstitution target = Optional.ofNullable(userInstitution)
+                                    .orElseGet(() -> buildUserInstitution(institutionId, request, user));
+                            return alignUserInstitution(target, userResource, productId, request, user, loggedUser);
+                        }));
+    }
+
+
+    private Uni<Void> alignUserInstitution(UserInstitution target, UserResource userResource, String productId, UpdateProductUsersDto request, UpdateProductUsersDto.ProductUser user, LoggedUser loggedUser) {
+        List<OnboardedProduct> activeProducts = retrieveActiveProducts(target, productId);
+        if (activeProducts.isEmpty()) {
+            return addProductUser(target, userResource, productId, request, user, loggedUser);
+        }
+        if (hasSameRoleAndProductRoles(activeProducts, user)) {
+            return updateAlignedProductUser(target, activeProducts, userResource, productId, request.getTokenId(), user, loggedUser);
+        }
+        return replaceProductUserRoles(target, activeProducts, productId, request.getTokenId(), user);
+    }
+
+    /**
+     * The user has no role on the product: the roles are created in ACTIVE and the email is sent.
+     */
+    private Uni<Void> addProductUser(UserInstitution target, UserResource userResource, String productId, UpdateProductUsersDto request, UpdateProductUsersDto.ProductUser user, LoggedUser loggedUser) {
+        log.info("Adding role {} on product {} for user {} of institution {}", Encode.forJava(user.getRole()), Encode.forJava(productId), Encode.forJava(user.getUserId()), Encode.forJava(target.getInstitutionId()));
+        addProductRoles(target, productId, request.getTokenId(), user);
+        return userInstitutionService.persistOrUpdate(target)
+                .onItem().transformToUni(saved -> sendNotificationsAndReturnData(saved, userResource, user.getProductRoles(), true, loggedUser, productId, QueueEvent.ADD))
+                .replaceWithVoid();
+    }
+
+    /**
+     * The user has the same role and productRoles: suspended roles are reactivated (sending the reactivation email),
+     * tokenId and userMailUuid are updated if different. Nothing is saved if the user is already aligned.
+     */
+    private Uni<Void> updateAlignedProductUser(UserInstitution target, List<OnboardedProduct> activeProducts, UserResource userResource, String productId, String tokenId, UpdateProductUsersDto.ProductUser user, LoggedUser loggedUser) {
+        OffsetDateTime now = OffsetDateTime.now();
+        String reactivatedProductRole = activeProducts.stream()
+                .filter(onboardedProduct -> SUSPENDED.equals(onboardedProduct.getStatus()))
+                .map(OnboardedProduct::getProductRole)
+                .findFirst()
+                .orElse(null);
+        boolean reactivated = reactivateSuspendedProducts(activeProducts, now);
+        boolean tokenIdUpdated = updateTokenId(activeProducts, tokenId, now);
+        boolean userMailUuidUpdated = updateUserMailUuid(target, user.getUserMailUuid());
+
+        if (!reactivated && !tokenIdUpdated && !userMailUuidUpdated) {
+            log.info("User {} is already aligned on product {} of institution {}", Encode.forJava(user.getUserId()), Encode.forJava(productId), Encode.forJava(target.getInstitutionId()));
+            return Uni.createFrom().voidItem();
+        }
+
+        log.info("Updating role {} on product {} for user {} of institution {}: reactivated={}, tokenIdUpdated={}, userMailUuidUpdated={}", Encode.forJava(user.getRole()), Encode.forJava(productId), Encode.forJava(user.getUserId()), Encode.forJava(target.getInstitutionId()), reactivated, tokenIdUpdated, userMailUuidUpdated);
+        Uni<UserInstitution> saved = userInstitutionService.persistOrUpdate(target);
+        if (!reactivated) {
+            return saved.replaceWithVoid();
+        }
+        return saved.onItem().transformToUni(userInstitution -> sendReactivatedUserNotification(userInstitution, userResource, productId, reactivatedProductRole, loggedUser));
+    }
+
+    /**
+     * The user has a different role or different productRoles: the current roles are set to DELETED and the new ones
+     * are added in ACTIVE in the same write, without sending emails.
+     */
+    private Uni<Void> replaceProductUserRoles(UserInstitution target, List<OnboardedProduct> activeProducts, String productId, String tokenId, UpdateProductUsersDto.ProductUser user) {
+        log.info("Replacing roles on product {} with {} for user {} of institution {}", Encode.forJava(productId), Encode.forJava(user.getRole()), Encode.forJava(user.getUserId()), Encode.forJava(target.getInstitutionId()));
+        OffsetDateTime now = OffsetDateTime.now();
+        activeProducts.forEach(onboardedProduct -> {
+            onboardedProduct.setStatus(DELETED);
+            onboardedProduct.setUpdatedAt(now);
+        });
+        addProductRoles(target, productId, tokenId, user);
+        return userInstitutionService.persistOrUpdate(target).replaceWithVoid();
+    }
+
+    /**
+     * Sends the same email sent when a suspended user is reactivated (status ACTIVE).
+     * An error while sending the email does not block the alignment of the users.
+     */
+    private Uni<Void> sendReactivatedUserNotification(UserInstitution userInstitution, UserResource userResource, String productId, String productRole, LoggedUser loggedUser) {
+        return retrieveProductAndAddToPrepareNotificationData(PrepareNotificationData.builder(), productId)
+                .onItem().transformToUni(builder -> userNotificationService.sendEmailNotification(userResource, userInstitution, builder.build().getProduct(), ACTIVE, productRole, loggedUser.getName(), loggedUser.getFamilyName()))
+                .onFailure().invoke(throwable -> log.error("Error sending reactivation email for userId: {}, institutionId: {}, productId: {}", Encode.forJava(userInstitution.getUserId()), Encode.forJava(userInstitution.getInstitutionId()), Encode.forJava(productId), throwable))
+                .onFailure().recoverWithNull()
+                .replaceWithVoid();
+    }
+
+    private UserInstitution buildUserInstitution(String institutionId, UpdateProductUsersDto request, UpdateProductUsersDto.ProductUser user) {
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setUserId(user.getUserId());
+        userInstitution.setInstitutionId(institutionId);
+        userInstitution.setInstitutionDescription(request.getInstitutionDescription());
+        userInstitution.setInstitutionRootName(request.getInstitutionRootName());
+        return userInstitution;
+    }
+
+    private void addProductRoles(UserInstitution userInstitution, String productId, String tokenId, UpdateProductUsersDto.ProductUser user) {
+        updateUserMailUuid(userInstitution, user.getUserMailUuid());
+        user.getProductRoles().forEach(productRole -> userInstitution.getProducts()
+                .add(userInstitutionMapper.createOnboardedProduct(productId, tokenId, user.getRole(), productRole, null)));
+    }
+
+    private boolean updateUserMailUuid(UserInstitution userInstitution, String userMailUuid) {
+        if (StringUtils.isBlank(userMailUuid) || userMailUuid.equals(userInstitution.getUserMailUuid())) {
+            return false;
+        }
+        userInstitution.setUserMailUuid(userMailUuid);
+        userInstitution.setUserMailUpdatedAt(OffsetDateTime.now());
+        return true;
+    }
+
+    private static boolean reactivateSuspendedProducts(List<OnboardedProduct> activeProducts, OffsetDateTime now) {
+        List<OnboardedProduct> suspendedProducts = activeProducts.stream()
+                .filter(onboardedProduct -> SUSPENDED.equals(onboardedProduct.getStatus()))
+                .toList();
+        suspendedProducts.forEach(onboardedProduct -> {
+            onboardedProduct.setStatus(ACTIVE);
+            onboardedProduct.setUpdatedAt(now);
+        });
+        return !suspendedProducts.isEmpty();
+    }
+
+    private static boolean updateTokenId(List<OnboardedProduct> activeProducts, String tokenId, OffsetDateTime now) {
+        if (StringUtils.isBlank(tokenId)) {
+            return false;
+        }
+        List<OnboardedProduct> productsToUpdate = activeProducts.stream()
+                .filter(onboardedProduct -> !tokenId.equals(onboardedProduct.getTokenId()))
+                .toList();
+        productsToUpdate.forEach(onboardedProduct -> {
+            onboardedProduct.setTokenId(tokenId);
+            onboardedProduct.setUpdatedAt(now);
+        });
+        return !productsToUpdate.isEmpty();
+    }
+
+    private static boolean hasSameRoleAndProductRoles(List<OnboardedProduct> activeProducts, UpdateProductUsersDto.ProductUser user) {
+        boolean sameRole = activeProducts.stream()
+                .allMatch(onboardedProduct -> Objects.nonNull(onboardedProduct.getRole())
+                        && user.getRole().equals(onboardedProduct.getRole().name()));
+        Set<String> currentProductRoles = activeProducts.stream().map(OnboardedProduct::getProductRole).collect(Collectors.toSet());
+        return sameRole && currentProductRoles.equals(new HashSet<>(user.getProductRoles()));
+    }
+
+    private static List<OnboardedProduct> retrieveActiveProducts(UserInstitution userInstitution, String productId) {
+        return Optional.ofNullable(userInstitution.getProducts()).orElse(Collections.emptyList()).stream()
+                .filter(onboardedProduct -> productId.equals(onboardedProduct.getProductId()))
+                .filter(onboardedProduct -> List.of(ACTIVE, SUSPENDED).contains(onboardedProduct.getStatus()))
+                .toList();
     }
 
     @Override

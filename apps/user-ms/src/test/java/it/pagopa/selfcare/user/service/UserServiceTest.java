@@ -19,6 +19,7 @@ import it.pagopa.selfcare.user.controller.request.AddUserRoleDto;
 import it.pagopa.selfcare.user.controller.request.CreateUserDto;
 import it.pagopa.selfcare.user.controller.request.EmailType;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.OnboardedProductWithActions;
 import it.pagopa.selfcare.user.entity.UserInstitution;
@@ -2558,6 +2559,315 @@ class UserServiceTest {
         userService.getUserOtpEmailInfo("userId").subscribe()
                 .withSubscriber(UniAssertSubscriber.create())
                 .assertItem(expectedResponse2);
+    }
+
+    private static final String UPDATE_INSTITUTION_ID = "institutionId";
+    private static final String UPDATE_PRODUCT_ID = "prod-io";
+    private static final LoggedUser UPDATE_LOGGED_USER = LoggedUser.builder().uid("uid").name("name").familyName("familyName").build();
+
+    private static UpdateProductUsersDto buildUpdateProductUsersDto(UpdateProductUsersDto.ProductUser... users) {
+        UpdateProductUsersDto dto = new UpdateProductUsersDto();
+        dto.setInstitutionDescription("institutionDescription");
+        dto.setTokenId("tokenId");
+        dto.setUsers(List.of(users));
+        return dto;
+    }
+
+    private static UpdateProductUsersDto.ProductUser buildProductUser(String userId, String role) {
+        UpdateProductUsersDto.ProductUser user = new UpdateProductUsersDto.ProductUser();
+        user.setUserId(userId);
+        user.setRole(role);
+        user.setProductRoles(List.of("admin"));
+        user.setUserMailUuid(workContractsKey);
+        return user;
+    }
+
+    private static UserInstitution buildProductUserInstitution(String userId, PartyRole role, OnboardedProductState status) {
+        OnboardedProduct onboardedProduct = new OnboardedProduct();
+        onboardedProduct.setProductId(UPDATE_PRODUCT_ID);
+        onboardedProduct.setProductRole("admin");
+        onboardedProduct.setRole(role);
+        onboardedProduct.setStatus(status);
+        onboardedProduct.setTokenId("oldTokenId");
+
+        UserInstitution userInstitution = new UserInstitution();
+        userInstitution.setId(ObjectId.get());
+        userInstitution.setUserId(userId);
+        userInstitution.setInstitutionId(UPDATE_INSTITUTION_ID);
+        userInstitution.setInstitutionDescription("institutionDescription");
+        userInstitution.setUserMailUuid(workContractsKey);
+        userInstitution.setProducts(new ArrayList<>(List.of(onboardedProduct)));
+        return userInstitution;
+    }
+
+    private void mockUpdateProductUsersCommon(List<UserInstitution> currentAdmins) {
+        when(userUtils.checkProductRolesAndValidateRequestMultirole(any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.retrieveFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(currentAdmins));
+        when(userInstitutionService.persistOrUpdate(any())).thenAnswer(invocation -> Uni.createFrom().item((UserInstitution) invocation.getArgument(0)));
+        when(userRegistryApi.findByIdUsingGET(anyString(), anyString())).thenReturn(Uni.createFrom().item(userResource));
+        when(productService.getProduct(anyString())).thenReturn(new Product());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = PartyRole.class, names = {"MANAGER", "DELEGATE", "SUB_DELEGATE", "ADMIN_EA"})
+    void updateProductUsers_addNewUserAndRemoveAdminNotInList(PartyRole oldRole) {
+        final String newUserId = "newUserId";
+        final String oldAdminId = "oldAdminId";
+        UserInstitution oldAdmin = buildProductUserInstitution(oldAdminId, oldRole, ACTIVE);
+        mockUpdateProductUsersCommon(List.of(oldAdmin));
+        when(userInstitutionService.findByUserIdAndInstitutionId(newUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().nullItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.findTokenIdUserIdList(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, oldRole, null))
+                .thenReturn(Uni.createFrom().item(List.of(new OnboardingUserDeleteInfo("oldTokenId", oldAdminId))));
+        when(userInstitutionService.callOnboardingDelete("oldTokenId", oldAdminId, false)).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, oldRole, null, DELETED))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(oldAdmin));
+        when(userNotificationService.sendEmailNotification(any(), any(), any(), eq(DELETED), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(newUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService).persistOrUpdate(captor.capture());
+        UserInstitution saved = captor.getValue();
+        assertEquals(newUserId, saved.getUserId());
+        assertEquals(UPDATE_INSTITUTION_ID, saved.getInstitutionId());
+        assertEquals("institutionDescription", saved.getInstitutionDescription());
+        assertEquals(workContractsKey, saved.getUserMailUuid());
+        assertEquals(1, saved.getProducts().size());
+        OnboardedProduct added = saved.getProducts().get(0);
+        assertEquals(MANAGER, added.getRole());
+        assertEquals(ACTIVE, added.getStatus());
+        assertEquals("admin", added.getProductRole());
+        assertEquals("tokenId", added.getTokenId());
+        assertEquals(UPDATE_PRODUCT_ID, added.getProductId());
+
+        verify(userNotificationService).sendCreateUserNotification(eq("institutionDescription"), eq(List.of("admin")), eq(userResource), any(), any(), eq(UPDATE_LOGGED_USER));
+        verify(userInstitutionService).callOnboardingDelete("oldTokenId", oldAdminId, false);
+        verify(userInstitutionService).updateUserStatusWithOptionalFilterByInstitutionAndProduct(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, oldRole, null, DELETED);
+        verify(userNotificationService).sendEmailNotification(any(), any(), any(), eq(DELETED), isNull(), eq("name"), eq("familyName"));
+    }
+
+    @Test
+    void updateProductUsers_roleChangeWithoutEmail() {
+        final String existingUserId = "existingUserId";
+        UserInstitution existing = buildProductUserInstitution(existingUserId, DELEGATE, ACTIVE);
+        mockUpdateProductUsersCommon(List.of(existing));
+        when(userInstitutionService.findByUserIdAndInstitutionId(existingUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(existing));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(existingUserId, "ADMIN_EA")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService).persistOrUpdate(captor.capture());
+        List<OnboardedProduct> products = captor.getValue().getProducts();
+        assertEquals(2, products.size());
+        assertEquals(DELEGATE, products.get(0).getRole());
+        assertEquals(DELETED, products.get(0).getStatus());
+        assertEquals(ADMIN_EA, products.get(1).getRole());
+        assertEquals(ACTIVE, products.get(1).getStatus());
+        assertEquals("tokenId", products.get(1).getTokenId());
+
+        verifyNoInteractions(userNotificationService);
+        verify(userInstitutionService, never()).updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void updateProductUsers_suspendedUserIsReactivatedWithActivationEmail() {
+        final String existingUserId = "existingUserId";
+        UserInstitution existing = buildProductUserInstitution(existingUserId, MANAGER, SUSPENDED);
+        String roleId = "roleId";
+        existing.getProducts().get(0).setRoleId(roleId);
+        mockUpdateProductUsersCommon(List.of(existing));
+        when(userInstitutionService.findByUserIdAndInstitutionId(existingUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(existing));
+        when(userNotificationService.sendEmailNotification(any(), any(), any(), eq(ACTIVE), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(existingUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService).persistOrUpdate(captor.capture());
+        List<OnboardedProduct> products = captor.getValue().getProducts();
+        assertEquals(1, products.size());
+        assertEquals(MANAGER, products.get(0).getRole());
+        assertEquals(ACTIVE, products.get(0).getStatus());
+        assertEquals(roleId, products.get(0).getRoleId());
+        assertEquals("tokenId", products.get(0).getTokenId());
+        verify(userNotificationService).sendEmailNotification(eq(userResource), any(), any(), eq(ACTIVE), eq("admin"), eq("name"), eq("familyName"));
+        verify(userNotificationService, never()).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void updateProductUsers_reactivationEmailErrorDoesNotBlock() {
+        final String existingUserId = "existingUserId";
+        UserInstitution existing = buildProductUserInstitution(existingUserId, MANAGER, SUSPENDED);
+        mockUpdateProductUsersCommon(List.of(existing));
+        when(userInstitutionService.findByUserIdAndInstitutionId(existingUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(existing));
+        when(userNotificationService.sendEmailNotification(any(), any(), any(), eq(ACTIVE), any(), any(), any()))
+                .thenThrow(new InvalidRequestException("Missing mail"));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(existingUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userInstitutionService).persistOrUpdate(any());
+    }
+
+    @Test
+    void updateProductUsers_suspendedUserWithDifferentProductRolesIsReplaced() {
+        final String existingUserId = "existingUserId";
+        UserInstitution existing = buildProductUserInstitution(existingUserId, MANAGER, SUSPENDED);
+        mockUpdateProductUsersCommon(List.of(existing));
+        when(userInstitutionService.findByUserIdAndInstitutionId(existingUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(existing));
+        UpdateProductUsersDto.ProductUser user = buildProductUser(existingUserId, "MANAGER");
+        user.setProductRoles(List.of("admin", "operator"));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(user), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService).persistOrUpdate(captor.capture());
+        List<OnboardedProduct> products = captor.getValue().getProducts();
+        assertEquals(3, products.size());
+        assertEquals(DELETED, products.get(0).getStatus());
+        assertEquals(List.of("admin", "operator"), products.subList(1, 3).stream().map(OnboardedProduct::getProductRole).toList());
+        assertTrue(products.subList(1, 3).stream().allMatch(p -> ACTIVE.equals(p.getStatus()) && MANAGER.equals(p.getRole())));
+        verifyNoInteractions(userNotificationService);
+    }
+
+    @Test
+    void updateProductUsers_operatorNotInListIsNotRemoved() {
+        final String newUserId = "newUserId";
+        UserInstitution operator = buildProductUserInstitution("operatorId", OPERATOR, ACTIVE);
+        mockUpdateProductUsersCommon(List.of(operator));
+        when(userInstitutionService.findByUserIdAndInstitutionId(newUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().nullItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(newUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userInstitutionService, never()).findTokenIdUserIdList(any(), any(), any(), any(), any());
+        verify(userInstitutionService, never()).updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any());
+        verify(userNotificationService, never()).sendEmailNotification(any(), any(), any(), any(), any(), any(), any());
+        assertEquals(ACTIVE, operator.getProducts().get(0).getStatus());
+    }
+
+    @Test
+    void updateProductUsers_operatorInListBecomesAdmin() {
+        final String operatorId = "operatorId";
+        UserInstitution operator = buildProductUserInstitution(operatorId, OPERATOR, ACTIVE);
+        mockUpdateProductUsersCommon(List.of());
+        when(userInstitutionService.findByUserIdAndInstitutionId(operatorId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(operator));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(operatorId, "DELEGATE")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService).persistOrUpdate(captor.capture());
+        List<OnboardedProduct> products = captor.getValue().getProducts();
+        assertEquals(2, products.size());
+        assertEquals(OPERATOR, products.get(0).getRole());
+        assertEquals(DELETED, products.get(0).getStatus());
+        assertEquals(DELEGATE, products.get(1).getRole());
+        assertEquals(ACTIVE, products.get(1).getStatus());
+        verifyNoInteractions(userNotificationService);
+    }
+
+    @Test
+    void updateProductUsers_alignedUserWithDifferentTokenIdIsUpdatedWithoutEmail() {
+        final String existingUserId = "existingUserId";
+        UserInstitution existing = buildProductUserInstitution(existingUserId, MANAGER, ACTIVE);
+        String roleId = "roleId";
+        existing.getProducts().get(0).setRoleId(roleId);
+        mockUpdateProductUsersCommon(List.of(existing));
+        when(userInstitutionService.findByUserIdAndInstitutionId(existingUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(existing));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(existingUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService).persistOrUpdate(captor.capture());
+        List<OnboardedProduct> products = captor.getValue().getProducts();
+        assertEquals(1, products.size());
+        assertEquals(ACTIVE, products.get(0).getStatus());
+        assertEquals("tokenId", products.get(0).getTokenId());
+        assertEquals(roleId, products.get(0).getRoleId());
+        verifyNoInteractions(userNotificationService);
+    }
+
+    @Test
+    void updateProductUsers_alreadyAlignedUserIsNotModified() {
+        final String existingUserId = "existingUserId";
+        UserInstitution existing = buildProductUserInstitution(existingUserId, MANAGER, ACTIVE);
+        existing.getProducts().get(0).setTokenId("tokenId");
+        mockUpdateProductUsersCommon(List.of(existing));
+        when(userInstitutionService.findByUserIdAndInstitutionId(existingUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(existing));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(existingUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userInstitutionService, never()).persistOrUpdate(any());
+        verify(userInstitutionService, never()).updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any());
+        verifyNoInteractions(userNotificationService);
+    }
+
+    @Test
+    void updateProductUsers_operatorsAreFilteredAndDuplicatesKeepHighestRole() {
+        final String user1 = "user1";
+        final String user2 = "user2";
+        final String user3 = "user3";
+        mockUpdateProductUsersCommon(List.of());
+        when(userInstitutionService.findByUserIdAndInstitutionId(any(), eq(UPDATE_INSTITUTION_ID))).thenReturn(Uni.createFrom().nullItem());
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        UpdateProductUsersDto.ProductUser user2First = buildProductUser(user2, "ADMIN_EA");
+        UpdateProductUsersDto.ProductUser user2Second = buildProductUser(user2, "ADMIN_EA");
+        user2Second.setProductRoles(List.of("other"));
+        UpdateProductUsersDto request = buildUpdateProductUsersDto(
+                buildProductUser("operatorId", "OPERATOR"),
+                buildProductUser(user1, "DELEGATE"),
+                buildProductUser(user1, "MANAGER"),
+                user2First,
+                user2Second,
+                buildProductUser(user3, "SUB_DELEGATE"),
+                buildProductUser(user3, "ADMIN_EA"));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, request, UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userUtils, times(3)).checkProductRolesAndValidateRequestMultirole(any(), any(), any());
+        verify(userInstitutionService, never()).findByUserIdAndInstitutionId(eq("operatorId"), any());
+        ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
+        verify(userInstitutionService, times(3)).persistOrUpdate(captor.capture());
+        Map<String, OnboardedProduct> saved = captor.getAllValues().stream()
+                .collect(java.util.stream.Collectors.toMap(UserInstitution::getUserId, ui -> ui.getProducts().get(0)));
+        assertEquals(MANAGER, saved.get(user1).getRole());
+        assertEquals(ADMIN_EA, saved.get(user2).getRole());
+        assertEquals("admin", saved.get(user2).getProductRole());
+        assertEquals(ADMIN_EA, saved.get(user3).getRole());
+    }
+
+    @Test
+    void updateProductUsers_invalidProductRoles() {
+        when(userUtils.checkProductRolesAndValidateRequestMultirole(any(), any(), any()))
+                .thenReturn(Uni.createFrom().failure(new InvalidRequestException("Not valid multirole configuration")));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser("userId", "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitFailure().assertFailedWith(InvalidRequestException.class);
+
+        verifyNoInteractions(userInstitutionService);
+        verifyNoInteractions(userNotificationService);
     }
 
 }

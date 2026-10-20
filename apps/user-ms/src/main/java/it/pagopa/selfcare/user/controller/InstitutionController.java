@@ -5,16 +5,20 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.PartyRole;
 import it.pagopa.selfcare.user.controller.request.UpdateDescriptionDto;
+import it.pagopa.selfcare.user.controller.request.UpdateProductUsersDto;
 import it.pagopa.selfcare.user.controller.response.*;
 import it.pagopa.selfcare.user.controller.response.product.SearchUserDto;
 import it.pagopa.selfcare.user.model.constants.OnboardedProductState;
 import it.pagopa.selfcare.user.service.UserService;
 import it.pagopa.selfcare.user.util.GeneralUtils;
+import it.pagopa.selfcare.user.util.UserUtils;
 import it.pagopa.selfcare.user.util.product.ProductId;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.SecurityContext;
 import lombok.AllArgsConstructor;
 import org.apache.http.HttpStatus;
 import org.eclipse.microprofile.openapi.annotations.Operation;
@@ -37,6 +41,7 @@ import java.util.List;
 public class InstitutionController {
 
     private final UserService userService;
+    private final UserUtils userUtils;
 
     @Operation(
             summary = "Retrieve user's information including product role details",
@@ -145,6 +150,32 @@ public class InstitutionController {
                                                                            @ProductId @PathParam(value = "productId") String productId) {
         return userService.deleteUserInstitutionProductUsers(institutionId.replaceAll("[^a-zA-Z0-9-_]", ""),
                         productId.replaceAll("[^a-zA-Z0-9-_]", ""));
+    }
+
+    @Operation(
+            summary = "Update the admin users of a product of an institution",
+            description = "Receives the complete list of administrators of the product (e.g. the ones indicated in a signed contract update; allowed roles: MANAGER, DELEGATE, ADMIN_EA) and aligns the user roles: " +
+                    "missing users are added in ACTIVE, users with a different role are updated without sending emails, " +
+                    "active administrators (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list are set to DELETED. Other roles are not affected."
+    )
+    @APIResponses(value = {
+            @APIResponse(responseCode = "204", description = "No Content"),
+            @APIResponse(responseCode = "400", description = "Bad Request", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "401", description = "Not Authorized", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json")),
+            @APIResponse(responseCode = "404", description = "Not Found", content = @Content(schema = @Schema(implementation = Problem.class), mediaType = "application/problem+json"))
+    })
+    @POST
+    @Path(value = "/{institutionId}/products/{productId}/users")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Uni<Response> updateProductUsers(@PathParam(value = "institutionId") String institutionId,
+                                            @ProductId @PathParam(value = "productId") String productId,
+                                            @jakarta.validation.constraints.NotNull @Valid UpdateProductUsersDto updateProductUsersDto,
+                                            @Context SecurityContext ctx) {
+        return userUtils.readUserIdFromToken(ctx)
+                .onItem().transformToUni(loggedUser -> userService.updateProductUsers(institutionId, productId, updateProductUsersDto, loggedUser))
+                .replaceWith(Response.status(HttpStatus.SC_NO_CONTENT).build());
     }
 
     @Operation(

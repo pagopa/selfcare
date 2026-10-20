@@ -759,6 +759,609 @@ Feature: Institution
 
   ######################### END PUT /institutions/{institutionId} ###########################
 
+  ######## BEGIN POST /institutions/{institutionId}/products/{productId}/users ##########
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product creating the missing users
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          },
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains at path "" the following list of objects in any order:
+      | userId                                         | institutionId                             | institutionDescription          | userMailUuid                                        |
+      | 97a511a7-2acc-47b9-afed-2f3c65753b4a           | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21      | Comune di Bergamo               | ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1        |
+      | 35a78332-d038-4bfa-8e85-2cba7f6b7bf7           | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21      | Comune di Bergamo               | ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv        |
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | MANAGER      | ACTIVE  | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+    And The response body contains the list "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" of size 1
+    And The response body contains at path "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | DELEGATE     | ACTIVE  | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          },
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | MANAGER      | ACTIVE  | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+    And The response body contains the list "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" of size 1
+    And The response body contains at path "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | DELEGATE     | ACTIVE  | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product replacing the role and removing the administrators not in the list
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          },
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | MANAGER      | DELETED | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+    And The response body contains the list "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" of size 2
+    And The response body contains at path "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | DELEGATE     | DELETED | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+      | prod-io   | MANAGER      | ACTIVE  | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product ignoring operators and keeping the highest role for duplicated users
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "OPERATOR",
+              "productRoles": ["referente operativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          },
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          },
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 1
+    And The response body contains the list "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" of size 1
+    And The response body contains at path "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" the following list of objects in any order:
+      | productId | role         | status  | productRole              | tokenId                              |
+      | prod-io   | MANAGER      | ACTIVE  | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+
+  Scenario: Unsuccessfully align the administrators of a product (missing institutionDescription and empty users)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": []
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 400
+    And The response body contains:
+      | title                                                                | Constraint Violation                       |
+      | status                                                               | 400                                        |
+    And The response body contains the list "violations" of size 2
+    And The response body contains at path "violations" the following list of objects in any order:
+      | field                                                                | message                                    |
+      | updateProductUsers.updateProductUsersDto.institutionDescription      | institutionDescription is required         |
+      | updateProductUsers.updateProductUsersDto.users                       | users is required                          |
+
+  Scenario: Unsuccessfully align the administrators of a product (productRole not valid for the role)
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["wrong role"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 400
+
+  Scenario: Bad Token align the administrators of a product
+    Given A bad jwt token
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          },
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 401
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product reactivating a suspended user and updating the tokenId
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | id              | 97a511a7-2acc-47b9-afed-2f3c65753b4a                        |
+    And The following query params:
+      | institutionId   | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21                        |
+      | productId       | prod-io                                                     |
+      | status          | SUSPENDED                                                   |
+    When I send a PUT request to "users/{id}/status"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | MANAGER      | SUSPENDED | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | MANAGER      | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product updating only the tokenId of an aligned user
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | MANAGER      | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product keeping the operators not in the list
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "OPERATOR",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": ["referente operativo"]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 201
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "" of size 2
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 1
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | OPERATOR     | ACTIVE    | referente operativo      | 7a3df825-8317-4601-9fea-12283b7ed97f |
+    And The response body contains the list "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" of size 1
+    And The response body contains at path "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | MANAGER      | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product replacing the operator role of a user in the list
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-io",
+              "role": "OPERATOR",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": ["referente operativo"]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 201
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 2
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | OPERATOR     | DELETED   | referente operativo      | 7a3df825-8317-4601-9fea-12283b7ed97f |
+      | prod-io      | DELEGATE     | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+
+  @RemoveUserInstitutions
+  Scenario: Successfully align the administrators of a product without changing the roles on other products
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+      """
+      {
+          "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+          "product": {
+              "productId": "prod-interop",
+              "role": "MANAGER",
+              "tokenId": "7a3df825-8317-4601-9fea-12283b7ed97f",
+              "productRoles": ["admin"]
+          },
+          "institutionDescription": "Comune di Bergamo",
+          "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+      }
+      """
+    And The following path params:
+      | userId                        | 97a511a7-2acc-47b9-afed-2f3c65753b4a          |
+    When I send a POST request to "users/{userId}"
+    Then The status code is 201
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+              "role": "MANAGER",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#81956dd1-00fd-4423-888b-f77a48d26ba1"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 2
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-interop | MANAGER      | ACTIVE    | admin                    | 7a3df825-8317-4601-9fea-12283b7ed97f |
+      | prod-io      | MANAGER      | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+      | productId                     | prod-io                                        |
+    And The following request body:
+      """
+      {
+          "institutionDescription": "Comune di Bergamo",
+          "tokenId": "c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64",
+          "users": [
+          {
+              "userId": "35a78332-d038-4bfa-8e85-2cba7f6b7bf7",
+              "role": "DELEGATE",
+              "productRoles": ["referente amministrativo"],
+              "userMailUuid": "ID_MAIL#1234abcd-5678-ef90-ghij-klmnopqrstuv"
+          }
+          ]
+      }
+      """
+    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    Then The status code is 204
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | institutionId                 | e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21           |
+    When I send a GET request to "/institutions/{institutionId}/user-institutions"
+    Then The status code is 200
+    And The response body contains the list "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" of size 2
+    And The response body contains at path "find { it.userId == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-interop | MANAGER      | ACTIVE    | admin                    | 7a3df825-8317-4601-9fea-12283b7ed97f |
+      | prod-io      | MANAGER      | DELETED   | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+    And The response body contains the list "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" of size 1
+    And The response body contains at path "find { it.userId == '35a78332-d038-4bfa-8e85-2cba7f6b7bf7' }.products" the following list of objects in any order:
+      | productId    | role         | status    | productRole              | tokenId                              |
+      | prod-io      | DELEGATE     | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+
+  ######## END POST /institutions/{institutionId}/products/{productId}/users ##########
+
   ######## BEGIN POST /institutions/{institutionId}/product/{productId}/check-user ##########
 
   Scenario: Unsuccessfully retrieve check-user (missing fiscalCode field)
