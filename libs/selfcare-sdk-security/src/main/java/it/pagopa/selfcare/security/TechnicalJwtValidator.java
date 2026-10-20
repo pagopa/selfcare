@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.client.auth;
+package it.pagopa.selfcare.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Locale;
 
 /** Performs fail-fast consistency checks on the configured machine token. */
-final class TechnicalJwtValidator {
+public final class TechnicalJwtValidator {
 
     private static final String EXPECTED_ALGORITHM = "RS256";
     private static final String TENANT_CLAIM = "tenant_id";
@@ -19,7 +19,7 @@ final class TechnicalJwtValidator {
      * Checks claims that the caller can validate without the public key. Signature verification remains
      * authoritative in onboarding-functions.
      */
-    static void validate(String token, String expectedTenant) {
+    public static void validate(String token, String expectedTenant) {
         if (token == null || token.isBlank()) {
             throw invalid("token is missing");
         }

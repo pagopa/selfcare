@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.client.auth;
 
+import it.pagopa.selfcare.security.TechnicalJwtValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;

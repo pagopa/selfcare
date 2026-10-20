@@ -1,4 +1,4 @@
-package it.pagopa.selfcare.onboarding.client.auth;
+package it.pagopa.selfcare.security;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;

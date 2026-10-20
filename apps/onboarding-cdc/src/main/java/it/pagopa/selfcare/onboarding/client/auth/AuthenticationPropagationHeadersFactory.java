@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.onboarding.client.auth;
 
 import it.pagopa.selfcare.onboarding.context.TenantContext;
+import it.pagopa.selfcare.security.TechnicalJwtValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MultivaluedMap;
 import lombok.extern.slf4j.Slf4j;

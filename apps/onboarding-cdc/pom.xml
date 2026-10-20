@@ -26,6 +26,7 @@
         <surefire-plugin.version>3.1.2</surefire-plugin.version>
         <quarkus-openapi-generator.version>2.16.0</quarkus-openapi-generator.version>
         <commons-sdk-version>0.18.1</commons-sdk-version>
+        <common-sdk-security-version>0.8.0</common-sdk-security-version>
         <azure-data-tables.version>12.5.8</azure-data-tables.version>
         <azure-identity.version>1.18.4</azure-identity.version>
     </properties>
@@ -44,11 +45,6 @@
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-arc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.auth0</groupId>
-            <artifactId>java-jwt</artifactId>
-            <version>4.0.0</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -140,6 +136,11 @@
             <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selfcare-onboarding-sdk-product</artifactId>
             <version>${commons-sdk-version}</version>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selfcare-sdk-security</artifactId>
+            <version>${common-sdk-security-version}</version>
         </dependency>
     </dependencies>
     <build>
