@@ -24,19 +24,21 @@ module "local" {
 ###############################################################################
 
 module "apim_api_auth" {
-  source                     = "../../_modules/apim_api"
-  apim_name                  = module.local.config.apim_name
-  apim_rg                    = module.local.config.apim_rg
-  api_name                   = "selc-${module.local.config.env_short}-api-auth"
-  display_name               = "Auth API"
-  base_path                  = "auth"
-  private_dns_name           = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix            = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
-  openapi_path               = "../../../../apps/auth/src/main/docs/openapi-apim.json"
-  tenant_ids                 = module.local.config.tenant_ids
-  tenant_hosts               = module.local.config.tenant_hosts
-  tenant_enforcement_enabled = true
+  source                        = "../../_modules/apim_api"
+  apim_name                     = module.local.config.apim_name
+  apim_rg                       = module.local.config.apim_rg
+  api_name                      = "selc-${module.local.config.env_short}-api-auth"
+  display_name                  = "Auth API"
+  base_path                     = "auth"
+  private_dns_name              = "selc-${module.local.config.env_short}-auth-ms-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix               = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix           = module.local.config.api_dns_zone_prefix
+  openapi_path                  = "../../../../apps/auth/src/main/docs/openapi-apim.json"
+  tenant_ids                    = module.local.config.tenant_ids
+  tenant_hosts                  = module.local.config.tenant_hosts
+  tenant_enforcement_enabled    = true
+  tenant_jwt_audiences          = module.local.config.tenant_jwt_audiences
+  jwt_tenant_resolution_enabled = false
   allowed_headers = [
     "Authorization",
     "Content-Type",
@@ -149,6 +151,7 @@ locals {
             session = {
               privateKeyEnvVar = "TENANT_${tenant_id}_JWT_SESSION_PRIVATE_KEY"
               keyIdEnvVar      = "TENANT_${tenant_id}_JWT_SESSION_KEY_ID"
+              audience         = tenant.jwt_audience
             }
           }
         } : {})
@@ -181,6 +184,10 @@ locals {
     {
       name  = "SESSION_TOKEN_AUDIENCE"
       value = "api.selfcare.pagopa.it"
+    },
+    {
+      name  = "SESSION_TOKEN_TENANT_AUDIENCE_ENABLED"
+      value = "false"
     },
     {
       name  = "USER_REGISTRY_URL"

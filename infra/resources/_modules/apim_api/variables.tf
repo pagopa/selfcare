@@ -95,6 +95,63 @@ variable "tenant_enforcement_enabled" {
   }
 }
 
+variable "tenant_jwt_audiences" {
+  type = list(object({
+    id             = string
+    audience       = string
+    certificate_id = string
+  }))
+  default     = []
+  description = <<-EOT
+    Mapping between the session-token audience (aud claim) and the canonical tenant id, together with
+    the APIM certificate used to verify that tenant's token signature. Required when
+    jwt_tenant_resolution_enabled is true.
+  EOT
+
+  validation {
+    condition     = length(distinct([for tenant in var.tenant_jwt_audiences : lower(tenant.audience)])) == length(var.tenant_jwt_audiences)
+    error_message = "Each audience in tenant_jwt_audiences must be unique."
+  }
+
+  validation {
+    condition = alltrue([
+      for tenant in var.tenant_jwt_audiences :
+      can(regex("^[a-zA-Z0-9.-]+$", tenant.audience)) &&
+      can(regex("^[A-Z][A-Z0-9_]*$", tenant.id)) &&
+      can(regex("^[a-zA-Z0-9-]+$", tenant.certificate_id))
+    ])
+    error_message = "Each audience must be a bare hostname, each tenant id must be uppercase and each certificate_id must be an APIM certificate name."
+  }
+}
+
+variable "jwt_tenant_resolution_enabled" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    When true (and tenant_enforcement_enabled is true), requests carrying a Bearer token are attributed
+    to the tenant whose audience matches the token aud claim. The token is validated with that tenant's
+    certificate (signature, expiration, issuer, audience) and, if present, the tenant_id claim must match.
+    Invalid tokens are rejected with 401, unknown audiences or mismatching tenant_id with 403.
+    Requests without a Bearer token fall back to the X-Selfcare-Original-Host resolution.
+  EOT
+
+  validation {
+    condition     = !var.jwt_tenant_resolution_enabled || (var.tenant_enforcement_enabled && length(var.tenant_jwt_audiences) > 0)
+    error_message = "jwt_tenant_resolution_enabled requires tenant_enforcement_enabled and a non-empty tenant_jwt_audiences."
+  }
+}
+
+variable "jwt_issuers" {
+  type        = list(string)
+  default     = ["SPID", "PAGOPA"]
+  description = "Issuers accepted when validating the session token for tenant resolution."
+
+  validation {
+    condition     = length(var.jwt_issuers) > 0
+    error_message = "jwt_issuers must not be empty."
+  }
+}
+
 variable "allowed_headers" {
   type        = list(string)
   default     = ["*"]
