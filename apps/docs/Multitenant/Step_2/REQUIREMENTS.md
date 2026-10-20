@@ -9,6 +9,10 @@ For the `auth` microservice, including OneIdentity credentials and the tenant-sp
 key, see [the ordered implementation activities](Auth_implementation.md). The document distinguishes the
 existing AR-only authentication flows from the shared-deployment resource-routing work.
 
+For the ingress layer (one Application Gateway listener, one APIM API per BFF, and per-request tenant
+resolution without tenant-specific hostnames), see [Ingress_unification.md](Ingress_unification.md) and
+`SELC-19`.
+
 The current tenants are:
 
 - `AR`: `selfcare.pagopa.it`
@@ -245,6 +249,35 @@ The following decisions are already established and are not reopened by this ste
 - **SELC-18.7:** Legacy resources MUST be decommissioned only after production validation confirms that both
   tenants are served by the shared deployment without cross-tenant access or unresolved-resource fallback.
 
+### SELC-19: Single Ingress and Tenant Resolution Without Hostnames
+
+- **SELC-19.1:** Each environment MUST expose one API host (`api.<env>.selfcare.pagopa.it`) through one
+  Application Gateway listener. The gateway MUST remain tenant-agnostic and MUST NOT be used to select a tenant.
+- **SELC-19.2:** Each BFF or service MUST be published by one APIM API serving both tenants. The tenant-specific
+  `imprese/*` APIs MUST be removed once no client depends on them.
+- **SELC-19.3:** APIM MUST resolve the tenant in this order: the validated JWT `tenant_id` claim; the
+  `tenantId` variable set by the APIM product policy for subscription-key APIs; the exact match of `Origin`
+  against `tenant_registries[*].allowed_origins`, only for unauthenticated pre-login operations. The host
+  (`X-Selfcare-Original-Host`) MUST NOT be a tenant source once the API host is shared.
+- **SELC-19.4:** Every APIM product MUST declare its tenant through
+  `<set-variable name="tenantId" value="AR|PNPG" />`. Product-linked API and operation policies MUST propagate
+  that value as `X-Tenant-Id`, as the `tenant_id` claim of any internally minted JWT, and as the backend
+  `tenantId` parameter where required. An API MUST be linked only to products of a single tenant until it is
+  served by a multi-tenant backend.
+- **SELC-19.5:** APIM MUST overwrite `X-Tenant-Id` on every forwarded request and MUST reject with `403` a
+  request whose tenant cannot be resolved, or whose token tenant differs from the tenant derived from `Origin`.
+- **SELC-19.6:** The login flow MUST bind the tenant to the session: the OIDC `redirect_uri` MUST belong to the
+  tenant's registered frontend, and every issuer, including the PNPG login, MUST emit `tenant_id`.
+- **SELC-19.7:** Once every issuer emits `tenant_id`, `JWT_TENANT_CLAIM_REQUIRED` MUST be enabled in every
+  shared deployment. This supersedes the Step 0 `PNPG` default for tokens without the claim (SELC-2.3, SELC-3.1).
+- **SELC-19.8:** A backend accepting tokens from several tenants MUST verify that the key that validated the
+  signature belongs to the tenant in the `tenant_id` claim.
+- **SELC-19.9:** The PNPG frontends (`.github/workflows/env/fe_*_pnpg.env`) MUST call the shared API host
+  without the `/imprese` prefix only after the unified APIM APIs are active. The frontend domains remain
+  distinct per tenant.
+- **SELC-19.10:** The legacy `api-pnpg` host MUST remain available, either routed like `api` or as a `308`
+  redirect, until the agreed compatibility window for external clients ends.
+
 ## Non-Functional Requirements
 
 - **Security:** Every tenant-routing failure is fail-closed and observable. Logs MUST NOT expose tokens,
@@ -283,6 +316,9 @@ The following decisions are already established and are not reopened by this ste
   environment-variable collisions.
 - A tested rollback path exists until each environment's shared deployment is accepted and its legacy
   resources are formally decommissioned.
+- AR and PNPG frontends reach the same API host and the same APIM API; each request reaches the backend with
+  the `X-Tenant-Id` matching the session token, and a token or `Origin` belonging to another tenant is rejected.
+- External API requests carry the `tenantId` of their APIM product in `X-Tenant-Id` and in the minted JWT.
 
 ## Open Decisions and Blockers
 
@@ -306,10 +342,14 @@ The following decisions are already established and are not reopened by this ste
 - Resolve APIM-routed service-to-service clients that currently depend on subscription keys, either by
   configuring subscription-to-tenant mappings or by moving them to authenticated private service URLs.
 - Define rate-limit thresholds, replica bounds, SLOs, RTO, and RPO for the combined tenant workload.
+- Decide whether the PNPG login extends `hub-spid-login` with `tenant_id` or moves to `auth` and OneIdentity.
+- Decide the pre-login tenant source (`Origin` allowlist or tenant path segment on public endpoints), the
+  Terraform owner of the unified APIM APIs, and the `api-pnpg` compatibility window.
 
 ## Out of Scope
 
-- Replacing the Step 0 tenant identification and JWT/header reconciliation mechanism.
+- Replacing the Step 0 JWT/header reconciliation mechanism. `SELC-19` changes only the APIM source of the
+  tenant (from hostname to token, product, or `Origin`) and removes the `PNPG` default.
 - Introducing a new tenant identifier format.
 - Fine-grained authorization inside a tenant beyond the existing application roles and permissions.
 - Removing tenant-specific product catalogue queries once product has adopted
