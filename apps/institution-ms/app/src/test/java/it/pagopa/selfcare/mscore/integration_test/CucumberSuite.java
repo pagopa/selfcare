@@ -73,6 +73,11 @@ public class CucumberSuite {
         registry.add("MONGODB_CONNECTION_STRING_PNPG", () -> mongoUri);
         registry.add("JWT_PUBLIC_KEY_AR", () -> publicKey);
         registry.add("JWT_PUBLIC_KEY_PNPG", () -> publicKey);
+        String blobConnectionString = "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;"
+                + "AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;"
+                + "BlobEndpoint=http://localhost:10000/devstoreaccount1;";
+        registry.add("INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING", () -> blobConnectionString);
+        registry.add("INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING", () -> blobConnectionString);
         registry.add("SELFCARE_TENANT_DATA_ISOLATION", () -> """
                 {
                   "AR": {
@@ -82,7 +87,25 @@ public class CucumberSuite {
                       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
                     },
                     "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
-                    "storages": {}
+                    "storages": {
+                      "products": {
+                        "account": "devstoreaccount1",
+                        "container": "products",
+                        "pathPrefix": "ar",
+                        "authentication": {
+                          "type": "CONNECTION_STRING",
+                          "connectionStringEnvVar": "INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING"
+                        }
+                      },
+                      "mail-templates": {
+                        "account": "devstoreaccount1",
+                        "container": "resources",
+                        "authentication": {
+                          "type": "CONNECTION_STRING",
+                          "connectionStringEnvVar": "INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING"
+                        }
+                      }
+                    }
                   },
                   "PNPG": {
                     "mongo": {
@@ -91,7 +114,25 @@ public class CucumberSuite {
                       "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"
                     },
                     "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" },
-                    "storages": {}
+                    "storages": {
+                      "products": {
+                        "account": "devstoreaccount1",
+                        "container": "products",
+                        "pathPrefix": "pnpg",
+                        "authentication": {
+                          "type": "CONNECTION_STRING",
+                          "connectionStringEnvVar": "INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING"
+                        }
+                      },
+                      "mail-templates": {
+                        "account": "devstoreaccount1",
+                        "container": "resources",
+                        "authentication": {
+                          "type": "CONNECTION_STRING",
+                          "connectionStringEnvVar": "INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING"
+                        }
+                      }
+                    }
                   }
                 }
                 """);

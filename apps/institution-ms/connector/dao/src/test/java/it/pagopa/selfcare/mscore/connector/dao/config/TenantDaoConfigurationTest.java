@@ -24,7 +24,11 @@ class TenantDaoConfigurationTest {
                         "mongodb://mongo.example:27017/?replicaSet=rs0&appName=custom")
                 .withProperty("MONGODB_APPNAME", "institution")
                 .withProperty("MONGODB_NAME_SELC_MSCORE", "existing-institution-db")
-                .withProperty("jwt.signingKey", "test-public-key");
+                .withProperty("jwt.signingKey", "test-public-key")
+                .withProperty("INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING", "products-connection")
+                .withProperty(
+                        "INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING",
+                        "mail-templates-connection");
 
         TenantRegistry registry = tenantRegistry(environment, environment.getProperty("tenant.registry.json"));
 
@@ -91,6 +95,45 @@ class TenantDaoConfigurationTest {
                         "AR"));
     }
 
+    @Test
+    void mandatoryBlobBindingsAndCredentialsAreValidatedAtStartup() {
+        MockEnvironment environment = new MockEnvironment()
+                        .withProperty("MONGO_AR", "mongodb://ar:27017");
+
+        assertThrows(
+                        IllegalStateException.class,
+                        () -> tenantRegistry(
+                                environment,
+                                """
+                                {"AR":{"mongo":{"account":"ar","database":"db","connectionStringEnvVar":"MONGO_AR"}}}
+                                """,
+                                "AR",
+                                "products,mail-templates"));
+        assertThrows(
+                        IllegalStateException.class,
+                        () -> tenantRegistry(
+                                environment,
+                                """
+                                {
+                                  "AR": {
+                                    "mongo": {"account":"ar","database":"db","connectionStringEnvVar":"MONGO_AR"},
+                                    "storages": {
+                                      "products": {
+                                        "account":"products",
+                                        "container":"products",
+                                        "authentication": {
+                                          "type":"CONNECTION_STRING",
+                                          "connectionStringEnvVar":"MISSING_BLOB_CONNECTION"
+                                        }
+                                      }
+                                    }
+                                  }
+                                }
+                                """,
+                                "AR",
+                                "products"));
+    }
+
     private MockEnvironment environmentWithDaoProperties() throws IOException {
         Properties properties = PropertiesLoaderUtils.loadProperties(
                 new ClassPathResource("config/dao-config.properties"));
@@ -106,8 +149,20 @@ class TenantDaoConfigurationTest {
 
     private TenantRegistry tenantRegistry(
             MockEnvironment environment, String registryJson, String supportedTenants) {
+        return tenantRegistry(
+                environment,
+                registryJson,
+                supportedTenants,
+                environment.getProperty("tenant.storage.mandatory-keys", ""));
+    }
+
+    private TenantRegistry tenantRegistry(
+            MockEnvironment environment,
+            String registryJson,
+            String supportedTenants,
+            String mandatoryStorageKeys) {
         TenantRegistry registry = new TenantRegistry(
-                new ObjectMapper(), environment, registryJson, supportedTenants, "");
+                new ObjectMapper(), environment, registryJson, supportedTenants, mandatoryStorageKeys);
         registry.initialize();
         return registry;
     }

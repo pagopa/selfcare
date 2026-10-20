@@ -107,6 +107,63 @@ database and is UP only when all probes succeed; the file and product blob
 storage components remain included. Tenant registry or connection changes
 require an application restart because routed Mongo clients are cached.
 
+### Tenant-aware blob storage
+
+Blob access uses the shared Spring `TenantBlobClientProvider` and requires the
+`products` and `mail-templates` storage bindings for every supported tenant.
+Each binding declares an account, container, optional trusted `pathPrefix`, and
+an explicit authentication mode. For Managed Identity, the registry stores
+only the environment-variable name for the client ID; for connection strings,
+it stores only the environment-variable name for the connection string. Values
+are supplied outside the registry and are validated during startup. The product
+catalog path remains the domain file `products.json`; the delegation email
+template path remains `MAIL_TEMPLATE_DELEGATION_NOTIFICATION_PATH`.
+
+A single-tenant deployment sets `TENANT_SUPPORTED_TENANTS=AR` and includes both
+bindings under the existing `AR` registry entry:
+
+```json
+{
+  "AR": {
+    "storages": {
+      "products": {
+        "account": "product-storage",
+        "container": "selc-d-product",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "INSTITUTION_PRODUCTS_STORAGE_CLIENT_ID"
+        }
+      },
+      "mail-templates": {
+        "account": "documents-storage",
+        "container": "sc-d-documents-blob",
+        "pathPrefix": "templates",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "INSTITUTION_MAIL_TEMPLATES_STORAGE_CLIENT_ID"
+        }
+      }
+    }
+  }
+}
+```
+
+The `storages` object is merged into (not substituted for) the tenant's existing
+`mongo` and `jwt` registry entries. To run one application with two tenants,
+set `TENANT_SUPPORTED_TENANTS=AR,PNPG` and repeat both bindings under each
+tenant, pointing each purpose to that tenant's existing account, container,
+path, and Managed Identity. Use distinct client-ID environment-variable
+references per tenant and purpose. `TENANT_STORAGE_MANDATORY_KEYS` defaults to
+`products,mail-templates`; missing bindings or referenced credentials prevent
+startup. Both readiness indicators probe every supported tenant without an
+HTTP tenant context, and any failed probe marks readiness DOWN.
+
+Apply registry changes with the matching application release and restart the
+application; do not rely on runtime fallback to the previous global storage
+variables. For rollback, restore the previous application and its matching
+single-tenant registry/configuration together. No storage resources or blob
+data are provisioned, migrated, or consolidated by this change.
+
 ### Tenant rollout and rollback
 
 The existing Terraform roots at

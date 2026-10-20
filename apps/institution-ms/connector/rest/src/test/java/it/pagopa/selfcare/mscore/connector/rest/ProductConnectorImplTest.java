@@ -4,7 +4,10 @@ import it.pagopa.selfcare.product.entity.ContractTemplate;
 import it.pagopa.selfcare.product.entity.Product;
 import it.pagopa.selfcare.product.entity.ProductStatus;
 import it.pagopa.selfcare.product.service.ProductService;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
+import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -25,6 +28,18 @@ class ProductConnectorImplTest {
 
     @MockBean
     private ProductService productService;
+
+    @MockBean
+    private TenantContext tenantContext;
+
+    @MockBean
+    private TenantRegistry tenantRegistry;
+
+    @BeforeEach
+    void setTenant() {
+        when(tenantContext.requiredTenantId()).thenReturn("AR");
+        when(tenantRegistry.normalizeAndValidate("AR")).thenReturn("AR");
+    }
 
     /**
      * Method under test: {@link ProductConnectorImpl#getProductById(String)}
@@ -61,4 +76,3 @@ class ProductConnectorImplTest {
         return product;
     }
 }
-

@@ -76,6 +76,14 @@ locals {
       value = "true"
     },
     {
+      name  = "TENANT_STORAGE_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "TENANT_STORAGE_MANDATORY_KEYS"
+      value = "products,mail-templates"
+    },
+    {
       name  = "TENANT_STRICT_DATA_ISOLATION"
       value = "true"
     },
@@ -91,7 +99,24 @@ locals {
           jwt = {
             publicKeyEnvVar = "JWT_PUBLIC_KEY_PNPG"
           }
-          storages = {}
+          storages = {
+            products = {
+              account   = data.azurerm_storage_account.product_storage.name
+              container = "selc-d-product"
+              authentication = {
+                type                          = "MANAGED_IDENTITY"
+                managedIdentityClientIdEnvVar = "INSTITUTION_PRODUCTS_STORAGE_CLIENT_ID"
+              }
+            }
+            mail-templates = {
+              account   = "selcdweupnpgcheckoutst01"
+              container = "$web"
+              authentication = {
+                type                          = "MANAGED_IDENTITY"
+                managedIdentityClientIdEnvVar = "INSTITUTION_MAIL_TEMPLATES_STORAGE_CLIENT_ID"
+              }
+            }
+          }
         }
       })
     },
@@ -110,28 +135,6 @@ locals {
     {
       name  = "MAIL_TEMPLATE_DELEGATION_NOTIFICATION_PATH"
       value = "contracts/template/mail/delegation-notification/1.0.1.json"
-    },
-    {
-      name  = "STORAGE_CONTAINER"
-      value = "$web"
-    },
-    {
-      name  = "STORAGE_ENDPOINT"
-      value = "core.windows.net"
-    },
-
-    {
-      name  = "STORAGE_APPLICATION_ID"
-      value = "selcdweupnpgcheckoutst01"
-    },
-
-    {
-      name  = "STORAGE_CREDENTIAL_ID"
-      value = "selcdweupnpgcheckoutst01"
-    },
-    {
-      name  = "STORAGE_TEMPLATE_URL"
-      value = "https://selcdweupnpgcheckoutst01.z6.web.core.windows.net"
     },
     {
       name  = "APPLICATIONINSIGHTS_ROLE_NAME"
@@ -186,15 +189,11 @@ locals {
       value = "true"
     },
     {
-      name  = "STORAGE_AZURE_CLIENT_ID"
+      name  = "INSTITUTION_MAIL_TEMPLATES_STORAGE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {
-      name  = "AZURE_STORAGE_ACCOUNT_NAME"
-      value = data.azurerm_storage_account.product_storage.name
-    },
-    {
-      name  = "AZURE_CLIENT_ID"
+      name  = "INSTITUTION_PRODUCTS_STORAGE_CLIENT_ID"
       value = data.azurerm_user_assigned_identity.product_storage_blob_identity.client_id
     },
     {

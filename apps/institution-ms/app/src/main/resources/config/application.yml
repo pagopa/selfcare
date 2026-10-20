@@ -10,7 +10,6 @@ spring:
     include:
       # TO enable specific-language documentations
       - swaggerEN
-      - AzureStorage
   data:
     web:
       pageable:
