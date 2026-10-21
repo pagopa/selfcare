@@ -104,7 +104,9 @@ New writes are always tagged.
 The readiness group is available at `/actuator/health/readiness`. Its
 `mongoReadiness` component (`mongodb-institution`) pings every supported tenant
 database and is UP only when all probes succeed; the file and product blob
-storage components remain included. Tenant registry or connection changes
+storage components remain included. MongoDB diagnostics retain the component,
+latency, and sanitized tenant failure details, but omit the obsolete
+single-database `host` and `database` fields. Tenant registry or connection changes
 require an application restart because routed Mongo clients are cached.
 
 ### Tenant-aware blob storage
@@ -233,3 +235,15 @@ A new suite of integration tests written with cucumber was added in `it.pagopa.s
 To run the Cucumber tests locally, execute it.pagopa.selfcare.user.integration_test.CucumberSuite
 
 To run a single test or a specific feature file, open the file and press the play button for the corresponding test (or the file). 
+
+### Tenant MongoDB regression tests
+
+`TenantDelegationAggregationIntegrationTest` uses a MongoDB Testcontainer to cover
+tenant-scoped aggregations, reachable foreign graph nodes, notifications, and
+institution replacement writes in strict and compatibility modes. It verifies
+that rejected writes leave stored documents unchanged and do not insert retry IDs.
+With Docker running, execute it from the monorepo root:
+
+```shell script
+mvn --projects :selc-ms-core-app --also-make test -Dtest=TenantDelegationAggregationIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false
+```

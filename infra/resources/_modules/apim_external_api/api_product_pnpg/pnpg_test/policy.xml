@@ -2,6 +2,7 @@
     <inbound>
         <base/>
         <set-variable name="productId" value="prod-pn-pg-test"/>
+        <set-variable name="tenantId" value="PNPG"/>
     </inbound>
     <backend>
         <base/>

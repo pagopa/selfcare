@@ -21,15 +21,14 @@ import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.env.MockEnvironment;
 
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest(
@@ -40,9 +39,7 @@ import static org.mockito.Mockito.doAnswer;
             "management.endpoint.health.show-details=always",
             "management.endpoint.health.show-components=always",
             "management.endpoint.health.group.readiness.include=readinessState,mongoReadiness,fileBlobStorageReadiness,productBlobStorageReadiness",
-            "management.health.mongo.enabled=false",
-            "spring.data.mongodb.database=selcMsCore",
-            "spring.data.mongodb.uri=mongodb://mongo-primary:27017/selcMsCore"
+            "management.health.mongo.enabled=false"
         })
 class TenantReadinessEndpointTest {
 
@@ -58,7 +55,7 @@ class TenantReadinessEndpointTest {
     }
 
     @Test
-    void readinessEndpointNeedsNoTenantHeaderAndKeepsBlobComponents() throws Exception {
+    void readinessEndpointUsesRegistryOnlyConfigurationAndKeepsBlobComponents() throws Exception {
         ResponseEntity<String> response =
                 restTemplate.getForEntity("/actuator/health/readiness", String.class);
 
@@ -66,8 +63,11 @@ class TenantReadinessEndpointTest {
         JsonNode body = objectMapper.readTree(response.getBody());
         assertEquals("UP", body.path("status").asText());
         assertEquals("UP", body.path("components").path("mongoReadiness").path("status").asText());
-        assertEquals("mongodb", body.path("components").path("mongoReadiness")
-                .path("details").path("component").asText());
+        JsonNode mongoDetails = body.path("components").path("mongoReadiness").path("details");
+        assertEquals("mongodb", mongoDetails.path("component").asText());
+        assertFalse(mongoDetails.has("host"));
+        assertFalse(mongoDetails.has("database"));
+        assertTrue(mongoDetails.has("latencyMs"));
         assertEquals("UP", body.path("components").path("fileBlobStorageReadiness").path("status").asText());
         assertEquals("UP", body.path("components").path("productBlobStorageReadiness").path("status").asText());
         assertTrue(tenantContext.tenantId().isEmpty());
@@ -103,10 +103,20 @@ class TenantReadinessEndpointTest {
         }
 
         @Bean
-        TenantRegistry tenantRegistry() {
-            TenantRegistry registry = mock(TenantRegistry.class);
-            when(registry.supportedTenantIds()).thenReturn(Set.of("AR", "PNPG"));
-            return registry;
+        TenantRegistry tenantRegistry(ObjectMapper objectMapper) {
+            return new TenantRegistry(
+                    objectMapper,
+                    new MockEnvironment()
+                            .withProperty("MONGO_AR", "mongodb://mongo-ar:27017")
+                            .withProperty("MONGO_PNPG", "mongodb://mongo-pnpg:27017"),
+                    """
+                    {
+                      "AR":{"mongo":{"account":"ar","database":"institution-ar","connectionStringEnvVar":"MONGO_AR"}},
+                      "PNPG":{"mongo":{"account":"pnpg","database":"institution-pnpg","connectionStringEnvVar":"MONGO_PNPG"}}
+                    }
+                    """,
+                    "AR,PNPG",
+                    "");
         }
 
         @Bean

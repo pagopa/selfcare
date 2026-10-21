@@ -23,12 +23,15 @@ public class TenantOwnershipPolicy {
     }
 
     public Criteria criteria() {
+        return criteria(InstitutionEntity.Fields.tenantId.name());
+    }
+
+    Criteria criteria(String tenantIdField) {
         String tenantId = tenantContext.requiredTenantId();
-        Criteria ownedDocument = Criteria.where(InstitutionEntity.Fields.tenantId.name()).is(tenantId);
         if (strictDataIsolation) {
-            return ownedDocument;
+            return Criteria.where(tenantIdField).is(tenantId);
         }
-        return Criteria.where(InstitutionEntity.Fields.tenantId.name()).in(tenantId, null);
+        return Criteria.where(tenantIdField).in(tenantId, null);
     }
 
     public Criteria and(Criteria domainCriteria) {

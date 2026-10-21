@@ -45,6 +45,19 @@ class TenantOwnershipPolicyTest {
     }
 
     @Test
+    void joinedInstitutionUsesTheSameOwnershipRules() {
+        tenantContext.setTenantId("AR");
+
+        assertEquals(new Document("institution.tenantId", "AR"),
+                new TenantOwnershipPolicy(tenantContext, true)
+                        .criteria("institution.tenantId").getCriteriaObject());
+        assertEquals(new Document("institution.tenantId",
+                        new Document("$in", java.util.Arrays.asList("AR", null))),
+                new TenantOwnershipPolicy(tenantContext, false)
+                        .criteria("institution.tenantId").getCriteriaObject());
+    }
+
+    @Test
     void ownershipCriterionIsConjoinedWithExistingOrDomainFilter() {
         tenantContext.setTenantId("AR");
         Criteria existingOr = new Criteria().orOperator(

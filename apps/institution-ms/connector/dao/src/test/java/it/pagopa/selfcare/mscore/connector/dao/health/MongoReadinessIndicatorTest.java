@@ -43,10 +43,8 @@ class MongoReadinessIndicatorTest {
         assertTrue(tenantContext.tenantId().isEmpty());
         assertEquals("mongodb-institution", indicator.checkName());
         assertEquals("mongodb", health.getDetails().get("component"));
-        assertEquals("selcMsCore", health.getDetails().get("database"));
-        assertEquals(
-                "mongo-primary:27017,mongo-secondary:27017",
-                health.getDetails().get("host"));
+        assertFalse(health.getDetails().containsKey("database"));
+        assertFalse(health.getDetails().containsKey("host"));
         assertTrue(health.getDetails().containsKey("latencyMs"));
         assertFalse(health.getDetails().containsKey("error"));
     }
@@ -120,8 +118,6 @@ class MongoReadinessIndicatorTest {
             TenantContext tenantContext) {
         return new MongoReadinessIndicator(
                 mongoTemplate,
-                "selcMsCore",
-                "mongodb://mongo-primary:27017,mongo-secondary:27017/selcMsCore",
                 tenantRegistry,
                 tenantContext) {
             @Override

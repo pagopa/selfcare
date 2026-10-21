@@ -6,16 +6,20 @@ import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import it.pagopa.selfcare.commons.tenant.mongodb.TenantMongoDatabaseFactory;
 import it.pagopa.selfcare.mscore.connector.dao.DelegationConnectorImpl;
 import it.pagopa.selfcare.mscore.connector.dao.DelegationRepository;
+import it.pagopa.selfcare.mscore.connector.dao.InstitutionConnectorImpl;
+import it.pagopa.selfcare.mscore.connector.dao.InstitutionRepository;
 import it.pagopa.selfcare.mscore.connector.dao.MongoCustomConnectorImpl;
 import it.pagopa.selfcare.mscore.connector.dao.MailNotificationRepository;
 import it.pagopa.selfcare.mscore.connector.dao.MailNotificationConnectorImpl;
 import it.pagopa.selfcare.mscore.connector.dao.model.MailNotificationEntity;
 import it.pagopa.selfcare.mscore.connector.dao.TenantAwareEntityWriter;
+import it.pagopa.selfcare.mscore.connector.dao.TenantOwnershipConflictException;
 import it.pagopa.selfcare.mscore.connector.dao.TenantOwnershipPolicy;
 import it.pagopa.selfcare.mscore.connector.dao.model.DelegationEntity;
 import it.pagopa.selfcare.mscore.connector.dao.model.DelegationPageEntity;
 import it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity;
 import it.pagopa.selfcare.mscore.connector.dao.model.mapper.DelegationEntityMapperImpl;
+import it.pagopa.selfcare.mscore.connector.dao.model.mapper.InstitutionEntityMapperImpl;
 import it.pagopa.selfcare.mscore.constant.DelegationType;
 import it.pagopa.selfcare.mscore.model.delegation.DelegationCount;
 import it.pagopa.selfcare.mscore.model.delegation.DelegationInstitution;
@@ -46,6 +50,7 @@ import org.testcontainers.containers.GenericContainer;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -166,7 +171,7 @@ class TenantDelegationAggregationIntegrationTest {
     }
 
     @Test
-    void lookupsExcludeForeignAndMissingInstitutionsBeforeLimit() throws Exception {
+    void lookupsFilterInstitutionOwnershipBeforeLimitInBothIsolationModes() throws Exception {
         TenantContext tenantContext = new TenantContext();
         tenantContext.setTenantId("AR");
         TenantRegistry registry = new TenantRegistry(
@@ -190,47 +195,91 @@ class TenantDelegationAggregationIntegrationTest {
         mongoTemplate.insert(institution("owned-target", "AR"));
         mongoTemplate.insert(institution("foreign-source", "PNPG"));
         mongoTemplate.insert(institution("foreign-target", "PNPG"));
+        for (String side : List.of("source", "target")) {
+            mongoTemplate.getCollection(DelegationConnectorImpl.COLLECTION_INSTITUTION)
+                    .insertMany(List.of(
+                            new org.bson.Document("_id", "legacy-absent-" + side),
+                            new org.bson.Document("_id", "legacy-null-" + side).append("tenantId", null)));
+        }
 
         mongoTemplate.insert(delegationWithReferences(
                 "missing-source", "absent-source", "delegator-target", "2025-01-01T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "foreign-source-root", "foreign-source", "delegator-target", "2025-01-02T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
-                "owned-source-root", "owned-source", "delegator-target", "2025-01-03T00:00:00Z"));
+                "legacy-absent-source-root", "legacy-absent-source", "delegator-target", "2025-01-03T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "legacy-null-source-root", "legacy-null-source", "delegator-target", "2025-01-04T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "owned-source-root", "owned-source", "delegator-target", "2025-01-05T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "missing-target", "delegate-source", "absent-target", "2025-01-01T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "foreign-target-root", "delegate-source", "foreign-target", "2025-01-02T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
-                "owned-target-root", "delegate-source", "owned-target", "2025-01-03T00:00:00Z"));
+                "legacy-absent-target-root", "delegate-source", "legacy-absent-target", "2025-01-03T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "legacy-null-target-root", "delegate-source", "legacy-null-target", "2025-01-04T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "owned-target-root", "delegate-source", "owned-target", "2025-01-05T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "no-match-root", "absent-source", "no-match-target", "2025-01-04T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "foreign-only-root", "foreign-source", "foreign-only-target", "2025-01-05T00:00:00Z"));
+        DelegationEntity foreignSourceDelegation = delegationWithReferences(
+                "foreign-delegation-source", "owned-source", "delegator-target", "2025-01-01T00:00:00Z");
+        foreignSourceDelegation.setTenantId("PNPG");
+        mongoTemplate.insert(foreignSourceDelegation);
+        DelegationEntity foreignTargetDelegation = delegationWithReferences(
+                "foreign-delegation-target", "delegate-source", "owned-target", "2025-01-01T00:00:00Z");
+        foreignTargetDelegation.setTenantId("PNPG");
+        mongoTemplate.insert(foreignTargetDelegation);
 
-        DelegationConnectorImpl connector = new DelegationConnectorImpl(
-                mock(DelegationRepository.class),
-                new DelegationEntityMapperImpl(),
-                mongoTemplate,
-                mock(TenantAwareEntityWriter.class),
-                new TenantOwnershipPolicy(tenantContext, true));
+        for (boolean strict : List.of(true, false)) {
+            DelegationConnectorImpl connector = new DelegationConnectorImpl(
+                    mock(DelegationRepository.class),
+                    new DelegationEntityMapperImpl(),
+                    mongoTemplate,
+                    mock(TenantAwareEntityWriter.class),
+                    new TenantOwnershipPolicy(tenantContext, strict));
 
-        List<DelegationInstitution> delegators = connector.findDelegators(
-                "delegator-target", "prod-a", DelegationType.EA, null, 1);
-        assertEquals(1, delegators.size());
-        assertEquals("owned-source-root", delegators.get(0).getDelegationId());
-        assertEquals("owned-source", delegators.get(0).getInstitution().getId());
+            List<DelegationInstitution> delegators = connector.findDelegators(
+                    "delegator-target", "prod-a", DelegationType.EA, null, 1);
+            assertEquals(1, delegators.size());
+            String firstSource = strict ? "owned-source" : "legacy-absent-source";
+            assertEquals(firstSource + "-root", delegators.get(0).getDelegationId());
+            assertEquals(firstSource, delegators.get(0).getInstitution().getId());
 
-        List<DelegationInstitution> delegates = connector.findDelegates(
-                "delegate-source", "prod-a", DelegationType.EA, null, 1);
-        assertEquals(1, delegates.size());
-        assertEquals("owned-target-root", delegates.get(0).getDelegationId());
-        assertEquals("owned-target", delegates.get(0).getInstitution().getId());
+            List<DelegationInstitution> delegates = connector.findDelegates(
+                    "delegate-source", "prod-a", DelegationType.EA, null, 1);
+            assertEquals(1, delegates.size());
+            String firstTarget = strict ? "owned-target" : "legacy-absent-target";
+            assertEquals(firstTarget + "-root", delegates.get(0).getDelegationId());
+            assertEquals(firstTarget, delegates.get(0).getInstitution().getId());
 
-        assertEquals(List.of(), connector.findDelegators(
-                "no-match-target", "prod-a", DelegationType.EA, null, 1));
-        assertEquals(List.of(), connector.findDelegators(
-                "foreign-only-target", "prod-a", DelegationType.EA, null, 1));
+            assertEquals(strict
+                            ? List.of("owned-source-root")
+                            : List.of("legacy-absent-source-root", "legacy-null-source-root", "owned-source-root"),
+                    connector.findDelegators("delegator-target", "prod-a", DelegationType.EA, null, 10)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(strict
+                            ? List.of("owned-target-root")
+                            : List.of("legacy-absent-target-root", "legacy-null-target-root", "owned-target-root"),
+                    connector.findDelegates("delegate-source", "prod-a", DelegationType.EA, null, 10)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(strict ? List.of() : List.of("legacy-null-source-root"),
+                    connector.findDelegators(
+                                    "delegator-target", "prod-a", DelegationType.EA, delegators.get(0).getId(), 1)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(strict ? List.of() : List.of("legacy-null-target-root"),
+                    connector.findDelegates(
+                                    "delegate-source", "prod-a", DelegationType.EA, delegates.get(0).getId(), 1)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(List.of(), connector.findDelegators(
+                    "no-match-target", "prod-a", DelegationType.EA, null, 1));
+            assertEquals(List.of(), connector.findDelegators(
+                    "foreign-only-target", "prod-a", DelegationType.EA, null, 1));
+        }
     }
 
     @Test
@@ -263,6 +312,10 @@ class TenantDelegationAggregationIntegrationTest {
                         new org.bson.Document("institutionId", "legacy-absent")
                                 .append("products", new org.bson.Document("status", "ACTIVE")),
                         new org.bson.Document("institutionId", "legacy-null")
+                                .append("products", new org.bson.Document("status", "ACTIVE")),
+                        new org.bson.Document("institutionId", "root-foreign")
+                                .append("products", new org.bson.Document("status", "ACTIVE")),
+                        new org.bson.Document("institutionId", "foreign-absent")
                                 .append("products", new org.bson.Document("status", "ACTIVE")))));
         var institutions = mongoTemplate.getCollection("Institution");
         institutions.insertOne(new org.bson.Document("_id", "root-absent")
@@ -290,6 +343,11 @@ class TenantDelegationAggregationIntegrationTest {
                 .append("tenantId", "PNPG")
                 .append("externalId", "foreign-null")
                 .append("description", "foreign"));
+        institutions.insertOne(new org.bson.Document("_id", "root-foreign")
+                .append("tenantId", "AR")
+                .append("externalId", "root-foreign")
+                .append("institutionId", "foreign-null")
+                .append("description", "owned"));
 
         UserInstitutionFilter filter = new UserInstitutionFilter();
         filter.setUserId("user-owned");
@@ -301,10 +359,10 @@ class TenantDelegationAggregationIntegrationTest {
             filter.setExternalId(null);
             List<UserInstitutionAggregation> modeResults =
                     connector.findUserInstitutionAggregation(filter, UserInstitutionAggregation.class);
-            assertEquals(2, modeResults.size());
+            assertEquals(3, modeResults.size());
             List<String> expectedIds = strict
-                    ? List.of("root-absent", "root-null")
-                    : List.of("legacy-absent", "legacy-null");
+                    ? List.of("root-absent", "root-foreign", "root-null")
+                    : List.of("legacy-absent", "legacy-null", "root-foreign");
             assertEquals(expectedIds, modeResults.stream()
                     .map(result -> result.getInstitutions().get(0).getId())
                     .sorted()
@@ -317,9 +375,108 @@ class TenantDelegationAggregationIntegrationTest {
             assertEquals(List.of("root-absent"), results.get(0).getInstitutions()
                     .stream().map(Institution::getId).toList());
 
-            filter.setExternalId("foreign-absent");
-            assertTrue(connector.findUserInstitutionAggregation(
-                    filter, UserInstitutionAggregation.class).isEmpty());
+            for (String foreignExternalId : List.of("foreign-absent", "foreign-null")) {
+                filter.setExternalId(foreignExternalId);
+                assertTrue(connector.findUserInstitutionAggregation(
+                        filter, UserInstitutionAggregation.class).isEmpty());
+            }
+        }
+    }
+
+    @Test
+    void institutionWritesInsertAndReplaceOwnedDocumentsInBothIsolationModes() throws Exception {
+        TenantContext tenantContext = new TenantContext();
+        tenantContext.setTenantId("AR");
+        MongoTemplate mongoTemplate = institutionWriteTemplate(tenantContext, "tenant_owned_write_test");
+
+        for (boolean strict : List.of(true, false)) {
+            mongoTemplate.dropCollection(InstitutionEntity.class);
+            InstitutionConnectorImpl connector = institutionConnector(mongoTemplate, tenantContext, strict);
+
+            Institution inserted = connector.save(replacementInstitution("owned", "original"));
+
+            assertEquals("owned", inserted.getId());
+            assertEquals("original", inserted.getDescription());
+            var documents = institutionDocuments(mongoTemplate);
+            assertEquals(1, documents.size());
+            assertEquals("AR", documents.get(0).getString("tenantId"));
+            assertEquals("original", documents.get(0).getString("description"));
+            mongoTemplate.getCollection("Institution").updateOne(
+                    new org.bson.Document("_id", "owned"),
+                    new org.bson.Document("$set", new org.bson.Document("obsoleteField", "remove-me")));
+
+            Institution replaced = connector.save(replacementInstitution("owned", "replacement"));
+
+            assertEquals("owned", replaced.getId());
+            assertEquals("replacement", replaced.getDescription());
+            documents = institutionDocuments(mongoTemplate);
+            assertEquals(1, documents.size());
+            assertEquals("owned", documents.get(0).getString("_id"));
+            assertEquals("AR", documents.get(0).getString("tenantId"));
+            assertEquals("replacement", documents.get(0).getString("description"));
+            assertFalse(documents.get(0).containsKey("obsoleteField"));
+        }
+    }
+
+    @Test
+    void institutionWritesReplaceLegacyDocumentsOnlyInCompatibilityMode() throws Exception {
+        TenantContext tenantContext = new TenantContext();
+        tenantContext.setTenantId("AR");
+        MongoTemplate mongoTemplate = institutionWriteTemplate(tenantContext, "tenant_legacy_write_test");
+
+        for (boolean strict : List.of(true, false)) {
+            mongoTemplate.dropCollection(InstitutionEntity.class);
+            mongoTemplate.getCollection("Institution").insertMany(List.of(
+                    new org.bson.Document("_id", "legacy-absent").append("description", "original"),
+                    new org.bson.Document("_id", "legacy-null").append("description", "original")
+                            .append("tenantId", null)));
+            InstitutionConnectorImpl connector = institutionConnector(mongoTemplate, tenantContext, strict);
+
+            for (String id : List.of("legacy-absent", "legacy-null")) {
+                Institution replacement = replacementInstitution(id, "replacement");
+                if (strict) {
+                    var before = institutionDocuments(mongoTemplate);
+
+                    assertThrows(TenantOwnershipConflictException.class, () -> connector.save(replacement));
+
+                    assertEquals(before, institutionDocuments(mongoTemplate),
+                            "Rejected legacy replacement must not modify data or insert a retry UUID");
+                } else {
+                    Institution replaced = connector.save(replacement);
+
+                    assertEquals(id, replaced.getId());
+                    assertEquals("replacement", replaced.getDescription());
+                    var document = mongoTemplate.getCollection("Institution")
+                            .find(new org.bson.Document("_id", id)).first();
+                    assertEquals("AR", Objects.requireNonNull(document).getString("tenantId"));
+                    assertEquals("replacement", document.getString("description"));
+                    assertEquals(2, institutionDocuments(mongoTemplate).size());
+                }
+            }
+        }
+    }
+
+    @Test
+    void institutionWritesRejectForeignIdsWithoutChangingDocumentsOrRetryingWithNewIds() throws Exception {
+        TenantContext tenantContext = new TenantContext();
+        tenantContext.setTenantId("AR");
+        MongoTemplate mongoTemplate = institutionWriteTemplate(tenantContext, "tenant_foreign_write_test");
+
+        for (boolean strict : List.of(true, false)) {
+            mongoTemplate.dropCollection(InstitutionEntity.class);
+            mongoTemplate.getCollection("Institution").insertOne(
+                    new org.bson.Document("_id", "foreign")
+                            .append("tenantId", "PNPG")
+                            .append("externalId", "foreign-external-id")
+                            .append("description", "original"));
+            InstitutionConnectorImpl connector = institutionConnector(mongoTemplate, tenantContext, strict);
+            var before = institutionDocuments(mongoTemplate);
+
+            assertThrows(TenantOwnershipConflictException.class,
+                    () -> connector.save(replacementInstitution("foreign", "replacement")));
+
+            assertEquals(before, institutionDocuments(mongoTemplate),
+                    "Rejected foreign replacement must preserve every document and insert no retry UUID");
         }
     }
 
@@ -391,6 +548,40 @@ class TenantDelegationAggregationIntegrationTest {
                 MailNotificationEntity.class));
         assertFalse(compatibilityConnector.removeMailNotification("foreign", "foreign-product"));
         assertEquals("PNPG", mailDocument(mongoTemplate, "foreign").getString("tenantId"));
+    }
+
+    private MongoTemplate institutionWriteTemplate(TenantContext tenantContext, String database) throws Exception {
+        TenantRegistry registry = new TenantRegistry(
+                new ObjectMapper(),
+                new MockEnvironment().withProperty(
+                        "MONGO_AR", "mongodb://" + MONGO.getHost() + ":" + MONGO.getMappedPort(27017)),
+                """
+                {"AR":{"mongo":{"account":"local","database":"%s","connectionStringEnvVar":"MONGO_AR"}}}
+                """.formatted(database),
+                "AR",
+                "");
+        registry.initialize();
+        return new MongoTemplate(new TenantMongoDatabaseFactory(registry, tenantContext), mappingConverter());
+    }
+
+    private InstitutionConnectorImpl institutionConnector(
+            MongoTemplate mongoTemplate, TenantContext tenantContext, boolean strict) {
+        TenantAwareEntityWriter writer = new TenantAwareEntityWriter(
+                mongoTemplate, new TenantOwnershipPolicy(tenantContext, strict), tenantContext);
+        return new InstitutionConnectorImpl(
+                mock(InstitutionRepository.class), new InstitutionEntityMapperImpl(), writer);
+    }
+
+    private Institution replacementInstitution(String id, String description) {
+        Institution institution = new Institution();
+        institution.setId(id);
+        institution.setDescription(description);
+        return institution;
+    }
+
+    private List<org.bson.Document> institutionDocuments(MongoTemplate mongoTemplate) {
+        return mongoTemplate.getCollection("Institution").find()
+                .sort(new org.bson.Document("_id", 1)).into(new ArrayList<>());
     }
 
     private MailNotificationConnectorImpl mailNotificationConnector(

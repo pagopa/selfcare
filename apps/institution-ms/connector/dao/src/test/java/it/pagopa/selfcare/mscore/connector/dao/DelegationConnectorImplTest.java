@@ -82,8 +82,8 @@ class DelegationConnectorImplTest {
                 new Criteria().andOperator(
                         invocation.getArgument(0),
                         Criteria.where("tenantId").is("AR")));
-        lenient().when(ownershipPolicy.criteria())
-                .thenReturn(Criteria.where("tenantId").is("AR"));
+        lenient().when(ownershipPolicy.criteria("institution.tenantId"))
+                .thenReturn(Criteria.where("institution.tenantId").is("AR"));
     }
 
     @Spy
@@ -517,7 +517,8 @@ class DelegationConnectorImplTest {
         ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
         verify(mongoTemplate, times(2)).aggregate(
                 aggregationCaptor.capture(), anyString(), any(Class.class));
-        aggregationCaptor.getAllValues().forEach(this::assertJoinPipelineScopesBothSides);
+        assertJoinPipelineScopesBothSides(aggregationCaptor.getAllValues().get(0), "from", "AR");
+        assertJoinPipelineScopesBothSides(aggregationCaptor.getAllValues().get(1), "to", "AR");
 
         assertEquals(2, delegators.size());
         assertEquals(2, delegates.size());
@@ -551,6 +552,33 @@ class DelegationConnectorImplTest {
         assertEquals("test2@test.com", delegates.get(1).getInstitution().getDigitalAddress());
         assertEquals("Institution2", delegators.get(1).getInstitution().getDescription());
         assertEquals("Institution2", delegates.get(1).getInstitution().getDescription());
+    }
+
+    @Test
+    void delegationLookupsPreserveCompatibilityOwnershipRules() {
+        when(ownershipPolicy.and(any(Criteria.class))).thenAnswer(invocation ->
+                new Criteria().andOperator(
+                        invocation.getArgument(0),
+                        Criteria.where("tenantId").in("AR", null)));
+        when(ownershipPolicy.criteria("institution.tenantId"))
+                .thenReturn(Criteria.where("institution.tenantId").in("AR", null));
+        when(mongoTemplate.aggregate(any(Aggregation.class), anyString(),
+                eq(DelegationInstitutionEntity.class)))
+                .thenReturn(new AggregationResults<>(List.of(), new Document()));
+
+        delegationConnectorImpl.findDelegators(
+                "institutionId", "productId", DelegationType.EA, null, 100);
+        delegationConnectorImpl.findDelegates(
+                "institutionId", "productId", DelegationType.EA, null, 100);
+
+        ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
+        verify(mongoTemplate, times(2)).aggregate(
+                aggregationCaptor.capture(), anyString(), eq(DelegationInstitutionEntity.class));
+        Document ownershipCondition = new Document("$in", java.util.Arrays.asList("AR", null));
+        assertJoinPipelineScopesBothSides(
+                aggregationCaptor.getAllValues().get(0), "from", ownershipCondition);
+        assertJoinPipelineScopesBothSides(
+                aggregationCaptor.getAllValues().get(1), "to", ownershipCondition);
     }
 
     @Test
@@ -675,14 +703,22 @@ class DelegationConnectorImplTest {
   assertTrue(firstStage.get("$match", Document.class).toString().contains("tenantId"));
   }
 
-  private void assertJoinPipelineScopesBothSides(Aggregation aggregation) {
+  private void assertJoinPipelineScopesBothSides(
+          Aggregation aggregation, String localField, Object ownershipCondition) {
     List<Document> stages = aggregation.toPipeline(Aggregation.DEFAULT_CONTEXT);
-    assertTrue(stages.get(0).get("$match", Document.class).toString().contains("tenantId"));
-    assertTrue(stages.get(2).containsKey("$lookup"));
-    assertTrue(stages.get(2).get("$lookup", Document.class)
-            .getList("pipeline", Document.class).get(1).toString().contains("tenantId"));
-    assertTrue(stages.get(3).containsKey("$unwind"));
-    assertTrue(stages.get(4).containsKey("$limit"));
+    assertEquals(6, stages.size());
+    assertEquals(new Document("tenantId", ownershipCondition),
+            stages.get(0).get("$match", Document.class).getList("$and", Document.class).get(1));
+    assertEquals(new Document("$sort", new Document("createdAt", 1)), stages.get(1));
+    assertEquals(new Document("from", "Institution")
+                    .append("localField", localField)
+                    .append("foreignField", "_id")
+                    .append("as", "institution"),
+            stages.get(2).get("$lookup", Document.class));
+    assertEquals(new Document("$unwind", "$institution"), stages.get(3));
+    assertEquals(new Document("$match", new Document("institution.tenantId", ownershipCondition)),
+            stages.get(4));
+    assertEquals(100, stages.get(5).get("$limit", Number.class).intValue());
   }
 
 }
