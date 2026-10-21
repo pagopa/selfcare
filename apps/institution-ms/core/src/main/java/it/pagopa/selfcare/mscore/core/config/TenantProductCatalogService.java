@@ -150,7 +150,22 @@ public class TenantProductCatalogService implements ProductService {
 
         private java.io.File downloadToTempFile(String filePath) {
             try {
-                java.io.File file = java.io.File.createTempFile("tenant-product-", ".tmp");
+                java.nio.file.Path tempPath;
+                if (java.nio.file.FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+                    tempPath = java.nio.file.Files.createTempFile(
+                            "tenant-product-",
+                            ".tmp",
+                            java.nio.file.attribute.PosixFilePermissions.asFileAttribute(
+                                    java.util.EnumSet.of(
+                                            java.nio.file.attribute.PosixFilePermission.OWNER_READ,
+                                            java.nio.file.attribute.PosixFilePermission.OWNER_WRITE
+                                    )
+                            )
+                    );
+                } else {
+                    tempPath = java.nio.file.Files.createTempFile("tenant-product-", ".tmp");
+                }
+                java.io.File file = tempPath.toFile();
                 blobClient.blob(filePath).downloadToFile(file.getAbsolutePath(), true);
                 file.deleteOnExit();
                 return file;
