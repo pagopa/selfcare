@@ -4,6 +4,7 @@ import io.cucumber.java.After;
 import io.cucumber.java.Scenario;
 import io.cucumber.java.en.And;
 import it.pagopa.selfcare.cucumber.utils.SharedStepData;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.mscore.connector.dao.InstitutionRepository;
 import it.pagopa.selfcare.mscore.connector.dao.MailNotificationRepository;
 import it.pagopa.selfcare.mscore.connector.dao.model.InstitutionEntity;
@@ -30,17 +31,20 @@ public class InstitutionSteps {
     private final InstitutionRepository institutionRepository;
     private final MailNotificationRepository mailNotificationRepository;
     private final MongoTemplate mongoTemplate;
+    private final TenantContext tenantContext;
 
     private String mockInstitutionId;
 
     public InstitutionSteps(SharedStepData sharedStepData,
                             InstitutionRepository institutionRepository,
                             MailNotificationRepository mailNotificationRepository,
-                            MongoTemplate mongoTemplate) {
+                            MongoTemplate mongoTemplate,
+                            TenantContext tenantContext) {
         this.sharedStepData = sharedStepData;
         this.institutionRepository = institutionRepository;
         this.mailNotificationRepository = mailNotificationRepository;
         this.mongoTemplate = mongoTemplate;
+        this.tenantContext = tenantContext;
     }
 
     @After("@RemoveInstitutionIdAfterScenario")
@@ -69,6 +73,7 @@ public class InstitutionSteps {
     public void createMockInstitutionWithId(String id) {
         final InstitutionEntity entity = new InstitutionEntity();
         entity.setId(id);
+        entity.setTenantId(tenantContext.tenantId().orElseThrow());
         entity.setOrigin(Origin.MOCK);
         entity.setCreatedAt(OffsetDateTime.now());
         entity.setUpdatedAt(OffsetDateTime.now());
@@ -83,6 +88,7 @@ public class InstitutionSteps {
         mockInstitutionId = savedEntity.getId();
 
         final MailNotificationEntity mailNotificationEntity = new MailNotificationEntity();
+        mailNotificationEntity.setTenantId(tenantContext.tenantId().orElseThrow());
         mailNotificationEntity.setInstitutionId(mockInstitutionId);
         mailNotificationEntity.setProductIds(Set.of("prod-io", "prod-pagopa"));
         mailNotificationEntity.setModuleDayOfTheEpoch(10);
@@ -104,6 +110,7 @@ public class InstitutionSteps {
     public void createMockInstitutionWithoutActiveOnboardings(String id) {
         final InstitutionEntity entity = new InstitutionEntity();
         entity.setId(id);
+        entity.setTenantId(tenantContext.tenantId().orElseThrow());
         entity.setOrigin(Origin.MOCK);
         entity.setOriginId("x1");
         entity.setCreatedAt(OffsetDateTime.now());

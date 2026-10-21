@@ -3,6 +3,7 @@ package it.pagopa.selfcare.mscore.integration_test.steps;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.mscore.connector.dao.DelegationRepository;
 import it.pagopa.selfcare.mscore.connector.dao.InstitutionRepository;
 import it.pagopa.selfcare.mscore.connector.dao.model.DelegationEntity;
@@ -28,13 +29,16 @@ public class DelegationSteps {
     private final InstitutionRepository institutionRepository;
     private final DelegationRepository delegationRepository;
     private final MongoTemplate mongoTemplate;
+    private final TenantContext tenantContext;
 
     public DelegationSteps(InstitutionRepository institutionRepository,
                            DelegationRepository delegationRepository,
-                           MongoTemplate mongoTemplate) {
+                           MongoTemplate mongoTemplate,
+                           TenantContext tenantContext) {
         this.institutionRepository = institutionRepository;
         this.delegationRepository = delegationRepository;
         this.mongoTemplate = mongoTemplate;
+        this.tenantContext = tenantContext;
     }
 
     private String mockInstitutionId1;
@@ -70,6 +74,7 @@ public class DelegationSteps {
 
         final InstitutionEntity entity1 = new InstitutionEntity();
         entity1.setId(id1);
+        entity1.setTenantId(tenantContext.tenantId().orElseThrow());
         entity1.setOrigin(Origin.MOCK);
         entity1.setCreatedAt(OffsetDateTime.now());
         entity1.setUpdatedAt(OffsetDateTime.now());
@@ -82,6 +87,7 @@ public class DelegationSteps {
 
         final InstitutionEntity entity2 = new InstitutionEntity();
         entity2.setId(id2);
+        entity2.setTenantId(tenantContext.tenantId().orElseThrow());
         entity2.setOrigin(Origin.MOCK);
         entity2.setCreatedAt(OffsetDateTime.now());
         entity2.setUpdatedAt(OffsetDateTime.now());
@@ -99,6 +105,7 @@ public class DelegationSteps {
         final InstitutionEntity toInstitution = institutionRepository.findById(id2).orElseThrow();
         final DelegationEntity delegation = new DelegationEntity();
         delegation.setId(delegationId);
+        delegation.setTenantId(tenantContext.tenantId().orElseThrow());
         delegation.setFrom(fromInstitution.getId());
         delegation.setTo(toInstitution.getId());
         delegation.setInstitutionFromName("From Institution");
@@ -122,6 +129,7 @@ public class DelegationSteps {
     public void createMockDelegationWithoutRealInstitutions(String delegationId) {
         final DelegationEntity delegation = new DelegationEntity();
         delegation.setId(delegationId);
+        delegation.setTenantId(tenantContext.tenantId().orElseThrow());
         delegation.setFrom("mockFrom");
         delegation.setTo("mockTo");
         delegation.setInstitutionFromName("From Institution");
@@ -175,6 +183,7 @@ public class DelegationSteps {
       DelegationEntity delegation = new DelegationEntity();
 
       delegation.setId(row.get("id"));
+      delegation.setTenantId(tenantContext.tenantId().orElseThrow());
       delegation.setCreatedAt(OffsetDateTime.parse(row.get("createdAt")));
 
       delegation.setFrom(row.get("from"));
