@@ -104,7 +104,9 @@ New writes are always tagged.
 The readiness group is available at `/actuator/health/readiness`. Its
 `mongoReadiness` component (`mongodb-institution`) pings every supported tenant
 database and is UP only when all probes succeed; the file and product blob
-storage components remain included. Tenant registry or connection changes
+storage components remain included. MongoDB diagnostics retain the component,
+latency, and sanitized tenant failure details, but omit the obsolete
+single-database `host` and `database` fields. Tenant registry or connection changes
 require an application restart because routed Mongo clients are cached.
 
 ### Tenant rollout and rollback

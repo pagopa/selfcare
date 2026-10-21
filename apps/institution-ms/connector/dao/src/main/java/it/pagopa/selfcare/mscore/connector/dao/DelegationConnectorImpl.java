@@ -11,7 +11,6 @@ import it.pagopa.selfcare.mscore.constant.Order;
 import it.pagopa.selfcare.mscore.model.delegation.*;
 import it.pagopa.selfcare.mscore.model.institution.Institution;
 import lombok.extern.slf4j.Slf4j;
-import org.bson.Document;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -107,17 +106,6 @@ public class DelegationConnectorImpl implements DelegationConnector {
         final List<Criteria> criterias = getCriterias(from, to, productId, null, null);
         Optional.ofNullable(type).ifPresent(t -> criterias.add(Criteria.where(DelegationEntity.Fields.type.name()).is(t)));
         return criterias;
-    }
-
-    private AggregationOperation lookupOwnedInstitution(String localField) {
-        Document tenantCriteria = ownershipPolicy.criteria().getCriteriaObject();
-        return context -> new Document("$lookup", new Document("from", COLLECTION_INSTITUTION)
-                .append("let", new Document("institutionId", "$" + localField))
-                .append("pipeline", List.of(
-                        new Document("$match", new Document("$expr",
-                                new Document("$eq", List.of("$_id", "$$institutionId")))),
-                        new Document("$match", tenantCriteria)))
-                .append("as", "institution"));
     }
 
     @Override
@@ -263,14 +251,17 @@ public class DelegationConnectorImpl implements DelegationConnector {
         // Sort delegations
         final SortOperation sortOperation = Aggregation.sort(Sort.Direction.ASC, "createdAt");
 
-        // Limit delegations
-        final AggregationOperation lookupOperationFrom = lookupOwnedInstitution("from");
+        final LookupOperation lookupOperationFrom =
+                Aggregation.lookup(COLLECTION_INSTITUTION, "from", "_id", "institution");
         final UnwindOperation unwindOperationFrom = Aggregation.unwind("institution");
+        final MatchOperation institutionMatchOperation =
+                Aggregation.match(ownershipPolicy.criteria("institution.tenantId"));
         final LimitOperation limitOperation = Aggregation.limit(size);
 
         // Aggregate
         final Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation, sortOperation, lookupOperationFrom, unwindOperationFrom, limitOperation);
+                matchOperation, sortOperation, lookupOperationFrom, unwindOperationFrom,
+                institutionMatchOperation, limitOperation);
         return mongoTemplate.aggregate(aggregation, COLLECTION_DELEGATIONS, DelegationInstitutionEntity.class).getMappedResults()
                 .stream().map(delegationMapper::convertToDelegationInstitution).toList();
     }
@@ -288,14 +279,17 @@ public class DelegationConnectorImpl implements DelegationConnector {
         // Sort delegations
         final SortOperation sortOperation = Aggregation.sort(Sort.Direction.ASC, "createdAt");
 
-        // Limit delegations
-        final AggregationOperation lookupOperationTo = lookupOwnedInstitution("to");
+        final LookupOperation lookupOperationTo =
+                Aggregation.lookup(COLLECTION_INSTITUTION, "to", "_id", "institution");
         final UnwindOperation unwindOperationTo = Aggregation.unwind("institution");
+        final MatchOperation institutionMatchOperation =
+                Aggregation.match(ownershipPolicy.criteria("institution.tenantId"));
         final LimitOperation limitOperation = Aggregation.limit(size);
 
         // Aggregate
         final Aggregation aggregation = Aggregation.newAggregation(
-                matchOperation, sortOperation, lookupOperationTo, unwindOperationTo, limitOperation);
+                matchOperation, sortOperation, lookupOperationTo, unwindOperationTo,
+                institutionMatchOperation, limitOperation);
         return mongoTemplate.aggregate(aggregation, COLLECTION_DELEGATIONS, DelegationInstitutionEntity.class).getMappedResults()
                 .stream().map(delegationMapper::convertToDelegationInstitution).toList();
     }

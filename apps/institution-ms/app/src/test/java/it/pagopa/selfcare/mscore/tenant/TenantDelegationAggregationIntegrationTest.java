@@ -166,7 +166,7 @@ class TenantDelegationAggregationIntegrationTest {
     }
 
     @Test
-    void lookupsExcludeForeignAndMissingInstitutionsBeforeLimit() throws Exception {
+    void lookupsFilterInstitutionOwnershipBeforeLimitInBothIsolationModes() throws Exception {
         TenantContext tenantContext = new TenantContext();
         tenantContext.setTenantId("AR");
         TenantRegistry registry = new TenantRegistry(
@@ -190,47 +190,91 @@ class TenantDelegationAggregationIntegrationTest {
         mongoTemplate.insert(institution("owned-target", "AR"));
         mongoTemplate.insert(institution("foreign-source", "PNPG"));
         mongoTemplate.insert(institution("foreign-target", "PNPG"));
+        for (String side : List.of("source", "target")) {
+            mongoTemplate.getCollection(DelegationConnectorImpl.COLLECTION_INSTITUTION)
+                    .insertMany(List.of(
+                            new org.bson.Document("_id", "legacy-absent-" + side),
+                            new org.bson.Document("_id", "legacy-null-" + side).append("tenantId", null)));
+        }
 
         mongoTemplate.insert(delegationWithReferences(
                 "missing-source", "absent-source", "delegator-target", "2025-01-01T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "foreign-source-root", "foreign-source", "delegator-target", "2025-01-02T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
-                "owned-source-root", "owned-source", "delegator-target", "2025-01-03T00:00:00Z"));
+                "legacy-absent-source-root", "legacy-absent-source", "delegator-target", "2025-01-03T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "legacy-null-source-root", "legacy-null-source", "delegator-target", "2025-01-04T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "owned-source-root", "owned-source", "delegator-target", "2025-01-05T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "missing-target", "delegate-source", "absent-target", "2025-01-01T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "foreign-target-root", "delegate-source", "foreign-target", "2025-01-02T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
-                "owned-target-root", "delegate-source", "owned-target", "2025-01-03T00:00:00Z"));
+                "legacy-absent-target-root", "delegate-source", "legacy-absent-target", "2025-01-03T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "legacy-null-target-root", "delegate-source", "legacy-null-target", "2025-01-04T00:00:00Z"));
+        mongoTemplate.insert(delegationWithReferences(
+                "owned-target-root", "delegate-source", "owned-target", "2025-01-05T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "no-match-root", "absent-source", "no-match-target", "2025-01-04T00:00:00Z"));
         mongoTemplate.insert(delegationWithReferences(
                 "foreign-only-root", "foreign-source", "foreign-only-target", "2025-01-05T00:00:00Z"));
+        DelegationEntity foreignSourceDelegation = delegationWithReferences(
+                "foreign-delegation-source", "owned-source", "delegator-target", "2025-01-01T00:00:00Z");
+        foreignSourceDelegation.setTenantId("PNPG");
+        mongoTemplate.insert(foreignSourceDelegation);
+        DelegationEntity foreignTargetDelegation = delegationWithReferences(
+                "foreign-delegation-target", "delegate-source", "owned-target", "2025-01-01T00:00:00Z");
+        foreignTargetDelegation.setTenantId("PNPG");
+        mongoTemplate.insert(foreignTargetDelegation);
 
-        DelegationConnectorImpl connector = new DelegationConnectorImpl(
-                mock(DelegationRepository.class),
-                new DelegationEntityMapperImpl(),
-                mongoTemplate,
-                mock(TenantAwareEntityWriter.class),
-                new TenantOwnershipPolicy(tenantContext, true));
+        for (boolean strict : List.of(true, false)) {
+            DelegationConnectorImpl connector = new DelegationConnectorImpl(
+                    mock(DelegationRepository.class),
+                    new DelegationEntityMapperImpl(),
+                    mongoTemplate,
+                    mock(TenantAwareEntityWriter.class),
+                    new TenantOwnershipPolicy(tenantContext, strict));
 
-        List<DelegationInstitution> delegators = connector.findDelegators(
-                "delegator-target", "prod-a", DelegationType.EA, null, 1);
-        assertEquals(1, delegators.size());
-        assertEquals("owned-source-root", delegators.get(0).getDelegationId());
-        assertEquals("owned-source", delegators.get(0).getInstitution().getId());
+            List<DelegationInstitution> delegators = connector.findDelegators(
+                    "delegator-target", "prod-a", DelegationType.EA, null, 1);
+            assertEquals(1, delegators.size());
+            String firstSource = strict ? "owned-source" : "legacy-absent-source";
+            assertEquals(firstSource + "-root", delegators.get(0).getDelegationId());
+            assertEquals(firstSource, delegators.get(0).getInstitution().getId());
 
-        List<DelegationInstitution> delegates = connector.findDelegates(
-                "delegate-source", "prod-a", DelegationType.EA, null, 1);
-        assertEquals(1, delegates.size());
-        assertEquals("owned-target-root", delegates.get(0).getDelegationId());
-        assertEquals("owned-target", delegates.get(0).getInstitution().getId());
+            List<DelegationInstitution> delegates = connector.findDelegates(
+                    "delegate-source", "prod-a", DelegationType.EA, null, 1);
+            assertEquals(1, delegates.size());
+            String firstTarget = strict ? "owned-target" : "legacy-absent-target";
+            assertEquals(firstTarget + "-root", delegates.get(0).getDelegationId());
+            assertEquals(firstTarget, delegates.get(0).getInstitution().getId());
 
-        assertEquals(List.of(), connector.findDelegators(
-                "no-match-target", "prod-a", DelegationType.EA, null, 1));
-        assertEquals(List.of(), connector.findDelegators(
-                "foreign-only-target", "prod-a", DelegationType.EA, null, 1));
+            assertEquals(strict
+                            ? List.of("owned-source-root")
+                            : List.of("legacy-absent-source-root", "legacy-null-source-root", "owned-source-root"),
+                    connector.findDelegators("delegator-target", "prod-a", DelegationType.EA, null, 10)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(strict
+                            ? List.of("owned-target-root")
+                            : List.of("legacy-absent-target-root", "legacy-null-target-root", "owned-target-root"),
+                    connector.findDelegates("delegate-source", "prod-a", DelegationType.EA, null, 10)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(strict ? List.of() : List.of("legacy-null-source-root"),
+                    connector.findDelegators(
+                                    "delegator-target", "prod-a", DelegationType.EA, delegators.get(0).getId(), 1)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(strict ? List.of() : List.of("legacy-null-target-root"),
+                    connector.findDelegates(
+                                    "delegate-source", "prod-a", DelegationType.EA, delegates.get(0).getId(), 1)
+                            .stream().map(DelegationInstitution::getDelegationId).toList());
+            assertEquals(List.of(), connector.findDelegators(
+                    "no-match-target", "prod-a", DelegationType.EA, null, 1));
+            assertEquals(List.of(), connector.findDelegators(
+                    "foreign-only-target", "prod-a", DelegationType.EA, null, 1));
+        }
     }
 
     @Test
