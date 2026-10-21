@@ -24,15 +24,14 @@ orchestration.
 
 Calls also propagate `Authorization`, `X-Tenant-Id`, and the Azure Function key.
 Within an authenticated HTTP request the original session JWT is forwarded. A
-background call uses `JWT_BEARER_TOKEN` as a fallback and rejects it locally when
-it is malformed, expired, not RS256, lacks `iss`/`uid`, or its `tenant_id` differs
-from the resolved tenant. The Function remains responsible for signature and
-issuer verification.
+background call uses `JWT_BEARER_TOKEN` as a fallback. The client does not inspect
+the token: onboarding-functions (`HttpJwtValidator`) is the only place that
+verifies signature, `exp`, issuer, `uid` and `tenant_id` against `X-Tenant-Id`.
 
 The technical token is an expiring Key Vault secret. Rotate it before `exp` in
 every environment and verify that the replacement is signed by the key matching
-the stack's `JWT_PUBLIC_KEY_<TENANT>` configuration. A failed local consistency
-check is an operational configuration error and the downstream call is not sent.
+the stack's `JWT_PUBLIC_KEY_<TENANT>` configuration. An expired or mismatched token
+surfaces as a `401` from onboarding-functions.
 
 ### Disable starting async onboarding workflow
 

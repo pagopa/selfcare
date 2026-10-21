@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @QuarkusTest
@@ -61,24 +60,6 @@ class AuthenticationPropagationHeadersFactoryTest {
         // then
         assertEquals(List.of("PNPG"), outgoingHeaders.get(TenantContext.TENANT_HEADER));
         assertTechnicalAuthorization(outgoingHeaders);
-    }
-
-    @Test
-    void rejectsTechnicalTokenForDifferentTenant() {
-        // given
-        MultivaluedHashMap<String, String> incomingHeaders = new MultivaluedHashMap<>();
-        MultivaluedHashMap<String, String> outgoingHeaders = new MultivaluedHashMap<>();
-        incomingHeaders.put(TenantContext.TENANT_HEADER, List.of("AR"));
-
-        // when
-        IllegalStateException exception = assertThrows(
-                IllegalStateException.class,
-                () -> authenticationPropagationHeadersFactory.update(incomingHeaders, outgoingHeaders));
-
-        // then
-        assertEquals(
-                "Invalid technical JWT for onboarding-functions: tenant_id does not match X-Tenant-Id",
-                exception.getMessage());
     }
 
     private static void assertTechnicalAuthorization(

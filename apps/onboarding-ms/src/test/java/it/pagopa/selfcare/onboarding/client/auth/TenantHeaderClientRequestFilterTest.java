@@ -94,26 +94,6 @@ class TenantHeaderClientRequestFilterTest {
     assertEquals("No bearer token available for onboarding-functions", exception.getMessage());
   }
 
-  @Test
-  void rejectsTechnicalTokenForDifferentTenant() {
-    // given
-    when(tokenInstance.isResolvable()).thenReturn(false);
-    TenantHeaderClientRequestFilter filter =
-        new TenantHeaderClientRequestFilter(
-            headersFactory, tokenInstance, Optional.of(technicalJwt("PNPG")), "function-key");
-
-    // when
-    IllegalStateException exception =
-        assertThrows(
-            IllegalStateException.class,
-            () -> filter.filter(requestContext(new MultivaluedHashMap<>())));
-
-    // then
-    assertEquals(
-        "Invalid technical JWT for onboarding-functions: tenant_id does not match X-Tenant-Id",
-        exception.getMessage());
-  }
-
   private static ClientRequestContext requestContext(MultivaluedMap<String, Object> outgoing) {
     ClientRequestContext requestContext = mock(ClientRequestContext.class);
     when(requestContext.getHeaders()).thenReturn(outgoing);

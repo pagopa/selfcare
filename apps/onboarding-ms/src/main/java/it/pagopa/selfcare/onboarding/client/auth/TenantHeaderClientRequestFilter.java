@@ -1,6 +1,5 @@
 package it.pagopa.selfcare.onboarding.client.auth;
 
-import it.pagopa.selfcare.security.TechnicalJwtValidator;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
@@ -56,13 +55,12 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         if (tenant != null) {
             requestContext.getHeaders().put(TENANT_HEADER, new ArrayList<>(tenant));
         }
-        String resolvedTenant = tenant == null || tenant.isEmpty() ? null : tenant.get(0);
         requestContext.getHeaders().putSingle(
-                AUTHORIZATION_HEADER, "Bearer " + resolveBearerToken(resolvedTenant));
+                AUTHORIZATION_HEADER, "Bearer " + resolveBearerToken());
         requestContext.getHeaders().putSingle(FUNCTION_KEY_HEADER, functionKey);
     }
 
-    private String resolveBearerToken(String tenant) {
+    private String resolveBearerToken() {
         try {
             if (jsonWebToken.isResolvable()) {
                 String rawToken = jsonWebToken.get().getRawToken();
@@ -73,11 +71,9 @@ public class TenantHeaderClientRequestFilter implements ClientRequestFilter {
         } catch (RuntimeException ignored) {
             // There is no active HTTP security context: use the technical token below.
         }
-        String token = technicalToken
+        return technicalToken
                 .filter(configuredToken -> !configuredToken.isBlank())
                 .orElseThrow(() ->
                         new IllegalStateException("No bearer token available for onboarding-functions"));
-        TechnicalJwtValidator.validate(token, tenant);
-        return token;
     }
 }
