@@ -178,3 +178,15 @@ A new suite of integration tests written with cucumber was added in `it.pagopa.s
 To run the Cucumber tests locally, execute it.pagopa.selfcare.user.integration_test.CucumberSuite
 
 To run a single test or a specific feature file, open the file and press the play button for the corresponding test (or the file). 
+
+### Tenant MongoDB regression tests
+
+`TenantDelegationAggregationIntegrationTest` uses a MongoDB Testcontainer to cover
+tenant-scoped aggregations, reachable foreign graph nodes, notifications, and
+institution replacement writes in strict and compatibility modes. It verifies
+that rejected writes leave stored documents unchanged and do not insert retry IDs.
+With Docker running, execute it from the monorepo root:
+
+```shell script
+mvn --projects :selc-ms-core-app --also-make test -Dtest=TenantDelegationAggregationIntegrationTest -Dsurefire.failIfNoSpecifiedTests=false
+```
