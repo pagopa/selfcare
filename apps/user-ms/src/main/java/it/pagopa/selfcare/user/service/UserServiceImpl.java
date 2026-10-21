@@ -375,8 +375,9 @@ public class UserServiceImpl implements UserService {
      *   email) and tokenId and userMailUuid are updated if different; if nothing changes the user is not modified;
      * - user in the list with a different role or different productRoles: the previous role is set to DELETED
      *   and the new role is added in ACTIVE, without sending emails;
-     * - administrator (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list: the role is set to DELETED and an email is sent;
-     *   if it was the last active role of the user on the product, the user is also removed from the groups of the product.
+     * - administrator (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list: all the administrator roles of the user on the
+     *   product (also with different productRoles) are set to DELETED, keeping the other roles, sending an email for each removed role;
+     *   if the user has no other active role on the product, the user is also removed from the groups of the product.
      * The operation is idempotent: a user already aligned is not modified.
      */
     @Override
@@ -388,36 +389,50 @@ public class UserServiceImpl implements UserService {
         return Multi.createFrom().iterable(users)
                 .onItem().transformToUniAndConcatenate(user -> userUtils.checkProductRolesAndValidateRequestMultirole(productId, PartyRole.valueOf(user.getRole()), user.getProductRoles()))
                 .collect().asList()
-                .onItem().transformToUni(ignore -> retrieveProductAdmins(institutionId, productId))
-                .onItem().transformToUni(currentAdmins -> Multi.createFrom().iterable(users)
+                .onItem().transformToUni(ignore -> retrieveProductAdminIds(institutionId, productId))
+                .onItem().transformToUni(currentAdminIds -> Multi.createFrom().iterable(users)
                         .onItem().transformToUniAndConcatenate(user -> syncProductUser(institutionId, productId, request, user, loggedUser))
                         .collect().asList()
-                        .replaceWith(currentAdmins))
-                .onItem().transformToUni(currentAdmins -> Multi.createFrom().iterable(currentAdmins.entrySet())
-                        .filter(admin -> !requestedUserIds.contains(admin.getKey()))
-                        .onItem().transformToUniAndConcatenate(admin -> removeProductAdmin(admin.getKey(), institutionId, productId, admin.getValue(), loggedUser))
+                        .replaceWith(currentAdminIds))
+                .onItem().transformToUni(currentAdminIds -> Multi.createFrom().iterable(currentAdminIds)
+                        .filter(adminId -> !requestedUserIds.contains(adminId))
+                        .onItem().transformToUniAndConcatenate(adminId -> removeProductAdmin(adminId, institutionId, productId, loggedUser))
                         .collect().asList())
                 .onFailure().invoke(throwable -> log.error("Error during update of product users for institutionId: {}, productId: {} -> exception: {}", Encode.forJava(institutionId), Encode.forJava(productId), throwable.getMessage(), throwable))
                 .replaceWithVoid();
     }
 
     /**
-     * Removes the administrator role of a user not in the list. When it is the last active role of the user on the
-     * product (definitive removal, not a role change), the user is removed from all the groups of the institution and
-     * product before the role is deleted, so that a retry repeats the group removal.
+     * Removes all the administrator roles (also with different productRoles) of a user not in the list, keeping the
+     * other roles. When the user has no other active role on the product (definitive removal, not a role change), the
+     * user is removed from all the groups of the institution and product before the roles are deleted, so that a retry
+     * repeats the group removal. An email is sent for each removed role.
      */
-    private Uni<Void> removeProductAdmin(String userId, String institutionId, String productId, PartyRole role, LoggedUser loggedUser) {
-        log.info("Removing role {} on product {} for user {} of institution {}", role, Encode.forJava(productId), Encode.forJava(userId), Encode.forJava(institutionId));
+    private Uni<Void> removeProductAdmin(String userId, String institutionId, String productId, LoggedUser loggedUser) {
         return userInstitutionService.findByUserIdAndInstitutionId(userId, institutionId)
-                .onItem().transformToUni(userInstitution -> isLastActiveRoleOnProduct(userInstitution, productId, role)
-                        ? removeUserFromGroups(userId, institutionId, productId)
-                        : Uni.createFrom().voidItem())
-                .onItem().transformToUni(ignore -> updateUserProductStatus(userId, institutionId, productId, role, DELETED, null, loggedUser));
+                .onItem().transformToUni(userInstitution -> removeProductAdminRoles(userInstitution, userId, institutionId, productId, loggedUser));
     }
 
-    private static boolean isLastActiveRoleOnProduct(UserInstitution userInstitution, String productId, PartyRole role) {
-        return Objects.isNull(userInstitution) || retrieveActiveProducts(userInstitution, productId).stream()
-                .allMatch(onboardedProduct -> role.equals(onboardedProduct.getRole()));
+    private Uni<Void> removeProductAdminRoles(UserInstitution userInstitution, String userId, String institutionId, String productId, LoggedUser loggedUser) {
+        List<OnboardedProduct> activeProducts = Objects.isNull(userInstitution) ? List.of() : retrieveActiveProducts(userInstitution, productId);
+        List<OnboardedProduct> adminProducts = activeProducts.stream().filter(UserServiceImpl::isProductAdmin).toList();
+        if (adminProducts.isEmpty()) {
+            log.info("No administrator role to remove on product {} for user {} of institution {}", Encode.forJava(productId), Encode.forJava(userId), Encode.forJava(institutionId));
+            return Uni.createFrom().voidItem();
+        }
+        log.info("Removing {} administrator roles on product {} for user {} of institution {}", adminProducts.size(), Encode.forJava(productId), Encode.forJava(userId), Encode.forJava(institutionId));
+        Uni<Void> groupsRemoval = adminProducts.size() == activeProducts.size()
+                ? removeUserFromGroups(userId, institutionId, productId)
+                : Uni.createFrom().voidItem();
+        return groupsRemoval
+                .onItem().transformToUni(ignore -> Multi.createFrom().iterable(adminProducts)
+                        .onItem().transformToUniAndConcatenate(adminProduct -> updateUserProductStatus(userId, institutionId, productId, adminProduct.getRole(), DELETED, adminProduct.getProductRole(), loggedUser))
+                        .collect().asList())
+                .replaceWithVoid();
+    }
+
+    private static boolean isProductAdmin(OnboardedProduct onboardedProduct) {
+        return Objects.nonNull(onboardedProduct.getRole()) && PRODUCT_ADMIN_ROLES.contains(onboardedProduct.getRole().name());
     }
 
     private Uni<Void> removeUserFromGroups(String userId, String institutionId, String productId) {
@@ -446,9 +461,9 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * Returns the users having an ACTIVE or SUSPENDED administrator role on the product, with their role.
+     * Returns the ids of the users having an ACTIVE or SUSPENDED administrator role on the product.
      */
-    private Uni<Map<String, PartyRole>> retrieveProductAdmins(String institutionId, String productId) {
+    private Uni<Set<String>> retrieveProductAdminIds(String institutionId, String productId) {
         var userInstitutionFilters = UserInstitutionFilter.builder().institutionId(institutionId).build().constructMap();
         var productFilters = OnboardedProductFilter.builder()
                 .productId(productId)
@@ -456,15 +471,11 @@ public class UserServiceImpl implements UserService {
                 .status(List.of(ACTIVE.name(), SUSPENDED.name()))
                 .build().constructMap();
         return userInstitutionService.retrieveFilteredUserInstitution(userUtils.retrieveMapForFilter(userInstitutionFilters, productFilters))
-                .onItem().transform(userInstitutions -> {
-                    Map<String, PartyRole> admins = new LinkedHashMap<>();
-                    userInstitutions.forEach(userInstitution -> retrieveActiveProducts(userInstitution, productId).stream()
-                            .map(OnboardedProduct::getRole)
-                            .filter(role -> Objects.nonNull(role) && PRODUCT_ADMIN_ROLES.contains(role.name()))
-                            .findFirst()
-                            .ifPresent(role -> admins.put(userInstitution.getUserId(), role)));
-                    return admins;
-                });
+                .onItem().transform(userInstitutions -> userInstitutions.stream()
+                        .filter(userInstitution -> retrieveActiveProducts(userInstitution, productId).stream()
+                                .anyMatch(UserServiceImpl::isProductAdmin))
+                        .map(UserInstitution::getUserId)
+                        .collect(Collectors.toCollection(LinkedHashSet::new)));
     }
 
     private Uni<Void> syncProductUser(String institutionId, String productId, UpdateProductUsersDto request, UpdateProductUsersDto.ProductUser user, LoggedUser loggedUser) {
@@ -497,7 +508,9 @@ public class UserServiceImpl implements UserService {
         log.info("Adding role {} on product {} for user {} of institution {}", Encode.forJava(user.getRole()), Encode.forJava(productId), Encode.forJava(user.getUserId()), Encode.forJava(target.getInstitutionId()));
         addProductRoles(target, productId, request.getTokenId(), user);
         return userInstitutionService.persistOrUpdate(target)
-                .onItem().transformToUni(saved -> sendNotificationsAndReturnData(saved, userResource, user.getProductRoles(), true, loggedUser, productId, QueueEvent.ADD))
+                .onItem().transformToUni(saved -> sendNotificationsAndReturnData(saved, userResource, user.getProductRoles(), true, loggedUser, productId, QueueEvent.ADD)
+                        .onFailure().invoke(throwable -> log.error("Error sending creation email for userId: {}, institutionId: {}, productId: {}", Encode.forJava(saved.getUserId()), Encode.forJava(saved.getInstitutionId()), Encode.forJava(productId), throwable))
+                        .onFailure().recoverWithNull())
                 .replaceWithVoid();
     }
 
