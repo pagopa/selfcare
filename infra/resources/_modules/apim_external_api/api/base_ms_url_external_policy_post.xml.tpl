@@ -9,7 +9,7 @@
     <set-body template="none">@{
         var body = context.Request.Body.As<JObject>(preserveContent: true);
         body["productId"] = (string)context.Variables["productId"];
-        body["tenantId"] = "AR";
+        body["tenantId"] = context.Variables.GetValueOrDefault("tenantId", "AR");
         return body.ToString();
     }</set-body>
 

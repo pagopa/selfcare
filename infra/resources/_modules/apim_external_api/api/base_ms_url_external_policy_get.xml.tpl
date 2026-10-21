@@ -13,7 +13,8 @@
     <rewrite-uri template="@{
         string basePath = (string)context.Variables["requestpath"];
         string productId = (string)context.Variables["productId"];
-        return $"{basePath}/{productId}?tenantId=AR";
+        string tenantId = context.Variables.GetValueOrDefault("tenantId", "AR");
+        return $"{basePath}/{productId}?tenantId={tenantId}";
     }" />
 
     <set-backend-service base-url="${MS_BACKEND_URL}"/>

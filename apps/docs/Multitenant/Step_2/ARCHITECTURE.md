@@ -29,11 +29,13 @@
   MongoDB. Function workloads use Quarkus Azure Functions and the Azure Functions Java libraries. Framework
   versions differ by application and are not standardized by this step.
 - `Client framework:` Existing React frontends for the AR and PNPG user journeys. No client-framework change
-  is required by Step 2; frontend behavior is outside this step except for continuing to call the existing
-  APIM endpoints.
+  is required. The PNPG frontends change only their API base URLs (`.github/workflows/env/fe_*_pnpg.env`) to
+  the shared API host; see [Ingress_unification.md](Ingress_unification.md).
 - `API style and integration model:` HTTPS REST APIs described through OpenAPI and exposed through APIM;
   private REST calls between services; asynchronous CDC/event payloads; scheduled batch processing; Azure
-  Functions orchestration. APIM resolves the trusted tenant at ingress and overwrites `X-Tenant-Id`.
+  Functions orchestration. One Application Gateway listener and one APIM API per BFF serve both tenants. APIM
+  resolves the trusted tenant from the JWT claim, the APIM product, or (pre-login only) `Origin`, and
+  overwrites `X-Tenant-Id`.
 - `Authentication and session model:` JWT bearer authentication. The backend reconciles the JWT
   `tenant_id` claim with the APIM-provided `X-Tenant-Id` and exposes the result through `TenantContext`.
   Direct service calls propagate a compatible header and JWT; APIM-routed machine clients require
@@ -61,8 +63,9 @@
 
 ## Initial Architecture (Provisional)
 
-**Assumption A:** Step 0 tenant validation remains the only HTTP trust boundary. Step 2 consumes
-`TenantContext`; it does not introduce another header, claim, hostname, or path parser.
+**Assumption A:** Step 0 header/JWT reconciliation remains the backend trust boundary. Step 2 changes only
+how APIM obtains the tenant once the API host is shared (§7); downstream components consume `TenantContext`
+and never parse headers, claims, hostnames, or paths.
 
 **Assumption B:** The Step 1 canonical registry is the configuration-plane source for tenant resource
 metadata. No service-specific tenant map is introduced.
@@ -76,7 +79,7 @@ incomplete. Their provider-specific client design is `TO BE DECIDED`.
 
 ### 1. Trusted tenant context
 
-APIM maps the incoming tenant route to `AR` or `PNPG`, overwrites `X-Tenant-Id`, and forwards the request.
+APIM resolves the tenant (§7), overwrites `X-Tenant-Id`, and forwards the request.
 The backend validates the header against the JWT claim and stores the accepted value in `TenantContext`.
 Repositories and downstream resource providers receive only this validated value.
 
@@ -281,6 +284,31 @@ Services are migrated according to the internal call graph: dependencies before 
 entry points last. Existing Azure resources are moved to exactly one Terraform state before the unified stack
 manages them. Legacy resources remain available until production validation succeeds.
 
+### 7. Single ingress
+
+Details: [Ingress_unification.md](Ingress_unification.md).
+
+```text
+Browser (selfcare.pagopa.it | imprese.notifichedigitali.it)
+        ↓  https://api.<env>.selfcare.pagopa.it/<bff>/...
+Application Gateway — one listener, path rules only, tenant-agnostic
+        ↓  X-Selfcare-Original-Host (tracing only), incoming X-Tenant-Id removed
+APIM — one API per BFF
+        tenantId = JWT tenant_id  |  product tenantId  |  Origin allowlist (pre-login)
+        403 if unresolved or inconsistent; X-Tenant-Id overwritten
+        ↓
+Shared Container App Environment — header/claim reconciliation → TenantContext → tenant registry
+```
+
+- The Application Gateway cannot route on headers or JWT claims, so it routes by path only. The PNPG login
+  path (`/spid/*` to `hub-spid-pnpg`) moves into the `api` URL path map.
+- APIM products declare `tenantId` in their policy; product-linked policies propagate it to `X-Tenant-Id`, to
+  the minted JWT, and to backend parameters.
+- The tenant is sealed into the session token at login (`redirect_uri` bound to the tenant frontend, `tenant_id`
+  emitted by every issuer), then `JWT_TENANT_CLAIM_REQUIRED=true` removes the `PNPG` default.
+- Backends verify that the signing key belongs to the claimed tenant.
+- `api-pnpg` stays available, routed like `api` or redirecting with `308`, during the compatibility window.
+
 ## Requirement Traceability
 
 | Architecture component or boundary | Requirement groups | Notes |
@@ -297,6 +325,7 @@ manages them. Legacy resources remain available until production validation succ
 | Tenant-aware email provider and scheduler | SELC-16 | Sender mapping, complete producer inventory, and tenant-bound machine credentials are `TO BE DECIDED` |
 | Shared deployment configuration boundary | SELC-17 | Prevents tenant-specific values from being collapsed into legacy single-value settings |
 | Dependency-ordered cutover and Terraform state transfer | SELC-18 | Rate limits, replica bounds, SLOs, RTO, and RPO need more architecture input |
+| Single listener, one APIM API per BFF, token/product/`Origin` tenant resolution | SELC-19 | PNPG login strategy, pre-login source, Terraform owner, and `api-pnpg` window are open |
 
 ## Dependency Rules
 

@@ -20,7 +20,7 @@
                 <value>@((string)context.Variables["jwt"])</value>
             </set-header>
             <set-header name="X-Tenant-Id" exists-action="override">
-                <value>${APP_TENANT_ID}</value>
+                <value>@(context.Variables.GetValueOrDefault("tenantId", "${APP_TENANT_ID}"))</value>
             </set-header>
         </send-request>
 
