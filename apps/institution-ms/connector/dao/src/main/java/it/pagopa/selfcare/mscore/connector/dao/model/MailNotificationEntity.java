@@ -20,6 +20,7 @@ import java.util.Set;
 public class MailNotificationEntity {
 
     public static final String FIELD_ID = "id";
+    public static final String FIELD_TENANT_ID = "tenantId";
     public static final String FIELD_INSTITUTION_ID = "institutionId";
     public static final String FIELD_MODULE_DAY_OF_THE_EPOCH = "moduleDayOfTheEpoch";
     public static final String FIELD_PRODUCT_IDS = "productIds";
@@ -29,6 +30,8 @@ public class MailNotificationEntity {
 
     @BsonId
     private ObjectId id;
+
+    private String tenantId;
 
     @NotNull
     @Indexed(unique = true)

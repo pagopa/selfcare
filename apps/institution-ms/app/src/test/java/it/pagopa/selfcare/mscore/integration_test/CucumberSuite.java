@@ -65,7 +65,36 @@ public class CucumberSuite {
             throw new IOException("Public key file not found in classpath");
         }
         String publicKey = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        String mongoUri = "mongodb://localhost:27017/?readPreference=primary&appname=selcMsCore&directConnection=true&ssl=false";
         registry.add("JWT_TOKEN_PUBLIC_KEY", () -> publicKey);
+        registry.add("TENANT_SUPPORTED_TENANTS", () -> "AR,PNPG");
+        registry.add("TENANT_DEFAULT", () -> "AR");
+        registry.add("MONGODB_CONNECTION_STRING_AR", () -> mongoUri);
+        registry.add("MONGODB_CONNECTION_STRING_PNPG", () -> mongoUri);
+        registry.add("JWT_PUBLIC_KEY_AR", () -> publicKey);
+        registry.add("JWT_PUBLIC_KEY_PNPG", () -> publicKey);
+        registry.add("SELFCARE_TENANT_DATA_ISOLATION", () -> """
+                {
+                  "AR": {
+                    "mongo": {
+                      "account": "institution-ar-test",
+                      "database": "selcMsCore",
+                      "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_AR"
+                    },
+                    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_AR" },
+                    "storages": {}
+                  },
+                  "PNPG": {
+                    "mongo": {
+                      "account": "institution-pnpg-test",
+                      "database": "selcMsCorePnpg",
+                      "connectionStringEnvVar": "MONGODB_CONNECTION_STRING_PNPG"
+                    },
+                    "jwt": { "publicKeyEnvVar": "JWT_PUBLIC_KEY_PNPG" },
+                    "storages": {}
+                  }
+                }
+                """);
     }
 
 }

@@ -2,14 +2,35 @@ package it.pagopa.selfcare.commons.tenant.mongodb;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.MongoClientSettings;
 import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.commons.tenant.TenantRegistry;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.env.MockEnvironment;
 
 class TenantMongoDatabaseFactoryTest {
+
+    @Test
+    void configuredApplicationNameOverridesUriWithoutDroppingConnectionOptions() {
+        MongoClientSettings settings = TenantMongoDatabaseFactory.clientSettings(
+                "mongodb://localhost:27017/?readPreference=secondary&tls=true&appName=uri-name",
+                "selcMsCore");
+
+        assertEquals("selcMsCore", settings.getApplicationName());
+        assertEquals("secondary", settings.getReadPreference().getName());
+        assertTrue(settings.getSslSettings().isEnabled());
+    }
+
+    @Test
+    void blankConfiguredApplicationNameKeepsUriApplicationName() {
+        MongoClientSettings settings = TenantMongoDatabaseFactory.clientSettings(
+                "mongodb://localhost:27017/?appName=uri-name", " ");
+
+        assertEquals("uri-name", settings.getApplicationName());
+    }
 
     @Test
     void selectsClientAndDatabaseFromCurrentTenant() {
