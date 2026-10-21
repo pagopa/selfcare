@@ -186,7 +186,7 @@ locals {
     },
     {
       name  = "ONBOARDING-REQUIRED-DOCUMENTS-ENABLED"
-      value = "false"
+      value = "true"
     },
     {
       name  = "MS_DOCUMENT_URL"

@@ -17,7 +17,7 @@ import org.openapi.quarkus.onboarding_functions_json.model.OrchestrationResponse
 @ApplicationScoped
 public class OrchestrationServiceDefault implements OrchestrationService {
 
-    public static final String STARTING_ONBOARDING_ORCHESTRATION_FOR = "Starting Onboarding Orchestration for";
+    public static final String STARTING_ONBOARDING_ORCHESTRATION_FOR = "Starting Onboarding Orchestration for ";
 
     private final OrchestrationApi orchestrationApi;
 

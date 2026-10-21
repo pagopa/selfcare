@@ -102,13 +102,20 @@ the token's `kid`, so behavior is unchanged from before this change.
 ## Forward compatibility (future consolidated deployment)
 
 When a single deployment eventually serves both tenants at once, each tenant's
-`jwt.publicKeyEnvVar` **must** hold a JWK/JWKS document with a real, issuer-assigned
-`kid` rather than a plain PEM key: a plain PEM's synthetic `tenant:*` kid does not match
-any real token's `kid` header once more than one verification key is configured, so
-signature verification would fail for every token. This constraint is enforced only in
-practice (via `JWTCallerPrincipalFactory.selectPublicKey`, which requires an exact
-`kid` match whenever more than one key is configured) — no code changes are needed to
-migrate, only supplying JWKS-formatted key material per tenant.
+`jwt.publicKeyEnvVar` **should** hold a JWK/JWKS document with a real, issuer-assigned
+`kid` rather than a plain PEM key. `JWTCallerPrincipalFactory.selectCandidateKeys`
+behaves as follows when more than one key is configured:
+
+- token with a `kid`: only the exact match is tried; an unknown `kid` is rejected;
+- token without a `kid`: every configured key is tried, and the first one that verifies the
+  signature is accepted.
+
+The second case keeps plain PEM keys working, but it does not record which tenant owns the
+verifying key. A token signed with the AR key and carrying `tenant_id=PNPG` would therefore
+pass signature verification. Before a deployment trusts more than one tenant key
+(`SELC-19.8`), the factory must expose the tenant owning the verifying key and
+`JwtTenantValidator` must reject a token whose `tenant_id` differs from it. Real per-tenant
+`kid` values make this binding explicit and avoid one verification attempt per key.
 
 ### Spring implementation (`selc-commons-web`)
 

@@ -3152,6 +3152,56 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void onboardingContractUpdate(UniAsserter asserter) {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_INTEROP.getValue());
+        request.setUsers(List.of(manager, delegate1,
+                UserRequest.builder().name("delegate2").surname("surname2").taxCode("taxCode_delegate_2")
+                        .role(PartyRole.DELEGATE).build(),
+                UserRequest.builder().name("delegate3").surname("surname3").taxCode("taxCode_delegate_4")
+                        .role(PartyRole.DELEGATE).build()));
+        request.setInstitutionType(InstitutionType.PA);
+        request.setTaxCode("taxCode");
+        request.setSubunitCode("subunitCode");
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        mockPersistOnboarding(asserter);
+
+        mockSimpleSearchPOSTAndPersist(asserter);
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+
+        Onboarding referencedOnboarding = createDummyOnboarding();
+        referencedOnboarding.setPricingPlan("BASE");
+        referencedOnboarding.setAdditionalInformations(new AdditionalInformations());
+        referencedOnboarding.setContractUpdateRequired(true);
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(referencedOnboarding));
+        when(Onboarding.find((Document) any(), any())).thenReturn(query);
+
+        asserter.execute(() -> when(userRegistryApi.updateUsingPATCH(any(), any()))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build())));
+
+        asserter.assertThat(() -> onboardingService.onboardingContractUpdate(request, "userId"), response -> {
+            assertNotNull(response);
+            ArgumentCaptor<Onboarding> persisted = ArgumentCaptor.forClass(Onboarding.class);
+            PanacheMock.verify(Onboarding.class).persist(persisted.capture(), any());
+            Onboarding onboarding = persisted.getValue();
+            assertEquals(CONTRACT_UPDATE, onboarding.getWorkflowType());
+            assertEquals(OnboardingStatus.REQUEST, onboarding.getStatus());
+            assertEquals(referencedOnboarding.getId(), onboarding.getReferenceOnboardingId());
+            assertEquals("BASE", onboarding.getPricingPlan());
+            assertSame(referencedOnboarding.getAdditionalInformations(), onboarding.getAdditionalInformations());
+            assertNull(onboarding.getPreviousManagerId());
+            assertNull(onboarding.getTestEnvProductIds());
+            assertEquals(4, onboarding.getUsers().size());
+            assertTrue(onboarding.getExpiringDate().isAfter(LocalDateTime.now().plusDays(89)));
+            assertTrue(onboarding.getExpiringDate().isBefore(LocalDateTime.now().plusDays(91)));
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
     void onboardingUsersWithNullOnboardingReeferenceId(UniAsserter asserter) {
         OnboardingUserRequest request = new OnboardingUserRequest();
         List<UserRequest> users = List.of(manager);
@@ -3172,6 +3222,81 @@ class OnboardingServiceDefaultTest {
 
         asserter.assertFailedWith(() -> onboardingService.onboardingUsers(request, "userId", WorkflowType.USERS_EA), ResourceNotFoundException.class);
 
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingContractUpdateWithNullOnboardingReferenceId(UniAsserter asserter) {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_INTEROP.getValue());
+        request.setUsers(List.of(manager));
+        request.setInstitutionType(InstitutionType.PA);
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+
+        PanacheMock.mock(Onboarding.class);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().empty());
+        when(Onboarding.find((Document) any(), any())).thenReturn(query);
+
+        asserter.assertFailedWith(() -> onboardingService.onboardingContractUpdate(request, "userId"),
+                ResourceNotFoundException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingContractUpdateWithDuplicateManagerAndDelegate(UniAsserter asserter) {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_INTEROP.getValue());
+        request.setUsers(List.of(manager, UserRequest.builder().taxCode(manager.getTaxCode())
+                .email("delegate@example.com").role(PartyRole.DELEGATE).build()));
+        request.setInstitutionType(InstitutionType.PA);
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+
+        PanacheMock.mock(Onboarding.class);
+        Onboarding referencedOnboarding = createDummyOnboarding();
+        referencedOnboarding.setContractUpdateRequired(true);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(referencedOnboarding));
+        when(Onboarding.find((Document) any(), any())).thenReturn(query);
+
+        asserter.assertFailedWith(() -> onboardingService.onboardingContractUpdate(request, "userId"),
+                InvalidRequestException.class);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingContractUpdateWhenFlagMissing(UniAsserter asserter) {
+        assertContractUpdateNotRequired(null, asserter);
+    }
+
+    @Test
+    @RunOnVertxContext
+    void onboardingContractUpdateWhenFlagFalse(UniAsserter asserter) {
+        assertContractUpdateNotRequired(false, asserter);
+    }
+
+    private void assertContractUpdateNotRequired(Boolean contractUpdateRequired, UniAsserter asserter) {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_INTEROP.getValue());
+        request.setUsers(List.of(manager));
+        request.setInstitutionType(InstitutionType.PA);
+        request.setOrigin(Origin.IPA.name());
+        request.setOriginId("originId");
+        mockSimpleProductValidAssert(request.getProductId(), false, asserter, false, true);
+
+        PanacheMock.mock(Onboarding.class);
+        Onboarding referencedOnboarding = createDummyOnboarding();
+        referencedOnboarding.setContractUpdateRequired(contractUpdateRequired);
+        ReactivePanacheQuery query = Mockito.mock(ReactivePanacheQuery.class);
+        when(query.stream()).thenReturn(Multi.createFrom().item(referencedOnboarding));
+        when(Onboarding.find((Document) any(), any())).thenReturn(query);
+
+        asserter.assertFailedWith(() -> onboardingService.onboardingContractUpdate(request, "userId"),
+                InvalidRequestException.class);
     }
 
     @Test

@@ -260,6 +260,38 @@ class OnboardingFunctionsTest {
   }
 
   @Test
+  void onboardingsOrchestrator_logsUnsupportedWorkflow() {
+    final String onboardingId = "onboardingId";
+    TaskOrchestrationContext orchestrationContext = mock(TaskOrchestrationContext.class);
+    when(orchestrationContext.getInput(String.class))
+        .thenReturn(
+            orchestrationInput(new it.pagopa.selfcare.onboarding.dto.OnboardingOrchestrationInput(onboardingId, "AR")));
+    when(orchestrationContext.getIsReplaying()).thenReturn(false);
+
+    Onboarding onboarding = new Onboarding();
+    onboarding.setId(onboardingId);
+    onboarding.setTenantId("AR");
+    onboarding.setWorkflowType(WorkflowType.CONTRACT_UPDATE);
+    when(service.getOnboarding(onboardingId)).thenReturn(Optional.of(onboarding));
+
+    Logger logger = mock(Logger.class);
+    ExecutionContext functionContext = mock(ExecutionContext.class);
+    when(functionContext.getLogger()).thenReturn(logger);
+
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> function.onboardingsOrchestrator(orchestrationContext, functionContext));
+
+    assertEquals(
+        "Workflow options not found for onboardingId onboardingId and workflowType CONTRACT_UPDATE",
+        exception.getMessage());
+    verify(logger).severe(exception.getMessage());
+    verify(service, never())
+        .updateOnboardingStatusAndInstanceId(anyString(), any(OnboardingStatus.class), anyString());
+  }
+
+  @Test
   void onboardingsOrchestratorContractRegistration() {
     Onboarding onboarding = new Onboarding();
     List<User> users = new ArrayList<>();

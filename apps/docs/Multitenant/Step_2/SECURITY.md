@@ -38,8 +38,20 @@ Source inputs:
 
 ### HTTP and APIM trust boundary
 
-- APIM MUST derive the tenant only from the configured trusted route and MUST overwrite, never forward, a
-  client-provided `X-Tenant-Id`. Unknown routes fail with a generic `403` before reaching a backend.
+- APIM MUST derive the tenant only from trusted sources and MUST overwrite, never forward, a client-provided
+  `X-Tenant-Id`. Unresolved tenants fail with a generic `403` before reaching a backend.
+- With a shared API host, the trusted sources are, in order: the validated JWT `tenant_id`; the `tenantId`
+  declared by the APIM product policy; and, for unauthenticated pre-login operations only, an exact match of
+  `Origin` against the tenant allowlist. The host and `X-Selfcare-Original-Host` are not tenant sources.
+- `Origin` can be forged by non-browser clients. It MUST NOT grant access to tenant-owned data; it only selects
+  the login flow, and the tenant is then sealed into the signed session token. When both a token and `Origin`
+  are present and disagree, APIM rejects the request.
+- The login flow MUST bind the OIDC `redirect_uri` to the tenant's registered frontend and MUST issue
+  `tenant_id` for every tenant. Once all issuers emit it, the `PNPG` default for tokens without the claim MUST
+  be disabled (`JWT_TENANT_CLAIM_REQUIRED=true`).
+- In a deployment trusting several tenant keys, the key that verified the signature MUST belong to the tenant
+  named in `tenant_id`. Trying every key and accepting any match is not sufficient.
+- The Application Gateway SHOULD remove any incoming `X-Tenant-Id`, as defence in depth.
 - CORS allowlists MUST contain exact trusted origins. CORS is a browser control, not authentication or
   authorization, and MUST NOT be used as proof of tenant identity.
 - Backend services MUST validate JWT signature and the configured algorithm, trusted issuer, audience,
@@ -49,7 +61,9 @@ Source inputs:
 - Every non-public endpoint MUST perform authorization locally. APIM checks do not replace service-side
   access control.
 - Subscription keys used by machine clients MUST be bound to one tenant and MUST NOT be the sole credential
-  for sensitive operations when a signed service identity is available.
+  for sensitive operations when a signed service identity is available. The binding is the `tenantId` variable
+  in the APIM product policy; an API MUST NOT be linked to products of different tenants while its backend
+  serves a single tenant.
 
 ### Tenant and object-level authorization
 
