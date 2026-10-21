@@ -309,7 +309,7 @@
       }
     },
     "/institutions/{institutionId}/products/{productId}/users" : {
-      "post" : {
+      "put" : {
         "tags" : [ "Institution" ],
         "summary" : "Update the admin users of a product of an institution",
         "description" : "Receives the complete list of administrators of the product (e.g. the ones indicated in a signed contract update; allowed roles: MANAGER, DELEGATE, ADMIN_EA) and aligns the user roles: missing users are added in ACTIVE, users with a different role are updated without sending emails, active administrators (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list are set to DELETED. Other roles are not affected.",

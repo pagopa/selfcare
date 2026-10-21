@@ -221,7 +221,7 @@ paths:
       security:
       - SecurityScheme: []
   /institutions/{institutionId}/products/{productId}/users:
-    post:
+    put:
       tags:
       - Institution
       summary: Update the admin users of a product of an institution

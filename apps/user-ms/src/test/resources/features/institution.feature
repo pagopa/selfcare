@@ -759,7 +759,7 @@ Feature: Institution
 
   ######################### END PUT /institutions/{institutionId} ###########################
 
-  ######## BEGIN POST /institutions/{institutionId}/products/{productId}/users ##########
+  ######## BEGIN PUT /institutions/{institutionId}/products/{productId}/users ##########
 
   @RemoveUserInstitutions
   Scenario: Successfully align the administrators of a product creating the missing users
@@ -788,7 +788,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -833,7 +833,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -876,7 +876,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -897,7 +897,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -954,7 +954,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -979,7 +979,7 @@ Feature: Institution
           "users": []
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 400
     And The response body contains:
       | title                                                                | Constraint Violation                       |
@@ -1010,7 +1010,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 400
 
   Scenario: Bad Token align the administrators of a product
@@ -1039,7 +1039,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 401
 
   @RemoveUserInstitutions
@@ -1063,7 +1063,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1102,7 +1102,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1135,7 +1135,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1156,7 +1156,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1208,7 +1208,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1265,7 +1265,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1318,7 +1318,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1349,7 +1349,7 @@ Feature: Institution
           ]
       }
       """
-    When I send a POST request to "/institutions/{institutionId}/products/{productId}/users"
+    When I send a PUT request to "/institutions/{institutionId}/products/{productId}/users"
     Then The status code is 204
     Given User login with username "j.doe" and password "test"
     And The following path params:
@@ -1366,7 +1366,7 @@ Feature: Institution
       | productId    | role         | status    | productRole              | tokenId                              |
       | prod-io      | DELEGATE     | ACTIVE    | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
 
-  ######## END POST /institutions/{institutionId}/products/{productId}/users ##########
+  ######## END PUT /institutions/{institutionId}/products/{productId}/users ##########
 
   ######## BEGIN POST /institutions/{institutionId}/product/{productId}/check-user ##########
 

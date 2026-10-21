@@ -78,7 +78,7 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", institutionId)
                 .pathParam("productId", productId)
                 .body(dto)
-                .post("/{institutionId}/products/{productId}/users")
+                .put("/{institutionId}/products/{productId}/users")
                 .then()
                 .statusCode(204);
 
@@ -94,7 +94,7 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", "institutionId")
                 .pathParam("productId", "prod-io")
                 .body(buildUpdateProductUsersDto(List.of()))
-                .post("/{institutionId}/products/{productId}/users")
+                .put("/{institutionId}/products/{productId}/users")
                 .then()
                 .statusCode(400);
 
@@ -114,7 +114,7 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", "institutionId")
                 .pathParam("productId", "prod-io")
                 .body(buildUpdateProductUsersDto(List.of(buildProductUser("userId", "OPERATOR"))))
-                .post("/{institutionId}/products/{productId}/users")
+                .put("/{institutionId}/products/{productId}/users")
                 .then()
                 .statusCode(400);
     }
@@ -127,7 +127,7 @@ class InstitutionControllerTest {
                 .pathParam("institutionId", "institutionId")
                 .pathParam("productId", "prod-io")
                 .body(buildUpdateProductUsersDto(List.of(buildProductUser("userId", "MANAGER"))))
-                .post("/{institutionId}/products/{productId}/users")
+                .put("/{institutionId}/products/{productId}/users")
                 .then()
                 .statusCode(401);
     }
