@@ -18,6 +18,7 @@ public class DelegationEntity {
 
     @Id
     private String id;
+    private String tenantId;
     private String from;
     private String institutionFromName;
     private String institutionToName;

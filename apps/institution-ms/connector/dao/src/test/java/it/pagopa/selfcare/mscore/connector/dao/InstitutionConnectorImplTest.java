@@ -8,6 +8,7 @@ import it.pagopa.selfcare.mscore.connector.dao.model.inner.PaymentServiceProvide
 import it.pagopa.selfcare.mscore.connector.dao.model.mapper.InstitutionEntityMapper;
 import it.pagopa.selfcare.mscore.connector.dao.model.mapper.InstitutionEntityMapperImpl;
 import it.pagopa.selfcare.mscore.connector.dao.utils.TestUtils;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.mscore.constant.Origin;
 import it.pagopa.selfcare.mscore.constant.RelationshipState;
 import it.pagopa.selfcare.mscore.constant.SearchMode;
@@ -23,11 +24,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.test.context.ContextConfiguration;
@@ -51,6 +54,9 @@ class InstitutionConnectorImplTest {
     @Mock
     InstitutionRepository institutionRepository;
 
+    @Mock
+    TenantAwareEntityWriter entityWriter;
+
     @Spy
     InstitutionEntityMapper institutionMapper = new InstitutionEntityMapperImpl();
 
@@ -71,9 +77,10 @@ class InstitutionConnectorImplTest {
      */
     @Test
     void testFindAll() {
-        when(institutionRepository.findAll()).thenReturn(new ArrayList<>());
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(new ArrayList<>());
         assertTrue(institutionConnectorImpl.findAll().isEmpty());
-        verify(institutionRepository).findAll();
+        verify(institutionRepository).find(any(Query.class), eq(InstitutionEntity.class));
     }
 
     /**
@@ -85,9 +92,10 @@ class InstitutionConnectorImplTest {
 
         ArrayList<InstitutionEntity> institutionEntityList = new ArrayList<>();
         institutionEntityList.add(institutionEntity);
-        when(institutionRepository.findAll()).thenReturn(institutionEntityList);
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(institutionEntityList);
         assertEquals(1, institutionConnectorImpl.findAll().size());
-        verify(institutionRepository).findAll();
+        verify(institutionRepository).find(any(Query.class), eq(InstitutionEntity.class));
     }
 
     /**
@@ -95,9 +103,42 @@ class InstitutionConnectorImplTest {
      */
     @Test
     void testFindAll4() {
-        when(institutionRepository.findAll()).thenThrow(new InvalidRequestException("An error occurred", "Code"));
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenThrow(new InvalidRequestException("An error occurred", "Code"));
         assertThrows(InvalidRequestException.class, () -> institutionConnectorImpl.findAll());
-        verify(institutionRepository).findAll();
+        verify(institutionRepository).find(any(Query.class), eq(InstitutionEntity.class));
+    }
+
+    @Test
+    void findAllUsesStrictTenantOwnershipPolicy() {
+        assertFindAllOwnershipPolicy(true, "AR");
+    }
+
+    @Test
+    void findAllUsesCompatibilityTenantOwnershipPolicy() {
+        assertFindAllOwnershipPolicy(false, new org.bson.Document("$in", Arrays.asList("AR", null)));
+    }
+
+    private void assertFindAllOwnershipPolicy(boolean strict, Object expectedTenantCriterion) {
+        TenantContext tenantContext = new TenantContext();
+        tenantContext.setTenantId("AR");
+        MongoOperations mongoOperations = mock(MongoOperations.class);
+        MongoCustomConnectorImpl customConnector = new MongoCustomConnectorImpl(
+                mongoOperations,
+                new TenantOwnershipPolicy(tenantContext, strict));
+        when(mongoOperations.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of());
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenAnswer(invocation -> customConnector.find(
+                        invocation.getArgument(0), InstitutionEntity.class));
+
+        institutionConnectorImpl.findAll();
+
+        ArgumentCaptor<Query> queryCaptor = ArgumentCaptor.forClass(Query.class);
+        verify(mongoOperations).find(queryCaptor.capture(), eq(InstitutionEntity.class));
+        assertEquals(expectedTenantCriterion,
+                queryCaptor.getValue().getQueryObject().get("tenantId"));
+        tenantContext.clear();
     }
 
     @Test
@@ -121,7 +162,8 @@ class InstitutionConnectorImplTest {
 
         institutionEntity.setOnboarding(List.of(onboardingEntity, onboardingEntity2));
 
-        when(institutionRepository.findById(any())).thenReturn(Optional.of(institutionEntity));
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(institutionEntity));
 
         Institution response = institutionConnectorImpl.findByIdAndProduct("507f1f77bcf86cd799439011", "productId_1");
         Assertions.assertEquals(onboardingEntity.getProductId() ,response.getOnboarding().get(0).getProductId());
@@ -134,7 +176,8 @@ class InstitutionConnectorImplTest {
 
         institutionEntity.setOnboarding(Collections.emptyList());
 
-        when(institutionRepository.findById(any())).thenReturn(Optional.of(institutionEntity));
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(institutionEntity));
 
         final Executable executable = () ->  institutionConnectorImpl.findByIdAndProduct("507f1f77bcf86cd799439011", "productId_1");
 
@@ -152,7 +195,8 @@ class InstitutionConnectorImplTest {
 
         institutionEntity.setOnboarding(List.of(onboardingEntity2));
 
-        when(institutionRepository.findById(any())).thenReturn(Optional.of(institutionEntity));
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(institutionEntity));
 
         final Executable executable = () ->  institutionConnectorImpl.findByIdAndProduct("507f1f77bcf86cd799439011", "productId_1");
 
@@ -192,14 +236,36 @@ class InstitutionConnectorImplTest {
         return onboarding;
     }
 
+    private Answer<InstitutionEntity> assignTenantAndReturn() {
+        return invocation -> {
+            InstitutionEntity entity = invocation.getArgument(1);
+            java.util.function.BiConsumer<InstitutionEntity, String> tenantIdSetter =
+                    invocation.getArgument(3);
+            tenantIdSetter.accept(entity, "AR");
+            return entity;
+        };
+    }
+
     @Test
     void shouldSaveInstitution() {
 
         Onboarding onboarding = dummyOnboarding();
         Institution institution = dummyInstitution();
-        when(institutionRepository.save(any())).thenAnswer(arg -> arg.getArguments()[0]);
+        when(entityWriter.replace(
+                anyString(),
+                any(InstitutionEntity.class),
+                eq(InstitutionEntity.class),
+                any())).thenAnswer(assignTenantAndReturn());
 
         Institution response = institutionConnectorImpl.save(institution);
+        ArgumentCaptor<InstitutionEntity> entityCaptor =
+                ArgumentCaptor.forClass(InstitutionEntity.class);
+        verify(entityWriter).replace(
+                eq(institution.getId()),
+                entityCaptor.capture(),
+                eq(InstitutionEntity.class),
+                any());
+        Assertions.assertEquals("AR", entityCaptor.getValue().getTenantId());
         Assertions.assertEquals(institution.getId(), response.getId());
         Assertions.assertEquals(institution.getExternalId(), response.getExternalId());
         Assertions.assertEquals(institution.getParentDescription(), response.getParentDescription());
@@ -219,23 +285,45 @@ class InstitutionConnectorImplTest {
     @Test
     void shouldSaveInstitution_whenDuplicateKeyError() {
 
-        when(institutionRepository.save(any())).
+        when(entityWriter.replace(
+                anyString(),
+                any(InstitutionEntity.class),
+                eq(InstitutionEntity.class),
+                any())).
                 thenThrow(DuplicateKeyException.class)
-                .thenAnswer(arg -> arg.getArguments()[0]);
+                .thenAnswer(assignTenantAndReturn());
 
         Institution response = institutionConnectorImpl.save(dummyInstitution());
 
         ArgumentCaptor<InstitutionEntity> captor = ArgumentCaptor.forClass(InstitutionEntity.class);
-        Mockito.verify(institutionRepository, times(2))
-                .save(captor.capture());
+        Mockito.verify(entityWriter, times(2))
+                .replace(anyString(), captor.capture(), eq(InstitutionEntity.class), any());
 
         List<InstitutionEntity> entities = captor.getAllValues();
         Assertions.assertEquals(entities.get(1).getId(), response.getId());
+        Assertions.assertEquals("AR", entities.get(0).getTenantId());
+        Assertions.assertEquals("AR", entities.get(1).getTenantId());
         Assertions.assertEquals(entities.get(1).getExternalId(), response.getExternalId());
         Assertions.assertEquals(entities.get(1).getParentDescription(), response.getParentDescription());
         Assertions.assertEquals(entities.get(1).getRea(), response.getRea());
         Assertions.assertEquals(entities.get(1).getZipCode(), response.getZipCode());
         Assertions.assertEquals(entities.get(1).getOnboarding().size(), response.getOnboarding().size());
+    }
+
+    @Test
+    void shouldNotRetryWhenTenantOwnershipConflicts() {
+        when(entityWriter.replace(
+                anyString(),
+                any(InstitutionEntity.class),
+                eq(InstitutionEntity.class),
+                any())).thenThrow(new TenantOwnershipConflictException());
+
+        assertThrows(
+                TenantOwnershipConflictException.class,
+                () -> institutionConnectorImpl.save(dummyInstitution()));
+
+        verify(entityWriter, times(1))
+                .replace(anyString(), any(InstitutionEntity.class), eq(InstitutionEntity.class), any());
     }
 
     @Test
@@ -257,13 +345,19 @@ class InstitutionConnectorImplTest {
 
     @Test
     void deleteById() {
-        doNothing().when(institutionRepository).deleteById(any());
+        when(institutionRepository.findAndRemove(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(new InstitutionEntity());
         Assertions.assertDoesNotThrow(() -> institutionConnectorImpl.deleteById("507f1f77bcf86cd799439011"));
+        verify(institutionRepository).findAndRemove(
+                queryArgumentCaptor.capture(), eq(InstitutionEntity.class));
+        assertEquals("507f1f77bcf86cd799439011",
+                queryArgumentCaptor.getValue().getQueryObject().getString("id"));
     }
 
     @Test
     void testFindById() {
-        when(institutionRepository.findById(any())).thenReturn(Optional.empty());
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of());
         assertThrows(ResourceNotFoundException.class, () -> institutionConnectorImpl.findById("42"));
     }
 
@@ -277,7 +371,8 @@ class InstitutionConnectorImplTest {
         institutionEntity.setGeographicTaxonomies(new ArrayList<>());
         institutionEntity.setPaymentServiceProvider(new PaymentServiceProviderEntity());
         institutionEntity.setDataProtectionOfficer(new DataProtectionOfficerEntity());
-        when(institutionRepository.findById(any())).thenReturn(Optional.of(institutionEntity));
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(institutionEntity));
         assertNotNull(institutionConnectorImpl.findById("id"));
     }
 
@@ -401,19 +496,20 @@ class InstitutionConnectorImplTest {
      */
     @Test
     void testFindAllByIds3() {
-        when(institutionRepository.findAllById(org.mockito.Mockito.any()))
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
                 .thenThrow(new ResourceNotFoundException("An error occurred", "Code"));
-        List<String> ids = new ArrayList<>();
+        List<String> ids = List.of("id");
         assertThrows(ResourceNotFoundException.class, () -> institutionConnectorImpl.findAllByIds(ids));
-        verify(institutionRepository).findAllById(org.mockito.Mockito.any());
+        verify(institutionRepository).find(any(Query.class), eq(InstitutionEntity.class));
     }
 
     @Test
     void testFindAllByIds2() {
-        when(institutionRepository.findAllById(org.mockito.Mockito.any())).thenReturn(List.of(new InstitutionEntity()));
-        List<String> ids = new ArrayList<>();
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(new InstitutionEntity()));
+        List<String> ids = List.of("id");
         assertDoesNotThrow(() -> institutionConnectorImpl.findAllByIds(ids));
-        verify(institutionRepository).findAllById(org.mockito.Mockito.any());
+        verify(institutionRepository).find(any(Query.class), eq(InstitutionEntity.class));
     }
 
     @Test
@@ -538,21 +634,32 @@ class InstitutionConnectorImplTest {
     void shouldFindOnboardingByIdAndProductId() {
         InstitutionEntity institutionEntity = new InstitutionEntity();
         institutionEntity.setOnboarding(List.of(new OnboardingEntity()));
-        when(institutionRepository.findByInstitutionIdAndOnboardingProductId(anyString(), anyString()))
-                .thenReturn(institutionEntity);
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(institutionEntity));
 
         List<Onboarding> onboardings = institutionConnectorImpl
                 .findOnboardingByIdAndProductId("example", "example");
 
         assertFalse(onboardings.isEmpty());
+        verify(institutionRepository).find(
+                queryArgumentCaptor.capture(), eq(InstitutionEntity.class));
+        Query query = queryArgumentCaptor.getValue();
+        assertEquals("example", query.getQueryObject().getString("id"));
+        assertTrue(query.getFieldsObject().containsKey("onboarding"));
+        assertEquals(
+                "example",
+                query.getQueryObject()
+                        .get("onboarding", org.bson.Document.class)
+                        .get("$elemMatch", org.bson.Document.class)
+                        .getString("productId"));
     }
 
     @Test
     void shouldFindOnboardingByIdAndProductIdIfProductIsNull() {
         InstitutionEntity institutionEntity = new InstitutionEntity();
         institutionEntity.setOnboarding(List.of(new OnboardingEntity()));
-        when(institutionRepository.findById(anyString()))
-                .thenReturn(Optional.of(institutionEntity));
+        when(institutionRepository.find(any(Query.class), eq(InstitutionEntity.class)))
+                .thenReturn(List.of(institutionEntity));
 
         List<Onboarding> onboardings = institutionConnectorImpl
                 .findOnboardingByIdAndProductId("example", null);

@@ -17,6 +17,10 @@
         </dependency>
         <dependency>
             <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-tenant</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
             <artifactId>selc-ms-core-connector-rest</artifactId>
         </dependency>
         <dependency>
