@@ -37,12 +37,15 @@ import it.pagopa.selfcare.user.service.utils.OPERATION_TYPE;
 import it.pagopa.selfcare.user.util.ActionMapRetriever;
 import it.pagopa.selfcare.user.util.UserUtils;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.WebApplicationException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_group_ms_json.api.UserGroupApi;
 import org.openapi.quarkus.user_registry_json.model.UserResource;
 import org.openapi.quarkus.user_registry_json.model.UserSearchDto;
 import org.openapi.quarkus.user_registry_json.model.WorkContactResource;
@@ -90,6 +93,10 @@ public class UserServiceImpl implements UserService {
     private final TelemetryClient telemetryClient;
     private final ActionMapRetriever actionMapRetriever;
 
+    @RestClient
+    @Inject
+    UserGroupApi userGroupApi;
+
     Supplier<String> randomMailId = () -> (MAIL_ID_PREFIX + UUID.randomUUID());
     private static final String WORK_CONTACTS = "workContacts";
     static final String USERS_WORKS_FIELD_LIST = "fiscalCode,familyName,email,name,workContacts";
@@ -97,7 +104,6 @@ public class UserServiceImpl implements UserService {
     public static final String USER_FIELD_LIST_WITHOUT_WORK_CONTACTS = "name,familyName,fiscalCode";
     private static final String USER_INSTITUTION_FOUNDED = "UserInstitution with userId: {} and institutionId: {} founded";
     private static final String USER_INSTITUTION_NOT_FOUND = "UserInstitution with userId: {} and institutionId: {} not found";
-    // Administrator roles ordered by precedence (the first is the highest)
     private static final List<String> PRODUCT_ADMIN_ROLES = List.of(PartyRole.MANAGER.name(), PartyRole.DELEGATE.name(), PartyRole.ADMIN_EA.name(), PartyRole.SUB_DELEGATE.name());
 
     /**
@@ -369,7 +375,8 @@ public class UserServiceImpl implements UserService {
      *   email) and tokenId and userMailUuid are updated if different; if nothing changes the user is not modified;
      * - user in the list with a different role or different productRoles: the previous role is set to DELETED
      *   and the new role is added in ACTIVE, without sending emails;
-     * - administrator (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list: the role is set to DELETED and an email is sent.
+     * - administrator (MANAGER, DELEGATE, SUB_DELEGATE, ADMIN_EA) not in the list: the role is set to DELETED and an email is sent;
+     *   if it was the last active role of the user on the product, the user is also removed from the groups of the product.
      * The operation is idempotent: a user already aligned is not modified.
      */
     @Override
@@ -388,12 +395,35 @@ public class UserServiceImpl implements UserService {
                         .replaceWith(currentAdmins))
                 .onItem().transformToUni(currentAdmins -> Multi.createFrom().iterable(currentAdmins.entrySet())
                         .filter(admin -> !requestedUserIds.contains(admin.getKey()))
-                        .onItem().transformToUniAndConcatenate(admin -> {
-                            log.info("Removing role {} on product {} for user {} of institution {}", admin.getValue(), Encode.forJava(productId), Encode.forJava(admin.getKey()), Encode.forJava(institutionId));
-                            return updateUserProductStatus(admin.getKey(), institutionId, productId, admin.getValue(), DELETED, null, loggedUser);
-                        })
+                        .onItem().transformToUniAndConcatenate(admin -> removeProductAdmin(admin.getKey(), institutionId, productId, admin.getValue(), loggedUser))
                         .collect().asList())
                 .onFailure().invoke(throwable -> log.error("Error during update of product users for institutionId: {}, productId: {} -> exception: {}", Encode.forJava(institutionId), Encode.forJava(productId), throwable.getMessage(), throwable))
+                .replaceWithVoid();
+    }
+
+    /**
+     * Removes the administrator role of a user not in the list. When it is the last active role of the user on the
+     * product (definitive removal, not a role change), the user is removed from all the groups of the institution and
+     * product before the role is deleted, so that a retry repeats the group removal.
+     */
+    private Uni<Void> removeProductAdmin(String userId, String institutionId, String productId, PartyRole role, LoggedUser loggedUser) {
+        log.info("Removing role {} on product {} for user {} of institution {}", role, Encode.forJava(productId), Encode.forJava(userId), Encode.forJava(institutionId));
+        return userInstitutionService.findByUserIdAndInstitutionId(userId, institutionId)
+                .onItem().transformToUni(userInstitution -> isLastActiveRoleOnProduct(userInstitution, productId, role)
+                        ? removeUserFromGroups(userId, institutionId, productId)
+                        : Uni.createFrom().voidItem())
+                .onItem().transformToUni(ignore -> updateUserProductStatus(userId, institutionId, productId, role, DELETED, null, loggedUser));
+    }
+
+    private static boolean isLastActiveRoleOnProduct(UserInstitution userInstitution, String productId, PartyRole role) {
+        return Objects.isNull(userInstitution) || retrieveActiveProducts(userInstitution, productId).stream()
+                .allMatch(onboardedProduct -> role.equals(onboardedProduct.getRole()));
+    }
+
+    private Uni<Void> removeUserFromGroups(String userId, String institutionId, String productId) {
+        log.info("Removing user {} from the groups of product {} of institution {}", Encode.forJava(userId), Encode.forJava(productId), Encode.forJava(institutionId));
+        return userGroupApi.deleteMemberFromUserGroupsUsingDELETE(UUID.fromString(userId), institutionId, productId)
+                .onFailure().invoke(throwable -> log.error("Error removing user {} from the groups of product {} of institution {}", Encode.forJava(userId), Encode.forJava(productId), Encode.forJava(institutionId), throwable))
                 .replaceWithVoid();
     }
 

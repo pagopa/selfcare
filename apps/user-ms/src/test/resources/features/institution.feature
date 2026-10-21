@@ -914,6 +914,12 @@ Feature: Institution
       | productId | role         | status  | productRole              | tokenId                              |
       | prod-io   | DELEGATE     | DELETED | referente amministrativo | 7a3df825-8317-4601-9fea-12283b7ed97f |
       | prod-io   | MANAGER      | ACTIVE  | referente amministrativo | c9f2b1d4-6a3e-4f8b-9d27-5e1a0b3c7f64 |
+    Given User login with username "j.doe" and password "test"
+    And The following path params:
+      | groupId                       | 6a1f0c2e9b3d4e5f6a7b8c01                       |
+    When I send a GET request to "http://localhost:8083/v1/user-groups/{groupId}"
+    Then The status code is 200
+    And The response body contains the list "members.findAll { it == '97a511a7-2acc-47b9-afed-2f3c65753b4a' }" of size 0
 
   @RemoveUserInstitutions
   Scenario: Successfully align the administrators of a product ignoring operators and keeping the highest role for duplicated users

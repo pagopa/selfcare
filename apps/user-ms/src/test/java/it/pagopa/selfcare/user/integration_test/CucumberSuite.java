@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Scanner;
 
 @Slf4j
@@ -48,7 +49,9 @@ public class CucumberSuite extends CucumberQuarkusTest {
         RestAssured.port = 8081;
 
         composeContainer = new ComposeContainer(new File("docker-compose.yml")).withLocalCompose(true)
-                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1));
+                .waitingFor("azure-cli", Wait.forLogMessage(".*BLOBSTORAGE INITIALIZED.*\\n", 1))
+                .waitingFor("usergroupms", Wait.forLogMessage(".*Started SelfCareUserGroupApplication.*", 1)
+                        .withStartupTimeout(Duration.ofMinutes(5)));
         composeContainer.start();
         Runtime.getRuntime().addShutdownHook(new Thread(composeContainer::stop));
 

@@ -48,6 +48,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.openapi.quarkus.user_group_ms_json.api.UserGroupApi;
 import org.openapi.quarkus.user_registry_json.model.*;
 
 import java.time.LocalDate;
@@ -120,6 +122,9 @@ class UserServiceTest {
     private UserUtils userUtils;
     @InjectMock
     private TelemetryClient telemetryClient;
+    @InjectMock
+    @RestClient
+    UserGroupApi userGroupApi;
 
     private static CreateUserDto getCreateUserDto(String productId, String fiscalCode, String institutionId, List<String> productRoles, String role) {
 
@@ -2612,7 +2617,7 @@ class UserServiceTest {
     @EnumSource(value = PartyRole.class, names = {"MANAGER", "DELEGATE", "SUB_DELEGATE", "ADMIN_EA"})
     void updateProductUsers_addNewUserAndRemoveAdminNotInList(PartyRole oldRole) {
         final String newUserId = "newUserId";
-        final String oldAdminId = "oldAdminId";
+        final String oldAdminId = "5d3b1c6e-8f2a-4b7d-9e10-2a4c6e8f0b13";
         UserInstitution oldAdmin = buildProductUserInstitution(oldAdminId, oldRole, ACTIVE);
         mockUpdateProductUsersCommon(List.of(oldAdmin));
         when(userInstitutionService.findByUserIdAndInstitutionId(newUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().nullItem());
@@ -2624,11 +2629,16 @@ class UserServiceTest {
                 .thenReturn(Uni.createFrom().item(1L));
         when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(oldAdmin));
         when(userNotificationService.sendEmailNotification(any(), any(), any(), eq(DELETED), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.findByUserIdAndInstitutionId(oldAdminId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(oldAdmin));
+        when(userGroupApi.deleteMemberFromUserGroupsUsingDELETE(UUID.fromString(oldAdminId), UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build()));
 
         userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(newUserId, "MANAGER")), UPDATE_LOGGED_USER)
                 .subscribe().withSubscriber(UniAssertSubscriber.create())
                 .awaitItem().assertCompleted();
 
+        verify(userGroupApi).deleteMemberFromUserGroupsUsingDELETE(UUID.fromString(oldAdminId), UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID);
+        verify(userGroupApi, times(1)).deleteMemberFromUserGroupsUsingDELETE(any(), any(), any());
         ArgumentCaptor<UserInstitution> captor = ArgumentCaptor.forClass(UserInstitution.class);
         verify(userInstitutionService).persistOrUpdate(captor.capture());
         UserInstitution saved = captor.getValue();
@@ -2648,6 +2658,54 @@ class UserServiceTest {
         verify(userInstitutionService).callOnboardingDelete("oldTokenId", oldAdminId, false);
         verify(userInstitutionService).updateUserStatusWithOptionalFilterByInstitutionAndProduct(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, oldRole, null, DELETED);
         verify(userNotificationService).sendEmailNotification(any(), any(), any(), eq(DELETED), isNull(), eq("name"), eq("familyName"));
+    }
+
+    @Test
+    void updateProductUsers_removedAdminWithOtherRoleIsNotRemovedFromGroups() {
+        final String newUserId = "newUserId";
+        final String oldAdminId = "oldAdminId";
+        UserInstitution oldAdmin = buildProductUserInstitution(oldAdminId, DELEGATE, ACTIVE);
+        OnboardedProduct operatorRole = new OnboardedProduct();
+        operatorRole.setProductId(UPDATE_PRODUCT_ID);
+        operatorRole.setProductRole("operator");
+        operatorRole.setRole(OPERATOR);
+        operatorRole.setStatus(ACTIVE);
+        oldAdmin.getProducts().add(operatorRole);
+        mockUpdateProductUsersCommon(List.of(oldAdmin));
+        when(userInstitutionService.findByUserIdAndInstitutionId(newUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().nullItem());
+        when(userInstitutionService.findByUserIdAndInstitutionId(oldAdminId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(oldAdmin));
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.findTokenIdUserIdList(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, DELEGATE, null)).thenReturn(Uni.createFrom().item(List.of()));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, DELEGATE, null, DELETED))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(oldAdmin));
+        when(userNotificationService.sendEmailNotification(any(), any(), any(), eq(DELETED), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(newUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userInstitutionService).updateUserStatusWithOptionalFilterByInstitutionAndProduct(oldAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, DELEGATE, null, DELETED);
+        verifyNoInteractions(userGroupApi);
+    }
+
+    @Test
+    void updateProductUsers_groupRemovalErrorBlocksRoleDeletion() {
+        final String oldAdminId = "5d3b1c6e-8f2a-4b7d-9e10-2a4c6e8f0b13";
+        final String newUserId = "newUserId";
+        UserInstitution oldAdmin = buildProductUserInstitution(oldAdminId, MANAGER, ACTIVE);
+        mockUpdateProductUsersCommon(List.of(oldAdmin));
+        when(userInstitutionService.findByUserIdAndInstitutionId(newUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().nullItem());
+        when(userInstitutionService.findByUserIdAndInstitutionId(oldAdminId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(oldAdmin));
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userGroupApi.deleteMemberFromUserGroupsUsingDELETE(UUID.fromString(oldAdminId), UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID))
+                .thenReturn(Uni.createFrom().failure(new WebApplicationException(500)));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(newUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitFailure().assertFailedWith(WebApplicationException.class);
+
+        verify(userInstitutionService, never()).updateUserStatusWithOptionalFilterByInstitutionAndProduct(eq(oldAdminId), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -2672,6 +2730,7 @@ class UserServiceTest {
         assertEquals("tokenId", products.get(1).getTokenId());
 
         verifyNoInteractions(userNotificationService);
+        verifyNoInteractions(userGroupApi);
         verify(userInstitutionService, never()).updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), any(), any(), any(), any(), any());
     }
 

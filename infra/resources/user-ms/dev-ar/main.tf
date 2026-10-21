@@ -146,6 +146,10 @@ locals {
       value = "https://selc-${module.local.config.env_short}-onboarding-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
+      name  = "USER_GROUP_URL"
+      value = "https://selc-${module.local.config.env_short}-user-group-ca.${module.local.config.private_dns_name_domain}"
+    },
+    {
       name  = "WEBHOOK_URL"
       value = "https://selc-${module.local.config.env_short}-webhook-ms-ca.${module.local.config.private_dns_name_domain}"
     },

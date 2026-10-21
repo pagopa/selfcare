@@ -1,0 +1,21 @@
+[
+  {
+    "_id": {
+      "$oid": "6a1f0c2e9b3d4e5f6a7b8c01"
+    },
+    "institutionId": "e3a4c8d2-5b79-4f3e-92d7-184a9b6fcd21",
+    "productId": "prod-io",
+    "name": "io group",
+    "description": "io group description",
+    "status": "ACTIVE",
+    "members": [
+      "97a511a7-2acc-47b9-afed-2f3c65753b4a"
+    ],
+    "createdAt": {
+      "$date": "2024-10-28T12:25:53.228+00:00"
+    },
+    "createdBy": "97a511a7-2acc-47b9-afed-2f3c65753b4a",
+    "modifiedAt": null,
+    "tenantId": "AR"
+  }
+]
