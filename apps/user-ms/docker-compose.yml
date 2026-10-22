@@ -49,6 +49,19 @@ services:
     networks:
       - develop-network
 
+  usergroupms:
+    image: ghcr.io/pagopa/selfcare-user-group-ms:latest
+    pull_policy: always
+    platform: linux/amd64
+    ports:
+      - "8083:8083"
+    env_file:
+      - "./src/test/resources/usergroupenv"
+    networks:
+      - develop-network
+    depends_on:
+      - mongodb
+
 networks:
   develop-network:
     name: selfcare-user-develop-network
