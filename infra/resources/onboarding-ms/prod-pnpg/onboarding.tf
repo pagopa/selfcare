@@ -179,10 +179,6 @@ locals {
       value = "https://selc-${module.local.config.env_short}-pnpg-user-ms-ca.${module.local.config.private_dns_name_domain}"
     },
     {
-      name  = "JWT_BEARER_TOKEN"
-      value = "@Microsoft.KeyVault(SecretUri=https://${module.local.config.key_vault_name}.vault.azure.net/secrets/jwt-bearer-token-functions/)"
-    },
-    {
       name  = "ONBOARDING-UPDATE-USER-REQUESTER"
       value = "true"
     },
@@ -218,6 +214,7 @@ locals {
 
   onboarding_ms_secrets_names = {
     "JWT_PUBLIC_KEY_PNPG"                   = "jwt-public-key"
+    "JWT_BEARER_TOKEN"                      = "jwt-bearer-token-functions"
     "MONGODB_CONNECTION_STRING_PNPG"        = "mongodb-connection-string"
     "USER-REGISTRY-API-KEY"                 = "user-registry-api-key"
     "ONBOARDING-FUNCTIONS-API-KEY"          = "fn-onboarding-primary-key"
