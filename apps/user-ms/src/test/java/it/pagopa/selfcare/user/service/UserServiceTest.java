@@ -845,6 +845,28 @@ class UserServiceTest {
     }
 
     @Test
+    void updateUserProductStatusEmailErrorDoesNotBlock() {
+        UserResource userResource = mock(UserResource.class);
+        when(userRegistryApi.findByIdUsingGET(any(), any())).thenReturn(Uni.createFrom().item(userResource));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(anyMap())).thenReturn(Uni.createFrom().item(mock(UserInstitution.class)));
+        when(productService.getProduct(any())).thenReturn(mock(Product.class));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                "userId", "institutionId", "productId", null, "productRole", OnboardedProductState.SUSPENDED))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(userNotificationService.sendEmailNotification(any(), any(), any(), any(), any(), any(), any()))
+                .thenThrow(new InvalidRequestException("Missing mail for userId: userId"));
+
+        userService.updateUserProductStatus("userId", "institutionId", "productId", OnboardedProductState.SUSPENDED, "productRole",
+                        LoggedUser.builder().build())
+                .subscribe()
+                .withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userInstitutionService).updateUserStatusWithOptionalFilterByInstitutionAndProduct(
+                "userId", "institutionId", "productId", null, "productRole", OnboardedProductState.SUSPENDED);
+    }
+
+    @Test
     void updateUserProductStatusNotFound() {
         UserResource userResource = mock(UserResource.class);
         when(userRegistryApi.findByIdUsingGET(any(), any()))
@@ -2750,6 +2772,37 @@ class UserServiceTest {
         verify(userInstitutionService).persistOrUpdate(captor.capture());
         assertEquals(ACTIVE, captor.getValue().getProducts().get(0).getStatus());
         verify(userNotificationService).sendCreateUserNotification(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void updateProductUsers_deletionEmailErrorDoesNotBlockSubsequentRemovals() {
+        final String newUserId = "newUserId";
+        final String firstAdminId = "5d3b1c6e-8f2a-4b7d-9e10-2a4c6e8f0b13";
+        final String secondAdminId = "7a1c2e3f-4b5d-4c6e-8f70-1a2b3c4d5e6f";
+        UserInstitution firstAdmin = buildProductUserInstitution(firstAdminId, MANAGER, ACTIVE);
+        UserInstitution secondAdmin = buildProductUserInstitution(secondAdminId, DELEGATE, ACTIVE);
+        mockUpdateProductUsersCommon(List.of(firstAdmin, secondAdmin));
+        when(userInstitutionService.findByUserIdAndInstitutionId(newUserId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().nullItem());
+        when(userInstitutionService.findByUserIdAndInstitutionId(firstAdminId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(firstAdmin));
+        when(userInstitutionService.findByUserIdAndInstitutionId(secondAdminId, UPDATE_INSTITUTION_ID)).thenReturn(Uni.createFrom().item(secondAdmin));
+        when(userNotificationService.sendCreateUserNotification(any(), any(), any(), any(), any(), any())).thenReturn(Uni.createFrom().voidItem());
+        when(userInstitutionService.findTokenIdUserIdList(any(), eq(UPDATE_INSTITUTION_ID), eq(UPDATE_PRODUCT_ID), any(), any())).thenReturn(Uni.createFrom().item(List.of()));
+        when(userInstitutionService.updateUserStatusWithOptionalFilterByInstitutionAndProduct(any(), eq(UPDATE_INSTITUTION_ID), eq(UPDATE_PRODUCT_ID), any(), any(), eq(DELETED)))
+                .thenReturn(Uni.createFrom().item(1L));
+        when(userInstitutionService.retrieveFirstFilteredUserInstitution(any())).thenReturn(Uni.createFrom().item(firstAdmin));
+        when(userNotificationService.sendEmailNotification(any(), any(), any(), eq(DELETED), any(), any(), any()))
+                .thenThrow(new InvalidRequestException("Missing mail for userId: " + firstAdminId))
+                .thenReturn(Uni.createFrom().voidItem());
+        when(userGroupApi.deleteMemberFromUserGroupsUsingDELETE(any(), eq(UPDATE_INSTITUTION_ID), eq(UPDATE_PRODUCT_ID)))
+                .thenReturn(Uni.createFrom().item(Response.noContent().build()));
+
+        userService.updateProductUsers(UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, buildUpdateProductUsersDto(buildProductUser(newUserId, "MANAGER")), UPDATE_LOGGED_USER)
+                .subscribe().withSubscriber(UniAssertSubscriber.create())
+                .awaitItem().assertCompleted();
+
+        verify(userInstitutionService).updateUserStatusWithOptionalFilterByInstitutionAndProduct(firstAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, MANAGER, "admin", DELETED);
+        verify(userInstitutionService).updateUserStatusWithOptionalFilterByInstitutionAndProduct(secondAdminId, UPDATE_INSTITUTION_ID, UPDATE_PRODUCT_ID, DELEGATE, "admin", DELETED);
+        verify(userNotificationService, times(2)).sendEmailNotification(any(), any(), any(), eq(DELETED), any(), any(), any());
     }
 
     @Test
