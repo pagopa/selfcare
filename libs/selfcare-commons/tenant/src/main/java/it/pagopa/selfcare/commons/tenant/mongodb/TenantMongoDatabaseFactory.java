@@ -1,6 +1,8 @@
 package it.pagopa.selfcare.commons.tenant.mongodb;
 
 import com.mongodb.ClientSessionOptions;
+import com.mongodb.ConnectionString;
+import com.mongodb.MongoClientSettings;
 import com.mongodb.client.ClientSession;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
@@ -24,6 +26,11 @@ public class TenantMongoDatabaseFactory implements MongoDatabaseFactory {
     private final Map<String, MongoDatabaseFactory> factories = new ConcurrentHashMap<>();
 
     public TenantMongoDatabaseFactory(TenantRegistry tenantRegistry, TenantContext tenantContext) {
+        this(tenantRegistry, tenantContext, "");
+    }
+
+    public TenantMongoDatabaseFactory(
+            TenantRegistry tenantRegistry, TenantContext tenantContext, String applicationName) {
         this.tenantRegistry = tenantRegistry;
         this.tenantContext = tenantContext;
         tenantRegistry.supportedTenantIds().forEach(tenantId -> {
@@ -31,12 +38,22 @@ public class TenantMongoDatabaseFactory implements MongoDatabaseFactory {
             String connectionString = tenantRegistry.mongoConnectionString(tenantId)
                     .orElseThrow(() -> new IllegalStateException(
                             "Missing Mongo connection string for tenant " + tenantId));
-            MongoClient client = MongoClients.create(connectionString);
+            MongoClient client =
+                    MongoClients.create(clientSettings(connectionString, applicationName));
             clients.put(tenantId, client);
             factories.put(
                     tenantId,
                     new SimpleMongoClientDatabaseFactory(client, mongo.database()));
         });
+    }
+
+    static MongoClientSettings clientSettings(String connectionString, String applicationName) {
+        MongoClientSettings.Builder builder = MongoClientSettings.builder()
+                .applyConnectionString(new ConnectionString(connectionString));
+        if (applicationName != null && !applicationName.isBlank()) {
+            builder.applicationName(applicationName);
+        }
+        return builder.build();
     }
 
     @Override

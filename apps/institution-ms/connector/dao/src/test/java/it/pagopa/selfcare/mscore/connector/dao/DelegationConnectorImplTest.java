@@ -14,11 +14,13 @@ import it.pagopa.selfcare.mscore.model.delegation.*;
 import it.pagopa.selfcare.mscore.model.institution.Institution;
 import org.bson.Document;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -27,6 +29,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.support.PageableExecutionUtils;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -34,13 +37,13 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static it.pagopa.selfcare.mscore.constant.GenericError.CREATE_DELEGATION_ERROR;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ContextConfiguration(classes = {DelegationConnectorImpl.class})
 @ExtendWith(MockitoExtension.class)
@@ -64,6 +67,25 @@ class DelegationConnectorImplTest {
     @Mock
     private MongoTemplate mongoTemplate;
 
+    @Mock
+    private TenantAwareEntityWriter entityWriter;
+
+    @Mock
+    private TenantOwnershipPolicy ownershipPolicy;
+
+    @Captor
+    private ArgumentCaptor<org.springframework.data.mongodb.core.query.Query> queryCaptor;
+
+    @BeforeEach
+    void configureOwnershipPolicy() {
+        lenient().when(ownershipPolicy.and(any(Criteria.class))).thenAnswer(invocation ->
+                new Criteria().andOperator(
+                        invocation.getArgument(0),
+                        Criteria.where("tenantId").is("AR")));
+        lenient().when(ownershipPolicy.criteria("institution.tenantId"))
+                .thenReturn(Criteria.where("institution.tenantId").is("AR"));
+    }
+
     @Spy
     private DelegationEntityMapper delegationMapper = new DelegationEntityMapperImpl();
 
@@ -73,20 +95,44 @@ class DelegationConnectorImplTest {
         delegationEntity.setId("id");
         delegationEntity.setType(DelegationType.PT);
         delegationEntity.setIsTest(true);
-        when(delegationRepository.save(Mockito.any())).thenReturn(delegationEntity);
-        Delegation response = delegationConnectorImpl.save(new Delegation());
+        when(entityWriter.replace(anyString(), any(DelegationEntity.class),
+                Mockito.eq(DelegationEntity.class), any()))
+                .thenAnswer(assignTenantAndReturn());
+        Delegation toSave = new Delegation();
+        toSave.setId("id");
+        toSave.setType(DelegationType.PT);
+        toSave.setIsTest(true);
+        Delegation response = delegationConnectorImpl.save(toSave);
         assertNotNull(response);
         assertNotNull(response.getId());
         assertEquals(response.getId(), delegationEntity.getId());
         assertEquals(response.getType(), delegationEntity.getType());
         assertEquals(response.getIsTest(), delegationEntity.getIsTest());
+        ArgumentCaptor<DelegationEntity> savedEntity =
+                ArgumentCaptor.forClass(DelegationEntity.class);
+        verify(entityWriter).replace(anyString(), savedEntity.capture(),
+                Mockito.eq(DelegationEntity.class), any());
+        assertEquals("AR", savedEntity.getValue().getTenantId());
     }
 
     @Test
     void testSaveDelegationWithError() {
-        when(delegationRepository.save(any())).thenThrow(new MsCoreException(CREATE_DELEGATION_ERROR.getMessage(), CREATE_DELEGATION_ERROR.getCode()));
+        when(entityWriter.replace(anyString(), any(DelegationEntity.class),
+                Mockito.eq(DelegationEntity.class), any()))
+                .thenThrow(new MsCoreException(CREATE_DELEGATION_ERROR.getMessage(), CREATE_DELEGATION_ERROR.getCode()));
         assertThrows(MsCoreException.class, () -> delegationConnectorImpl.save(new Delegation()));
-        verify(delegationRepository).save(any());
+        verify(entityWriter).replace(anyString(), any(DelegationEntity.class),
+                Mockito.eq(DelegationEntity.class), any());
+    }
+
+    private Answer<DelegationEntity> assignTenantAndReturn() {
+        return invocation -> {
+            DelegationEntity entity = invocation.getArgument(1);
+            java.util.function.BiConsumer<DelegationEntity, String> tenantIdSetter =
+                    invocation.getArgument(3);
+            tenantIdSetter.accept(entity, "AR");
+            return entity;
+        };
     }
 
     @Test
@@ -97,10 +143,15 @@ class DelegationConnectorImplTest {
         delegation.setType(DelegationType.PT);
         delegation.setProductId("prod");
         delegation.setStatus(DelegationState.DELETED);
-        when(delegationRepository.findByFromAndToAndProductIdAndTypeAndStatus(any(), any(), any(), any(), any())).thenReturn(Optional.of(new DelegationEntity()));
+        when(delegationRepository.find(any(org.springframework.data.mongodb.core.query.Query.class),
+                Mockito.eq(DelegationEntity.class))).thenReturn(List.of(new DelegationEntity()));
         boolean response = delegationConnectorImpl.checkIfExistsWithStatus(delegation, DelegationState.DELETED);
         assertTrue(response);
-
+        verify(delegationRepository).find(queryCaptor.capture(), Mockito.eq(DelegationEntity.class));
+        Document criteria = queryCaptor.getValue().getQueryObject();
+        assertEquals("from", criteria.getString("from"));
+        assertEquals("to", criteria.getString("to"));
+        assertEquals("prod", criteria.getString("productId"));
     }
 
     @Test
@@ -173,6 +224,9 @@ class DelegationConnectorImplTest {
         Document setDoc = (Document) updateDoc.get("$set");
         assertTrue(setDoc.containsKey(DelegationEntity.Fields.closedAt.name()));
         assertNotNull(setDoc.get(DelegationEntity.Fields.closedAt.name()));
+        verify(delegationRepository).findAndModify(
+                queryCaptor.capture(), any(), any(), Mockito.eq(DelegationEntity.class));
+        assertEquals("id", queryCaptor.getValue().getQueryObject().getString("id"));
     }
 
     @Test
@@ -196,18 +250,25 @@ class DelegationConnectorImplTest {
         Document setDoc = (Document) updateDoc.get("$set");
         assertTrue(setDoc.containsKey(DelegationEntity.Fields.closedAt.name()));
         assertNull(setDoc.get(DelegationEntity.Fields.closedAt.name()));
+        verify(delegationRepository).findAndModify(
+                queryCaptor.capture(), any(), any(), Mockito.eq(DelegationEntity.class));
+        assertEquals("id", queryCaptor.getValue().getQueryObject().getString("id"));
     }
 
     @Test
     void checkIfDelegationsAreActive_true() {
-        when(delegationRepository.findByToAndStatus(anyString(), any())).thenReturn(Optional.of(List.of(new DelegationEntity())));
+        when(delegationRepository.find(any(org.springframework.data.mongodb.core.query.Query.class),
+                Mockito.eq(DelegationEntity.class))).thenReturn(List.of(new DelegationEntity()));
         boolean response = delegationConnectorImpl.checkIfDelegationsAreActive("id");
         assertTrue(response);
+        verify(delegationRepository).find(queryCaptor.capture(), Mockito.eq(DelegationEntity.class));
+        assertEquals("id", queryCaptor.getValue().getQueryObject().getString("to"));
     }
 
     @Test
     void checkIfDelegationsAreActive_false() {
-        when(delegationRepository.findByToAndStatus(anyString(), any())).thenReturn(Optional.of(Collections.emptyList()));
+        when(delegationRepository.find(any(org.springframework.data.mongodb.core.query.Query.class),
+                Mockito.eq(DelegationEntity.class))).thenReturn(Collections.emptyList());
         boolean response = delegationConnectorImpl.checkIfDelegationsAreActive("id");
         assertFalse(response);
     }
@@ -275,6 +336,11 @@ class DelegationConnectorImplTest {
         assertNotNull(delegation);
         assertEquals(delegation.getId(), delegationEntity.getId());
         assertEquals(delegation.getIsTest(), delegationEntity.getIsTest());
+        verify(delegationRepository).findAndModify(
+                queryCaptor.capture(), any(), any(), Mockito.eq(DelegationEntity.class));
+        assertEquals("from", queryCaptor.getValue().getQueryObject().getString("from"));
+        assertEquals("to", queryCaptor.getValue().getQueryObject().getString("to"));
+        assertEquals("prod-io", queryCaptor.getValue().getQueryObject().getString("productId"));
     }
 
     @Test
@@ -297,10 +363,18 @@ class DelegationConnectorImplTest {
         assertNull(setDoc.get(DelegationEntity.Fields.isTest.name()));
         assertNotNull(delegation);
         assertEquals(delegation.getId(), delegationEntity.getId());
+        verify(delegationRepository).findAndModify(
+                queryCaptor.capture(), any(), any(), Mockito.eq(DelegationEntity.class));
+        assertEquals("from", queryCaptor.getValue().getQueryObject().getString("from"));
+        assertEquals("to", queryCaptor.getValue().getQueryObject().getString("to"));
     }
 
     @Test
     void findAndCount_shouldGetData() {
+        lenient().when(ownershipPolicy.and(any(Criteria.class))).thenAnswer(invocation ->
+                new Criteria().andOperator(
+                        invocation.getArgument(0),
+                        Criteria.where("tenantId").is("AR")));
 
         DelegationEntity delegationEntity = new DelegationEntity();
         delegationEntity.setId("id");
@@ -331,6 +405,8 @@ class DelegationConnectorImplTest {
 
         DelegationWithPagination response = delegationConnectorImpl.findAndCount(createDelegationParameters(delegationEntity.getFrom(),
                 delegationEntity.getTo(), delegationEntity.getProductId(), null, null, Order.NONE, PAGE_SIZE, MAX_PAGE_SIZE));
+        verify(mongoTemplate).count(queryCaptor.capture(), eq(DelegationEntity.class));
+        assertTrue(queryCaptor.getValue().getQueryObject().toJson().contains("\"tenantId\": \"AR\""));
 
         //Then
         assertNotNull(response);
@@ -382,6 +458,12 @@ class DelegationConnectorImplTest {
 
         Assertions.assertDoesNotThrow(executable);
         verify(delegationRepository, times(2)).updateMulti(any(), any(), any());
+        verify(delegationRepository, times(2)).updateMulti(
+                queryCaptor.capture(), any(), Mockito.eq(DelegationEntity.class));
+        assertEquals("institutionId",
+                queryCaptor.getAllValues().get(0).getQueryObject().getString("to"));
+        assertEquals("institutionId",
+                queryCaptor.getAllValues().get(1).getQueryObject().getString("from"));
 
     }
 
@@ -432,6 +514,11 @@ class DelegationConnectorImplTest {
 
         final List<DelegationInstitution> delegators = delegationConnectorImpl.findDelegators("institutionId", "productId", DelegationType.EA, 123L, 100);
         final List<DelegationInstitution> delegates = delegationConnectorImpl.findDelegates("institutionId", "productId", DelegationType.EA, 123L, 100);
+        ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
+        verify(mongoTemplate, times(2)).aggregate(
+                aggregationCaptor.capture(), anyString(), any(Class.class));
+        assertJoinPipelineScopesBothSides(aggregationCaptor.getAllValues().get(0), "from", "AR");
+        assertJoinPipelineScopesBothSides(aggregationCaptor.getAllValues().get(1), "to", "AR");
 
         assertEquals(2, delegators.size());
         assertEquals(2, delegates.size());
@@ -465,6 +552,33 @@ class DelegationConnectorImplTest {
         assertEquals("test2@test.com", delegates.get(1).getInstitution().getDigitalAddress());
         assertEquals("Institution2", delegators.get(1).getInstitution().getDescription());
         assertEquals("Institution2", delegates.get(1).getInstitution().getDescription());
+    }
+
+    @Test
+    void delegationLookupsPreserveCompatibilityOwnershipRules() {
+        when(ownershipPolicy.and(any(Criteria.class))).thenAnswer(invocation ->
+                new Criteria().andOperator(
+                        invocation.getArgument(0),
+                        Criteria.where("tenantId").in("AR", null)));
+        when(ownershipPolicy.criteria("institution.tenantId"))
+                .thenReturn(Criteria.where("institution.tenantId").in("AR", null));
+        when(mongoTemplate.aggregate(any(Aggregation.class), anyString(),
+                eq(DelegationInstitutionEntity.class)))
+                .thenReturn(new AggregationResults<>(List.of(), new Document()));
+
+        delegationConnectorImpl.findDelegators(
+                "institutionId", "productId", DelegationType.EA, null, 100);
+        delegationConnectorImpl.findDelegates(
+                "institutionId", "productId", DelegationType.EA, null, 100);
+
+        ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
+        verify(mongoTemplate, times(2)).aggregate(
+                aggregationCaptor.capture(), anyString(), eq(DelegationInstitutionEntity.class));
+        Document ownershipCondition = new Document("$in", java.util.Arrays.asList("AR", null));
+        assertJoinPipelineScopesBothSides(
+                aggregationCaptor.getAllValues().get(0), "from", ownershipCondition);
+        assertJoinPipelineScopesBothSides(
+                aggregationCaptor.getAllValues().get(1), "to", ownershipCondition);
     }
 
     @Test
@@ -502,10 +616,16 @@ class DelegationConnectorImplTest {
         assertEquals(1, result2.getPageInfo().getTotalPages());
         assertEquals(3, result2.getPageInfo().getTotalElements());
         assertEquals(100, result2.getPageInfo().getPageSize());
+
+        ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
+        verify(mongoTemplate, times(3)).aggregate(
+                aggregationCaptor.capture(), eq("Delegations"), eq(DelegationPageEntity.class));
+        aggregationCaptor.getAllValues().forEach(this::assertFirstStageScopesTenant);
     }
 
   @Test
   void countDelegations_shouldReturnCountsByProduct() {
+    ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
     OffsetDateTime from = OffsetDateTime.now().minusDays(1);
     OffsetDateTime to = OffsetDateTime.now();
 
@@ -527,9 +647,10 @@ class DelegationConnectorImplTest {
       delegationConnectorImpl.countDelegations(from, to, "prod-pagopa");
 
     verify(mongoTemplate).aggregate(
-      any(Aggregation.class),
+      aggregationCaptor.capture(),
       eq("Delegations"),
       eq(DelegationCount.class));
+    assertFirstStageScopesTenant(aggregationCaptor.getValue());
 
     assertEquals(2, result.size());
 
@@ -542,6 +663,11 @@ class DelegationConnectorImplTest {
 
   @Test
   void countDelegations_shouldReturnCountsForAllProductsWhenProductIdIsNull() {
+    ArgumentCaptor<Aggregation> aggregationCaptor = ArgumentCaptor.forClass(Aggregation.class);
+    when(ownershipPolicy.and(any(Criteria.class))).thenAnswer(invocation ->
+            new Criteria().andOperator(
+                    invocation.getArgument(0),
+                    Criteria.where("tenantId").in("AR", null)));
     OffsetDateTime from = OffsetDateTime.now().minusDays(1);
     OffsetDateTime to = OffsetDateTime.now();
 
@@ -561,11 +687,38 @@ class DelegationConnectorImplTest {
       delegationConnectorImpl.countDelegations(from, to, null);
 
     verify(mongoTemplate).aggregate(
-      any(Aggregation.class),
+      aggregationCaptor.capture(),
       eq("Delegations"),
       eq(DelegationCount.class));
+    assertFirstStageScopesTenant(aggregationCaptor.getValue());
+    assertTrue(aggregationCaptor.getValue()
+            .toPipeline(Aggregation.DEFAULT_CONTEXT).get(0).toString().contains("$in"));
 
     assertEquals(expected, result);
+  }
+
+  private void assertFirstStageScopesTenant(Aggregation aggregation) {
+    Document firstStage = aggregation.toPipeline(Aggregation.DEFAULT_CONTEXT).get(0);
+    assertTrue(firstStage.containsKey("$match"));
+  assertTrue(firstStage.get("$match", Document.class).toString().contains("tenantId"));
+  }
+
+  private void assertJoinPipelineScopesBothSides(
+          Aggregation aggregation, String localField, Object ownershipCondition) {
+    List<Document> stages = aggregation.toPipeline(Aggregation.DEFAULT_CONTEXT);
+    assertEquals(6, stages.size());
+    assertEquals(new Document("tenantId", ownershipCondition),
+            stages.get(0).get("$match", Document.class).getList("$and", Document.class).get(1));
+    assertEquals(new Document("$sort", new Document("createdAt", 1)), stages.get(1));
+    assertEquals(new Document("from", "Institution")
+                    .append("localField", localField)
+                    .append("foreignField", "_id")
+                    .append("as", "institution"),
+            stages.get(2).get("$lookup", Document.class));
+    assertEquals(new Document("$unwind", "$institution"), stages.get(3));
+    assertEquals(new Document("$match", new Document("institution.tenantId", ownershipCondition)),
+            stages.get(4));
+    assertEquals(100, stages.get(5).get("$limit", Number.class).intValue());
   }
 
 }

@@ -43,28 +43,43 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
 
     private final InstitutionRepository repository;
     private final InstitutionEntityMapper institutionMapper;
+    private final TenantAwareEntityWriter entityWriter;
 
-    public InstitutionConnectorImpl(InstitutionRepository repository, InstitutionEntityMapper institutionMapper) {
+    public InstitutionConnectorImpl(
+            InstitutionRepository repository,
+            InstitutionEntityMapper institutionMapper,
+            TenantAwareEntityWriter entityWriter) {
         this.repository = repository;
         this.institutionMapper = institutionMapper;
+        this.entityWriter = entityWriter;
     }
 
     @Override
     public List<Institution> findAll() {
-        return repository.findAll().stream().map(institutionMapper::convertToInstitution).collect(Collectors.toList());
+        return repository.find(new Query(), InstitutionEntity.class).stream()
+                .map(institutionMapper::convertToInstitution)
+                .collect(Collectors.toList());
     }
 
     @Override
     public Institution save(Institution institution) {
         final InstitutionEntity entity = institutionMapper.convertToInstitutionEntity(institution);
         try {
-            return institutionMapper.convertToInstitution(repository.save(entity));
+            return institutionMapper.convertToInstitution(entityWriter.replace(
+                    entity.getId(),
+                    entity,
+                    InstitutionEntity.class,
+                    InstitutionEntity::setTenantId));
         } catch (DuplicateKeyException e) {
             // the chance of generating two identical UUIDs is astronomically small
             // but sometimes happens, we catch this error in order to retry saving object
             log.warn(String.format("_id: %s, message: %s", entity.getId(), e.getMessage()));
             entity.setId(UUID.randomUUID().toString());
-            return institutionMapper.convertToInstitution(repository.save(entity));
+            return institutionMapper.convertToInstitution(entityWriter.replace(
+                    entity.getId(),
+                    entity,
+                    InstitutionEntity.class,
+                    InstitutionEntity::setTenantId));
         }
     }
 
@@ -80,12 +95,18 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
 
     @Override
     public void deleteById(String id) {
-        repository.deleteById(id);
+        repository.findAndRemove(
+                Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).is(id)),
+                InstitutionEntity.class);
     }
 
     @Override
     public Institution findById(String id) {
-        return repository.findById(id)
+        return repository.find(
+                        Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).is(id)),
+                        InstitutionEntity.class)
+                .stream()
+                .findFirst()
                 .map(institution -> {
                     log.info("Founded institution {}", institution.getExternalId());
                     return institutionMapper.convertToInstitution(institution);
@@ -179,10 +200,15 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
 
     @Override
     public List<Institution> findAllByIds(List<String> ids) {
-        List<Institution> list = new ArrayList<>();
-        repository.findAllById(ids)
-                .forEach(entity -> list.add(institutionMapper.convertToInstitution(entity)));
-        return list;
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        return repository.find(
+                        Query.query(Criteria.where(InstitutionEntity.Fields.id.name()).in(ids)),
+                        InstitutionEntity.class)
+                .stream()
+                .map(institutionMapper::convertToInstitution)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -199,10 +225,26 @@ public class InstitutionConnectorImpl implements InstitutionConnector {
     @Override
     public List<Onboarding> findOnboardingByIdAndProductId(String institutionId, String productId) {
 
-        Optional<InstitutionEntity> optionalInstitution = Objects.nonNull(productId)
-                ? Optional
-                .ofNullable(repository.findByInstitutionIdAndOnboardingProductId(institutionId, productId))
-                : repository.findById(institutionId);
+        Optional<InstitutionEntity> optionalInstitution;
+        if (Objects.nonNull(productId)) {
+            String onboardingField = InstitutionEntity.Fields.onboarding.name();
+            Criteria productCriteria =
+                    Criteria.where(OnboardingEntity.Fields.productId.name()).is(productId);
+            Query query = Query.query(Criteria.where(InstitutionEntity.Fields.id.name())
+                    .is(institutionId)
+                    .and(onboardingField)
+                    .elemMatch(productCriteria));
+            query.fields().elemMatch(onboardingField, productCriteria);
+            optionalInstitution = repository.find(query, InstitutionEntity.class).stream()
+                    .findFirst();
+        } else {
+            optionalInstitution = repository.find(
+                            Query.query(Criteria.where(InstitutionEntity.Fields.id.name())
+                                    .is(institutionId)),
+                            InstitutionEntity.class)
+                    .stream()
+                    .findFirst();
+        }
         return optionalInstitution
                 .map(institutionMapper::convertToInstitution)
                 .map(Institution::getOnboarding)

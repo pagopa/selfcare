@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.mscore.connector.dao;
 
 import com.mongodb.client.result.UpdateResult;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.mscore.api.MailNotificationConnector;
 import it.pagopa.selfcare.mscore.connector.dao.model.MailNotificationEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -18,9 +19,13 @@ import java.util.Optional;
 public class MailNotificationConnectorImpl implements MailNotificationConnector {
 
     private final MailNotificationRepository mailNotificationRepository;
+    private final TenantContext tenantContext;
 
-    public MailNotificationConnectorImpl(MailNotificationRepository mailNotificationRepository) {
+    public MailNotificationConnectorImpl(
+            MailNotificationRepository mailNotificationRepository,
+            TenantContext tenantContext) {
         this.mailNotificationRepository = mailNotificationRepository;
+        this.tenantContext = tenantContext;
     }
 
     @Override
@@ -31,6 +36,7 @@ public class MailNotificationConnectorImpl implements MailNotificationConnector 
                 .addToSet(MailNotificationEntity.FIELD_PRODUCT_IDS, productId)
                 .set(MailNotificationEntity.FIELD_UPDATED_AT, Instant.now())
                 .setOnInsert(MailNotificationEntity.FIELD_INSTITUTION_ID, institutionId)
+                .setOnInsert(MailNotificationEntity.FIELD_TENANT_ID, tenantContext.requiredTenantId())
                 .setOnInsert(MailNotificationEntity.FIELD_MODULE_DAY_OF_THE_EPOCH, moduleDayOfTheEpoch)
                 .setOnInsert(MailNotificationEntity.FIELD_DIGITAL_ADDRESS, digitalAddress)
                 .setOnInsert(MailNotificationEntity.FIELD_CREATED_AT, Instant.now());
