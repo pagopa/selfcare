@@ -27,8 +27,8 @@ public class TokenInitializer {
             System.setProperty("JWT_BEARER_TOKEN", Objects.requireNonNull(
                     JwtUtils.generateToken(
                             JwtData.builder()
-                                    .username("f.rossi")
-                                    .password("test")
+                                    .username("fake-user")
+                                    .password("fake-password")
                                     .jwtHeader(buildJwtHeader())
                                     .jwtPayload(buildJwtPayload())
                                     .build())));
@@ -45,8 +45,8 @@ public class TokenInitializer {
         // when
         var result = JwtUtils.generateToken(
                 JwtData.builder()
-                        .username("f.rossi")
-                        .password("test")
+                        .username("fake-user")
+                        .password("fake-password")
                         .jwtHeader(buildJwtHeader())
                         .jwtPayload(buildJwtPayload())
                         .build());

@@ -22,8 +22,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Pins the contract with onboarding-functions: its HTTP triggers require {@code X-Tenant-Id}, so every
  * generated client must register {@link TenantHeaderClientRequestFilter}, which forwards it through
- * {@link AuthenticationPropagationHeadersFactory}. A {@code ClientHeadersFactory} cannot be used directly:
- * the generator already registers its own because the spec declares the function key security scheme.
+ * {@link AuthenticationPropagationHeadersFactory}. The custom filter owns function key, JWT and tenant
+ * propagation, so generated security filters are intentionally disabled.
  */
 class OnboardingFunctionsClientTenantPropagationConfigTest {
 
@@ -56,10 +56,20 @@ class OnboardingFunctionsClientTenantPropagationConfigTest {
     }
 
     @Test
-    void onboardingFunctionsSpecKeepsFunctionKeyAuthentication() throws IOException {
+    void onboardingFunctionsFilterOwnsAllAuthenticationHeaders() throws IOException {
+        // given
         Properties properties = mainApplicationProperties();
 
-        assertNotNull(properties.getProperty("quarkus.openapi-generator.onboarding_functions_json.auth.api_key.api-key"));
+        // when
+        String securityGeneration = properties.getProperty(
+                "quarkus.openapi-generator.codegen.spec.onboarding_functions_json.enable-security-generation");
+        String functionKey = properties.getProperty("onboarding-ms.onboarding-functions-api-key");
+        String bearerToken = properties.getProperty("onboarding-ms.jwt-bearer-token");
+
+        // then
+        assertEquals("false", securityGeneration);
+        assertNotNull(functionKey);
+        assertNotNull(bearerToken);
     }
 
     // The test classpath shadows application.properties with the test one, so the main file is read from disk.

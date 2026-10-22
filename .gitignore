@@ -27,7 +27,11 @@ target/
 **/*.iml
 *.ipr
 .claude
-
+# Local agent tool state (AGENTS.md and CLAUDE.md stay tracked)
+.codex
+.cursor
+.gemini
+.copilot
 # User-specific stuff
 .idea/**/workspace.xml
 .idea/**/tasks.xml

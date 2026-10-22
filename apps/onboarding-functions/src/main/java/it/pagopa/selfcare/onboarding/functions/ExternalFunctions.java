@@ -11,6 +11,7 @@ import it.pagopa.selfcare.onboarding.dto.AckPayloadRequest;
 import it.pagopa.selfcare.onboarding.context.TenantContext;
 import it.pagopa.selfcare.onboarding.service.CheckOrganizationService;
 import it.pagopa.selfcare.onboarding.service.FunctionInvocationLogger;
+import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.utils.AckStatus;
 import org.apache.commons.lang3.StringUtils;
 
@@ -22,12 +23,15 @@ public class ExternalFunctions {
     private final CheckOrganizationService checkOrganizationService;
     private final ObjectMapper objectMapper;
     private final FunctionInvocationLogger functionInvocationLogger;
+    private final HttpJwtValidator httpJwtValidator;
 
     public ExternalFunctions(CheckOrganizationService checkOrganizationService, ObjectMapper objectMapper,
-                             FunctionInvocationLogger functionInvocationLogger) {
+                             FunctionInvocationLogger functionInvocationLogger,
+                             HttpJwtValidator httpJwtValidator) {
         this.checkOrganizationService = checkOrganizationService;
         this.objectMapper = objectMapper;
         this.functionInvocationLogger = functionInvocationLogger;
+        this.httpJwtValidator = httpJwtValidator;
     }
 
     @FunctionName("TestToken")
@@ -35,6 +39,10 @@ public class ExternalFunctions {
             @HttpTrigger(name = "req", methods = {HttpMethod.GET}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
 
+        Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+        if (authenticationError.isPresent()) {
+            return authenticationError.get();
+        }
         functionInvocationLogger.logInvocation("TestToken", request);
 
         TenantContext.Scope tenantScope;
@@ -54,6 +62,10 @@ public class ExternalFunctions {
             @HttpTrigger(name = "req", methods = {HttpMethod.HEAD}, authLevel = AuthorizationLevel.FUNCTION) HttpRequestMessage<Optional<String>> request,
             final ExecutionContext context) {
 
+        Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+        if (authenticationError.isPresent()) {
+            return authenticationError.get();
+        }
         functionInvocationLogger.logInvocation("CheckOrganization", request);
 
         String fiscalCode = request.getQueryParameters().get("fiscalCode");
@@ -87,6 +99,10 @@ public class ExternalFunctions {
     public HttpResponseMessage messageAcknowledgment(
             @HttpTrigger(name = "req", methods = {HttpMethod.POST}, route = "acknowledgment/{productId}/message/{messageId}/status/{status}", authLevel = AuthorizationLevel.FUNCTION)
             HttpRequestMessage<Optional<String>> request, @BindingName("productId") String productId, @BindingName("messageId") String messageId, @BindingName("status") String status, final ExecutionContext context) {
+        Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+        if (authenticationError.isPresent()) {
+            return authenticationError.get();
+        }
         functionInvocationLogger.logInvocation("messageAcknowledgment", request);
 
         final AckPayloadRequest ackPayloadRequest;
@@ -132,6 +148,10 @@ public class ExternalFunctions {
   public HttpResponseMessage webhookTest(
           @HttpTrigger(name = "req", methods = {HttpMethod.POST}, route = "webhookTest", authLevel = AuthorizationLevel.FUNCTION)
           HttpRequestMessage<Optional<String>> request, final ExecutionContext context) {
+    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+    if (authenticationError.isPresent()) {
+      return authenticationError.get();
+    }
     functionInvocationLogger.logInvocation("webhookTest", request);
 
     try {

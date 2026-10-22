@@ -82,7 +82,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "api_key": [],
+            "bearerAuth": [],
+            "tenant_header": []
           }
         ]
       }
@@ -128,7 +130,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "api_key": [],
+            "bearerAuth": [],
+            "tenant_header": []
           }
         ]
       }
@@ -183,7 +187,9 @@
         },
         "security": [
           {
-            "api_key": []
+            "api_key": [],
+            "bearerAuth": [],
+            "tenant_header": []
           }
         ]
       }
@@ -616,6 +622,16 @@
       "api_key": {
         "type": "apiKey",
         "name": "x-functions-key",
+        "in": "header"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "tenant_header": {
+        "type": "apiKey",
+        "name": "X-Tenant-Id",
         "in": "header"
       }
     }

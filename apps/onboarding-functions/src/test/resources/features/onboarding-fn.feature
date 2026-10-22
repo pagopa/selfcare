@@ -204,3 +204,41 @@ Feature: Onboarding collection
       | PENDING   |
       | PENDING_IN_REVIEW |
 #      | COMPLETED |
+
+  Scenario: Reject StartOnboardingOrchestration without Authorization
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request has no Authorization header
+    When I send a GET request with given onboardingId
+    Then the response should have status code 401
+    And the response header "WWW-Authenticate" should be "Bearer"
+    And the onboarding status should not change
+
+  Scenario: Reject StartOnboardingOrchestration with a malformed bearer token
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request has a malformed bearer token
+    When I send a GET request with given onboardingId
+    Then the response should have status code 401
+    And the response header "WWW-Authenticate" should be "Bearer"
+    And the onboarding status should not change
+
+  Scenario: Reject StartOnboardingOrchestration when token and header tenants differ
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request token belongs to tenant "PNPG"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 401
+    And the response header "WWW-Authenticate" should be "Bearer"
+    And the onboarding status should not change
+
+  Scenario: Reject StartOnboardingOrchestration without a tenant header
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request has no tenant header
+    When I send a GET request with given onboardingId
+    Then the response should have status code 400
+    And the onboarding status should not change
+
+  Scenario: Reject StartOnboardingOrchestration with an unsupported tenant header
+    Given Preparing the invocation of "StartOnboardingOrchestration" HTTP call with onboardingId "89ad7142-24bb-48ad-8504-9c9231137e85"
+    And the request tenant header is "FAKE-TENANT"
+    When I send a GET request with given onboardingId
+    Then the response should have status code 400
+    And the onboarding status should not change

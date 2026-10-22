@@ -166,7 +166,8 @@ class TenantSessionKeyProviderTest {
                 null,
                 new TenantDefinition.SessionDefinition(
                     "TENANT_" + tenantId + "_JWT_SESSION_PRIVATE_KEY",
-                    "TENANT_" + tenantId + "_JWT_SESSION_KEY_ID"))));
+                    "TENANT_" + tenantId + "_JWT_SESSION_KEY_ID",
+                    null))));
   }
 
   private TenantRegistry.Tenant tenantWithoutSigningReferences(String tenantId) {

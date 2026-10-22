@@ -34,7 +34,7 @@
                 var signature = rsa.SignData(data2sign, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);;
                 var jwtSignatureBase64UrlEncoded = Convert.ToBase64String(signature).Replace("/", "_").Replace("+", "-"). Replace("=", "");
 
-                // 4) Return the HMAC SHA256-signed JWT as the value for the Authorization header
+                // 4) Return the RSA SHA256-signed JWT as the value for the Authorization header
                 return $"Bearer {jwtHeaderBase64UrlEncoded}.{jwtPayloadBase64UrlEncoded}.{jwtSignatureBase64UrlEncoded}";
                 }
 
