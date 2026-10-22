@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -22,24 +22,33 @@ class TenantHeaderClientRequestFilterTest {
     TenantHeaderClientRequestFilter filter;
 
     @Test
-    void sendsStackDefaultTenantAndNoAuthorization() {
+    void sendsStackDefaultTenantAndTechnicalAuthorization() {
+        // given
         MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 
+        // when
         filter.filter(requestContext(headers));
 
+        // then
         assertEquals(List.of("PNPG"), headers.get(TenantContext.TENANT_HEADER));
-        assertFalse(headers.containsKey("Authorization"));
+        assertTechnicalAuthorization(headers);
+        assertEquals(List.of("test-function-key"), headers.get("x-functions-key"));
     }
 
     @Test
     void sendsTenantOfCurrentContext() {
+        // given
         MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
 
-        try (TenantContext.Scope ignored = TenantContext.open("AR")) {
+        // when
+        try (TenantContext.Scope ignored = TenantContext.open("PNPG")) {
             filter.filter(requestContext(headers));
         }
 
-        assertEquals(List.of("AR"), headers.get(TenantContext.TENANT_HEADER));
+        // then
+        assertEquals(List.of("PNPG"), headers.get(TenantContext.TENANT_HEADER));
+        assertTechnicalAuthorization(headers);
+        assertEquals(List.of("test-function-key"), headers.get("x-functions-key"));
     }
 
     private static ClientRequestContext requestContext(MultivaluedMap<String, Object> headers) {
@@ -47,5 +56,9 @@ class TenantHeaderClientRequestFilterTest {
         when(requestContext.getHeaders()).thenReturn(headers);
         when(requestContext.getStringHeaders()).thenReturn(new MultivaluedHashMap<>());
         return requestContext;
+    }
+
+    private static void assertTechnicalAuthorization(MultivaluedMap<String, Object> headers) {
+        assertTrue(headers.getFirst("Authorization").toString().startsWith("Bearer eyJ"));
     }
 }

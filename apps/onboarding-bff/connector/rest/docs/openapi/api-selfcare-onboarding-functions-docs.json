@@ -47,8 +47,41 @@
             "description": "Not Found",
             "content": {
             }
+          },
+          "400": {
+            "description": "Missing or unsupported X-Tenant-Id"
+          },
+          "401": {
+            "description": "Missing or invalid bearer JWT"
           }
-        }
+        },
+        "security": [
+          {
+            "function_key": [],
+            "bearerAuth": [],
+            "tenant_header": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "function_key": {
+        "type": "apiKey",
+        "name": "x-functions-key",
+        "in": "header"
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "tenant_header": {
+        "type": "apiKey",
+        "name": "X-Tenant-Id",
+        "in": "header",
+        "description": "Tenant identifier; it must match the JWT tenant_id claim"
       }
     }
   }
