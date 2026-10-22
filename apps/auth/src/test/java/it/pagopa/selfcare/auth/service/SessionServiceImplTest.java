@@ -2,31 +2,34 @@ package it.pagopa.selfcare.auth.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.auth.conf.TenantDefinition;
 import it.pagopa.selfcare.auth.conf.TenantRegistry;
 import it.pagopa.selfcare.auth.exception.ForbiddenException;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
+/**
+ * Runs as {@link QuarkusTest} so that quarkus-jacoco instruments {@link SessionServiceImpl} and the
+ * audience branches are reported as covered.
+ */
+@QuarkusTest
 class SessionServiceImplTest {
 
   private static final String GLOBAL_AUDIENCE = "api.dev.selfcare.pagopa.it";
   private static final String PNPG_AUDIENCE = "pnpg.dev.selfcare.pagopa.it";
 
-  @Mock TenantRegistry tenantRegistry;
-
+  private TenantRegistry tenantRegistry;
   private SessionServiceImpl service;
 
   @BeforeEach
   void setUp() {
+    tenantRegistry = mock(TenantRegistry.class);
     service = new SessionServiceImpl();
     service.audience = GLOBAL_AUDIENCE;
     service.tenantRegistry = tenantRegistry;
@@ -51,7 +54,7 @@ class SessionServiceImplTest {
   @Test
   void fallBackToGlobalAudienceWhenTenantAudienceIsMissing() {
     service.tenantAudienceEnabled = true;
-    mockTenant(jwt(new TenantDefinition.SessionDefinition("PK", "KID")));
+    mockTenant(jwt(new TenantDefinition.SessionDefinition("PK", "KID", null)));
 
     assertEquals(GLOBAL_AUDIENCE, service.resolveAudience("PNPG"));
   }

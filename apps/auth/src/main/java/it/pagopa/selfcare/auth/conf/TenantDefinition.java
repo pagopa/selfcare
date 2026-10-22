@@ -31,10 +31,5 @@ public record TenantDefinition(
   public record SessionDefinition(
       @JsonProperty("privateKeyEnvVar") String privateKeyEnvVar,
       @JsonProperty("keyIdEnvVar") String keyIdEnvVar,
-      @JsonProperty("audience") String audience) {
-
-    public SessionDefinition(String privateKeyEnvVar, String keyIdEnvVar) {
-      this(privateKeyEnvVar, keyIdEnvVar, null);
-    }
-  }
+      @JsonProperty("audience") String audience) {}
 }

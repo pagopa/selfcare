@@ -81,16 +81,6 @@ class TenantDefinitionTest {
   }
 
   @Test
-  void sessionDefinitionShortConstructorHasNoAudience() {
-    TenantDefinition.SessionDefinition session =
-        new TenantDefinition.SessionDefinition("PRIVATE_KEY", "KEY_ID");
-
-    assertEquals("PRIVATE_KEY", session.privateKeyEnvVar());
-    assertEquals("KEY_ID", session.keyIdEnvVar());
-    assertNull(session.audience());
-  }
-
-  @Test
   void tenantDefinitionShortConstructorHasNoJwt() {
     TenantDefinition definition =
         new TenantDefinition(
