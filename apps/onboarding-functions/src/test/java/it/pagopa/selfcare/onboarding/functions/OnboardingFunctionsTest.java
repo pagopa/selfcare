@@ -32,11 +32,13 @@ import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.ProductService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.UserService;
+import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import it.pagopa.selfcare.onboarding.utils.Utils;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -80,7 +82,14 @@ class OnboardingFunctionsTest {
 
   @InjectMock UserService userService;
 
+  @InjectMock HttpJwtValidator httpJwtValidator;
+
   @Inject ObjectMapper objectMapper;
+
+  @BeforeEach
+  void allowAuthenticatedRequests() {
+    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+  }
 
   final String onboardingStringBase = "{\"id\":\"onboardingId\", \"tenantId\":\"AR\", \"productId\":\"prod-test\"}";
 

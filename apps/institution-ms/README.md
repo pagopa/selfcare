@@ -26,7 +26,9 @@ restore the legacy MongoDB client configuration.
 
 For the existing single-tenant setup, `TENANT_SUPPORTED_TENANTS` and
 `TENANT_DEFAULT` default to `AR`. The default registry keeps the existing
-institution database and connection settings:
+institution database and connection settings. The MongoDB/JWT examples below
+must also include the required bindings described under
+[Tenant-aware blob storage](#tenant-aware-blob-storage):
 
 ```json
 {
@@ -177,8 +179,9 @@ Those environment variables reference the existing
 `mongodb-connection-string` and `jwt-public-key` Key Vault secrets in each
 root's current vault. The registry selects the existing Cosmos DB account and
 `selcMsCore` database; these settings do not provision databases or add a
-second tenant to a deployment. Mongo routing and strict isolation are enabled
-in the Terraform baseline.
+second tenant to a deployment. Mongo routing is enabled in the Terraform
+baseline, while `TENANT_STRICT_DATA_ISOLATION=false` preserves access to legacy
+untagged documents within each deployment's single-tenant database.
 
 Before enabling another tenant, coordinate every producer and consumer of the
 institution, delegation, notification, and graph-source collections so new
@@ -188,11 +191,10 @@ identifiers and existing indexes are database-wide.
 
 Inventory untagged records and identify their owner before cutover. If a
 backfill is needed, run a reviewed, tenant-specific operational procedure; the
-service does not migrate production data automatically. The Terraform baseline
-remains strict; an explicitly authorized temporary
-`TENANT_STRICT_DATA_ISOLATION=false` override is appropriate only for one known
-owner of the selected database. Backfill and coordinate producers before
-re-enabling strict mode. Release the matching application and deployment
+service does not migrate production data automatically. Keep the compatibility
+setting only while there is one known owner of the selected database. Backfill
+and coordinate producers before setting `TENANT_STRICT_DATA_ISOLATION=true`.
+Release the matching application and deployment
 configuration together, then restart and verify `/actuator/health/readiness`
 and tenant-scoped CRUD/join smoke tests.
 

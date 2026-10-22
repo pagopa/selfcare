@@ -144,7 +144,7 @@ locals {
     },
     {
       name  = "TENANT_STRICT_DATA_ISOLATION"
-      value = "true"
+      value = "false"
     },
     {
       name = "SELFCARE_TENANT_DATA_ISOLATION"
