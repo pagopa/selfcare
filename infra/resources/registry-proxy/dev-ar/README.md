@@ -18,6 +18,7 @@
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
+| <a name="module_ai_search_geotax"></a> [ai\_search\_geotax](#module\_ai\_search\_geotax) | ../../_modules/ai_search_geotax | n/a |
 | <a name="module_ai_search_ipa"></a> [ai\_search\_ipa](#module\_ai\_search\_ipa) | ../../_modules/ai_search_ipa | n/a |
 | <a name="module_ai_search_onboarding"></a> [ai\_search\_onboarding](#module\_ai\_search\_onboarding) | ../../_modules/ai_search_onboarding | n/a |
 | <a name="module_apim_api_registry_proxy"></a> [apim\_api\_registry\_proxy](#module\_apim\_api\_registry\_proxy) | ../../_modules/apim_api | n/a |

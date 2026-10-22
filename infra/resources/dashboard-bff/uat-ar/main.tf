@@ -224,20 +224,22 @@ module "container_app_dashboard_bff" {
 ###############################################################################
 
 module "apim_api_bff_dashboard" {
-  source                     = "../../_modules/apim_api"
-  apim_name                  = module.local.config.apim_name
-  apim_rg                    = module.local.config.apim_rg
-  api_name                   = "selc-${module.local.config.env_short}-api-bff-dashboard"
-  display_name               = "BFF Dashboard API"
-  base_path                  = "dashboard"
-  private_dns_name           = "selc-${module.local.config.env_short}-dashboard-backend-ca.${module.local.config.private_dns_name_domain}"
-  dns_zone_prefix            = module.local.config.dns_zone_prefix
-  api_dns_zone_prefix        = module.local.config.api_dns_zone_prefix
-  external_domain            = "pagopa.it"
-  openapi_path               = "../../../../apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
-  tenant_ids                 = module.local.config.tenant_ids
-  tenant_hosts               = module.local.config.tenant_hosts
-  tenant_enforcement_enabled = true
+  source                        = "../../_modules/apim_api"
+  apim_name                     = module.local.config.apim_name
+  apim_rg                       = module.local.config.apim_rg
+  api_name                      = "selc-${module.local.config.env_short}-api-bff-dashboard"
+  display_name                  = "BFF Dashboard API"
+  base_path                     = "dashboard"
+  private_dns_name              = "selc-${module.local.config.env_short}-dashboard-backend-ca.${module.local.config.private_dns_name_domain}"
+  dns_zone_prefix               = module.local.config.dns_zone_prefix
+  api_dns_zone_prefix           = module.local.config.api_dns_zone_prefix
+  external_domain               = "pagopa.it"
+  openapi_path                  = "../../../../apps/dashboard-bff/src/main/resources/swagger/api-docs.json"
+  tenant_ids                    = module.local.config.tenant_ids
+  tenant_hosts                  = module.local.config.tenant_hosts
+  tenant_enforcement_enabled    = true
+  tenant_jwt_audiences          = module.local.config.tenant_jwt_audiences
+  jwt_tenant_resolution_enabled = false
   allowed_headers = [
     "Authorization",
     "Content-Type",
