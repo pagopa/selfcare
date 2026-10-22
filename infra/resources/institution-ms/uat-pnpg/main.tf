@@ -64,6 +64,38 @@ locals {
 
   app_settings_institution_ms = [
     {
+      name  = "TENANT_SUPPORTED_TENANTS"
+      value = "PNPG"
+    },
+    {
+      name  = "TENANT_DEFAULT"
+      value = "PNPG"
+    },
+    {
+      name  = "TENANT_MONGODB_ENABLED"
+      value = "true"
+    },
+    {
+      name  = "TENANT_STRICT_DATA_ISOLATION"
+      value = "false"
+    },
+    {
+      name = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = jsonencode({
+        PNPG = {
+          mongo = {
+            account                = "cosmos-pnpg"
+            database               = module.cosmosdb.database_name
+            connectionStringEnvVar = "MONGODB_CONNECTION_STRING_PNPG"
+          }
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_PNPG"
+          }
+          storages = {}
+        }
+      })
+    },
+    {
       name  = "DESTINATION_MAILS"
       value = "pectest@pec.pagopa.it"
     },
@@ -185,12 +217,12 @@ locals {
 
   secrets_names_institution_ms = {
     "APPLICATIONINSIGHTS_CONNECTION_STRING"    = "appinsights-connection-string"
-    "MONGODB_CONNECTION_URI"                   = "mongodb-connection-string"
+    "MONGODB_CONNECTION_STRING_PNPG"           = "mongodb-connection-string"
     "SMTP_USR"                                 = "smtp-usr"
     "SMTP_PSW"                                 = "smtp-psw"
     "ONBOARDING_INSTITUTION_ALTERNATIVE_EMAIL" = "party-test-institution-email"
     "USER_REGISTRY_API_KEY"                    = "user-registry-api-key"
-    "JWT_TOKEN_PUBLIC_KEY"                     = "jwt-public-key"
+    "JWT_PUBLIC_KEY_PNPG"                      = "jwt-public-key"
     "ONE_MAIL_API_KEY"                         = "onemail-api-key"
   }
 }
