@@ -51,7 +51,7 @@ mvn versions:set -DnewVersion=<x.y.z> --projects :<lib> && mvn versions:commit  
 ```
 
 - Builds need credentials in `~/.m2/settings.xml` for Azure DevOps (`selfcare-platform`) and GitHub Packages (`pagopa/selfcare`).
-- **Reproducible toolchain**: Maven 3.9.x (CI uses 3.9.5), Java 17 Temurin (`.java-version`), Node from `.node-version`, Terraform from `.terraform-version`.
+- **Reproducible toolchain**: Maven 3.9.x (CI uses 3.9.5), Java 17 Temurin (as in CI), Node from `.node-version`, Terraform from `.terraform-version`.
 - `skipITs` defaults to `true` in some app POMs: pass `-DskipITs=false` to actually run integration tests.
 - Run only the module you changed (and dependents when touching `libs/`); the full build is slow.
 
