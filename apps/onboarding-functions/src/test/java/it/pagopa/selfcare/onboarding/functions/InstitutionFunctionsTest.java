@@ -34,6 +34,7 @@ import java.util.*;
 import java.util.logging.Logger;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
@@ -55,6 +56,14 @@ public class InstitutionFunctionsTest {
 
   @InjectMock
   UserService userService;
+
+  @InjectMock
+  HttpJwtValidator httpJwtValidator;
+
+  @BeforeEach
+  void allowAuthenticatedRequests() {
+    when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+  }
 
   final String institutionUserFilters = "{\"userId\":\"userId\",\"productId\":\"productId\",\"institutionId\":\"institutionId\",\"tenantId\":\"ar\"}";
   final String institutionUserFiltersWithoutTenant = "{\"userId\":\"userId\",\"productId\":\"productId\",\"institutionId\":\"institutionId\"}";

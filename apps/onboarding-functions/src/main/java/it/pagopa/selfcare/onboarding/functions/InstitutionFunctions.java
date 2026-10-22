@@ -39,6 +39,7 @@ public class InstitutionFunctions {
   private final OnboardingService onboardingService;
   private final ObjectMapper objectMapper;
   private final FunctionInvocationLogger functionInvocationLogger;
+  private final HttpJwtValidator httpJwtValidator;
   private final TaskOptions optionsRetry;
 
   public InstitutionFunctions(ObjectMapper objectMapper,
@@ -46,12 +47,14 @@ public class InstitutionFunctions {
                               InstitutionService institutionService,
                               OnboardingService onboardingService,
                               RetryPolicyConfig retryPolicyConfig,
-                              FunctionInvocationLogger functionInvocationLogger) {
+                              FunctionInvocationLogger functionInvocationLogger,
+                              HttpJwtValidator httpJwtValidator) {
     this.objectMapper = objectMapper;
     this.institutionService = institutionService;
     this.userService = userService;
     this.onboardingService = onboardingService;
     this.functionInvocationLogger = functionInvocationLogger;
+    this.httpJwtValidator = httpJwtValidator;
     final int maxAttempts = retryPolicyConfig.maxAttempts();
     final Duration firstRetryInterval = Duration.ofSeconds(retryPolicyConfig.firstRetryInterval());
     RetryPolicy retryPolicy = new RetryPolicy(maxAttempts, firstRetryInterval);
@@ -68,6 +71,10 @@ public class InstitutionFunctions {
     @DurableClientInput(name = "durableContext") DurableClientContext durableContext,
 
     final ExecutionContext context) {
+    Optional<HttpResponseMessage> authenticationError = httpJwtValidator.validate(request, context);
+    if (authenticationError.isPresent()) {
+      return authenticationError.get();
+    }
     String userId = functionInvocationLogger.logInvocation("TriggerDeleteInstitutionAndUser", request);
     if (FunctionInvocationLogger.isMissingUserId(userId)) {
       return request

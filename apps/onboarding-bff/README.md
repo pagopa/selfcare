@@ -5,6 +5,15 @@ An orchestrator for the onboarding process
 
 The BFF exposes `GET /v2/institutions/ipa/{taxCode}` for an exact IPA tax-code lookup and `GET /v2/institutions/ipa` for paginated IPA search. Both endpoints forward the optional singular `category` query parameter to Registry Proxy; it accepts one IPA code or a comma-separated list such as `C17,C16,L10`.
 
+## Onboarding Functions authentication
+
+The `onboarding-functions-api` Feign client applies the shared authorization
+interceptor and the tenant interceptor, while its configuration adds the Azure
+Function key. Therefore each call carries the session bearer token,
+`X-Tenant-Id`, and `x-functions-key` together. Keep all three controls when
+changing the generated client or its Feign configuration; the functions reject
+missing tenant with `400` and invalid bearer credentials with `401`.
+
 ## Configuration Properties
 
 ### Integration-test tenant registry
