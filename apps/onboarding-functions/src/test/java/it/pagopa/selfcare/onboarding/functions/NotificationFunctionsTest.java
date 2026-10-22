@@ -21,9 +21,11 @@ import it.pagopa.selfcare.onboarding.service.NotificationEventService;
 import it.pagopa.selfcare.onboarding.service.OnboardingService;
 import it.pagopa.selfcare.onboarding.service.TelemetryService;
 import it.pagopa.selfcare.onboarding.service.CompletionService;
+import it.pagopa.selfcare.onboarding.service.HttpJwtValidator;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -63,6 +65,14 @@ public class NotificationFunctionsTest {
 
     @InjectMock
     CompletionService completionService;
+
+    @InjectMock
+    HttpJwtValidator httpJwtValidator;
+
+    @BeforeEach
+    void allowAuthenticatedRequests() {
+        when(httpJwtValidator.validate(any(), any())).thenReturn(Optional.empty());
+    }
 
 
     final String onboardinString = "{\"onboardingId\":\"onboardingId\",\"tenantId\":\"AR\"}";

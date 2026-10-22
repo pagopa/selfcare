@@ -105,8 +105,10 @@ locals {
       "MINUTES_THRESHOLD_FOR_UPDATE_NOTIFICATION"          = "5"
       "JWT_TOKEN_ISSUER"                                   = "SPID"
       "JWT_TOKEN_PRIVATE_KEY"                              = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-private-key/)"
+      "JWT_PUBLIC_KEY_PNPG"                                = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-public-key/)"
       "JWT_TOKEN_KID"                                      = "@Microsoft.KeyVault(SecretUri=https://selc-u-pnpg-kv.vault.azure.net/secrets/jwt-kid/)"
       "DEFAULT_TENANT"                                     = "PNPG"
+      "SUPPORTED_TENANTS"                                  = "PNPG"
     }
   }
 }

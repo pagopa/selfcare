@@ -31,8 +31,8 @@ public class IntegrationFunctionProfile implements QuarkusTestProfile {
         Objects.requireNonNull(
             JwtUtils.generateToken(
                 JwtData.builder()
-                    .username("f.rossi")
-                    .password("test")
+                    .username("fake-user")
+                    .password("fake-password")
                     .jwtHeader(buildJwtHeader())
                     .jwtPayload(buildJwtPayload())
                     .build())));
@@ -59,17 +59,17 @@ public class IntegrationFunctionProfile implements QuarkusTestProfile {
 
   public static Map<String, String> buildJwtPayload() {
     Map<String, String> jwtPayload = new HashMap<>();
-    jwtPayload.put("family_name", "Rossi");
-    jwtPayload.put("fiscal_number", "RSSFNC85M01H501Z");
-    jwtPayload.put("name", "Francesco");
+    jwtPayload.put("family_name", "User");
+    jwtPayload.put("fiscal_number", "FAKE-FISCAL-NUMBER");
+    jwtPayload.put("name", "Test");
     jwtPayload.put("spid_level", "https://www.spid.gov.it/SpidL2");
     jwtPayload.put("from_aa", "false");
-    jwtPayload.put("uid", "b6a7c8d2-3b4a-4f7b-8e85-2cba7f6b7bf7");
+    jwtPayload.put("uid", "fake-onboarding-functions-it-user");
     jwtPayload.put("level", "L2");
     jwtPayload.put("aud", "api.dev.selfcare.pagopa.it");
     jwtPayload.put("iss", "SPID");
     jwtPayload.put("tenant_id", "AR");
-    jwtPayload.put("jti", "_3f603a8bc36b1231b1a7");
+    jwtPayload.put("jti", "fake-onboarding-functions-it-jti");
     return jwtPayload;
   }
 

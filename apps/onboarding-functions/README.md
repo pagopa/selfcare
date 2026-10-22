@@ -21,6 +21,20 @@ Request` and do not schedule an orchestration when the header is absent or blank
 Human requests use the authenticated user identifier; service-to-service callers
 use a stable identity such as `m2m:onboarding-ms` or `m2m:onboarding-cdc`.
 
+### HTTP trigger authentication
+
+All twelve HTTP triggers require three independent credentials: the Azure Function
+key, `X-Tenant-Id`, and `Authorization: Bearer <jwt>`. The JWT must use RS256, be
+signed by the public key configured for the header tenant, contain an unexpired
+`exp`, an allowed `iss`, `uid`, and a matching `tenant_id`. Missing or unsupported
+tenant context returns `400`; JWT failures return `401` with
+`WWW-Authenticate: Bearer`. Validation runs before request parsing, telemetry with
+application data, service calls, or Durable orchestration scheduling.
+
+Configure `SUPPORTED_TENANTS`, `JWT_PUBLIC_KEY_AR`/`JWT_PUBLIC_KEY_PNPG`, and
+`JWT_ALLOWED_ISSUERS` per stack. Keep the Azure Function key enabled: bearer
+authentication is an additional control, not a replacement.
+
 ### Contract Signature
 
 You can enable the signature inside contracts when there are builded setting PAGOPA_SIGNATURE_SOURCE env (default value is `disabled`) as `local` if you want to use Pkcs7HashSignService or `aruba` for ArubaPkcs7HashSignService. Look at this [README](../../libs/onboarding-sdk-crypto/README.md) for more informations.
@@ -43,6 +57,10 @@ Before running you must set these properties as environment variables.
 | quarkus.mongodb.connection-string<br/>                                 | MONGODB_CONNECTION_URI     |             |     yes      |
 | quarkus.openapi-generator.user_registry_json.auth.api_key.api-key<br/> | USER_REGISTRY_API_KEY      |             |     yes      |
 | quarkus.rest-client."*.user_registry_json.api.UserApi".url<br/>        | USER_REGISTRY_URL          |             |     yes      |
+| onboarding-functions.tenant.supported-tenants<br/>                    | SUPPORTED_TENANTS          | AR,PNPG     | per stack    |
+| onboarding-functions.jwt.validation.tenants.AR.public-key<br/>        | JWT_PUBLIC_KEY_AR          |             | for AR       |
+| onboarding-functions.jwt.validation.tenants.PNPG.public-key<br/>      | JWT_PUBLIC_KEY_PNPG        |             | for PNPG     |
+| onboarding-functions.jwt.validation.allowed-issuers<br/>              | JWT_ALLOWED_ISSUERS        | SPID,PAGOPA | yes          |
 
 ### Blob storage authentication
 
@@ -142,6 +160,11 @@ docker compose -f apps/onboarding-functions/src/test/resources/docker-compose.ym
 ```
 
 The stack starts MongoDB, Azurite, MockServer, User MS, Institution MS, Document MS and the Function Host. The Function endpoint used by the feature is `http://localhost:8090`.
+
+The feature generates short-lived, test-only RS256 caller tokens at runtime. It
+checks the valid path plus missing/malformed JWT, missing/unsupported tenant and
+token/header tenant mismatch, including that rejected requests do not change the
+onboarding status. Do not add a long-lived JWT to the integration env file.
 
 > **Test data only:** all environment variables, keys, tokens, connection strings, fixtures and databases used by this stack are fake/local test data. MongoDB and Azurite run in Docker and are not connected to Azure or to a real database.
 

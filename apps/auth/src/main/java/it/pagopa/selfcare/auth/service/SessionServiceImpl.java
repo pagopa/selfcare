@@ -2,6 +2,8 @@ package it.pagopa.selfcare.auth.service;
 
 import io.smallrye.jwt.build.Jwt;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.auth.conf.TenantDefinition;
+import it.pagopa.selfcare.auth.conf.TenantRegistry;
 import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider;
 import it.pagopa.selfcare.auth.conf.TenantSessionKeyProvider.SigningKey;
 import it.pagopa.selfcare.auth.model.UserClaims;
@@ -28,7 +30,25 @@ public class SessionServiceImpl implements SessionService {
   @ConfigProperty(name = "jwt.session.audience")
   String audience;
 
+  @ConfigProperty(name = "jwt.session.tenant-audience-enabled", defaultValue = "false")
+  boolean tenantAudienceEnabled;
+
   @Inject TenantSessionKeyProvider tenantSessionKeyProvider;
+  @Inject TenantRegistry tenantRegistry;
+
+  /**
+   * Returns the tenant-specific audience from the tenant registry (jwt.session.audience) when the
+   * feature is enabled, falling back to the global jwt.session.audience.
+   */
+  String resolveAudience(String tenantId) {
+    if (!tenantAudienceEnabled) {
+      return audience;
+    }
+    TenantDefinition.JwtDefinition jwt =
+        tenantRegistry.resolveEnabledTenant(tenantId).definition().jwt();
+    String tenantAudience = jwt == null || jwt.session() == null ? null : jwt.session().audience();
+    return tenantAudience == null || tenantAudience.isBlank() ? audience : tenantAudience;
+  }
 
   @Override
   public Uni<String> generateSessionToken(UserClaims userClaims) {
@@ -44,7 +64,7 @@ public class SessionServiceImpl implements SessionService {
                 .claim(TENANT_CLAIM, userClaims.getTenantId())
                 .claim("spid_level", SPID_LEVEL_L2)
                 .issuer(ISSUER)
-                .audience(audience)
+                .audience(resolveAudience(userClaims.getTenantId()))
                 .issuedAt(issuedAt)
                 .expiresAt(issuedAt.plus(Duration.ofHours(sessionDuration)))
                 .jws()
@@ -63,7 +83,7 @@ public class SessionServiceImpl implements SessionService {
                 .claim("email", userClaims.getEmail())
                 .claim(TENANT_CLAIM, userClaims.getTenantId())
                 .issuer("PAGOPA")
-                .audience(audience)
+                .audience(resolveAudience(userClaims.getTenantId()))
                 .issuedAt(issuedAt)
                 .expiresAt(issuedAt.plus(Duration.ofHours(sessionDuration)))
                 .jws()
