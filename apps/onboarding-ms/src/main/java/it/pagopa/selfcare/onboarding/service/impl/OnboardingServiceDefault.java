@@ -50,6 +50,7 @@ import static it.pagopa.selfcare.onboarding.common.WorkflowType.CONTRACT_UPDATE;
 import static it.pagopa.selfcare.onboarding.common.WorkflowType.USERS;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.DEFAULT_ERROR;
 import static it.pagopa.selfcare.onboarding.constants.CustomError.UNABLE_TO_COMPLETE_THE_ONBOARDING_FOR_INSTITUTION_FOR_PRODUCT_DISMISSED;
+import static it.pagopa.selfcare.onboarding.util.ErrorMessage.ONBOARDING_NOT_PENDING;
 
 @Slf4j
 @ApplicationScoped
@@ -701,6 +702,21 @@ public class OnboardingServiceDefault implements OnboardingService {
     }
 
     private Uni<Boolean> verifyCompletionPreconditions(Onboarding onboarding, boolean isUsersFlow) {
+        if (CONTRACT_UPDATE.equals(onboarding.getWorkflowType())) {
+            if (!PENDING.equals(onboarding.getStatus())) {
+                return Uni.createFrom().failure(
+                        new InvalidRequestException(
+                                String.format(
+                                        ONBOARDING_NOT_PENDING.getMessage(),
+                                        onboarding.getId(),
+                                        onboarding.getStatus()),
+                                ONBOARDING_NOT_PENDING.getCode()));
+            }
+            return getProductByOnboarding(onboarding)
+                    .onItem().transformToUni(product ->
+                            validationHelper.verifyOnboardingNotExistForProductAndProductParent(
+                                    onboarding, product.getProductId(), product.getParentId()));
+        }
         return getProductByOnboarding(onboarding)
                 .onItem().transformToUni(product ->
                         isUsersFlow

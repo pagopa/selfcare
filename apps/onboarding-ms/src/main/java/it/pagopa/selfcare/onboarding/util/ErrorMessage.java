@@ -65,6 +65,7 @@ public enum ErrorMessage {
     ONBOARDING_EXPIRED("0040", "Onboarding with id %s not found or it is expired!"),
     ONBOARDING_NOT_TO_BE_VALIDATED("0043", "Onboarding with id %s has not TO_BE_VALIDATED status!"),
     ONBOARDING_NOT_COMPLETED("0044", "Onboarding with id %s must be in COMPLETED status but it is in %s status!"),
+    ONBOARDING_NOT_PENDING("0045", "Onboarding with id %s must be in PENDING status but it is in %s status!"),
     GET_INSTITUTION_BY_GEOTAXONOMY_ERROR("0053", "Error while searching institutions related to given geoTaxonomies"),
     GET_INSTITUTION_BY_PRODUCTID_ERROR("0053", "Error while searching institutions related to given productId"),
     GET_INSTITUTIONS_REQUEST_ERROR("0054", "Invalid request parameters sent. Allowed filters combinations taxCode and subunit or origin and originId"),
