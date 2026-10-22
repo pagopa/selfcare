@@ -1,6 +1,7 @@
 package it.pagopa.selfcare.mscore.connector.dao;
 
 import com.mongodb.client.result.UpdateResult;
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import it.pagopa.selfcare.mscore.connector.dao.model.MailNotificationEntity;
 import org.bson.BsonObjectId;
 import org.bson.BsonValue;
@@ -8,6 +9,7 @@ import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -31,6 +33,14 @@ class MailNotificationConnectorImplTest {
 
     @Mock
     private MailNotificationRepository repository;
+
+    @Mock
+    private TenantContext tenantContext;
+
+    @BeforeEach
+    void configureTenantContext() {
+        lenient().when(tenantContext.requiredTenantId()).thenReturn("AR");
+    }
 
     @Test
     void addMailNotification_insert() {
@@ -79,6 +89,8 @@ class MailNotificationConnectorImplTest {
         Assertions.assertEquals(17, updateDocument.get("$setOnInsert", Document.class).get("moduleDayOfTheEpoch", Integer.class));
         Assertions.assertEquals("test@test.com", updateDocument.get("$setOnInsert", Document.class).get("digitalAddress", String.class));
         Assertions.assertNotNull(updateDocument.get("$setOnInsert", Document.class).get("createdAt", Instant.class));
+        Assertions.assertEquals("AR", updateDocument.get("$setOnInsert", Document.class)
+                .get(MailNotificationEntity.FIELD_TENANT_ID, String.class));
     }
 
     @Test
