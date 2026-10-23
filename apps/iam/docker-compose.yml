@@ -54,7 +54,7 @@ services:
 
   institutionms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-institution-ms:latest
+    image: ghcr.io/pagopa/selfcare-institution-ms:latest@sha256:494bb3373e8ed8e3f06b62e0c96b40bdeed2e6a3f025030d76d37ae8f35e9f95
     ports:
       - "8082:8082"
     networks:
@@ -71,7 +71,7 @@ services:
 
   userms:
     platform: linux/amd64
-    image: ghcr.io/pagopa/selfcare-user-ms:latest
+    image: ghcr.io/pagopa/selfcare-user-ms:latest@sha256:54f543f88de57fc2bf7ad24ce1ad32506e976a322feca77d7faed9d94b8dd575
     ports:
       - "8087:8087"
     env_file:
