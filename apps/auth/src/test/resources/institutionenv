@@ -16,8 +16,12 @@ STORAGE_TEMPLATE_URL=https://github.com/pagopa/selfcare-infra/tree/main/src/core
 STORAGE_CREDENTIAL_ID=devstoreaccount1
 STORAGE_CREDENTIAL_SECRET=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==
 STORAGE_ENDPOINT=localhost
-BLOB_STORAGE_PRODUCT_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
-PRODUCT_STORAGE_CONTAINER=products
+INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;
+
+TENANT_SUPPORTED_TENANTS=AR
+TENANT_DEFAULT=AR
+TENANT_STRICT_DATA_ISOLATION=false
 
 SELFCARE_USER_URL=http://userms:8080
 USERVICE_USER_REGISTRY_URL=http://mockserver:1080/user-registry-mock/v1

@@ -3,6 +3,7 @@ package it.pagopa.selfcare.product.controller;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -20,8 +21,10 @@ import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.product.model.OriginEntry;
+import it.pagopa.selfcare.product.model.dto.request.OnboardingDecisionRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.OnboardingDecisionResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
@@ -30,6 +33,8 @@ import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.OnboardingChannel;
+import it.pagopa.selfcare.product.model.enums.OnboardingDecisionReason;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
@@ -1223,5 +1228,94 @@ class ProductControllerTest {
 
     // then
     verify(productService, times(1)).validateProductRole("AR", productId, UserRole.MANAGER, null);
+  }
+
+  // -------------------------------------------------------------------------
+  // POST /{productId}/onboarding-decision
+  // -------------------------------------------------------------------------
+
+  private static final String DECISION_BODY =
+      "{\"institutionType\":\"GPU\",\"origin\":\"SELC\",\"channel\":\"SELF_SERVICE\"}";
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getOnboardingDecision_shouldReturn200WithDecision() {
+    // given
+    OnboardingDecisionResponse response =
+        OnboardingDecisionResponse.builder()
+            .allowed(false)
+            .reason(OnboardingDecisionReason.SELF_ONBOARDING_NOT_ALLOWED)
+            .message("only managed")
+            .build();
+    ArgumentCaptor<OnboardingDecisionRequest> captor =
+        ArgumentCaptor.forClass(OnboardingDecisionRequest.class);
+    when(productService.getOnboardingDecision(eq("AR"), eq("prod-pagopa"), captor.capture()))
+        .thenReturn(Uni.createFrom().item(response));
+
+    // when
+    given()
+        .contentType(ContentType.JSON)
+        .body(DECISION_BODY)
+        .when()
+        .post("/prod-pagopa/onboarding-decision")
+        .then()
+        .statusCode(200)
+        .body("allowed", equalTo(false))
+        .body("reason", equalTo("SELF_ONBOARDING_NOT_ALLOWED"))
+        .body("message", equalTo("only managed"));
+
+    // then
+    Assertions.assertEquals(InstitutionType.GPU, captor.getValue().getInstitutionType());
+    Assertions.assertEquals(Origin.SELC, captor.getValue().getOrigin());
+    Assertions.assertEquals(OnboardingChannel.SELF_SERVICE, captor.getValue().getChannel());
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getOnboardingDecision_shouldReturn400_whenServiceRejectsArguments() {
+    when(productService.getOnboardingDecision(eq("AR"), eq("prod-pagopa"), any()))
+        .thenReturn(Uni.createFrom().failure(new IllegalArgumentException("bad input")));
+
+    given()
+        .contentType(ContentType.JSON)
+        .body(DECISION_BODY)
+        .when()
+        .post("/prod-pagopa/onboarding-decision")
+        .then()
+        .statusCode(400)
+        .contentType("application/problem+json")
+        .body("detail", equalTo("bad input"))
+        .body("instance", equalTo("/product/prod-pagopa/onboarding-decision"));
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getOnboardingDecision_shouldReturn404_whenProductNotValid() {
+    when(productService.getOnboardingDecision(eq("AR"), eq("prod-missing"), any()))
+        .thenReturn(Uni.createFrom().failure(new NotFoundException("Product not found")));
+
+    given()
+        .contentType(ContentType.JSON)
+        .body(DECISION_BODY)
+        .when()
+        .post("/prod-missing/onboarding-decision")
+        .then()
+        .statusCode(404)
+        .contentType("application/problem+json")
+        .body("detail", equalTo("Product not found"));
+  }
+
+  @Test
+  @TestSecurity(user = "userJwt")
+  void getOnboardingDecision_shouldReturn400_whenRequiredFieldIsMissing() {
+    given()
+        .contentType(ContentType.JSON)
+        .body("{\"institutionType\":\"GPU\",\"origin\":\"SELC\"}")
+        .when()
+        .post("/prod-pagopa/onboarding-decision")
+        .then()
+        .statusCode(400);
+
+    verify(productService, never()).getOnboardingDecision(any(), any(), any());
   }
 }
