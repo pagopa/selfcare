@@ -57,7 +57,7 @@ public class OnboardingFunctionStep extends CucumberQuarkusTest {
     private static final long STATUS_POLL_TIMEOUT_MS = 40_000L;
     private static final long STATUS_POLL_INTERVAL_MS = 1_000L;
     private static final String INTEGRATION_TEST_CALLER_ID = "m2m:onboarding-functions-it";
-    private static final String INTEGRATION_TEST_TENANT = "AR";
+    static final String INTEGRATION_TEST_TENANT = "AR";
 
     private ValidatableResponse validatableResponse;
     private static ObjectMapper objectMapper;

@@ -55,6 +55,7 @@ public class IntegrationOperationUtils {
                 documentId = UUID.randomUUID().toString();
             }
             document.append("_id", documentId);
+            document.append("tenantId", OnboardingFunctionStep.INTEGRATION_TEST_TENANT);
             document.append(
                     "institutionType",
                     institution.getInstitutionType() != null
