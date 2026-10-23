@@ -18,6 +18,7 @@ import it.pagopa.selfcare.dashboard.model.mapper.InstitutionResourceMapper;
 import it.pagopa.selfcare.dashboard.model.mapper.OnboardingMapper;
 import it.pagopa.selfcare.dashboard.model.mapper.UserMapper;
 import it.pagopa.selfcare.dashboard.model.mapper.UserMapperV2;
+import it.pagopa.selfcare.dashboard.model.onboarding.OnboardingContractUpdateDto;
 import it.pagopa.selfcare.dashboard.model.user.*;
 import it.pagopa.selfcare.dashboard.service.DelegationService;
 import it.pagopa.selfcare.dashboard.service.InstitutionV2Service;
@@ -142,6 +143,26 @@ public class InstitutionV2Controller {
         log.debug("createInstitutionProductUser result = {}", result);
         log.trace("createInstitutionProductUser end");
         return result;
+    }
+
+    @PostMapping(value = "/{institutionId}/products/{productId}/contract-update", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "onboardingContractUpdate", description = "${swagger.dashboard.institutions.api.onboardingContractUpdate}", operationId = "#v2OnboardingContractUpdate")
+    @PreAuthorize("hasPermission(new it.pagopa.selfcare.dashboard.security.FilterAuthorityDomain(#institutionId, #productId, null), 'Selc:CreateProductUsers')")
+    public void onboardingContractUpdate(@Parameter(description = "${swagger.dashboard.institutions.model.id}")
+                                         @PathVariable("institutionId")
+                                         String institutionId,
+                                         @Parameter(description = "${swagger.dashboard.products.model.id}")
+                                         @PathVariable("productId")
+                                         String productId,
+                                         @RequestBody
+                                         @Valid
+                                         OnboardingContractUpdateDto onboardingContractUpdateDto) {
+        log.trace("onboardingContractUpdate start");
+        log.debug(LogUtils.CONFIDENTIAL_MARKER, "onboardingContractUpdate institutionId = {}, productId = {}, request = {}",
+                Encode.forJava(institutionId), Encode.forJava(productId), Encode.forJava(onboardingContractUpdateDto.toString()));
+        institutionV2Service.onboardingContractUpdate(onboardingMapper.toOnboardingContractUpdateRequest(productId, onboardingContractUpdateDto));
+        log.trace("onboardingContractUpdate end");
     }
 
     @PutMapping(value = "/{institutionId}/products/{productId}/users/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)

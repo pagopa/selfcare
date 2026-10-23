@@ -8,8 +8,12 @@ import io.restassured.common.mapper.TypeRef;
 import io.restassured.response.ExtractableResponse;
 import io.restassured.specification.RequestSpecification;
 import it.pagopa.selfcare.dashboard.model.*;
+import it.pagopa.selfcare.dashboard.model.onboarding.ContractUpdateUserDto;
+import it.pagopa.selfcare.dashboard.model.onboarding.OnboardingContractUpdateDto;
 import it.pagopa.selfcare.dashboard.model.user.UserCountResource;
 import it.pagopa.selfcare.dashboard.model.user.UserProductRoles;
+import it.pagopa.selfcare.onboarding.common.InstitutionType;
+import it.pagopa.selfcare.onboarding.common.PartyRole;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +32,8 @@ public class InstitutionApiSteps {
 
     @Autowired
     private DashboardStepsUtil dashboardStepsUtil;
+
+    private OnboardingContractUpdateDto contractUpdateRequest;
 
 
     @DataTableType
@@ -311,6 +318,53 @@ public class InstitutionApiSteps {
         if (dashboardStepsUtil.status == 200) {
             dashboardStepsUtil.responses.setInstitutionBaseResourceList(response.body().as(new TypeRef<>() {}));
         } else {
+            dashboardStepsUtil.errorMessage = response.body().asString();
+        }
+    }
+
+    @And("the following contract update institution details:")
+    public void theFollowingContractUpdateInstitutionDetails(List<Map<String, String>> rows) {
+        Map<String, String> entry = rows.get(0);
+        contractUpdateRequest = new OnboardingContractUpdateDto();
+        Optional.ofNullable(entry.get("institutionType")).map(InstitutionType::valueOf).ifPresent(contractUpdateRequest::setInstitutionType);
+        contractUpdateRequest.setOrigin(entry.get("origin"));
+        contractUpdateRequest.setOriginId(entry.get("originId"));
+        contractUpdateRequest.setTaxCode(entry.get("taxCode"));
+        contractUpdateRequest.setSubunitCode(entry.get("subunitCode"));
+        contractUpdateRequest.setUsers(List.of());
+    }
+
+    @And("the following contract update users:")
+    public void theFollowingContractUpdateUsers(List<Map<String, String>> rows) {
+        contractUpdateRequest.setUsers(rows.stream().map(entry -> {
+            ContractUpdateUserDto user = new ContractUpdateUserDto();
+            user.setName(entry.get("name"));
+            user.setSurname(entry.get("surname"));
+            user.setTaxCode(entry.get("taxCode"));
+            user.setEmail(entry.get("email"));
+            Optional.ofNullable(entry.get("role")).map(PartyRole::valueOf).ifPresent(user::setRole);
+            return user;
+        }).toList());
+    }
+
+    @When("I send a POST request to {string} to request a contract update")
+    public void iSendAPOSTRequestToRequestAContractUpdate(String url) {
+        RequestSpecification requestSpecification = RestAssured.given()
+                .contentType("application/json");
+
+        dashboardStepsUtil.setHeader(requestSpecification);
+
+        ExtractableResponse<?> response = requestSpecification
+                .when()
+                .pathParam("institutionId", dashboardStepsUtil.filter.getInstitutionId())
+                .pathParam("productId", dashboardStepsUtil.filter.getProductId())
+                .body(contractUpdateRequest)
+                .post(url)
+                .then()
+                .extract();
+
+        dashboardStepsUtil.status = response.statusCode();
+        if (dashboardStepsUtil.status != 201) {
             dashboardStepsUtil.errorMessage = response.body().asString();
         }
     }
