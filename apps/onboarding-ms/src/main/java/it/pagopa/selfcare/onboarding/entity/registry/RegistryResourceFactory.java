@@ -56,10 +56,22 @@ public class RegistryResourceFactory {
     @Inject
     GeographicTaxonomiesApi geographicTaxonomiesApi;
 
+  /**
+   * Origin the institution has once its registry is resolved: origins without a dedicated registry
+   * (null, SELC, MOCK, UNKNOWN) are handled by {@link RegistryManagerSELC}, which sets the origin to SELC.
+   */
+  public static Origin effectiveOrigin(Origin origin) {
+    if (origin == null) {
+      return Origin.SELC;
+    }
+    return switch (origin) {
+      case PDND_INFOCAMERE, ANAC, IVASS, INFOCAMERE, ADE, IPA -> origin;
+      default -> Origin.SELC;
+    };
+  }
+
   public RegistryManager<?> create(Onboarding onboarding, String managerTaxCode) {
-    return switch (onboarding.getInstitution().getOrigin() != null
-        ? onboarding.getInstitution().getOrigin()
-        : Origin.SELC) {
+    return switch (effectiveOrigin(onboarding.getInstitution().getOrigin())) {
       case PDND_INFOCAMERE -> new RegistryManagerPDNDInfocamere(onboarding, infocamerePdndApi, userRegistryApi);
       case ANAC -> new RegistryManagerANAC(onboarding, stationsApi);
       case IVASS -> new RegistryManagerIVASS(onboarding, insuranceCompaniesApi);

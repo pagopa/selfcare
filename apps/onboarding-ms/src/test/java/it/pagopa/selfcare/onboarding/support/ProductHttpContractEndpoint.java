@@ -18,6 +18,8 @@ import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import java.util.Objects;
 import org.openapi.quarkus.product_json.model.InstitutionType;
+import org.openapi.quarkus.product_json.model.OnboardingChannel;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionRequest;
 import org.openapi.quarkus.product_json.model.Origin;
 
 /** Test-only bridge exercising the real request context and generated REST client. */
@@ -35,12 +37,13 @@ public class ProductHttpContractEndpoint {
                               @QueryParam("origin") Origin origin, @QueryParam("explicitTenant") String explicitTenant) {
         return Uni.createFrom().deferred(() -> {
             Uni<?> result = switch (operation) {
-                case "product" -> productService.getProduct(productId);
+                case "product" -> productService.getValidProduct(productId);
                 case "valid" -> Objects.isNull(explicitTenant) ? productService.getValidProduct(productId)
                         : productService.getValidProduct(productId, explicitTenant);
-                case "workflow" -> productService.getWorkflowType(institutionType, origin, ProductId.fromValue(productId));
+                case "decision" -> productService.getOnboardingDecision(productId, new OnboardingDecisionRequest()
+                        .institutionType(institutionType).origin(origin).channel(OnboardingChannel.SELF_SERVICE),
+                        explicitTenant);
                 case "documents" -> productService.getRequiredDocuments(ProductId.fromValue(productId), institutionType, origin);
-                case "enabled" -> productService.isRequiredDocuments(ProductId.fromValue(productId), institutionType, origin);
                 case "expiration" -> productService.getProductExpirationDays(productId);
                 default -> throw new IllegalArgumentException("Unknown contract-test operation");
             };
