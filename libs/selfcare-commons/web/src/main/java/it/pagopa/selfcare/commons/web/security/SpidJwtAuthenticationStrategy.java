@@ -38,6 +38,8 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
     private final TenantRegistry tenantRegistry;
     private final String defaultTenantId;
 
+    @Value("${jwt.tenant-claim-required:false}")
+    private boolean tenantClaimRequired;
 
     @Autowired
     public SpidJwtAuthenticationStrategy(
@@ -117,6 +119,9 @@ public class SpidJwtAuthenticationStrategy implements JwtAuthenticationStrategy 
         final Object rawClaimTenantId = claims.get(CLAIM_TENANT_ID);
         final String effectiveTenantId;
         if (rawClaimTenantId == null) {
+            if (tenantClaimRequired) {
+                throw new TenantValidationException();
+            }
             effectiveTenantId = normalizeAndValidate(defaultTenantId);
         } else if (rawClaimTenantId instanceof String claimTenantId
                 && StringUtils.hasText(claimTenantId)) {

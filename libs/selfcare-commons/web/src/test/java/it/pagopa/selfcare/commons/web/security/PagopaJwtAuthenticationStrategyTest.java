@@ -185,4 +185,20 @@ class PagopaJwtAuthenticationStrategyTest {
         verifyNoInteractions(authoritiesRetrieverMock);
     }
 
+    @Test
+    void rejectsUnboundMachineTokensWhenTenantClaimIsRequired() {
+        TenantRegistry registry = mock(TenantRegistry.class);
+        ObjectProvider<TenantRegistry> provider = mock(ObjectProvider.class);
+        when(provider.getIfAvailable()).thenReturn(registry);
+        when(registry.isConfigured()).thenReturn(true);
+        when(jwtServiceMock.getClaims("token", "AR")).thenReturn(new DefaultClaims());
+        var strategy = new PagopaJwtAuthenticationStrategy(
+                jwtServiceMock, authoritiesRetrieverMock, provider, "AR");
+        org.springframework.test.util.ReflectionTestUtils.setField(strategy, "tenantClaimRequired", true);
+
+        assertThrows(TenantValidationException.class,
+                () -> strategy.authenticate(new JwtAuthenticationToken("token", "AR")));
+        verifyNoInteractions(authoritiesRetrieverMock);
+    }
+
 }

@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.party.registry_proxy.web.filter;
 
+import it.pagopa.selfcare.commons.tenant.TenantContext;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doNothing;
@@ -14,7 +15,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 
-import org.apache.catalina.connector.Response;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
-@ContextConfiguration(classes = {LogFilter.class})
+@ContextConfiguration(classes = {LogFilter.class, TenantContext.class})
 @ExtendWith(SpringExtension.class)
 class LogFilterTest {
     @Autowired
@@ -48,7 +48,7 @@ class LogFilterTest {
     @Test
     void testDoFilter5() throws IOException, ServletException {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        Response response = new Response();
+        MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain filterChain = mock(FilterChain.class);
         doThrow(new UnsupportedEncodingException()).when(filterChain)
                 .doFilter(any(), any());
@@ -56,4 +56,3 @@ class LogFilterTest {
         verify(filterChain).doFilter(any(), any());
     }
 }
-

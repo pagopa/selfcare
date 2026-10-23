@@ -26,6 +26,14 @@ class K8sJwtAuthenticationStrategyTest {
     private final K8sJwtAuthenticationStrategy k8sJwtAuthenticationStrategy;
     private final AuthenticationV1Api apiClientMock;
 
+    @Test
+    void strictTenantModeRejectsUnboundKubernetesMachineTokens() {
+        var strategy = new K8sJwtAuthenticationStrategy(apiClientMock);
+        org.springframework.test.util.ReflectionTestUtils.setField(strategy, "tenantClaimRequired", true);
+        assertThrows(TenantValidationException.class,
+                () -> strategy.authenticate(new JwtAuthenticationToken("token", "AR")));
+        verifyNoInteractions(apiClientMock);
+    }
 
     public K8sJwtAuthenticationStrategyTest() {
         apiClientMock = mock(AuthenticationV1Api.class);

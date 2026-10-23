@@ -1,33 +1,18 @@
 package it.pagopa.selfcare.party.registry_proxy.connector.rest.client;
 
 import it.pagopa.selfcare.party.registry_proxy.connector.model.SearchServiceStatus;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.AzureSearchRestClientConfig;
+import it.pagopa.selfcare.party.registry_proxy.connector.rest.config.AzureSearchClientCredentials;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.GeoTaxonomyIstatIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.IpaInstitutionIndex;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexRequest;
 import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceIndexResponse;
-import it.pagopa.selfcare.party.registry_proxy.connector.rest.model.search.SearchServiceOnboardingIndex;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
-@FeignClient(name = "${rest-client.ai-search.serviceCode}", url = "${rest-client.ai-search.base-url}", configuration = AzureSearchRestClientConfig.class)
+@FeignClient(name = "${rest-client.ai-search.serviceCode}", url = "${rest-client.ai-search.base-url}", configuration = AzureSearchClientCredentials.class)
 public interface AzureSearchRestClient {
-
-  @PostMapping(value = "${rest-client.ai-search.onboarding.add.path}", consumes = APPLICATION_JSON_VALUE)
-  @ResponseBody
-  SearchServiceStatus indexOnboarding(@RequestBody SearchServiceIndexRequest<SearchServiceOnboardingIndex> searchServiceRequest);
-
-  @GetMapping("${rest-client.ai-search.onboarding.search.path}")
-  SearchServiceIndexResponse<SearchServiceOnboardingIndex> searchOnboarding(@RequestParam(value = "search", required = false) String search,
-                                                                            @RequestParam(value = "searchMode", required = false) String searchMode,
-                                                                            @RequestParam(value = "$filter", required = false) String filter,
-                                                                            @RequestParam(value = "$count", required = false) Boolean count,
-                                                                            @RequestParam(value = "$top", required = false) Long top,
-                                                                            @RequestParam(value = "$skip", required = false) Long skip,
-                                                                            @RequestParam(value = "$select", required = false) String select,
-                                                                            @RequestParam(value = "$orderby", required = false) String orderby);
 
   @PostMapping(value = "${rest-client.ai-search.ipa.institution.add.path}", consumes = APPLICATION_JSON_VALUE)
   @ResponseBody
