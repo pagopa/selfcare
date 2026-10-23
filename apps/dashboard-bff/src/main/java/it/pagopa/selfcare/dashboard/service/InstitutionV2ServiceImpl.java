@@ -14,7 +14,9 @@ import it.pagopa.selfcare.dashboard.model.user.UserInfo;
 import it.pagopa.selfcare.dashboard.model.user.UserInstitutionWithActionsDto;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissions;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsList;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingContractUpdateRequest;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingStatus;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserProductResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.owasp.encoder.Encode;
@@ -279,6 +281,15 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
         }
     }
 
+    @Override
+    public void onboardingContractUpdate(OnboardingContractUpdateRequest onboardingContractUpdateRequest) {
+        log.trace("onboardingContractUpdate start");
+        Assert.notNull(onboardingContractUpdateRequest, "An OnboardingContractUpdateRequest is required");
+        log.debug("onboardingContractUpdate productId = {}", Encode.forJava(onboardingContractUpdateRequest.getProductId()));
+        onboardingRestClient._onboardingContractUpdate(onboardingContractUpdateRequest);
+        log.trace("onboardingContractUpdate end");
+    }
+
     private OnboardingResponse getOnboardingResponse(String institutionId, String productId) {
         OnboardingsResponse onboardingsResponse = Optional.ofNullable(
                 coreInstitutionApiRestClient._getOnboardingsInstitutionUsingGET(institutionId, null).getBody()
@@ -312,7 +323,7 @@ public class InstitutionV2ServiceImpl implements InstitutionV2Service {
     }
 
     private Boolean getOnboardingWithFilter(String taxCode, String subunitCode, String productId, String status) {
-        ResponseEntity<OnboardingGetResponse> response = onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, status, subunitCode, taxCode, null, null);
+        ResponseEntity<OnboardingGetResponse> response = onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, OnboardingStatus.fromValue(status), subunitCode, taxCode, null, null, null);
         return checkOnboardingPresence(response);
     }
 

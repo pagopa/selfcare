@@ -3,6 +3,7 @@ package it.pagopa.selfcare.dashboard.service;
 import it.pagopa.selfcare.core.generated.openapi.v1.dto.OnboardingsResponse;
 import it.pagopa.selfcare.dashboard.model.institution.Institution;
 import it.pagopa.selfcare.dashboard.model.user.UserInfo;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingContractUpdateRequest;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserProductResponse;
 import org.springframework.core.io.Resource;
 
@@ -18,5 +19,6 @@ public interface InstitutionV2Service {
     OnboardingsResponse getOnboardingsInfoResponse(String institutionId, List<String> products);
     Resource getContract(String institutionId, String productId);
     Boolean checkAttachmentStatus(String institutionId, String productId, String attachmentName);
+    void onboardingContractUpdate(OnboardingContractUpdateRequest onboardingContractUpdateRequest);
 
 }

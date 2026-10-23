@@ -1,0 +1,130 @@
+[
+  {
+    "_id": "b05e0ed9-2da1-4814-b6c0-8fd076009a01",
+    "tenantId": "AR",
+    "productId": "prod-io",
+    "alias": "prod-io",
+    "title": "IO",
+    "status": "ACTIVE",
+    "version": 1,
+    "features": {
+      "allowCompanyOnboarding": true,
+      "allowIndividualOnboarding": false,
+      "delegable": false,
+      "invoiceable": true,
+      "enabled": true,
+      "expirationDays": 30
+    },
+    "roleMappings": [
+      {
+        "role": "MANAGER",
+        "institutionType": "DEFAULT",
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "skipUserCreation": false,
+        "backOfficeRoles": [
+          {
+            "code": "admin",
+            "label": "Amministratore",
+            "description": "Amministratore"
+          }
+        ]
+      },
+      {
+        "role": "DELEGATE",
+        "institutionType": "DEFAULT",
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "skipUserCreation": false,
+        "backOfficeRoles": [
+          {
+            "code": "admin",
+            "label": "Amministratore",
+            "description": "Amministratore"
+          }
+        ]
+      }
+    ],
+    "institutionOrigins": [
+      {
+        "institutionType": "PA",
+        "origin": "IPA",
+        "labelKey": "pa"
+      },
+      {
+        "institutionType": "PT",
+        "origin": "IPA",
+        "labelKey": "pt"
+      }
+    ],
+    "requiredDocuments": []
+  },
+  {
+    "_id": "5f3c7a52-9e4b-4d61-8a2f-0c7b1e6d9a34",
+    "tenantId": "AR",
+    "productId": "prod-pn",
+    "alias": "prod-pn",
+    "title": "SEND - Servizio Notifiche Digitali",
+    "status": "ACTIVE",
+    "version": 1,
+    "features": {
+      "allowCompanyOnboarding": true,
+      "allowIndividualOnboarding": false,
+      "delegable": false,
+      "invoiceable": true,
+      "enabled": true,
+      "expirationDays": 30
+    },
+    "roleMappings": [
+      {
+        "role": "MANAGER",
+        "institutionType": "DEFAULT",
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "skipUserCreation": false,
+        "backOfficeRoles": [
+          {
+            "code": "admin",
+            "label": "Amministratore",
+            "description": "Amministratore"
+          }
+        ]
+      },
+      {
+        "role": "DELEGATE",
+        "institutionType": "DEFAULT",
+        "multiroleAllowed": false,
+        "phasesAdditionAllowed": [
+          "onboarding"
+        ],
+        "skipUserCreation": false,
+        "backOfficeRoles": [
+          {
+            "code": "admin",
+            "label": "Amministratore",
+            "description": "Amministratore"
+          }
+        ]
+      }
+    ],
+    "institutionOrigins": [
+      {
+        "institutionType": "PA",
+        "origin": "IPA",
+        "labelKey": "pa"
+      },
+      {
+        "institutionType": "PT",
+        "origin": "IPA",
+        "labelKey": "pt"
+      }
+    ],
+    "requiredDocuments": []
+  }
+]
