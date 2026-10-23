@@ -263,13 +263,33 @@ Feature: Onboarding collection
     Then the response status code should be 400
     And the response should contain the text "Field digitalAddress or description are not valid"
 
-  Scenario: Successfully store onboarding for GPU in status REQUEST
+  Scenario: Can't perform self-service onboarding for GPU when the pair is reserved to managed flows
     Given I have a request object named "success_gpu_request"
     When I send a POST request to "" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "institution with institution type GPU and origin SELC can onboard product prod-pagopa only through the flows managed by PagoPA"
+
+  Scenario: Successfully complete onboarding for GPU through a managed flow
+    Given I have a request object named "success_gpu_completion_request"
+    When I send a POST request to "/completion" with this request
     Then the response status code should be 200
     And the response body should not be empty
-    And the response should have field "status" with value "REQUEST"
-    And the response should have field "workflowType" with value "FOR_APPROVE_GPU"
+    And the response should have field "workflowType" with value "CONFIRMATION"
+
+  Scenario: Can't perform onboarding request when no workflow is configured for the pair
+    Given I have a request object named "invalid_gpu_no_workflow_request"
+    When I send a POST request to "" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "No workflow configured for product prod-io, institutionType GPU, origin SELC"
+
+  Scenario: Can't perform onboarding request with institutionType SA and origin IPA
+    Given I have a request object named "invalid_sa_ipa_request"
+    When I send a POST request to "" with this request
+    Then the response status code should be 400
+    And the response body should not be empty
+    And the response should contain the text "InstitutionType 'SA' is not allowed for origin 'IPA'. Allowed institution types: [GSP, PA, SCEC]"
 
   #Scenario: Can't perform onboarding request for UO Aggregate
    # Given I have a request object named "invalid_aggregate_pa_request"

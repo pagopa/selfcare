@@ -1,8 +1,10 @@
 package it.pagopa.selfcare.product.service;
 
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.product.model.dto.request.OnboardingDecisionRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.OnboardingDecisionResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
@@ -49,6 +51,19 @@ public interface ProductService {
    *     jakarta.ws.rs.NotFoundException} when the product/parent does not exist or is not valid
    */
   Uni<ProductResponse> getValidProduct(String tenantId, String productId);
+
+  /**
+   * Decides whether an institution can onboard the product through the given channel and with
+   * which workflow, applying the {@link OnboardingRules}. A denied request is a regular outcome
+   * ({@code allowed=false} with a reason), not a failure.
+   *
+   * @param productId the product identifier
+   * @param request the institution type, origin, channel and optional imposed workflow
+   * @return the decision; fails with {@link jakarta.ws.rs.NotFoundException} when the
+   *     product/parent does not exist or is not valid
+   */
+  Uni<OnboardingDecisionResponse> getOnboardingDecision(
+      String tenantId, String productId, OnboardingDecisionRequest request);
 
   /**
    * Returns the expiration days associated with the given product. If the product exists and is
