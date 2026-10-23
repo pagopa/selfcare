@@ -2,8 +2,10 @@ package it.pagopa.selfcare.product.controller;
 
 import io.quarkus.security.Authenticated;
 import io.smallrye.mutiny.Uni;
+import it.pagopa.selfcare.product.model.dto.request.OnboardingDecisionRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.OnboardingDecisionResponse;
 import it.pagopa.selfcare.product.model.dto.response.Problem;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
@@ -19,6 +21,7 @@ import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.security.tenant.EffectiveTenant;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
@@ -522,6 +525,90 @@ public class ProductController {
                             .detail(t.getMessage())
                             .status(Response.Status.NOT_FOUND.getStatusCode())
                             .instance("/product/workflow-type")
+                            .build())
+                    .build());
+  }
+
+  @POST
+  @Tag(name = "Product")
+  @Path("/{productId}/onboarding-decision")
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Operation(
+      summary = "Decide whether an institution can onboard a product",
+      description =
+          "Internal endpoint for onboarding-ms. Checks the institutionType/origin pair against the "
+              + "product and the platform onboarding rules for the given channel, and returns the "
+              + "workflow, the required documents and the expiration days to use. A denied "
+              + "onboarding is returned with 200 and allowed=false.",
+      operationId = "getOnboardingDecision")
+  @APIResponses(
+      value = {
+        @APIResponse(
+            responseCode = "200",
+            description = "Decision taken",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON,
+                    schema = @Schema(implementation = OnboardingDecisionResponse.class))),
+        @APIResponse(
+            responseCode = "400",
+            description = "Bad Request",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "404",
+            description = "Product or parent not found or not valid",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class))),
+        @APIResponse(
+            responseCode = "500",
+            description = "Internal Server Error",
+            content =
+                @Content(
+                    mediaType = "application/problem+json",
+                    schema = @Schema(implementation = Problem.class)))
+      })
+  public Uni<Response> getOnboardingDecision(
+      @Parameter(name = "tenantId", description = EffectiveTenant.QUERY_DESCRIPTION)
+          @QueryParam("tenantId")
+          String tenantId,
+      @PathParam("productId") String productId,
+      @Valid @NotNull OnboardingDecisionRequest request) {
+    tenantId = effectiveTenant.resolve(tenantId);
+    String instance = "/product/" + productId + "/onboarding-decision";
+    return productService
+        .getOnboardingDecision(tenantId, productId, request)
+        .onItem()
+        .transform(decision -> Response.ok(decision).build())
+        .onFailure(IllegalArgumentException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.BAD_REQUEST)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title("Bad Request")
+                            .detail(t.getMessage())
+                            .status(Response.Status.BAD_REQUEST.getStatusCode())
+                            .instance(instance)
+                            .build())
+                    .build())
+        .onFailure(NotFoundException.class)
+        .recoverWithItem(
+            t ->
+                Response.status(Response.Status.NOT_FOUND)
+                    .type("application/problem+json")
+                    .entity(
+                        Problem.builder()
+                            .title(PRODUCT_NOT_FOUND)
+                            .detail(t.getMessage())
+                            .status(Response.Status.NOT_FOUND.getStatusCode())
+                            .instance(instance)
                             .build())
                     .build());
   }
