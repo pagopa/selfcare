@@ -2,6 +2,7 @@ package it.pagopa.selfcare.product.service;
 
 import it.pagopa.selfcare.product.config.OnboardingRulesConfig;
 import it.pagopa.selfcare.product.config.OnboardingRulesConfig.ValidationMode;
+import it.pagopa.selfcare.product.exception.InvalidRequestException;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.WorkflowRule;
@@ -10,7 +11,6 @@ import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -149,7 +149,8 @@ public class OnboardingRules {
 
   /**
    * Validates the product and, depending on {@link OnboardingRulesConfig#validationMode()}, logs
-   * the problems (WARN) or rejects the product with {@link BadRequestException} (STRICT).
+   * the problems (WARN) or rejects the product with {@link InvalidRequestException}, mapped to 400
+   * (STRICT).
    */
   public void enforce(Product product) {
     List<String> problems = validate(product);
@@ -160,7 +161,7 @@ public class OnboardingRules {
         String.format(
             INVALID_RULES, Encode.forJava(product.getProductId()), String.join("; ", problems));
     if (ValidationMode.STRICT == config.validationMode()) {
-      throw new BadRequestException(message);
+      throw new InvalidRequestException(message);
     }
     log.warn(message);
   }

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.product.config.OnboardingRulesConfig;
 import it.pagopa.selfcare.product.config.OnboardingRulesConfig.ValidationMode;
+import it.pagopa.selfcare.product.exception.InvalidRequestException;
 import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.SigningConfiguration;
@@ -17,7 +18,6 @@ import it.pagopa.selfcare.product.model.enums.InstitutionType;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.BadRequestException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -42,8 +42,12 @@ class OnboardingRulesTest {
   }
 
   private static OnboardingRules strictRules() {
+    return rules(ValidationMode.STRICT);
+  }
+
+  private static OnboardingRules rules(ValidationMode mode) {
     OnboardingRulesConfig config = mock(OnboardingRulesConfig.class);
-    when(config.validationMode()).thenReturn(ValidationMode.STRICT);
+    when(config.validationMode()).thenReturn(mode);
     when(config.allowedInstitutionTypes()).thenReturn(Map.of());
     when(config.allowedWorkflowTypes()).thenReturn(Map.of());
     return new OnboardingRules(config);
@@ -265,10 +269,10 @@ class OnboardingRulesTest {
     Product product =
         Product.builder()
             .productId("prod-test")
-            .institutionOrigins(List.of(entry(InstitutionType.SA, Origin.IPA, false)))
+            .institutionOrigins(List.of(entry(InstitutionType.PA, Origin.IPA, null)))
             .build();
 
-    assertThatCode(() -> onboardingRules.enforce(product)).doesNotThrowAnyException();
+    assertThatCode(() -> rules(ValidationMode.WARN).enforce(product)).doesNotThrowAnyException();
   }
 
   @Test
@@ -280,7 +284,7 @@ class OnboardingRulesTest {
             .build();
 
     assertThatThrownBy(() -> strictRules().enforce(product))
-        .isInstanceOf(BadRequestException.class)
+        .isInstanceOf(InvalidRequestException.class)
         .hasMessage(
             "Invalid onboarding rules for product prod-test: institutionOrigins PA/IPA is"
                 + " self-onboardable but has no workflow");
