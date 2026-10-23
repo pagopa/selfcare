@@ -2172,6 +2172,115 @@ class OnboardingServiceDefaultTest {
 
     @Test
     @RunOnVertxContext
+    void completeContractUpdate_shouldRejectWhenStatusIsNotPending(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.OVERRIDDEN);
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+        asserter.execute(() -> verifyNoInteractions(documentContentControllerApi));
+    }
+
+    @Test
+    @RunOnVertxContext
+    void completeContractUpdate_shouldContinueWhenReferenceOnboardingIsCompleted(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        String referenceOnboardingId = UUID.randomUUID().toString();
+        onboarding.setReferenceOnboardingId(referenceOnboardingId);
+        Onboarding referenceOnboarding = createDummyOnboarding();
+        referenceOnboarding.setId(referenceOnboardingId);
+        referenceOnboarding.setStatus(OnboardingStatus.COMPLETED);
+
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(referenceOnboardingId))
+                .thenReturn(Uni.createFrom().item(Optional.of(referenceOnboarding))));
+
+        ProductResponse product = mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+        asserter.execute(() -> when(productService.getValidProduct(onboarding.getProductId(), onboarding.getTenantId()))
+                .thenReturn(Uni.createFrom().item(product)));
+        UserResource managerResource = new UserResource();
+        managerResource.setFiscalCode("ACTUAL-FISCAL-CODE");
+        asserter.execute(() -> when(userRegistryApi.findByIdUsingGET(
+                USERS_FIELD_TAXCODE, onboarding.getUsers().get(0).getId()))
+                .thenReturn(Uni.createFrom().item(managerResource)));
+        IllegalStateException downstreamFailure = new IllegalStateException("Contract update validation passed");
+        asserter.execute(() -> when(onboardingUtils.buildUploadSignedContractRequest(
+                any(Onboarding.class),
+                anyBoolean(),
+                any(FormItem.class),
+                any(org.openapi.quarkus.product_json.model.ProductResponse.class),
+                any(DocumentType.class),
+                anyList(),
+                anyInt()))
+                .thenReturn(Uni.createFrom().failure(downstreamFailure)));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+                IllegalStateException.class);
+        asserter.execute(() -> {
+            verify(onboardingUtils).buildUploadSignedContractRequest(
+                    any(Onboarding.class),
+                    anyBoolean(),
+                    any(FormItem.class),
+                    any(org.openapi.quarkus.product_json.model.ProductResponse.class),
+                    eq(DocumentType.INSTITUTION),
+                    anyList(),
+                    anyInt());
+        });
+    }
+
+    @Test
+    @RunOnVertxContext
+    void completeContractUpdate_shouldRejectWhenReferenceOnboardingIsNotCompleted(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.PENDING);
+        String referenceOnboardingId = UUID.randomUUID().toString();
+        onboarding.setReferenceOnboardingId(referenceOnboardingId);
+        Onboarding referenceOnboarding = createDummyOnboarding();
+        referenceOnboarding.setId(referenceOnboardingId);
+        referenceOnboarding.setStatus(OnboardingStatus.PENDING);
+
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(onboarding.getId()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(referenceOnboardingId))
+                .thenReturn(Uni.createFrom().item(Optional.of(referenceOnboarding))));
+        mockSimpleProductValidAssert(onboarding.getProductId(), false, asserter, false, true);
+
+        asserter.assertFailedWith(
+                () -> onboardingService.complete(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+        asserter.execute(() -> verifyNoInteractions(documentContentControllerApi));
+    }
+
+    @Test
+    @RunOnVertxContext
+    void consumeContractUpdate_shouldRejectWhenStatusIsNotPending(UniAsserter asserter) {
+        Onboarding onboarding = createDummyOnboarding();
+        onboarding.setWorkflowType(CONTRACT_UPDATE);
+        onboarding.setStatus(OnboardingStatus.COMPLETED);
+        asserter.execute(() -> PanacheMock.mock(Onboarding.class));
+        asserter.execute(() -> when(Onboarding.findByIdOptional(any()))
+                .thenReturn(Uni.createFrom().item(Optional.of(onboarding))));
+
+        asserter.assertFailedWith(
+                () -> onboardingService.completeWithoutSignatureVerification(onboarding.getId(), TEST_FORM_ITEM),
+                InvalidRequestException.class);
+        asserter.execute(() -> verifyNoInteractions(documentContentControllerApi));
+    }
+
+    @Test
+    @RunOnVertxContext
     void completeWithoutSignatureVerification(UniAsserter asserter) {
         Onboarding onboarding = createDummyOnboarding();
         asserter.execute(() -> PanacheMock.mock(Onboarding.class));
