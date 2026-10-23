@@ -18,6 +18,7 @@ output "config" {
     strict_tenant_data_isolation   = local.strict_tenant_data_isolation
     tenant_ids                     = local.tenant_ids
     tenant_hosts                   = local.tenant_hosts
+    tenant_jwt_audiences           = local.tenant_jwt_audiences
     project                        = local.project
     project_location               = local.project_location
     mongo_db                       = local.mongo_db

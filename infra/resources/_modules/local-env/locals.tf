@@ -40,6 +40,7 @@ locals {
         allowed_origins         = ["http://localhost:3000", "https://dev.selfcare.pagopa.it", "https://api.dev.selfcare.pagopa.it"]
         authentication_provider = "ONE_IDENTITY"
         auth_enabled            = true
+        jwt_audience            = "api.dev.selfcare.pagopa.it"
       }
       PNPG = {
         frontend_uri            = "https://pnpg.dev.selfcare.pagopa.it"
@@ -47,6 +48,7 @@ locals {
         allowed_origins         = ["https://pnpg.dev.selfcare.pagopa.it", "https://api-pnpg.dev.selfcare.pagopa.it"]
         authentication_provider = "HUB_SPID_LOGIN"
         auth_enabled            = false
+        jwt_audience            = "pnpg.dev.selfcare.pagopa.it"
       }
     }
     uat = {
@@ -56,6 +58,7 @@ locals {
         allowed_origins         = ["https://uat.selfcare.pagopa.it", "https://api.uat.selfcare.pagopa.it"]
         authentication_provider = "ONE_IDENTITY"
         auth_enabled            = true
+        jwt_audience            = "api.uat.selfcare.pagopa.it"
       }
       PNPG = {
         frontend_uri            = "https://imprese.uat.notifichedigitali.it"
@@ -63,6 +66,7 @@ locals {
         allowed_origins         = ["https://imprese.uat.notifichedigitali.it", "https://api-pnpg.uat.selfcare.pagopa.it"]
         authentication_provider = "HUB_SPID_LOGIN"
         auth_enabled            = false
+        jwt_audience            = "imprese.uat.notifichedigitali.it"
       }
     }
     prod = {
@@ -72,6 +76,7 @@ locals {
         allowed_origins         = ["https://selfcare.pagopa.it", "https://api.selfcare.pagopa.it"]
         authentication_provider = "ONE_IDENTITY"
         auth_enabled            = true
+        jwt_audience            = "api.selfcare.pagopa.it"
       }
       PNPG = {
         frontend_uri            = "https://imprese.notifichedigitali.it"
@@ -79,6 +84,7 @@ locals {
         allowed_origins         = ["https://imprese.notifichedigitali.it", "https://api-pnpg.selfcare.pagopa.it"]
         authentication_provider = "HUB_SPID_LOGIN"
         auth_enabled            = false
+        jwt_audience            = "imprese.notifichedigitali.it"
       }
     }
   }
@@ -117,6 +123,22 @@ locals {
     for tenant_id, tenant in local.tenant_registry : {
       id   = tenant_id
       host = regex("^https?://([^/:]+)", tenant.api_uri)[0]
+    }
+  ]
+
+  # APIM certificates holding the public key that verifies each tenant's session tokens.
+  tenant_jwt_certificate_ids = {
+    AR   = "jwt-spid-crt"
+    PNPG = "jwt-pnpg-spid-crt"
+  }
+
+  # Session-token audience (aud) -> tenant mapping used by APIM to resolve the tenant from a
+  # validated JWT instead of the hostname, so a single listener/API can serve every tenant.
+  tenant_jwt_audiences = [
+    for tenant_id, tenant in local.tenant_registry : {
+      id             = tenant_id
+      audience       = tenant.jwt_audience
+      certificate_id = local.tenant_jwt_certificate_ids[tenant_id]
     }
   ]
 

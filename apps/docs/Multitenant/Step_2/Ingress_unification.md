@@ -132,6 +132,46 @@ File: `infra/core/_modules/appgateway/main.tf`.
 4. Deprecate `tenant_hosts` in `local-env/locals.tf` when no API uses `host` resolution. The PNPG `api_uri`
    becomes the AR API host.
 
+### Implemented: tenant from the session-token audience (`aud`)
+
+First step towards `token_or_origin`. It is behind the `apim_api` flag `jwt_tenant_resolution_enabled`, which
+defaults to `false` and is wired as `false` in `dashboard-bff`, `onboarding-bff`, `auth` and `registry-proxy`.
+
+- `local-env` adds `jwt_audience` to each tenant registry entry:
+
+  | Env | AR | PNPG |
+  |---|---|---|
+  | dev | `api.dev.selfcare.pagopa.it` | `pnpg.dev.selfcare.pagopa.it` |
+  | uat | `api.uat.selfcare.pagopa.it` | `imprese.uat.notifichedigitali.it` |
+  | prod | `api.selfcare.pagopa.it` | `imprese.notifichedigitali.it` |
+
+- `local-env` also exposes `tenant_jwt_audiences = [{id, audience, certificate_id}]`. The certificate ids are the
+  APIM certificates `jwt-spid-crt` (AR) and `jwt-pnpg-spid-crt` (PNPG).
+- APIM policy when the flag is enabled:
+
+  ```text
+  no Bearer token          → existing X-Selfcare-Original-Host resolution
+  aud not decodable        → 401 (tenant-audit reason=invalid_jwt)
+  aud unknown or ambiguous → 403 (reason=unknown_audience)
+  aud → tenant T           → validate-jwt with T's certificate only (signature, exp, aud, iss SPID|PAGOPA)
+                             invalid → 401
+                             tenant_id claim present and != T → 403 (reason=jwt_tenant_mismatch)
+                             tenantId = T (overrides the host-based value)
+  set-header X-Tenant-Id (override) = tenantId
+  ```
+
+  Each audience is verified only with its own tenant's key, so the policy also binds the key to the tenant.
+  The SDK does not provide this binding yet.
+- `auth` issues the tenant audience only when `SESSION_TOKEN_TENANT_AUDIENCE_ENABLED=true` (default `false`).
+  The audience comes from `jwt.session.audience` in `TENANT_REGISTRY_JSON`. Otherwise `SESSION_TOKEN_AUDIENCE`
+  is used, as before. The AR value is unchanged, so the flag only affects PNPG once `auth_enabled = true`.
+- Prerequisites before enabling the APIM flag:
+  - `hub-spid-login` PNPG must issue `aud` = the PNPG frontend domain. Today it uses `api-pnpg.<env>…`.
+  - Verify that `jwt-spid-crt` and `jwt-pnpg-spid-crt` hold the public keys matching the session signing keys
+    (`jwt-private-key-pkcs8` for AR in `auth`).
+  - Any API that also receives Bearer tokens with a different `aud` (for example machine-to-machine tokens)
+    must keep the flag off.
+
 ### External APIs (`apim_external_api`)
 
 External APIs are already tenant-aware through product policies. Each AR or PNPG API is linked only to

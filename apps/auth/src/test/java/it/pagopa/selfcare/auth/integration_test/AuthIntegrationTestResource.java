@@ -7,9 +7,12 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.testcontainers.containers.ComposeContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+@Slf4j
 public class AuthIntegrationTestResource implements QuarkusTestResourceLifecycleManager {
 
   private ComposeContainer composeContainer;
@@ -20,6 +23,9 @@ public class AuthIntegrationTestResource implements QuarkusTestResourceLifecycle
         new ComposeContainer(new File("src/test/resources/docker-compose.yml"))
             .withLocalCompose(true)
             .withPull(true)
+            .withLogConsumer("institutionms", new Slf4jLogConsumer(log).withPrefix("institutionms"))
+            .withLogConsumer("userms", new Slf4jLogConsumer(log).withPrefix("userms"))
+            .withLogConsumer("iamms", new Slf4jLogConsumer(log).withPrefix("iamms"))
             .waitingFor(
                 "institutionms",
                 Wait.forLogMessage(".*Started SelfCareCoreApplication.*", 1)
