@@ -1982,7 +1982,7 @@
           "workflowType": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/WorkflowType"
+              "$ref": "#/components/schemas/WorkflowType1"
             }
           }
         }
@@ -2003,7 +2003,7 @@
         ],
         "type": "string"
       },
-      "WorkflowType": {
+      "WorkflowType1": {
         "enum": [
           "CONTRACT_REGISTRATION",
           "CONTRACT_WITH_COUNTERSIGNATURE",
@@ -2054,7 +2054,7 @@
         "type": "object",
         "properties": {
           "type": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           },
           "institutionType": {
             "$ref": "#/components/schemas/InstitutionType1"
@@ -2160,7 +2160,7 @@
             "$ref": "#/components/schemas/Origin1"
           },
           "workflowType": {
-            "$ref": "#/components/schemas/WorkflowType"
+            "$ref": "#/components/schemas/WorkflowType1"
           }
         }
       },
