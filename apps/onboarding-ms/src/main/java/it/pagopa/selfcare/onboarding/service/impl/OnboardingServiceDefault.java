@@ -35,6 +35,8 @@ import org.bson.Document;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.core_json.api.OnboardingApi;
+import org.openapi.quarkus.product_json.model.OnboardingChannel;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionResponse;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
 
@@ -42,6 +44,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static it.pagopa.selfcare.onboarding.common.OnboardingStatus.COMPLETED;
@@ -59,6 +62,7 @@ public class OnboardingServiceDefault implements OnboardingService {
     public static final String GSP_CATEGORY_INSTITUTION_TYPE = "L37";
     public static final String SCEC_CATEGORY_INSTITUTION_TYPE = "S01G";
     private static final String TIMEOUT_ORCHESTRATION_RESPONSE = "70";
+    private static final Consumer<OnboardingDecisionResponse> NO_SETTINGS = decision -> { };
 
     // -------------------------------------------------------------------------
     // Injected dependencies
@@ -79,7 +83,8 @@ public class OnboardingServiceDefault implements OnboardingService {
     UserRegistryHelper userRegistryHelper;
     @Inject
     OnboardingValidationHelper validationHelper;
-    @Inject WorkflowTypeResolver workflowTypeResolver;
+    @Inject
+    OnboardingAdmissionHelper admissionHelper;
     @Inject
     OnboardingPgHelper pgHelper;
     @Inject
@@ -104,74 +109,37 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Starting onboarding: description={}, origin={}, institutionType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
                 onboarding.getInstitution().getInstitutionType());
-        return workflowTypeResolver.resolve(onboarding)
-                .onItem().invoke(workflowType -> {
-                    onboarding.setWorkflowType(workflowType);
-                    log.info("Resolved workflowType={} for institution: {}",
-                            workflowType, onboarding.getInstitution().getDescription());
-                })
-                .onItem().transformToUni(workflowType -> resolveRequiredDocumentsEnabled(onboarding))
-                .onItem().invoke(requiredDocumentsEnabled -> {
-                    OnboardingStatus initialStatus = Boolean.TRUE.equals(requiredDocumentsEnabled)
-                            ? OnboardingStatus.REQUESTING
-                            : OnboardingStatus.REQUEST;
-                    onboarding.setStatus(initialStatus);
-                    log.info("Resolved required-documents flag={} for institution {}: initial onboarding status set to {}",
-                            requiredDocumentsEnabled, onboarding.getInstitution().getDescription(), initialStatus);
-                })
-                .onItem().transformToUni(ignored -> computeExpiry(onboarding.getProductId(), onboarding.getTenantId()))
-                .onItem().transformToUni(expiry -> {
-                    onboarding.setExpiringDate(expiry);
-                    return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester);
-                });
+        return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, userRequester,
+                admissionHelper.admit(onboarding, OnboardingChannel.SELF_SERVICE, null,
+                        decision -> applySelfServiceDecision(onboarding, decision)));
     }
 
-    private Uni<Boolean> resolveRequiredDocumentsEnabled(Onboarding onboarding) {
-
-      if (!requiredDocumentsEnabled) {
-            log.info("Required-documents flow disabled by configuration for institution {}",
-                    onboarding.getInstitution().getDescription());
-            return Uni.createFrom().item(Boolean.FALSE);
-        }
-
-        InstitutionType institutionType = onboarding.getInstitution().getInstitutionType();
-        Origin origin = onboarding.getInstitution().getOrigin();
-        var productInstitutionType = institutionType != null
-                ? org.openapi.quarkus.product_json.model.InstitutionType.valueOf(institutionType.name())
-                : null;
-        var productOrigin = origin != null
-                ? org.openapi.quarkus.product_json.model.Origin.valueOf(origin.name())
-                : null;
-        ProductId productId =  ProductId.fromValue(onboarding.getProductId());
-
-        Uni<Boolean> requiredDocuments = Objects.isNull(onboarding.getTenantId())
-                ? productService.isRequiredDocuments(productId, productInstitutionType, productOrigin)
-                : productService.isRequiredDocuments(productId, productInstitutionType, productOrigin,
-                        onboarding.getTenantId());
-        return requiredDocuments
-                .onFailure().recoverWithItem(throwable -> {
-                    log.warn("Falling back to legacy flow: isRequiredDocumentsEnabled failed for productId={}, institutionType={}, origin={}: {}",
-                            onboarding.getProductId(), institutionType, origin, throwable.getMessage());
-                    return Boolean.FALSE;
-                });
-
+    /**
+     * A self-service onboarding starts in REQUESTING, waiting for the documents, when the required-documents
+     * flow is enabled and product-ms requires documents for the institution; otherwise in REQUEST.
+     */
+    private void applySelfServiceDecision(Onboarding onboarding, OnboardingDecisionResponse decision) {
+        boolean requiresDocuments = requiredDocumentsEnabled
+                && CollectionUtils.isNotEmpty(decision.getRequiredDocuments());
+        OnboardingStatus initialStatus = requiresDocuments ? OnboardingStatus.REQUESTING : OnboardingStatus.REQUEST;
+        onboarding.setStatus(initialStatus);
+        onboarding.setExpiringDate(expiringDate(decision));
+        log.info("Required documents={} for institution {}: initial onboarding status set to {}",
+                requiresDocuments, onboarding.getInstitution().getDescription(), initialStatus);
     }
 
     @Override
     public Uni<OnboardingResponse> onboardingIncrement(Onboarding onboarding, List<UserRequest> userRequests,
                                                         List<AggregateInstitutionRequest> aggregates,
                                                         UserRequesterDto userRequester) {
-        onboarding.setWorkflowType(WorkflowType.INCREMENT_REGISTRATION_AGGREGATOR);
         onboarding.setStatus(PENDING);
         log.info("Starting onboardingIncrement: description={}, origin={}, institutionType={}",
                 onboarding.getInstitution().getDescription(), onboarding.getInstitution().getOrigin(),
                 onboarding.getInstitution().getInstitutionType());
-        return computeExpiry(onboarding.getProductId(), onboarding.getTenantId())
-                .onItem().transformToUni(expiry -> {
-                    onboarding.setExpiringDate(expiry);
-                    return persistenceHelper.addReferencedOnboardingId(onboarding)
-                            .flatMap(o -> fillUsersAndOnboarding(o, userRequests, aggregates, true, userRequester));
-                });
+        return persistenceHelper.addReferencedOnboardingId(onboarding)
+                .flatMap(o -> fillUsersAndOnboarding(o, userRequests, aggregates, true, userRequester,
+                        admitManaged(o, WorkflowType.INCREMENT_REGISTRATION_AGGREGATOR,
+                                decision -> o.setExpiringDate(expiringDate(decision)))));
     }
 
     @Override
@@ -216,16 +184,17 @@ public class OnboardingServiceDefault implements OnboardingService {
     @Override
     public Uni<OnboardingResponse> onboardingCompletion(Onboarding onboarding, List<UserRequest> userRequests,
                                                          UserRequesterDto userRequester) {
-        onboarding.setWorkflowType(WorkflowType.CONFIRMATION);
         onboarding.setStatus(OnboardingStatus.REQUEST);
-        return fillUsersAndOnboarding(onboarding, userRequests, null, false, userRequester);
+        return fillUsersAndOnboarding(onboarding, userRequests, null, false, userRequester,
+                admitManaged(onboarding, WorkflowType.CONFIRMATION, NO_SETTINGS));
     }
 
     @Override
     public Uni<OnboardingResponse> onboardingPgCompletion(Onboarding onboarding, List<UserRequest> userRequests) {
-        onboarding.setWorkflowType(WorkflowType.CONFIRMATION);
         onboarding.setStatus(PENDING);
-        return fillUsersAndOnboarding(onboarding, userRequests, null, false, null);
+        return fillUsersAndOnboarding(onboarding, userRequests, null, false, null,
+                admissionHelper.admit(onboarding, OnboardingChannel.SELF_SERVICE, WorkflowType.CONFIRMATION,
+                        NO_SETTINGS));
     }
 
     @Override
@@ -233,9 +202,9 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                     List<UserRequest> userRequests,
                                                                     List<AggregateInstitutionRequest> aggregates,
                                                                     UserRequesterDto userRequester) {
-        onboarding.setWorkflowType(WorkflowType.CONFIRMATION_AGGREGATOR);
         onboarding.setStatus(OnboardingStatus.REQUEST);
-        return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, null);
+        return fillUsersAndOnboarding(onboarding, userRequests, aggregates, false, null,
+                admitManaged(onboarding, WorkflowType.CONFIRMATION_AGGREGATOR, NO_SETTINGS));
     }
 
     @Override
@@ -244,18 +213,18 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                 List<UserRequest> userRequests,
                                                                 List<AggregateInstitutionRequest> aggregates,
                                                                 UserRequesterDto userRequester) {
-        onboarding.setWorkflowType(WorkflowType.IMPORT_AGGREGATION);
         onboarding.setStatus(PENDING);
-        return fillUsersAndOnboardingForImport(onboarding, userRequests, aggregates, contractImported, userRequester);
+        return fillUsersAndOnboardingForImport(onboarding, userRequests, aggregates, contractImported, userRequester,
+                admitManaged(onboarding, WorkflowType.IMPORT_AGGREGATION, NO_SETTINGS));
     }
 
     @Override
     public Uni<OnboardingResponse> onboardingImport(Onboarding onboarding, List<UserRequest> userRequests,
                                                      OnboardingImportContract contractImported,
                                                      UserRequesterDto userRequester) {
-        onboarding.setWorkflowType(WorkflowType.IMPORT);
         onboarding.setStatus(PENDING);
-        return fillUsersAndOnboardingForImport(onboarding, userRequests, null, contractImported, userRequester);
+        return fillUsersAndOnboardingForImport(onboarding, userRequests, null, contractImported, userRequester,
+                admitManaged(onboarding, WorkflowType.IMPORT, NO_SETTINGS));
     }
 
     @Override
@@ -532,33 +501,46 @@ public class OnboardingServiceDefault implements OnboardingService {
     // Private orchestration helpers
     // -------------------------------------------------------------------------
 
+    private Uni<OnboardingAdmission> admitManaged(Onboarding onboarding, WorkflowType workflowType,
+                                                  Consumer<OnboardingDecisionResponse> onAdmitted) {
+        return admissionHelper.admit(onboarding, OnboardingChannel.MANAGED, workflowType, onAdmitted);
+    }
+
+    private static LocalDateTime expiringDate(OnboardingDecisionResponse decision) {
+        int expirationDays = Objects.nonNull(decision.getExpirationDays())
+                ? decision.getExpirationDays()
+                : ProductConfigUtils.DEFAULT_EXPIRATION_DAYS;
+        return OffsetDateTime.now(ZoneId.systemDefault()).plusDays(expirationDays).toLocalDateTime();
+    }
+
+    /**
+     * Admission first, so that a denied onboarding fails with 400 before any other check, then the existing
+     * onboarding check, the registry step and the validations. The product is the one returned with the
+     * admission: no other call to product-ms is needed.
+     */
     private Uni<OnboardingResponse> fillUsersAndOnboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                                             List<AggregateInstitutionRequest> aggregates,
                                                             boolean isAggregatesIncrement,
-                                                            UserRequesterDto userRequester) {
+                                                            UserRequesterDto userRequester,
+                                                            Uni<OnboardingAdmission> admission) {
         onboarding.setCreatedAt(LocalDateTime.now());
-        return verifyExistingOnboarding(onboarding, isAggregatesIncrement)
-                .onItem().transformToUni(product ->
-                        handleOnboarding(onboarding, userRequests, aggregates, product, userRequester));
-    }
-
-    private Uni<ProductResponse> verifyExistingOnboarding(Onboarding onboarding, boolean isAggregatesIncrement) {
-        return getProductByOnboarding(onboarding)
-                .onItem().transformToUni(product ->
-                        validationHelper.verifyAlreadyOnboarding(onboarding.getInstitution(),
-                                        product.getProductId(), product.getParentId(), isAggregatesIncrement)
-                                .replaceWith(product));
+        return admission
+                .onItem().call(admitted -> validationHelper.verifyAlreadyOnboarding(onboarding.getInstitution(),
+                        admitted.product().getProductId(), admitted.product().getParentId(), isAggregatesIncrement))
+                .onItem().transformToUni(admitted ->
+                        handleOnboarding(onboarding, userRequests, aggregates, admitted, userRequester));
     }
 
     private Uni<OnboardingResponse> handleOnboarding(Onboarding onboarding, List<UserRequest> userRequests,
                                                       List<AggregateInstitutionRequest> aggregates,
-                                                      ProductResponse product, UserRequesterDto userRequester) {
+                                                      OnboardingAdmission admission, UserRequesterDto userRequester) {
         return Uni.createFrom()
                 .item(registryResourceFactory.create(onboarding, getManagerTaxCode(userRequests)))
                 .onItem().invoke(rm -> rm.setResource(rm.retrieveInstitution()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .onItem().transformToUni(rm ->
-                        validateAndPersistOnboarding(rm, onboarding, userRequests, aggregates, product, userRequester));
+                .onItem().transformToUni(rm -> admissionHelper.confirm(onboarding, admission)
+                        .onItem().transformToUni(admitted -> validateAndPersistOnboarding(rm, onboarding,
+                                userRequests, aggregates, admitted.product(), userRequester)));
     }
 
     private Uni<OnboardingResponse> validateAndPersistOnboarding(RegistryManager<?> rm, Onboarding onboarding,
@@ -568,15 +550,10 @@ public class OnboardingServiceDefault implements OnboardingService {
         log.info("Starting validateAndPersistOnboarding for institution: {}",
                 onboarding.getInstitution().getDescription());
         return rm.isValid()
-                .onItem().transformToUni(ignored -> rm.validateInstitutionType(product))
                 .onItem().invoke(() -> validationHelper.validateTaxCode(onboarding.getInstitution().getTaxCode(), product))
                 .onItem().transformToUni(ignored -> validationHelper.verifyAllowManagerAsDelegate(userRequests))
-                .onItem().transformToUni(ignored ->
-                        productServiceFor(onboarding)
-                                .onItem().transformToUni(pr ->
-                                        validationHelper.verifySameUserManagerAndDelegate(userRequests, pr)
-                                                .onItem().transformToUni(ignoredInner ->
-                                                        validationHelper.verifyRequiredRecipientCode(onboarding, pr))))
+                .onItem().transformToUni(ignored -> validationHelper.verifySameUserManagerAndDelegate(userRequests, product))
+                .onItem().transformToUni(ignored -> validationHelper.verifyRequiredRecipientCode(onboarding, product))
                 .onItem().transformToUni(ignored -> userRegistryHelper.addUserRequester(userRequester, onboarding.getUserRequester()))
                 .onItem().transformToUni(ignored -> rm.customValidation(product))
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
@@ -594,11 +571,13 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                       List<UserRequest> userRequests,
                                                                       List<AggregateInstitutionRequest> aggregates,
                                                                       OnboardingImportContract contract,
-                                                                      UserRequesterDto userRequester) {
+                                                                      UserRequesterDto userRequester,
+                                                                      Uni<OnboardingAdmission> admission) {
         onboarding.setCreatedAt(LocalDateTime.now());
-        return verifyExistingOnboardingForImport(onboarding)
-                .onItem().transformToUni(product ->
-                        handleOnboardingForImport(onboarding, userRequests, aggregates, product, contract))
+        return admission
+                .onItem().call(admitted -> verifyExistingOnboardingForImport(onboarding, admitted.product()))
+                .onItem().transformToUni(admitted ->
+                        handleOnboardingForImport(onboarding, userRequests, aggregates, admitted, contract))
                 .onFailure(IncrementRequiredException.class)
                 .recoverWithUni(throwable -> {
                     log.info("Existing onboarding found for {} and {}, calling onboardingIncrement",
@@ -607,27 +586,25 @@ public class OnboardingServiceDefault implements OnboardingService {
                 });
     }
 
-    private Uni<ProductResponse> verifyExistingOnboardingForImport(Onboarding onboarding) {
-        return getProductByOnboarding(onboarding)
-                .onItem().transformToUni(product ->
-                        validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
-                                        onboarding.getInstitution(), product.getProductId(), product.getParentId())
-                                .replaceWith(product)
-                                .onFailure(ResourceConflictException.class)
-                                .recoverWithUni(throwable ->
-                                        validationHelper.handleConflictForImport(onboarding, product)));
+    private Uni<ProductResponse> verifyExistingOnboardingForImport(Onboarding onboarding, ProductResponse product) {
+        return validationHelper.verifyAlreadyOnboardingForProductAndProductParent(
+                        onboarding.getInstitution(), product.getProductId(), product.getParentId())
+                .replaceWith(product)
+                .onFailure(ResourceConflictException.class)
+                .recoverWithUni(throwable -> validationHelper.handleConflictForImport(onboarding, product));
     }
 
     private Uni<OnboardingResponse> handleOnboardingForImport(Onboarding onboarding, List<UserRequest> userRequests,
                                                                List<AggregateInstitutionRequest> aggregates,
-                                                                ProductResponse product,
+                                                               OnboardingAdmission admission,
                                                                OnboardingImportContract contract) {
         return Uni.createFrom()
                 .item(registryResourceFactory.create(onboarding, getManagerTaxCode(userRequests)))
                 .onItem().invoke(rm -> rm.setResource(rm.retrieveInstitution()))
                 .runSubscriptionOn(Infrastructure.getDefaultWorkerPool())
-                .onItem().transformToUni(rm ->
-                        validateAndPersistOnboardingForImport(rm, onboarding, userRequests, aggregates, product, contract));
+                .onItem().transformToUni(rm -> admissionHelper.confirm(onboarding, admission)
+                        .onItem().transformToUni(admitted -> validateAndPersistOnboardingForImport(rm, onboarding,
+                                userRequests, aggregates, admitted.product(), contract)));
     }
 
     private Uni<OnboardingResponse> validateAndPersistOnboardingForImport(RegistryManager<?> rm,
@@ -637,7 +614,6 @@ public class OnboardingServiceDefault implements OnboardingService {
                                                                              ProductResponse product,
                                                                             OnboardingImportContract contract) {
         return rm.isValid()
-                .onItem().transformToUni(ignored -> rm.validateInstitutionType(product))
                 .onItem().transformToUni(ignored -> rm.customValidation(product))
                 .onItem().invoke(() -> onboarding.setTestEnvProductIds(product.getTestEnvProductIds()))
                 .onItem().transformToUni(ignored ->
@@ -836,12 +812,6 @@ public class OnboardingServiceDefault implements OnboardingService {
                 .onItem().transform(expirationDays -> OffsetDateTime.now(ZoneId.systemDefault())
                         .plusDays(expirationDays)
                         .toLocalDateTime());
-    }
-
-    private Uni<ProductResponse> productServiceFor(Onboarding onboarding) {
-        return Objects.isNull(onboarding.getTenantId())
-                ? productService.getProduct(onboarding.getProductId())
-                : productService.getProduct(onboarding.getProductId(), onboarding.getTenantId());
     }
 
     // -------------------------------------------------------------------------

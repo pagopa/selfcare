@@ -1,5 +1,6 @@
 package it.pagopa.selfcare.onboarding.entity;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.quarkus.test.InjectMock;
@@ -11,6 +12,9 @@ import it.pagopa.selfcare.onboarding.entity.registry.*;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.openapi.quarkus.party_registry_proxy_json.api.InfocamerePdndApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.InsuranceCompaniesApi;
 import org.openapi.quarkus.party_registry_proxy_json.api.StationsApi;
@@ -50,6 +54,19 @@ class RegistryResourceProviderTest {
         institution.setOrigin(origin);
         onboarding.setInstitution(institution);
         return onboarding;
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @EnumSource(value = Origin.class, names = {"SELC", "MOCK", "UNKNOWN"})
+    void givenOriginWithoutDedicatedRegistry_whenEffectiveOrigin_thenSelc(Origin origin) {
+        assertEquals(Origin.SELC, RegistryResourceFactory.effectiveOrigin(origin));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = Origin.class, names = {"IPA", "ANAC", "IVASS", "INFOCAMERE", "ADE", "PDND_INFOCAMERE"})
+    void givenOriginWithDedicatedRegistry_whenEffectiveOrigin_thenSameOrigin(Origin origin) {
+        assertEquals(origin, RegistryResourceFactory.effectiveOrigin(origin));
     }
 
     @Test

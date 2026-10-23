@@ -2,12 +2,8 @@ package it.pagopa.selfcare.onboarding.entity.registry;
 
 import io.smallrye.mutiny.Uni;
 import it.pagopa.selfcare.onboarding.common.Origin;
-import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
-import it.pagopa.selfcare.onboarding.exception.InvalidRequestException;
 import org.openapi.quarkus.product_json.model.ProductResponse;
-
-import java.util.Objects;
 
 public class RegistryManagerSELC extends BaseRegistryManager<Object> {
 
@@ -25,31 +21,10 @@ public class RegistryManagerSELC extends BaseRegistryManager<Object> {
         onboarding.getInstitution().setOrigin(Origin.SELC);
     }
 
+    /** Admission (institution type, origin, workflow) is decided by product-ms before the registry step. */
     @Override
     public Uni<Onboarding> customValidation(ProductResponse product) {
-        if (isWorkflowTypeAllowed(onboarding.getWorkflowType()) || Objects.nonNull(product.getParentId())) {
-            return Uni.createFrom().item(onboarding);
-        }
-
-        return Uni.createFrom().failure(new InvalidRequestException("Invalid workflow type for origin SELC"));
-    }
-
-    protected boolean isWorkflowTypeAllowed(WorkflowType workflowType) {
-        if (Objects.isNull(workflowType )) {
-            return false;
-        }
-
-        return switch (workflowType) {
-            case FOR_APPROVE,
-                 IMPORT,
-                 FOR_APPROVE_PT,
-                 FOR_APPROVE_GPU,
-                 CONFIRMATION,
-                 CONFIRMATION_AGGREGATOR,
-                 INCREMENT_REGISTRATION_AGGREGATOR,
-                 CONTRACT_WITH_COUNTERSIGNATURE -> true;
-            default -> false;
-        };
+        return Uni.createFrom().item(onboarding);
     }
 
     @Override
