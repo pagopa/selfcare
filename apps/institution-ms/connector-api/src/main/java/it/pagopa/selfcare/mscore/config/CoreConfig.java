@@ -23,15 +23,5 @@ public class CoreConfig {
     private boolean sendEmailToInstitution;
     private boolean infoCamereEnable;
     private boolean enableSendDelegationMail;
-    private BlobStorage blobStorage;
     private boolean mailEnabled;
-
-    @Data
-    public static class BlobStorage {
-        private String containerProduct;
-        private String filepathProduct;
-        private String connectionStringProduct;
-        private String accountNameProduct;
-        private String managedIdentityClientIdProduct;
-    }
 }

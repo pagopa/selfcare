@@ -26,7 +26,9 @@ restore the legacy MongoDB client configuration.
 
 For the existing single-tenant setup, `TENANT_SUPPORTED_TENANTS` and
 `TENANT_DEFAULT` default to `AR`. The default registry keeps the existing
-institution database and connection settings:
+institution database and connection settings. The MongoDB/JWT examples below
+must also include the required bindings described under
+[Tenant-aware blob storage](#tenant-aware-blob-storage):
 
 ```json
 {
@@ -109,6 +111,63 @@ latency, and sanitized tenant failure details, but omit the obsolete
 single-database `host` and `database` fields. Tenant registry or connection changes
 require an application restart because routed Mongo clients are cached.
 
+### Tenant-aware blob storage
+
+Blob access uses the shared Spring `TenantBlobClientProvider` and requires the
+`products` and `mail-templates` storage bindings for every supported tenant.
+Each binding declares an account, container, optional trusted `pathPrefix`, and
+an explicit authentication mode. For Managed Identity, the registry stores
+only the environment-variable name for the client ID; for connection strings,
+it stores only the environment-variable name for the connection string. Values
+are supplied outside the registry and are validated during startup. The product
+catalog path remains the domain file `products.json`; the delegation email
+template path remains `MAIL_TEMPLATE_DELEGATION_NOTIFICATION_PATH`.
+
+A single-tenant deployment sets `TENANT_SUPPORTED_TENANTS=AR` and includes both
+bindings under the existing `AR` registry entry:
+
+```json
+{
+  "AR": {
+    "storages": {
+      "products": {
+        "account": "product-storage",
+        "container": "selc-d-product",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "INSTITUTION_PRODUCTS_STORAGE_CLIENT_ID"
+        }
+      },
+      "mail-templates": {
+        "account": "documents-storage",
+        "container": "sc-d-documents-blob",
+        "pathPrefix": "templates",
+        "authentication": {
+          "type": "MANAGED_IDENTITY",
+          "managedIdentityClientIdEnvVar": "INSTITUTION_MAIL_TEMPLATES_STORAGE_CLIENT_ID"
+        }
+      }
+    }
+  }
+}
+```
+
+The `storages` object is merged into (not substituted for) the tenant's existing
+`mongo` and `jwt` registry entries. To run one application with two tenants,
+set `TENANT_SUPPORTED_TENANTS=AR,PNPG` and repeat both bindings under each
+tenant, pointing each purpose to that tenant's existing account, container,
+path, and Managed Identity. Use distinct client-ID environment-variable
+references per tenant and purpose. `TENANT_STORAGE_MANDATORY_KEYS` defaults to
+`products,mail-templates`; missing bindings or referenced credentials prevent
+startup. Both readiness indicators probe every supported tenant without an
+HTTP tenant context, and any failed probe marks readiness DOWN.
+
+Apply registry changes with the matching application release and restart the
+application; do not rely on runtime fallback to the previous global storage
+variables. For rollback, restore the previous application and its matching
+single-tenant registry/configuration together. No storage resources or blob
+data are provisioned, migrated, or consolidated by this change.
+
 ### Tenant rollout and rollback
 
 The existing Terraform roots at
@@ -120,8 +179,9 @@ Those environment variables reference the existing
 `mongodb-connection-string` and `jwt-public-key` Key Vault secrets in each
 root's current vault. The registry selects the existing Cosmos DB account and
 `selcMsCore` database; these settings do not provision databases or add a
-second tenant to a deployment. Mongo routing and strict isolation are enabled
-in the Terraform baseline.
+second tenant to a deployment. Mongo routing is enabled in the Terraform
+baseline, while `TENANT_STRICT_DATA_ISOLATION=false` preserves access to legacy
+untagged documents within each deployment's single-tenant database.
 
 Before enabling another tenant, coordinate every producer and consumer of the
 institution, delegation, notification, and graph-source collections so new
@@ -131,11 +191,10 @@ identifiers and existing indexes are database-wide.
 
 Inventory untagged records and identify their owner before cutover. If a
 backfill is needed, run a reviewed, tenant-specific operational procedure; the
-service does not migrate production data automatically. The Terraform baseline
-remains strict; an explicitly authorized temporary
-`TENANT_STRICT_DATA_ISOLATION=false` override is appropriate only for one known
-owner of the selected database. Backfill and coordinate producers before
-re-enabling strict mode. Release the matching application and deployment
+service does not migrate production data automatically. Keep the compatibility
+setting only while there is one known owner of the selected database. Backfill
+and coordinate producers before setting `TENANT_STRICT_DATA_ISOLATION=true`.
+Release the matching application and deployment
 configuration together, then restart and verify `/actuator/health/readiness`
 and tenant-scoped CRUD/join smoke tests.
 
