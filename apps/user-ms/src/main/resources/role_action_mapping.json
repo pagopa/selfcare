@@ -1076,7 +1076,6 @@
       "Selc:ListAllProductGroups",
       "Selc:ListProductGroups",
       "Selc:ViewInstitutionData",
-      "Selc:ViewContract",
       "Selc:UpdateGeoTaxonomy"
     ],
     "default": [

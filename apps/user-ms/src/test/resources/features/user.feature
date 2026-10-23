@@ -5611,7 +5611,6 @@ Feature: User
       | Selc:ListAllProductGroups         |
       | Selc:ListProductGroups            |
       | Selc:ViewInstitutionData          |
-      | Selc:ViewContract                 |
       | Selc:UpdateGeoTaxonomy            |
 
   @RemoveUserInstitutionAfterScenario
