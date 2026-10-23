@@ -139,12 +139,12 @@ Results:
 
 1. **product-ms** first. All changes are additive:
    - with `selfOnboarding` absent, behaviour is unchanged;
-   - validation runs in `WARN` mode.
+   - validation runs in `STRICT` mode: only products created or updated from now on must be coherent; stored products are not re-validated.
 2. **onboarding-ms**. It depends on the decision endpoint, so it must be deployed after product-ms in each environment.
 3. **Configuration**, per environment and tenant (AR, PNPG):
    - set `selfOnboarding: false` where needed (prod-pagopa GPU/SELC);
-   - fix the problems logged by the `WARN` validation;
-   - then set `ONBOARDING_RULES_VALIDATION_MODE=STRICT`.
+   - fix the problems the validation reports in the same update (a `STRICT` rejection lists all of them);
+   - set `ONBOARDING_RULES_VALIDATION_MODE=WARN` only if an environment needs to save a product before its configuration can be aligned.
 4. **Cleanup** (follow-up):
    - deprecate `GET /product/workflow-type` and `HEAD /required-documents/enabled` once APIM logs show no consumers;
    - propagate `selfOnboarding` in the product-cdc `OriginEntry` copy if blob consumers need it.

@@ -88,10 +88,10 @@ There was also a bug: when a pair had no workflow rule, the self-service flow re
   - self-onboardable pairs without a resolvable workflow, or with a workflow not admitted for the origin;
   - `workflowRules` without a matching `institutionOrigins` entry.
 - **SELC-6.2** Validation mode is set by `product-ms.onboarding-rules.validation-mode` (`ONBOARDING_RULES_VALIDATION_MODE`):
-  - `WARN` (default): logs the problems;
-  - `STRICT`: rejects the product with 400.
+  - `STRICT` (default): rejects the product with 400;
+  - `WARN`: only logs the problems. Use it temporarily in an environment whose configurations are not aligned yet.
 
-  Switch to `STRICT` once the real configurations are aligned.
+  `STRICT` checks only products being created or updated: products already stored are not re-validated.
 
 ## Acceptance Criteria
 
