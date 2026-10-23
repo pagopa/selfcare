@@ -5,12 +5,15 @@ import it.pagopa.selfcare.product.mapper.ProductMapperRequest;
 import it.pagopa.selfcare.product.mapper.ProductMapperResponse;
 import it.pagopa.selfcare.product.model.BackOfficeRole;
 import it.pagopa.selfcare.product.model.Features;
+import it.pagopa.selfcare.product.model.OriginEntry;
 import it.pagopa.selfcare.product.model.Product;
 import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.RoleMapping;
 import it.pagopa.selfcare.product.model.WorkflowRule;
+import it.pagopa.selfcare.product.model.dto.request.OnboardingDecisionRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
+import it.pagopa.selfcare.product.model.dto.response.OnboardingDecisionResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductExpirationResponse;
 import it.pagopa.selfcare.product.model.dto.response.ProductOriginResponse;
@@ -19,9 +22,12 @@ import it.pagopa.selfcare.product.model.dto.response.ProductRoleResponse;
 import it.pagopa.selfcare.product.model.dto.response.RequiredDocumentResponse;
 import it.pagopa.selfcare.product.model.dto.response.WorkflowTypeResponse;
 import it.pagopa.selfcare.product.model.enums.InstitutionType;
+import it.pagopa.selfcare.product.model.enums.OnboardingChannel;
+import it.pagopa.selfcare.product.model.enums.OnboardingDecisionReason;
 import it.pagopa.selfcare.product.model.enums.Origin;
 import it.pagopa.selfcare.product.model.enums.ProductStatus;
 import it.pagopa.selfcare.product.model.enums.UserRole;
+import it.pagopa.selfcare.product.model.enums.WorkflowType;
 import it.pagopa.selfcare.product.repository.ProductRepository;
 import it.pagopa.selfcare.product.util.ProductUtils;
 import it.pagopa.selfcare.tenant.TenantContext;
@@ -31,6 +37,7 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +60,15 @@ public class ProductServiceImpl implements ProductService {
   private static final String ROLE_NOT_FOUND = "Role %s not found for product %s";
   private static final String PRODUCT_ROLE_NOT_FOUND =
       "ProductRole %s not found for role %s in product %s";
+  private static final String INSTITUTION_TYPE_NOT_ALLOWED =
+      "institution with institution type %s and origin %s is not allowed to onboard product %s";
+  private static final String SELF_ONBOARDING_NOT_ALLOWED =
+      "institution with institution type %s and origin %s can onboard product %s only through"
+          + " the flows managed by PagoPA";
+  private static final String WORKFLOW_NOT_RESOLVABLE =
+      "No workflow configured for product %s, institutionType %s, origin %s";
+  private static final String WORKFLOW_NOT_ALLOWED_FOR_ORIGIN =
+      "Invalid workflow type for origin %s";
   private static final int DEFAULT_EXPIRATION_DATE = 30;
 
   // JPA
@@ -65,6 +81,7 @@ public class ProductServiceImpl implements ProductService {
 
   // UTILS
   private final ProductUtils productUtils;
+  private final OnboardingRules onboardingRules;
 
   @Override
   public Uni<String> ping() {
@@ -97,6 +114,7 @@ public class ProductServiceImpl implements ProductService {
 
     requestProduct.setMetadata(productUtils.buildProductMetadata(createdBy));
     applyParentOnboardingDefaults(requestProduct, true);
+    onboardingRules.enforce(requestProduct);
 
     return validateParentRelationship(requestProduct)
         .onItem()
@@ -180,6 +198,114 @@ public class ProductServiceImpl implements ProductService {
         .onItem()
         .transformToUni(this::ensureProductAndParentAreValid)
         .map(productMapperResponse::toProductResponse);
+  }
+
+  @Override
+  public Uni<OnboardingDecisionResponse> getOnboardingDecision(
+      String tenantId, String productId, OnboardingDecisionRequest request) {
+    useTenant(tenantId);
+    if (StringUtils.isBlank(productId)) {
+      return Uni.createFrom()
+          .failure(new IllegalArgumentException(String.format(MISSING_PRODUCT_BY_ID, productId)));
+    }
+
+    String sanitizedProductId = Encode.forJava(productId);
+    log.info(
+        "Deciding onboarding for product {}, institutionType {}, origin {}, channel {}",
+        sanitizedProductId,
+        request.getInstitutionType(),
+        request.getOrigin(),
+        request.getChannel());
+
+    return productRepository
+        .findProductById(productId)
+        .onItem()
+        .ifNull()
+        .failWith(() -> new NotFoundException(String.format(PRODUCT_NOT_FOUND, sanitizedProductId)))
+        .onItem()
+        .transformToUni(this::ensureProductAndParentAreValid)
+        .map(product -> decide(product, request))
+        .invoke(
+            decision ->
+                log.info(
+                    "Onboarding decision for product {}: allowed {}, reason {}, workflowType {}",
+                    sanitizedProductId,
+                    decision.isAllowed(),
+                    decision.getReason(),
+                    decision.getWorkflowType()));
+  }
+
+  /**
+   * Applies the {@link OnboardingRules} to a valid product, in this order: origin coherence, pair
+   * admitted by the product, channel, workflow resolution, workflow admitted for the origin.
+   */
+  private OnboardingDecisionResponse decide(Product product, OnboardingDecisionRequest request) {
+    InstitutionType institutionType = request.getInstitutionType();
+    Origin origin = request.getOrigin();
+
+    Optional<String> mismatch = onboardingRules.checkOriginCoherence(institutionType, origin);
+    if (mismatch.isPresent()) {
+      return denied(OnboardingDecisionReason.ORIGIN_INSTITUTION_TYPE_MISMATCH, mismatch.get());
+    }
+
+    Optional<OriginEntry> entry =
+        onboardingRules.findOriginEntry(product, institutionType, origin);
+    if (entry.isEmpty()) {
+      return denied(
+          OnboardingDecisionReason.INSTITUTION_TYPE_NOT_ALLOWED,
+          String.format(
+              INSTITUTION_TYPE_NOT_ALLOWED, institutionType, origin, product.getProductId()));
+    }
+    if (OnboardingChannel.SELF_SERVICE == request.getChannel()
+        && !OnboardingRules.isSelfOnboardingAllowed(entry.get())) {
+      return denied(
+          OnboardingDecisionReason.SELF_ONBOARDING_NOT_ALLOWED,
+          String.format(
+              SELF_ONBOARDING_NOT_ALLOWED, institutionType, origin, product.getProductId()));
+    }
+
+    Optional<WorkflowType> workflowType =
+        Optional.ofNullable(request.getWorkflowType())
+            .or(
+                () ->
+                    onboardingRules.resolveWorkflowType(
+                        product,
+                        institutionType,
+                        origin,
+                        Boolean.TRUE.equals(request.getAggregator())));
+    if (workflowType.isEmpty()) {
+      return denied(
+          OnboardingDecisionReason.WORKFLOW_NOT_RESOLVABLE,
+          String.format(
+              WORKFLOW_NOT_RESOLVABLE, product.getProductId(), institutionType, origin));
+    }
+    if (!onboardingRules.isWorkflowAllowedForOrigin(product, origin, workflowType.get())) {
+      return denied(
+          OnboardingDecisionReason.WORKFLOW_NOT_ALLOWED_FOR_ORIGIN,
+          String.format(WORKFLOW_NOT_ALLOWED_FOR_ORIGIN, origin));
+    }
+
+    return OnboardingDecisionResponse.builder()
+        .allowed(true)
+        .workflowType(workflowType.get())
+        .requiredDocuments(
+            filterRequiredDocumentsForContext(product, institutionType, origin).stream()
+                .map(productMapperResponse::toRequiredDocumentResponse)
+                .toList())
+        .expirationDays(expirationDays(product))
+        .product(productMapperResponse.toProductResponse(product))
+        .build();
+  }
+
+  private static OnboardingDecisionResponse denied(
+      OnboardingDecisionReason reason, String message) {
+    return OnboardingDecisionResponse.builder().allowed(false).reason(reason).message(message).build();
+  }
+
+  private static int expirationDays(Product product) {
+    return Objects.nonNull(product.getFeatures())
+        ? product.getFeatures().getExpirationDays()
+        : DEFAULT_EXPIRATION_DATE;
   }
 
   @Override
@@ -392,6 +518,7 @@ public class ProductServiceImpl implements ProductService {
                           patched.setTenantId(tenantContext.requiredTenantId());
                           applyParentOnboardingDefaults(
                               patched, patchRequest.getParentId() != null);
+                          onboardingRules.enforce(patched);
 
                           return validateParentRelationship(patched)
                               .onItem()

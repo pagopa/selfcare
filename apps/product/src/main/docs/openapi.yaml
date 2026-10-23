@@ -176,6 +176,56 @@ components:
         signingStep:
           format: int32
           type: integer
+    OnboardingChannel:
+      enum:
+      - SELF_SERVICE
+      - MANAGED
+      type: string
+    OnboardingDecisionReason:
+      enum:
+      - ORIGIN_INSTITUTION_TYPE_MISMATCH
+      - INSTITUTION_TYPE_NOT_ALLOWED
+      - SELF_ONBOARDING_NOT_ALLOWED
+      - WORKFLOW_NOT_RESOLVABLE
+      - WORKFLOW_NOT_ALLOWED_FOR_ORIGIN
+      type: string
+    OnboardingDecisionRequest:
+      required:
+      - institutionType
+      - origin
+      - channel
+      type: object
+      properties:
+        institutionType:
+          $ref: "#/components/schemas/InstitutionType"
+        origin:
+          $ref: "#/components/schemas/Origin"
+        channel:
+          $ref: "#/components/schemas/OnboardingChannel"
+        aggregator:
+          type: boolean
+        workflowType:
+          $ref: "#/components/schemas/WorkflowType"
+    OnboardingDecisionResponse:
+      type: object
+      properties:
+        allowed:
+          type: boolean
+        reason:
+          $ref: "#/components/schemas/OnboardingDecisionReason"
+        message:
+          type: string
+        workflowType:
+          $ref: "#/components/schemas/WorkflowType"
+        requiredDocuments:
+          type: array
+          items:
+            $ref: "#/components/schemas/RequiredDocumentResponse"
+        expirationDays:
+          format: int32
+          type: integer
+        product:
+          $ref: "#/components/schemas/ProductResponse"
     OnboardingStatus:
       enum:
       - REQUEST
@@ -212,6 +262,8 @@ components:
           $ref: "#/components/schemas/Origin"
         labelKey:
           type: string
+        selfOnboarding:
+          type: boolean
     Problem:
       type: object
       properties:
@@ -1283,6 +1335,65 @@ paths:
                 $ref: "#/components/schemas/ProductExpirationResponse"
         "404":
           description: Product not found or not valid
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "500":
+          description: Internal Server Error
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "401":
+          description: Not Authorized
+        "403":
+          description: Not Allowed
+      security:
+      - SecurityScheme: []
+  /product/{productId}/onboarding-decision:
+    post:
+      summary: Decide whether an institution can onboard a product
+      description: "Internal endpoint for onboarding-ms. Checks the institutionType/origin\
+        \ pair against the product and the platform onboarding rules for the given\
+        \ channel, and returns the workflow, the required documents and the expiration\
+        \ days to use. A denied onboarding is returned with 200 and allowed=false."
+      operationId: getOnboardingDecision
+      tags:
+      - Product
+      parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+      - description: "Optional. Defaults to the X-Tenant-Id header, or to the JWT\
+          \ tenant_id claim when the header is absent."
+        name: tenantId
+        in: query
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingDecisionRequest"
+        required: true
+      responses:
+        "200":
+          description: Decision taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OnboardingDecisionResponse"
+        "400":
+          description: Bad Request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "404":
+          description: Product or parent not found or not valid
           content:
             application/problem+json:
               schema:

@@ -20,6 +20,10 @@ import it.pagopa.selfcare.product.model.RequiredDocument;
 import it.pagopa.selfcare.product.model.RequiredDocumentFilter;
 import it.pagopa.selfcare.product.model.RoleMapping;
 import it.pagopa.selfcare.product.model.WorkflowRule;
+import it.pagopa.selfcare.product.model.dto.request.OnboardingDecisionRequest;
+import it.pagopa.selfcare.product.model.dto.response.OnboardingDecisionResponse;
+import it.pagopa.selfcare.product.model.enums.OnboardingChannel;
+import it.pagopa.selfcare.product.model.enums.OnboardingDecisionReason;
 import it.pagopa.selfcare.product.model.dto.request.ProductCreateRequest;
 import it.pagopa.selfcare.product.model.dto.request.ProductPatchRequest;
 import it.pagopa.selfcare.product.model.dto.response.ProductBaseResponse;
@@ -1869,5 +1873,238 @@ class ProductServiceImplTest {
     // then
     assertThat(thrown).isInstanceOf(BadRequestException.class).hasMessage("Missing productRole");
     verify(productRepository, never()).findProductById(anyString());
+  }
+
+  // -------------------------------------------------------------------------
+  // getOnboardingDecision
+  // -------------------------------------------------------------------------
+
+  private static OnboardingDecisionRequest decisionRequest(
+      InstitutionType type, Origin origin, OnboardingChannel channel) {
+    return OnboardingDecisionRequest.builder()
+        .institutionType(type)
+        .origin(origin)
+        .channel(channel)
+        .build();
+  }
+
+  private Product pagopaProduct() {
+    return Product.builder()
+        .productId("prod-pagopa")
+        .status(ProductStatus.ACTIVE)
+        .institutionOrigins(
+            List.of(
+                OriginEntry.builder().institutionType(InstitutionType.PA).origin(Origin.IPA).build(),
+                OriginEntry.builder()
+                    .institutionType(InstitutionType.GPU)
+                    .origin(Origin.SELC)
+                    .selfOnboarding(false)
+                    .build(),
+                OriginEntry.builder().institutionType(InstitutionType.PSP).origin(Origin.SELC).build(),
+                OriginEntry.builder()
+                    .institutionType(InstitutionType.PRV)
+                    .origin(Origin.SELC)
+                    .build()))
+        .workflowRules(
+            List.of(
+                WorkflowRule.builder()
+                    .institutionType(InstitutionType.PA)
+                    .origin(Origin.IPA)
+                    .workflowType(WorkflowType.CONTRACT_REGISTRATION)
+                    .build(),
+                WorkflowRule.builder()
+                    .institutionType(InstitutionType.GPU)
+                    .origin(Origin.SELC)
+                    .workflowType(WorkflowType.FOR_APPROVE_GPU)
+                    .build(),
+                WorkflowRule.builder()
+                    .institutionType(InstitutionType.PRV)
+                    .origin(Origin.SELC)
+                    .workflowType(WorkflowType.CONTRACT_REGISTRATION)
+                    .build()))
+        .build();
+  }
+
+  private OnboardingDecisionResponse decide(Product product, OnboardingDecisionRequest request) {
+    when(productRepository.findProductById(product.getProductId()))
+        .thenReturn(Uni.createFrom().item(product));
+    mockToProductResponseEcho();
+    return productService
+        .getOnboardingDecision("AR", product.getProductId(), request)
+        .await()
+        .indefinitely();
+  }
+
+  @Test
+  void getOnboardingDecision_allowsSelfServicePairWithResolvedWorkflow() {
+    Product product = pagopaProduct();
+    product.setFeatures(Features.builder().expirationDays(60).build());
+    RequiredDocument document =
+        RequiredDocument.builder()
+            .filter(
+                RequiredDocumentFilter.builder()
+                    .institutionType(List.of(InstitutionType.PA))
+                    .origin(List.of(Origin.IPA))
+                    .build())
+            .build();
+    product.setRequiredDocuments(List.of(document));
+    RequiredDocumentResponse documentResponse = new RequiredDocumentResponse();
+    when(productMapperResponse.toRequiredDocumentResponse(document)).thenReturn(documentResponse);
+
+    OnboardingDecisionResponse decision =
+        decide(product, decisionRequest(InstitutionType.PA, Origin.IPA, OnboardingChannel.SELF_SERVICE));
+
+    assertTrue(decision.isAllowed());
+    assertNull(decision.getReason());
+    assertEquals(WorkflowType.CONTRACT_REGISTRATION, decision.getWorkflowType());
+    assertEquals(List.of(documentResponse), decision.getRequiredDocuments());
+    assertEquals(60, decision.getExpirationDays());
+    assertEquals("prod-pagopa", decision.getProduct().getProductId());
+  }
+
+  @Test
+  void getOnboardingDecision_deniesSelfServiceForManagedOnlyPair() {
+    OnboardingDecisionResponse decision =
+        decide(
+            pagopaProduct(),
+            decisionRequest(InstitutionType.GPU, Origin.SELC, OnboardingChannel.SELF_SERVICE));
+
+    assertFalse(decision.isAllowed());
+    assertEquals(OnboardingDecisionReason.SELF_ONBOARDING_NOT_ALLOWED, decision.getReason());
+    assertEquals(
+        "institution with institution type GPU and origin SELC can onboard product prod-pagopa"
+            + " only through the flows managed by PagoPA",
+        decision.getMessage());
+    assertNull(decision.getWorkflowType());
+    assertNull(decision.getProduct());
+  }
+
+  @Test
+  void getOnboardingDecision_allowsManagedOnlyPairWithImposedWorkflow() {
+    OnboardingDecisionRequest request =
+        decisionRequest(InstitutionType.GPU, Origin.SELC, OnboardingChannel.MANAGED);
+    request.setWorkflowType(WorkflowType.CONFIRMATION);
+
+    OnboardingDecisionResponse decision = decide(pagopaProduct(), request);
+
+    assertTrue(decision.isAllowed());
+    assertEquals(WorkflowType.CONFIRMATION, decision.getWorkflowType());
+    assertEquals(List.of(), decision.getRequiredDocuments());
+    assertEquals(30, decision.getExpirationDays());
+  }
+
+  @Test
+  void getOnboardingDecision_resolvesAggregatorWorkflow() {
+    OnboardingDecisionRequest request =
+        decisionRequest(InstitutionType.PA, Origin.IPA, OnboardingChannel.SELF_SERVICE);
+    request.setAggregator(true);
+
+    OnboardingDecisionResponse decision = decide(pagopaProduct(), request);
+
+    assertTrue(decision.isAllowed());
+    assertEquals(WorkflowType.CONTRACT_REGISTRATION_AGGREGATOR, decision.getWorkflowType());
+  }
+
+  @Test
+  void getOnboardingDecision_deniesPairIncoherentWithOrigin() {
+    OnboardingDecisionResponse decision =
+        decide(
+            pagopaProduct(),
+            decisionRequest(InstitutionType.SA, Origin.IPA, OnboardingChannel.MANAGED));
+
+    assertFalse(decision.isAllowed());
+    assertEquals(OnboardingDecisionReason.ORIGIN_INSTITUTION_TYPE_MISMATCH, decision.getReason());
+    assertEquals(
+        "InstitutionType 'SA' is not allowed for origin 'IPA'. Allowed institution types: [GSP,"
+            + " PA, SCEC]",
+        decision.getMessage());
+  }
+
+  @Test
+  void getOnboardingDecision_deniesPairNotListedByProduct() {
+    OnboardingDecisionResponse decision =
+        decide(
+            pagopaProduct(),
+            decisionRequest(InstitutionType.GSP, Origin.IPA, OnboardingChannel.MANAGED));
+
+    assertFalse(decision.isAllowed());
+    assertEquals(OnboardingDecisionReason.INSTITUTION_TYPE_NOT_ALLOWED, decision.getReason());
+    assertEquals(
+        "institution with institution type GSP and origin IPA is not allowed to onboard product"
+            + " prod-pagopa",
+        decision.getMessage());
+  }
+
+  @Test
+  void getOnboardingDecision_deniesPairWithoutWorkflow() {
+    OnboardingDecisionRequest request =
+        decisionRequest(InstitutionType.PSP, Origin.SELC, OnboardingChannel.SELF_SERVICE);
+    request.setAggregator(false);
+
+    OnboardingDecisionResponse decision = decide(pagopaProduct(), request);
+
+    assertFalse(decision.isAllowed());
+    assertEquals(OnboardingDecisionReason.WORKFLOW_NOT_RESOLVABLE, decision.getReason());
+    assertEquals(
+        "No workflow configured for product prod-pagopa, institutionType PSP, origin SELC",
+        decision.getMessage());
+  }
+
+  @Test
+  void getOnboardingDecision_deniesWorkflowNotAllowedForOrigin() {
+    OnboardingDecisionResponse decision =
+        decide(
+            pagopaProduct(),
+            decisionRequest(InstitutionType.PRV, Origin.SELC, OnboardingChannel.SELF_SERVICE));
+
+    assertFalse(decision.isAllowed());
+    assertEquals(OnboardingDecisionReason.WORKFLOW_NOT_ALLOWED_FOR_ORIGIN, decision.getReason());
+    assertEquals("Invalid workflow type for origin SELC", decision.getMessage());
+  }
+
+  @Test
+  void getOnboardingDecision_throwsIllegalArgument_whenProductIdIsBlank() {
+    OnboardingDecisionRequest request =
+        decisionRequest(InstitutionType.PA, Origin.IPA, OnboardingChannel.SELF_SERVICE);
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getOnboardingDecision("AR", StringUtils.EMPTY, request)
+                    .await()
+                    .indefinitely());
+
+    assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+    verify(productRepository, never()).findProductById(anyString());
+  }
+
+  @Test
+  void getOnboardingDecision_throwsNotFound_whenProductDoesNotExist() {
+    when(productRepository.findProductById("prod-missing")).thenReturn(Uni.createFrom().nullItem());
+    OnboardingDecisionRequest request =
+        decisionRequest(InstitutionType.PA, Origin.IPA, OnboardingChannel.SELF_SERVICE);
+
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                productService
+                    .getOnboardingDecision("AR", "prod-missing", request)
+                    .await()
+                    .indefinitely());
+
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
+  }
+
+  @Test
+  void getOnboardingDecision_throwsNotFound_whenProductIsNotValid() {
+    Product product = pagopaProduct();
+    product.setStatus(ProductStatus.PHASE_OUT);
+    OnboardingDecisionRequest request =
+        decisionRequest(InstitutionType.PA, Origin.IPA, OnboardingChannel.SELF_SERVICE);
+
+    Throwable thrown = catchThrowable(() -> decide(product, request));
+
+    assertThat(thrown).isInstanceOf(NotFoundException.class);
   }
 }
