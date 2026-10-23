@@ -12,6 +12,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>it.pagopa.selfcare</groupId>
+            <artifactId>selc-commons-tenant</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.azure</groupId>
             <artifactId>azure-identity</artifactId>
             <version>1.18.1</version>
