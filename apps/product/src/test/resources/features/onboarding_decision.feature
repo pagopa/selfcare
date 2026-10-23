@@ -30,6 +30,12 @@ Feature: Onboarding admission rules
           "institutionType": "PSP",
           "origin": "SELC",
           "labelKey": "psp"
+        },
+        {
+          "institutionType": "PRV",
+          "origin": "SELC",
+          "labelKey": "prv",
+          "selfOnboarding": false
         }
       ],
       "workflowRules": [
@@ -42,6 +48,11 @@ Feature: Onboarding admission rules
           "institutionType": "GPU",
           "origin": "SELC",
           "workflowType": "FOR_APPROVE_GPU"
+        },
+        {
+          "institutionType": "PSP",
+          "origin": "SELC",
+          "workflowType": "FOR_APPROVE"
         }
       ]
     }
@@ -157,7 +168,7 @@ Feature: Onboarding admission rules
     Given User login with username "j.doe" and password "test"
     And The following request body:
     """
-    { "institutionType": "PSP", "origin": "SELC", "channel": "SELF_SERVICE" }
+    { "institutionType": "PRV", "origin": "SELC", "channel": "MANAGED" }
     """
     When I send a POST request to "/product/prod-rules/onboarding-decision"
     Then The status code is 200
@@ -182,3 +193,29 @@ Feature: Onboarding admission rules
     """
     When I send a POST request to "/product/prod-unknown/onboarding-decision"
     Then The status code is 404
+
+  Scenario: POST /product - a self-onboardable pair without workflow is rejected
+    Given User login with username "j.doe" and password "test"
+    And The following request body:
+    """
+    {
+      "tenantId": "AR",
+      "productId": "prod-rules-invalid",
+      "alias": "prod-rules-invalid",
+      "title": "Prod RULES invalid",
+      "description": "Product with an incoherent onboarding configuration",
+      "status": "ACTIVE",
+      "institutionOrigins": [
+        {
+          "institutionType": "PSP",
+          "origin": "SELC",
+          "labelKey": "psp"
+        }
+      ]
+    }
+    """
+    And The following query params:
+      | createdBy | user-test |
+    When I send a POST request to "/product"
+    Then The status code is 400
+    And The response body contains the string "Invalid onboarding rules for product prod-rules-invalid: institutionOrigins PSP/SELC is self-onboardable but has no workflow"
