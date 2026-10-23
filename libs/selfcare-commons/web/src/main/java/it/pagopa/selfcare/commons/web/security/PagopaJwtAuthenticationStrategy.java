@@ -38,6 +38,8 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
     private final TenantRegistry tenantRegistry;
     private final String defaultTenantId;
 
+    @Value("${jwt.tenant-claim-required:false}")
+    private boolean tenantClaimRequired;
 
     @Autowired
     public PagopaJwtAuthenticationStrategy(
@@ -113,6 +115,9 @@ public class PagopaJwtAuthenticationStrategy implements JwtAuthenticationStrateg
 
     private String resolveTenant(String headerTenantId, Claims claims) {
         String claimTenantId = claims.get(CLAIM_TENANT_ID, String.class);
+        if (tenantClaimRequired && !org.springframework.util.StringUtils.hasText(claimTenantId)) {
+            throw new TenantValidationException();
+        }
         String effectiveTenant =
                 org.springframework.util.StringUtils.hasText(claimTenantId)
                         ? normalizeAndValidate(claimTenantId)

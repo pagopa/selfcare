@@ -107,6 +107,41 @@ locals {
       }
     }
   }
+  registry_proxy_tenant_resources = {
+    for tenant_id in keys(local.tenant_registry) : tenant_id => {
+      jwt = {
+        publicKeyEnvVar = "JWT_PUBLIC_KEY_${tenant_id}"
+        issuers         = ["SPID", "PAGOPA"]
+        audiences       = distinct([local.tenant_registry[tenant_id].jwt_audience, regex("^https?://([^/:]+)", local.tenant_registry[tenant_id].api_uri)[0]])
+      }
+      registryProxy = {
+        search = tenant_id == "AR" ? {
+          endpoint        = "https://selc-${local.env_short}-weu-ar-srch.search.windows.net"
+          onboardingIndex = "onboarding-index-ar"
+          apiKeyEnvVar    = "AZURE_SEARCH_API_KEY"
+        } : null
+        nationalRegistries = {
+          endpoint     = "https://api-selcpg${local.env == "prod" ? "" : ".${local.env}"}.notifichedigitali.it/national-registries-private"
+          apiKeyEnvVar = "NATIONAL_REGISTRY_API_KEY_${tenant_id}"
+        }
+        pdnd = {
+          clientIdEnvVar   = "PDND_INFOCAMERE_CLIENT_ID_${tenant_id}"
+          privateKeyEnvVar = "PDND_INFOCAMERE_PRIVATE_KEY_${tenant_id}"
+          kidEnvVar        = "PDND_INFOCAMERE_KID_${tenant_id}"
+          purposeIdEnvVar  = "PDND_INFOCAMERE_PURPOSE_ID_${tenant_id}"
+          audience         = "auth.interop.pagopa.it/client-assertion"
+        }
+        pdndInvitalia = tenant_id == "AR" ? {
+          clientIdEnvVar   = "PDND_INVITALIA_INFOCAMERE_CLIENT_ID_AR"
+          privateKeyEnvVar = "PDND_INVITALIA_INFOCAMERE_PRIVATE_KEY_AR"
+          kidEnvVar        = "PDND_INVITALIA_INFOCAMERE_KID_AR"
+          purposeIdEnvVar  = "PDND_INVITALIA_INFOCAMERE_PURPOSE_ID_AR"
+          audience         = "auth.interop.pagopa.it/client-assertion"
+        } : null
+        invitaliaProducts = tenant_id == "AR" ? ["prod-idpay-merchant", "prod-registro-beni"] : []
+      }
+    }
+  }
   tenant_ids = flatten([
     for tenant_id, tenant in local.tenant_registry : [
       for origin in tenant.allowed_origins : {
