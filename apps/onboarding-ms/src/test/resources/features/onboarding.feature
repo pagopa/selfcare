@@ -415,6 +415,21 @@ Feature: Onboarding collection
     Then the response status code should be 404
     And the response should contain the text "Onboarding for taxCode 00095990644, origin IPA, originId c_a489, productId prod-io, subunitCode null not found"
 
+  Scenario: Successfully upload signed contract for pending contract update
+    When I upload the contract "documents/test.pdf" to "/{onboardingId}/complete" for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e02"
+    Then the response status code should be 204
+    And the document-ms contract for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e02" is signed
+
+  Scenario: Can't upload signed contract for contract update not in PENDING status
+    When I upload the contract "documents/test.pdf" to "/{onboardingId}/complete" for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e03"
+    Then the response status code should be 400
+    And the response should contain the text "must be in PENDING status but it is in COMPLETED status"
+
+  Scenario: Can't upload signed contract for contract update with missing reference onboarding
+    When I upload the contract "documents/test.pdf" to "/{onboardingId}/complete" for onboarding "7c4d5f0e-1a2b-4c3d-8e9f-0a1b2c3d4e04"
+    Then the response status code should be 400
+    And the response should contain the text "not onboarded or isn't ACTIVE"
+
   Scenario: Successfully store onboarding for SCP in status REQUEST
     Given I have a request object named "success_scp_request"
     When I send a POST request to "" with this request
