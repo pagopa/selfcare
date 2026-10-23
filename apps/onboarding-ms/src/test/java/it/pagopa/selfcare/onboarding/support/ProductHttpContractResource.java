@@ -59,10 +59,12 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
             String authorization = exchange.getRequestHeaders().getFirst("Authorization");
             String rawQuery = exchange.getRequestURI().getRawQuery();
             String queryTenant = queryParam(rawQuery, "tenantId");
+            String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             requests.add(Map.of("path", path, "method", exchange.getRequestMethod(),
                     "tenant", Objects.isNull(tenant) ? "" : tenant,
                     "authorization", Objects.isNull(authorization) ? "" : authorization,
-                    "query", Objects.isNull(rawQuery) ? "" : rawQuery));
+                    "query", Objects.isNull(rawQuery) ? "" : rawQuery,
+                    "body", body));
             if (Objects.isNull(tenant) || !List.of("AR", "PNPG").contains(tenant)
                     || !path.startsWith("/product/")
                     || path.startsWith("/product/" + tenant + "/")
@@ -90,14 +92,12 @@ public class ProductHttpContractResource implements QuarkusTestResourceLifecycle
             }
             JsonNode product = fixture(tenant);
             String root = "/product";
-            if (path.equals(root + "/workflow-type") && "GET".equals(exchange.getRequestMethod())) {
-                send(exchange, 200, "{\"workflowType\":\""
-                        + product.path("workflowRules").get(0).path("workflowType").asText() + "\"}");
-            } else if ((path.equals(root + "/prod-io/required-documents/enabled")
-                    || path.equals(root + "/prod-pn/required-documents/enabled"))
-                    && "HEAD".equals(exchange.getRequestMethod())) {
-                exchange.getResponseHeaders().set("X-Required-Documents-Enabled", String.valueOf(path.contains("/prod-io/")));
-                exchange.sendResponseHeaders(200, -1);
+            if (path.equals(root + "/prod-io/onboarding-decision") && "POST".equals(exchange.getRequestMethod())) {
+                ObjectNode decision = mapper.createObjectNode().put("allowed", true)
+                        .put("workflowType", product.path("workflowRules").get(0).path("workflowType").asText())
+                        .put("expirationDays", product.path("features").path("expirationDays").asInt());
+                decision.set("product", product);
+                send(exchange, 200, mapper.writeValueAsString(decision));
             } else if (path.equals(root + "/prod-io/required-documents") && "GET".equals(exchange.getRequestMethod())) {
                 ArrayNode documents = product.path("requiredDocuments").deepCopy();
                 documents.forEach(document -> ((ObjectNode) document).remove("filter"));

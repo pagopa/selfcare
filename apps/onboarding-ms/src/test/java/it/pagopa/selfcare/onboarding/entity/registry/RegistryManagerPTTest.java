@@ -47,16 +47,16 @@ class RegistryManagerPTTest {
   }
 
   @Test
-  void customValidationTest_shouldThrowNewInvalidRequestException() {
-    // given
+  void customValidationTest_shouldNotCheckWorkflowType_whenProductIsDelegable() {
+    // given: the workflow allowed for the origin is decided by product-ms before the registry step
     when(product.getFeatures()).thenReturn(new Features().delegable(true));
-    when(product.getParentId()).thenReturn(null);
+    onboarding.setWorkflowType(null);
 
     // when
     Uni<Onboarding> result = registryManagerPT.customValidation(product);
 
     // then
-    assertThrows(InvalidRequestException.class, () -> result.await().indefinitely());
+    assertSame(onboarding, result.await().indefinitely());
   }
 
   @Test
