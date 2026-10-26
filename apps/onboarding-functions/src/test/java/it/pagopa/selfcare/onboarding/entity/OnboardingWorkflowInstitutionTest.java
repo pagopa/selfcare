@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.common.WorkflowType;
 import it.pagopa.selfcare.onboarding.config.MailTemplatePlaceholdersConfig;
 import org.junit.jupiter.api.Test;
 
+@QuarkusTest
 class OnboardingWorkflowInstitutionTest {
 
   private static final String CONFIRM_URL = "https://host/onboarding/confirm?jwt=";
