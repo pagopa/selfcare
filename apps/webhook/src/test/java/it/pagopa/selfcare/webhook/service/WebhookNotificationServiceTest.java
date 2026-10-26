@@ -110,6 +110,7 @@ class WebhookNotificationServiceTest {
     assertEquals(WebhookNotification.NotificationStatus.DELIVERED, captured.getStatus());
     assertNotNull(captured.getCompletedAt());
     verify(httpRequest).putHeader("Authorization", "Bearer signed-token");
+    verify(httpRequest).putHeader("X-Tenant-Id", "tenant-1");
     verify(rawHttpRequest).as(any());
     verify(httpRequest)
         .sendJson(
@@ -152,6 +153,29 @@ class WebhookNotificationServiceTest {
             eq(443),
             eq("example.com"),
             eq("/api/webhook?code=test-function-key"));
+  }
+
+  @Test
+  void processNotification_shouldUseDefaultTenantHeaderWhenNotificationHasNoTenant() {
+    // given
+    Webhook webhook = createWebhook();
+    WebhookNotification notification = createNotification(webhook.getId());
+    notification.setTenantId(null);
+
+    when(notificationRepository.update(any(WebhookNotification.class)))
+        .thenReturn(Uni.createFrom().item(notification));
+    when(httpRequest.sendJson(any())).thenReturn(Uni.createFrom().item(httpResponse));
+    when(httpResponse.statusCode()).thenReturn(200);
+
+    // when
+    notificationService
+        .processNotification(notification, webhook)
+        .subscribe()
+        .withSubscriber(UniAssertSubscriber.create())
+        .awaitItem();
+
+    // then
+    verify(httpRequest).putHeader("X-Tenant-Id", "AR");
   }
 
   @Test
