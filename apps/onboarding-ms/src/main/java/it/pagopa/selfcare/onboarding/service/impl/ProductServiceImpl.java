@@ -12,10 +12,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.openapi.quarkus.product_json.api.ProductApi;
 import org.openapi.quarkus.product_json.model.InstitutionType;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionRequest;
+import org.openapi.quarkus.product_json.model.OnboardingDecisionResponse;
 import org.openapi.quarkus.product_json.model.Origin;
 import org.openapi.quarkus.product_json.model.ProductResponse;
 import org.openapi.quarkus.product_json.model.RequiredDocumentResponse;
-import org.openapi.quarkus.product_json.model.WorkflowTypeResponse;
 import org.owasp.encoder.Encode;
 
 import java.util.List;
@@ -37,16 +38,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Uni<WorkflowTypeResponse> getWorkflowType(InstitutionType institutionType, Origin origin, ProductId productId) {
-        log.info("Calling getWorkflowType: productId={}, institutionType={}, origin={}", productId.getValue(), institutionType, origin);
-        return getWorkflowType(institutionType, origin, productId, null);
-    }
-
-    @Override
-    public Uni<WorkflowTypeResponse> getWorkflowType(InstitutionType institutionType, Origin origin,
-                                                     ProductId productId, String tenantId) {
-        return mapNotFound(productController.getWorkflowType(institutionType, origin, productId.getValue(),
-                canonicalTenant(tenantId)), productId.getValue());
+    public Uni<OnboardingDecisionResponse> getOnboardingDecision(String productId, OnboardingDecisionRequest request,
+                                                               String tenantId) {
+        log.info("Calling getOnboardingDecision: productId={}, institutionType={}, origin={}, channel={}",
+                Encode.forJava(String.valueOf(productId)), request.getInstitutionType(), request.getOrigin(),
+                request.getChannel());
+        return mapNotFound(productController.getOnboardingDecision(productId, request, canonicalTenant(tenantId)),
+                productId);
     }
 
     @Override
@@ -61,36 +59,6 @@ public class ProductServiceImpl implements ProductService {
                                                                      Origin origin, String tenantId) {
         return mapNotFound(productController.getRequiredDocuments(productId.getValue(), institutionType, origin,
                 canonicalTenant(tenantId)), productId.getValue());
-    }
-
-    @Override
-    public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType, Origin origin) {
-        log.info("Calling isRequiredDocumentsEnabled: productId={}, institutionType={}, origin={}", productId.getValue(), institutionType, origin);
-        return isRequiredDocuments(productId, institutionType, origin, null);
-    }
-
-    @Override
-    public Uni<Boolean> isRequiredDocuments(ProductId productId, InstitutionType institutionType,
-                                             Origin origin, String tenantId) {
-        return mapNotFound(productController.isRequiredDocumentsEnabled(productId.getValue(), institutionType, origin,
-                canonicalTenant(tenantId)), productId.getValue())
-                .onItem()
-                .transform(response -> {
-                    try (response) {
-                        return Boolean.parseBoolean(response.getHeaderString("X-Required-Documents-Enabled"));
-                    }
-                });
-    }
-
-    @Override
-    public Uni<ProductResponse> getProduct(String productId) {
-        log.info("Calling getProductById: productId={}", Encode.forJava(String.valueOf(productId)));
-        return getProduct(productId, null);
-    }
-
-    @Override
-    public Uni<ProductResponse> getProduct(String productId, String tenantId) {
-        return mapNotFound(productController.getProductById(productId, canonicalTenant(tenantId)), productId);
     }
 
     @Override

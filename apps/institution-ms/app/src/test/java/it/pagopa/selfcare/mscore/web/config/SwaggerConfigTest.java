@@ -1,7 +1,6 @@
 package it.pagopa.selfcare.mscore.web.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import it.pagopa.selfcare.azurestorage.AzureBlobClientDefault;
 import it.pagopa.selfcare.mscore.connector.azure_storage.AzureBlobClient;
 import it.pagopa.selfcare.mscore.connector.rest.UserRegistryConnectorImpl;
 import it.pagopa.selfcare.mscore.core.*;
@@ -17,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.file.Files;
@@ -29,14 +29,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
+@TestPropertySource(properties = {
+        "INSTITUTION_PRODUCTS_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://localhost:10000/devstoreaccount1;",
+        "INSTITUTION_MAIL_TEMPLATES_STORAGE_CONNECTION_STRING=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCD9I1QhZT4gRjAAHEDPazjFIwtg==;BlobEndpoint=http://localhost:10000/devstoreaccount1;"
+})
 @Slf4j
 class SwaggerConfigTest {
 
     @MockBean
     ExternalService externalService;
-
-    @MockBean
-    private AzureBlobClientDefault productBlobClient;
 
     @MockBean
     InstitutionService institutionService;
@@ -95,4 +96,3 @@ class SwaggerConfigTest {
         }
     }
 }
-
