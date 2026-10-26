@@ -173,6 +173,10 @@ locals {
       value = "selcWebhook"
     },
     {
+      name  = "WEBHOOK_DEFAULT_TENANT_ID"
+      value = "AR"
+    },
+    {
       name  = "WEBHOOK_STORAGE_QUEUE_ENABLED"
       value = "true"
     },
