@@ -2,6 +2,7 @@ package it.pagopa.selfcare.webhook.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -176,6 +177,36 @@ class WebhookNotificationServiceTest {
 
     // then
     verify(httpRequest).putHeader("X-Tenant-Id", "AR");
+  }
+
+  @Test
+  void resolveTenantId_shouldPreferNotificationTenant() {
+    WebhookNotification notification = createNotification(new ObjectId());
+
+    assertEquals(
+        "tenant-1",
+        WebhookNotificationService.resolveTenantId(notification, java.util.Optional.of("AR")));
+  }
+
+  @Test
+  void resolveTenantId_shouldFallBackToDefaultWhenTenantIsBlank() {
+    WebhookNotification notification = createNotification(new ObjectId());
+    notification.setTenantId(" ");
+
+    assertEquals(
+        "PNPG",
+        WebhookNotificationService.resolveTenantId(notification, java.util.Optional.of("PNPG")));
+  }
+
+  @Test
+  void resolveTenantId_shouldReturnNullWhenNoTenantAndNoDefault() {
+    WebhookNotification notification = createNotification(new ObjectId());
+    notification.setTenantId(null);
+
+    assertNull(
+        WebhookNotificationService.resolveTenantId(notification, java.util.Optional.empty()));
+    assertNull(
+        WebhookNotificationService.resolveTenantId(notification, java.util.Optional.of(" ")));
   }
 
   @Test

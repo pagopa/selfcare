@@ -254,20 +254,7 @@ public class WebhookNotificationService {
             .putHeader("X-Webhook-Notification-Id", notification.getId().toHexString());
 
     // The notification tenant wins; the infra-provided default (AR or PNPG) is the fallback.
-    String tenantId = notification.getTenantId();
-    if (tenantId == null || tenantId.isBlank()) {
-      tenantId = defaultTenantId.filter(value -> !value.isBlank()).orElse(null);
-      if (tenantId == null) {
-        log.warn(
-            "Notification {} has no tenantId and no default tenant is configured: X-Tenant-Id header not set",
-            notification.getId());
-      } else {
-        log.warn(
-            "Notification {} has no tenantId: using default tenant {} for X-Tenant-Id header",
-            notification.getId(),
-            tenantId);
-      }
-    }
+    String tenantId = resolveTenantId(notification, defaultTenantId);
     if (tenantId != null) {
       request.putHeader("X-Tenant-Id", tenantId);
     }
@@ -277,6 +264,25 @@ public class WebhookNotificationService {
       DataEncryptionConfig.decrypt(webhook.getHeaders()).forEach(request::putHeader);
     }
     return request;
+  }
+
+  static String resolveTenantId(WebhookNotification notification, Optional<String> defaultTenant) {
+    String tenantId = notification.getTenantId();
+    if (tenantId != null && !tenantId.isBlank()) {
+      return tenantId;
+    }
+    String fallback = defaultTenant.filter(value -> !value.isBlank()).orElse(null);
+    if (fallback == null) {
+      log.warn(
+          "Notification {} has no tenantId and no default tenant is configured: X-Tenant-Id header not set",
+          notification.getId());
+    } else {
+      log.warn(
+          "Notification {} has no tenantId: using default tenant {} for X-Tenant-Id header",
+          notification.getId(),
+          fallback);
+    }
+    return fallback;
   }
 
   private static long elapsedMs(long startNanos) {
