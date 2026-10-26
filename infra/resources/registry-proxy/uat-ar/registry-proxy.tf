@@ -158,8 +158,42 @@ locals {
       value = "AR"
     },
     {
-      name  = "SELFCARE_TENANT_DATA_ISOLATION"
-      value = jsonencode({ AR = module.local.config.registry_proxy_tenant_resources.AR })
+      name = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = jsonencode({
+        AR = {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_AR"
+            issuers         = ["SPID", "PAGOPA"]
+            audiences       = ["api.uat.selfcare.pagopa.it"]
+          }
+          registryProxy = {
+            search = {
+              endpoint        = "https://selc-u-weu-ar-srch.search.windows.net"
+              onboardingIndex = "onboarding-index-ar"
+              apiKeyEnvVar    = "AZURE_SEARCH_API_KEY"
+            }
+            nationalRegistries = {
+              endpoint     = "https://api-selcpg.uat.notifichedigitali.it/national-registries-private"
+              apiKeyEnvVar = "NATIONAL_REGISTRY_API_KEY_AR"
+            }
+            pdnd = {
+              clientIdEnvVar   = "PDND_INFOCAMERE_CLIENT_ID_AR"
+              privateKeyEnvVar = "PDND_INFOCAMERE_PRIVATE_KEY_AR"
+              kidEnvVar        = "PDND_INFOCAMERE_KID_AR"
+              purposeIdEnvVar  = "PDND_INFOCAMERE_PURPOSE_ID_AR"
+              audience         = "auth.interop.pagopa.it/client-assertion"
+            }
+            pdndInvitalia = {
+              clientIdEnvVar   = "PDND_INVITALIA_INFOCAMERE_CLIENT_ID_AR"
+              privateKeyEnvVar = "PDND_INVITALIA_INFOCAMERE_PRIVATE_KEY_AR"
+              kidEnvVar        = "PDND_INVITALIA_INFOCAMERE_KID_AR"
+              purposeIdEnvVar  = "PDND_INVITALIA_INFOCAMERE_PURPOSE_ID_AR"
+              audience         = "auth.interop.pagopa.it/client-assertion"
+            }
+            invitaliaProducts = ["prod-idpay-merchant", "prod-registro-beni"]
+          }
+        }
+      })
     },
     {
       name  = "JAVA_TOOL_OPTIONS"

@@ -72,8 +72,32 @@ locals {
       value = "PNPG"
     },
     {
-      name  = "SELFCARE_TENANT_DATA_ISOLATION"
-      value = jsonencode({ PNPG = module.local.config.registry_proxy_tenant_resources.PNPG })
+      name = "SELFCARE_TENANT_DATA_ISOLATION"
+      value = jsonencode({
+        PNPG = {
+          jwt = {
+            publicKeyEnvVar = "JWT_PUBLIC_KEY_PNPG"
+            issuers         = ["SPID", "PAGOPA"]
+            audiences       = ["imprese.uat.notifichedigitali.it", "api-pnpg.uat.selfcare.pagopa.it"]
+          }
+          registryProxy = {
+            search = null
+            nationalRegistries = {
+              endpoint     = "https://api-selcpg.uat.notifichedigitali.it/national-registries-private"
+              apiKeyEnvVar = "NATIONAL_REGISTRY_API_KEY_PNPG"
+            }
+            pdnd = {
+              clientIdEnvVar   = "PDND_INFOCAMERE_CLIENT_ID_PNPG"
+              privateKeyEnvVar = "PDND_INFOCAMERE_PRIVATE_KEY_PNPG"
+              kidEnvVar        = "PDND_INFOCAMERE_KID_PNPG"
+              purposeIdEnvVar  = "PDND_INFOCAMERE_PURPOSE_ID_PNPG"
+              audience         = "auth.interop.pagopa.it/client-assertion"
+            }
+            pdndInvitalia     = null
+            invitaliaProducts = []
+          }
+        }
+      })
     },
     {
       name  = "JAVA_TOOL_OPTIONS"

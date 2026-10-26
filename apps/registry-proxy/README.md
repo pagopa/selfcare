@@ -85,11 +85,12 @@ resources and credential references are validated at startup. Onboarding indexes
 must be distinct even when the Search account is shared. External endpoints must
 be trusted HTTPS configuration, not request parameters.
 
-The six existing Terraform deployments receive their own tenant entry from
-`local-env`, preserving their existing Key Vault secret names with tenant-qualified
-application configuration keys. No state transfer, traffic cutover or resource
-deletion is performed. PNPG onboarding search is intentionally unmapped until a
-dedicated index and credentials are provisioned. The unused archival helper now
+Each of the six Terraform deployments defines `SELFCARE_TENANT_DATA_ISOLATION`
+directly in its `infra/resources/registry-proxy/<env>-<tenant>/registry-proxy.tf`,
+not in the shared `local-env` module. Existing Key Vault secret names are preserved
+with tenant-qualified application configuration keys. No state transfer, traffic
+cutover or resource deletion is performed. PNPG onboarding search is intentionally
+unmapped until a dedicated index and credentials are provisioned. The unused archival helper now
 returns a `CompletableFuture` and requires an explicit `tenantId`; any future
 caller must retain that identity in its durable payload and observe delivery
 failures. Configure `storages.visure` with a tenant-specific container/prefix and
