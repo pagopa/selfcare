@@ -73,6 +73,7 @@ locals {
       "SELFCARE_URL"                                       = "https://selfcare.pagopa.it"
       "MAIL_ONBOARDING_CONFIRMATION_LINK"                  = "https://dev.selfcare.pagopa.it/onboarding/confirm?jwt="
       "MAIL_USER_CONFIRMATION_LINK"                        = "https://dev.selfcare.pagopa.it/onboarding/confirm?add-user=true&jwt="
+      "MAIL_CONTRACT_UPDATE_CONFIRMATION_LINK"             = "https://dev.selfcare.pagopa.it/onboarding/confirm?contract-update=true&jwt="
       "MAIL_ONBOARDING_REJECTION_LINK"                     = "https://dev.selfcare.pagopa.it/onboarding/cancel?jwt="
       "MAIL_ONBOARDING_URL"                                = "https://dev.selfcare.pagopa.it/onboarding/"
       "MS_USER_URL"                                        = "https://selc-${module.local.config.env_short}-user-ms-ca.${module.local.config.private_dns_name_domain}"
