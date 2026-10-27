@@ -16,8 +16,10 @@ import it.pagopa.selfcare.dashboard.model.product.mapper.ProductMapper;
 import it.pagopa.selfcare.dashboard.model.user.UserInfo;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissions;
 import it.pagopa.selfcare.iam.generated.openapi.v1.dto.ProductRolePermissionsList;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingContractUpdateRequest;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGet;
 import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingGetResponse;
+import it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingStatus;
 import it.pagopa.selfcare.product.service.ProductService;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.OnboardedProductResponse;
 import it.pagopa.selfcare.user.generated.openapi.v1.dto.UserDataWithProductInfoResponse;
@@ -88,6 +90,25 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
     @BeforeEach
     void init() {
         super.setUp();
+    }
+
+    @Test
+    void onboardingContractUpdate_callsOnboardingMs() {
+        OnboardingContractUpdateRequest request = new OnboardingContractUpdateRequest();
+        request.setProductId(PROD_IO.getValue());
+        when(onboardingRestClient._onboardingContractUpdate(request))
+                .thenReturn(ResponseEntity.ok(new it.pagopa.selfcare.onboarding.generated.openapi.v1.dto.OnboardingResponse()));
+
+        institutionV2Service.onboardingContractUpdate(request);
+
+        verify(onboardingRestClient, times(1))._onboardingContractUpdate(request);
+        verifyNoMoreInteractions(onboardingRestClient);
+    }
+
+    @Test
+    void onboardingContractUpdate_withNullRequest_throwsIllegalArgument() {
+        assertThrows(IllegalArgumentException.class, () -> institutionV2Service.onboardingContractUpdate(null));
+        verifyNoInteractions(onboardingRestClient);
     }
 
     @Test
@@ -532,21 +553,21 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         onboardingGetResponse.setItems(List.of(new OnboardingGet().productId(productId)));
         onboardingGetResponse.setCount((long) onboardingGetResponse.getItems().size());
 
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, status, subunitCode, taxCode, null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, OnboardingStatus.fromValue(status), subunitCode, taxCode, null, null, null))
                 .thenReturn(ResponseEntity.of(Optional.of(onboardingGetResponse)));
 
         Boolean actualResponse = institutionV2Service.verifyIfExistsPendingOnboarding(taxCode, subunitCode, productId);
 
         assertTrue(actualResponse);
         verify(onboardingRestClient, Mockito.times(1))
-                ._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, PENDING.name(), subunitCode, taxCode, null, null);
+                ._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, OnboardingStatus.fromValue(PENDING.name()), subunitCode, taxCode, null, null, null);
     }
 
     @Test
     void getOnboardingWithFilterOk() {
         String taxCode = "taxCode";
         String productId = "productId";
-        String status = "status";
+        String status = PENDING.name();
 
         OnboardingGet onboardingGet = new OnboardingGet();
         onboardingGet.setProductId(productId);
@@ -556,9 +577,9 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
 
         doReturn(ResponseEntity.of(Optional.of(onboardingGetResponse)))
                 .when(onboardingRestClient)
-                ._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, status, null, taxCode, null, null);
+                ._getOnboardingWithFilter(null, null, null, null, productId, null,1, null, OnboardingStatus.fromValue(status), null, taxCode, null, null, null);
 
-        boolean onboardingGetInfo = onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, status, null, taxCode, null, null).getBody() != null;
+        boolean onboardingGetInfo = onboardingRestClient._getOnboardingWithFilter(null, null, null, null, productId, null, 1, null, OnboardingStatus.fromValue(status), null, taxCode, null, null, null).getBody() != null;
         Assertions.assertTrue(onboardingGetInfo);
     }
 
@@ -568,18 +589,18 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         onboardingGetResponse.setItems(List.of(new OnboardingGet().productId("test-product")));
         onboardingGetResponse.setCount((long) onboardingGetResponse.getItems().size());
 
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null,1, null, PENDING.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null,1, null, OnboardingStatus.fromValue(PENDING.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.ok().build());
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, TOBEVALIDATED.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(TOBEVALIDATED.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.of(Optional.of(onboardingGetResponse)));
 
         Boolean actualResponse = institutionV2Service.verifyIfExistsPendingOnboarding("test-institution", null, "test-product");
 
         assertTrue(actualResponse);
         verify(onboardingRestClient, Mockito.times(1))
-                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, PENDING.name(), null, "test-institution", null, null);
+                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(PENDING.name()), null, "test-institution", null, null, null);
         verify(onboardingRestClient, Mockito.times(1))
-                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, TOBEVALIDATED.name(), null, "test-institution", null, null);
+                ._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(TOBEVALIDATED.name()), null, "test-institution", null, null, null);
     }
 
     @Test
@@ -587,9 +608,9 @@ class InstitutionV2ServiceImplTest extends BaseServiceTest {
         OnboardingGetResponse onboardingGetResponse = new OnboardingGetResponse();
         onboardingGetResponse.setItems(List.of(new OnboardingGet().productId("test-product")));
         onboardingGetResponse.setCount((long) onboardingGetResponse.getItems().size());
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, PENDING.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(PENDING.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.ok().build());
-        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, TOBEVALIDATED.name(), null, "test-institution", null, null))
+        when(onboardingRestClient._getOnboardingWithFilter(null, null, null, null, "test-product", null, 1, null, OnboardingStatus.fromValue(TOBEVALIDATED.name()), null, "test-institution", null, null, null))
                 .thenReturn(ResponseEntity.ok().build());
 
         Boolean actualResponse = institutionV2Service.verifyIfExistsPendingOnboarding("test-institution", null, "test-product");
