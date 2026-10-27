@@ -14,6 +14,7 @@ import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.MongoCollection;
 import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.mongodb.panache.common.PanacheUpdate;
+import io.quarkus.test.junit.QuarkusTest;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
 import it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
+@QuarkusTest
 class OnboardingRepositoryServiceImplTest {
 
   @Test
