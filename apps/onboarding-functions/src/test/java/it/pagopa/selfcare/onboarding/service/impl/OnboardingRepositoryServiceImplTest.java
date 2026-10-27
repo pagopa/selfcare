@@ -2,18 +2,28 @@ package it.pagopa.selfcare.onboarding.service.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.mongodb.MongoException;
+import com.mongodb.client.AggregateIterable;
+import com.mongodb.client.MongoCollection;
 import io.quarkus.mongodb.panache.PanacheQuery;
 import io.quarkus.mongodb.panache.common.PanacheUpdate;
 import it.pagopa.selfcare.onboarding.entity.Onboarding;
+import it.pagopa.selfcare.onboarding.exception.DatabaseThrottledException;
 import it.pagopa.selfcare.onboarding.repository.OnboardingRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 class OnboardingRepositoryServiceImplTest {
@@ -104,6 +114,65 @@ class OnboardingRepositoryServiceImplTest {
     assertEquals(10L, actual);
     verify(onboardingRepository).find(query);
     verify(panacheQuery).count();
+  }
+
+  @Test
+  void countByProduct_shouldGroupCountsByProductId() {
+    // given
+    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
+    AggregateIterable<Document> aggregate = Mockito.mock(AggregateIterable.class);
+    OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
+    Document query = new Document("status", "COMPLETED");
+    when(onboardingRepository.mongoCollection()).thenReturn(collection);
+    when(collection.aggregate(anyList(), eq(Document.class))).thenReturn(aggregate);
+    List<Document> groups =
+      List.of(
+        new Document("_id", "prod-a").append("count", 3),
+        new Document("_id", "prod-b").append("count", 5L),
+        new Document("_id", null).append("count", 1));
+    when(aggregate.into(any())).thenReturn(groups);
+
+    // when
+    Map<String, Long> actual = service.countByProduct(query);
+
+    // then
+    assertEquals(Map.of("prod-a", 3L, "prod-b", 5L), actual);
+    ArgumentCaptor<List<Document>> pipeline = ArgumentCaptor.forClass(List.class);
+    verify(collection).aggregate(pipeline.capture(), eq(Document.class));
+    assertEquals(new Document("$match", query), pipeline.getValue().get(0));
+  }
+
+  @Test
+  void countByProduct_shouldMapCosmosTooManyRequestsToThrottledException() {
+    // given
+    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
+    OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
+    when(onboardingRepository.mongoCollection()).thenReturn(collection);
+    when(collection.aggregate(anyList(), eq(Document.class)))
+      .thenThrow(new MongoException(16500, "Error=16500, RetryAfterMs=2500, Details='Request rate is large'"));
+
+    // when
+    DatabaseThrottledException exception =
+      assertThrows(DatabaseThrottledException.class, () -> service.countByProduct(new Document()));
+
+    // then
+    assertEquals(2500L, exception.getRetryAfterMs());
+  }
+
+  @Test
+  void countByProduct_shouldRethrowOtherMongoExceptions() {
+    // given
+    OnboardingRepository onboardingRepository = Mockito.mock(OnboardingRepository.class);
+    MongoCollection<Onboarding> collection = Mockito.mock(MongoCollection.class);
+    OnboardingRepositoryServiceImpl service = new OnboardingRepositoryServiceImpl(onboardingRepository);
+    when(onboardingRepository.mongoCollection()).thenReturn(collection);
+    when(collection.aggregate(anyList(), eq(Document.class)))
+      .thenThrow(new MongoException(1, "boom"));
+
+    // when / then
+    assertThrows(MongoException.class, () -> service.countByProduct(new Document()));
   }
 
   @Test
